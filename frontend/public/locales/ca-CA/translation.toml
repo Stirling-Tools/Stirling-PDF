@@ -453,6 +453,25 @@ noShortcut = "Cap drecera definida"
 mac = "Inclou ⌘ (Command), ⌥ (Option) o un altre modificador a la drecera."
 windows = "Inclou Ctrl, Alt o un altre modificador a la drecera."
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "Actualització disponible"
 current = "Versió actual"
@@ -493,6 +512,11 @@ oldPassword = "Contrasenya Actual"
 newPassword = "Nova Contrasenya"
 confirmNewPassword = "Confirma la Nova Contrasenya"
 submit = "Envia els Canvis"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "Opcions del compte"
@@ -926,6 +950,11 @@ tags = "text,anotació,etiqueta"
 title = "Afegeix text"
 desc = "Afegeix text personalitzat a qualsevol lloc del teu PDF"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "Afegeix fitxers"
 uploadFromComputer = "Puja des de l'ordinador"
@@ -1245,6 +1274,21 @@ cbzOptions = "Opcions de CBZ a PDF"
 optimizeForEbook = "Optimitza el PDF per a lectors d'ebook (usa Ghostscript)"
 cbzOutputOptions = "Opcions de PDF a CBZ"
 cbzDpi = "DPI per al renderitzat d'imatges"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversió,img,jpg,imatge,foto"
@@ -1362,6 +1406,11 @@ add = "Afegeix adjunt"
 remove = "Elimina adjunt"
 embed = "Incrusta adjunt"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "Afegir Marca d'Aigua"
@@ -2306,6 +2355,10 @@ saved = "Desades"
 label = "Carrega la imatge de la signatura"
 placeholder = "Selecciona el fitxer d'imatge"
 hint = "Carrega una imatge PNG o JPG de la teva signatura"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "Com afegir la signatura"
@@ -2375,6 +2428,11 @@ bullet1 = "Els formularis es tornen no editables"
 bullet2 = "Els enllaços continuen funcionant en fer clic"
 bullet3 = "Els comentaris i les notes romanen visibles"
 bullet4 = "Els marcadors continuen ajudant a navegar"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "repara,restaura,correcció,recupera"
@@ -2925,6 +2983,7 @@ header = "Talla PDF"
 submit = "Envia"
 noFileSelected = "Seleccioneu un fitxer PDF per començar a retallar"
 reset = "Restableix al PDF complet"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Selecció de l'àrea de retall"
@@ -3342,6 +3401,19 @@ placeholder = "Introdueix el nombre de divisions horitzontals"
 label = "Divisions Verticals"
 placeholder = "Introdueix el nombre de divisions verticals"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "Segell, Afegeix imatge, Centra imatge, Marca d'aigua, PDF, Insereix, Personalitza"
 header = "Segella PDF"
@@ -3720,6 +3792,10 @@ bullet2 = "Els valors alts redueixen la mida del fitxer"
 title = "Escala de grisos"
 text = "Seleccioneu aquesta opció per convertir totes les imatges a blanc i negre, cosa que pot reduir significativament la mida del fitxer, especialment per a PDFs escanejats o documents amb moltes imatges."
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "S'ha produït un error en comprimir el PDF."
 
@@ -3731,6 +3807,24 @@ failed = "S'ha produït un error en comprimir el PDF."
 [compress.selectText.1]
 _value = "Configuració de compressió"
 1 = "1-3 compressió de PDF,</br> 4-6 compressió lleugera d'imatges,</br> 7-9 compressió intensa d'imatges Reduirà dràsticament la qualitat de la imatge"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Aquest fitxer està protegit amb contrasenya. Si us plau, introdueix la contrasenya:"
@@ -3983,11 +4077,9 @@ rotateRight = "Gira a la dreta"
 toggleSidebar = "Mostra/oculta la barra lateral"
 exportSelected = "Exporta les pàgines seleccionades"
 toggleAnnotations = "Mostra/oculta les anotacions"
-annotationMode = "Activa/desactiva el mode d'anotació"
 print = "Imprimeix el PDF"
-draw = "Dibuixa"
-save = "Desa"
 saveChanges = "Desa els canvis"
+annotations = "Annotations"
 
 [search]
 title = "Cerca al PDF"
@@ -4038,12 +4130,20 @@ settings = "Ajustos"
 adminSettings = "Ajustos admin"
 allTools = "All Tools"
 reader = "Lector"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "Visita guiada de les eines"
 toolsTourDesc = "Descobriu què poden fer les eines"
 adminTour = "Visita per a administradors"
 adminTourDesc = "Exploreu la configuració i les funcions d'administració"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Error"
@@ -5069,6 +5169,7 @@ loading = "Carregant..."
 back = "Enrere"
 continue = "Continua"
 error = "Error"
+save = "Save"
 
 [config.overview]
 title = "Configuració de l’aplicació"
@@ -5278,6 +5379,20 @@ userBody = "Convida companys, assigna rols i mantén els documents organitzats e
 
 [onboarding.securityCheck]
 message = "L'aplicació ha patit canvis importants recentment. Pot ser necessària l'atenció de l'administrador del servidor. Confirma el teu rol per continuar."
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "Benvinguts a la <strong>Visita d’administració</strong>! Explorem les potents funcionalitats i paràmetres d’empresa disponibles per als administradors del sistema."
@@ -5568,6 +5683,28 @@ contactSales = "Contacta amb vendes"
 contactToUpgrade = "Contacteu-nos per actualitzar o personalitzar el vostre pla"
 maxUsers = "Nombre màxim d’usuaris"
 upTo = "Fins a"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "mes"
@@ -5771,6 +5908,8 @@ notAvailable = "Sistema d’auditoria no disponible"
 notAvailableMessage = "El sistema d’auditoria no està configurat o no està disponible."
 disabled = "El registre d’auditoria està desactivat"
 disabledMessage = "Activeu el registre d’auditoria a la configuració de l’aplicació per fer el seguiment dels esdeveniments del sistema."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Error en carregar el sistema d’auditoria"
@@ -6025,6 +6164,8 @@ reset = "Restableix els canvis"
 downloadJson = "Descarrega JSON"
 generatePdf = "Genera PDF"
 saveChanges = "Deseu els canvis"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Autoajusta el text a les caixes"
@@ -6042,6 +6183,9 @@ descriptionInline = "Consell: Mantén premut Ctrl (Cmd) o Shift per seleccionar 
 [pdfTextEditor.options.forceSingleElement]
 title = "Bloqueja el text editat a un únic element del PDF"
 description = "Quan s'habilita, l'editor exporta cada quadre de text editat com un sol element de text del PDF per evitar glifs superposats o tipus de lletra barrejats."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "Fusiona els quadres seleccionats"
@@ -6118,6 +6262,21 @@ subset = "subconjunt"
 invalidJson = "No es pot llegir el fitxer JSON. Assegura't que s'hagi generat amb l'eina de PDF a JSON."
 pdfConversion = "No es pot convertir el JSON editat de nou a PDF."
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "Sessió caducada"
 pleaseLoginAgain = "Si us plau, torna a iniciar sessió."
@@ -6164,3 +6323,78 @@ title = "Resultats d'afegir text"
 
 [addText.error]
 failed = "S'ha produït un error en afegir text al PDF."
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

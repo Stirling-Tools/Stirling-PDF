@@ -453,6 +453,25 @@ noShortcut = "Ingen genväg angiven"
 mac = "Inkludera ⌘ (Command), ⌥ (Option) eller en annan modifierare i ditt kortkommando."
 windows = "Inkludera Ctrl, Alt eller en annan modifierare i ditt kortkommando."
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "Uppdatering tillgänglig"
 current = "Aktuell version"
@@ -493,6 +512,11 @@ oldPassword = "Nuvarande lösenord"
 newPassword = "Nytt lösenord"
 confirmNewPassword = "Bekräfta nytt lösenord"
 submit = "Skicka ändringar"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "Kontoinställningar"
@@ -926,6 +950,11 @@ tags = "text,kommentar,etikett"
 title = "Lägg till text"
 desc = "Lägg till egen text var som helst i din PDF"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "Lägg till filer"
 uploadFromComputer = "Ladda upp från datorn"
@@ -1245,6 +1274,21 @@ cbzOptions = "CBZ till PDF‑alternativ"
 optimizeForEbook = "Optimera PDF för e‑boksläsare (använder Ghostscript)"
 cbzOutputOptions = "PDF till CBZ‑alternativ"
 cbzDpi = "DPI för bildrendering"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "konvertering,img,jpg,bild,foto"
@@ -1362,6 +1406,11 @@ add = "Lägg till bilaga"
 remove = "Ta bort bilaga"
 embed = "Bädda in bilaga"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "Lägg till vattenstämpel"
@@ -2306,6 +2355,10 @@ saved = "Sparad"
 label = "Ladda upp signaturbild"
 placeholder = "Välj bildfil"
 hint = "Ladda upp en PNG- eller JPG-bild av din signatur"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "Så här lägger du till signatur"
@@ -2375,6 +2428,11 @@ bullet1 = "Formulär blir icke-redigerbara"
 bullet2 = "Länkar fungerar fortfarande vid klick"
 bullet3 = "Kommentarer och anteckningar förblir synliga"
 bullet4 = "Bokmärken hjälper dig fortfarande att navigera"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "fixa,återställa,korrigering,återhämta"
@@ -2925,6 +2983,7 @@ header = "Beskär PDF"
 submit = "Skicka"
 noFileSelected = "Välj en PDF-fil för att börja beskära"
 reset = "Återställ till full PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Val av beskärningsområde"
@@ -3342,6 +3401,19 @@ placeholder = "Ange antal horisontella indelningar"
 label = "Vertikala indelningar"
 placeholder = "Ange antal vertikala indelningar"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "Stämpel,Lägg till bild,centrera bild,Vattenstämpel,PDF,Bädda in,Anpassa"
 header = "Stämpla PDF"
@@ -3720,6 +3792,10 @@ bullet2 = "Högre värden minskar filstorleken"
 title = "Gråskala"
 text = "Välj detta alternativ för att konvertera alla bilder till svartvitt, vilket kan minska filstorleken avsevärt, särskilt för skannade PDF:er eller bildtunga dokument."
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "Ett fel inträffade vid komprimering av PDF:en."
 
@@ -3731,6 +3807,24 @@ failed = "Ett fel inträffade vid komprimering av PDF:en."
 [compress.selectText.1]
 _value = "Komprimeringsinställningar"
 1 = "1–3 PDF-komprimering,</br> 4–6 lätt bildkomprimering,</br> 7–9 kraftig bildkomprimering Försämrar bildkvaliteten avsevärt"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Denna fil är lösenordsskyddad. Fyll i lösenord:"
@@ -3983,11 +4077,9 @@ rotateRight = "Rotera åt höger"
 toggleSidebar = "Växla sidofält"
 exportSelected = "Exportera markerade sidor"
 toggleAnnotations = "Växla synlighet för anteckningar"
-annotationMode = "Växla anteckningsläge"
 print = "Skriv ut PDF"
-draw = "Rita"
-save = "Spara"
 saveChanges = "Spara ändringar"
+annotations = "Annotations"
 
 [search]
 title = "Sök i PDF"
@@ -4038,12 +4130,20 @@ settings = "Inst."
 adminSettings = "Admin inst."
 allTools = "All Tools"
 reader = "Läsare"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "Verktygsrundtur"
 toolsTourDesc = "Lär dig vad verktygen kan göra"
 adminTour = "Adminrundtur"
 adminTourDesc = "Utforska admininställningar och funktioner"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Fel"
@@ -5069,6 +5169,7 @@ loading = "Läser in..."
 back = "Tillbaka"
 continue = "Fortsätt"
 error = "Fel"
+save = "Save"
 
 [config.overview]
 title = "Programkonfiguration"
@@ -5278,6 +5379,20 @@ userBody = "Bjud in teammedlemmar, tilldela roller och håll dina dokument organ
 
 [onboarding.securityCheck]
 message = "Applikationen har nyligen genomgått stora förändringar. Din serveradmins uppmärksamhet kan krävas. Bekräfta din roll för att fortsätta."
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "Välkommen till <strong>Admin-rundturen</strong>! Låt oss utforska de kraftfulla företagsfunktionerna och inställningarna som finns tillgängliga för systemadministratörer."
@@ -5568,6 +5683,28 @@ contactSales = "Kontakta sälj"
 contactToUpgrade = "Kontakta oss för att uppgradera eller anpassa din plan"
 maxUsers = "Max antal användare"
 upTo = "Upp till"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "månad"
@@ -5771,6 +5908,8 @@ notAvailable = "Granskningssystemet är inte tillgängligt"
 notAvailableMessage = "Granskningssystemet är inte konfigurerat eller inte tillgängligt."
 disabled = "Granskningsloggning är inaktiverad"
 disabledMessage = "Aktivera granskningsloggning i din applikationskonfiguration för att spåra systemhändelser."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Fel vid inläsning av granskningssystemet"
@@ -6025,6 +6164,8 @@ reset = "Återställ ändringar"
 downloadJson = "Ladda ner JSON"
 generatePdf = "Skapa PDF"
 saveChanges = "Spara ändringar"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Skala text automatiskt för att passa rutor"
@@ -6042,6 +6183,9 @@ descriptionInline = "Tips: Håll Ctrl (Cmd) eller Shift för att markera flera t
 [pdfTextEditor.options.forceSingleElement]
 title = "Lås redigerad text till ett enda PDF-element"
 description = "När detta är aktiverat exporterar editorn varje redigerad textruta som ett PDF-textelement för att undvika överlappande tecken eller blandade typsnitt."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "Slå ihop markerade textrutor"
@@ -6118,6 +6262,21 @@ subset = "delmängd"
 invalidJson = "Det gick inte att läsa JSON-filen. Kontrollera att den skapades av verktyget PDF till JSON."
 pdfConversion = "Det gick inte att konvertera den redigerade JSON-filen tillbaka till en PDF."
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "Sessionen har gått ut"
 pleaseLoginAgain = "Logga in igen."
@@ -6164,3 +6323,78 @@ title = "Resultat för Lägg till text"
 
 [addText.error]
 failed = "Ett fel inträffade när text lades till i PDF:en."
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

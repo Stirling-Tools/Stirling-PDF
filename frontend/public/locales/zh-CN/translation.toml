@@ -453,6 +453,25 @@ noShortcut = "未设置快捷键"
 mac = "请在快捷键中包含 ⌘（Command）、⌥（Option）或其他修饰键。"
 windows = "请在快捷键中包含 Ctrl、Alt 或其他修饰键。"
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "有可用更新"
 current = "当前版本"
@@ -493,6 +512,11 @@ oldPassword = "当前密码"
 newPassword = "新密码"
 confirmNewPassword = "确认新密码"
 submit = "提交更改"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "账号设定"
@@ -926,6 +950,11 @@ tags = "文本,注释,标签"
 title = "添加文本"
 desc = "在 PDF 任意位置添加自定义文本"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "添加文件"
 uploadFromComputer = "从电脑上传"
@@ -1245,6 +1274,21 @@ cbzOptions = "CBZ 转 PDF 选项"
 optimizeForEbook = "为电子书阅读器优化 PDF（使用 Ghostscript）"
 cbzOutputOptions = "PDF 转 CBZ 选项"
 cbzDpi = "图像渲染的 DPI"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "转换、图像、JPG、图片、照片"
@@ -1362,6 +1406,11 @@ add = "添加附件"
 remove = "移除附件"
 embed = "嵌入附件"
 submit = "添加附件"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "添加水印"
@@ -2306,6 +2355,10 @@ saved = "已保存"
 label = "上传签名图像"
 placeholder = "选择图像文件"
 hint = "上传 PNG 或 JPG 格式的签名图像"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "如何添加签名"
@@ -2375,6 +2428,11 @@ bullet1 = "表单将不可编辑"
 bullet2 = "链接仍可点击"
 bullet3 = "批注与备注仍可见"
 bullet4 = "书签仍可用于导航"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "修复、恢复、纠正、恢复"
@@ -2925,6 +2983,7 @@ header = "裁剪 PDF"
 submit = "提交"
 noFileSelected = "选择一个 PDF 文件开始裁剪"
 reset = "重置为整页"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "裁剪区域选择"
@@ -3342,6 +3401,19 @@ placeholder = "输入水平分割数"
 label = "垂直分割"
 placeholder = "输入垂直分割数"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "图章、添加图片、图片居中、水印、PDF、嵌入、自定义"
 header = "添加图章"
@@ -3720,6 +3792,10 @@ bullet2 = "较高数值能更大幅度减小文件"
 title = "灰度"
 text = "选择此选项将所有图像转换为黑白，这对扫描 PDF 或图片较多的文档可显著减小体积。"
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "压缩 PDF 时发生错误。"
 
@@ -3731,6 +3807,24 @@ failed = "压缩 PDF 时发生错误。"
 [compress.selectText.1]
 _value = "压缩设置"
 1 = "1-3 PDF 压缩，</br> 4-6 轻度图像压缩，</br> 7-9 深度图像压缩（将显著降低图像质量）"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "此文件受密码保护。请输入密码："
@@ -3983,11 +4077,9 @@ rotateRight = "向右旋转"
 toggleSidebar = "切换侧边栏"
 exportSelected = "导出所选页面"
 toggleAnnotations = "切换注释可见性"
-annotationMode = "切换注释模式"
 print = "打印 PDF"
-draw = "绘制"
-save = "保存"
 saveChanges = "保存更改"
+annotations = "Annotations"
 
 [search]
 title = "搜索 PDF"
@@ -4038,12 +4130,20 @@ settings = "设置"
 adminSettings = "管理设置"
 allTools = "全部工具"
 reader = "阅读器"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "工具导览"
 toolsTourDesc = "了解这些工具能做什么"
 adminTour = "管理导览"
 adminTourDesc = "浏览管理设置与功能"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "错误"
@@ -5069,6 +5169,7 @@ loading = "正在加载..."
 back = "返回"
 continue = "继续"
 error = "错误"
+save = "Save"
 
 [config.overview]
 title = "应用配置"
@@ -5278,6 +5379,20 @@ userBody = "邀请队友、分配角色，并在一个安全的工作区中整�
 
 [onboarding.securityCheck]
 message = "应用近期发生重大变更。可能需要您的服务器管理员关注。请确认您的角色以继续。"
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "欢迎使用 <strong>管理员引导</strong>！让我们一起探索提供给系统管理员的强大企业功能和设置。"
@@ -5568,6 +5683,28 @@ contactSales = "联系销售"
 contactToUpgrade = "联系我们以升级或定制您的套餐"
 maxUsers = "最大用户数"
 upTo = "最多"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "月"
@@ -5771,6 +5908,8 @@ notAvailable = "审计系统不可用"
 notAvailableMessage = "审计系统未配置或不可用。"
 disabled = "已禁用审计日志"
 disabledMessage = "请在应用配置中启用审计日志以跟踪系统事件。"
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "加载审计系统时出错"
@@ -6025,6 +6164,8 @@ reset = "重置更改"
 downloadJson = "下载 JSON"
 generatePdf = "生成 PDF"
 saveChanges = "保存更改"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "自动缩放文本以适配框体"
@@ -6042,6 +6183,9 @@ descriptionInline = "提示：按住 Ctrl（Cmd）或 Shift 可多选文本框�
 [pdfTextEditor.options.forceSingleElement]
 title = "将已编辑文本锁定为单个 PDF 元素"
 description = "启用后，编辑器会将每个已编辑文本框导出为一个 PDF 文本元素，以避免字形重叠或混合字体。"
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "合并所选框"
@@ -6118,6 +6262,21 @@ subset = "子集"
 invalidJson = "无法读取JSON文件。请确保它由PDF转JSON工具生成。"
 pdfConversion = "无法将已编辑的JSON转换回PDF。"
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "会话已过期"
 pleaseLoginAgain = "请重新登录。"
@@ -6164,3 +6323,78 @@ title = "添加文本结果"
 
 [addText.error]
 failed = "向PDF添加文本时发生错误。"
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

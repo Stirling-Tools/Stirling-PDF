@@ -171,8 +171,14 @@ Merges missing translations from en-GB into target language files and manages tr
 
 **Usage:**
 ```bash
+# Operate on all locales (except en-GB) when language is omitted
+python scripts/translations/translation_merger.py add-missing
+
 # Add missing translations from en-GB to French
 python scripts/translations/translation_merger.py fr-FR add-missing
+
+# Create backups before modifying files
+python scripts/translations/translation_merger.py fr-FR add-missing --backup
 
 # Extract untranslated entries to a file
 python scripts/translations/translation_merger.py fr-FR extract-untranslated --output fr_untranslated.json
@@ -183,15 +189,20 @@ python scripts/translations/translation_merger.py fr-FR create-template --output
 # Apply translations from a file
 python scripts/translations/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
 
+# Override default paths if needed
+python scripts/translations/translation_merger.py fr-FR add-missing --locales-dir ./frontend/public/locales --ignore-file ./scripts/ignore_translation.toml
+
 # Remove unused translations not present in en-GB
 python scripts/translations/translation_merger.py fr-FR remove-unused
 ```
 
 **Features:**
 - Adds missing keys from en-GB (copies English text directly)
+- Runs across all locales for add-missing/remove-unused when language is omitted
 - Extracts untranslated entries for external translation
 - Creates structured templates for AI translation
-- Applies translated content back to language files
+- Applies translated content back to language files (template format or plain JSON)
+- Supports `--backup` on mutating commands
 - Automatic backup creation
 - Removes unused translations not present in en-GB
 
