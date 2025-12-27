@@ -34,13 +34,6 @@ run_as_runtime_user() {
   fi
 }
 
-# ---------- VERSION_TAG ----------
-# Load VERSION_TAG from file if not provided via environment.
-if [ -z "${VERSION_TAG:-}" ] && [ -f /etc/stirling_version ]; then
-  VERSION_TAG="$(tr -d '\r\n' < /etc/stirling_version)"
-  export VERSION_TAG
-fi
-
 # ---------- JAVA_OPTS ----------
 # Configure Java runtime options.
 export JAVA_TOOL_OPTIONS="${JAVA_BASE_OPTS:-} ${JAVA_CUSTOM_OPTS:-}"
