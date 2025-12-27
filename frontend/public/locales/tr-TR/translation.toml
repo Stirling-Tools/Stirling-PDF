@@ -453,6 +453,25 @@ noShortcut = "Kısayol ayarlanmamış"
 mac = "Kısayolunuza ⌘ (Command), ⌥ (Option) veya başka bir değiştirici ekleyin."
 windows = "Kısayolunuza Ctrl, Alt veya başka bir değiştirici ekleyin."
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "Güncelleme Mevcut"
 current = "Geçerli Sürüm"
@@ -493,6 +512,11 @@ oldPassword = "Mevcut Şifre"
 newPassword = "Yeni Şifre"
 confirmNewPassword = "Yeni Şifreyi Onayla"
 submit = "Değişiklikleri Gönder"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "Hesap Ayarları"
@@ -926,6 +950,11 @@ tags = "metin,ek açıklama,etiket"
 title = "Metin Ekle"
 desc = "PDF'inize istediğiniz yere özel metin ekleyin"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "Dosya Ekle"
 uploadFromComputer = "Bilgisayardan yükle"
@@ -1245,6 +1274,21 @@ cbzOptions = "CBZ'den PDF'e Seçenekleri"
 optimizeForEbook = "PDF'yi e-kitap okuyucular için optimize et (Ghostscript kullanır)"
 cbzOutputOptions = "PDF'den CBZ'ye Seçenekleri"
 cbzDpi = "Görüntü oluşturma için DPI"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "dönüşüm,img,jpg,fotoğraf,resim"
@@ -1362,6 +1406,11 @@ add = "Ek Ekle"
 remove = "Eki Kaldır"
 embed = "Eki Göm"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "Filigran Ekle"
@@ -2306,6 +2355,10 @@ saved = "Kaydedildi"
 label = "İmza görseli yükle"
 placeholder = "Görsel dosyası seç"
 hint = "İmzanızın PNG veya JPG görselini yükleyin"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "İmza nasıl eklenir"
@@ -2375,6 +2428,11 @@ bullet1 = "Formlar düzenlenemez hale gelir"
 bullet2 = "Bağlantılar tıklandığında hâlâ çalışır"
 bullet3 = "Yorumlar ve notlar görünür kalır"
 bullet4 = "Yer imleri hâlâ gezinmenize yardımcı olur"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "onar,geri yükle,düzelt,geri getir"
@@ -2925,6 +2983,7 @@ header = "PDF'i Kırp"
 submit = "Gönder"
 noFileSelected = "Kırpmaya başlamak için bir PDF seçin"
 reset = "Tam PDF'ye sıfırla"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Kırpma Alanı Seçimi"
@@ -3342,6 +3401,19 @@ placeholder = "Yatay bölme sayısını girin"
 label = "Dikey Bölümler"
 placeholder = "Dikey bölme sayısını girin"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "Damga, Görüntü ekle, Görüntüyü ortala, Filigran, PDF, Göm, Özelleştir"
 header = "Damga PDF"
@@ -3720,6 +3792,10 @@ bullet2 = "Yüksek değerler dosya boyutunu azaltır"
 title = "Gri Tonlama"
 text = "Tüm görselleri siyah beyaza dönüştürmek için bu seçeneği belirleyin; özellikle taranmış PDF'ler veya görsel ağırlıklı belgeler için dosya boyutunu önemli ölçüde azaltabilir."
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "PDF sıkıştırılırken bir hata oluştu."
 
@@ -3731,6 +3807,24 @@ failed = "PDF sıkıştırılırken bir hata oluştu."
 [compress.selectText.1]
 _value = "Sıkıştırma Ayarları"
 1 = "1-3 PDF sıkıştırma,</br> 4-6 hafif görüntü sıkıştırma,</br> 7-9 yoğun görüntü sıkıştırma görüntü kalitesini ciddi ölçüde düşürür"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Bu dosya parola korumalı. Lütfen parolayı girin:"
@@ -3983,11 +4077,9 @@ rotateRight = "Sağa Döndür"
 toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
 exportSelected = "Seçilen Sayfaları Dışa Aktar"
 toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
-annotationMode = "Açıklama Modunu Değiştir"
 print = "PDF'yi Yazdır"
-draw = "Çiz"
-save = "Kaydet"
 saveChanges = "Değişiklikleri Kaydet"
+annotations = "Annotations"
 
 [search]
 title = "PDF Ara"
@@ -4038,12 +4130,20 @@ settings = "Ayarlar"
 adminSettings = "Admin Ayarları"
 allTools = "All Tools"
 reader = "Okuyucu"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "Araç Turu"
 toolsTourDesc = "Araçların neler yapabildiğini öğrenin"
 adminTour = "Yönetici Turu"
 adminTourDesc = "Yönetici ayarlarını ve özelliklerini keşfedin"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Hata"
@@ -5069,6 +5169,7 @@ loading = "Yükleniyor..."
 back = "Geri"
 continue = "Devam et"
 error = "Hata"
+save = "Save"
 
 [config.overview]
 title = "Uygulama Yapılandırması"
@@ -5278,6 +5379,20 @@ userBody = "Ekip arkadaşlarını davet edin, roller atayın ve belgelerinizi te
 
 [onboarding.securityCheck]
 message = "Uygulama son zamanlarda önemli değişiklikler geçirdi. Sunucu yöneticinizin dikkatine ihtiyaç duyulabilir. Devam etmek için lütfen rolünüzü doğrulayın."
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "<strong>Yönetici Turu</strong>'na hoş geldiniz! Sistem yöneticileri için mevcut güçlü kurumsal özellikleri ve ayarları keşfedelim."
@@ -5568,6 +5683,28 @@ contactSales = "Satış ile İletişime Geçin"
 contactToUpgrade = "Planınızı yükseltmek veya özelleştirmek için bizimle iletişime geçin"
 maxUsers = "Maksimum Kullanıcı"
 upTo = "En fazla"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "ay"
@@ -5771,6 +5908,8 @@ notAvailable = "Denetim sistemi kullanılamıyor"
 notAvailableMessage = "Denetim sistemi yapılandırılmamış veya kullanılamıyor."
 disabled = "Denetim günlüğü devre dışı"
 disabledMessage = "Sistem olaylarını takip etmek için uygulama yapılandırmanızda denetim günlüğünü etkinleştirin."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Denetim sistemi yüklenirken hata"
@@ -6025,6 +6164,8 @@ reset = "Değişiklikleri Sıfırla"
 downloadJson = "JSON'u İndir"
 generatePdf = "PDF Oluştur"
 saveChanges = "Değişiklikleri Kaydet"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Metni kutulara otomatik sığdır"
@@ -6042,6 +6183,9 @@ descriptionInline = "İpucu: Birden çok metin kutusu seçmek için Ctrl (Cmd) v
 [pdfTextEditor.options.forceSingleElement]
 title = "Düzenlenen metni tek bir PDF öğesine kilitle"
 description = "Etkinleştirildiğinde, düzenlenmiş her metin kutusu, üst üste binen glifler veya karışık yazı tiplerini önlemek için tek bir PDF metin öğesi olarak dışa aktarılır."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "Seçili kutuları birleştir"
@@ -6118,6 +6262,21 @@ subset = "kısmi"
 invalidJson = "JSON dosyası okunamadı. PDF to JSON aracı tarafından oluşturulduğundan emin olun."
 pdfConversion = "Düzenlenen JSON tekrar PDF'ye dönüştürülemedi."
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "Oturum Süresi Doldu"
 pleaseLoginAgain = "Lütfen tekrar giriş yapın."
@@ -6164,3 +6323,78 @@ title = "Metin Ekleme Sonuçları"
 
 [addText.error]
 failed = "PDF'ye metin eklenirken bir hata oluştu."
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

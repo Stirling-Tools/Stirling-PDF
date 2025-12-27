@@ -453,6 +453,25 @@ noShortcut = "ยังไม่ได้ตั้งปุ่มลัด"
 mac = "ให้มี ⌘ (Command), ⌥ (Option) หรือปุ่มดัดแปลงอื่นในชุดแป้นลัดของคุณ"
 windows = "ให้มี Ctrl, Alt หรือปุ่มดัดแปลงอื่นในชุดแป้นลัดของคุณ"
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "มีอัปเดต"
 current = "เวอร์ชันปัจจุบัน"
@@ -493,6 +512,11 @@ oldPassword = "รหัสผ่านปัจจุบัน"
 newPassword = "รหัสผ่านใหม่"
 confirmNewPassword = "ยืนยันรหัสผ่านใหม่"
 submit = "ส่งการเปลี่ยนแปลง"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "การตั้งค่าบัญชี"
@@ -926,6 +950,11 @@ tags = "ข้อความ,คำอธิบายประกอบ,ป้�
 title = "เพิ่มข้อความ"
 desc = "เพิ่มข้อความที่กำหนดเองที่ใดก็ได้ใน PDF ของคุณ"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "เพิ่มไฟล์"
 uploadFromComputer = "อัปโหลดจากคอมพิวเตอร์"
@@ -1245,6 +1274,21 @@ cbzOptions = "ตัวเลือก CBZ เป็น PDF"
 optimizeForEbook = "ปรับ PDF ให้เหมาะกับเครื่องอ่าน ebook (ใช้ Ghostscript)"
 cbzOutputOptions = "ตัวเลือก PDF เป็น CBZ"
 cbzDpi = "DPI สำหรับการเรนเดอร์ภาพ"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "การแปลง, รูปภาพ, JPG, ภาพ, รูปถ่าย"
@@ -1362,6 +1406,11 @@ add = "เพิ่มไฟล์แนบ"
 remove = "ลบไฟล์แนบ"
 embed = "ฝังไฟล์แนบ"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "เพิ่มลายน้ำ"
@@ -2306,6 +2355,10 @@ saved = "ที่บันทึกไว้"
 label = "อัปโหลดภาพลายเซ็น"
 placeholder = "เลือกไฟล์รูปภาพ"
 hint = "อัปโหลดภาพลายเซ็นเป็น PNG หรือ JPG"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "วิธีเพิ่มลายเซ็น"
@@ -2375,6 +2428,11 @@ bullet1 = "ฟอร์มจะแก้ไขไม่ได้"
 bullet2 = "ลิงก์ยังใช้งานได้เมื่อคลิก"
 bullet3 = "คอมเมนต์และบันทึกยังคงมองเห็นได้"
 bullet4 = "บุ๊กมาร์กยังช่วยในการนำทาง"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "ซ่อมแซม, กู้คืน, กู้"
@@ -2925,6 +2983,7 @@ header = "ครอบตัด PDF"
 submit = "ส่ง"
 noFileSelected = "เลือกไฟล์ PDF เพื่อเริ่มการครอบตัด"
 reset = "รีเซ็ตเป็น PDF เต็มหน้า"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "การเลือกพื้นที่ครอบตัด"
@@ -3342,6 +3401,19 @@ placeholder = "ป้อนจำนวนการแบ่งแนวนอ�
 label = "การแบ่งแนวตั้ง"
 placeholder = "ป้อนจำนวนการแบ่งแนวตั้ง"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "ตราประทับ, เพิ่มรูปภาพ, รูปภาพกึ่งกลาง, ลายน้ำ, PDF, ฝัง, ปรับแต่ง"
 header = "ตราประทับ PDF"
@@ -3720,6 +3792,10 @@ bullet2 = "ค่าสูงช่วยลดขนาดไฟล์ได้
 title = "ภาพขาวดำ"
 text = "เลือกตัวเลือกนี้เพื่อแปลงรูปภาพทั้งหมดเป็นขาวดำ ซึ่งช่วยลดขนาดไฟล์ได้มาก โดยเฉพาะสำหรับ PDF ที่สแกนหรือเอกสารที่มีภาพจำนวนมาก"
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "เกิดข้อผิดพลาดขณะบีบอัด PDF"
 
@@ -3731,6 +3807,24 @@ failed = "เกิดข้อผิดพลาดขณะบีบอัด 
 [compress.selectText.1]
 _value = "การตั้งค่าการบีบอัด"
 1 = "1-3 บีบอัด PDF,</br> 4-6 บีบอัดรูปภาพแบบเบา,</br> 7-9 บีบอัดรูปภาพอย่างหนัก จะลดคุณภาพของภาพลงอย่างมาก"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "ไฟล์นี้มีการป้องกันด้วยรหัสผ่าน โปรดป้อนรหัสผ่าน:"
@@ -3983,11 +4077,9 @@ rotateRight = "หมุนขวา"
 toggleSidebar = "สลับแถบข้าง"
 exportSelected = "ส่งออกหน้าที่เลือก"
 toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
-annotationMode = "สลับโหมดคำอธิบายประกอบ"
 print = "พิมพ์ PDF"
-draw = "วาด"
-save = "บันทึก"
 saveChanges = "บันทึกการเปลี่ยนแปลง"
+annotations = "Annotations"
 
 [search]
 title = "ค้นหาใน PDF"
@@ -4038,12 +4130,20 @@ settings = "ตั้งค่า"
 adminSettings = "ตั้งค่า แอดมิน"
 allTools = "All Tools"
 reader = "ตัวอ่าน"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "แนะนำเครื่องมือ"
 toolsTourDesc = "เรียนรู้ว่าเครื่องมือทำอะไรได้บ้าง"
 adminTour = "ทัวร์ผู้ดูแล"
 adminTourDesc = "สำรวจการตั้งค่าและฟีเจอร์ของผู้ดูแล"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "ข้อผิดพลาด"
@@ -5069,6 +5169,7 @@ loading = "กำลังโหลด..."
 back = "ย้อนกลับ"
 continue = "ดำเนินการต่อ"
 error = "ข้อผิดพลาด"
+save = "Save"
 
 [config.overview]
 title = "การกำหนดค่าแอปพลิเคชัน"
@@ -5278,6 +5379,20 @@ userBody = "เชิญเพื่อนร่วมทีม กำหนด�
 
 [onboarding.securityCheck]
 message = "แอปมีการเปลี่ยนแปลงครั้งใหญ่เมื่อไม่นานมานี้ อาจต้องการความใส่ใจจากผู้ดูแลเซิร์ฟเวอร์ โปรดยืนยันบทบาทของคุณเพื่อดำเนินการต่อ"
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "ยินดีต้อนรับสู่ <strong>ทัวร์ผู้ดูแลระบบ</strong> มาสำรวจฟีเจอร์องค์กรอันทรงพลังและการตั้งค่าที่มีให้ผู้ดูแลระบบกัน"
@@ -5568,6 +5683,28 @@ contactSales = "ติดต่อฝ่ายขาย"
 contactToUpgrade = "ติดต่อเราเพื่ออัปเกรดหรือปรับแต่งแผนของคุณ"
 maxUsers = "ผู้ใช้สูงสุด"
 upTo = "สูงสุด"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "เดือน"
@@ -5771,6 +5908,8 @@ notAvailable = "ระบบบันทึกการตรวจสอบไ�
 notAvailableMessage = "ระบบบันทึกการตรวจสอบยังไม่ได้กำหนดค่าหรือไม่พร้อมใช้งาน"
 disabled = "การบันทึกการตรวจสอบถูกปิดใช้งาน"
 disabledMessage = "เปิดใช้การบันทึกการตรวจสอบในการกำหนดค่าแอปพลิเคชันของคุณเพื่อการติดตามเหตุการณ์ของระบบ"
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "เกิดข้อผิดพลาดในการโหลดระบบบันทึกการตรวจสอบ"
@@ -6025,6 +6164,8 @@ reset = "รีเซ็ตการเปลี่ยนแปลง"
 downloadJson = "ดาวน์โหลด JSON"
 generatePdf = "สร้าง PDF"
 saveChanges = "บันทึกการเปลี่ยนแปลง"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ปรับขนาดข้อความอัตโนมัติให้พอดีกล่อง"
@@ -6042,6 +6183,9 @@ descriptionInline = "เคล็ดลับ: กดค้าง Ctrl (Cmd) ห
 [pdfTextEditor.options.forceSingleElement]
 title = "ล็อกข้อความที่แก้ไขเป็นองค์ประกอบ PDF เดียว"
 description = "เมื่อเปิดใช้ เครื่องมือจะส่งออกแต่ละกล่องข้อความที่แก้ไขเป็นองค์ประกอบข้อความ PDF เดียว เพื่อหลีกเลี่ยงอักขระซ้อนทับหรือฟอนต์ปะปน"
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "รวมกล่องที่เลือก"
@@ -6118,6 +6262,21 @@ subset = "ซับเซ็ต"
 invalidJson = "ไม่สามารถอ่านไฟล์ JSON โปรดตรวจสอบว่าไฟล์ถูกสร้างโดยเครื่องมือ PDF to JSON"
 pdfConversion = "ไม่สามารถแปลง JSON ที่แก้ไขกลับเป็น PDF"
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "เซสชันหมดอายุ"
 pleaseLoginAgain = "โปรดเข้าสู่ระบบอีกครั้ง"
@@ -6164,3 +6323,78 @@ title = "ผลการเพิ่มข้อความ"
 
 [addText.error]
 failed = "เกิดข้อผิดพลาดระหว่างเพิ่มข้อความลงใน PDF"
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

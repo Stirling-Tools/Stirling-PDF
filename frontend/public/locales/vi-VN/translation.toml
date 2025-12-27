@@ -453,6 +453,25 @@ noShortcut = "Chưa đặt phím tắt"
 mac = "Bao gồm ⌘ (Command), ⌥ (Option), hoặc một phím bổ trợ khác trong phím tắt của bạn."
 windows = "Bao gồm Ctrl, Alt, hoặc phím bổ trợ khác trong phím tắt của bạn."
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "Có bản cập nhật"
 current = "Phiên bản hiện tại"
@@ -493,6 +512,11 @@ oldPassword = "Mật khẩu hiện tại"
 newPassword = "Mật khẩu mới"
 confirmNewPassword = "Xác nhận mật khẩu mới"
 submit = "Gửi thay đổi"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "Cài đặt tài khoản"
@@ -926,6 +950,11 @@ tags = "văn bản,chú thích,nhãn"
 title = "Thêm văn bản"
 desc = "Thêm văn bản tùy chỉnh ở bất kỳ đâu trong PDF"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "Thêm tệp"
 uploadFromComputer = "Tải lên từ máy tính"
@@ -1245,6 +1274,21 @@ cbzOptions = "Tùy chọn CBZ sang PDF"
 optimizeForEbook = "Tối ưu PDF cho thiết bị đọc sách điện tử (dùng Ghostscript)"
 cbzOutputOptions = "Tùy chọn PDF sang CBZ"
 cbzDpi = "DPI cho kết xuất ảnh"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "chuyển đổi,img,jpg,hình ảnh,ảnh"
@@ -1362,6 +1406,11 @@ add = "Thêm tệp đính kèm"
 remove = "Xóa tệp đính kèm"
 embed = "Nhúng tệp đính kèm"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "Thêm hình mờ"
@@ -2306,6 +2355,10 @@ saved = "Đã lưu"
 label = "Tải lên ảnh chữ ký"
 placeholder = "Chọn tệp hình ảnh"
 hint = "Tải lên ảnh chữ ký định dạng PNG hoặc JPG"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "Cách thêm chữ ký"
@@ -2375,6 +2428,11 @@ bullet1 = "Biểu mẫu trở nên không thể chỉnh sửa"
 bullet2 = "Liên kết vẫn hoạt động khi nhấp"
 bullet3 = "Bình luận và ghi chú vẫn hiển thị"
 bullet4 = "Dấu trang vẫn giúp bạn điều hướng"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "sửa,khôi phục,sửa chữa,phục hồi"
@@ -2925,6 +2983,7 @@ header = "Cắt cúp PDF"
 submit = "Gửi"
 noFileSelected = "Chọn một tệp PDF để bắt đầu cắt xén"
 reset = "Đặt lại về toàn bộ PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Chọn vùng cắt"
@@ -3342,6 +3401,19 @@ placeholder = "Nhập số lượng phân chia theo chiều ngang"
 label = "Phân chia theo chiều dọc"
 placeholder = "Nhập số lượng phân chia theo chiều dọc"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "Dấu,Thêm hình ảnh,căn giữa hình ảnh,Hình mờ,PDF,Nhúng,Tùy chỉnh"
 header = "Đóng dấu PDF"
@@ -3720,6 +3792,10 @@ bullet2 = "Giá trị cao giảm kích thước tệp"
 title = "Thang xám"
 text = "Chọn tùy chọn này để chuyển tất cả hình ảnh sang đen trắng, có thể giảm đáng kể kích thước tệp, đặc biệt với PDF quét hoặc tài liệu nhiều hình ảnh."
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "Đã xảy ra lỗi khi nén PDF."
 
@@ -3731,6 +3807,24 @@ failed = "Đã xảy ra lỗi khi nén PDF."
 [compress.selectText.1]
 _value = "Cài đặt nén"
 1 = "1-3 nén PDF,</br> 4-6 nén ảnh nhẹ,</br> 7-9 nén ảnh mạnh sẽ làm giảm chất lượng hình ảnh đáng kể"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Tệp này được bảo vệ bằng mật khẩu. Vui lòng nhập mật khẩu:"
@@ -3983,11 +4077,9 @@ rotateRight = "Xoay phải"
 toggleSidebar = "Chuyển đổi thanh bên"
 exportSelected = "Xuất các trang đã chọn"
 toggleAnnotations = "Chuyển đổi hiển thị chú thích"
-annotationMode = "Chuyển đổi chế độ chú thích"
 print = "In PDF"
-draw = "Vẽ"
-save = "Lưu"
 saveChanges = "Lưu thay đổi"
+annotations = "Annotations"
 
 [search]
 title = "Tìm kiếm PDF"
@@ -4038,12 +4130,20 @@ settings = "Cài đặt"
 adminSettings = "Cài đặt quản trị"
 allTools = "All Tools"
 reader = "Trình đọc"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "Hướng dẫn công cụ"
 toolsTourDesc = "Tìm hiểu công cụ có thể làm gì"
 adminTour = "Hướng dẫn quản trị"
 adminTourDesc = "Khám phá cài đặt & tính năng quản trị"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Lỗi"
@@ -5069,6 +5169,7 @@ loading = "Đang tải..."
 back = "Quay lại"
 continue = "Tiếp tục"
 error = "Lỗi"
+save = "Save"
 
 [config.overview]
 title = "Cấu hình ứng dụng"
@@ -5278,6 +5379,20 @@ userBody = "Mời đồng đội, gán vai trò và quản lý tài liệu gọn
 
 [onboarding.securityCheck]
 message = "Ứng dụng vừa có nhiều thay đổi. Có thể cần sự chú ý của quản trị viên server. Vui lòng xác nhận vai trò của bạn để tiếp tục."
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "Chào mừng đến với <strong>Chuyến tham quan Quản trị</strong>! Hãy khám phá các tính năng enterprise mạnh mẽ và cài đặt dành cho quản trị viên hệ thống."
@@ -5568,6 +5683,28 @@ contactSales = "Liên hệ bộ phận kinh doanh"
 contactToUpgrade = "Liên hệ với chúng tôi để nâng cấp hoặc tùy chỉnh gói của bạn"
 maxUsers = "Số người dùng tối đa"
 upTo = "Tối đa"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "tháng"
@@ -5771,6 +5908,8 @@ notAvailable = "Hệ thống kiểm toán không khả dụng"
 notAvailableMessage = "Hệ thống kiểm toán chưa được cấu hình hoặc không khả dụng."
 disabled = "Ghi nhật ký kiểm toán đã bị tắt"
 disabledMessage = "Bật ghi nhật ký kiểm toán trong cấu hình ứng dụng để theo dõi các sự kiện hệ thống."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Lỗi khi tải hệ thống kiểm toán"
@@ -6025,6 +6164,8 @@ reset = "Đặt lại thay đổi"
 downloadJson = "Tải JSON"
 generatePdf = "Tạo PDF"
 saveChanges = "Lưu thay đổi"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tự căn chỉnh văn bản cho vừa hộp"
@@ -6042,6 +6183,9 @@ descriptionInline = "Mẹo: Giữ Ctrl (Cmd) hoặc Shift để chọn nhiều h
 [pdfTextEditor.options.forceSingleElement]
 title = "Khóa văn bản đã chỉnh sửa thành một phần tử PDF duy nhất"
 description = "Khi bật, trình chỉnh sửa xuất mỗi hộp văn bản đã chỉnh sửa thành một phần tử văn bản PDF để tránh chồng ký tự hoặc trộn font."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "Gộp các hộp đã chọn"
@@ -6118,6 +6262,21 @@ subset = "nhúng một phần"
 invalidJson = "Không thể đọc tệp JSON. Hãy đảm bảo tệp được tạo bởi công cụ PDF to JSON."
 pdfConversion = "Không thể chuyển JSON đã chỉnh sửa lại thành PDF."
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "Phiên đã hết hạn"
 pleaseLoginAgain = "Vui lòng đăng nhập lại."
@@ -6164,3 +6323,78 @@ title = "Kết quả thêm văn bản"
 
 [addText.error]
 failed = "Đã xảy ra lỗi khi thêm văn bản vào PDF."
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

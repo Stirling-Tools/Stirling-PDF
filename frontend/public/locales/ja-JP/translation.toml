@@ -453,6 +453,25 @@ noShortcut = "ショートカット未設定"
 mac = "ショートカットに⌘（Command）、⌥（Option）などの修飾キーを含めてください。"
 windows = "ショートカットにCtrl、Altなどの修飾キーを含めてください。"
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "更新があります"
 current = "現在のバージョン"
@@ -493,6 +512,11 @@ oldPassword = "現在のパスワード"
 newPassword = "新しいパスワード"
 confirmNewPassword = "新しいパスワードの確認"
 submit = "変更を送信"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "アカウント設定"
@@ -926,6 +950,11 @@ tags = "テキスト,注釈,ラベル"
 title = "テキストを追加"
 desc = "PDFの任意の場所にテキストを追加"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "ファイルを追加"
 uploadFromComputer = "コンピュータからアップロード"
@@ -1245,6 +1274,21 @@ cbzOptions = "CBZ から PDF へのオプション"
 optimizeForEbook = "PDF を eBook リーダー向けに最適化（Ghostscript 使用）"
 cbzOutputOptions = "PDF から CBZ へのオプション"
 cbzDpi = "画像レンダリングの DPI"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo,psd,photoshop"
@@ -1362,6 +1406,11 @@ add = "添付を追加"
 remove = "添付を削除"
 embed = "添付を埋め込む"
 submit = "添付ファイルの追加"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "透かしの追加"
@@ -2306,6 +2355,10 @@ saved = "保存済み"
 label = "署名画像をアップロード"
 placeholder = "画像ファイルを選択"
 hint = "署名の PNG または JPG 画像をアップロードしてください"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "署名の追加方法"
@@ -2375,6 +2428,11 @@ bullet1 = "フォームは編集不可になります"
 bullet2 = "リンクは引き続きクリックで機能します"
 bullet3 = "コメントやメモは表示されたままです"
 bullet4 = "ブックマークは引き続きナビゲーションに有用です"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "修復,復元,補正,回復"
@@ -2925,6 +2983,7 @@ header = "PDFのトリミング"
 submit = "送信"
 noFileSelected = "トリミングを開始する PDF ファイルを選択してください"
 reset = "PDF 全体にリセット"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "切り抜き範囲の選択"
@@ -3342,6 +3401,19 @@ placeholder = "水平方向の分割数を選択"
 label = "垂直方向"
 placeholder = "垂直方向の分割数を選択"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "スタンプ, 画像を追加, 画像を中央に配置, 透かし, PDF, 埋め込み, カスタマイズ"
 header = "PDFにスタンプを押す"
@@ -3720,6 +3792,10 @@ bullet2 = "値が大きいほどファイルサイズを削減"
 title = "グレースケール"
 text = "このオプションを選ぶと、すべての画像を白黒に変換します。特にスキャン PDF や画像の多い文書で大幅なサイズ削減が見込めます。"
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "PDF の圧縮中にエラーが発生しました。"
 
@@ -3731,6 +3807,24 @@ failed = "PDF の圧縮中にエラーが発生しました。"
 [compress.selectText.1]
 _value = "圧縮設定"
 1 = "1-3 PDF圧縮、</br> 4-6 弱い画像圧縮、</br> 7-9 強い画像圧縮により画質が大幅に低下します"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "このファイルはパスワードで保護されています。パスワードを入力してください:"
@@ -3983,11 +4077,9 @@ rotateRight = "右に回転"
 toggleSidebar = "サイドバーを切り替え"
 exportSelected = "選択したページを書き出し"
 toggleAnnotations = "注釈の表示を切り替え"
-annotationMode = "注釈モードを切り替え"
 print = "PDFを印刷"
-draw = "描画"
-save = "保存"
 saveChanges = "変更を保存"
+annotations = "Annotations"
 
 [search]
 title = "PDF を検索"
@@ -4038,12 +4130,20 @@ settings = "設定"
 adminSettings = "管理者設定"
 allTools = "All Tools"
 reader = "リーダー"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "ツールツアー"
 toolsTourDesc = "ツールでできることを学ぶ"
 adminTour = "管理ツアー"
 adminTourDesc = "管理設定と機能を探索"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "エラー"
@@ -5069,6 +5169,7 @@ loading = "読み込み中..."
 back = "戻る"
 continue = "続行"
 error = "エラー"
+save = "Save"
 
 [config.overview]
 title = "アプリケーション構成"
@@ -5278,6 +5379,20 @@ userBody = "メンバーを招待し、役割を割り当て、1つの安全な�
 
 [onboarding.securityCheck]
 message = "アプリケーションに最近大きな変更がありました。サーバー管理者の対応が必要な場合があります。続行するには、ご自身の役割を確認してください。"
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "<strong>管理者ツアー</strong> へようこそ！システム管理者向けの強力なエンタープライズ機能と設定を見ていきましょう。"
@@ -5568,6 +5683,28 @@ contactSales = "営業に問い合わせ"
 contactToUpgrade = "プランのアップグレードやカスタマイズはお問い合わせください"
 maxUsers = "最大ユーザー数"
 upTo = "最大"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "月"
@@ -5771,6 +5908,8 @@ notAvailable = "監査システムは利用できません"
 notAvailableMessage = "監査システムが未設定または利用できません。"
 disabled = "監査ログは無効です"
 disabledMessage = "アプリケーション設定で監査ログを有効にして、システムイベントを記録してください。"
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "監査システムの読み込みエラー"
@@ -6025,6 +6164,8 @@ reset = "変更をリセット"
 downloadJson = "JSON をダウンロード"
 generatePdf = "PDF を生成"
 saveChanges = "変更を保存"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ボックスに収まるようテキストを自動スケール"
@@ -6042,6 +6183,9 @@ descriptionInline = "ヒント: Ctrl（Cmd）または Shift を押しながら�
 [pdfTextEditor.options.forceSingleElement]
 title = "編集したテキストを1つのPDF要素に固定"
 description = "有効にすると、編集した各テキストボックスを1つのPDFテキスト要素としてエクスポートし、グリフの重なりやフォント混在を避けます。"
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "選択ボックスを結合"
@@ -6118,6 +6262,21 @@ subset = "サブセット"
 invalidJson = "JSONファイルを読み取れません。PDF to JSONツールで生成されたものか確認してください。"
 pdfConversion = "編集したJSONをPDFに変換できませんでした。"
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "セッションの有効期限が切れました"
 pleaseLoginAgain = "再度ログインしてください。"
@@ -6164,3 +6323,78 @@ title = "テキスト追加の結果"
 
 [addText.error]
 failed = "PDFにテキストを追加中にエラーが発生しました。"
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

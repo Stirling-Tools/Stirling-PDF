@@ -453,6 +453,25 @@ noShortcut = "Nicio scurtătură setată"
 mac = "Includeți ⌘ (Command), ⌥ (Option) sau un alt modificator în scurtătură."
 windows = "Includeți Ctrl, Alt sau un alt modificator în scurtătură."
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "Actualizare disponibilă"
 current = "Versiune curentă"
@@ -493,6 +512,11 @@ oldPassword = "Parola Curentă"
 newPassword = "Parolă Nouă"
 confirmNewPassword = "Confirmă Parola Nouă"
 submit = "Trimite Modificările"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "Setări Cont"
@@ -926,6 +950,11 @@ tags = "text,anotare,etichetă"
 title = "Adaugă text"
 desc = "Adaugă text personalizat oriunde în PDF-ul tău"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "Adăugați fișiere"
 uploadFromComputer = "Încărcați de pe calculator"
@@ -1245,6 +1274,21 @@ cbzOptions = "Opțiuni CBZ la PDF"
 optimizeForEbook = "Optimizați PDF pentru e-readere (folosește Ghostscript)"
 cbzOutputOptions = "Opțiuni PDF la CBZ"
 cbzDpi = "DPI pentru randarea imaginilor"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversie,img,jpg,poză,fotografie"
@@ -1362,6 +1406,11 @@ add = "Adaugă atașament"
 remove = "Elimină atașament"
 embed = "Încorporează atașament"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "Adaugă Filigran"
@@ -2306,6 +2355,10 @@ saved = "Salvate"
 label = "Încarcă imaginea semnăturii"
 placeholder = "Selectați fișierul imagine"
 hint = "Încărcați o imagine PNG sau JPG a semnăturii dvs."
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "Cum să adăugați semnătura"
@@ -2375,6 +2428,11 @@ bullet1 = "Formularele devin needitabile"
 bullet2 = "Linkurile rămân funcționale la clic"
 bullet3 = "Comentariile și notele rămân vizibile"
 bullet4 = "Semnele de carte vă ajută în continuare la navigare"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "repară,restaurează,corectare,recuperează"
@@ -2925,6 +2983,7 @@ header = "Decupează PDF"
 submit = "Trimite"
 noFileSelected = "Selectați un fișier PDF pentru a începe decuparea"
 reset = "Resetează la PDF complet"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Selecție zonă de decupare"
@@ -3342,6 +3401,19 @@ placeholder = "Introdu numărul de diviziuni orizontale"
 label = "Diviziuni Verticale"
 placeholder = "Introdu numărul de diviziuni verticale"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "Ștampilă, Adaugă imagine, centrează imagine, Filigran, PDF, Încorporează, Personalizează"
 header = "Ștampilează PDF"
@@ -3720,6 +3792,10 @@ bullet2 = "Valorile mai mari reduc dimensiunea fișierului"
 title = "Nuanțe de gri"
 text = "Selectați această opțiune pentru a converti toate imaginile în alb-negru, ceea ce poate reduce semnificativ dimensiunea fișierului, în special pentru PDF-uri scanate sau documente bogate în imagini."
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "A apărut o eroare la comprimarea PDF-ului."
 
@@ -3731,6 +3807,24 @@ failed = "A apărut o eroare la comprimarea PDF-ului."
 [compress.selectText.1]
 _value = "Setări de comprimare"
 1 = "1-3 comprimare PDF,</br> 4-6 comprimare ușoară a imaginilor,</br> 7-9 comprimare intensă a imaginilor Va reduce semnificativ calitatea imaginilor"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Acest fișier este protejat cu parolă. Introduceți parola:"
@@ -3983,11 +4077,9 @@ rotateRight = "Rotiți la dreapta"
 toggleSidebar = "Comutați bara laterală"
 exportSelected = "Exportați paginile selectate"
 toggleAnnotations = "Comutați vizibilitatea adnotărilor"
-annotationMode = "Comutați modul de adnotare"
 print = "Imprimați PDF"
-draw = "Desenați"
-save = "Salvați"
 saveChanges = "Salvați modificările"
+annotations = "Annotations"
 
 [search]
 title = "Căutați în PDF"
@@ -4038,12 +4130,20 @@ settings = "Setări"
 adminSettings = "Setări admin"
 allTools = "All Tools"
 reader = "Cititor"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "Turul instrumentelor"
 toolsTourDesc = "Aflați ce pot face instrumentele"
 adminTour = "Turul de administrare"
 adminTourDesc = "Explorați setările și funcțiile de administrare"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Eroare"
@@ -5069,6 +5169,7 @@ loading = "Se încarcă..."
 back = "Înapoi"
 continue = "Continuă"
 error = "Eroare"
+save = "Save"
 
 [config.overview]
 title = "Configurarea aplicației"
@@ -5278,6 +5379,20 @@ userBody = "Invite colegi, atribuie roluri și ține documentele organizate înt
 
 [onboarding.securityCheck]
 message = "Aplicația a suferit schimbări semnificative recent. Poate fi nevoie de atenția adminului serverului. Confirmă-ți rolul pentru a continua."
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "Bun venit la <strong>Turul Admin</strong>! Haideți să explorăm funcțiile enterprise și setările puternice disponibile administratorilor de sistem."
@@ -5568,6 +5683,28 @@ contactSales = "Contactați vânzări"
 contactToUpgrade = "Contactați-ne pentru a face upgrade sau a personaliza planul"
 maxUsers = "Număr maxim de utilizatori"
 upTo = "Până la"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "lună"
@@ -5771,6 +5908,8 @@ notAvailable = "Sistem de audit indisponibil"
 notAvailableMessage = "Sistemul de audit nu este configurat sau nu este disponibil."
 disabled = "Jurnalizarea de audit este dezactivată"
 disabledMessage = "Activați jurnalizarea de audit în configurația aplicației pentru a urmări evenimentele sistemului."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Eroare la încărcarea sistemului de audit"
@@ -6025,6 +6164,8 @@ reset = "Resetați modificările"
 downloadJson = "Descărcați JSON"
 generatePdf = "Generați PDF"
 saveChanges = "Salvează modificările"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Scalare automată a textului pentru a se potrivi în casete"
@@ -6042,6 +6183,9 @@ descriptionInline = "Sfat: Țineți apăsat Ctrl (Cmd) sau Shift pentru a select
 [pdfTextEditor.options.forceSingleElement]
 title = "Blocați textul editat într-un singur element PDF"
 description = "Când este activată, editorul exportă fiecare casetă de text editată ca un singur element de text PDF pentru a evita suprapunerea glifelor sau amestecul de fonturi."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "Unește casetele selectate"
@@ -6118,6 +6262,21 @@ subset = "subset"
 invalidJson = "Nu se poate citi fișierul JSON. Asigurați-vă că a fost generat de instrumentul PDF to JSON."
 pdfConversion = "Nu se poate converti JSON-ul editat înapoi în PDF."
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "Sesiune expirată"
 pleaseLoginAgain = "Vă rugăm să vă autentificați din nou."
@@ -6164,3 +6323,78 @@ title = "Rezultate adăugare text"
 
 [addText.error]
 failed = "A apărut o eroare la adăugarea textului în PDF."
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

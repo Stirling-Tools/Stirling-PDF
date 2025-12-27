@@ -453,6 +453,25 @@ noShortcut = "कोई शॉर्टकट सेट नहीं"
 mac = "अपने शॉर्टकट में ⌘ (Command), ⌥ (Option), या कोई अन्य मॉडिफ़ायर शामिल करें।"
 windows = "अपने शॉर्टकट में Ctrl, Alt, या कोई अन्य मॉडिफ़ायर शामिल करें।"
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "अपडेट उपलब्ध"
 current = "वर्तमान संस्करण"
@@ -493,6 +512,11 @@ oldPassword = "वर्तमान पासवर्ड"
 newPassword = "नया पासवर्ड"
 confirmNewPassword = "नए पासवर्ड की पुष्टि करें"
 submit = "परिवर्तन जमा करें"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "खाता सेटिंग्स"
@@ -926,6 +950,11 @@ tags = "पाठ,टिप्पणी,लेबल"
 title = "टेक्स्ट जोड़ें"
 desc = "अपने PDF में कहीं भी कस्टम टेक्स्ट जोड़ें"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "फ़ाइलें जोड़ें"
 uploadFromComputer = "कंप्यूटर से अपलोड करें"
@@ -1245,6 +1274,21 @@ cbzOptions = "CBZ से PDF विकल्प"
 optimizeForEbook = "ईबुक रीडर्स के लिए PDF ऑप्टिमाइज़ करें (Ghostscript का उपयोग करता है)"
 cbzOutputOptions = "PDF से CBZ विकल्प"
 cbzDpi = "इमेज रेंडरिंग के लिए DPI"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "रूपांतरण,img,jpg,चित्र,फोटो"
@@ -1362,6 +1406,11 @@ add = "अटैचमेंट जोड़ें"
 remove = "अटैचमेंट हटाएँ"
 embed = "अटैचमेंट एम्बेड करें"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "वॉटरमार्क जोड़ें"
@@ -2306,6 +2355,10 @@ saved = "सहेजा गया"
 label = "हस्ताक्षर की इमेज अपलोड करें"
 placeholder = "इमेज फ़ाइल चुनें"
 hint = "अपने हस्ताक्षर की PNG या JPG इमेज अपलोड करें"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "हस्ताक्षर कैसे जोड़ें"
@@ -2375,6 +2428,11 @@ bullet1 = "फॉर्म गैर-संपादन योग्य हो �
 bullet2 = "लिंक क्लिक करने पर अभी भी काम करते हैं"
 bullet3 = "टिप्पणियाँ और नोट्स दिखाई देते रहते हैं"
 bullet4 = "बुकमार्क अभी भी नेविगेशन में मदद करते हैं"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "ठीक करें,पुनर्स्थापित करें,सुधार,पुनर्प्राप्त करें"
@@ -2925,6 +2983,7 @@ header = "PDF क्रॉप करें"
 submit = "जमा करें"
 noFileSelected = "क्रॉप शुरू करने के लिए एक PDF फ़ाइल चुनें"
 reset = "पूर्ण PDF पर रीसेट करें"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "क्रॉप क्षेत्र चयन"
@@ -3342,6 +3401,19 @@ placeholder = "क्षैतिज विभाजनों की संख�
 label = "ऊर्ध्वाधर विभाजन"
 placeholder = "ऊर्ध्वाधर विभाजनों की संख्या दर्ज करें"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "स्टैम्प, छवि जोड़ें, केंद्र छवि, वॉटरमार्क, PDF, एम्बेड, अनुकूलित"
 header = "PDF स्टैम्प करें"
@@ -3720,6 +3792,10 @@ bullet2 = "अधिक मान फ़ाइल आकार घटाते �
 title = "श्वेत-श्याम"
 text = "सभी छवियों को काले-सफेद में बदलने के लिए इस विकल्प को चुनें, जो विशेषकर स्कैन किए गए PDFs या चित्र-प्रधान दस्तावेज़ों के लिए फ़ाइल आकार को काफी घटा सकता है।"
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "PDF संपीड़ित करते समय त्रुटि हुई।"
 
@@ -3731,6 +3807,24 @@ failed = "PDF संपीड़ित करते समय त्रुटि
 [compress.selectText.1]
 _value = "संपीड़न सेटिंग्स"
 1 = "1-3 PDF संपीड़न,</br> 4-6 हल्का छवि संपीड़न,</br> 7-9 तीव्र छवि संपीड़न छवि गुणवत्ता को काफी घटाएगा"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "यह फ़ाइल पासवर्ड से सुरक्षित है। कृपया पासवर्ड दर्ज करें:"
@@ -3983,11 +4077,9 @@ rotateRight = "दाएँ घुमाएँ"
 toggleSidebar = "साइडबार टॉगल करें"
 exportSelected = "चयनित पृष्ठ निर्यात करें"
 toggleAnnotations = "एनोटेशन दृश्यता टॉगल करें"
-annotationMode = "एनोटेशन मोड टॉगल करें"
 print = "PDF प्रिंट करें"
-draw = "ड्रॉ"
-save = "सहेजें"
 saveChanges = "परिवर्तनों को सहेजें"
+annotations = "Annotations"
 
 [search]
 title = "PDF खोजें"
@@ -4038,12 +4130,20 @@ settings = "सेटिंग्स"
 adminSettings = "एडमिन सेटिंग्स"
 allTools = "All Tools"
 reader = "रीडर"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "टूल्स टूर"
 toolsTourDesc = "जानें कि टूल क्या कर सकते हैं"
 adminTour = "एडमिन टूर"
 adminTourDesc = "एडमिन सेटिंग्स और फ़ीचर्स का अन्वेषण करें"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "त्रुटि"
@@ -5069,6 +5169,7 @@ loading = "लोड हो रहा है..."
 back = "वापस"
 continue = "जारी रखें"
 error = "त्रुटि"
+save = "Save"
 
 [config.overview]
 title = "एप्लिकेशन कॉन्फ़िगरेशन"
@@ -5278,6 +5379,20 @@ userBody = "टीममेट्स को आमंत्रित करे�
 
 [onboarding.securityCheck]
 message = "एप्लिकेशन में हाल ही में महत्वपूर्ण बदलाव हुए हैं। आपके सर्वर एडमिन का ध्यान आवश्यक हो सकता है। कृपया जारी रखने के लिए अपनी भूमिका की पुष्टि करें।"
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "<strong>Admin Tour</strong> में आपका स्वागत है! आइए सिस्टम प्रशासकों के लिए उपलब्ध शक्तिशाली एंटरप्राइज फीचर्स और सेटिंग्स देखें।"
@@ -5568,6 +5683,28 @@ contactSales = "सेल्स से संपर्क करें"
 contactToUpgrade = "अपने प्लान को अपग्रेड या कस्टमाइज़ करने के लिए हमसे संपर्क करें"
 maxUsers = "अधिकतम उपयोगकर्ता"
 upTo = "तक"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "माह"
@@ -5771,6 +5908,8 @@ notAvailable = "ऑडिट सिस्टम उपलब्ध नहीं"
 notAvailableMessage = "ऑडिट सिस्टम कॉन्फ़िगर नहीं है या उपलब्ध नहीं है।"
 disabled = "ऑडिट लॉगिंग अक्षम है"
 disabledMessage = "सिस्टम ईवेंट ट्रैक करने के लिए अपनी एप्लिकेशन कॉन्फ़िगरेशन में ऑडिट लॉगिंग सक्षम करें।"
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "ऑडिट सिस्टम लोड करने में त्रुटि"
@@ -6025,6 +6164,8 @@ reset = "परिवर्तन रीसेट करें"
 downloadJson = "JSON डाउनलोड करें"
 generatePdf = "PDF जनरेट करें"
 saveChanges = "परिवर्तन सहेजें"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "टेक्स्ट को बॉक्स में फिट करने हेतु ऑटो-स्केल"
@@ -6042,6 +6183,9 @@ descriptionInline = "टिप: मल्टी-सेलेक्ट करन�
 [pdfTextEditor.options.forceSingleElement]
 title = "संपादित टेक्स्ट को एक ही PDF एलिमेंट में लॉक करें"
 description = "सक्रिय होने पर, ओवरलैपिंग glyphs या मिश्रित फ़ॉन्ट्स से बचने के लिए, एडिटर संपादित हर टेक्स्ट बॉक्स को एक PDF टेक्स्ट एलिमेंट के रूप में एक्सपोर्ट करता है."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "चयनित बॉक्सों को मर्ज करें"
@@ -6118,6 +6262,21 @@ subset = "सबसेट"
 invalidJson = "JSON फ़ाइल पढ़ी नहीं जा सकी। सुनिश्चित करें कि यह PDF to JSON टूल द्वारा जनरेट की गई हो."
 pdfConversion = "एडिटेड JSON को वापस PDF में कन्वर्ट नहीं किया जा सका."
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "सत्र समाप्त"
 pleaseLoginAgain = "कृपया फिर से लॉगिन करें."
@@ -6164,3 +6323,78 @@ title = "टेक्स्ट जोड़ने के परिणाम"
 
 [addText.error]
 failed = "PDF में टेक्स्ट जोड़ते समय त्रुटि हुई."
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

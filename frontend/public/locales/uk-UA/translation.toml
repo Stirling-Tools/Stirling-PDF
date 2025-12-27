@@ -453,6 +453,25 @@ noShortcut = "Комбінацію не задано"
 mac = "Додайте ⌘ (Command), ⌥ (Option) або інший модифікатор до комбінації."
 windows = "Додайте Ctrl, Alt або інший модифікатор до комбінації."
 
+[settings.security]
+description = "Update your password to keep your account secure."
+title = "Security"
+
+[settings.security.password]
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+error = "Unable to update password. Please verify your current password and try again."
+mismatch = "New passwords do not match."
+new = "New password"
+newPlaceholder = "Enter a new password"
+required = "All fields are required."
+ssoDisabled = "Password changes are managed by your identity provider."
+subtitle = "Change your password. You will be logged out after updating."
+success = "Password updated successfully. Please sign in again."
+update = "Update password"
+
 [update]
 modalTitle = "Доступне оновлення"
 current = "Поточна версія"
@@ -493,6 +512,11 @@ oldPassword = "Поточний пароль"
 newPassword = "Новий пароль"
 confirmNewPassword = "Підтвердіть новий пароль"
 submit = "Надіслати зміни"
+changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+ssoManaged = "Your account is managed by your identity provider."
 
 [account]
 title = "Налаштування акаунта"
@@ -926,6 +950,11 @@ tags = "текст,анотація,мітка"
 title = "Додати текст"
 desc = "Додавайте свій текст будь-де в PDF"
 
+[home.annotate]
+desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+
 [landing]
 addFiles = "Додати файли"
 uploadFromComputer = "Завантажити з комп’ютера"
@@ -1245,6 +1274,21 @@ cbzOptions = "Параметри CBZ у PDF"
 optimizeForEbook = "Оптимізувати PDF для рідерів електронних книг (використовує Ghostscript)"
 cbzOutputOptions = "Параметри PDF у CBZ"
 cbzDpi = "DPI для рендерингу зображень"
+cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "конвертація,зображення,jpg,картинка,фото"
@@ -1362,6 +1406,11 @@ add = "Додати вкладення"
 remove = "Видалити вкладення"
 embed = "Вбудувати вкладення"
 submit = "Add attachments"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "Додати водяний знак"
@@ -2306,6 +2355,10 @@ saved = "Збережені"
 label = "Завантажити зображення підпису"
 placeholder = "Виберіть файл зображення"
 hint = "Завантажте зображення підпису у форматі PNG або JPG"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+backgroundRemovalFailedTitle = "Background removal failed"
+processing = "Processing image..."
+removeBackground = "Remove white background (make transparent)"
 
 [sign.instructions]
 title = "Як додати підпис"
@@ -2375,6 +2428,11 @@ bullet1 = "Форми стають нередагованими"
 bullet2 = "Посилання залишаються клікабельними"
 bullet3 = "Коментарі та нотатки залишаються видимими"
 bullet4 = "Закладки ще допомагають у навігації"
+
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
 
 [repair]
 tags = "виправити,відновити,виправити,відновити"
@@ -2925,6 +2983,7 @@ header = "Обрізати PDF-файл"
 submit = "Надіслати"
 noFileSelected = "Виберіть PDF, щоб почати обрізання"
 reset = "Скинути до повного PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Вибір області обрізки"
@@ -3342,6 +3401,19 @@ placeholder = "Введіть кількість горизонтальних р
 label = "Вертикальні розділи"
 placeholder = "Введіть кількість вертикальних розділів"
 
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
+[split-by-sections.splitMode]
+custom = "Custom pages"
+description = "Choose how to split the pages"
+label = "Split Mode"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptFirstAndLast = "Split all except first and last"
+splitAllExceptLast = "Split all except last"
+
 [AddStampRequest]
 tags = "штамп,додати зображення,центральне зображення,водяний знак,pdf,вставити,налаштувати"
 header = "Поставити печатку на PDF"
@@ -3720,6 +3792,10 @@ bullet2 = "Вищі значення зменшують розмір файлу"
 title = "Відтінки сірого"
 text = "Увімкніть цю опцію, щоб перетворити всі зображення в чорно-білі, що може суттєво зменшити розмір файлу, особливо для відсканованих PDF або документів із великою кількістю зображень."
 
+[compress.tooltip.lineArt]
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Line Art"
+
 [compress.error]
 failed = "Під час стиснення PDF сталася помилка."
 
@@ -3731,6 +3807,24 @@ failed = "Під час стиснення PDF сталася помилка."
 [compress.selectText.1]
 _value = "Параметри стиснення"
 1 = "1-3 стиснення PDF,</br> 4-6 невелике стиснення зображень,</br> 7-9 посилене стиснення зображень (різко знизить якість зображень)"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
+[compress.lineArt]
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeHigh = "Strong"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+label = "Convert images to line art"
+unavailable = "ImageMagick is not installed or enabled on this server"
+
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Цей файл захищений паролем. Будь ласка, введіть пароль:"
@@ -3983,11 +4077,9 @@ rotateRight = "Повернути праворуч"
 toggleSidebar = "Перемкнути бічну панель"
 exportSelected = "Експорт вибраних сторінок"
 toggleAnnotations = "Перемкнути видимість анотацій"
-annotationMode = "Перемкнути режим анотацій"
 print = "Надрукувати PDF"
-draw = "Малювати"
-save = "Зберегти"
 saveChanges = "Зберегти зміни"
+annotations = "Annotations"
 
 [search]
 title = "Пошук у PDF"
@@ -4038,12 +4130,20 @@ settings = "Налашт."
 adminSettings = "Налашт. адміна"
 allTools = "All Tools"
 reader = "Перегляд"
+showMeAround = "Show me around"
+tours = "Tours"
 
 [quickAccess.helpMenu]
 toolsTour = "Огляд інструментів"
 toolsTourDesc = "Дізнайтеся, що вміють інструменти"
 adminTour = "Огляд адміністратора"
 adminTourDesc = "Ознайомтеся з адміністраторськими налаштуваннями та функціями"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Помилка"
@@ -5069,6 +5169,7 @@ loading = "Завантаження..."
 back = "Назад"
 continue = "Продовжити"
 error = "Помилка"
+save = "Save"
 
 [config.overview]
 title = "Конфігурація застосунку"
@@ -5278,6 +5379,20 @@ userBody = "Запрошуйте колег, призначайте ролі т�
 
 [onboarding.securityCheck]
 message = "Додаток нещодавно зазнав значних змін. Може знадобитися увага адміністратора сервера. Підтвердьте свою роль, щоб продовжити."
+
+[onboarding.tourOverview]
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Tour Overview"
+
+[onboarding.whatsNew]
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "Ласкаво просимо до <strong>адмін-туру</strong>! Давайте розглянемо потужні корпоративні можливості та налаштування, доступні системним адміністраторам."
@@ -5568,6 +5683,28 @@ contactSales = "Зв’язатися з відділом продажу"
 contactToUpgrade = "Зв’яжіться з нами, щоб оновити або налаштувати свій план"
 maxUsers = "Максимум користувачів"
 upTo = "До"
+activateLicense = "Activate Your License"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+checkoutOpened = "Checkout Opened"
+getLicense = "Get Server License"
+monthlyBilling = "Monthly Billing"
+selectPeriod = "Select Billing Period"
+upgradeToEnterprise = "Upgrade to Enterprise"
+yearlyBilling = "Yearly Billing"
+
+[plan.static.billingPortal]
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Email Verification Required"
+
+[plan.static.licenseActivation]
+activate = "Activate License"
+checkoutOpened = "Checkout Opened in New Tab"
+doLater = "I'll do this later"
+enterKey = "Enter your license key below to activate your plan:"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+keyDescription = "Paste the license key from your email"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.period]
 month = "місяць"
@@ -5771,6 +5908,8 @@ notAvailable = "Система аудиту недоступна"
 notAvailableMessage = "Система аудиту не налаштована або недоступна."
 disabled = "Ведення журналу аудиту вимкнено"
 disabledMessage = "Увімкніть ведення журналу аудиту в конфігурації застосунку, щоб відстежувати події системи."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Помилка завантаження системи аудиту"
@@ -6025,6 +6164,8 @@ reset = "Скинути зміни"
 downloadJson = "Завантажити JSON"
 generatePdf = "Згенерувати PDF"
 saveChanges = "Зберегти зміни"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Автопідгін тексту під рамки"
@@ -6042,6 +6183,9 @@ descriptionInline = "Порада: утримуйте Ctrl (Cmd) або Shift д
 [pdfTextEditor.options.forceSingleElement]
 title = "Фіксувати відредагований текст в одному елементі PDF"
 description = "Якщо ввімкнено, редактор експортує кожен відредагований текстовий блок як один елемент тексту PDF, щоб уникнути перекриття гліфів чи змішаних шрифтів."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
 
 [pdfTextEditor.manual]
 mergeTooltip = "Об’єднати вибрані блоки"
@@ -6118,6 +6262,21 @@ subset = "частковий"
 invalidJson = "Неможливо прочитати файл JSON. Переконайтеся, що його згенеровано інструментом PDF to JSON."
 pdfConversion = "Не вдалося перетворити відредагований JSON назад у PDF."
 
+[pdfTextEditor.tooltip.alpha]
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alpha Viewer"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.previewVariance]
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Preview Variance"
+
+[pdfTextEditor.tooltip.textFocus]
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Text and Image Focus"
+
 [auth]
 sessionExpired = "Сеанс завершено"
 pleaseLoginAgain = "Будь ласка, увійдіть знову."
@@ -6164,3 +6323,78 @@ title = "Результати додавання тексту"
 
 [addText.error]
 failed = "Під час додавання тексту до PDF сталася помилка."
+
+[annotation]
+applyChanges = "Apply Changes"
+backgroundColor = "Background colour"
+borderOff = "Border: Off"
+borderOn = "Border: On"
+chooseColor = "Choose colour"
+circle = "Circle"
+clearBackground = "Remove background"
+color = "Colour"
+contents = "Text"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+drawing = "Drawing"
+editCircle = "Edit Circle"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editPolygon = "Edit Polygon"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+ellipse = "Ellipse"
+exit = "Exit annotation mode"
+fillColor = "Fill Colour"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+freehandHighlighter = "Freehand Highlighter"
+highlight = "Highlight"
+imagePreview = "Preview"
+inkHighlighter = "Freehand Highlighter"
+line = "Line"
+noBackground = "No background"
+note = "Note"
+noteIcon = "Note Icon"
+notesStamps = "Notes & Stamps"
+opacity = "Opacity"
+pen = "Pen"
+polygon = "Polygon"
+rectangle = "Rectangle"
+redo = "Redo"
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+savingCopy = "Preparing download..."
+select = "Select"
+selectAndMove = "Select and Edit"
+settings = "Settings"
+shapes = "Shapes"
+square = "Square"
+squiggly = "Squiggly"
+stamp = "Add Image"
+stampSettings = "Stamp Settings"
+strikeout = "Strikeout"
+strokeColor = "Stroke Colour"
+strokeOpacity = "Stroke Opacity"
+strokeWidth = "Width"
+text = "Text box"
+textAlignment = "Text Alignment"
+textMarkup = "Text Markup"
+title = "Annotate"
+underline = "Underline"
+undo = "Undo"
+unsupportedType = "This annotation type is not fully supported for editing."
+
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"
