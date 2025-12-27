@@ -412,14 +412,14 @@ const useTelegramProvider = (): Provider => {
         defaultValue: false,
       },
       {
-        key: 'feedback.channel.errorPocessing',
+        key: 'feedback.channel.errorProcessing',
         type: 'switch',
         label: t(
-          'admin.settings.telegram.feedback.channel.errorPocessing.label',
+          'admin.settings.telegram.feedback.channel.errorProcessing.label',
           'Show processing errors (Channel)'
         ),
         description: t(
-          'admin.settings.telegram.feedback.channel.errorPocessing.description',
+          'admin.settings.telegram.feedback.channel.errorProcessing.description',
           'Send processing error messages to channels.'
         ),
         defaultValue: false,
@@ -448,11 +448,11 @@ const useTelegramProvider = (): Provider => {
         defaultValue: false,
       },
       {
-        key: 'feedback.user.errorPocessing',
+        key: 'feedback.user.errorProcessing',
         type: 'switch',
-        label: t('admin.settings.telegram.feedback.user.errorPocessing.label', 'Show processing errors (User)'),
+        label: t('admin.settings.telegram.feedback.user.errorProcessing.label', 'Show processing errors (User)'),
         description: t(
-          'admin.settings.telegram.feedback.user.errorPocessing.description',
+          'admin.settings.telegram.feedback.user.errorProcessing.description',
           'Send processing error messages to users.'
         ),
         defaultValue: false,

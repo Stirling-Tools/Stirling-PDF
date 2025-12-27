@@ -164,9 +164,9 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             case ERROR_PROCESSING ->
                     switch (chatType) {
                         case CHAT_CHANNEL ->
-                                telegramProperties.getFeedback().getChannel().getErrorPocessing();
+                                telegramProperties.getFeedback().getChannel().getErrorProcessing();
                         case CHAT_PRIVATE ->
-                                telegramProperties.getFeedback().getUser().getErrorPocessing();
+                                telegramProperties.getFeedback().getUser().getErrorProcessing();
                         default -> true;
                     };
             case PROCESSING ->

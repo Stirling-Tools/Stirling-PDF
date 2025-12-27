@@ -4556,7 +4556,7 @@ title = "Kanal-Feedback-Regeln"
 label = "\"Kein gültiges Dokument\" einblenden (Kanal)"
 description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Kanal-Uploads."
 
-[admin.settings.telegram.feedback.channel.errorPocessing]
+[admin.settings.telegram.feedback.channel.errorProcessing]
 label = "Verarbeitungsfehler einblenden (Kanal)"
 description = "Sendet Verarbeitungsfehlermeldungen an Kanäle senden."
 
@@ -4571,7 +4571,7 @@ title = "Benutzer-Feedback-Regeln"
 label = "\"Kein gültiges Dokument\" einblenden (Benutzer)"
 description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Benutzer-Uploads."
 
-[admin.settings.telegram.feedback.user.errorPocessing]
+[admin.settings.telegram.feedback.user.errorProcessing]
 label = "Verarbeitungsfehler einblenden (Benutzer)"
 description = "Sendet Verarbeitungsfehlermeldungen an Benutzer."
 

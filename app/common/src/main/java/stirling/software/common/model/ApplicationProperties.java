@@ -698,7 +698,7 @@ public class ApplicationProperties {
                  * Set to {@code false} to hide/suppress processing error feedback messages to the
                  * channel (to avoid spam).
                  */
-                private Boolean errorPocessing = true;
+                private Boolean errorProcessing = true;
 
                 /**
                  * Set to {@code false} to hide/suppress "processing" feedback messages to the
@@ -730,7 +730,7 @@ public class ApplicationProperties {
                  * Set to {@code false} to hide/suppress processing error feedback messages to users
                  * (to avoid spam).
                  */
-                private Boolean errorPocessing = true;
+                private Boolean errorProcessing = true;
 
                 /**
                  * Set to {@code false} to hide/suppress "processing" feedback messages to users (to

@@ -134,12 +134,12 @@ telegram:
   feedback:
     channel:
       noValidDocument: true # set to 'false' to hide/suppress feedback messages in channels (to avoid spam)
-      errorPocessing: true # set to 'false' to hide/suppress feedback messages in channels (to avoid spam)
+      errorProcessing: true # set to 'false' to hide/suppress feedback messages in channels (to avoid spam)
       errorMessage: true # set to 'false' to hide/suppress error messages in channels (to avoid spam)
       processing: true # set to 'false' to hide/suppress processing messages in channels (to avoid spam)
     user:
       noValidDocument: true # set to 'false' to hide/suppress feedback messages to users (to avoid spam)
-      errorPocessing: true # set to 'false' to hide/suppress feedback messages to users (to avoid spam)
+      errorProcessing: true # set to 'false' to hide/suppress feedback messages to users (to avoid spam)
       errorMessage: true # set to 'false' to hide/suppress error messages to users (to avoid spam)
       processing: true # set to 'false' to hide/suppress processing messages to users (to avoid spam)
 
