@@ -21,6 +21,8 @@ export const shouldProcessFilesSeparately = (
     (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
     // PDF to text-like formats should be one output per input
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
+  // PDF to CBR conversions (each PDF should generate its own archive)
+  (parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr') ||
     // PDF to office format conversions (each PDF should generate its own office file)
     (parameters.fromExtension === 'pdf' && isOfficeFormat(parameters.toExtension)) ||
     // Office files to PDF conversions (each file should be processed separately via LibreOffice)
@@ -40,12 +42,12 @@ export const shouldProcessFilesSeparately = (
 // Static function that can be used by both the hook and automation executor
 export const buildConvertFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions } = parameters;
 
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbzOptions, cbzOutputOptions, ebookOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -73,6 +75,10 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("outputFormat", pdfaOptions.outputFormat);
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
+  } else if (fromExtension === 'cbr' && toExtension === 'pdf') {
+    formData.append("optimizeForEbook", cbrOptions.optimizeForEbook.toString());
+  } else if (fromExtension === 'pdf' && toExtension === 'cbr') {
+    formData.append("dpi", pdfToCbrOptions.dpi.toString());
   } else if (fromExtension === 'cbz' && toExtension === 'pdf') {
     formData.append("optimizeForEbook", (cbzOptions?.optimizeForEbook ?? false).toString());
   } else if (fromExtension === 'pdf' && toExtension === 'cbz') {
