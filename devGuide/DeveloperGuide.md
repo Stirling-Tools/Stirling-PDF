@@ -12,6 +12,7 @@ Stirling-PDF is built using:
 - PDFBox
 - LibreOffice
 - qpdf
+- Calibre (`ebook-convert` CLI) for eBook conversions
 - HTML, CSS, JavaScript
 - Docker
 - PDF.js
@@ -54,7 +55,12 @@ Stirling-PDF is built using:
 Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, don't support Lombok out of the box. To set up Lombok in your development environment:
 Visit the [Lombok website](https://projectlombok.org/setup/) for installation instructions specific to your IDE.
 
-5. Add environment variable
+5. Install Calibre CLI (optional but required for eBook conversions)
+   Ensure the `ebook-convert` binary from Calibre is available on your PATH when working on the
+   eBook to PDF feature. The Calibre tool group is automatically disabled when the binary is
+   missing, so having it installed locally allows you to exercise the full workflow.
+
+6. Add environment variable
 For local testing, you should generally be testing the full 'Security' version of Stirling PDF. To do this, you must add the environment flag DISABLE_ADDITIONAL_FEATURES=false to your system and/or IDE build/run step.
 
 ## 4. Project Structure
