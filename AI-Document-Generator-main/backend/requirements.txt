@@ -1,0 +1,6 @@
+Flask==3.0.0
+Flask-CORS==4.0.0
+# Use modern OpenAI SDK (v1 interface)
+openai>=1.12.0
+langchain-core==1.2.5
+langchain-openai==1.1.6

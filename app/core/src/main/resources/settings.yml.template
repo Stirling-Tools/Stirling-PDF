@@ -145,6 +145,7 @@ system:
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS. For local development with frontend on port 5173, add 'http://localhost:5173'
   backendUrl: '' # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
   frontendUrl: '' # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
+  aiServiceBaseUrl: '' # Base URL for the AI document generator backend (e.g. 'http://localhost:5000'). Leave empty to default to 'http://localhost:5000' in development.
   serverCertificate:
     enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
     organizationName: Stirling-PDF # Organization name for generated certificates

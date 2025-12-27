@@ -417,6 +417,7 @@ public class ApplicationProperties {
         private String frontendUrl; // Frontend URL for invite email links (e.g.
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
+        private String aiServiceBaseUrl; // Base URL for the AI document generator backend (e.g. 'http://localhost:5000').
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();

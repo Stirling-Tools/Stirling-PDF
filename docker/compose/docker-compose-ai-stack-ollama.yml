@@ -1,0 +1,79 @@
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: docker/backend/Dockerfile
+    container_name: stirling-pdf-backend
+    restart: on-failure:5
+    ports:
+      - "8080:8080"
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "true"
+      SECURITY_ENABLELOGIN: "false"
+      SYSTEM_AISERVICEBASEURL: "http://ai-backend:5000"
+    volumes:
+      - ../../stirling/ai/data:/usr/share/tessdata:rw
+      - ../../stirling/ai/config:/configs:rw
+      - ../../stirling/ai/logs:/logs:rw
+    depends_on:
+      - ai-backend
+    networks:
+      - ai-stack
+
+  ai-backend:
+    build:
+      context: ../../AI-Document-Generator-main
+      dockerfile: Dockerfile
+    container_name: ai-document-generator-backend
+    restart: on-failure:5
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../../AI-Document-Generator-main/backend/data:/app/data:rw
+      - ../../AI-Document-Generator-main/backend/output:/app/output:rw
+    environment:
+      - OPENAI_API_KEY=ollama
+      - OPENAI_BASE_URL=http://ollama:11434/v1
+      - SMART_MODEL=qwen3-vl:8b
+      - FAST_MODEL=qwen3-vl:8b
+    depends_on:
+      - ollama
+    networks:
+      - ai-stack
+
+  ai-frontend:
+    image: node:20-alpine
+    container_name: ai-document-generator-frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../AI-Document-Generator-main/frontend:/app:rw
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      DOCKER_ENV: "true"
+    depends_on:
+      - backend
+    networks:
+      - ai-stack
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    gpus: all
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    command: ["serve"]
+    networks:
+      - ai-stack
+
+volumes:
+  ollama-data:
+
+networks:
+  ai-stack:
+    driver: bridge
