@@ -2,7 +2,7 @@
 # Single JAR contains both frontend and backend with extra fonts for air-gapped environments
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:8.14-jdk21 AS build
+FROM gradle:9.2-jdk21 AS build
 
 # Install Node.js and npm for frontend build
 RUN apt-get update && apt-get install -y \
