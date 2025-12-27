@@ -62,7 +62,7 @@
     "react-router-dom": "^7.9.1",
     "signature_pad": "^5.0.4",
     "smol-toml": "^1.4.2",
-    "tailwindcss": "^4.1.13",
+    "tailwindcss": "^4.1.18",
     "web-vitals": "^5.1.0"
   },
   "scripts": {
