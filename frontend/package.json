@@ -118,7 +118,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@iconify-json/material-symbols": "^1.2.48",
+    "@iconify-json/material-symbols": "^1.2.50",
     "@iconify/utils": "^3.0.2",
     "@playwright/test": "^1.55.0",
     "@tauri-apps/cli": "^2.5.0",
