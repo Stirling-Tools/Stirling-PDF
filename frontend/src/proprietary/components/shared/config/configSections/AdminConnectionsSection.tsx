@@ -7,13 +7,37 @@ import { useRestartServer } from '@app/components/shared/config/useRestartServer
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import ProviderCard from '@app/components/shared/config/configSections/ProviderCard';
-import {
-  ALL_PROVIDERS,
-  Provider,
-} from '@app/components/shared/config/configSections/providerDefinitions';
+import { Provider, useAllProviders } from '@app/components/shared/config/configSections/providerDefinitions';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+
+interface FeedbackFlags {
+  noValidDocument?: boolean;
+  errorProcessing?: boolean;
+  errorMessage?: boolean;
+}
+
+interface FeedbackSettings {
+  general?: { enabled?: boolean };
+  channel?: FeedbackFlags;
+  user?: FeedbackFlags;
+}
+
+interface TelegramSettingsData {
+  enabled?: boolean;
+  botToken?: string;
+  botUsername?: string;
+  pipelineInboxFolder?: string;
+  customFolderSuffix?: boolean;
+  enableAllowUserIDs?: boolean;
+  allowUserIDs?: number[];
+  enableAllowChannelIDs?: boolean;
+  allowChannelIDs?: number[];
+  processingTimeoutSeconds?: number;
+  pollingIntervalMillis?: number;
+  feedback?: FeedbackSettings;
+}
 
 interface ConnectionsSettingsData {
   oauth2?: {
@@ -42,6 +66,7 @@ interface ConnectionsSettingsData {
     password?: string;
     from?: string;
   };
+  telegram?: TelegramSettingsData;
   ssoAutoLogin?: boolean;
 }
 
@@ -49,6 +74,7 @@ export default function AdminConnectionsSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const allProviders = useAllProviders();
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
@@ -65,14 +91,19 @@ export default function AdminConnectionsSection() {
       const premiumResponse = await apiClient.get('/api/v1/admin/settings/section/premium');
       const premiumData = premiumResponse.data || {};
 
+      // Fetch Telegram settings
+      const telegramResponse = await apiClient.get('/api/v1/admin/settings/section/telegram');
+      const telegramData = telegramResponse.data || {};
+
       const result: any = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
+        telegram: telegramData || {},
         ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false
       };
 
-      // Merge pending blocks from all three endpoints
+      // Merge pending blocks from all endpoints
       const pendingBlock: any = {};
       if (securityData._pending?.oauth2) {
         pendingBlock.oauth2 = securityData._pending.oauth2;
@@ -82,6 +113,9 @@ export default function AdminConnectionsSection() {
       }
       if (mailData._pending) {
         pendingBlock.mail = mailData._pending;
+      }
+      if (telegramData._pending) {
+        pendingBlock.telegram = telegramData._pending;
       }
       if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
         pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
@@ -129,6 +163,10 @@ export default function AdminConnectionsSection() {
       return settings?.mail?.enabled === true;
     }
 
+    if (provider.id === 'telegram') {
+      return settings?.telegram?.enabled === true;
+    }
+
     if (provider.id === 'oauth2-generic') {
       return settings?.oauth2?.enabled === true;
     }
@@ -145,6 +183,10 @@ export default function AdminConnectionsSection() {
 
     if (provider.id === 'smtp') {
       return settings?.mail || {};
+    }
+
+    if (provider.id === 'telegram') {
+      return settings?.telegram || {};
     }
 
     if (provider.id === 'oauth2-generic') {
@@ -176,6 +218,35 @@ export default function AdminConnectionsSection() {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
         const response = await apiClient.put('/api/v1/admin/settings/section/mail', providerSettings);
+
+        if (response.status === 200) {
+          await fetchSettings(); // Refresh settings
+          alert({
+            alertType: 'success',
+            title: t('admin.success', 'Success'),
+            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
+          });
+          showRestartModal();
+        } else {
+          throw new Error('Failed to save');
+        }
+      } else if (provider.id === 'telegram') {
+        const parseToNumberArray = (values: any) =>
+          (Array.isArray(values) ? values : [])
+            .map((value) => Number(value))
+            .filter((value) => !Number.isNaN(value));
+
+        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
+          ...providerSettings,
+          allowUserIDs: parseToNumberArray(providerSettings.allowUserIDs),
+          allowChannelIDs: parseToNumberArray(providerSettings.allowChannelIDs),
+          processingTimeoutSeconds: providerSettings.processingTimeoutSeconds
+            ? Number(providerSettings.processingTimeoutSeconds)
+            : undefined,
+          pollingIntervalMillis: providerSettings.pollingIntervalMillis
+            ? Number(providerSettings.pollingIntervalMillis)
+            : undefined,
+        });
 
         if (response.status === 200) {
           await fetchSettings(); // Refresh settings
@@ -238,10 +309,26 @@ export default function AdminConnectionsSection() {
       return;
     }
 
-    try{
+    try {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
         const response = await apiClient.put('/api/v1/admin/settings/section/mail', { enabled: false });
+
+        if (response.status === 200) {
+          await fetchSettings();
+          alert({
+            alertType: 'success',
+            title: t('admin.success', 'Success'),
+            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
+          });
+          showRestartModal();
+        } else {
+          throw new Error('Failed to disconnect');
+        }
+      } else if (provider.id === 'telegram') {
+        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
+          enabled: false,
+        });
 
         if (response.status === 200) {
           await fetchSettings();
@@ -331,8 +418,8 @@ export default function AdminConnectionsSection() {
     }
   };
 
-  const linkedProviders = ALL_PROVIDERS.filter((p) => isProviderConfigured(p));
-  const availableProviders = ALL_PROVIDERS.filter((p) => !isProviderConfigured(p));
+  const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
+  const availableProviders = allProviders.filter((p) => !isProviderConfigured(p));
 
   return (
     <Stack gap="xl">

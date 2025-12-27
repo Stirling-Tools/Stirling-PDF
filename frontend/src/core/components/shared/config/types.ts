@@ -18,6 +18,7 @@ export const VALID_NAV_KEYS = [
   'adminGeneral',
   'adminSecurity',
   'adminConnections',
+  'adminTelegram',
   'adminPrivacy',
   'adminDatabase',
   'adminAdvanced',
