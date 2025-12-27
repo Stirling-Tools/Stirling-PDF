@@ -163,5 +163,9 @@
       "@testing-library/user-event",
       "@vitest/coverage-v8"
     ]
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   }
 }
