@@ -200,7 +200,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install tomli-w
+          pip install --require-hashes tomli-w==1.2.0 --hash sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90
 
       - name: Run Python script to check files
         id: run-check

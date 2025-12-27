@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file='.github\scripts\requirements_pre_commit.txt' --strip-extras '.github\scripts\requirements_pre_commit.in'
 #
-cfgv==3.4.0 \
-    --hash=sha256:b7265b1f29fd3316bfcd2b330d63d024f2bfd8bcb8b0272f8e19a504856c48f9 \
-    --hash=sha256:e52591d4c5f5dead8e0f673fb16db7949d2cfb3f7da4582893288f0ded8fe560
+cfgv==3.5.0 \
+    --hash=sha256:a8dc6b26ad22ff227d2634a65cb388215ce6cc96bbcc5cfde7641ae87e8dacc0 \
+    --hash=sha256:d5b1034354820651caa73ede66a6294d6e95c1b00acc5e9b098e917404669132
     # via pre-commit
 distlib==0.4.0 \
     --hash=sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16 \
@@ -28,9 +28,9 @@ platformdirs==4.5.0 \
     --hash=sha256:70ddccdd7c99fc5942e9fc25636a8b34d04c24b335100223152c2803e4063312 \
     --hash=sha256:e578a81bb873cbb89a41fcc904c7ef523cc18284b7e3b3ccf06aca1403b7ebd3
     # via virtualenv
-pre-commit==4.3.0 \
-    --hash=sha256:2b0747ad7e6e967169136edffee14c16e148a778a54e4f967921aa1ebf2308d8 \
-    --hash=sha256:499fe450cc9d42e9d58e606262795ecb64dd05438943c62b66f6a8673da30b16
+pre-commit==4.5.0 \
+    --hash=sha256:25e2ce09595174d9c97860a95609f9f852c0614ba602de3561e267547f2335e1 \
+    --hash=sha256:dc5a065e932b19fc1d4c653c6939068fe54325af8e741e74e88db4d28a4dd66b
     # via -r .github/scripts/requirements_pre_commit.in
 pyyaml==6.0.3 \
     --hash=sha256:00c4bdeba853cc34e7dd471f16b4114f4162dc03e6b7afcc2128711f0eca823c \

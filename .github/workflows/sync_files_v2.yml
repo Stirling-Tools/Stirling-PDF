@@ -53,8 +53,7 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install Python dependencies
-        run: |
-          pip install tomli-w
+        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
 
       - name: Sync translation TOML files
         run: |
@@ -64,9 +63,6 @@ jobs:
         run: |
           git add frontend/public/locales/*/translation.toml
           git diff --staged --quiet || git commit -m ":memo: Sync translation files (TOML)" || echo "No changes detected"
-
-      - name: Install README dependencies
-        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
 
       - name: Sync README.md
         run: |
