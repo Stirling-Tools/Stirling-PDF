@@ -15,7 +15,7 @@ export const CONVERT_SUPPORTED_FORMATS = [
   // Ebook formats
   'epub', 'mobi', 'azw3', 'fb2',
   // Archive formats
-  'zip', 'cbz',
+  'zip', 'cbr', 'cbz',
   // Other
   'dbf', 'fods', 'vsd', 'vor', 'vor3', 'vor4', 'uop', 'pct', 'ps', 'pdf',
 ];
