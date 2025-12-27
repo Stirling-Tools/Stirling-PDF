@@ -66,7 +66,11 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         onError={handleOAuthError}
         isDisabled={loading}
         serverUrl={serverUrl}
-        providers={['google', 'github']}
+        mode="saas"
+        providers={[
+          { id: 'google' },
+          { id: 'github' },
+        ]}
       />
 
       <DividerWithText

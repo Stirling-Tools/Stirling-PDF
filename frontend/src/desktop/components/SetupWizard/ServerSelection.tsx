@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Stack, Button, TextInput, Alert, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { ServerConfig } from '@app/services/connectionModeService';
+import { ServerConfig, SSOProviderConfig } from '@app/services/connectionModeService';
 import { connectionModeService } from '@app/services/connectionModeService';
 import LocalIcon from '@app/components/shared/LocalIcon';
 
@@ -43,7 +43,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
       }
 
       // Fetch OAuth providers and check if login is enabled
-      let enabledProviders: string[] = [];
+      const enabledProviders: SSOProviderConfig[] = [];
       try {
         const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`);
 
@@ -76,9 +76,19 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
         // Extract provider IDs from authorization URLs
         // Example: "/oauth2/authorization/google" → "google"
-        enabledProviders = Object.keys(data.providerList || {})
-          .map(key => key.split('/').pop())
-          .filter((id): id is string => id !== undefined);
+        const providerEntries = Object.entries(data.providerList || {});
+        providerEntries.forEach(([path, label]) => {
+          const id = path.split('/').pop();
+          if (!id) {
+            return;
+          }
+
+          enabledProviders.push({
+            id,
+            path,
+            label: typeof label === 'string' ? label : undefined,
+          });
+        });
 
         console.log('[ServerSelection] Detected OAuth providers:', enabledProviders);
       } catch (err) {

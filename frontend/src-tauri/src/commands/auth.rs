@@ -85,7 +85,14 @@ pub async fn clear_auth_token(_app_handle: AppHandle) -> Result<(), String> {
     // Delete the token - ignore error if it doesn't exist
     match entry.delete_credential() {
         Ok(_) | Err(keyring::Error::NoEntry) => Ok(()),
-        Err(e) => Err(format!("Failed to clear token: {}", e)),
+        Err(e) => {
+            log::warn!("Failed to delete keyring credential: {}. Attempting overwrite with empty token.", e);
+            // As a fallback, overwrite with an empty token so a stale value cannot be reused
+            match entry.set_password("") {
+                Ok(_) => Ok(()),
+                Err(e2) => Err(format!("Failed to clear token (delete + overwrite failed): {}", e2)),
+            }
+        },
     }
 }
 

@@ -5,13 +5,14 @@ import LoginHeader from '@app/routes/login/LoginHeader';
 import ErrorMessage from '@app/routes/login/ErrorMessage';
 import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
 import DividerWithText from '@app/components/shared/DividerWithText';
-import { DesktopOAuthButtons, OAuthProvider } from '@app/components/SetupWizard/DesktopOAuthButtons';
+import { DesktopOAuthButtons } from '@app/components/SetupWizard/DesktopOAuthButtons';
 import { UserInfo } from '@app/services/authService';
+import { SSOProviderConfig } from '@app/services/connectionModeService';
 import '@app/routes/authShared/auth.css';
 
 interface SelfHostedLoginScreenProps {
   serverUrl: string;
-  enabledOAuthProviders?: string[];
+  enabledOAuthProviders?: SSOProviderConfig[];
   onLogin: (username: string, password: string) => Promise<void>;
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   loading: boolean;
@@ -74,7 +75,8 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
             onError={handleOAuthError}
             isDisabled={loading}
             serverUrl={serverUrl}
-            providers={enabledOAuthProviders as OAuthProvider[]}
+            mode="selfHosted"
+            providers={enabledOAuthProviders}
           />
 
           <DividerWithText

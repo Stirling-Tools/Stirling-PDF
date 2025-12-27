@@ -3,9 +3,15 @@ import { fetch } from '@tauri-apps/plugin-http';
 
 export type ConnectionMode = 'saas' | 'selfhosted';
 
+export interface SSOProviderConfig {
+  id: string;
+  path: string;
+  label?: string;
+}
+
 export interface ServerConfig {
   url: string;
-  enabledOAuthProviders?: string[];
+  enabledOAuthProviders?: SSOProviderConfig[];
 }
 
 export interface ConnectionConfig {
