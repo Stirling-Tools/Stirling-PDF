@@ -1276,6 +1276,18 @@ optimizeForEbook = "PDF für E-Book-Reader optimieren (verwendet Ghostscript)"
 cbzOutputOptions = "Optionen: PDF zu CBZ"
 cbzDpi = "DPI für Bildrendering"
 
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
 [imageToPdf]
 tags = "konvertierung,img,jpg,bild,foto"
 
@@ -1392,6 +1404,11 @@ add = "Anhang hinzufügen"
 remove = "Anhang entfernen"
 embed = "Anhang einbetten"
 submit = "Anhänge hinzufügen"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 
 [watermark]
 title = "Wasserzeichen hinzufügen"
@@ -2406,6 +2423,11 @@ bullet2 = "Links funktionieren beim Anklicken weiterhin"
 bullet3 = "Kommentare und Notizen bleiben sichtbar"
 bullet4 = "Lesezeichen helfen weiterhin bei der Navigation"
 
+[flatten.renderDpi]
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+label = "Rendering DPI (optional, recommended 150 DPI)"
+placeholder = "e.g. 150"
+
 [repair]
 tags = "reparieren,wiederherstellen,korrigieren,wiederherstellen"
 title = "Reparieren"
@@ -2955,6 +2977,7 @@ header = "PDF zuschneiden"
 submit = "Abschicken"
 noFileSelected = "Wählen Sie eine PDF-Datei aus, um mit dem Zuschneiden zu beginnen"
 reset = "Auf vollständiges PDF zurücksetzen"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Zuschneidebereich-Auswahl"
@@ -3791,6 +3814,11 @@ unavailable = "ImageMagick is not installed or enabled on this server"
 
 [compress.linearize]
 label = "Linearize PDF for fast web viewing"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Diese Datei ist passwortgeschützt. Bitte geben Sie das Passwort ein:"
