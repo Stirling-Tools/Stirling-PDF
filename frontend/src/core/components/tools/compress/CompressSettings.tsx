@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl } from "@mantine/core";
+import SliderWithInput from '@app/components/shared/sliderWithInput/SliderWithInput';
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
@@ -13,7 +14,6 @@ interface CompressSettingsProps {
 
 const CompressSettings = ({ parameters, onParameterChange, disabled = false }: CompressSettingsProps) => {
   const { t } = useTranslation();
-  const [isSliding, setIsSliding] = useState(false);
   const [imageMagickAvailable, setImageMagickAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -47,57 +47,22 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
 
       {/* Quality Adjustment */}
       {parameters.compressionMethod === 'quality' && (
-        <Stack gap="sm">
+        <Stack gap="md">
           <Divider />
-          <Text size="sm" fw={500}>Compression Level</Text>
-          <div style={{ position: 'relative' }}>
-            <input
-              type="range"
-              min="1"
-              max="9"
-              step="1"
-              value={parameters.compressionLevel}
-              onChange={(e) => onParameterChange('compressionLevel', parseInt(e.target.value))}
-              onMouseDown={() => setIsSliding(true)}
-              onMouseUp={() => setIsSliding(false)}
-              onTouchStart={() => setIsSliding(true)}
-              onTouchEnd={() => setIsSliding(false)}
-              disabled={disabled}
-              style={{
-                width: '100%',
-                height: '6px',
-                borderRadius: '3px',
-                background: `linear-gradient(to right, #228be6 0%, #228be6 ${(parameters.compressionLevel - 1) / 8 * 100}%, #e9ecef ${(parameters.compressionLevel - 1) / 8 * 100}%, #e9ecef 100%)`,
-                outline: 'none',
-                WebkitAppearance: 'none'
-              }}
-            />
-            {isSliding && (
-              <div style={{
-                position: 'absolute',
-                top: '-25px',
-                left: `${(parameters.compressionLevel - 1) / 8 * 100}%`,
-                transform: 'translateX(-50%)',
-                background: '#f8f9fa',
-                border: '1px solid #dee2e6',
-                borderRadius: '4px',
-                padding: '2px 6px',
-                fontSize: '12px',
-                color: '#228be6',
-                whiteSpace: 'nowrap'
-              }}>
-                {parameters.compressionLevel}
-              </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6c757d' }}>
-            <span>Min 1</span>
-            <span>Max 9</span>
-          </div>
-          <Text size="xs" c="dimmed" style={{ marginTop: '8px' }}>
-            {parameters.compressionLevel <= 3 && "1-3 PDF compression"}
-            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && "4-6 lite image compression"}
-            {parameters.compressionLevel >= 7 && "7-9 intense image compression Will dramatically reduce image quality"}
+          <SliderWithInput
+            label={t('compress.tooltip.qualityAdjustment.title', 'Compression Level')}
+            value={parameters.compressionLevel}
+            onChange={(value) => onParameterChange('compressionLevel', value)}
+            disabled={disabled}
+            min={1}
+            max={9}
+            step={1}
+            suffix=""
+          />
+          <Text size="xs" c="dimmed" mt={-4}>
+            {parameters.compressionLevel <= 3 && t('compress.compressionLevel.range1to3', 'Lower values preserve quality but result in larger files')}
+            {parameters.compressionLevel >= 4 && parameters.compressionLevel <= 6 && t('compress.compressionLevel.range4to6', 'Medium compression with moderate quality reduction')}
+            {parameters.compressionLevel >= 7 && t('compress.compressionLevel.range7to9', 'Higher values reduce file size significantly but may reduce image clarity')}
           </Text>
         </Stack>
       )}
@@ -144,6 +109,17 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
           disabled={disabled}
           label={t("compress.grayscale.label", "Apply Grayscale for compression")}
         />
+
+        {/* Linearize Option */}
+        <Stack gap="sm">
+          <Checkbox
+            checked={parameters.linearize}
+            onChange={(event) => onParameterChange('linearize', event.currentTarget.checked)}
+            disabled={disabled}
+            label={t("compress.linearize.label", "Linearize PDF for fast web viewing")}
+          />
+        </Stack>
+
         <Checkbox
           checked={parameters.lineArt}
           onChange={(event) => onParameterChange('lineArt', event.currentTarget.checked)}

@@ -27,7 +27,7 @@ class AppUpdateAuthService implements ShowAdminInterface {
         if (!showUpdate) {
             return showUpdate;
         }
-        boolean showUpdateOnlyAdmin = applicationProperties.getSystem().getShowUpdateOnlyAdmin();
+        boolean showUpdateOnlyAdmin = applicationProperties.getSystem().isShowUpdateOnlyAdmin();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return !showUpdateOnlyAdmin;
