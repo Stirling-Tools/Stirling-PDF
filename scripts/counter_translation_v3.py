@@ -53,7 +53,13 @@ import sys
 from collections.abc import Mapping
 from typing import Iterable
 
-import tomlkit
+# Ensure tomlkit is installed before importing
+try:
+    import tomlkit
+except ImportError:
+    raise ImportError(
+        "The 'tomlkit' library is not installed. Please install it using 'pip install tomlkit'."
+    )
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -104,7 +110,10 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
     Returns:
         None
     """
-    with open(os.path.join(os.getcwd(), "devGuide", "HowToAddNewLanguage.md"), encoding="utf-8") as file:
+    with open(
+        os.path.join(os.getcwd(), "devGuide", "HowToAddNewLanguage.md"),
+        encoding="utf-8",
+    ) as file:
         content = file.readlines()
 
     for i, line in enumerate(content[2:], start=2):
@@ -117,7 +126,12 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
                         f"![{value}%](https://geps.dev/progress/{value})",
                     )
 
-    with open(os.path.join(os.getcwd(), "devGuide", "HowToAddNewLanguage.md"), "w", encoding="utf-8", newline="\n") as file:
+    with open(
+        os.path.join(os.getcwd(), "devGuide", "HowToAddNewLanguage.md"),
+        "w",
+        encoding="utf-8",
+        newline="\n",
+    ) as file:
         file.writelines(content)
 
 
