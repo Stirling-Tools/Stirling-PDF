@@ -11,6 +11,7 @@ adjusting the format.
 Usage:
     python check_language_toml.py --reference-file <path_to_reference_file> --branch <branch_name> [--actor <actor_name>] [--files <list_of_changed_files>]
 """
+
 # Sample for Windows:
 # python .github/scripts/check_language_toml.py --reference-file frontend/public/locales/en-GB/translation.toml --branch "" --files frontend/public/locales/de-DE/translation.toml frontend/public/locales/fr-FR/translation.toml
 
@@ -122,12 +123,14 @@ def update_missing_keys(reference_file, file_list, branch=""):
     reference_properties = parse_toml_file(reference_file)
 
     for file_path in file_list:
-        basename_current_file = os.path.basename(os.path.join(branch, file_path))
+        language_dir = os.path.basename(os.path.dirname(file_path))
+        reference_lang_dir = os.path.basename(os.path.dirname(reference_file))
         if (
-            basename_current_file == os.path.basename(reference_file)
+            language_dir == reference_lang_dir
             or not file_path.endswith(".toml")
-            or not os.path.dirname(file_path).endswith("locales")
+            or not os.path.dirname(os.path.dirname(file_path)).endswith("locales")
         ):
+            print(f"Skipping file: {file_path}")
             continue
 
         current_properties = parse_toml_file(os.path.join(branch, file_path))

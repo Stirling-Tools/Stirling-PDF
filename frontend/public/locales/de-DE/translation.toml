@@ -340,6 +340,10 @@ advance = "Erweiterte Funktionen"
 edit = "Anzeigen und Bearbeiten"
 popular = "Beliebt"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Einstellungen"
 
@@ -435,6 +439,25 @@ latestVersion = "Neueste Version"
 checkForUpdates = "Nach Updates suchen"
 viewDetails = "Details anzeigen"
 
+[settings.security]
+title = "Sicherheit"
+description = "Aktualisieren Sie Ihr Passwort, um Ihr Konto zu schützen."
+
+[settings.security.password]
+subtitle = "Ändern Sie Ihr Passwort. Nach dem Update werden Sie abgemeldet."
+required = "Alle Felder sind erforderlich."
+mismatch = "Die neuen Passwörter stimmen nicht überein."
+error = "Passwort konnte nicht aktualisiert werden. Bitte überprüfen Sie Ihr aktuelles Passwort und versuchen Sie es erneut."
+success = "Passwort erfolgreich aktualisiert. Bitte melden Sie sich erneut an."
+ssoDisabled = "Passwortänderungen werden von Ihrem Identity-Provider verwaltet."
+current = "Aktuelles Passwort"
+currentPlaceholder = "Geben Sie Ihr aktuelles Passwort ein"
+new = "Neues Passwort"
+newPlaceholder = "Neues Passwort eingeben"
+confirm = "Neues Passwort bestätigen"
+confirmPlaceholder = "Neues Passwort erneut eingeben"
+update = "Passwort aktualisieren"
+
 [settings.hotkeys]
 title = "Tastenkürzel"
 description = "Tastenkürzel für schnellen Tool-Zugriff anpassen. Klicken Sie auf \"Shortcut ändern\" und drücken Sie eine neue Tastenkombination. Drücken Sie Esc, um abzubrechen."
@@ -452,25 +475,6 @@ noShortcut = "Kein Kürzel festgelegt"
 [settings.hotkeys.errorModifier]
 mac = "Fügen Sie ⌘ (Command), ⌥ (Option) oder einen anderen Modifikator in Ihr Kürzel ein."
 windows = "Fügen Sie Strg, Alt oder einen anderen Modifikator in Ihr Kürzel ein."
-
-[settings.security]
-description = "Aktualisieren Sie Ihr Passwort, um Ihr Konto zu schützen."
-title = "Sicherheit"
-
-[settings.security.password]
-confirm = "Neues Passwort bestätigen"
-confirmPlaceholder = "Neues Passwort erneut eingeben"
-current = "Aktuelles Passwort"
-currentPlaceholder = "Geben Sie Ihr aktuelles Passwort ein"
-error = "Passwort konnte nicht aktualisiert werden. Bitte überprüfen Sie Ihr aktuelles Passwort und versuchen Sie es erneut."
-mismatch = "Die neuen Passwörter stimmen nicht überein."
-new = "Neues Passwort"
-newPlaceholder = "Neues Passwort eingeben"
-required = "Alle Felder sind erforderlich."
-ssoDisabled = "Passwortänderungen werden von Ihrem Identity-Provider verwaltet."
-subtitle = "Ändern Sie Ihr Passwort. Nach dem Update werden Sie abgemeldet."
-success = "Passwort erfolgreich aktualisiert. Bitte melden Sie sich erneut an."
-update = "Passwort aktualisieren"
 
 [update]
 modalTitle = "Update verfügbar"
@@ -507,16 +511,16 @@ low = "Niedrig"
 title = "Anmeldeinformationen ändern"
 header = "Aktualisieren Sie Ihre Kontodaten"
 changePassword = "Sie verwenden die Standard-Zugangsdaten. Bitte geben Sie ein neues Passwort ein."
+ssoManaged = "Ihr Konto wird von Ihrem Identity-Provider verwaltet."
 newUsername = "Neuer Benutzername"
 oldPassword = "Aktuelles Passwort"
 newPassword = "Neues Passwort"
 confirmNewPassword = "Neues Passwort bestätigen"
 submit = "Änderung speichern"
-changeUsername = "Aktualisieren Sie Ihren Benutzernamen. Nach dem Update werden Sie abgemeldet."
 credsUpdated = "Konto aktualisiert"
 description = "Änderungen gespeichert. Bitte melden Sie sich erneut an."
 error = "Benutzername konnte nicht aktualisiert werden. Bitte überprüfen Sie Ihr Passwort und versuchen Sie es erneut."
-ssoManaged = "Ihr Konto wird von Ihrem Identity-Provider verwaltet."
+changeUsername = "Aktualisieren Sie Ihren Benutzernamen. Nach dem Update werden Sie abgemeldet."
 
 [account]
 title = "Kontoeinstellungen"
@@ -731,6 +735,11 @@ desc = "Teilt mehrere Fotos aus einem Foto/PDF auf"
 tags = "unterschrift,autogramm"
 title = "Signieren"
 desc = "Fügt PDF-Signaturen durch Zeichnung, Text oder Bild hinzu"
+
+[home.annotate]
+tags = "annotieren,highlight,zeichnen"
+title = "Annotieren"
+desc = "Im Viewer markieren, zeichnen, Notizen und Formen hinzufügen"
 
 [home.flatten]
 tags = "vereinfachen,entfernen,interaktiv"
@@ -949,11 +958,6 @@ desc = "Vorhandenen Text und Bilder in PDFs bearbeiten"
 tags = "text,anmerkung,beschriftung"
 title = "Text hinzufügen"
 desc = "Beliebigen Text überall in Ihrem PDF hinzufügen"
-
-[home.annotate]
-desc = "Im Viewer markieren, zeichnen, Notizen und Formen hinzufügen"
-tags = "annotieren,highlight,zeichnen"
-title = "Annotieren"
 
 [landing]
 addFiles = "Dateien hinzufügen"
@@ -1274,19 +1278,19 @@ cbzOptions = "Optionen: CBZ zu PDF"
 optimizeForEbook = "PDF für E-Book-Reader optimieren (verwendet Ghostscript)"
 cbzOutputOptions = "Optionen: PDF zu CBZ"
 cbzDpi = "DPI für Bildrendering"
-cbrDpi = "DPI für Bildrendering"
 cbrOptions = "CBR-Optionen"
 cbrOutputOptions = "Optionen: PDF zu CBR"
+cbrDpi = "DPI für Bildrendering"
 
 [convert.ebookOptions]
 ebookOptions = "Optionen: E-Book zu PDF"
 ebookOptionsDesc = "Optionen zum Konvertieren von E-Books in PDF"
 embedAllFonts = "Alle Schriftarten einbetten"
 embedAllFontsDesc = "Alle Schriftarten aus dem E-Book in das erzeugte PDF einbetten"
-includePageNumbers = "Seitenzahlen einfügen"
-includePageNumbersDesc = "Seitenzahlen zum erzeugten PDF hinzufügen"
 includeTableOfContents = "Inhaltsverzeichnis einfügen"
 includeTableOfContentsDesc = "Ein erzeugtes Inhaltsverzeichnis zum Ergebnis-PDF hinzufügen"
+includePageNumbers = "Seitenzahlen einfügen"
+includePageNumbersDesc = "Seitenzahlen zum erzeugten PDF hinzufügen"
 optimizeForEbookPdf = "Für E-Book-Reader optimieren"
 optimizeForEbookPdfDesc = "PDF für das Lesen auf E-Book-Readern optimieren (kleinere Dateigröße, bessere Darstellung auf E-Ink-Geräten)"
 
@@ -1405,12 +1409,12 @@ header = "Anhänge hinzufügen"
 add = "Anhang hinzufügen"
 remove = "Anhang entfernen"
 embed = "Anhang einbetten"
-submit = "Anhänge hinzufügen"
 convertToPdfA3b = "In PDF/A-3b konvertieren"
 convertToPdfA3bDescription = "Erstellt ein Archiv-PDF mit eingebetteten Anhängen"
 convertToPdfA3bTooltip = "PDF/A-3b ist ein Archivformat, das die langfristige Aufbewahrung sicherstellt. Es erlaubt das Einbetten beliebiger Dateiformate als Anhänge. Die Konvertierung erfordert Ghostscript und kann bei großen Dateien länger dauern."
 convertToPdfA3bTooltipHeader = "Über die PDF/A-3b-Konvertierung"
 convertToPdfA3bTooltipTitle = "Funktion"
+submit = "Anhänge hinzufügen"
 
 [watermark]
 title = "Wasserzeichen hinzufügen"
@@ -2355,10 +2359,10 @@ saved = "Gespeichert"
 label = "Unterschriftsbild hochladen"
 placeholder = "Bilddatei auswählen"
 hint = "Laden Sie ein PNG- oder JPG-Bild Ihrer Unterschrift hoch"
-backgroundRemovalFailedMessage = "Der Hintergrund konnte nicht aus dem Bild entfernt werden. Das Originalbild wird stattdessen verwendet."
-backgroundRemovalFailedTitle = "Hintergrund konnte nicht entfernt werden"
-processing = "Bild wird verarbeitet..."
 removeBackground = "Weißen Hintergrund entfernen (transparent machen)"
+processing = "Bild wird verarbeitet..."
+backgroundRemovalFailedTitle = "Hintergrund konnte nicht entfernt werden"
+backgroundRemovalFailedMessage = "Der Hintergrund konnte nicht aus dem Bild entfernt werden. Das Originalbild wird stattdessen verwendet."
 
 [sign.instructions]
 title = "So fügen Sie eine Unterschrift hinzu"
@@ -2404,6 +2408,11 @@ note = "Das Abflachen entfernt interaktive Elemente aus der PDF und macht sie ni
 label = "Nur Formulare vereinfachen"
 desc = "Nur Formularfelder vereinfachen, andere interaktive Elemente unverändert lassen"
 
+[flatten.renderDpi]
+label = "Rendering-DPI (optional, empfohlen 150 DPI)"
+help = "Lassen Sie das Feld leer, um die Systemvorgabe zu verwenden. Höhere DPI schärfen das Ergebnis, erhöhen aber die Verarbeitungszeit und die Dateigröße."
+placeholder = "z. B. 150"
+
 [flatten.results]
 title = "Reduzierungs-Ergebnisse"
 
@@ -2428,11 +2437,6 @@ bullet1 = "Formulare werden nicht mehr bearbeitbar"
 bullet2 = "Links funktionieren beim Anklicken weiterhin"
 bullet3 = "Kommentare und Notizen bleiben sichtbar"
 bullet4 = "Lesezeichen helfen weiterhin bei der Navigation"
-
-[flatten.renderDpi]
-help = "Lassen Sie das Feld leer, um die Systemvorgabe zu verwenden. Höhere DPI schärfen das Ergebnis, erhöhen aber die Verarbeitungszeit und die Dateigröße."
-label = "Rendering-DPI (optional, empfohlen 150 DPI)"
-placeholder = "z. B. 150"
 
 [repair]
 tags = "reparieren,wiederherstellen,korrigieren,wiederherstellen"
@@ -3401,18 +3405,18 @@ placeholder = "Anzahl horizontaler Teiler eingeben"
 label = "Vertikale Teiler"
 placeholder = "Anzahl vertikaler Teiler eingeben"
 
+[split-by-sections.splitMode]
+label = "Teilmodus"
+description = "Wählen Sie, wie die Seiten geteilt werden sollen"
+splitAll = "Alle Seiten teilen"
+splitAllExceptFirst = "Alle außer der ersten teilen"
+splitAllExceptLast = "Alle außer der letzten teilen"
+splitAllExceptFirstAndLast = "Alle außer der ersten und letzten teilen"
+custom = "Benutzerdefinierte Seiten"
+
 [split-by-sections.customPages]
 label = "Benutzerdefinierte Seitenzahlen"
 placeholder = "z. B. 2,4,6"
-
-[split-by-sections.splitMode]
-custom = "Benutzerdefinierte Seiten"
-description = "Wählen Sie, wie die Seiten geteilt werden sollen"
-label = "Teilmodus"
-splitAll = "Alle Seiten teilen"
-splitAllExceptFirst = "Alle außer der ersten teilen"
-splitAllExceptFirstAndLast = "Alle außer der ersten und letzten teilen"
-splitAllExceptLast = "Alle außer der letzten teilen"
 
 [AddStampRequest]
 tags = "stempeln,bild hinzufügen,bild zentrieren,wasserzeichen,pdf,einbetten,anpassen"
@@ -3775,6 +3779,19 @@ filesize = "Dateigröße"
 [compress.grayscale]
 label = "Graustufen für Komprimierung anwenden"
 
+[compress.linearize]
+label = "PDF für schnelles Web-Viewing linearisieren"
+
+[compress.lineArt]
+label = "Bilder in Strichzeichnungen umwandeln"
+description = "Verwendet ImageMagick, um Seiten in kontrastreiches Schwarzweiß umzuwandeln und die Dateigröße maximal zu reduzieren."
+unavailable = "ImageMagick ist auf diesem Server nicht installiert oder aktiviert"
+detailLevel = "Detailgrad"
+edgeEmphasis = "Kantenbetonung"
+edgeLow = "Sanft"
+edgeMedium = "Ausgewogen"
+edgeHigh = "Stark"
+
 [compress.tooltip.header]
 title = "Kompressions-Einstellungen - Übersicht"
 
@@ -3793,8 +3810,8 @@ title = "Graustufen"
 text = "Wählen Sie diese Option, um alle Bilder in Schwarz-Weiß zu konvertieren, was die Dateigröße erheblich reduzieren kann, insbesondere bei gescannten PDFs oder bildreichen Dokumenten."
 
 [compress.tooltip.lineArt]
-text = "Konvertiert Seiten mit ImageMagick in kontrastreiches Schwarzweiß. Mit der Detailstufe steuern Sie, wie viel Inhalt schwarz wird, und mit der Kantenbetonung, wie aggressiv Kanten erkannt werden."
 title = "Strichzeichnung"
+text = "Konvertiert Seiten mit ImageMagick in kontrastreiches Schwarzweiß. Mit der Detailstufe steuern Sie, wie viel Inhalt schwarz wird, und mit der Kantenbetonung, wie aggressiv Kanten erkannt werden."
 
 [compress.error]
 failed = "Ein Fehler ist beim Komprimieren der PDF aufgetreten."
@@ -3812,19 +3829,6 @@ _value = "Kompressionseinstellungen"
 range1to3 = "Niedrigere Werte bewahren die Qualität, führen aber zu größeren Dateien"
 range4to6 = "Mittlere Komprimierung mit moderater Qualitätsreduktion"
 range7to9 = "Höhere Werte reduzieren die Dateigröße deutlich, können aber die Bildschärfe verringern"
-
-[compress.lineArt]
-description = "Verwendet ImageMagick, um Seiten in kontrastreiches Schwarzweiß umzuwandeln und die Dateigröße maximal zu reduzieren."
-detailLevel = "Detailgrad"
-edgeEmphasis = "Kantenbetonung"
-edgeHigh = "Stark"
-edgeLow = "Sanft"
-edgeMedium = "Ausgewogen"
-label = "Bilder in Strichzeichnungen umwandeln"
-unavailable = "ImageMagick ist auf diesem Server nicht installiert oder aktiviert"
-
-[compress.linearize]
-label = "PDF für schnelles Web-Viewing linearisieren"
 
 [decrypt]
 passwordPrompt = "Diese Datei ist passwortgeschützt. Bitte geben Sie das Passwort ein:"
@@ -4065,21 +4069,92 @@ deleteSelected = "Ausgewählte Seiten löschen"
 closePdf = "PDF schließen"
 exportAll = "PDF exportieren"
 downloadSelected = "Ausgewählte Dateien herunterladen"
-downloadAll = "Alle herunterladen"
-saveAll = "Alle speichern"
+annotations = "Annotations"
+exportSelected = "Ausgewählte Seiten exportieren"
+saveChanges = "Änderungen speichern"
 toggleTheme = "Design wechseln"
-toggleBookmarks = "Lesezeichen ein-/ausblenden"
 language = "Sprache"
+toggleAnnotations = "Anmerkungen ein-/ausblenden"
 search = "PDF durchsuchen"
 panMode = "Verschiebemodus"
 rotateLeft = "Nach links drehen"
 rotateRight = "Nach rechts drehen"
 toggleSidebar = "Seitenleiste umschalten"
-exportSelected = "Ausgewählte Seiten exportieren"
-toggleAnnotations = "Anmerkungen ein-/ausblenden"
+toggleBookmarks = "Lesezeichen ein-/ausblenden"
 print = "PDF drucken"
-saveChanges = "Änderungen speichern"
-annotations = "Annotations"
+downloadAll = "Alle herunterladen"
+saveAll = "Alle speichern"
+
+[textAlign]
+left = "Links"
+center = "Zentriert"
+right = "Rechts"
+
+[annotation]
+title = "Annotieren"
+desc = "Markieren, Stift, Text und Notizen verwenden. Änderungen bleiben live – kein Abflachen erforderlich."
+highlight = "Markieren"
+pen = "Stift"
+text = "Textfeld"
+note = "Notiz"
+rectangle = "Rechteck"
+ellipse = "Ellipse"
+select = "Auswählen"
+exit = "Anmerkungsmodus beenden"
+strokeWidth = "Breite"
+opacity = "Deckkraft"
+strokeOpacity = "Linien-Deckkraft"
+fillOpacity = "Fülldeckkraft"
+fontSize = "Schriftgröße"
+chooseColor = "Farbe wählen"
+color = "Farbe"
+strokeColor = "Linienfarbe"
+fillColor = "Füllfarbe"
+underline = "Unterstreichen"
+strikeout = "Durchstreichen"
+squiggly = "Wellenlinie"
+inkHighlighter = "Freihand-Textmarker"
+freehandHighlighter = "Freihand-Textmarker"
+square = "Quadrat"
+circle = "Kreis"
+polygon = "Polygon"
+line = "Linie"
+stamp = "Bild hinzufügen"
+textMarkup = "Textmarkierung"
+drawing = "Zeichnung"
+shapes = "Formen"
+notesStamps = "Notizen & Stempel"
+settings = "Einstellungen"
+borderOn = "Rahmen: Ein"
+borderOff = "Rahmen: Aus"
+editInk = "Stift bearbeiten"
+editLine = "Linie bearbeiten"
+editNote = "Notiz bearbeiten"
+editText = "Textfeld bearbeiten"
+editTextMarkup = "Textmarkierung bearbeiten"
+editSelected = "Anmerkung bearbeiten"
+editSquare = "Quadrat bearbeiten"
+editCircle = "Kreis bearbeiten"
+editPolygon = "Polygon bearbeiten"
+unsupportedType = "Dieser Anmerkungstyp wird für die Bearbeitung nicht vollständig unterstützt."
+textAlignment = "Textausrichtung"
+noteIcon = "Notizsymbol"
+imagePreview = "Vorschau"
+contents = "Text"
+backgroundColor = "Hintergrundfarbe"
+clearBackground = "Hintergrund entfernen"
+noBackground = "Kein Hintergrund"
+stampSettings = "Stempel-Einstellungen"
+savingCopy = "Download wird vorbereitet..."
+saveFailed = "Kopie konnte nicht gespeichert werden"
+saveReady = "Download bereit"
+selectAndMove = "Auswählen und Bearbeiten"
+editSelectDescription = "Klicken Sie auf eine vorhandene Anmerkung, um Farbe, Deckkraft, Text oder Größe zu bearbeiten."
+editStampHint = "Um das Bild zu ändern, löschen Sie diesen Stempel und fügen Sie einen neuen hinzu."
+editSwitchToSelect = "Wechseln Sie zu „Auswählen und Bearbeiten“, um diese Anmerkung zu bearbeiten."
+undo = "Rückgängig"
+redo = "Wiederholen"
+applyChanges = "Änderungen anwenden"
 
 [search]
 title = "PDF durchsuchen"
@@ -4130,8 +4205,12 @@ settings = "Optionen"
 adminSettings = "Admin Optionen"
 allTools = "Werkzeuge"
 reader = "Reader"
-showMeAround = "Rundgang starten"
 tours = "Touren"
+showMeAround = "Rundgang starten"
+
+[quickAccess.toursTooltip]
+admin = "Sehen Sie sich hier Touren an: Tools-Tour, V2-Layout-Tour und Admin-Tour."
+user = "Sehen Sie sich hier Touren an: Tools-Tour und V2-Layout-Tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Tool-Tour"
@@ -4140,10 +4219,6 @@ adminTour = "Admin-Tour"
 adminTourDesc = "Entdecken Sie Admin-Einstellungen & Funktionen"
 whatsNewTour = "Neu in V2"
 whatsNewTourDesc = "Tour zum aktualisierten Layout"
-
-[quickAccess.toursTooltip]
-admin = "Sehen Sie sich hier Touren an: Tools-Tour, V2-Layout-Tour und Admin-Tour."
-user = "Sehen Sie sich hier Touren an: Tools-Tour und V2-Layout-Tour."
 
 [admin]
 error = "Fehler"
@@ -5336,6 +5411,16 @@ finish = "Fertigstellen"
 startTour = "Tour starten"
 startTourDescription = "Geführte Tour zu den wichtigsten Funktionen von Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Starten Sie im Bereich <strong>Schnellzugriff</strong>, um zwischen Reader, Automate, Ihren Dateien und allen Touren zu wechseln."
+leftPanel = "Die linke <strong>Tools</strong>-Leiste zeigt alles, was Sie tun können. Durchsuchen Sie Kategorien oder suchen Sie, um schnell ein Tool zu finden."
+fileUpload = "Verwenden Sie die Schaltfläche <strong>Dateien</strong>, um eine PDF hochzuladen oder eine kürzlich verwendete auszuwählen. Wir laden ein Beispiel, damit Sie den Arbeitsbereich sehen können."
+rightRail = "Die <strong>rechte Leiste</strong> enthält Schnellaktionen zum Auswählen von Dateien, Ändern des Designs oder der Sprache und zum Herunterladen von Ergebnissen."
+topBar = "Die obere Leiste ermöglicht den Wechsel zwischen <strong>Viewer</strong>, <strong>Seiteneditor</strong> und <strong>Aktive Dateien</strong>."
+pageEditorView = "Wechseln Sie zum Seiteneditor, um Seiten neu anzuordnen, zu drehen oder zu löschen."
+activeFilesView = "Verwenden Sie „Aktive Dateien“, um alles Geöffnete zu sehen und auszuwählen, woran Sie arbeiten möchten."
+wrapUp = "Das ist neu in V2. Öffnen Sie jederzeit das Menü <strong>Touren</strong>, um diese, die Tools-Tour oder die Admin-Tour erneut abzuspielen."
+
 [onboarding.welcomeModal]
 title = "Willkommen bei Stirling PDF!"
 description = "Möchten Sie eine kurze 1‑Minuten‑Tour machen, um die wichtigsten Funktionen kennenzulernen und zu erfahren, wie Sie loslegen?"
@@ -5355,6 +5440,10 @@ skipForNow = "Für jetzt überspringen"
 download = "Herunterladen →"
 showMeAround = "Rundgang starten"
 skipTheTour = "Rundgang überspringen"
+
+[onboarding.tourOverview]
+title = "Tour-Übersicht"
+body = "Stirling PDF V2 wird mit Dutzenden Tools und einem aufgefrischten Layout ausgeliefert. Machen Sie eine kurze Tour, um zu sehen, was sich geändert hat und wo Sie die benötigten Funktionen finden."
 
 [onboarding.serverLicense]
 skip = "Für jetzt überspringen"
@@ -5379,20 +5468,6 @@ userBody = "Laden Sie Teammitglieder ein, weisen Sie Rollen zu und halten Sie Ih
 
 [onboarding.securityCheck]
 message = "Die Anwendung hat kürzlich bedeutende Änderungen erfahren. Möglicherweise ist Aufmerksamkeit Ihres Server-Admins erforderlich. Bitte bestätigen Sie Ihre Rolle, um fortzufahren."
-
-[onboarding.tourOverview]
-body = "Stirling PDF V2 wird mit Dutzenden Tools und einem aufgefrischten Layout ausgeliefert. Machen Sie eine kurze Tour, um zu sehen, was sich geändert hat und wo Sie die benötigten Funktionen finden."
-title = "Tour-Übersicht"
-
-[onboarding.whatsNew]
-activeFilesView = "Verwenden Sie „Aktive Dateien“, um alles Geöffnete zu sehen und auszuwählen, woran Sie arbeiten möchten."
-fileUpload = "Verwenden Sie die Schaltfläche <strong>Dateien</strong>, um eine PDF hochzuladen oder eine kürzlich verwendete auszuwählen. Wir laden ein Beispiel, damit Sie den Arbeitsbereich sehen können."
-leftPanel = "Die linke <strong>Tools</strong>-Leiste zeigt alles, was Sie tun können. Durchsuchen Sie Kategorien oder suchen Sie, um schnell ein Tool zu finden."
-pageEditorView = "Wechseln Sie zum Seiteneditor, um Seiten neu anzuordnen, zu drehen oder zu löschen."
-quickAccess = "Starten Sie im Bereich <strong>Schnellzugriff</strong>, um zwischen Reader, Automate, Ihren Dateien und allen Touren zu wechseln."
-rightRail = "Die <strong>rechte Leiste</strong> enthält Schnellaktionen zum Auswählen von Dateien, Ändern des Designs oder der Sprache und zum Herunterladen von Ergebnissen."
-topBar = "Die obere Leiste ermöglicht den Wechsel zwischen <strong>Viewer</strong>, <strong>Seiteneditor</strong> und <strong>Aktive Dateien</strong>."
-wrapUp = "Das ist neu in V2. Öffnen Sie jederzeit das Menü <strong>Touren</strong>, um diese, die Tools-Tour oder die Admin-Tour erneut abzuspielen."
 
 [adminOnboarding]
 welcome = "Willkommen zur <strong>Admin-Tour</strong>! Entdecken wir die leistungsstarken Enterprise-Funktionen und Einstellungen für Systemadministratoren."
@@ -5683,28 +5758,28 @@ contactSales = "Vertrieb kontaktieren"
 contactToUpgrade = "Kontaktieren Sie uns, um Ihren Plan zu upgraden oder anzupassen"
 maxUsers = "Max. Benutzer"
 upTo = "Bis zu"
-activateLicense = "Lizenz aktivieren"
-checkoutInstructions = "Schließen Sie Ihren Kauf im Stripe-Tab ab. Kehren Sie danach hierher zurück und aktualisieren Sie die Seite, um Ihre Lizenz zu aktivieren. Sie erhalten außerdem eine E-Mail mit Ihrem Lizenzschlüssel."
-checkoutOpened = "Checkout geöffnet"
 getLicense = "Server-Lizenz erhalten"
-monthlyBilling = "Monatliche Abrechnung"
-selectPeriod = "Abrechnungszeitraum auswählen"
 upgradeToEnterprise = "Auf Enterprise upgraden"
+selectPeriod = "Abrechnungszeitraum auswählen"
+monthlyBilling = "Monatliche Abrechnung"
 yearlyBilling = "Jährliche Abrechnung"
-
-[plan.static.billingPortal]
-message = "Sie müssen Ihre E-Mail-Adresse im Stripe-Abrechnungsportal verifizieren. Prüfen Sie Ihre E-Mails auf einen Login-Link."
-title = "E-Mail-Verifizierung erforderlich"
+checkoutOpened = "Checkout geöffnet"
+checkoutInstructions = "Schließen Sie Ihren Kauf im Stripe-Tab ab. Kehren Sie danach hierher zurück und aktualisieren Sie die Seite, um Ihre Lizenz zu aktivieren. Sie erhalten außerdem eine E-Mail mit Ihrem Lizenzschlüssel."
+activateLicense = "Lizenz aktivieren"
 
 [plan.static.licenseActivation]
-activate = "Lizenz aktivieren"
 checkoutOpened = "Checkout in neuem Tab geöffnet"
-doLater = "Ich mache das später"
-enterKey = "Geben Sie unten Ihren Lizenzschlüssel ein, um Ihren Plan zu aktivieren:"
 instructions = "Schließen Sie den Kauf im Stripe-Tab ab. Nach Abschluss der Zahlung erhalten Sie eine E-Mail mit Ihrem Lizenzschlüssel."
+enterKey = "Geben Sie unten Ihren Lizenzschlüssel ein, um Ihren Plan zu aktivieren:"
 keyDescription = "Fügen Sie den Lizenzschlüssel aus Ihrer E-Mail ein"
+activate = "Lizenz aktivieren"
+doLater = "Ich mache das später"
 success = "Lizenz aktiviert!"
 successMessage = "Ihre Lizenz wurde erfolgreich aktiviert. Sie können dieses Fenster nun schließen."
+
+[plan.static.billingPortal]
+title = "E-Mail-Verifizierung erforderlich"
+message = "Sie müssen Ihre E-Mail-Adresse im Stripe-Abrechnungsportal verifizieren. Prüfen Sie Ihre E-Mails auf einen Login-Link."
 
 [plan.period]
 month = "Monat"
@@ -6187,6 +6262,21 @@ description = "Wenn aktiviert, exportiert der Editor jedes bearbeitete Textfeld 
 [pdfTextEditor.options.advanced]
 title = "Advanced Settings"
 
+[pdfTextEditor.tooltip.header]
+title = "Vorschau-Einschränkungen"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Fokus auf Text und Bilder"
+text = "Dieser Arbeitsbereich konzentriert sich auf das Bearbeiten von Text und das Neupositionieren eingebetteter Bilder. Komplexe Seitengrafiken, Formular-Widgets und Ebenengrafiken bleiben für den Export erhalten, sind hier jedoch nicht vollständig bearbeitbar."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Abweichungen in der Vorschau"
+text = "Einige Darstellungen (z. B. Tabellenränder, Formen oder das Erscheinungsbild von Anmerkungen) werden in der Vorschau möglicherweise nicht exakt angezeigt. Die exportierte PDF behält die ursprünglichen Zeichenbefehle nach Möglichkeit bei."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha-Viewer"
+text = "Dieser Alpha-Viewer wird noch weiterentwickelt – bestimmte Schriftarten, Farben, Transparenzeffekte und Layoutdetails können leicht abweichen. Bitte prüfen Sie die erzeugte PDF vor dem Teilen."
+
 [pdfTextEditor.manual]
 mergeTooltip = "Ausgewählte Felder zusammenführen"
 merge = "Auswahl zusammenführen"
@@ -6262,21 +6352,6 @@ subset = "Subset"
 invalidJson = "JSON-Datei kann nicht gelesen werden. Stellen Sie sicher, dass sie vom PDF-zu-JSON-Tool erzeugt wurde."
 pdfConversion = "Das bearbeitete JSON kann nicht zurück in ein PDF konvertiert werden."
 
-[pdfTextEditor.tooltip.alpha]
-text = "Dieser Alpha-Viewer wird noch weiterentwickelt – bestimmte Schriftarten, Farben, Transparenzeffekte und Layoutdetails können leicht abweichen. Bitte prüfen Sie die erzeugte PDF vor dem Teilen."
-title = "Alpha-Viewer"
-
-[pdfTextEditor.tooltip.header]
-title = "Vorschau-Einschränkungen"
-
-[pdfTextEditor.tooltip.previewVariance]
-text = "Einige Darstellungen (z. B. Tabellenränder, Formen oder das Erscheinungsbild von Anmerkungen) werden in der Vorschau möglicherweise nicht exakt angezeigt. Die exportierte PDF behält die ursprünglichen Zeichenbefehle nach Möglichkeit bei."
-title = "Abweichungen in der Vorschau"
-
-[pdfTextEditor.tooltip.textFocus]
-text = "Dieser Arbeitsbereich konzentriert sich auf das Bearbeiten von Text und das Neupositionieren eingebetteter Bilder. Komplexe Seitengrafiken, Formular-Widgets und Ebenengrafiken bleiben für den Export erhalten, sind hier jedoch nicht vollständig bearbeitbar."
-title = "Fokus auf Text und Bilder"
-
 [auth]
 sessionExpired = "Sitzung abgelaufen"
 pleaseLoginAgain = "Bitte melden Sie sich erneut an."
@@ -6323,78 +6398,3 @@ title = "Ergebnisse: Text hinzufügen"
 
 [addText.error]
 failed = "Beim Hinzufügen von Text zum PDF ist ein Fehler aufgetreten."
-
-[annotation]
-applyChanges = "Änderungen anwenden"
-backgroundColor = "Hintergrundfarbe"
-borderOff = "Rahmen: Aus"
-borderOn = "Rahmen: Ein"
-chooseColor = "Farbe wählen"
-circle = "Kreis"
-clearBackground = "Hintergrund entfernen"
-color = "Farbe"
-contents = "Text"
-desc = "Markieren, Stift, Text und Notizen verwenden. Änderungen bleiben live – kein Abflachen erforderlich."
-drawing = "Zeichnung"
-editCircle = "Kreis bearbeiten"
-editInk = "Stift bearbeiten"
-editLine = "Linie bearbeiten"
-editNote = "Notiz bearbeiten"
-editPolygon = "Polygon bearbeiten"
-editSelectDescription = "Klicken Sie auf eine vorhandene Anmerkung, um Farbe, Deckkraft, Text oder Größe zu bearbeiten."
-editSelected = "Anmerkung bearbeiten"
-editSquare = "Quadrat bearbeiten"
-editStampHint = "Um das Bild zu ändern, löschen Sie diesen Stempel und fügen Sie einen neuen hinzu."
-editSwitchToSelect = "Wechseln Sie zu „Auswählen und Bearbeiten“, um diese Anmerkung zu bearbeiten."
-editText = "Textfeld bearbeiten"
-editTextMarkup = "Textmarkierung bearbeiten"
-ellipse = "Ellipse"
-exit = "Anmerkungsmodus beenden"
-fillColor = "Füllfarbe"
-fillOpacity = "Fülldeckkraft"
-fontSize = "Schriftgröße"
-freehandHighlighter = "Freihand-Textmarker"
-highlight = "Markieren"
-imagePreview = "Vorschau"
-inkHighlighter = "Freihand-Textmarker"
-line = "Linie"
-noBackground = "Kein Hintergrund"
-note = "Notiz"
-noteIcon = "Notizsymbol"
-notesStamps = "Notizen & Stempel"
-opacity = "Deckkraft"
-pen = "Stift"
-polygon = "Polygon"
-rectangle = "Rechteck"
-redo = "Wiederholen"
-saveFailed = "Kopie konnte nicht gespeichert werden"
-saveReady = "Download bereit"
-savingCopy = "Download wird vorbereitet..."
-select = "Auswählen"
-selectAndMove = "Auswählen und Bearbeiten"
-settings = "Einstellungen"
-shapes = "Formen"
-square = "Quadrat"
-squiggly = "Wellenlinie"
-stamp = "Bild hinzufügen"
-stampSettings = "Stempel-Einstellungen"
-strikeout = "Durchstreichen"
-strokeColor = "Linienfarbe"
-strokeOpacity = "Linien-Deckkraft"
-strokeWidth = "Breite"
-text = "Textfeld"
-textAlignment = "Textausrichtung"
-textMarkup = "Textmarkierung"
-title = "Annotieren"
-underline = "Unterstreichen"
-undo = "Rückgängig"
-unsupportedType = "Dieser Anmerkungstyp wird für die Bearbeitung nicht vollständig unterstützt."
-
-[footer]
-discord = "Discord"
-issues = "GitHub"
-
-[textAlign]
-center = "Zentriert"
-left = "Links"
-right = "Rechts"

@@ -340,6 +340,10 @@ advance = "Pokročilé"
 edit = "Zobraziť a upraviť"
 popular = "Populárne"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Predvoľby"
 
@@ -435,6 +439,25 @@ latestVersion = "Najnovšia verzia"
 checkForUpdates = "Skontrolovať aktualizácie"
 viewDetails = "Zobraziť podrobnosti"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Klávesové skratky"
 description = "Prispôsobte klávesové skratky pre rýchly prístup k nástrojom. Kliknite na \"Zmeniť skratku\" a stlačte novú kombináciu klávesov. Stlačením Esc zrušíte."
@@ -452,25 +475,6 @@ noShortcut = "Nastavená žiadna skratka"
 [settings.hotkeys.errorModifier]
 mac = "Do skratky zahrňte ⌘ (Command), ⌥ (Option) alebo iný modifikátor."
 windows = "Do skratky zahrňte Ctrl, Alt alebo iný modifikátor."
-
-[settings.security]
-description = "Update your password to keep your account secure."
-title = "Security"
-
-[settings.security.password]
-confirm = "Confirm new password"
-confirmPlaceholder = "Re-enter your new password"
-current = "Current password"
-currentPlaceholder = "Enter your current password"
-error = "Unable to update password. Please verify your current password and try again."
-mismatch = "New passwords do not match."
-new = "New password"
-newPlaceholder = "Enter a new password"
-required = "All fields are required."
-ssoDisabled = "Password changes are managed by your identity provider."
-subtitle = "Change your password. You will be logged out after updating."
-success = "Password updated successfully. Please sign in again."
-update = "Update password"
 
 [update]
 modalTitle = "Dostupná aktualizácia"
@@ -507,16 +511,16 @@ low = "Nízka"
 title = "Zmeniť údaje"
 header = "Aktualizujte údaje svojho účtu"
 changePassword = "Používate predvolené prihlasovacie údaje. Prosím, zadajte nové heslo"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "Nové používateľské meno"
 oldPassword = "Aktuálne heslo"
 newPassword = "Nové heslo"
 confirmNewPassword = "Potvrďte nové heslo"
 submit = "Odoslať zmeny"
-changeUsername = "Update your username. You will be logged out after updating."
 credsUpdated = "Account updated"
 description = "Changes saved. Please log in again."
 error = "Unable to update username. Please verify your password and try again."
-ssoManaged = "Your account is managed by your identity provider."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Nastavenia účtu"
@@ -731,6 +735,11 @@ desc = "Detegovať a rozdeliť skenované fotky na samostatné strany"
 tags = "podpis,podpísať"
 title = "Podpísať"
 desc = "Pridáva podpis do PDF kreslením, textom alebo obrázkom"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "zjednodušiť,odstrániť,interaktívne"
@@ -949,11 +958,6 @@ desc = "Upravujte existujúci text a obrázky v PDF"
 tags = "text,anotácia,štítok"
 title = "Pridať text"
 desc = "Pridajte vlastný text kdekoľvek do svojho PDF"
-
-[home.annotate]
-desc = "Highlight, draw, add notes and shapes in the viewer"
-tags = "annotate,highlight,draw"
-title = "Annotate"
 
 [landing]
 addFiles = "Pridať súbory"
@@ -1274,19 +1278,19 @@ cbzOptions = "Možnosti CBZ na PDF"
 optimizeForEbook = "Optimalizovať PDF pre čítačky e‑kníh (používa Ghostscript)"
 cbzOutputOptions = "Možnosti PDF na CBZ"
 cbzDpi = "DPI pre vykresľovanie obrázkov"
-cbrDpi = "DPI for image rendering"
 cbrOptions = "CBR Options"
 cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
 ebookOptionsDesc = "Options for converting eBooks to PDF"
 embedAllFonts = "Embed all fonts"
 embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
-includePageNumbers = "Include page numbers"
-includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
 includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
@@ -1405,12 +1409,12 @@ header = "Add attachments"
 add = "Pridať prílohu"
 remove = "Odstrániť prílohu"
 embed = "Vložiť prílohu"
-submit = "Add attachments"
 convertToPdfA3b = "Convert to PDF/A-3b"
 convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
 convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
 convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
 convertToPdfA3bTooltipTitle = "What it does"
+submit = "Add attachments"
 
 [watermark]
 title = "Pridať vodotlač"
@@ -2355,10 +2359,10 @@ saved = "Uložené"
 label = "Nahrať obrázok podpisu"
 placeholder = "Vyberte súbor obrázka"
 hint = "Nahrajte obrázok vášho podpisu vo formáte PNG alebo JPG"
-backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
-backgroundRemovalFailedTitle = "Background removal failed"
-processing = "Processing image..."
 removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "Ako pridať podpis"
@@ -2404,6 +2408,11 @@ note = "Sploštenie odstráni interaktívne prvky z PDF, čím ich spraví needi
 label = "Zploštiť iba formuláre"
 desc = "Sploštiť len polia formulára, ostatné interaktívne prvky ponechať"
 
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
+
 [flatten.results]
 title = "Výsledky sploštenia"
 
@@ -2428,11 +2437,6 @@ bullet1 = "Formuláre sa stanú needitovateľnými"
 bullet2 = "Odkazy po kliknutí stále fungujú"
 bullet3 = "Komentáre a poznámky zostanú viditeľné"
 bullet4 = "Záložky stále pomáhajú pri navigácii"
-
-[flatten.renderDpi]
-help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
-label = "Rendering DPI (optional, recommended 150 DPI)"
-placeholder = "e.g. 150"
 
 [repair]
 tags = "opraviť,obnoviť,oprava,obnovenie"
@@ -3401,18 +3405,18 @@ placeholder = "Zadajte počet horizontálnych delení"
 label = "Vertikálne delenia"
 placeholder = "Zadajte počet vertikálnych delení"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
 [split-by-sections.customPages]
 label = "Custom Page Numbers"
 placeholder = "e.g. 2,4,6"
-
-[split-by-sections.splitMode]
-custom = "Custom pages"
-description = "Choose how to split the pages"
-label = "Split Mode"
-splitAll = "Split all pages"
-splitAllExceptFirst = "Split all except first"
-splitAllExceptFirstAndLast = "Split all except first and last"
-splitAllExceptLast = "Split all except last"
 
 [AddStampRequest]
 tags = "pečiatka, pridať obrázok, stred obrázka, vodotlač, PDF, vložiť, prispôsobiť"
@@ -3775,6 +3779,19 @@ filesize = "Veľkosť súboru"
 [compress.grayscale]
 label = "Použiť odtiene šedej na kompresiu"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Prehľad nastavení kompresie"
 
@@ -3793,8 +3810,8 @@ title = "Odtiene sivej"
 text = "Vyberte túto možnosť na prevod všetkých obrázkov na čiernobiele, čo môže výrazne zmenšiť veľkosť súboru, najmä pri skenovaných PDF alebo dokumentoch s množstvom obrázkov."
 
 [compress.tooltip.lineArt]
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 
 [compress.error]
 failed = "Pri komprimovaní PDF došlo k chybe."
@@ -3812,19 +3829,6 @@ _value = "Nastavenia kompresie"
 range1to3 = "Lower values preserve quality but result in larger files"
 range4to6 = "Medium compression with moderate quality reduction"
 range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
-
-[compress.lineArt]
-description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
-detailLevel = "Detail level"
-edgeEmphasis = "Edge emphasis"
-edgeHigh = "Strong"
-edgeLow = "Gentle"
-edgeMedium = "Balanced"
-label = "Convert images to line art"
-unavailable = "ImageMagick is not installed or enabled on this server"
-
-[compress.linearize]
-label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Tento súbor je chránený heslom. Zadajte heslo:"
@@ -4065,21 +4069,92 @@ deleteSelected = "Odstrániť vybrané strany"
 closePdf = "Zavrieť PDF"
 exportAll = "Exportovať PDF"
 downloadSelected = "Stiahnuť vybrané súbory"
-downloadAll = "Stiahnuť všetko"
-saveAll = "Uložiť všetko"
+annotations = "Annotations"
+exportSelected = "Exportovať vybrané strany"
+saveChanges = "Uložiť zmeny"
 toggleTheme = "Prepnúť tému"
-toggleBookmarks = "Prepnúť záložky"
 language = "Jazyk"
+toggleAnnotations = "Prepnúť zobrazenie anotácií"
 search = "Hľadať v PDF"
 panMode = "Režim posunu"
 rotateLeft = "Otočiť doľava"
 rotateRight = "Otočiť doprava"
 toggleSidebar = "Prepnúť bočný panel"
-exportSelected = "Exportovať vybrané strany"
-toggleAnnotations = "Prepnúť zobrazenie anotácií"
+toggleBookmarks = "Prepnúť záložky"
 print = "Vytlačiť PDF"
-saveChanges = "Uložiť zmeny"
-annotations = "Annotations"
+downloadAll = "Stiahnuť všetko"
+saveAll = "Uložiť všetko"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Hľadať v PDF"
@@ -4130,8 +4205,12 @@ settings = "Nast."
 adminSettings = "Admin nast."
 allTools = "All Tools"
 reader = "Čítačka"
-showMeAround = "Show me around"
 tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Prehliadka nástrojov"
@@ -4140,10 +4219,6 @@ adminTour = "Prehliadka administrácie"
 adminTourDesc = "Preskúmajte administrátorské nastavenia a funkcie"
 whatsNewTour = "See what's new in V2"
 whatsNewTourDesc = "Tour the updated layout"
-
-[quickAccess.toursTooltip]
-admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
-user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Chyba"
@@ -5336,6 +5411,16 @@ finish = "Dokončiť"
 startTour = "Spustiť prehliadku"
 startTourDescription = "Prejdite si sprievodcu kľúčovými funkciami Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Vitajte v Stirling PDF!"
 description = "Chceli by ste si prejsť rýchlu 1‑minútovú prehliadku kľúčových funkcií a ako začať?"
@@ -5355,6 +5440,10 @@ skipForNow = "Preskočiť zatiaľ"
 download = "Stiahnuť →"
 showMeAround = "Ukážte mi to"
 skipTheTour = "Preskočiť prehliadku"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Preskočiť zatiaľ"
@@ -5379,20 +5468,6 @@ userBody = "Pozvite kolegov, priraďujte roly a udržujte dokumenty organizovan�
 
 [onboarding.securityCheck]
 message = "Aplikácia prešla nedávno významnými zmenami. Môže byť potrebná pozornosť vášho správcu servera. Potvrďte svoju rolu, aby ste pokračovali."
-
-[onboarding.tourOverview]
-body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
-title = "Tour Overview"
-
-[onboarding.whatsNew]
-activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
-fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
-leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
-pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
-quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
-rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
-topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
-wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "Vitajte v <strong>administrátorskom sprievodcovi</strong>! Poďme preskúmať výkonné podnikové funkcie a nastavenia dostupné pre systémových administrátorov."
@@ -5683,28 +5758,28 @@ contactSales = "Kontaktovať obchod"
 contactToUpgrade = "Kontaktujte nás na inovovanie alebo prispôsobenie vášho plánu"
 maxUsers = "Max. počet používateľov"
 upTo = "Až do"
-activateLicense = "Activate Your License"
-checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
-checkoutOpened = "Checkout Opened"
 getLicense = "Get Server License"
-monthlyBilling = "Monthly Billing"
-selectPeriod = "Select Billing Period"
 upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
 yearlyBilling = "Yearly Billing"
-
-[plan.static.billingPortal]
-message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
-title = "Email Verification Required"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
 
 [plan.static.licenseActivation]
-activate = "Activate License"
 checkoutOpened = "Checkout Opened in New Tab"
-doLater = "I'll do this later"
-enterKey = "Enter your license key below to activate your plan:"
 instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
 keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "mesiac"
@@ -6187,6 +6262,21 @@ description = "Keď je zapnuté, editor exportuje každý upravený textový box
 [pdfTextEditor.options.advanced]
 title = "Advanced Settings"
 
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+
 [pdfTextEditor.manual]
 mergeTooltip = "Zlúčiť vybrané boxy"
 merge = "Zlúčiť výber"
@@ -6262,21 +6352,6 @@ subset = "podmnožina"
 invalidJson = "Nedá sa prečítať súbor JSON. Uistite sa, že bol vytvorený nástrojom PDF to JSON."
 pdfConversion = "Nedá sa skonvertovať upravený JSON späť na PDF."
 
-[pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-title = "Alpha Viewer"
-
-[pdfTextEditor.tooltip.header]
-title = "Preview Limitations"
-
-[pdfTextEditor.tooltip.previewVariance]
-text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
-title = "Preview Variance"
-
-[pdfTextEditor.tooltip.textFocus]
-text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
-title = "Text and Image Focus"
-
 [auth]
 sessionExpired = "Relácia vypršala"
 pleaseLoginAgain = "Prosím, prihláste sa znova."
@@ -6323,78 +6398,3 @@ title = "Výsledky pridania textu"
 
 [addText.error]
 failed = "Pri pridávaní textu do PDF sa vyskytla chyba."
-
-[annotation]
-applyChanges = "Apply Changes"
-backgroundColor = "Background colour"
-borderOff = "Border: Off"
-borderOn = "Border: On"
-chooseColor = "Choose colour"
-circle = "Circle"
-clearBackground = "Remove background"
-color = "Colour"
-contents = "Text"
-desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
-drawing = "Drawing"
-editCircle = "Edit Circle"
-editInk = "Edit Pen"
-editLine = "Edit Line"
-editNote = "Edit Note"
-editPolygon = "Edit Polygon"
-editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
-editSelected = "Edit Annotation"
-editSquare = "Edit Square"
-editStampHint = "To change the image, delete this stamp and add a new one."
-editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
-editText = "Edit Text Box"
-editTextMarkup = "Edit Text Markup"
-ellipse = "Ellipse"
-exit = "Exit annotation mode"
-fillColor = "Fill Colour"
-fillOpacity = "Fill Opacity"
-fontSize = "Font size"
-freehandHighlighter = "Freehand Highlighter"
-highlight = "Highlight"
-imagePreview = "Preview"
-inkHighlighter = "Freehand Highlighter"
-line = "Line"
-noBackground = "No background"
-note = "Note"
-noteIcon = "Note Icon"
-notesStamps = "Notes & Stamps"
-opacity = "Opacity"
-pen = "Pen"
-polygon = "Polygon"
-rectangle = "Rectangle"
-redo = "Redo"
-saveFailed = "Unable to save copy"
-saveReady = "Download ready"
-savingCopy = "Preparing download..."
-select = "Select"
-selectAndMove = "Select and Edit"
-settings = "Settings"
-shapes = "Shapes"
-square = "Square"
-squiggly = "Squiggly"
-stamp = "Add Image"
-stampSettings = "Stamp Settings"
-strikeout = "Strikeout"
-strokeColor = "Stroke Colour"
-strokeOpacity = "Stroke Opacity"
-strokeWidth = "Width"
-text = "Text box"
-textAlignment = "Text Alignment"
-textMarkup = "Text Markup"
-title = "Annotate"
-underline = "Underline"
-undo = "Undo"
-unsupportedType = "This annotation type is not fully supported for editing."
-
-[footer]
-discord = "Discord"
-issues = "GitHub"
-
-[textAlign]
-center = "Center"
-left = "Left"
-right = "Right"

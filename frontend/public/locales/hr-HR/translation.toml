@@ -340,6 +340,10 @@ advance = "Napredno"
 edit = "Pregled & Uređivanje"
 popular = "Popularno"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Preferencije"
 
@@ -435,6 +439,25 @@ latestVersion = "Najnovija verzija"
 checkForUpdates = "Provjeri ažuriranja"
 viewDetails = "Prikaži detalje"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Prečaci tipkovnice"
 description = "Prilagodite prečace tipkovnice za brz pristup alatima. Kliknite \"Promijeni prečac\" i pritisnite novu kombinaciju tipki. Pritisnite Esc za odustajanje."
@@ -452,25 +475,6 @@ noShortcut = "Nije postavljen prečac"
 [settings.hotkeys.errorModifier]
 mac = "Uključite ⌘ (Command), ⌥ (Option) ili neki drugi modifikator u svom prečacu."
 windows = "Uključite Ctrl, Alt ili neki drugi modifikator u svom prečacu."
-
-[settings.security]
-description = "Update your password to keep your account secure."
-title = "Security"
-
-[settings.security.password]
-confirm = "Confirm new password"
-confirmPlaceholder = "Re-enter your new password"
-current = "Current password"
-currentPlaceholder = "Enter your current password"
-error = "Unable to update password. Please verify your current password and try again."
-mismatch = "New passwords do not match."
-new = "New password"
-newPlaceholder = "Enter a new password"
-required = "All fields are required."
-ssoDisabled = "Password changes are managed by your identity provider."
-subtitle = "Change your password. You will be logged out after updating."
-success = "Password updated successfully. Please sign in again."
-update = "Update password"
 
 [update]
 modalTitle = "Dostupno ažuriranje"
@@ -507,16 +511,16 @@ low = "Nizak"
 title = "Promijeni pristupne podatke"
 header = "Ažurirajte korisničke podatke"
 changePassword = "Koristite zadanu lozinku za prijavu. Unesite novu lozinku"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "Novo korisničko ime"
 oldPassword = "Trenutna zaporka"
 newPassword = "Nova zaporka"
 confirmNewPassword = "Potvrdite novu lozinku"
 submit = "Potvrdi"
-changeUsername = "Update your username. You will be logged out after updating."
 credsUpdated = "Account updated"
 description = "Changes saved. Please log in again."
 error = "Unable to update username. Please verify your password and try again."
-ssoManaged = "Your account is managed by your identity provider."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Postavke računa"
@@ -731,6 +735,11 @@ desc = "Detektirajte i razdvojite skenirane fotografije u zasebne stranice"
 tags = "potpis,autogram"
 title = "Potpisati"
 desc = "Dodaje potpis u PDF crtežom, tekstom ili slikom"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "pojednostavi,ukloni,interaktivno"
@@ -949,11 +958,6 @@ desc = "Uređujte postojeći tekst i slike unutar PDF-ova"
 tags = "tekst,anotacija,oznaka"
 title = "Dodaj tekst"
 desc = "Dodajte prilagođeni tekst bilo gdje u PDF-u"
-
-[home.annotate]
-desc = "Highlight, draw, add notes and shapes in the viewer"
-tags = "annotate,highlight,draw"
-title = "Annotate"
 
 [landing]
 addFiles = "Dodaj datoteke"
@@ -1274,19 +1278,19 @@ cbzOptions = "Opcije CBZ u PDF"
 optimizeForEbook = "Optimiziraj PDF za e-čitače (koristi Ghostscript)"
 cbzOutputOptions = "Opcije PDF u CBZ"
 cbzDpi = "DPI za renderiranje slike"
-cbrDpi = "DPI for image rendering"
 cbrOptions = "CBR Options"
 cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
 ebookOptionsDesc = "Options for converting eBooks to PDF"
 embedAllFonts = "Embed all fonts"
 embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
-includePageNumbers = "Include page numbers"
-includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"
 includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
@@ -1405,12 +1409,12 @@ header = "Add attachments"
 add = "Dodaj privitak"
 remove = "Ukloni privitak"
 embed = "Ugradi privitak"
-submit = "Add attachments"
 convertToPdfA3b = "Convert to PDF/A-3b"
 convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
 convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
 convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
 convertToPdfA3bTooltipTitle = "What it does"
+submit = "Add attachments"
 
 [watermark]
 title = "Dodaj vodeni žig"
@@ -2355,10 +2359,10 @@ saved = "Spremljeno"
 label = "Učitaj sliku potpisa"
 placeholder = "Odaberite slikovnu datoteku"
 hint = "Učitajte PNG ili JPG sliku svojega potpisa"
-backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
-backgroundRemovalFailedTitle = "Background removal failed"
-processing = "Processing image..."
 removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "Kako dodati potpis"
@@ -2404,6 +2408,11 @@ note = "Spljoštavanje uklanja interaktivne elemente iz PDF-a, čineći ih neure
 label = "Izravnati samo obrasce"
 desc = "Spljošti samo polja obrazaca, ostavljajući druge interaktivne elemente netaknute"
 
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
+
 [flatten.results]
 title = "Rezultati spljoštavanja"
 
@@ -2428,11 +2437,6 @@ bullet1 = "Obrasci postaju neuredivi"
 bullet2 = "Poveznice i dalje rade pri kliku"
 bullet3 = "Komentari i bilješke ostaju vidljivi"
 bullet4 = "Oznake i dalje pomažu pri navigaciji"
-
-[flatten.renderDpi]
-help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
-label = "Rendering DPI (optional, recommended 150 DPI)"
-placeholder = "e.g. 150"
 
 [repair]
 tags = "popravi,vrati,korekcija,obnovi"
@@ -3401,18 +3405,18 @@ placeholder = "Unesite broj vodoravnih podjela"
 label = "Okomite podjele"
 placeholder = "Unesite broj okomitih podjela"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
 [split-by-sections.customPages]
 label = "Custom Page Numbers"
 placeholder = "e.g. 2,4,6"
-
-[split-by-sections.splitMode]
-custom = "Custom pages"
-description = "Choose how to split the pages"
-label = "Split Mode"
-splitAll = "Split all pages"
-splitAllExceptFirst = "Split all except first"
-splitAllExceptFirstAndLast = "Split all except first and last"
-splitAllExceptLast = "Split all except last"
 
 [AddStampRequest]
 tags = "Pečat, dodavanje slike, središnja slika, vodeni žig, PDF, ugradnja, prilagodba"
@@ -3775,6 +3779,19 @@ filesize = "Veličina datoteke"
 [compress.grayscale]
 label = "Primijeni sivinu za kompresiju"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Pregled postavki kompresije"
 
@@ -3793,8 +3810,8 @@ title = "Sivi tonovi"
 text = "Odaberite ovu opciju kako biste sve slike pretvorili u crno-bijele, što može znatno smanjiti veličinu datoteke, osobito za skenirane PDF-ove ili dokumente s mnogo slika."
 
 [compress.tooltip.lineArt]
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 
 [compress.error]
 failed = "Došlo je do pogreške pri komprimiranju PDF-a."
@@ -3812,19 +3829,6 @@ _value = "Postavke kompresije"
 range1to3 = "Lower values preserve quality but result in larger files"
 range4to6 = "Medium compression with moderate quality reduction"
 range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
-
-[compress.lineArt]
-description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
-detailLevel = "Detail level"
-edgeEmphasis = "Edge emphasis"
-edgeHigh = "Strong"
-edgeLow = "Gentle"
-edgeMedium = "Balanced"
-label = "Convert images to line art"
-unavailable = "ImageMagick is not installed or enabled on this server"
-
-[compress.linearize]
-label = "Linearize PDF for fast web viewing"
 
 [decrypt]
 passwordPrompt = "Ova je datoteka zaštićena lozinkom. Unesite lozinku:"
@@ -4065,21 +4069,92 @@ deleteSelected = "Izbriši odabrane stranice"
 closePdf = "Zatvori PDF"
 exportAll = "Izvezi PDF"
 downloadSelected = "Preuzmi odabrane datoteke"
-downloadAll = "Preuzmi sve"
-saveAll = "Spremi sve"
+annotations = "Annotations"
+exportSelected = "Izvezi odabrane stranice"
+saveChanges = "Spremi promjene"
 toggleTheme = "Prebaci temu"
-toggleBookmarks = "Prebaci knjižne oznake"
 language = "Jezik"
+toggleAnnotations = "Prebaci vidljivost bilješki"
 search = "Pretraži PDF"
 panMode = "Način pomicanja"
 rotateLeft = "Rotiraj ulijevo"
 rotateRight = "Rotiraj udesno"
 toggleSidebar = "Prebaci bočnu traku"
-exportSelected = "Izvezi odabrane stranice"
-toggleAnnotations = "Prebaci vidljivost bilješki"
+toggleBookmarks = "Prebaci knjižne oznake"
 print = "Ispis PDF-a"
-saveChanges = "Spremi promjene"
-annotations = "Annotations"
+downloadAll = "Preuzmi sve"
+saveAll = "Spremi sve"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Pretraži PDF"
@@ -4130,8 +4205,12 @@ settings = "Postavke"
 adminSettings = "Admin postavke"
 allTools = "All Tools"
 reader = "Čitač"
-showMeAround = "Show me around"
 tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Vodič kroz alate"
@@ -4140,10 +4219,6 @@ adminTour = "Vodič za administratore"
 adminTourDesc = "Istražite administratorske postavke i značajke"
 whatsNewTour = "See what's new in V2"
 whatsNewTourDesc = "Tour the updated layout"
-
-[quickAccess.toursTooltip]
-admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
-user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [admin]
 error = "Pogreška"
@@ -5336,6 +5411,16 @@ finish = "Završi"
 startTour = "Započni obilazak"
 startTourDescription = "Krenite u vođeni obilazak ključnih značajki alata Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Dobrodošli u Stirling PDF!"
 description = "Želite li brzu 1-minutnu turu kako biste naučili ključne značajke i kako započeti?"
@@ -5355,6 +5440,10 @@ skipForNow = "Preskoči zasad"
 download = "Preuzmi →"
 showMeAround = "Provedi me"
 skipTheTour = "Preskoči obilazak"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Preskoči zasad"
@@ -5379,20 +5468,6 @@ userBody = "Pozovite suradnike, dodijelite uloge i držite dokumente organiziran
 
 [onboarding.securityCheck]
 message = "Aplikacija je nedavno pretrpjela značajne promjene. Možda je potrebna pažnja vašeg administratora poslužitelja. Potvrdite svoju ulogu za nastavak."
-
-[onboarding.tourOverview]
-body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
-title = "Tour Overview"
-
-[onboarding.whatsNew]
-activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
-fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
-leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
-pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
-quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
-rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
-topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
-wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [adminOnboarding]
 welcome = "Dobrodošli u <strong>Administratorski obilazak</strong>! Istražimo moćne korporativne značajke i postavke dostupne administratorima sustava."
@@ -5683,28 +5758,28 @@ contactSales = "Kontaktirajte prodaju"
 contactToUpgrade = "Kontaktirajte nas za nadogradnju ili prilagodbu vašeg plana"
 maxUsers = "Maks. korisnika"
 upTo = "Do"
-activateLicense = "Activate Your License"
-checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
-checkoutOpened = "Checkout Opened"
 getLicense = "Get Server License"
-monthlyBilling = "Monthly Billing"
-selectPeriod = "Select Billing Period"
 upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
 yearlyBilling = "Yearly Billing"
-
-[plan.static.billingPortal]
-message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
-title = "Email Verification Required"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
 
 [plan.static.licenseActivation]
-activate = "Activate License"
 checkoutOpened = "Checkout Opened in New Tab"
-doLater = "I'll do this later"
-enterKey = "Enter your license key below to activate your plan:"
 instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
 keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "mjesec"
@@ -6187,6 +6262,21 @@ description = "Kad je omogućeno, uređivač izvozi svaki uređeni tekstualni ok
 [pdfTextEditor.options.advanced]
 title = "Advanced Settings"
 
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+
 [pdfTextEditor.manual]
 mergeTooltip = "Spoji odabrane okvire"
 merge = "Spoji odabir"
@@ -6262,21 +6352,6 @@ subset = "podskup"
 invalidJson = "Nije moguće pročitati JSON datoteku. Provjerite je li generirana alatom PDF u JSON."
 pdfConversion = "Nije moguće pretvoriti uređeni JSON natrag u PDF."
 
-[pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-title = "Alpha Viewer"
-
-[pdfTextEditor.tooltip.header]
-title = "Preview Limitations"
-
-[pdfTextEditor.tooltip.previewVariance]
-text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
-title = "Preview Variance"
-
-[pdfTextEditor.tooltip.textFocus]
-text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
-title = "Text and Image Focus"
-
 [auth]
 sessionExpired = "Sesija je istekla"
 pleaseLoginAgain = "Prijavite se ponovno."
@@ -6323,78 +6398,3 @@ title = "Rezultati dodavanja teksta"
 
 [addText.error]
 failed = "Došlo je do pogreške pri dodavanju teksta u PDF."
-
-[annotation]
-applyChanges = "Apply Changes"
-backgroundColor = "Background colour"
-borderOff = "Border: Off"
-borderOn = "Border: On"
-chooseColor = "Choose colour"
-circle = "Circle"
-clearBackground = "Remove background"
-color = "Colour"
-contents = "Text"
-desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
-drawing = "Drawing"
-editCircle = "Edit Circle"
-editInk = "Edit Pen"
-editLine = "Edit Line"
-editNote = "Edit Note"
-editPolygon = "Edit Polygon"
-editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
-editSelected = "Edit Annotation"
-editSquare = "Edit Square"
-editStampHint = "To change the image, delete this stamp and add a new one."
-editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
-editText = "Edit Text Box"
-editTextMarkup = "Edit Text Markup"
-ellipse = "Ellipse"
-exit = "Exit annotation mode"
-fillColor = "Fill Colour"
-fillOpacity = "Fill Opacity"
-fontSize = "Font size"
-freehandHighlighter = "Freehand Highlighter"
-highlight = "Highlight"
-imagePreview = "Preview"
-inkHighlighter = "Freehand Highlighter"
-line = "Line"
-noBackground = "No background"
-note = "Note"
-noteIcon = "Note Icon"
-notesStamps = "Notes & Stamps"
-opacity = "Opacity"
-pen = "Pen"
-polygon = "Polygon"
-rectangle = "Rectangle"
-redo = "Redo"
-saveFailed = "Unable to save copy"
-saveReady = "Download ready"
-savingCopy = "Preparing download..."
-select = "Select"
-selectAndMove = "Select and Edit"
-settings = "Settings"
-shapes = "Shapes"
-square = "Square"
-squiggly = "Squiggly"
-stamp = "Add Image"
-stampSettings = "Stamp Settings"
-strikeout = "Strikeout"
-strokeColor = "Stroke Colour"
-strokeOpacity = "Stroke Opacity"
-strokeWidth = "Width"
-text = "Text box"
-textAlignment = "Text Alignment"
-textMarkup = "Text Markup"
-title = "Annotate"
-underline = "Underline"
-undo = "Undo"
-unsupportedType = "This annotation type is not fully supported for editing."
-
-[footer]
-discord = "Discord"
-issues = "GitHub"
-
-[textAlign]
-center = "Center"
-left = "Left"
-right = "Right"
