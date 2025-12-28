@@ -15,7 +15,25 @@ ignore = [
 
 [bo_CN]
 ignore = [
+    'admin.settings.advanced.processExecutor.libreOffice',
+    'admin.settings.advanced.processExecutor.ocrMyPdf',
+    'admin.settings.advanced.processExecutor.qpdf',
+    'admin.settings.advanced.processExecutor.tesseract',
+    'admin.settings.connections.oauth2.label',
+    'admin.settings.connections.saml2.label',
+    'convert.dpi',
+    'endpointStatistics.dataTypeApi',
+    'getPdfInfo.other.javaScript',
+    'getPdfInfo.other.xmp',
+    'getPdfInfo.summary.tech.javaScript',
+    'home.devApi.title',
     'language.direction',
+    'removeBlanks.whitePercent.unit',
+    'showJS.tags',
+    'usage.controls.dataType.api',
+    'validateSignature.downloadType.csv',
+    'validateSignature.downloadType.json',
+    'validateSignature.downloadType.pdf',
 ]
 
 [ca_CA]
