@@ -29,6 +29,10 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
   const thumb = fileStub?.thumbnailUrl || indexedDBThumb;
   const [isHovered, setIsHovered] = useState(false);
 
+  // Show loading state during hydration: PDF file without thumbnail yet
+  const isPdf = file.type === 'application/pdf';
+  const isHydrating = isPdf && !thumb && !isGenerating;
+
   return (
     <Card
       shadow="xs"
@@ -125,7 +129,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
               fit="contain"
               radius="sm"
             />
-          ) : isGenerating ? (
+          ) : (isGenerating || isHydrating) ? (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -141,7 +145,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
                 animation: 'spin 1s linear infinite',
                 marginBottom: 8
               }} />
-              <Text size="xs" c="dimmed">Generating...</Text>
+              <Text size="xs" c="dimmed">Loading...</Text>
             </div>
           ) : (
             <div style={{

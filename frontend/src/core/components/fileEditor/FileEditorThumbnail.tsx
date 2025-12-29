@@ -388,7 +388,7 @@ const FileEditorThumbnail = ({
         style={isSupported || hasError ? undefined : { filter: 'grayscale(80%)', opacity: 0.6 }}
       >
         <div className={styles.previewPaper}>
-          {file.thumbnailUrl && (
+          {file.thumbnailUrl ? (
             <PrivateContent>
               <img
                 src={file.thumbnailUrl}
@@ -415,7 +415,26 @@ const FileEditorThumbnail = ({
               }}
             />
             </PrivateContent>
-          )}
+          ) : file.type?.startsWith('application/pdf') ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              gap: '8px'
+            }}>
+              <div style={{
+                width: 24,
+                height: 24,
+                border: '3px solid #e0e0e0',
+                borderTop: '3px solid #666',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+              <span style={{ fontSize: '0.875rem', color: '#666' }}>Loading thumbnail...</span>
+            </div>
+          ) : null}
         </div>
 
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
