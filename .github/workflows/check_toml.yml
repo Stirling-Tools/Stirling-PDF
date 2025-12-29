@@ -199,8 +199,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python dependencies
-        run: |
-          pip install --require-hashes tomli-w==1.2.0 --hash sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90
+        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
 
       - name: Run Python script to check files
         id: run-check
