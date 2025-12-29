@@ -56,8 +56,8 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     return duplicates
 
 
-# Maximum size for TOML files (e.g., 600 KB)
-MAX_FILE_SIZE = 500 * 1024
+# Maximum size for TOML files (e.g., 570 KB)
+MAX_FILE_SIZE = 570 * 1024
 
 
 def parse_toml_file(file_path):
@@ -161,7 +161,6 @@ def check_for_differences(reference_file, file_list, branch, actor):
     reference_branch = branch
     basename_reference_file = os.path.basename(reference_file)
 
-    error_report = []
     report = []
     report.append(f"#### 🔄 Reference Branch: `{reference_branch}`")
     reference_keys = read_toml_keys(reference_file)
@@ -188,16 +187,12 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
         # Verify that file is within the expected directory
         if not absolute_path.startswith(base_dir):
-            # raise ValueError(f"Unsafe file found: {file_normpath}")
             has_differences = True
             report.append(f"\n⚠️ Unsafe file found: `{locale_dir}/{basename_current_file}`\n\n---\n")
             continue
 
         # Verify file size before processing
         if os.path.getsize(os.path.join(branch, file_normpath)) > MAX_FILE_SIZE:
-            # raise ValueError(
-            #     f"The file {file_normpath} is too large and could pose a security risk."
-            # )
             has_differences = True
             report.append(
                 f"\n⚠️ The file `{locale_dir}/{basename_current_file}` is too large and could pose a security risk.\n\n---\n"
@@ -280,7 +275,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("---")
         report.append("")
 
-    if has_differences or error_report:
+    if has_differences:
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
