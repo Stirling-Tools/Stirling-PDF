@@ -185,6 +185,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         # Verify that file is within the expected directory
         if not absolute_path.startswith(base_dir):
             # raise ValueError(f"Unsafe file found: {file_normpath}")
+            has_differences = True
             error_report.append(f"⚠️ Unsafe file found: {file_normpath}")
             continue
 
@@ -193,6 +194,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
             # raise ValueError(
             #     f"The file {file_normpath} is too large and could pose a security risk."
             # )
+            has_differences = True
             error_report.append(
                 f"⚠️ The file {file_normpath} is too large and could pose a security risk."
             )
@@ -278,7 +280,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("---")
         report.append("")
 
-    if has_differences:
+    if has_differences or error_report:
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
@@ -293,7 +295,9 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
     if not only_reference_file:
         print("\n".join(report))
-        print("\n".join(error_report))
+        if error_report:
+            print("\n### ⚠️ Errors Found:\n")
+            print("\n".join(error_report))
 
 
 if __name__ == "__main__":
