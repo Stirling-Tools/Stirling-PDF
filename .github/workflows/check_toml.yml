@@ -206,6 +206,11 @@ jobs:
             fs.writeFileSync("pr-branch-check_language_toml.py", Buffer.from(fileContent.content, "base64").toString("utf-8"));
             core.exportVariable("CHECK_SCRIPT_PATH", "pr-branch-check_language_toml.py");
 
+            console.log(`Check script path: ${process.env.CHECK_SCRIPT_PATH}`);
+
+            // cat CHECK_SCRIPT_PATH
+            console.log(fs.readFileSync(process.env.CHECK_SCRIPT_PATH, "utf-8"));
+
             console.log(`Reference file path: ${referenceFilePath}`);
             core.exportVariable("REFERENCE_FILE", referenceFilePath);
 
