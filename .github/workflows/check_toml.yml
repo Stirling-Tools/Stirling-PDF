@@ -8,10 +8,11 @@ on:
     paths:
       - "frontend/public/locales/*/translation.toml"
       - ".github/scripts/check_language_toml.py"
-  pull_request_target:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "frontend/public/locales/*/translation.toml"
+      - ".github/workflows/check_toml.yml"
+  # pull_request_target:
+  #   types: [opened, synchronize, reopened]
+  #   paths:
+  #     - "frontend/public/locales/*/translation.toml"
 
 # cancel in-progress jobs if a new job is triggered
 concurrency:
@@ -36,9 +37,6 @@ jobs:
 
       - name: Checkout main branch first
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        with:
-          ref: fix_merger_20251227 # test
-          fetch-depth: 0
 
       - name: Setup GitHub App Bot
         id: setup-bot
