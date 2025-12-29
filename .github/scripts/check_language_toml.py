@@ -182,11 +182,15 @@ def check_for_differences(reference_file, file_list, branch, actor):
         file_normpath = os.path.normpath(file_path)
         absolute_path = os.path.abspath(file_normpath)
 
+        basename_current_file = os.path.basename(os.path.join(branch, file_normpath))
+        locale_dir = os.path.basename(os.path.dirname(file_normpath))
+        report.append(f"#### 📃 **File Check:** `{locale_dir}/{basename_current_file}`")
+
         # Verify that file is within the expected directory
         if not absolute_path.startswith(base_dir):
             # raise ValueError(f"Unsafe file found: {file_normpath}")
             has_differences = True
-            report.append(f"⚠️ Unsafe file found: `{file_normpath}`")
+            report.append(f"\n⚠️ Unsafe file found: `{file_normpath}`")
             continue
 
         # Verify file size before processing
@@ -196,12 +200,9 @@ def check_for_differences(reference_file, file_list, branch, actor):
             # )
             has_differences = True
             report.append(
-                f"⚠️ The file `{file_normpath}` is too large and could pose a security risk."
+                f"\n⚠️ The file `{file_normpath}` is too large and could pose a security risk."
             )
             continue
-
-        basename_current_file = os.path.basename(os.path.join(branch, file_normpath))
-        locale_dir = os.path.basename(os.path.dirname(file_normpath))
 
         if basename_current_file == basename_reference_file and locale_dir == "en-GB":
             continue
@@ -213,7 +214,6 @@ def check_for_differences(reference_file, file_list, branch, actor):
             continue
 
         only_reference_file = False
-        report.append(f"#### 📃 **File Check:** `{locale_dir}/{basename_current_file}`")
         current_keys = read_toml_keys(os.path.join(branch, file_path))
         reference_key_count = len(reference_keys)
         current_key_count = len(current_keys)
