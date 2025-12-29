@@ -15,10 +15,12 @@ Usage:
 # Sample for Windows:
 # python .github/scripts/check_language_toml.py --reference-file frontend/public/locales/en-GB/translation.toml --branch "" --files frontend/public/locales/de-DE/translation.toml frontend/public/locales/fr-FR/translation.toml
 
+import argparse
 import glob
 import os
-import argparse
 import re
+from pathlib import Path
+
 import tomllib  # Python 3.11+ (stdlib)
 import tomli_w  # For writing TOML files
 
@@ -37,7 +39,8 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     duplicates = []
 
     # Load TOML file
-    with open(file_path, "rb") as file:
+    file_path = Path(file_path)
+    with file_path.open("rb") as file:
         data = tomllib.load(file)
 
     def process_dict(obj, current_prefix=""):
@@ -66,7 +69,8 @@ def parse_toml_file(file_path):
     :param file_path: Path to the TOML file.
     :return: Dictionary with flattened keys.
     """
-    with open(file_path, "rb") as file:
+    file_path = Path(file_path)
+    with file_path.open("rb") as file:
         data = tomllib.load(file)
 
     def flatten_dict(d, parent_key="", sep="."):
@@ -109,7 +113,8 @@ def write_toml_file(file_path, updated_properties):
     """
     nested_data = unflatten_dict(updated_properties)
 
-    with open(file_path, "wb") as file:
+    file_path = Path(file_path)
+    with file_path.open("wb") as file:
         tomli_w.dump(nested_data, file)
 
 
@@ -120,20 +125,23 @@ def update_missing_keys(reference_file, file_list, branch=""):
     :param file_list: List of translation files to update.
     :param branch: Branch where the files are located.
     """
+    reference_file = Path(reference_file)
     reference_properties = parse_toml_file(reference_file)
+    branch_path = Path(branch) if branch else Path()
 
     for file_path in file_list:
-        language_dir = os.path.basename(os.path.dirname(file_path))
-        reference_lang_dir = os.path.basename(os.path.dirname(reference_file))
+        file_path = Path(file_path)
+        language_dir = file_path.parent.name
+        reference_lang_dir = reference_file.parent.name
         if (
             language_dir == reference_lang_dir
-            or not file_path.endswith(".toml")
-            or not os.path.dirname(os.path.dirname(file_path)).endswith("locales")
+            or file_path.suffix != ".toml"
+            or file_path.parents[1].name != "locales"
         ):
             print(f"Skipping file: {file_path}")
             continue
 
-        current_properties = parse_toml_file(os.path.join(branch, file_path))
+        current_properties = parse_toml_file(branch_path / file_path)
         updated_properties = {}
 
         for ref_key, ref_value in reference_properties.items():
@@ -144,7 +152,7 @@ def update_missing_keys(reference_file, file_list, branch=""):
                 # Add missing key with reference value
                 updated_properties[ref_key] = ref_value
 
-        write_toml_file(os.path.join(branch, file_path), updated_properties)
+        write_toml_file(branch_path / file_path, updated_properties)
 
 
 def check_for_missing_keys(reference_file, file_list, branch):
@@ -152,14 +160,17 @@ def check_for_missing_keys(reference_file, file_list, branch):
 
 
 def read_toml_keys(file_path):
-    if os.path.isfile(file_path) and os.path.exists(file_path):
+    file_path = Path(file_path)
+    if file_path.is_file():
         return parse_toml_file(file_path)
     return {}
 
 
 def check_for_differences(reference_file, file_list, branch, actor):
     reference_branch = branch
-    basename_reference_file = os.path.basename(reference_file)
+    reference_file = Path(reference_file)
+    basename_reference_file = reference_file.name
+    branch_path = Path(branch) if branch else Path()
 
     report = []
     report.append(f"#### 🔄 Reference Branch: `{reference_branch}`")
@@ -173,26 +184,25 @@ def check_for_differences(reference_file, file_list, branch, actor):
     if len(file_list) == 1:
         file_arr = file_list[0].split()
 
-    base_dir = os.path.abspath(
-        os.path.join(os.getcwd(), "frontend", "public", "locales")
-    )
+    base_dir = Path.cwd() / "frontend" / "public" / "locales"
 
     for file_path in file_arr:
-        file_normpath = os.path.normpath(file_path)
-        absolute_path = os.path.abspath(file_normpath)
+        file_path = Path(file_path)
+        file_normpath = file_path
+        absolute_path = file_normpath.resolve()
 
-        basename_current_file = os.path.basename(os.path.join(branch, file_normpath))
-        locale_dir = os.path.basename(os.path.dirname(file_normpath))
+        basename_current_file = (branch_path / file_normpath).name
+        locale_dir = file_normpath.parent.name
         report.append(f"#### 📃 **File Check:** `{locale_dir}/{basename_current_file}`")
 
         # Verify that file is within the expected directory
-        if not absolute_path.startswith(base_dir):
+        if not absolute_path.is_relative_to(base_dir):
             has_differences = True
             report.append(f"\n⚠️ Unsafe file found: `{locale_dir}/{basename_current_file}`\n\n---\n")
             continue
 
         # Verify file size before processing
-        if os.path.getsize(os.path.join(branch, file_normpath)) > MAX_FILE_SIZE:
+        if (branch_path / file_normpath).stat().st_size > MAX_FILE_SIZE:
             has_differences = True
             report.append(
                 f"\n⚠️ The file `{locale_dir}/{basename_current_file}` is too large and could pose a security risk.\n\n---\n"
@@ -202,14 +212,11 @@ def check_for_differences(reference_file, file_list, branch, actor):
         if basename_current_file == basename_reference_file and locale_dir == "en-GB":
             continue
 
-        if (
-            not file_normpath.endswith(".toml")
-            or basename_current_file != "translation.toml"
-        ):
+        if file_normpath.suffix != ".toml" or basename_current_file != "translation.toml":
             continue
 
         only_reference_file = False
-        current_keys = read_toml_keys(os.path.join(branch, file_path))
+        current_keys = read_toml_keys(branch_path / file_path)
         reference_key_count = len(reference_keys)
         current_key_count = len(current_keys)
 
@@ -254,13 +261,13 @@ def check_for_differences(reference_file, file_list, branch, actor):
         else:
             report.append("2. **Test Status:** ✅ **_Passed_**")
 
-        if find_duplicate_keys(os.path.join(branch, file_normpath)):
+        if find_duplicate_keys(branch_path / file_normpath):
             has_differences = True
             output = "\n".join(
                 [
                     f"      - `{key}`: first at {first}, duplicate at `{duplicate}`"
                     for key, first, duplicate in find_duplicate_keys(
-                        os.path.join(branch, file_normpath)
+                        branch_path / file_normpath
                     )
                 ]
             )
