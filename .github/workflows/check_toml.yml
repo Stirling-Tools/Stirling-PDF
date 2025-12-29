@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   check-files:
-    if: github.event_name == 'pull_request_target'
+    if: github.event_name == 'pull_request_target' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       issues: write # Allow posting comments on issues/PRs
