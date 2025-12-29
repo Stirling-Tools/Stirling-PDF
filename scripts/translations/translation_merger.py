@@ -6,15 +6,15 @@ Useful for AI-assisted translation workflows.
 TOML format only.
 """
 
-import json
-import sys
-from pathlib import Path
-from typing import Dict, List, Set, Any
-import argparse
-import shutil
-from datetime import datetime
-
 import os
+import argparse
+import json
+import shutil
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
 import tomllib
 import tomli_w
 
@@ -23,7 +23,9 @@ class TranslationMerger:
     def __init__(
         self,
         locales_dir: str = os.path.join(os.getcwd(), "frontend", "public", "locales"),
-        ignore_file: str = os.path.join(os.getcwd(), "scripts", "ignore_translation.toml"),
+        ignore_file: str = os.path.join(
+            os.getcwd(), "scripts", "ignore_translation.toml"
+        ),
     ):
         self.locales_dir = Path(locales_dir)
         self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
@@ -31,7 +33,7 @@ class TranslationMerger:
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
 
-    def _load_translation_file(self, file_path: Path) -> Dict:
+    def _load_translation_file(self, file_path: Path) -> dict[str, Any]:
         """Load TOML translation file."""
         try:
             with open(file_path, "rb") as f:
@@ -44,7 +46,7 @@ class TranslationMerger:
             sys.exit(1)
 
     def _save_translation_file(
-        self, data: Dict, file_path: Path, backup: bool = False
+        self, data: dict[str, Any], file_path: Path, backup: bool = False
     ) -> None:
         """Save TOML translation file with backup option."""
         if backup and file_path.exists():
@@ -57,7 +59,7 @@ class TranslationMerger:
         with open(file_path, "wb") as f:
             tomli_w.dump(data, f)
 
-    def _load_ignore_patterns(self) -> Dict[str, Set[str]]:
+    def _load_ignore_patterns(self) -> dict[str, set[str]]:
         """Load ignore patterns from TOML file."""
         if not self.ignore_file.exists():
             return {}
@@ -74,7 +76,7 @@ class TranslationMerger:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
 
-    def _get_nested_value(self, data: Dict, key_path: str) -> Any:
+    def _get_nested_value(self, data: dict[str, Any], key_path: str) -> Any:
         """Get value from nested dict using dot notation."""
         keys = key_path.split(".")
         current = data
@@ -85,7 +87,9 @@ class TranslationMerger:
                 return None
         return current
 
-    def _set_nested_value(self, data: Dict, key_path: str, value: Any) -> None:
+    def _set_nested_value(
+        self, data: dict[str, Any], key_path: str, value: Any
+    ) -> None:
         """Set value in nested dict using dot notation."""
         keys = key_path.split(".")
         current = data
@@ -103,8 +107,8 @@ class TranslationMerger:
         current[keys[-1]] = value
 
     def _flatten_dict(
-        self, d: Dict, parent_key: str = "", separator: str = "."
-    ) -> Dict[str, Any]:
+        self, d: dict[str, Any], parent_key: str = "", separator: str = "."
+    ) -> dict[str, Any]:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -115,10 +119,10 @@ class TranslationMerger:
                 items.append((new_key, v))
         return dict(items)
 
-    def _delete_nested_key(self, data: Dict, key_path: str) -> bool:
+    def _delete_nested_key(self, data: dict[str, Any], key_path: str) -> bool:
         """Delete a nested key using dot notation and clean up empty branches."""
 
-        def _delete(current: Dict, keys: List[str]) -> bool:
+        def _delete(current: dict[str, Any], keys: list[str]) -> bool:
             key = keys[0]
 
             if key not in current:
@@ -138,7 +142,7 @@ class TranslationMerger:
 
         return _delete(data, key_path.split("."))
 
-    def get_missing_keys(self, target_file: Path) -> List[str]:
+    def get_missing_keys(self, target_file: Path) -> list[str]:
         """Get list of missing keys in target file."""
         lang_code = target_file.parent.name.replace("-", "_")
         ignore_set = self.ignore_patterns.get(lang_code, set())
@@ -154,7 +158,7 @@ class TranslationMerger:
         missing = set(golden_flat.keys()) - set(target_flat.keys())
         return sorted(missing - ignore_set)
 
-    def get_unused_keys(self, target_file: Path) -> List[str]:
+    def get_unused_keys(self, target_file: Path) -> list[str]:
         """Get list of keys that are not present in the golden truth file."""
         if not target_file.exists():
             return []
@@ -168,10 +172,10 @@ class TranslationMerger:
     def add_missing_translations(
         self,
         target_file: Path,
-        keys_to_add: List[str] = None,
+        keys_to_add: list[str] | None = None,
         save: bool = True,
         backup: bool = False,
-    ) -> Dict:
+    ) -> dict[str, Any]:
         """Add missing translations from en-GB to target file and optionally save."""
         if not target_file.parent.exists():
             target_file.parent.mkdir(parents=True, exist_ok=True)
@@ -202,8 +206,8 @@ class TranslationMerger:
         }
 
     def extract_untranslated_entries(
-        self, target_file: Path, output_file: Path = None
-    ) -> Dict:
+        self, target_file: Path, output_file: Path | None = None
+    ) -> dict[str, Any]:
         """Extract entries marked as untranslated or identical to en-GB for AI translation."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
@@ -258,9 +262,9 @@ class TranslationMerger:
     def apply_translations(
         self,
         target_file: Path,
-        translations: Dict[str, str],
+        translations: dict[str, str],
         backup: bool = False,
-    ) -> Dict:
+    ) -> dict[str, Any]:
         """Apply provided translations to target file."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
@@ -296,10 +300,10 @@ class TranslationMerger:
     def remove_unused_translations(
         self,
         target_file: Path,
-        keys_to_remove: List[str] = None,
+        keys_to_remove: list[str] | None = None,
         save: bool = True,
         backup: bool = False,
-    ) -> Dict:
+    ) -> dict[str, Any]:
         """Remove translations that are not present in the golden truth file."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
