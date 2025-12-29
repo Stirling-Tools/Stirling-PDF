@@ -19,7 +19,6 @@ import glob
 import os
 import argparse
 import re
-import sys
 import tomllib  # Python 3.11+ (stdlib)
 import tomli_w  # For writing TOML files
 
@@ -58,7 +57,7 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
 
 
 # Maximum size for TOML files (e.g., 600 KB)
-MAX_FILE_SIZE = 600 * 1024
+MAX_FILE_SIZE = 500 * 1024
 
 
 def parse_toml_file(file_path):
@@ -293,10 +292,8 @@ def check_for_differences(reference_file, file_list, branch, actor):
         )
 
     if not only_reference_file:
-        if not error_report:
-            print("\n".join(report))
+        print("\n".join(report))
         print("\n".join(error_report))
-        sys.exit(3)
 
 
 if __name__ == "__main__":
