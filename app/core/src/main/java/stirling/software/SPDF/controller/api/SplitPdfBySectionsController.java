@@ -198,34 +198,49 @@ public class SplitPdfBySectionsController {
 
                 for (int i = 0; i < horizontalDivisions; i++) {
                     for (int j = 0; j < verticalDivisions; j++) {
-                        PDDocument subDoc = new PDDocument();
-                        PDPage subPage = new PDPage(new PDRectangle(subPageWidth, subPageHeight));
-                        subDoc.addPage(subPage);
+                        PDDocument subDoc = null;
+                        try {
+                            subDoc = new PDDocument();
+                            PDPage subPage =
+                                    new PDPage(new PDRectangle(subPageWidth, subPageHeight));
+                            subDoc.addPage(subPage);
 
-                        PDFormXObject form =
-                                layerUtility.importPageAsForm(
-                                        document, document.getPages().indexOf(originalPage));
+                            PDFormXObject form =
+                                    layerUtility.importPageAsForm(
+                                            document, document.getPages().indexOf(originalPage));
 
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        subDoc, subPage, AppendMode.APPEND, true, true)) {
-                            // Set clipping area and position
-                            float translateX = -subPageWidth * i;
+                            try (PDPageContentStream contentStream =
+                                    new PDPageContentStream(
+                                            subDoc, subPage, AppendMode.APPEND, true, true)) {
+                                // Set clipping area and position
+                                float translateX = -subPageWidth * i;
 
-                            // float translateY = height - subPageHeight * (verticalDivisions - j);
-                            float translateY = -subPageHeight * (verticalDivisions - 1 - j);
+                                // float translateY = height - subPageHeight * (verticalDivisions -
+                                // j);
+                                float translateY = -subPageHeight * (verticalDivisions - 1 - j);
 
-                            contentStream.saveGraphicsState();
-                            contentStream.addRect(0, 0, subPageWidth, subPageHeight);
-                            contentStream.clip();
-                            contentStream.transform(new Matrix(1, 0, 0, 1, translateX, translateY));
+                                contentStream.saveGraphicsState();
+                                contentStream.addRect(0, 0, subPageWidth, subPageHeight);
+                                contentStream.clip();
+                                contentStream.transform(
+                                        new Matrix(1, 0, 0, 1, translateX, translateY));
 
-                            // Draw the form
-                            contentStream.drawForm(form);
-                            contentStream.restoreGraphicsState();
+                                // Draw the form
+                                contentStream.drawForm(form);
+                                contentStream.restoreGraphicsState();
+                            }
+
+                            splitDocuments.add(subDoc);
+                        } catch (Exception e) {
+                            if (subDoc != null) {
+                                try {
+                                    subDoc.close();
+                                } catch (IOException ex) {
+                                    // ignore
+                                }
+                            }
+                            throw e;
                         }
-
-                        splitDocuments.add(subDoc);
                     }
                 }
             }

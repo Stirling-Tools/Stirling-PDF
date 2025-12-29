@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -189,9 +190,10 @@ public class ConvertWebsiteToPdfTest {
             when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture()))
                     .thenReturn(dummyResult);
 
-            // Mock WebResponseUtils
-            ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
-            wr.when(() -> WebResponseUtils.pdfDocToWebResponse(any(PDDocument.class), anyString()))
+            wr.when(
+                            () ->
+                                    WebResponseUtils.baosToWebResponse(
+                                            any(ByteArrayOutputStream.class), any()))
                     .thenReturn(fakeResponse);
 
             // Act
@@ -261,7 +263,10 @@ public class ConvertWebsiteToPdfTest {
 
             // WebResponseUtils
             ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
-            wr.when(() -> WebResponseUtils.pdfDocToWebResponse(any(PDDocument.class), anyString()))
+            wr.when(
+                            () ->
+                                    WebResponseUtils.baosToWebResponse(
+                                            any(ByteArrayOutputStream.class), any()))
                     .thenReturn(fakeResponse);
 
             // Act: should not throw and should return a Response

@@ -32,83 +32,76 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     @Override
     public InputStreamResource replace() throws IOException {
-
-        File file = null;
-        try {
-            // Create a temporary file, with the original filename from the multipart file
-            file = Files.createTempFile("temp", getFileInput().getOriginalFilename()).toFile();
-
+        try (TempFile tempFile =
+                new TempFile(
+                        Files.createTempFile("temp", getFileInput().getOriginalFilename())
+                                .toFile())) {
             // Transfer the content of the multipart file to the file
-            getFileInput().transferTo(file);
+            getFileInput().transferTo(tempFile.getFile());
 
             // Load the uploaded PDF
-            PDDocument document = Loader.loadPDF(file);
+            try (PDDocument document = Loader.loadPDF(tempFile.getFile())) {
+                // Render each page and invert colors
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                for (int page = 0; page < document.getNumberOfPages(); page++) {
+                    BufferedImage image;
 
-            // Render each page and invert colors
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            for (int page = 0; page < document.getNumberOfPages(); page++) {
-                BufferedImage image;
+                    // Use global maximum DPI setting, fallback to 300 if not set
+                    int renderDpi = 300; // Default fallback
+                    ApplicationProperties properties =
+                            ApplicationContextProvider.getBean(ApplicationProperties.class);
+                    if (properties != null && properties.getSystem() != null) {
+                        renderDpi = properties.getSystem().getMaxDPI();
+                    }
+                    final int dpi = renderDpi;
+                    final int pageNum = page;
 
-                // Use global maximum DPI setting, fallback to 300 if not set
-                int renderDpi = 300; // Default fallback
-                ApplicationProperties properties =
-                        ApplicationContextProvider.getBean(ApplicationProperties.class);
-                if (properties != null && properties.getSystem() != null) {
-                    renderDpi = properties.getSystem().getMaxDPI();
-                }
-                final int dpi = renderDpi;
-                final int pageNum = page;
+                    image =
+                            ExceptionUtils.handleOomRendering(
+                                    pageNum + 1,
+                                    dpi,
+                                    () -> pdfRenderer.renderImageWithDPI(pageNum, dpi));
 
-                image =
-                        ExceptionUtils.handleOomRendering(
-                                pageNum + 1,
-                                dpi,
-                                () -> pdfRenderer.renderImageWithDPI(pageNum, dpi));
+                    // Invert the colors
+                    invertImageColors(image);
 
-                // Invert the colors
-                invertImageColors(image);
+                    // Create a new PDPage from the inverted image
+                    PDPage pdPage = document.getPage(page);
+                    File tempImageFile = null;
+                    try {
+                        tempImageFile = convertToBufferedImageTpFile(image);
+                        PDImageXObject pdImage =
+                                PDImageXObject.createFromFileByContent(tempImageFile, document);
 
-                // Create a new PDPage from the inverted image
-                PDPage pdPage = document.getPage(page);
-                File tempImageFile = null;
-                try {
-                    tempImageFile = convertToBufferedImageTpFile(image);
-                    PDImageXObject pdImage =
-                            PDImageXObject.createFromFileByContent(tempImageFile, document);
-
-                    PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    document,
-                                    pdPage,
-                                    PDPageContentStream.AppendMode.OVERWRITE,
-                                    true);
-                    contentStream.drawImage(
-                            pdImage,
-                            0,
-                            0,
-                            pdPage.getMediaBox().getWidth(),
-                            pdPage.getMediaBox().getHeight());
-                    contentStream.close();
-                } finally {
-                    if (tempImageFile != null && tempImageFile.exists()) {
-                        Files.delete(tempImageFile.toPath());
+                        try (PDPageContentStream contentStream =
+                                new PDPageContentStream(
+                                        document,
+                                        pdPage,
+                                        PDPageContentStream.AppendMode.OVERWRITE,
+                                        true)) {
+                            contentStream.drawImage(
+                                    pdImage,
+                                    0,
+                                    0,
+                                    pdPage.getMediaBox().getWidth(),
+                                    pdPage.getMediaBox().getHeight());
+                        }
+                    } finally {
+                        if (tempImageFile != null && tempImageFile.exists()) {
+                            Files.delete(tempImageFile.toPath());
+                        }
                     }
                 }
-            }
 
-            // Save the modified PDF to a ByteArrayOutputStream
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            document.save(byteArrayOutputStream);
-            document.close();
+                // Save the modified PDF to a ByteArrayOutputStream
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                document.save(byteArrayOutputStream);
 
-            // Prepare the modified PDF for download
-            ByteArrayInputStream inputStream =
-                    new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-            InputStreamResource resource = new InputStreamResource(inputStream);
-            return resource;
-        } finally {
-            if (file != null && file.exists()) {
-                Files.delete(file.toPath());
+                // Prepare the modified PDF for download
+                ByteArrayInputStream inputStream =
+                        new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                InputStreamResource resource = new InputStreamResource(inputStream);
+                return resource;
             }
         }
     }
@@ -136,5 +129,24 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
         File file = File.createTempFile("image", ".png");
         ImageIO.write(image, "png", file);
         return file;
+    }
+
+    private static class TempFile implements AutoCloseable {
+        private final File file;
+
+        public TempFile(File file) {
+            this.file = file;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (file != null && file.exists()) {
+                Files.delete(file.toPath());
+            }
+        }
     }
 }
