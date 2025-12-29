@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Text, Stack, Group, Card, Progress } from "@mantine/core";
+import { Button, Text, Stack, Group, Card, Progress, Loader } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "@app/contexts/FileContext";
@@ -119,14 +119,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
       case EXECUTION_STATUS.ERROR:
         return <span style={{ fontSize: 16, color: 'red' }}>✕</span>;
       case EXECUTION_STATUS.RUNNING:
-        return <div style={{
-          width: 16,
-          height: 16,
-          border: '2px solid #ccc',
-          borderTop: '2px solid #007bff',
-          borderRadius: '50%',
-          animation: `spin ${AUTOMATION_CONSTANTS.SPINNER_ANIMATION_DURATION} linear infinite`
-        }} />;
+        return <Loader size={16} />;
       default:
         return <div style={{
           width: 16,
