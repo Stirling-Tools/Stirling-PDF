@@ -19,6 +19,7 @@ import glob
 import os
 import argparse
 import re
+import sys
 import tomllib  # Python 3.11+ (stdlib)
 import tomli_w  # For writing TOML files
 
@@ -161,6 +162,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     reference_branch = branch
     basename_reference_file = os.path.basename(reference_file)
 
+    error_report = []
     report = []
     report.append(f"#### 🔄 Reference Branch: `{reference_branch}`")
     reference_keys = read_toml_keys(reference_file)
@@ -183,13 +185,19 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
         # Verify that file is within the expected directory
         if not absolute_path.startswith(base_dir):
-            raise ValueError(f"Unsafe file found: {file_normpath}")
+            # raise ValueError(f"Unsafe file found: {file_normpath}")
+            error_report.append(f"⚠️ Unsafe file found: {file_normpath}")
+            continue
 
         # Verify file size before processing
         if os.path.getsize(os.path.join(branch, file_normpath)) > MAX_FILE_SIZE:
-            raise ValueError(
-                f"The file {file_normpath} is too large and could pose a security risk."
+            # raise ValueError(
+            #     f"The file {file_normpath} is too large and could pose a security risk."
+            # )
+            error_report.append(
+                f"⚠️ The file {file_normpath} is too large and could pose a security risk."
             )
+            continue
 
         basename_current_file = os.path.basename(os.path.join(branch, file_normpath))
         locale_dir = os.path.basename(os.path.dirname(file_normpath))
@@ -285,7 +293,10 @@ def check_for_differences(reference_file, file_list, branch, actor):
         )
 
     if not only_reference_file:
-        print("\n".join(report))
+        if not error_report:
+            print("\n".join(report))
+        print("\n".join(error_report))
+        sys.exit(3)
 
 
 if __name__ == "__main__":

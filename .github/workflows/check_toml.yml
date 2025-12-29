@@ -7,6 +7,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "frontend/public/locales/*/translation.toml"
+      - ".github/scripts/check_language_toml.py"
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
