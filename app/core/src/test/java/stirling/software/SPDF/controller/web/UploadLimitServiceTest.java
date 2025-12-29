@@ -16,34 +16,7 @@ import stirling.software.common.model.ApplicationProperties;
 class UploadLimitServiceTest {
 
     private UploadLimitService uploadLimitService;
-    private ApplicationProperties applicationProperties;
     private ApplicationProperties.System systemProps;
-
-    @BeforeEach
-    void setUp() {
-        applicationProperties = mock(ApplicationProperties.class);
-        systemProps = mock(ApplicationProperties.System.class);
-        when(applicationProperties.getSystem()).thenReturn(systemProps);
-
-        uploadLimitService = new UploadLimitService();
-        // inject mock
-        try {
-            var field = UploadLimitService.class.getDeclaredField("applicationProperties");
-            field.setAccessible(true);
-            field.set(uploadLimitService, applicationProperties);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @ParameterizedTest(name = "getUploadLimit case #{index}: input={0}, expected={1}")
-    @MethodSource("uploadLimitParams")
-    void shouldComputeUploadLimitCorrectly(String input, long expected) {
-        when(systemProps.getFileUploadLimit()).thenReturn(input);
-
-        long result = uploadLimitService.getUploadLimit();
-        assertEquals(expected, result);
-    }
 
     static Stream<Arguments> uploadLimitParams() {
         return Stream.of(
@@ -56,9 +29,35 @@ class UploadLimitServiceTest {
                 // valid formats
                 Arguments.of("10KB", 10 * 1024L),
                 Arguments.of("2MB", 2 * 1024 * 1024L),
-                Arguments.of("1GB", 1L * 1024 * 1024 * 1024),
+                Arguments.of("1GB", (long) 1024 * 1024 * 1024),
                 Arguments.of("5mb", 5 * 1024 * 1024L),
                 Arguments.of("0MB", 0L));
+    }
+
+    @ParameterizedTest(name = "getUploadLimit case #{index}: input={0}, expected={1}")
+    @MethodSource("uploadLimitParams")
+    void shouldComputeUploadLimitCorrectly(String input, long expected) {
+        when(systemProps.getFileUploadLimit()).thenReturn(input);
+
+        long result = uploadLimitService.getUploadLimit();
+        assertEquals(expected, result);
+    }
+
+    @BeforeEach
+    void setUp() {
+        ApplicationProperties applicationProperties = mock(ApplicationProperties.class);
+        systemProps = mock(ApplicationProperties.System.class);
+        when(applicationProperties.getSystem()).thenReturn(systemProps);
+
+        uploadLimitService = new UploadLimitService();
+        // inject mock
+        try {
+            var field = UploadLimitService.class.getDeclaredField("applicationProperties");
+            field.setAccessible(true);
+            field.set(uploadLimitService, applicationProperties);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @ParameterizedTest(name = "getReadableUploadLimit case #{index}: rawValue={0}, expected={1}")

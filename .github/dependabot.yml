@@ -21,3 +21,38 @@ updates:
     directory: /
     schedule:
       interval: weekly
+
+  - package-ecosystem: npm
+    directory: /devTools
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: docker
+    directory: /docker/backend
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: docker
+    directory: /docker/embedded
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: docker
+    directory: /docker/frontend
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: cargo
+    directory: /frontend/src-tauri
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: pip
+    directory: /testing/cucumber
+    schedule:
+      interval: "weekly"

@@ -27,7 +27,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple
 from urllib.parse import unquote, urlparse
 
 import requests
@@ -121,10 +121,10 @@ def build_filename(url: str, output_dir: Path) -> Path:
 
 
 def download_pdf(
-        url: str,
-        output_dir: Path,
-        timeout: int,
-        overwrite: bool,
+    url: str,
+    output_dir: Path,
+    timeout: int,
+    overwrite: bool,
 ) -> Tuple[str, Optional[Path], Optional[str]]:
     try:
         dest = build_filename(url, output_dir)
@@ -139,8 +139,12 @@ def download_pdf(
             # Peek into the first bytes to be safe
             peek = response.raw.read(5, decode_content=True)
             if not peek.startswith(b"%PDF"):
-                return url, None, f"Skipping non-PDF content-type ({content_type or 'unknown'})"
-            content = peek + response.content[len(peek):]
+                return (
+                    url,
+                    None,
+                    f"Skipping non-PDF content-type ({content_type or 'unknown'})",
+                )
+            content = peek + response.content[len(peek) :]
         else:
             content = response.content
 
@@ -157,7 +161,9 @@ def main() -> None:
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Downloading {len(urls)} PDFs to {output_dir} using {args.workers} workers...")
+    print(
+        f"Downloading {len(urls)} PDFs to {output_dir} using {args.workers} workers..."
+    )
 
     successes = 0
     skipped = 0
@@ -184,7 +190,9 @@ def main() -> None:
                 print(f"[OK] {url} -> {path}")
 
     print()
-    print(f"Completed. Success: {successes}, Skipped: {skipped}, Failures: {len(failures)}")
+    print(
+        f"Completed. Success: {successes}, Skipped: {skipped}, Failures: {len(failures)}"
+    )
     if failures:
         print("Failures:")
         for url, error in failures:

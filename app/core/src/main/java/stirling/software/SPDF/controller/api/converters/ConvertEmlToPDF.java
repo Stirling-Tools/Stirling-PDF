@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
@@ -43,9 +44,9 @@ public class ConvertEmlToPDF {
             summary = "Convert EML to PDF",
             description =
                     "This endpoint converts EML (email) files to PDF format with extensive"
-                            + " customization options. Features include font settings, image constraints, display modes, attachment handling,"
-                            + " and HTML debug output. Input: EML file, Output: PDF"
-                            + " or HTML file. Type: SISO")
+                            + " customization options. Features include font settings, image"
+                            + " constraints, display modes, attachment handling, and HTML debug output."
+                            + " Input: EML file, Output: PDF or HTML file. Type: SISO")
     public ResponseEntity<byte[]> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
 
         MultipartFile inputFile = request.getFileInput();
@@ -65,7 +66,7 @@ public class ConvertEmlToPDF {
         }
 
         // Validate file type - support EML
-        String lowerFilename = originalFilename.toLowerCase();
+        String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
         if (!lowerFilename.endsWith(".eml")) {
             log.error("Invalid file type for EML to PDF: {}", originalFilename);
             return ResponseEntity.badRequest()

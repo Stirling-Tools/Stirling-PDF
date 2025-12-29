@@ -31,6 +31,24 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
   // Calculate current angle display
   const currentAngle = parameters.parameters.angle;
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        parameters.rotateAnticlockwise();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        parameters.rotateClockwise();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [parameters]);
+
   return (
     <Stack gap="md">
       {/* Thumbnail Preview Section */}

@@ -248,3 +248,56 @@ Feature: API Validation
         And the response file should have size greater than 200
         And the response file should have extension ".zip"
         And the response ZIP should contain 3 files
+
+
+    @ffmpeg @positive @pdftovideo
+    Scenario: Convert PDF to video (MP4)
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 3 pages with random text
+        And the request data includes
+            | parameter   | value |
+            | videoFormat | mp4   |
+            | fps         | 1     |
+        When I send the API request to the endpoint "/api/v1/convert/pdf/video"
+        Then the response status code should be 200
+        And the response file should have size greater than 1000
+        And the response file should have extension ".mp4"
+
+
+    @ffmpeg @positive @pdftovideo
+    Scenario: Convert PDF to video (WebM)
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages with random text
+        And the request data includes
+            | parameter   | value |
+            | videoFormat | webm  |
+            | fps         | 2     |
+        When I send the API request to the endpoint "/api/v1/convert/pdf/video"
+        Then the response status code should be 200
+        And the response file should have size greater than 1000
+        And the response file should have extension ".webm"
+
+
+    @positive @pdftojson
+    Scenario: Convert PDF to JSON (text editor format)
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 3 pages with random text
+        When I send the API request to the endpoint "/api/v1/convert/pdf/text-editor"
+        Then the response status code should be 200
+        And the response content type should be "application/json"
+        And the response file should have size greater than 100
+        And the response file should have extension ".json"
+
+
+    @positive @pdftojson
+    Scenario: Convert PDF to JSON in lightweight mode
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages with random text
+        And the request data includes
+            | parameter   | value |
+            | lightweight | true  |
+        When I send the API request to the endpoint "/api/v1/convert/pdf/text-editor"
+        Then the response status code should be 200
+        And the response content type should be "application/json"
+        And the response file should have size greater than 50
+        And the response file should have extension ".json"

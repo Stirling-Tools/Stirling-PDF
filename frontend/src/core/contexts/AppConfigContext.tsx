@@ -23,12 +23,14 @@ export interface AppConfig {
   defaultLocale?: string;
   logoStyle?: 'modern' | 'classic';
   enableLogin?: boolean;
+  showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
   isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
+  enableDesktopInstallSlide?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   termsAndConditions?: string;

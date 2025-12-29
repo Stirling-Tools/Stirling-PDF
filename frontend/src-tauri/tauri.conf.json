@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Stirling-PDF",
-  "version": "2.0.3",
+  "version": "2.2.0",
   "identifier": "stirling.pdf.dev",
   "build": {
     "frontendDist": "../dist",
@@ -22,7 +22,14 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "rpm", "appimage", "dmg", "app", "msi"],
+    "targets": [
+      "deb",
+      "rpm",
+      "appimage",
+      "dmg",
+      "app",
+      "msi"
+    ],
     "icon": [
       "icons/icon.png",
       "icons/icon.icns",
@@ -39,7 +46,9 @@
     ],
     "fileAssociations": [
       {
-        "ext": ["pdf"],
+        "ext": [
+          "pdf"
+        ],
         "name": "PDF Document",
         "description": "Open PDF files with Stirling-PDF",
         "role": "Editor",
@@ -75,6 +84,13 @@
     },
     "fs": {
       "requireLiteralLeadingDot": false
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "stirlingpdf"
+        ]
+      }
     }
   }
 }

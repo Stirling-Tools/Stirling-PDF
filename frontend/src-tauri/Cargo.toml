@@ -31,12 +31,13 @@ tauri-plugin-log = "2.7.1"
 tauri-plugin-shell = "2.3.3"
 tauri-plugin-fs = "2.4.4"
 tauri-plugin-http = "2.5.4"
-tauri-plugin-single-instance = "2.3.6"
+tauri-plugin-single-instance = { version = "2.3.6", features = ["deep-link"] }
 tauri-plugin-store = "2.4.1"
 tauri-plugin-opener = "2.5.2"
 keyring = { version = "3.6.3", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.48", features = ["time", "sync"] }
 reqwest = { version = "0.12", features = ["json"] }
+tauri-plugin-deep-link = "2.4.5"
 tiny_http = "0.12"
 url = "2.5"
 urlencoding = "2.1"

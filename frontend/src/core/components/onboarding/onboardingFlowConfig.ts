@@ -4,6 +4,8 @@ import SecurityCheckSlide from '@app/components/onboarding/slides/SecurityCheckS
 import PlanOverviewSlide from '@app/components/onboarding/slides/PlanOverviewSlide';
 import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseSlide';
 import FirstLoginSlide from '@app/components/onboarding/slides/FirstLoginSlide';
+import TourOverviewSlide from '@app/components/onboarding/slides/TourOverviewSlide';
+import AnalyticsChoiceSlide from '@app/components/onboarding/slides/AnalyticsChoiceSlide';
 import { SlideConfig, LicenseNotice } from '@app/types/types';
 
 export type SlideId =
@@ -12,9 +14,11 @@ export type SlideId =
   | 'desktop-install'
   | 'security-check'
   | 'admin-overview'
-  | 'server-license';
+  | 'server-license'
+  | 'tour-overview'
+  | 'analytics-choice';
 
-export type HeroType = 'rocket' | 'dual-icon' | 'shield' | 'diamond' | 'logo' | 'lock';
+export type HeroType = 'rocket' | 'dual-icon' | 'shield' | 'diamond' | 'logo' | 'lock' | 'analytics';
 
 export type ButtonAction =
   | 'next'
@@ -27,7 +31,10 @@ export type ButtonAction =
   | 'launch-tools'
   | 'launch-auto'
   | 'see-plans'
-  | 'skip-to-license';
+  | 'skip-to-license'
+  | 'skip-tour'
+  | 'enable-analytics'
+  | 'disable-analytics';
 
 export interface FlowState {
   selectedRole: 'admin' | 'user' | null;
@@ -52,6 +59,8 @@ export interface SlideFactoryParams {
   firstLoginUsername?: string;
   onPasswordChanged?: () => void;
   usingDefaultCredentials?: boolean;
+  analyticsError?: string | null;
+  analyticsLoading?: boolean;
 }
 
 export interface HeroDefinition {
@@ -79,9 +88,9 @@ export interface SlideDefinition {
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   'first-login': {
     id: 'first-login',
-    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials }) => 
-      FirstLoginSlide({ 
-        username: firstLoginUsername || '', 
+    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials }) =>
+      FirstLoginSlide({
+        username: firstLoginUsername || '',
         onPasswordChanged: onPasswordChanged || (() => {}),
         usingDefaultCredentials: usingDefaultCredentials || false,
       }),
@@ -195,6 +204,13 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
     hero: { type: 'dual-icon' },
     buttons: [
       {
+        key: 'license-back',
+        type: 'icon',
+        icon: 'chevron-left',
+        group: 'left',
+        action: 'prev',
+      },
+      {
         key: 'license-close',
         type: 'button',
         label: 'onboarding.buttons.skipForNow',
@@ -209,6 +225,59 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
         variant: 'primary',
         group: 'right',
         action: 'see-plans',
+      },
+    ],
+  },
+  'tour-overview': {
+    id: 'tour-overview',
+    createSlide: () => TourOverviewSlide(),
+    hero: { type: 'rocket' },
+    buttons: [
+      {
+        key: 'tour-overview-back',
+        type: 'icon',
+        icon: 'chevron-left',
+        group: 'left',
+        action: 'prev',
+      },
+      {
+        key: 'tour-overview-skip',
+        type: 'button',
+        label: 'onboarding.buttons.skipForNow',
+        variant: 'secondary',
+        group: 'left',
+        action: 'skip-tour',
+      },
+      {
+        key: 'tour-overview-show',
+        type: 'button',
+        label: 'onboarding.buttons.showMeAround',
+        variant: 'primary',
+        group: 'right',
+        action: 'launch-tools',
+      },
+    ],
+  },
+  'analytics-choice': {
+    id: 'analytics-choice',
+    createSlide: ({ analyticsError }) => AnalyticsChoiceSlide({ analyticsError }),
+    hero: { type: 'analytics' },
+    buttons: [
+      {
+        key: 'analytics-disable',
+        type: 'button',
+        label: 'no',
+        variant: 'secondary',
+        group: 'left',
+        action: 'disable-analytics',
+      },
+      {
+        key: 'analytics-enable',
+        type: 'button',
+        label: 'yes',
+        variant: 'primary',
+        group: 'right',
+        action: 'enable-analytics',
       },
     ],
   },
