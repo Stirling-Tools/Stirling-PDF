@@ -6,7 +6,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "@app/types/automation";
-import { AUTOMATION_CONSTANTS, EXECUTION_STATUS } from "@app/constants/automation";
+import { EXECUTION_STATUS } from "@app/constants/automation";
 import { useResourceCleanup } from "@app/utils/resourceManager";
 
 interface AutomationRunProps {
