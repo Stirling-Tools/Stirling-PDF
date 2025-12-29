@@ -3,7 +3,7 @@ name: Check TOML Translation Files on PR
 # This workflow validates TOML translation files
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
       - "frontend/public/locales/*/translation.toml"
