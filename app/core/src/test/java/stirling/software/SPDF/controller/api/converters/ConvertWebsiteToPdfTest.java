@@ -190,6 +190,8 @@ public class ConvertWebsiteToPdfTest {
             when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture()))
                     .thenReturn(dummyResult);
 
+            ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
+
             wr.when(
                             () ->
                                     WebResponseUtils.baosToWebResponse(
