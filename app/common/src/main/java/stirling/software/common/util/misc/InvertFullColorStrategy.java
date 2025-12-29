@@ -110,18 +110,20 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
     private void invertImageColors(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                int rgba = image.getRGB(x, y);
-                Color color = new Color(rgba, true);
-                Color invertedColor =
-                        new Color(
-                                255 - color.getRed(),
-                                255 - color.getGreen(),
-                                255 - color.getBlue());
-                image.setRGB(x, y, invertedColor.getRGB());
-            }
+        int[] pixels = new int[width * height];
+        image.getRGB(0, 0, width, height, pixels, 0, width);
+        for (int i = 0; i < pixels.length; i++) {
+            int pixel = pixels[i];
+
+            int a = 0xff;
+
+            int r = (pixel >> 16) & 0xff;
+            int g = (pixel >> 8) & 0xff;
+            int b = pixel & 0xff;
+
+            pixels[i] = (a << 24) | ((255 - r) << 16) | ((255 - g) << 8) | (255 - b);
         }
+        image.setRGB(0, 0, width, height, pixels, 0, width);
     }
 
     // Helper method to convert BufferedImage to InputStream

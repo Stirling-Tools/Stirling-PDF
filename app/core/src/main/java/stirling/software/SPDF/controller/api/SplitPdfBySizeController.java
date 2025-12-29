@@ -181,9 +181,11 @@ public class SplitPdfBySizeController {
 
                 if (shouldCheckSize) {
                     log.debug("Performing size check after {} pages", pageAdded);
-                    ByteArrayOutputStream checkSizeStream = new ByteArrayOutputStream();
-                    holder.getDoc().save(checkSizeStream);
-                    long actualSize = checkSizeStream.size();
+                    long actualSize;
+                    try (ByteArrayOutputStream checkSizeStream = new ByteArrayOutputStream()) {
+                        holder.getDoc().save(checkSizeStream);
+                        actualSize = checkSizeStream.size();
+                    }
                     log.debug(
                             "Current document size: {} bytes (max: {} bytes)",
                             actualSize,
@@ -233,10 +235,12 @@ public class SplitPdfBySizeController {
                                         testDoc.addPage(new PDPage(testPage.getCOSObject()));
 
                                         // Check if we're still under size
-                                        ByteArrayOutputStream testStream =
-                                                new ByteArrayOutputStream();
-                                        testDoc.save(testStream);
-                                        long testSize = testStream.size();
+                                        long testSize;
+                                        try (ByteArrayOutputStream testStream =
+                                                new ByteArrayOutputStream()) {
+                                            testDoc.save(testStream);
+                                            testSize = testStream.size();
+                                        }
 
                                         if (testSize <= maxBytes) {
                                             extraPagesAdded++;
