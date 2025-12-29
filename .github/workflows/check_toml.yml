@@ -9,10 +9,10 @@ on:
       - "frontend/public/locales/*/translation.toml"
       - ".github/scripts/check_language_toml.py"
       - ".github/workflows/check_toml.yml"
-  # pull_request_target:
-  #   types: [opened, synchronize, reopened]
-  #   paths:
-  #     - "frontend/public/locales/*/translation.toml"
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "frontend/public/locales/*/translation.toml"
 
 # cancel in-progress jobs if a new job is triggered
 concurrency:
@@ -37,8 +37,6 @@ jobs:
 
       - name: Checkout main branch first
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        with:
-          ref: fix_merger_20251227
 
       - name: Setup GitHub App Bot
         id: setup-bot
@@ -207,11 +205,6 @@ jobs:
 
             fs.writeFileSync("pr-branch-check_language_toml.py", Buffer.from(fileContent.content, "base64").toString("utf-8"));
             core.exportVariable("CHECK_SCRIPT_PATH", "pr-branch-check_language_toml.py");
-
-            console.log(`Check script path: ${process.env.CHECK_SCRIPT_PATH}`);
-
-            // cat CHECK_SCRIPT_PATH
-            console.log(fs.readFileSync(process.env.CHECK_SCRIPT_PATH, "utf-8"));
 
             console.log(`Reference file path: ${referenceFilePath}`);
             core.exportVariable("REFERENCE_FILE", referenceFilePath);
