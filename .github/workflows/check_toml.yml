@@ -3,16 +3,18 @@ name: Check TOML Translation Files on PR
 # This workflow validates TOML translation files
 
 on:
-  pull_request:
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
+  #   paths:
+  #     - "frontend/public/locales/*/translation.toml"
+  #     - ".github/scripts/check_language_toml.py"
+  #     - ".github/workflows/check_toml.yml"
+  pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
       - "frontend/public/locales/*/translation.toml"
       - ".github/scripts/check_language_toml.py"
       - ".github/workflows/check_toml.yml"
-  pull_request_target:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "frontend/public/locales/*/translation.toml"
 
 # cancel in-progress jobs if a new job is triggered
 concurrency:
