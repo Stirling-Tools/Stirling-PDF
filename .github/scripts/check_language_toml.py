@@ -190,7 +190,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         if not absolute_path.startswith(base_dir):
             # raise ValueError(f"Unsafe file found: {file_normpath}")
             has_differences = True
-            report.append(f"\n⚠️ Unsafe file found: `{file_normpath}`\n---\n")
+            report.append(f"\n⚠️ Unsafe file found: `{locale_dir}/{basename_current_file}`\n\n---\n")
             continue
 
         # Verify file size before processing
@@ -200,7 +200,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
             # )
             has_differences = True
             report.append(
-                f"\n⚠️ The file `{file_normpath}` is too large and could pose a security risk.\n---\n"
+                f"\n⚠️ The file `{locale_dir}/{basename_current_file}` is too large and could pose a security risk.\n\n---\n"
             )
             continue
 
