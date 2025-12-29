@@ -3,12 +3,6 @@ name: Check TOML Translation Files on PR
 # This workflow validates TOML translation files
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "frontend/public/locales/*/translation.toml"
-      - ".github/scripts/check_language_toml.py"
-      - ".github/workflows/check_toml.yml"
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
@@ -26,7 +20,7 @@ permissions:
 
 jobs:
   check-files:
-    if: github.event_name == 'pull_request_target' || github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
       issues: write # Allow posting comments on issues/PRs
@@ -198,16 +192,6 @@ jobs:
               fs.writeFileSync(referenceFilePath, content);
             }
 
-            const { data: fileContent } = await github.rest.repos.getContent({
-              owner: prRepoOwner,
-              repo: prRepoName,
-              path: ".github/scripts/check_language_toml.py",
-              ref: branch,
-            });
-
-            fs.writeFileSync("pr-branch-check_language_toml.py", Buffer.from(fileContent.content, "base64").toString("utf-8"));
-            core.exportVariable("CHECK_SCRIPT_PATH", "pr-branch-check_language_toml.py");
-
             console.log(`Reference file path: ${referenceFilePath}`);
             core.exportVariable("REFERENCE_FILE", referenceFilePath);
 
@@ -223,7 +207,7 @@ jobs:
         id: run-check
         run: |
           echo "Running Python script to check TOML files..."
-          python "${CHECK_SCRIPT_PATH}" \
+          python .github/scripts/check_language_toml.py \
             --actor ${{ github.event.pull_request.user.login }} \
             --reference-file "${REFERENCE_FILE}" \
             --branch "pr-branch" \
