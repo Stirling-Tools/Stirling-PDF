@@ -14,6 +14,8 @@ plugins {
 import com.github.jk1.license.render.*
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import groovy.xml.XmlSlurper
+import org.gradle.api.tasks.testing.Test
 
 ext {
     springBootVersion = "3.5.7"
