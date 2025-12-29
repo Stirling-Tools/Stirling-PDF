@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Stack, Text, Box, Group, ActionIcon, Center, Alert } from "@mantine/core";
+import { Stack, Text, Box, Group, ActionIcon, Center, Alert, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
@@ -151,69 +151,81 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
 
   return (
     <Stack gap="md" data-tour="crop-settings">
-      {/* PDF Preview with Crop Selector */}
-      <Stack gap="xs">
-        <Group justify="space-between" align="center">
-          <Text size="sm" fw={500}>
-            {t("crop.preview.title", "Crop Area Selection")}
-          </Text>
-          <ActionIcon
-            variant="outline"
-            onClick={handleReset}
-            disabled={disabled || isFullCrop}
-            title={t("crop.reset", "Reset to full PDF")}
-            aria-label={t("crop.reset", "Reset to full PDF")}
-          >
-            <RestartAltIcon style={{ fontSize: '1rem' }} />
-          </ActionIcon>
-        </Group>
-
-        <Center>
-          <Box
-            style={{
-              width: CONTAINER_SIZE,
-              height: CONTAINER_SIZE,
-              border: '1px solid var(--mantine-color-gray-3)',
-              borderRadius: '8px',
-              backgroundColor: 'var(--mantine-color-gray-0)',
-              overflow: 'hidden',
-              position: 'relative'
-            }}
-          >
-            <CropAreaSelector
-              pdfBounds={pdfBounds}
-              cropArea={cropArea}
-              onCropAreaChange={handleCropAreaChange}
-              disabled={disabled}
-            >
-              <DocumentThumbnail
-                file={selectedStub}
-                thumbnail={thumbnail}
-                style={{
-                  width: pdfBounds.thumbnailWidth,
-                  height: pdfBounds.thumbnailHeight,
-                  position: 'absolute',
-                  left: pdfBounds.offsetX,
-                  top: pdfBounds.offsetY
-                }}
-              />
-            </CropAreaSelector>
-          </Box>
-        </Center>
-
-      </Stack>
-
-      {/* Manual Coordinate Input */}
-      <CropCoordinateInputs
-        cropArea={cropArea}
-        onCoordinateChange={handleCoordinateChange}
+      {/* Auto-Crop Checkbox */}
+      <Checkbox
+        label={t("crop.autoCrop", "Auto-crop whitespace")}
+        checked={parameters.parameters.autoCrop}
+        onChange={(e) => parameters.updateParameter('autoCrop', e.currentTarget.checked)}
         disabled={disabled}
-        pdfBounds={pdfBounds}
-        showAutomationInfo={false}
       />
 
-      {/* Validation Alert */}
-      {!isCropValid && (
+      {/* PDF Preview with Crop Selector - Only show when autoCrop is false */}
+      {!parameters.parameters.autoCrop && (
+        <Stack gap="xs">
+          <Group justify="space-between" align="center">
+            <Text size="sm" fw={500}>
+              {t("crop.preview.title", "Crop Area Selection")}
+            </Text>
+            <ActionIcon
+              variant="outline"
+              onClick={handleReset}
+              disabled={disabled || isFullCrop}
+              title={t("crop.reset", "Reset to full PDF")}
+              aria-label={t("crop.reset", "Reset to full PDF")}
+            >
+              <RestartAltIcon style={{ fontSize: '1rem' }} />
+            </ActionIcon>
+          </Group>
+
+          <Center>
+            <Box
+              style={{
+                width: CONTAINER_SIZE,
+                height: CONTAINER_SIZE,
+                border: '1px solid var(--mantine-color-gray-3)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--mantine-color-gray-0)',
+                overflow: 'hidden',
+                position: 'relative'
+              }}
+            >
+              <CropAreaSelector
+                pdfBounds={pdfBounds}
+                cropArea={cropArea}
+                onCropAreaChange={handleCropAreaChange}
+                disabled={disabled}
+              >
+                <DocumentThumbnail
+                  file={selectedStub}
+                  thumbnail={thumbnail}
+                  style={{
+                    width: pdfBounds.thumbnailWidth,
+                    height: pdfBounds.thumbnailHeight,
+                    position: 'absolute',
+                    left: pdfBounds.offsetX,
+                    top: pdfBounds.offsetY
+                  }}
+                />
+              </CropAreaSelector>
+            </Box>
+          </Center>
+
+        </Stack>
+      )}
+
+      {/* Manual Coordinate Input - Only show when autoCrop is false */}
+      {!parameters.parameters.autoCrop && (
+        <CropCoordinateInputs
+          cropArea={cropArea}
+          onCoordinateChange={handleCoordinateChange}
+          disabled={disabled}
+          pdfBounds={pdfBounds}
+          showAutomationInfo={false}
+        />
+      )}
+
+      {/* Validation Alert - Only show when autoCrop is false */}
+      {!parameters.parameters.autoCrop && !isCropValid && (
         <Alert color="red" variant="light">
           <Text size="xs">
             {t("crop.error.invalidArea", "Crop area extends beyond PDF boundaries")}

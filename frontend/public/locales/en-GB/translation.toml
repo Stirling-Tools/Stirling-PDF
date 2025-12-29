@@ -1278,6 +1278,21 @@ cbzOptions = "CBZ to PDF Options"
 optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
 cbzOutputOptions = "PDF to CBZ Options"
 cbzDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
@@ -1394,6 +1409,11 @@ header = "Add Attachments"
 add = "Add Attachment"
 remove = "Remove Attachment"
 embed = "Embed Attachment"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add Attachments"
 
 [watermark]
@@ -2339,6 +2359,10 @@ saved = "Saved"
 label = "Upload signature image"
 placeholder = "Select image file"
 hint = "Upload a PNG or JPG image of your signature"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "How to add signature"
@@ -2383,6 +2407,11 @@ note = "Flattening removes interactive elements from the PDF, making them non-ed
 [flatten.options.flattenOnlyForms]
 label = "Flatten only forms"
 desc = "Only flatten form fields, leaving other interactive elements intact"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Flatten Results"
@@ -2958,6 +2987,7 @@ header = "Crop PDF"
 submit = "Apply Crop"
 noFileSelected = "Select a PDF file to begin cropping"
 reset = "Reset to full PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Crop Area Selection"
@@ -3794,6 +3824,11 @@ failed = "An error occurred while compressing the PDF."
 [compress.selectText.1]
 _value = "Compression Settings"
 1 = "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "This file is password-protected. Please enter the password:"
