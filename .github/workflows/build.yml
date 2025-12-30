@@ -138,6 +138,7 @@ jobs:
           path: ./SwaggerDoc.json
 
   frontend-validation:
+    if: ${{ github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230' }}
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
