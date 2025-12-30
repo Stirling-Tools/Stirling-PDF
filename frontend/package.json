@@ -12,7 +12,7 @@
     "@embedpdf/plugin-annotation": "^1.5.0",
     "@embedpdf/plugin-bookmark": "^1.5.0",
     "@embedpdf/plugin-export": "^1.5.0",
-    "@embedpdf/plugin-history": "^1.5.0",
+    "@embedpdf/plugin-history": "^2.1.0",
     "@embedpdf/plugin-interaction-manager": "^1.5.0",
     "@embedpdf/plugin-loader": "^1.5.0",
     "@embedpdf/plugin-pan": "^1.5.0",
