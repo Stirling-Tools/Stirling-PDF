@@ -6164,5 +6164,3 @@ title = "Ergebnisse: Text hinzufügen"
 
 [addText.error]
 failed = "Beim Hinzufügen von Text zum PDF ist ein Fehler aufgetreten."
-
-# End of frontend/public/locales/de-DE/translation.toml
