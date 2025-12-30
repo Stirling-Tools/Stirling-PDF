@@ -36,26 +36,26 @@ jobs:
           if [ -z "$FRONTEND_HASH" ]; then
             FRONTEND_HASH="no-frontend-changes"
           fi
-          
+
           # Get last commit that touched backend code, docker/backend, or docker/compose
           BACKEND_HASH=$(git log -1 --format="%H" -- app/ docker/backend/ docker/compose/ 2>/dev/null || echo "")
           if [ -z "$BACKEND_HASH" ]; then
             BACKEND_HASH="no-backend-changes"
           fi
-          
+
           echo "Frontend hash: $FRONTEND_HASH"
           echo "Backend hash: $BACKEND_HASH"
-          
+
           echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
           echo "backend_hash=$BACKEND_HASH" >> $GITHUB_OUTPUT
-          
+
           # Short hashes for tags
           if [ "$FRONTEND_HASH" = "no-frontend-changes" ]; then
             echo "frontend_short=no-frontend" >> $GITHUB_OUTPUT
           else
             echo "frontend_short=${FRONTEND_HASH:0:8}" >> $GITHUB_OUTPUT
           fi
-          
+
           if [ "$BACKEND_HASH" = "no-backend-changes" ]; then
             echo "backend_short=no-backend" >> $GITHUB_OUTPUT
           else
@@ -84,7 +84,6 @@ jobs:
             echo "Backend image needs to be built"
           fi
 
-
       - name: Login to Docker Hub
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
@@ -103,7 +102,7 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
-      
+
       - name: Build and push backend image
         if: steps.check-backend.outputs.exists == 'false'
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
@@ -117,18 +116,16 @@ jobs:
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
 
-
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
           echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
           chmod 600 ../private.key
 
-
       - name: Deploy to VPS on port 3000
         run: |
           export UNIQUE_NAME=docker-compose-v2-$GITHUB_RUN_ID.yml
-      
+
           cat > $UNIQUE_NAME << EOF
           version: '3.3'
           services:
@@ -154,7 +151,7 @@ jobs:
                 SWAGGER_SERVER_URL: "https://demo.stirlingpdf.cloud"
                 baseUrl: "https://demo.stirlingpdf.cloud"
               restart: on-failure:5
-      
+
             frontend:
               container_name: stirling-v2-frontend
               image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
@@ -166,10 +163,10 @@ jobs:
                 - backend
               restart: on-failure:5
           EOF
-      
+
           # Copy to remote with unique name
           scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/$UNIQUE_NAME
-      
+
           # SSH and rename/move atomically to avoid interference
           ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
             mkdir -p /stirling/V2/{data,config,logs}
@@ -186,4 +183,3 @@ jobs:
         if: always()
         run: |
           rm -f ../private.key
-

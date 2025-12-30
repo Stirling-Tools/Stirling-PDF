@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - syncLangTest
     paths:
       - "build.gradle"
       - "README.md"
