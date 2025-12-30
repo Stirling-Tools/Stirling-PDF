@@ -56,4 +56,5 @@ licenses-frontend: &licenses-frontend
   - "frontend/scripts/generate-licenses.js"
 
 licenses-backend: &licenses-backend
+  - ".github/workflows/frontend-licenses-update.yml"
   - *build
