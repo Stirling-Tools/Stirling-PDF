@@ -3,8 +3,6 @@ name: Auto PR V2 Deployment
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    branches-ignore:
-      - label_20251230
   workflow_dispatch:
     inputs:
       pr:
@@ -22,7 +20,7 @@ permissions:
 
 jobs:
   check-pr:
-    if: (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
+    if: ((github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch') && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.decide.outputs.should_deploy }}
@@ -136,7 +134,7 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
-            
+
             // Delete previous V2 deployment comments to avoid clutter
             const { data: comments } = await github.rest.issues.listComments({
               owner,
@@ -159,7 +157,7 @@ jobs:
                 comment_id: comment.id
               });
             }
-            
+
             // Create new deployment started comment
             const { data: newComment } = await github.rest.issues.createComment({
               owner,
@@ -175,7 +173,7 @@ jobs:
           repository: ${{ needs.check-pr.outputs.pr_repository }}
           ref: ${{ needs.check-pr.outputs.pr_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # Fetch full history for commit hash detection
+          fetch-depth: 0 # Fetch full history for commit hash detection
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
@@ -206,20 +204,20 @@ jobs:
           if [ -z "$BACKEND_HASH" ]; then
             BACKEND_HASH="no-backend-changes"
           fi
-          
+
           echo "Frontend hash: $FRONTEND_HASH"
           echo "Backend hash: $BACKEND_HASH"
-          
+
           echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
           echo "backend_hash=$BACKEND_HASH" >> $GITHUB_OUTPUT
-          
+
           # Short hashes for tags
           if [ "$FRONTEND_HASH" = "no-frontend-changes" ]; then
             echo "frontend_short=no-frontend" >> $GITHUB_OUTPUT
           else
             echo "frontend_short=${FRONTEND_HASH:0:8}" >> $GITHUB_OUTPUT
           fi
-          
+
           if [ "$BACKEND_HASH" = "no-backend-changes" ]; then
             echo "backend_short=no-backend" >> $GITHUB_OUTPUT
           else
@@ -282,7 +280,7 @@ jobs:
           # Use same port strategy as regular PRs - just the PR number
           V2_PORT=${{ needs.check-pr.outputs.pr_number }}
           BACKEND_PORT=$((V2_PORT + 10000))  # Backend on higher port to avoid conflicts
-          
+
           # Create docker-compose for V2 with separate frontend and backend
           cat > docker-compose.yml << EOF
           version: '3.3'
@@ -361,7 +359,7 @@ jobs:
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
             const v2Port = ${{ steps.deploy.outputs.v2_port }};
-            
+
             // Delete the "deploying..." comment since we're posting the final result
             const deploymentStartedId = ${{ steps.deployment-started.outputs.result }};
             if (deploymentStartedId) {
@@ -376,7 +374,7 @@ jobs:
                 console.log(`Could not delete deployment started comment: ${error.message}`);
               }
             }
-            
+
             const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
             const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
 
@@ -427,19 +425,19 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ github.event.pull_request.number }};
-            
+
             // Find and delete V2 deployment comments
             const { data: comments } = await github.rest.issues.listComments({
               owner,
               repo,
               issue_number: prNumber
             });
-            
+
             const v2Comments = comments.filter(c =>
               c.body?.includes("## 🚀 V2 Auto-Deployment Complete!") &&
               c.user?.type === "Bot"
             );
-            
+
             for (const comment of v2Comments) {
               await github.rest.issues.deleteComment({
                 owner,
