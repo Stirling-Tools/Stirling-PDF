@@ -25,12 +25,12 @@ jobs:
       licenses-backend: ${{ steps.changes.outputs.licenses-backend }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Check for file changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
@@ -49,12 +49,12 @@ jobs:
       repository-projects: write # Required for enabling automerge
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
       - name: Checkout PR head (default)
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -69,7 +69,7 @@ jobs:
 
       - name: Checkout BASE branch (safe script)
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base
@@ -281,7 +281,7 @@ jobs:
           author: ${{ steps.setup-bot.outputs.committer }}
           signoff: true
           branch: update-frontend-3rd-party-licenses
-          base: V2
+          base: main
           title: "Update Frontend 3rd Party Licenses"
           body: ${{ env.PR_BODY }}
           labels: Licenses,github-actions,frontend
@@ -316,12 +316,14 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Check out code
+      - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup GitHub App Bot
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
         id: setup-bot
         uses: ./.github/actions/setup-bot
         with:
@@ -334,50 +336,83 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Check licenses for compatibility
-        run: ./gradlew clean checkLicense
+      - name: Check licenses and generate report
+        id: license-check
+        run: |
+          ./gradlew clean checkLicense generateLicenseReport || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
           DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: true
 
-      - name: Upload artifact on failure
-        if: failure()
+      - name: Check for license compatibility issues
+        run: |
+          if grep -q "Dependencies without allowed license" build/reports/dependency-license/dependencies-without-allowed-license.json; then
+            echo "LICENSE_WARNINGS_EXIST=true" >> $GITHUB_ENV
+          else
+            echo "LICENSE_WARNINGS_EXIST=false" >> $GITHUB_ENV
+          fi
+        if: always()  # auch bei vorherigem Failure ausführen
+
+      - name: Upload artifact on license issues
+        if: env.LICENSE_WARNINGS_EXIST == 'true'
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: dependencies-without-allowed-license.json
+          name: backend-dependencies-without-allowed-license.json
           path: build/reports/dependency-license/dependencies-without-allowed-license.json
-          retention-days: 3
 
-      - name: Move and rename license file
+      - name: Move license file
+        if: env.LICENSE_CHECK_FAILED != 'true'  # nur wenn checkLicense erfolgreich war
         run: |
-          mv build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
+          mkdir -p app/core/src/main/resources/static
+          cp build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
 
-      - name: Commit changes
+      - name: Comment on PR and fail if warnings (PR only)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token || github.token }}
+          script: |
+            const hasWarnings = process.env.LICENSE_WARNINGS_EXIST === 'true';
+            let body = '## Backend License Check\n\n';
+            if (hasWarnings) {
+              body += '❌ **Failed** – Dependencies with incompatible licenses detected.\n\nPlease review and resolve before merging.';
+            } else {
+              body += '✅ **Passed** – All backend licenses are compatible.';
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+            if (hasWarnings) {
+              core.setFailed('Incompatible backend licenses detected');
+            }
+
+      - name: Commit changes (push only)
+        if: github.event_name == 'push' && env.LICENSE_WARNINGS_EXIST == 'false'
         run: |
+          git config user.name "${{ steps.setup-bot.outputs.committer }}"
+          git config user.email "${{ steps.setup-bot.outputs.committer-email || 'bot@github.com' }}"
           git add app/core/src/main/resources/static/3rdPartyLicenses.json
           git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
-      - name: Create Pull Request
+      - name: Create Pull Request (push only)
+        if: github.event_name == 'push' && env.CHANGES_DETECTED == 'true' && env.LICENSE_WARNINGS_EXIST == 'false'
         id: cpr
-        if: env.CHANGES_DETECTED == 'true'
         uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
         with:
           token: ${{ steps.setup-bot.outputs.token }}
-          commit-message: "Update 3rd Party Licenses"
+          commit-message: "Update Backend 3rd Party Licenses"
           committer: ${{ steps.setup-bot.outputs.committer }}
           author: ${{ steps.setup-bot.outputs.committer }}
-          signoff: true
-          branch: update-3rd-party-licenses
-          title: "Update 3rd Party Licenses"
-          body: |
-            Auto-generated by ${{ steps.setup-bot.outputs.app-slug }}[bot]
-          labels: Licenses,github-actions
-          draft: false
-          delete-branch: true
-          sign-commits: true
+          branch: update-backend-3rd-party-licenses
+          title: "Update Backend 3rd Party Licenses"
+          body: "Auto-generated license report update by bot."
+          labels: Licenses,github-actions,backend
 
-      - name: Enable Pull Request Automerge
-        if: steps.cpr.outputs.pull-request-operation == 'created'
+      - name: Enable Automerge (push only, no warnings)
+        if: github.event_name == 'push' && steps.cpr.outputs.pull-request-operation == 'created' && env.LICENSE_WARNINGS_EXIST == 'false'
         run: gh pr merge --squash --auto "${{ steps.cpr.outputs.pull-request-number }}"
         env:
           GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
