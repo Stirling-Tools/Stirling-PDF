@@ -577,58 +577,6 @@ jobs:
               "${file}"
           done < <(find ./artifacts -type f \( -name "*.jar" -o -name "*.msi" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage" \) -print0)
 
-      - name: Generate provenance statement
-        run: |
-          python - <<'PY'
-          import hashlib
-          import json
-          from pathlib import Path
-
-          artifacts_dir = Path("artifacts")
-          patterns = (".jar", ".msi", ".dmg", ".deb", ".AppImage")
-          subjects = []
-          for path in artifacts_dir.rglob("*"):
-            if path.is_file() and path.suffix in patterns:
-              digest = hashlib.sha256(path.read_bytes()).hexdigest()
-              subjects.append(
-                {
-                  "name": str(path.relative_to(artifacts_dir)),
-                  "digest": {"sha256": digest},
-                }
-              )
-
-          if not subjects:
-            raise SystemExit("No artifacts found for provenance statement.")
-
-          statement = {
-            "_type": "https://in-toto.io/Statement/v0.1",
-            "subject": subjects,
-            "predicateType": "https://slsa.dev/provenance/v1",
-            "predicate": {
-              "builder": {
-                "id": "https://github.com/${{ github.repository }}/.github/workflows/multiOSReleases.yml@${{ github.sha }}",
-              },
-              "buildType": "https://github.com/actions/runner/github-hosted",
-              "invocation": {
-                "configSource": {
-                  "uri": "https://github.com/${{ github.repository }}",
-                  "digest": {"sha1": "${{ github.sha }}"},
-                  "entryPoint": ".github/workflows/multiOSReleases.yml",
-                },
-                "parameters": {
-                  "workflow": "${{ github.workflow }}",
-                  "runId": "${{ github.run_id }}",
-                },
-              },
-              "metadata": {"buildInvocationId": "${{ github.run_id }}"},
-            },
-          }
-
-          provenance_path = artifacts_dir / "provenance.intoto.jsonl"
-          provenance_path.write_text(f"{json.dumps(statement)}\n", encoding="utf-8")
-          print(f"Wrote provenance to {provenance_path}")
-          PY
-
       - name: Attest release artifacts
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
