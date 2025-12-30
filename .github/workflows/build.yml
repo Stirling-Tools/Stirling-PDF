@@ -2,7 +2,7 @@ name: Build and Test Workflow
 
 on:
   pull_request:
-    branches: ["main", "V2", "V2-gha"]
+    branches: ["main"]
   workflow_dispatch:
 
 # cancel in-progress jobs if a new job is triggered
@@ -27,15 +27,16 @@ jobs:
     timeout-minutes: 3
     outputs:
       build: ${{ steps.changes.outputs.build }}
-      app: ${{ steps.changes.outputs.app }}
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
+      frontend: ${{ steps.changes.outputs.frontend }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Check for file changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
@@ -66,14 +67,12 @@ jobs:
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
+
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: ./gradlew clean build -PnoSpotless
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
+
       - name: Check Test Reports Exist
         if: always()
         run: |
@@ -91,6 +90,7 @@ jobs:
               exit 1
             fi
           done
+
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -117,13 +117,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
         env:
@@ -136,6 +135,8 @@ jobs:
           path: ./SwaggerDoc.json
 
   frontend-validation:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: files-changed
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -270,12 +271,14 @@ jobs:
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - name: Set up JDK 17
+
+      - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
 
       - name: check the licenses for compatibility
@@ -317,10 +320,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - name: Set up Java 17
+      - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
 
       - name: Set up Docker Buildx
@@ -379,16 +382,11 @@ jobs:
           docker system prune -af || true
           echo "Disk space after cleanup:" && df -h
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
 
       - name: Build application
         run: ./gradlew clean build

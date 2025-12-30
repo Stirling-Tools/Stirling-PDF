@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Badge } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
@@ -21,6 +22,7 @@ interface FeaturesSettingsData {
 
 export default function AdminFeaturesSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
@@ -118,7 +120,15 @@ export default function AdminFeaturesSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.features.serverCertificate.label', 'Server Certificate')}</Text>
-            <Badge color="blue" size="sm">PRO</Badge>
+            <Badge
+              color="grape"
+              size="sm"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/settings/adminPlan')}
+              title={t('admin.settings.badge.clickToUpgrade', 'Click to view plan details')}
+            >
+              PRO
+            </Badge>
           </Group>
 
           <Text size="xs" c="dimmed">
