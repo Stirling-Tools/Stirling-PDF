@@ -2,7 +2,7 @@ name: Build and Test Workflow
 
 on:
   pull_request:
-    branches: ["main", "V2", "V2-gha"]
+    branches: ["main"]
   workflow_dispatch:
 
 # cancel in-progress jobs if a new job is triggered
