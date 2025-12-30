@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -48,6 +48,7 @@ const EmbedPdfViewerContent = ({
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
+    scrollActions,
     panActions: _panActions,
     rotationActions: _rotationActions,
     getScrollState,
@@ -77,6 +78,15 @@ const EmbedPdfViewerContent = ({
   // annotation history changes, and cleared after we successfully apply changes.
   const hasAnnotationChangesRef = useRef(false);
 
+  // Scroll position preservation system
+  // We continuously track the last known good scroll position, so we always have it available
+  const lastKnownScrollPageRef = useRef<number>(1);
+  const pendingScrollRestoreRef = useRef<number | null>(null);
+  const scrollRestoreAttemptsRef = useRef<number>(0);
+  
+  // Track the file ID we should be viewing after a save (to handle list reordering)
+  const pendingFileIdRef = useRef<string | null>(null);
+
   // Get redaction context
   const { redactionsApplied, setRedactionsApplied } = useRedaction();
   
@@ -104,6 +114,43 @@ const EmbedPdfViewerContent = ({
 
   // Enable redaction only when redaction tool is selected
   const shouldEnableRedaction = selectedTool === 'redact';
+
+  // Track previous annotation/redaction state to detect tool switches
+  const prevEnableAnnotationsRef = useRef(shouldEnableAnnotations);
+  const prevEnableRedactionRef = useRef(shouldEnableRedaction);
+  
+  // Track scroll position whenever scrollState changes from the context
+  // This ensures we always have the most up-to-date position
+  useEffect(() => {
+    if (scrollState.currentPage > 0) {
+      lastKnownScrollPageRef.current = scrollState.currentPage;
+    }
+  }, [scrollState.currentPage]);
+  
+  // Preserve scroll position when switching between annotation and redaction tools
+  // Using useLayoutEffect to capture synchronously before DOM updates
+  useLayoutEffect(() => {
+    const annotationsChanged = prevEnableAnnotationsRef.current !== shouldEnableAnnotations;
+    const redactionChanged = prevEnableRedactionRef.current !== shouldEnableRedaction;
+    
+    if (annotationsChanged || redactionChanged) {
+      // Read scroll state directly AND use the tracked value - take whichever is valid
+      const currentScrollState = getScrollState();
+      const pageFromState = currentScrollState.currentPage;
+      const pageFromRef = lastKnownScrollPageRef.current;
+      
+      // Use the current state if valid, otherwise fall back to tracked ref
+      const pageToRestore = pageFromState > 0 ? pageFromState : pageFromRef;
+      
+      if (pageToRestore > 0) {
+        pendingScrollRestoreRef.current = pageToRestore;
+        scrollRestoreAttemptsRef.current = 0;
+      }
+      
+      prevEnableAnnotationsRef.current = shouldEnableAnnotations;
+      prevEnableRedactionRef.current = shouldEnableRedaction;
+    }
+  }, [shouldEnableAnnotations, shouldEnableRedaction, getScrollState]);
 
   // Keep annotation mode enabled when entering placement tools without overriding manual toggles
   useEffect(() => {
@@ -139,6 +186,20 @@ const EmbedPdfViewerContent = ({
       setActiveFileIndex(0);
     }
   }, [activeFiles.length, activeFileIndex]);
+
+  // After saving a file, the list may reorder (sorted by version).
+  // Track the saved file's ID and update activeFileIndex to follow it.
+  useEffect(() => {
+    if (pendingFileIdRef.current && activeFiles.length > 0) {
+      const targetFileId = pendingFileIdRef.current;
+      const newIndex = activeFiles.findIndex(f => f.fileId === targetFileId);
+      if (newIndex !== -1 && newIndex !== activeFileIndex) {
+        setActiveFileIndex(newIndex);
+      }
+      // Clear the pending file ID once we've found and switched to it
+      pendingFileIdRef.current = null;
+    }
+  }, [activeFiles, activeFileIndex, setActiveFileIndex]);
 
   // Determine which file to display
   const currentFile = React.useMemo(() => {
@@ -316,6 +377,9 @@ const EmbedPdfViewerContent = ({
     try {
       console.log('[Viewer] Applying changes - exporting PDF with annotations/redactions');
 
+      // Use the continuously tracked scroll position - more reliable than reading at this moment
+      const pageToRestore = lastKnownScrollPageRef.current;
+
       // Step 0: Commit any pending redactions before export
       const hadPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
       
@@ -344,13 +408,27 @@ const EmbedPdfViewerContent = ({
       const file = new File([blob], filename, { type: 'application/pdf' });
 
       // Step 3: Create StirlingFiles and stubs for version history
-      const parentStub = selectors.getStirlingFileStub(activeFileIds[0]);
+      // Only consume the current file, not all active files
+      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      if (!currentFileId) throw new Error('Current file ID not found');
+      
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
       const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
 
-      // Step 4: Consume files (replace in context)
-      await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
+      // Store the page to restore after file replacement triggers re-render
+      pendingScrollRestoreRef.current = pageToRestore;
+      scrollRestoreAttemptsRef.current = 0;
+      
+      // Store the new file ID so we can track it after the list reorders
+      const newFileId = stubs[0]?.id;
+      if (newFileId) {
+        pendingFileIdRef.current = newFileId;
+      }
+
+      // Step 4: Consume only the current file (replace in context)
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
 
       // Mark annotations as saved so navigation away from the viewer is allowed.
       hasAnnotationChangesRef.current = false;
@@ -359,7 +437,59 @@ const EmbedPdfViewerContent = ({
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
-  }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
+  }, [currentFile, activeFiles, activeFileIndex, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
+
+  // Restore scroll position after file replacement or tool switch
+  // Uses polling with retries to ensure the scroll succeeds
+  useEffect(() => {
+    if (pendingScrollRestoreRef.current === null) return;
+    
+    const pageToRestore = pendingScrollRestoreRef.current;
+    const maxAttempts = 10;
+    const attemptInterval = 100; // ms between attempts
+    
+    const attemptScroll = () => {
+      const currentState = getScrollState();
+      const targetPage = Math.min(pageToRestore, currentState.totalPages);
+      
+      // Only attempt if we have valid state (totalPages > 0 means PDF is loaded)
+      if (currentState.totalPages > 0 && targetPage > 0) {
+        scrollActions.scrollToPage(targetPage, 'instant');
+        
+        // Check if scroll succeeded after a brief delay
+        setTimeout(() => {
+          const afterState = getScrollState();
+          if (afterState.currentPage === targetPage || scrollRestoreAttemptsRef.current >= maxAttempts) {
+            // Success or max attempts reached - clear pending
+            pendingScrollRestoreRef.current = null;
+            scrollRestoreAttemptsRef.current = 0;
+          } else {
+            // Scroll might not have worked, retry
+            scrollRestoreAttemptsRef.current++;
+            if (scrollRestoreAttemptsRef.current < maxAttempts) {
+              setTimeout(attemptScroll, attemptInterval);
+            } else {
+              // Give up after max attempts
+              pendingScrollRestoreRef.current = null;
+              scrollRestoreAttemptsRef.current = 0;
+            }
+          }
+        }, 50);
+      } else if (scrollRestoreAttemptsRef.current < maxAttempts) {
+        // PDF not ready yet, retry
+        scrollRestoreAttemptsRef.current++;
+        setTimeout(attemptScroll, attemptInterval);
+      } else {
+        // Give up after max attempts
+        pendingScrollRestoreRef.current = null;
+        scrollRestoreAttemptsRef.current = 0;
+      }
+    };
+    
+    // Start attempting after initial delay
+    const timer = setTimeout(attemptScroll, 150);
+    return () => clearTimeout(timer);
+  }, [scrollState.totalPages, scrollActions, getScrollState]);
 
   // Register applyChanges with ViewerContext so tools can access it directly
   useEffect(() => {

@@ -17,8 +17,17 @@ export function RedactionAPIBridge() {
     setPendingCount, 
     setActiveType, 
     setIsRedacting,
-    setRedactionsApplied 
+    setRedactionsApplied,
+    setBridgeReady
   } = useRedaction();
+
+  // Mark bridge as ready on mount, not ready on unmount
+  useEffect(() => {
+    setBridgeReady(true);
+    return () => {
+      setBridgeReady(false);
+    };
+  }, [setBridgeReady]);
 
   // Sync EmbedPDF state to our context
   useEffect(() => {

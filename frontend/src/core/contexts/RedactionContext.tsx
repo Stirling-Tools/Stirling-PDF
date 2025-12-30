@@ -27,6 +27,8 @@ interface RedactionState {
   pendingCount: number;
   activeType: 'redactSelection' | 'marqueeRedact' | null;
   isRedacting: boolean;
+  // Whether the redaction API bridge is ready (API ref is populated)
+  isBridgeReady: boolean;
 }
 
 /**
@@ -40,6 +42,7 @@ interface RedactionActions {
   setPendingCount: (count: number) => void;
   setActiveType: (type: 'redactSelection' | 'marqueeRedact' | null) => void;
   setIsRedacting: (isRedacting: boolean) => void;
+  setBridgeReady: (ready: boolean) => void;
   // Actions that call through to EmbedPDF API
   activateTextSelection: () => void;
   activateMarquee: () => void;
@@ -65,6 +68,7 @@ const initialState: RedactionState = {
   pendingCount: 0,
   activeType: null,
   isRedacting: false,
+  isBridgeReady: false,
 };
 
 /**
@@ -120,12 +124,24 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }));
   }, []);
 
+  const setBridgeReady = useCallback((ready: boolean) => {
+    setState(prev => ({
+      ...prev,
+      isBridgeReady: ready,
+    }));
+  }, []);
+
   // Keep navigation guard aware of pending or applied redactions so we block navigation
+  // Also clear the flag when all redactions have been saved
   useEffect(() => {
     if (state.pendingCount > 0 || state.redactionsApplied) {
       setHasUnsavedChanges(true);
+    } else if (state.isRedactionMode) {
+      // Only clear if we're in redaction mode - this avoids interfering with annotation changes
+      // When there are no pending redactions and nothing has been applied, we're "clean"
+      setHasUnsavedChanges(false);
     }
-  }, [state.pendingCount, state.redactionsApplied, setHasUnsavedChanges]);
+  }, [state.pendingCount, state.redactionsApplied, state.isRedactionMode, setHasUnsavedChanges]);
 
   // Actions that call through to EmbedPDF API
   const activateTextSelection = useCallback(() => {
@@ -158,6 +174,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setPendingCount,
     setActiveType,
     setIsRedacting,
+    setBridgeReady,
     activateTextSelection,
     activateMarquee,
     commitAllPending,
@@ -192,6 +209,7 @@ export const useRedactionMode = () => {
     pendingCount: context?.pendingCount || 0,
     activeType: context?.activeType || null,
     isRedacting: context?.isRedacting || false,
+    isBridgeReady: context?.isBridgeReady || false,
   };
 };
 
