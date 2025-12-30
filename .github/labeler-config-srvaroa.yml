@@ -61,8 +61,6 @@ labels:
 
   - label: 'Front End'
     files:
-      - 'app/core/src/main/resources/templates/.*'
-      - 'app/proprietary/src/main/resources/templates/.*'
       - 'app/core/src/main/resources/static/.*'
       - 'app/proprietary/src/main/resources/static/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/controller/web/.*'
