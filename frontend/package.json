@@ -22,7 +22,7 @@
     "@embedpdf/plugin-scroll": "^1.5.0",
     "@embedpdf/plugin-search": "^1.5.0",
     "@embedpdf/plugin-selection": "^1.5.0",
-    "@embedpdf/plugin-spread": "^1.5.0",
+    "@embedpdf/plugin-spread": "^2.1.0",
     "@embedpdf/plugin-thumbnail": "^1.5.0",
     "@embedpdf/plugin-tiling": "^1.5.0",
     "@embedpdf/plugin-viewport": "^1.5.0",
