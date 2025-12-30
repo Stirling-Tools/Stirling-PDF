@@ -326,20 +326,22 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 );
 
                 return (
-                  <Tooltip
-                    position="right"
-                    arrow
-                    offset={8}
-                    open={tooltipOpen}
-                    manualCloseOnly={manualCloseOnly}
-                    showCloseButton={showCloseButton}
-                    closeOnOutside={false}
-                    openOnFocus={false}
-                    content={toursTooltipContent}
-                    onOpenChange={handleTooltipOpenChange}
-                  >
-                    {helpButtonNode}
-                  </Tooltip>
+                  <React.Fragment key={buttonConfig.id}>
+                    <Tooltip
+                      position="right"
+                      arrow
+                      offset={8}
+                      open={tooltipOpen}
+                      manualCloseOnly={manualCloseOnly}
+                      showCloseButton={showCloseButton}
+                      closeOnOutside={false}
+                      openOnFocus={false}
+                      content={toursTooltipContent}
+                      onOpenChange={handleTooltipOpenChange}
+                    >
+                      {helpButtonNode}
+                    </Tooltip>
+                  </React.Fragment>
                 );
               }
 

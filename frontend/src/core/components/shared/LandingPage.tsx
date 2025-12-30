@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Container, Button, Group, useMantineColorScheme } from '@mantine/core';
+import { Container, Button, Group, useMantineColorScheme, ActionIcon, Tooltip } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,9 @@ import { useLogoVariant } from '@app/hooks/useLogoVariant';
 import { useFileManager } from '@app/hooks/useFileManager';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useIsMobile } from '@app/hooks/useIsMobile';
+import MobileUploadModal from '@app/components/shared/MobileUploadModal';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -24,8 +27,11 @@ const LandingPage = () => {
   const { wordmark } = useLogoAssets();
   const { loadRecentFiles } = useFileManager();
   const [hasRecents, setHasRecents] = React.useState<boolean>(false);
+  const [mobileUploadModalOpen, setMobileUploadModalOpen] = React.useState(false);
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
+  const { config } = useAppConfig();
+  const isMobile = useIsMobile();
 
   const handleFileDrop = async (files: File[]) => {
     await addFiles(files);
@@ -46,6 +52,16 @@ const LandingPage = () => {
     }
     // Reset the input so the same file can be selected again
     event.target.value = '';
+  };
+
+  const handleMobileUploadClick = () => {
+    setMobileUploadModalOpen(true);
+  };
+
+  const handleFilesReceivedFromMobile = async (files: File[]) => {
+    if (files.length > 0) {
+      await addFiles(files);
+    }
   };
 
   // Determine if the user has any recent files (same source as File Manager)
@@ -202,32 +218,72 @@ const LandingPage = () => {
                       </span>
                     )}
                   </Button>
+                  {config?.enableMobileScanner && !isMobile && (
+                    <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
+                      <ActionIcon
+                        size={38}
+                        variant="subtle"
+                        onClick={handleMobileUploadClick}
+                        style={{
+                          backgroundColor: 'var(--landing-button-bg)',
+                          color: 'var(--accent-interactive)',
+                          border: '1px solid var(--landing-button-border)',
+                          borderRadius: '1rem',
+                          paddingLeft: '0.5rem',
+                          paddingRight: '0.5rem',
+                        }}
+                      >
+                        <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </>
               )}
               {!hasRecents && (
-                <Button
-                  aria-label="Upload"
-                  style={{
-                    backgroundColor: 'var(--landing-button-bg)',
-                    color: 'var(--landing-button-color)',
-                    border: '1px solid var(--landing-button-border)',
-                    borderRadius: '1rem',
-                    height: '38px',
-                    width: '100%',
-                    minWidth: '58px',
-                    paddingLeft: '1rem',
-                    paddingRight: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onClick={handleNativeUploadClick}
-                >
-                  <LocalIcon icon="upload" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
-                  <span style={{ marginLeft: '.5rem' }}>
-                    {t('landing.uploadFromComputer', 'Upload from computer')}
-                  </span>
-                </Button>
+                <>
+                  <Button
+                    aria-label="Upload"
+                    style={{
+                      backgroundColor: 'var(--landing-button-bg)',
+                      color: 'var(--landing-button-color)',
+                      border: '1px solid var(--landing-button-border)',
+                      borderRadius: '1rem',
+                      height: '38px',
+                      width: 'calc(100% - 38px - 0.6rem)',
+                      minWidth: '58px',
+                      paddingLeft: '1rem',
+                      paddingRight: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    onClick={handleNativeUploadClick}
+                  >
+                    <LocalIcon icon="upload" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+                    <span style={{ marginLeft: '.5rem' }}>
+                      {t('landing.uploadFromComputer', 'Upload from computer')}
+                    </span>
+                  </Button>
+                  {config?.enableMobileScanner && !isMobile && (
+                    <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
+                      <ActionIcon
+                        size={38}
+                        variant="subtle"
+                        onClick={handleMobileUploadClick}
+                        style={{
+                          backgroundColor: 'var(--landing-button-bg)',
+                          color: 'var(--accent-interactive)',
+                          border: '1px solid var(--landing-button-border)',
+                          borderRadius: '1rem',
+                          paddingLeft: '0.5rem',
+                          paddingRight: '0.5rem',
+                        }}
+                      >
+                        <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </>
               )}
             </div>
 
@@ -251,6 +307,11 @@ const LandingPage = () => {
           </span>
         </div>
       </Dropzone>
+      <MobileUploadModal
+        opened={mobileUploadModalOpen}
+        onClose={() => setMobileUploadModalOpen(false)}
+        onFilesReceived={handleFilesReceivedFromMobile}
+      />
     </Container>
   );
 };

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, PasswordInput } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
+import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, PasswordInput, Anchor } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -17,7 +18,6 @@ interface MailSettingsData {
   username?: string;
   password?: string;
   from?: string;
-  frontendUrl?: string;
 }
 
 interface ApiResponseWithPending<T> {
@@ -25,10 +25,10 @@ interface ApiResponseWithPending<T> {
 }
 
 type MailApiResponse = MailSettingsData & ApiResponseWithPending<MailSettingsData>;
-type SystemApiResponse = { frontendUrl?: string } & ApiResponseWithPending<{ frontendUrl?: string }>;
 
 export default function AdminMailSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -42,44 +42,13 @@ export default function AdminMailSection() {
   } = useAdminSettings<MailSettingsData>({
     sectionName: 'mail',
     fetchTransformer: async () => {
-      const [mailResponse, systemResponse] = await Promise.all([
-        apiClient.get<MailApiResponse>('/api/v1/admin/settings/section/mail'),
-        apiClient.get<SystemApiResponse>('/api/v1/admin/settings/section/system')
-      ]);
-
-      const mail = mailResponse.data || {};
-      const system = systemResponse.data || {};
-
-      const result: MailSettingsData & ApiResponseWithPending<MailSettingsData> = {
-        ...mail,
-        frontendUrl: system.frontendUrl || ''
-      };
-
-      // Merge pending blocks from both endpoints
-      const pendingBlock: Partial<MailSettingsData> = {};
-      if (mail._pending) {
-        Object.assign(pendingBlock, mail._pending);
-      }
-      if (system._pending?.frontendUrl !== undefined) {
-        pendingBlock.frontendUrl = system._pending.frontendUrl;
-      }
-
-      if (Object.keys(pendingBlock).length > 0) {
-        result._pending = pendingBlock;
-      }
-
-      return result;
+      const mailResponse = await apiClient.get<MailApiResponse>('/api/v1/admin/settings/section/mail');
+      return mailResponse.data || {};
     },
     saveTransformer: (settings) => {
-      const { frontendUrl, ...mailSettings } = settings;
-
-      const deltaSettings: Record<string, any> = {
-        'system.frontendUrl': frontendUrl
-      };
-
       return {
-        sectionData: mailSettings,
-        deltaSettings
+        sectionData: settings,
+        deltaSettings: {}
       };
     }
   });
@@ -141,6 +110,12 @@ export default function AdminMailSection() {
               <Text fw={500} size="sm">{t('admin.settings.mail.enableInvites.label', 'Enable Email Invites')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t('admin.settings.mail.enableInvites.description', 'Allow admins to invite users via email with auto-generated passwords')}
+              </Text>
+              <Text size="xs" c="orange" mt={8} fw={500}>
+                {t('admin.settings.mail.frontendUrlNote.note', 'Note: Requires Frontend URL to be configured. ')}
+                <Anchor href="#" onClick={(e) => { e.preventDefault(); navigate('/settings/adminGeneral#frontendUrl'); }} c="orange" td="underline">
+                  {t('admin.settings.mail.frontendUrlNote.link', 'Configure in System Settings')}
+                </Anchor>
               </Text>
             </div>
             <Group gap="xs">
@@ -224,21 +199,6 @@ export default function AdminMailSection() {
               value={settings.from || ''}
               onChange={(e) => setSettings({ ...settings, from: e.target.value })}
               placeholder="noreply@example.com"
-            />
-          </div>
-
-          <div>
-            <TextInput
-              label={
-                <Group gap="xs">
-                  <span>{t('admin.settings.mail.frontendUrl.label', 'Frontend URL')}</span>
-                  <PendingBadge show={isFieldPending('frontendUrl')} />
-                </Group>
-              }
-              description={t('admin.settings.mail.frontendUrl.description', 'Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL.')}
-              value={settings.frontendUrl || ''}
-              onChange={(e) => setSettings({ ...settings, frontendUrl: e.target.value })}
-              placeholder="https://pdf.example.com"
             />
           </div>
         </Stack>
