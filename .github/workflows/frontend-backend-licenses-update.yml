@@ -208,9 +208,9 @@ jobs:
               } catch (e) {
                 warningDetails = 'Unable to read warning details';
               }
-              
+
               commentBody = `## ❌ Frontend License Check Failed
-              
+
               The frontend license check has detected compatibility warnings that require review:
 
               ${warningDetails}
@@ -220,7 +220,7 @@ jobs:
               _This check will fail the PR until license issues are resolved._`;
             } else {
               commentBody = `## ✅ Frontend License Check Passed
-              
+
               All frontend licenses have been validated and no compatibility warnings were detected.
 
               The frontend license report has been updated successfully.`;
@@ -424,7 +424,7 @@ jobs:
             let commentBody;
             if (hasWarnings) {
               commentBody = `## ❌ Backend License Check Failed
-              
+
               The backend license check has detected dependencies with incompatible or unallowed licenses:
 
               ${warningDetails || 'See uploaded artifact for details.'}
@@ -434,9 +434,9 @@ jobs:
               _This check will fail the PR until license issues are resolved._`;
             } else {
               commentBody = `## ✅ Backend License Check Passed
-              
+
               All backend dependencies have valid and allowed licenses.
-              
+
               The backend license report has been updated successfully.`;
             }
 
@@ -470,7 +470,7 @@ jobs:
 
           if [ "${{ env.LICENSE_WARNINGS_EXIST }}" = "true" ]; then
             PR_BODY="$PR_BODY
-            
+
           ## ⚠️ License Compatibility Warnings
 
           Incompatible licenses detected – manual review required before merge."
