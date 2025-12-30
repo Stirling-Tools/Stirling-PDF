@@ -48,3 +48,12 @@ frontend: &frontend
   - scripts/summarize_type3_signatures.py
   - scripts/type3_to_cff.py
   - scripts/update_type3_library.py
+
+licenses-frontend: &licenses-frontend
+  - ".github/workflows/frontend-licenses-update.yml"
+  - "frontend/package.json"
+  - "frontend/package-lock.json"
+  - "frontend/scripts/generate-licenses.js"
+
+licenses-backend: &licenses-backend
+  - *build
