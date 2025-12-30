@@ -17,6 +17,10 @@ on:
       - "frontend/package-lock.json"
       - "frontend/scripts/generate-licenses.js"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
