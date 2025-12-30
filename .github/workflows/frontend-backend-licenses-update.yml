@@ -346,12 +346,13 @@ jobs:
 
       - name: Check for license compatibility issues
         run: |
-          if grep -q "Dependencies without allowed license" build/reports/dependency-license/dependencies-without-allowed-license.json; then
+          if [ -f build/reports/dependency-license/dependencies-without-allowed-license.json ] && \
+             jq 'length > 0' build/reports/dependency-license/dependencies-without-allowed-license.json | grep -q true; then
             echo "LICENSE_WARNINGS_EXIST=true" >> $GITHUB_ENV
           else
             echo "LICENSE_WARNINGS_EXIST=false" >> $GITHUB_ENV
           fi
-        if: always()  # auch bei vorherigem Failure ausführen
+        if: always()
 
       - name: Upload artifact on license issues
         if: env.LICENSE_WARNINGS_EXIST == 'true'
@@ -361,33 +362,96 @@ jobs:
           path: build/reports/dependency-license/dependencies-without-allowed-license.json
 
       - name: Move license file
-        if: env.LICENSE_CHECK_FAILED != 'true'  # nur wenn checkLicense erfolgreich war
+        if: env.LICENSE_CHECK_FAILED != 'true' && env.LICENSE_WARNINGS_EXIST == 'false'
         run: |
           mkdir -p app/core/src/main/resources/static
           cp build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
 
-      - name: Comment on PR and fail if warnings (PR only)
-        if: github.event_name == 'pull_request'
+      - name: Delete previous backend license check comments
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token || github.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.issue.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+
+            const backendLicenseComments = comments.filter(comment => 
+              comment.body.includes('## ✅ Backend License Check Passed') ||
+              comment.body.includes('## ❌ Backend License Check Failed')
+            );
+
+            for (const comment of backendLicenseComments) {
+              console.log(`Deleting old backend license comment: ${comment.id}`);
+              await github.rest.issues.deleteComment({
+                owner,
+                repo,
+                comment_id: comment.id
+              });
+            }
+
+      - name: Comment on PR - Backend License Check Results
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const hasWarnings = process.env.LICENSE_WARNINGS_EXIST === 'true';
-            let body = '## Backend License Check\n\n';
+            const fs = require('fs');
+            let warningDetails = '';
+
             if (hasWarnings) {
-              body += '❌ **Failed** – Dependencies with incompatible licenses detected.\n\nPlease review and resolve before merging.';
-            } else {
-              body += '✅ **Passed** – All backend licenses are compatible.';
+              try {
+                const warningsFile = 'build/reports/dependency-license/dependencies-without-allowed-license.json';
+                if (fs.existsSync(warningsFile)) {
+                  const data = JSON.parse(fs.readFileSync(warningsFile, 'utf8'));
+                  if (data.length > 0) {
+                    warningDetails = data.map(dep => `- **${dep.moduleName}@${dep.moduleVersion}** – ${dep.moduleLicenses.map(l => l.licenseName).join(', ')}`).join('\n');
+                  }
+                }
+              } catch (e) {
+                warningDetails = 'Unable to parse warning details.';
+              }
             }
+
+            let commentBody;
+            if (hasWarnings) {
+              commentBody = `## ❌ Backend License Check Failed
+              
+              The backend license check has detected dependencies with incompatible or unallowed licenses:
+
+              ${warningDetails || 'See uploaded artifact for details.'}
+
+              **Action Required:** Please review these licenses and resolve before merging.
+
+              _This check will fail the PR until license issues are resolved._`;
+            } else {
+              commentBody = `## ✅ Backend License Check Passed
+              
+              All backend dependencies have valid and allowed licenses.
+              
+              The backend license report has been updated successfully.`;
+            }
+
             await github.rest.issues.createComment({
-              issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: body
+              issue_number: context.issue.number,
+              body: commentBody
             });
-            if (hasWarnings) {
-              core.setFailed('Incompatible backend licenses detected');
-            }
+
+      - name: Fail workflow if license warnings exist (PR only)
+        if: github.event_name == 'pull_request' && env.LICENSE_WARNINGS_EXIST == 'true'
+        run: |
+          echo "❌ Backend license warnings detected. Failing the workflow."
+          exit 1
 
       - name: Commit changes (push only)
         if: github.event_name == 'push' && env.LICENSE_WARNINGS_EXIST == 'false'
@@ -397,8 +461,19 @@ jobs:
           git add app/core/src/main/resources/static/3rdPartyLicenses.json
           git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
+      - name: Prepare PR body (push only)
+        if: github.event_name == 'push' && env.CHANGES_DETECTED == 'true'
+        run: |
+          PR_BODY="Auto-generated by ${{ steps.setup-bot.outputs.app-slug }}[bot]\n\nThis PR updates the backend license report based on dependency changes."
+          if [ "${{ env.LICENSE_WARNINGS_EXIST }}" = "true" ]; then
+            PR_BODY="$PR_BODY\n\n## ⚠️ License Compatibility Warnings\n\nIncompatible licenses detected – manual review required before merge."
+          fi
+          echo "PR_BODY<<EOF" >> $GITHUB_ENV
+          echo "$PR_BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create Pull Request (push only)
-        if: github.event_name == 'push' && env.CHANGES_DETECTED == 'true' && env.LICENSE_WARNINGS_EXIST == 'false'
+        if: github.event_name == 'push' && env.CHANGES_DETECTED == 'true'
         id: cpr
         uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
         with:
@@ -406,13 +481,23 @@ jobs:
           commit-message: "Update Backend 3rd Party Licenses"
           committer: ${{ steps.setup-bot.outputs.committer }}
           author: ${{ steps.setup-bot.outputs.committer }}
+          signoff: true
           branch: update-backend-3rd-party-licenses
+          base: main
           title: "Update Backend 3rd Party Licenses"
-          body: "Auto-generated license report update by bot."
+          body: ${{ env.PR_BODY }}
           labels: Licenses,github-actions,backend
+          delete-branch: true
+          sign-commits: true
 
-      - name: Enable Automerge (push only, no warnings)
+      - name: Enable Pull Request Automerge (push only, no warnings)
         if: github.event_name == 'push' && steps.cpr.outputs.pull-request-operation == 'created' && env.LICENSE_WARNINGS_EXIST == 'false'
         run: gh pr merge --squash --auto "${{ steps.cpr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
+
+      - name: Add review required label (push only, with warnings)
+        if: github.event_name == 'push' && steps.cpr.outputs.pull-request-operation == 'created' && env.LICENSE_WARNINGS_EXIST == 'true'
+        run: gh pr edit "${{ steps.cpr.outputs.pull-request-number }}" --add-label "license-review-required"
         env:
           GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
