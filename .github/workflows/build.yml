@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   files-changed:
-    if: github.ref_name != 'label_20251230'
+    if: github.ref != 'refs/remotes/pull/5356/merge'
     name: detect what files changed
     runs-on: ubuntu-latest
     timeout-minutes: 3
