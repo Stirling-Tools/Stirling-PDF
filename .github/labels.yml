@@ -198,3 +198,6 @@
   color: "24C8FF"
   description: "Pull requests that update Tauri code"
   from_name: "tauri"
+- name: "license-review-required"
+  color: "EDEDED"
+  description: "This PR requires a license review"
