@@ -4,7 +4,7 @@ on:
     types: [opened, synchronize]
     branches:
       - main
-      - V2
+      - V3
 
 permissions:
   contents: read

@@ -96,7 +96,6 @@ jobs:
             const hasDeploymentComment = deploymentComments.length > 0;
             core.setOutput('present', (hasLabel || hasDeploymentComment) ? 'true' : 'false');
 
-
       - name: Set up SSH
         if: steps.remove-label-comment.outputs.present == 'true'
         run: |
