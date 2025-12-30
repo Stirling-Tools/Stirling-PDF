@@ -34,9 +34,20 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
+  - scripts/RestartHelper.java
 
 frontend: &frontend
   - frontend/**
   - .github/workflows/testdriver.yml
   - testing/**
   - docker/**
+  - scripts/translations/*.py
+  - scripts/build-tauri-jlink.bat
+  - scripts/build-tauri-jlink.sh
+  - scripts/convert_cff_to_ttf.py
+  - scripts/harvest_type3_fonts.py
+  - scripts/ignore_translation.toml
+  - scripts/index_type3_catalogue.py
+  - scripts/summarize_type3_signatures.py
+  - scripts/type3_to_cff.py
+  - scripts/update_type3_library.py

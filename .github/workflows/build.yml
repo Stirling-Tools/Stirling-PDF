@@ -22,15 +22,14 @@ permissions:
 
 jobs:
   files-changed:
-    if: ${{ github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230' }}
     name: detect what files changed
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
       build: ${{ steps.changes.outputs.build }}
-      app: ${{ steps.changes.outputs.app }}
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
+      frontend: ${{ steps.changes.outputs.frontend }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -107,7 +106,7 @@ jobs:
           if-no-files-found: warn
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true'
+    if: needs.files-changed.outputs.openapi == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
     needs: [files-changed]
     runs-on: ubuntu-latest
     steps:
@@ -138,7 +137,8 @@ jobs:
           path: ./SwaggerDoc.json
 
   frontend-validation:
-    if: ${{ github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230' }}
+    if: needs.files-changed.outputs.frontend == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
+    needs: files-changed
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -171,7 +171,7 @@ jobs:
           retention-days: 3
 
   check-licence:
-    if: needs.files-changed.outputs.build == 'true'
+    if: needs.files-changed.outputs.build == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
     needs: [files-changed, build]
     runs-on: ubuntu-latest
     steps:
@@ -199,7 +199,7 @@ jobs:
           retention-days: 3
 
   docker-compose-tests:
-    if: needs.files-changed.outputs.project == 'true'
+    if: needs.files-changed.outputs.project == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
     needs: files-changed
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
@@ -259,7 +259,7 @@ jobs:
           ./testing/test.sh
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
+    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
     needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
     runs-on: ubuntu-latest
     strategy:
