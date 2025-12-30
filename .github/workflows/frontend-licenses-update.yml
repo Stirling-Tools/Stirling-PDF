@@ -3,14 +3,14 @@ name: Frontend License Report Workflow
 on:
   push:
     branches:
-      - V2
+      - main
     paths:
       - "frontend/package.json"
       - "frontend/package-lock.json"
       - "frontend/scripts/generate-licenses.js"
   pull_request:
     branches:
-      - V2
+      - main
     paths:
       - ".github/workflows/frontend-licenses-update.yml"
       - "frontend/package.json"
