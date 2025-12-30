@@ -1,10 +1,12 @@
 name: "Auto Pull Request Labeler V2"
 on:
+  pull_request:
   pull_request_target:
     types: [opened, synchronize]
     branches:
       - main
       - V2
+      - V3
 
 permissions:
   contents: read
