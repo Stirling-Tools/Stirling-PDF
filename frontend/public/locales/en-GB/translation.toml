@@ -966,6 +966,7 @@ desc = "Add custom text anywhere in your PDF"
 addFiles = "Add Files"
 uploadFromComputer = "Upload from computer"
 openFromComputer = "Open from computer"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
@@ -1252,7 +1253,7 @@ includeAllRecipients = "Include CC and BCC recipients in header"
 downloadHtml = "Download HTML intermediate file instead of PDF"
 pdfaOptions = "PDF/A Options"
 outputFormat = "Output Format"
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features."
+pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
 fileFormat = "File Format"
 wordDoc = "Word Document"
@@ -1281,6 +1282,21 @@ cbzOptions = "CBZ to PDF Options"
 optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
 cbzOutputOptions = "PDF to CBZ Options"
 cbzDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
@@ -1397,6 +1413,11 @@ header = "Add Attachments"
 add = "Add Attachment"
 remove = "Remove Attachment"
 embed = "Embed Attachment"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add Attachments"
 
 [watermark]
@@ -2342,6 +2363,10 @@ saved = "Saved"
 label = "Upload signature image"
 placeholder = "Select image file"
 hint = "Upload a PNG or JPG image of your signature"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "How to add signature"
@@ -2386,6 +2411,11 @@ note = "Flattening removes interactive elements from the PDF, making them non-ed
 [flatten.options.flattenOnlyForms]
 label = "Flatten only forms"
 desc = "Only flatten form fields, leaving other interactive elements intact"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Flatten Results"
@@ -2961,6 +2991,7 @@ header = "Crop PDF"
 submit = "Apply Crop"
 noFileSelected = "Select a PDF file to begin cropping"
 reset = "Reset to full PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Crop Area Selection"
@@ -3405,6 +3436,19 @@ placeholder = "Enter number of horizontal divisions"
 label = "Vertical Divisions"
 placeholder = "Enter number of vertical divisions"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise"
 header = "Stamp PDF"
@@ -3766,6 +3810,9 @@ filesize = "File Size"
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
 [compress.lineArt]
 label = "Convert images to line art"
 description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
@@ -3808,6 +3855,11 @@ failed = "An error occurred while compressing the PDF."
 [compress.selectText.1]
 _value = "Compression Settings"
 1 = "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "This file is password-protected. Please enter the password:"
@@ -4344,6 +4396,13 @@ description = "Path to WeasyPrint executable for HTML to PDF conversion (leave e
 label = "Unoconvert Executable"
 description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
 
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
+
 [admin.settings.security]
 title = "Security"
 description = "Configure authentication, login behaviour, and security policies."
@@ -4548,6 +4607,13 @@ description = "Automatically create user accounts on first SAML2 login"
 label = "Block Registration"
 description = "Prevent new user registration via SAML2"
 
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+
 [admin.settings.database]
 title = "Database"
 description = "Configure custom database connection settings for enterprise deployments."
@@ -4728,6 +4794,10 @@ description = "Allow admins to invite users via email with auto-generated passwo
 [admin.settings.mail.frontendUrl]
 label = "Frontend URL"
 description = "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Legal Documents"
@@ -4914,6 +4984,8 @@ googleDriveShort = "Drive"
 myFiles = "My Files"
 noRecentFiles = "No recent files found"
 googleDriveNotAvailable = "Google Drive integration not available"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
 downloadSelected = "Download Selected"
 saveSelected = "Save Selected"
 openFiles = "Open Files"
@@ -6195,7 +6267,7 @@ title = "Authentication Failed"
 message = "Authentication was not successful. You can close this window and try again."
 
 [pdfTextEditor]
-title = "PDF JSON Editor"
+title = "PDF Text Editor"
 viewLabel = "PDF Editor"
 converting = "Converting PDF to editable format..."
 conversionFailed = "Failed to convert PDF. Please try again."
@@ -6224,6 +6296,8 @@ reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
 saveChanges = "Save Changes"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
@@ -6241,6 +6315,24 @@ descriptionInline = "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A
 [pdfTextEditor.options.forceSingleElement]
 title = "Lock edited text to a single PDF element"
 description = "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Merge selected boxes"
@@ -6261,8 +6353,8 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 [pdfTextEditor.empty]
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
-dropzone = "Drag and drop a PDF or JSON file here, or click to browse"
-dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
+dropzone = "Drag and drop a PDF here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"
@@ -6363,3 +6455,56 @@ title = "Add Text Results"
 
 [addText.error]
 failed = "An error occurred while adding text to the PDF."
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan this QR code with your mobile device to upload photos directly to this page."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Open the camera app on your phone and scan this code. Files will be transferred directly between devices."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"

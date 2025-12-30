@@ -156,17 +156,17 @@ public class EndpointConfiguration {
             return false;
         }
 
+        // Rule 2: For tool groups, they're enabled unless explicitly disabled (handled above)
+        if (isToolGroup(group)) {
+            log.debug("isGroupEnabled('{}') -> true (tool group not disabled)", group);
+            return true;
+        }
+
+        // Rule 3: For functional groups, check if all endpoints are enabled
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints == null || endpoints.isEmpty()) {
             log.debug("isGroupEnabled('{}') -> false (no endpoints)", group);
             return false;
-        }
-
-        // Rule 2: For functional groups, check if all endpoints are enabled
-        // Rule 3: For tool groups, they're enabled unless explicitly disabled (handled above)
-        if (isToolGroup(group)) {
-            log.debug("isGroupEnabled('{}') -> true (tool group not disabled)", group);
-            return true;
         }
 
         // For functional groups, check each endpoint individually
@@ -334,6 +334,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-vector");
+        addEndpointToGroup("Convert", "vector-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-video");
         addEndpointToGroup("Convert", "cbz-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-cbz");
         addEndpointToGroup("Convert", "pdf-to-json");
@@ -350,6 +353,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "auto-redact");
         addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "validate-signature");
+        addEndpointToGroup("Security", "verify-pdf");
         addEndpointToGroup("Security", "stamp");
         addEndpointToGroup("Security", "sign");
 
@@ -476,6 +480,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-json");
         addEndpointToGroup("Java", "json-to-pdf");
         addEndpointToGroup("rar", "pdf-to-cbr");
+        addEndpointToGroup("Java", "pdf-to-video");
+        addEndpointToGroup("Java", "verify-pdf");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -490,6 +496,10 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
+        addEndpointToGroup("Ghostscript", "crop");
+        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
+        addEndpointToGroup("Ghostscript", "pdf-to-vector");
+        addEndpointToGroup("Ghostscript", "vector-to-pdf");
 
         /* ImageMagick */
         addEndpointToGroup("ImageMagick", "compress-pdf");
@@ -528,6 +538,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Weasyprint", "markdown-to-pdf");
         addEndpointToGroup("Weasyprint", "eml-to-pdf");
 
+        // veraPDF dependent endpoints
+        addEndpointToGroup("veraPDF", "verify-pdf");
+
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
@@ -554,7 +567,7 @@ public class EndpointConfiguration {
             disableGroup("enterprise");
         }
 
-        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+        if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
         }
     }
@@ -578,7 +591,10 @@ public class EndpointConfiguration {
                 || "Weasyprint".equals(group)
                 || "Pdftohtml".equals(group)
                 || "ImageMagick".equals(group)
-                || "rar".equals(group);
+                || "rar".equals(group)
+                || "Calibre".equals(group)
+                || "FFmpeg".equals(group)
+                || "veraPDF".equals(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {

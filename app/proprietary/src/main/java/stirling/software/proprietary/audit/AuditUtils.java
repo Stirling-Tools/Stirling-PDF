@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -307,8 +308,8 @@ public class AuditUtils {
 
         // For HTTP methods, infer based on controller and path
         if (httpMethod != null && path != null) {
-            String cls = controller.getSimpleName().toLowerCase();
-            String pkg = controller.getPackage().getName().toLowerCase();
+            String cls = controller.getSimpleName().toLowerCase(Locale.ROOT);
+            String pkg = controller.getPackage().getName().toLowerCase(Locale.ROOT);
 
             if ("GET".equals(httpMethod)) return AuditEventType.HTTP_REQUEST;
 
@@ -374,8 +375,8 @@ public class AuditUtils {
         }
 
         // Otherwise infer from controller and path
-        String cls = controller.getSimpleName().toLowerCase();
-        String pkg = controller.getPackage().getName().toLowerCase();
+        String cls = controller.getSimpleName().toLowerCase(Locale.ROOT);
+        String pkg = controller.getPackage().getName().toLowerCase(Locale.ROOT);
 
         if ("GET".equals(httpMethod)) return AuditEventType.HTTP_REQUEST;
 

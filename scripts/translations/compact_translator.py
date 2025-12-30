@@ -13,11 +13,18 @@ import tomllib  # Python 3.11+ (stdlib)
 
 
 class CompactTranslationExtractor:
-    def __init__(self, locales_dir: str = "frontend/public/locales", ignore_file: str = "scripts/ignore_translation.toml"):
+    def __init__(
+        self,
+        locales_dir: str = "frontend/public/locales",
+        ignore_file: str = "scripts/ignore_translation.toml",
+    ):
         self.locales_dir = Path(locales_dir)
         self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
         if not self.golden_truth_file.exists():
-            print(f"Error: en-GB translation file not found at {self.golden_truth_file}", file=sys.stderr)
+            print(
+                f"Error: en-GB translation file not found at {self.golden_truth_file}",
+                file=sys.stderr,
+            )
             sys.exit(1)
         self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
@@ -26,7 +33,7 @@ class CompactTranslationExtractor:
     def _load_translation_file(self, file_path: Path) -> dict:
         """Load TOML translation file."""
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 return tomllib.load(f)
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}", file=sys.stderr)
@@ -41,14 +48,21 @@ class CompactTranslationExtractor:
             return {}
 
         try:
-            with open(self.ignore_file, 'rb') as f:
+            with open(self.ignore_file, "rb") as f:
                 ignore_data = tomllib.load(f)
-            return {lang: set(data.get('ignore', [])) for lang, data in ignore_data.items()}
+            return {
+                lang: set(data.get("ignore", [])) for lang, data in ignore_data.items()
+            }
         except Exception as e:
-            print(f"Warning: Could not load ignore file {self.ignore_file}: {e}", file=sys.stderr)
+            print(
+                f"Warning: Could not load ignore file {self.ignore_file}: {e}",
+                file=sys.stderr,
+            )
             return {}
 
-    def _flatten_dict(self, d: dict, parent_key: str = '', separator: str = '.') -> dict:
+    def _flatten_dict(
+        self, d: dict, parent_key: str = "", separator: str = "."
+    ) -> dict:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -65,14 +79,17 @@ class CompactTranslationExtractor:
         target_file = lang_dir / "translation.toml"
 
         if not target_file.exists():
-            print(f"Error: Translation file not found for language: {language}", file=sys.stderr)
+            print(
+                f"Error: Translation file not found for language: {language}",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         target_data = self._load_translation_file(target_file)
         golden_flat = self._flatten_dict(self.golden_truth)
         target_flat = self._flatten_dict(target_data)
 
-        lang_code = language.replace('-', '_')
+        lang_code = language.replace("-", "_")
         ignore_set = self.ignore_patterns.get(lang_code, set())
 
         # Find missing translations
@@ -85,8 +102,13 @@ class CompactTranslationExtractor:
                 target_value = target_flat[key]
                 golden_value = golden_flat[key]
 
-                if (isinstance(target_value, str) and target_value.startswith("[UNTRANSLATED]")) or \
-                   (golden_value == target_value and not self._is_expected_identical(key, golden_value)):
+                if (
+                    isinstance(target_value, str)
+                    and target_value.startswith("[UNTRANSLATED]")
+                ) or (
+                    golden_value == target_value
+                    and not self._is_expected_identical(key, golden_value)
+                ):
                     untranslated_keys.add(key)
 
         # Combine and create compact output
@@ -101,8 +123,8 @@ class CompactTranslationExtractor:
 
     def _is_expected_identical(self, key: str, value: str) -> bool:
         """Check if a key-value pair is expected to be identical across languages."""
-        identical_patterns = ['language.direction']
-        identical_values = {'ltr', 'rtl', 'True', 'False', 'true', 'false', 'unknown'}
+        identical_patterns = ["language.direction"]
+        identical_values = {"ltr", "rtl", "True", "False", "true", "false", "unknown"}
 
         if value.strip() in identical_values:
             return True
@@ -116,13 +138,23 @@ class CompactTranslationExtractor:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Extract untranslated entries in compact format for AI translation (TOML format only)'
+        description="Extract untranslated entries in compact format for AI translation (TOML format only)"
     )
-    parser.add_argument('language', help='Language code (e.g., de-DE, fr-FR)')
-    parser.add_argument('--locales-dir', default='frontend/public/locales', help='Path to locales directory')
-    parser.add_argument('--ignore-file', default='scripts/ignore_translation.toml', help='Path to ignore patterns file')
-    parser.add_argument('--max-entries', type=int, help='Maximum number of entries to output')
-    parser.add_argument('--output', help='Output file (default: stdout)')
+    parser.add_argument("language", help="Language code (e.g., de-DE, fr-FR)")
+    parser.add_argument(
+        "--locales-dir",
+        default="frontend/public/locales",
+        help="Path to locales directory",
+    )
+    parser.add_argument(
+        "--ignore-file",
+        default="scripts/ignore_translation.toml",
+        help="Path to ignore patterns file",
+    )
+    parser.add_argument(
+        "--max-entries", type=int, help="Maximum number of entries to output"
+    )
+    parser.add_argument("--output", help="Output file (default: stdout)")
 
     args = parser.parse_args()
 
@@ -131,16 +163,19 @@ def main():
 
     if args.max_entries:
         # Take first N entries
-        keys = list(untranslated.keys())[:args.max_entries]
+        keys = list(untranslated.keys())[: args.max_entries]
         untranslated = {k: untranslated[k] for k in keys}
 
     # Output compact JSON (no indentation, minimal whitespace)
-    output = json.dumps(untranslated, separators=(',', ':'), ensure_ascii=False)
+    output = json.dumps(untranslated, separators=(",", ":"), ensure_ascii=False)
 
     if args.output:
-        with open(args.output, 'w', encoding='utf-8') as f:
+        with open(args.output, "w", encoding="utf-8") as f:
             f.write(output)
-        print(f"Extracted {len(untranslated)} untranslated entries to {args.output}", file=sys.stderr)
+        print(
+            f"Extracted {len(untranslated)} untranslated entries to {args.output}",
+            file=sys.stderr,
+        )
     else:
         print(output)
 
