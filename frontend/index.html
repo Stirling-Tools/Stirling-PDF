@@ -19,5 +19,8 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script type="module" src="src/index.tsx"></script>
+    <!-- jscanify and OpenCV for mobile scanner - loaded after React for non-blocking page load -->
+    <script src="/vendor/jscanify/opencv.js" async></script>
+    <script src="/vendor/jscanify/jscanify.js" async></script>
   </body>
 </html>
