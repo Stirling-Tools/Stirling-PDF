@@ -2,12 +2,9 @@ build: &build
   - build.gradle
   - app/(common|core|proprietary)/build.gradle
 
-app: &app
-  - app/(common|core|proprietary)/src/main/java/**
-
 openapi: &openapi
   - *build
-  - *app
+  - app/(common|core|proprietary)/src/main/java/**
 
 docker: &docker
   - Dockerfile
