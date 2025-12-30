@@ -199,8 +199,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python dependencies
-        run: |
-          pip install tomli-w
+        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
 
       - name: Run Python script to check files
         id: run-check

@@ -1279,6 +1279,9 @@ cbzOptions = "CBZ to PDF Options"
 optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
 cbzOutputOptions = "PDF to CBZ Options"
 cbzDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -2357,6 +2360,10 @@ saved = "Saved"
 label = "Upload signature image"
 placeholder = "Select image file"
 hint = "Upload a PNG or JPG image of your signature"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "How to add signature"

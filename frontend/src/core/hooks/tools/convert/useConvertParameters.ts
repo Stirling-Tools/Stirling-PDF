@@ -36,6 +36,12 @@ export interface ConvertParameters extends BaseParameters {
   pdfaOptions: {
     outputFormat: string;
   };
+  cbrOptions: {
+    optimizeForEbook: boolean;
+  };
+  pdfToCbrOptions: {
+    dpi: number;
+  };
   cbzOptions: {
     optimizeForEbook: boolean;
   };
@@ -80,6 +86,12 @@ export const defaultParameters: ConvertParameters = {
   },
   pdfaOptions: {
     outputFormat: 'pdfa-1',
+  },
+  cbrOptions: {
+    optimizeForEbook: false,
+  },
+  pdfToCbrOptions: {
+    dpi: 150,
   },
   cbzOptions: {
     optimizeForEbook: false,
