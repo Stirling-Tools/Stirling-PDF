@@ -14,7 +14,7 @@ on:
           - macos
           - linux
   push:
-    branches: [main, V2, V2-demo]
+    branches: [main, V2-demo]
 
 permissions:
   contents: read
@@ -84,8 +84,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
