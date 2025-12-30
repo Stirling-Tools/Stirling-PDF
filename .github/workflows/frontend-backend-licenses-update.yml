@@ -347,7 +347,7 @@ jobs:
       - name: Check for license compatibility issues
         run: |
           if [ -f build/reports/dependency-license/dependencies-without-allowed-license.json ] && \
-             jq 'length > 0' build/reports/dependency-license/dependencies-without-allowed-license.json | grep -q true; then
+             jq '.dependenciesWithoutAllowedLicenses | length > 0' build/reports/dependency-license/dependencies-without-allowed-license.json | grep -q true; then
             echo "LICENSE_WARNINGS_EXIST=true" >> $GITHUB_ENV
           else
             echo "LICENSE_WARNINGS_EXIST=false" >> $GITHUB_ENV
