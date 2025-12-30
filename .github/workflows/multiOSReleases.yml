@@ -564,7 +564,7 @@ jobs:
         run: ls -R ./artifacts
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.7.0
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
 
       - name: Sign release artifacts with cosign
         env:
@@ -630,7 +630,7 @@ jobs:
           PY
 
       - name: Attest release artifacts
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
           subject-path: |
             ./artifacts/**/*.jar
