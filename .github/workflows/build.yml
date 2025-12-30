@@ -45,7 +45,6 @@ jobs:
           filters: .github/config/.files.yaml
 
   build:
-    if: ${{ github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230' }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -107,7 +106,7 @@ jobs:
           if-no-files-found: warn
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
+    if: needs.files-changed.outputs.openapi == 'true'
     needs: [files-changed]
     runs-on: ubuntu-latest
     steps:
@@ -138,7 +137,7 @@ jobs:
           path: ./SwaggerDoc.json
 
   frontend-validation:
-    if: needs.files-changed.outputs.frontend == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
+    if: needs.files-changed.outputs.frontend == 'true'
     needs: files-changed
     runs-on: ubuntu-latest
     steps:
@@ -172,7 +171,7 @@ jobs:
           retention-days: 3
 
   check-licence:
-    if: needs.files-changed.outputs.build == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
+    if: needs.files-changed.outputs.build == 'true'
     needs: [files-changed, build]
     runs-on: ubuntu-latest
     steps:
@@ -200,7 +199,7 @@ jobs:
           retention-days: 3
 
   docker-compose-tests:
-    if: needs.files-changed.outputs.project == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
+    if: needs.files-changed.outputs.project == 'true'
     needs: files-changed
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
@@ -260,7 +259,7 @@ jobs:
           ./testing/test.sh
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true' && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
+    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
     needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
     runs-on: ubuntu-latest
     strategy:

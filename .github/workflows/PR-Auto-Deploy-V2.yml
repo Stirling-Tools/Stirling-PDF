@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   check-pr:
-    if: ((github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch') && github.ref_name != 'label_20251230' && github.head_ref != 'label_20251230'
+    if: (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.decide.outputs.should_deploy }}
