@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   files-changed:
-    if: github.ref != 'label_20251230'
+    if: github.ref_name != 'label_20251230'
     name: detect what files changed
     runs-on: ubuntu-latest
     timeout-minutes: 3
