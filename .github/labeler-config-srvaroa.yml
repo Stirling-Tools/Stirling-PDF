@@ -46,15 +46,18 @@ labels:
   - label: 'API'
     title: '.*openapi.*|.*swagger.*|.*api.*'
 
-  - label: 'v2'
-    base-branch: 'V2'
+  - label: 'v3'
+    base-branch: 'V3'
 
   - label: 'Translation'
     files:
-      - 'app/core/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}.properties'
+      - 'frontend/public/locales/[a-zA-Z]{2}-[a-zA-Z\-]{2,7}/translation.toml'
       - 'scripts/ignore_translation.toml'
-      - 'app/core/src/main/resources/templates/fragments/languages.html'
-      - '.github/scripts/check_language_properties.py'
+      - 'scripts/remove_translation_keys.sh'
+      - 'scripts/replace_translation_line.sh'
+      - 'scripts/translations/.*'
+      - '.github/scripts/check_language_toml.py'
+      - 'scripts/counter_translation_v3.py'
 
   - label: 'Front End'
     files:
@@ -66,6 +69,11 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/UI/.*'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
       - 'frontend/**'
+
+  - label: 'Tauri'
+    files:
+      - 'frontend/src-tauri/**'
+      - 'frontend/src-tauri/.*'
 
   - label: 'Java'
     files:
