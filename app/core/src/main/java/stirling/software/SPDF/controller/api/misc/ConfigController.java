@@ -71,6 +71,15 @@ public class ConfigController {
             configData.put("contextPath", appConfig.getContextPath());
             configData.put("serverPort", appConfig.getServerPort());
 
+            // Add frontendUrl for mobile scanner QR codes
+            String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
+            configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
+
+            // Add mobile scanner setting
+            configData.put(
+                    "enableMobileScanner",
+                    applicationProperties.getSystem().isEnableMobileScanner());
+
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
@@ -84,6 +93,9 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+            configData.put(
+                    "showSettingsWhenNoLogin",
+                    applicationProperties.getSystem().isShowSettingsWhenNoLogin());
 
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();

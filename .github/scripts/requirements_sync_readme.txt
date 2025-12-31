@@ -4,6 +4,10 @@
 #
 #    pip-compile --generate-hashes --output-file='.github\scripts\requirements_sync_readme.txt' --strip-extras '.github\scripts\requirements_sync_readme.in'
 #
+tomli-w==1.2.0 \
+    --hash=sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90 \
+    --hash=sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021
+    # via -r .github/scripts/requirements_sync_readme.in
 tomlkit==0.13.3 \
     --hash=sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1 \
     --hash=sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0

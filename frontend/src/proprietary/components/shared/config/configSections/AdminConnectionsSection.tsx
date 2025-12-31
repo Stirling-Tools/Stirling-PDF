@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
+import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge, Anchor } from '@mantine/core';
 import { alert } from '@app/components/toast';
+import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
@@ -43,10 +45,12 @@ interface ConnectionsSettingsData {
     from?: string;
   };
   ssoAutoLogin?: boolean;
+  enableMobileScanner?: boolean;
 }
 
 export default function AdminConnectionsSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
@@ -65,14 +69,19 @@ export default function AdminConnectionsSection() {
       const premiumResponse = await apiClient.get('/api/v1/admin/settings/section/premium');
       const premiumData = premiumResponse.data || {};
 
+      // Fetch system settings for enableMobileScanner
+      const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
+      const systemData = systemResponse.data || {};
+
       const result: any = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
-        ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false
+        ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false,
+        enableMobileScanner: systemData.enableMobileScanner || false
       };
 
-      // Merge pending blocks from all three endpoints
+      // Merge pending blocks from all four endpoints
       const pendingBlock: any = {};
       if (securityData._pending?.oauth2) {
         pendingBlock.oauth2 = securityData._pending.oauth2;
@@ -85,6 +94,9 @@ export default function AdminConnectionsSection() {
       }
       if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
         pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
+      }
+      if (systemData._pending?.enableMobileScanner !== undefined) {
+        pendingBlock.enableMobileScanner = systemData._pending.enableMobileScanner;
       }
 
       if (Object.keys(pendingBlock).length > 0) {
@@ -331,6 +343,38 @@ export default function AdminConnectionsSection() {
     }
   };
 
+  const handleMobileScannerSave = async (newValue: boolean) => {
+    // Block save if login is disabled
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
+    try {
+      const deltaSettings = {
+        'system.enableMobileScanner': newValue
+      };
+
+      const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
+
+      if (response.status === 200) {
+        alert({
+          alertType: 'success',
+          title: t('admin.success', 'Success'),
+          body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
+        });
+        showRestartModal();
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (_error) {
+      alert({
+        alertType: 'error',
+        title: t('admin.error', 'Error'),
+        body: t('admin.settings.saveError', 'Failed to save settings'),
+      });
+    }
+  };
+
   const linkedProviders = ALL_PROVIDERS.filter((p) => isProviderConfigured(p));
   const availableProviders = ALL_PROVIDERS.filter((p) => !isProviderConfigured(p));
 
@@ -356,7 +400,15 @@ export default function AdminConnectionsSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.connections.ssoAutoLogin.label', 'SSO Auto Login')}</Text>
-            <Badge color="yellow" size="sm">PRO</Badge>
+            <Badge
+              color="grape"
+              size="sm"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/settings/adminPlan')}
+              title={t('admin.settings.badge.clickToUpgrade', 'Click to view plan details')}
+            >
+              PRO
+            </Badge>
           </Group>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -378,6 +430,45 @@ export default function AdminConnectionsSection() {
                 styles={getDisabledStyles()}
               />
               <PendingBadge show={isFieldPending('ssoAutoLogin')} />
+            </Group>
+          </div>
+        </Stack>
+      </Paper>
+
+      {/* Mobile Scanner (QR Code) Upload */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <Group gap="xs" align="center">
+            <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" />
+            <Text fw={600} size="sm">{t('admin.settings.connections.mobileScanner.label', 'Mobile Phone Upload')}</Text>
+          </Group>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.connections.mobileScanner.enable', 'Enable QR Code Upload')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.connections.mobileScanner.description', 'Allow users to upload files from mobile devices by scanning a QR code')}
+              </Text>
+              <Text size="xs" c="orange" mt={8} fw={500}>
+                {t('admin.settings.connections.mobileScanner.note', 'Note: Requires Frontend URL to be configured. ')}
+                <Anchor href="#" onClick={(e) => { e.preventDefault(); navigate('/settings/adminGeneral#frontendUrl'); }} c="orange" td="underline">
+                  {t('admin.settings.connections.mobileScanner.link', 'Configure in System Settings')}
+                </Anchor>
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                checked={settings?.enableMobileScanner || false}
+                onChange={(e) => {
+                  if (!loginEnabled) return; // Block change when login disabled
+                  const newValue = e.target.checked;
+                  setSettings({ ...settings, enableMobileScanner: newValue });
+                  handleMobileScannerSave(newValue);
+                }}
+                disabled={!loginEnabled}
+                styles={getDisabledStyles()}
+              />
+              <PendingBadge show={isFieldPending('enableMobileScanner')} />
             </Group>
           </div>
         </Stack>
@@ -422,6 +513,7 @@ export default function AdminConnectionsSection() {
                 key={provider.id}
                 provider={provider}
                 isConfigured={false}
+                settings={getProviderSettings(provider)}
                 onSave={(providerSettings) => handleProviderSave(provider, providerSettings)}
                 disabled={!loginEnabled}
               />

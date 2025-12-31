@@ -22,7 +22,7 @@ on:
           - macos
           - linux
   push:
-    branches: [main, V2, V2-demo, V2-master]
+    branches: [main, V2-master]
   release:
     types: [created]
 
@@ -126,8 +126,8 @@ jobs:
         if: matrix.variant.build_frontend == true
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Build JAR
@@ -178,8 +178,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
@@ -562,7 +562,7 @@ jobs:
         run: ls -R ./artifacts
 
       - name: Upload binaries to Release
-        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           generate_release_notes: true
