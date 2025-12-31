@@ -67,6 +67,8 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/UI/.*'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
       - 'frontend/**'
+      - 'frontend/.*'
+      - 'frontend/**/.*'
 
   - label: 'Tauri'
     files:
