@@ -1,12 +1,9 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,7 +20,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.oauth2.KeycloakProvider;
@@ -41,24 +37,19 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     public static final String LOGOUT_PATH = "/login?logout=true";
 
     private final ApplicationProperties.Security securityProperties;
-    private final AppConfig appConfig;
     private final JwtServiceInterface jwtService;
     private final LogoutSuccessHandler samlLogoutHandler;
 
     public CustomLogoutSuccessHandler(
-            ApplicationProperties.Security securityProperties,
-            AppConfig appConfig,
-            JwtServiceInterface jwtService) {
-        this(securityProperties, appConfig, jwtService, null);
+            ApplicationProperties.Security securityProperties, JwtServiceInterface jwtService) {
+        this(securityProperties, jwtService, null);
     }
 
     public CustomLogoutSuccessHandler(
             ApplicationProperties.Security securityProperties,
-            AppConfig appConfig,
             JwtServiceInterface jwtService,
             LogoutSuccessHandler samlLogoutHandler) {
         this.securityProperties = securityProperties;
-        this.appConfig = appConfig;
         this.jwtService = jwtService;
         this.samlLogoutHandler = samlLogoutHandler;
     }
@@ -124,23 +115,20 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             return true;
         }
 
-        // Try to reconstruct Saml2Authentication from JWT claims for SLO
+        // Reconstruct Saml2Authentication from JWT claims for SLO
         Optional<Saml2Authentication> reconstructedAuth =
                 reconstructSaml2AuthenticationFromJwt(request);
 
         if (reconstructedAuth.isPresent()) {
             Saml2Authentication samlAuth = reconstructedAuth.get();
-            CustomSaml2AuthenticatedPrincipal principal =
-                    (CustomSaml2AuthenticatedPrincipal) samlAuth.getPrincipal();
-            log.info(
-                    "SAML user {} logging out via IdP SLO (reconstructed from JWT)",
-                    principal.nameId());
+
             try {
                 samlLogoutHandler.onLogoutSuccess(request, response, samlAuth);
             } catch (Exception e) {
                 log.error("SAML SLO failed, falling back to local logout", e);
                 getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
             }
+
             return true;
         }
 
@@ -182,7 +170,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 return Optional.empty();
             }
 
-            // Parse session indexes (stored as List in JWT)
             List<String> sessionIndexes = Collections.emptyList();
             if (sessionIndexesObj instanceof List<?>) {
                 sessionIndexes =
@@ -214,7 +201,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             return Optional.of(samlAuth);
 
         } catch (Exception ex) {
-            log.debug("Unable to reconstruct Saml2Authentication from JWT", ex);
+            log.error("Unable to reconstruct Saml2Authentication from JWT", ex);
             return Optional.empty();
         }
     }

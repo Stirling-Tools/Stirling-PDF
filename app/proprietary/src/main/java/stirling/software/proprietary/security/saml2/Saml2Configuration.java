@@ -108,10 +108,43 @@ public class Saml2Configuration {
             log.error("Failed to load SAML2 SP credentials: {}", e.getMessage(), e);
             throw new IllegalStateException("Failed to load SAML2 SP credentials", e);
         }
+        // Apply metadata overrides - metadata takes precedence over manual config
         metadataInfo.ifPresent(info -> applyMetadataOverrides(samlConf, info));
-        String idpIssuer = samlConf.getIdpIssuer();
-        String idpSingleLoginUrl = samlConf.getIdpSingleLoginUrl();
-        String idpSingleLogoutUrl = samlConf.getIdpSingleLogoutUrl();
+
+        // Get IdP configuration - prefer values from metadata, fall back to manual config
+        String idpEntityId =
+                metadataInfo
+                        .map(IdpMetadataInfo::entityId)
+                        .filter(id -> id != null && !id.isBlank())
+                        .orElseGet(samlConf::getIdpEntityIdOrIssuer);
+
+        String idpSingleLoginUrl =
+                metadataInfo
+                        .map(IdpMetadataInfo::singleSignOnServiceUrl)
+                        .filter(url -> url != null && !url.isBlank())
+                        .orElseGet(samlConf::getIdpSingleLoginUrl);
+
+        String idpSingleLogoutUrl =
+                metadataInfo
+                        .map(IdpMetadataInfo::singleLogoutServiceUrl)
+                        .filter(url -> url != null && !url.isBlank())
+                        .orElseGet(samlConf::getIdpSingleLogoutUrl);
+
+        // Validate required IdP configuration
+        if (idpEntityId == null || idpEntityId.isBlank()) {
+            throw new IllegalStateException(
+                    "SAML2 IdP Entity ID is required. Set security.saml2.idpEntityId or provide idpMetadataUri");
+        }
+        if (idpSingleLoginUrl == null || idpSingleLoginUrl.isBlank()) {
+            throw new IllegalStateException(
+                    "SAML2 IdP Single Sign-On URL is required. Set security.saml2.idpSingleLoginUrl or provide idpMetadataUri");
+        }
+
+        log.info(
+                "SAML2 IdP configuration: entityId={}, ssoUrl={}, sloUrl={}",
+                idpEntityId,
+                idpSingleLoginUrl,
+                idpSingleLogoutUrl);
 
         // Get backend URL from configuration (for SAML endpoints)
         String backendUrl = applicationProperties.getSystem().getBackendUrl();
@@ -142,7 +175,7 @@ public class Saml2Configuration {
                         .authnRequestsSigned(true)
                         .assertingPartyMetadata(
                                 metadata ->
-                                        metadata.entityId(idpIssuer)
+                                        metadata.entityId(idpEntityId)
                                                 .verificationX509Credentials(
                                                         c -> c.add(verificationCredential))
                                                 .singleSignOnServiceBinding(
