@@ -119,13 +119,9 @@ public class AutoSplitPdfController {
         MultipartFile file = request.getFileInput();
         boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
 
-        PDDocument document = null;
         List<PDDocument> splitDocuments = new ArrayList<>();
-        TempFile outputTempFile = null;
-
-        try {
-            outputTempFile = new TempFile(tempFileManager, ".zip");
-            document = pdfDocumentFactory.load(file.getInputStream());
+        try (TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
+                PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
 
@@ -201,25 +197,13 @@ public class AutoSplitPdfController {
             log.error("Error in auto split", e);
             throw e;
         } finally {
-            // Clean up resources
-            if (document != null) {
-                try {
-                    document.close();
-                } catch (IOException e) {
-                    log.error("Error closing main PDDocument", e);
-                }
-            }
-
+            // Clean up split documents
             for (PDDocument splitDoc : splitDocuments) {
                 try {
                     splitDoc.close();
                 } catch (IOException e) {
                     log.error("Error closing split PDDocument", e);
                 }
-            }
-
-            if (outputTempFile != null) {
-                outputTempFile.close();
             }
         }
     }
