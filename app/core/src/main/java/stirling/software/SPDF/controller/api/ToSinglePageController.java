@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.http.MediaType;
@@ -47,53 +46,54 @@ public class ToSinglePageController {
             throws IOException {
 
         // Load the source document
-        PDDocument sourceDocument = pdfDocumentFactory.load(request);
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
+            // Calculate total height and max width
+            float totalHeight = 0;
+            float maxWidth = 0;
+            for (PDPage page : sourceDocument.getPages()) {
+                PDRectangle pageSize = page.getMediaBox();
+                totalHeight += pageSize.getHeight();
+                maxWidth = Math.max(maxWidth, pageSize.getWidth());
+            }
 
-        // Calculate total height and max width
-        float totalHeight = 0;
-        float maxWidth = 0;
-        for (PDPage page : sourceDocument.getPages()) {
-            PDRectangle pageSize = page.getMediaBox();
-            totalHeight += pageSize.getHeight();
-            maxWidth = Math.max(maxWidth, pageSize.getWidth());
+            // Create new document and page with calculated dimensions
+            try (PDDocument newDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+                PDPage newPage = new PDPage(new PDRectangle(maxWidth, totalHeight));
+                newDocument.addPage(newPage);
+
+                LayerUtility layerUtility = new LayerUtility(newDocument);
+                float yOffset = totalHeight;
+
+                // For each page, copy its content to the new page at the correct offset
+                try {
+                    layerUtility.wrapInSaveRestore(newPage);
+                } catch (NullPointerException e) {
+                }
+
+                int pageIndex = 0;
+                for (PDPage page : sourceDocument.getPages()) {
+                    PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
+                    if (form != null) {
+                        AffineTransform af =
+                                AffineTransform.getTranslateInstance(
+                                        0, yOffset - page.getMediaBox().getHeight());
+                        String defaultLayerName = "Layer" + pageIndex;
+                        layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
+                    }
+                    yOffset -= page.getMediaBox().getHeight();
+                    pageIndex++;
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                newDocument.save(baos);
+
+                byte[] result = baos.toByteArray();
+                return WebResponseUtils.bytesToWebResponse(
+                        result,
+                        GeneralUtils.generateFilename(
+                                request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
+            }
         }
-
-        // Create new document and page with calculated dimensions
-        PDDocument newDocument =
-                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-        PDPage newPage = new PDPage(new PDRectangle(maxWidth, totalHeight));
-        newDocument.addPage(newPage);
-
-        // Initialize the content stream of the new page
-        PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage);
-        contentStream.close();
-
-        LayerUtility layerUtility = new LayerUtility(newDocument);
-        float yOffset = totalHeight;
-
-        // For each page, copy its content to the new page at the correct offset
-        int pageIndex = 0;
-        for (PDPage page : sourceDocument.getPages()) {
-            PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
-            AffineTransform af =
-                    AffineTransform.getTranslateInstance(
-                            0, yOffset - page.getMediaBox().getHeight());
-            layerUtility.wrapInSaveRestore(newPage);
-            String defaultLayerName = "Layer" + pageIndex;
-            layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
-            yOffset -= page.getMediaBox().getHeight();
-            pageIndex++;
-        }
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        newDocument.save(baos);
-        newDocument.close();
-        sourceDocument.close();
-
-        byte[] result = baos.toByteArray();
-        return WebResponseUtils.bytesToWebResponse(
-                result,
-                GeneralUtils.generateFilename(
-                        request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
     }
 }

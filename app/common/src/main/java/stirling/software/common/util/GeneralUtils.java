@@ -91,6 +91,14 @@ public class GeneralUtils {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
             }
+        } catch (IOException e) {
+            if (tempFile.exists()) {
+                try {
+                    Files.delete(tempFile.toPath());
+                } catch (IOException ignored) {
+                }
+            }
+            throw e;
         }
         return tempFile;
     }
@@ -499,6 +507,12 @@ public class GeneralUtils {
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
             }
+        } catch (IOException e) {
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (IOException ignored) {
+            }
+            throw e;
         }
         return tempFile.toFile();
     }

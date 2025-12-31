@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -106,7 +107,6 @@ public class ConvertWebsiteToPDF {
 
         Path tempOutputFile = null;
         Path tempHtmlInput = null;
-        PDDocument doc = null;
         try {
             // Download the remote content first to ensure we don't allow dangerous schemes
             String htmlContent = fetchRemoteHtml(URL);
@@ -140,18 +140,14 @@ public class ConvertWebsiteToPDF {
                     .runCommandWithOutputHandling(command);
 
             // Load the PDF using pdfDocumentFactory
-            doc = pdfDocumentFactory.load(tempOutputFile.toFile());
+            try (PDDocument doc = pdfDocumentFactory.load(tempOutputFile.toFile());
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                // Convert URL to a safe filename
+                String outputFilename = convertURLToFileName(URL);
 
-            // Convert URL to a safe filename
-            String outputFilename = convertURLToFileName(URL);
-
-            ResponseEntity<byte[]> response =
-                    WebResponseUtils.pdfDocToWebResponse(doc, outputFilename);
-            if (response == null) {
-                // Defensive fallback - should not happen but avoids null returns breaking tests
-                return ResponseEntity.ok(new byte[0]);
+                doc.save(baos);
+                return WebResponseUtils.baosToWebResponse(baos, outputFilename);
             }
-            return response;
         } finally {
             if (tempHtmlInput != null) {
                 try {

@@ -77,38 +77,40 @@ public class PrintFileController {
             log.info("Selected Printer: {}", selectedService.getName());
 
             if (MediaType.APPLICATION_PDF_VALUE.equals(contentType)) {
-                PDDocument document = Loader.loadPDF(file.getBytes());
-                PrinterJob job = PrinterJob.getPrinterJob();
-                job.setPrintService(selectedService);
-                job.setPageable(new PDFPageable(document));
-                job.print();
-                document.close();
+                try (PDDocument document = Loader.loadPDF(file.getBytes())) {
+                    PrinterJob job = PrinterJob.getPrinterJob();
+                    job.setPrintService(selectedService);
+                    job.setPageable(new PDFPageable(document));
+                    job.print();
+                }
             } else if (contentType.startsWith("image/")) {
-                BufferedImage image = ImageIO.read(file.getInputStream());
-                PrinterJob job = PrinterJob.getPrinterJob();
-                job.setPrintService(selectedService);
-                job.setPrintable(
-                        new Printable() {
-                            public int print(
-                                    Graphics graphics, PageFormat pageFormat, int pageIndex)
-                                    throws PrinterException {
-                                if (pageIndex != 0) {
-                                    return NO_SUCH_PAGE;
+                try (var inputStream = file.getInputStream()) {
+                    BufferedImage image = ImageIO.read(inputStream);
+                    PrinterJob job = PrinterJob.getPrinterJob();
+                    job.setPrintService(selectedService);
+                    job.setPrintable(
+                            new Printable() {
+                                public int print(
+                                        Graphics graphics, PageFormat pageFormat, int pageIndex)
+                                        throws PrinterException {
+                                    if (pageIndex != 0) {
+                                        return NO_SUCH_PAGE;
+                                    }
+                                    Graphics2D g2d = (Graphics2D) graphics;
+                                    g2d.translate(
+                                            pageFormat.getImageableX(), pageFormat.getImageableY());
+                                    g2d.drawImage(
+                                            image,
+                                            0,
+                                            0,
+                                            (int) pageFormat.getImageableWidth(),
+                                            (int) pageFormat.getImageableHeight(),
+                                            null);
+                                    return PAGE_EXISTS;
                                 }
-                                Graphics2D g2d = (Graphics2D) graphics;
-                                g2d.translate(
-                                        pageFormat.getImageableX(), pageFormat.getImageableY());
-                                g2d.drawImage(
-                                        image,
-                                        0,
-                                        0,
-                                        (int) pageFormat.getImageableWidth(),
-                                        (int) pageFormat.getImageableHeight(),
-                                        null);
-                                return PAGE_EXISTS;
-                            }
-                        });
-                job.print();
+                            });
+                    job.print();
+                }
             }
             return new ResponseEntity<>(
                     "File printed successfully to " + selectedService.getName(), HttpStatus.OK);

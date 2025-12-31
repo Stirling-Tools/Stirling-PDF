@@ -91,8 +91,7 @@ public class UIDataController {
         LicensesData data = new LicensesData();
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
 
-        try {
-            InputStream is = resource.getInputStream();
+        try (InputStream is = resource.getInputStream()) {
             String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Dependency>> licenseData =

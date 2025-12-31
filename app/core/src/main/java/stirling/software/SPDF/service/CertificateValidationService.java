@@ -423,38 +423,38 @@ public class CertificateValidationService {
     private void loadBundledMozillaCACerts() {
         try {
             log.info("Loading bundled Mozilla CA certificates from resources");
-            InputStream certStream =
-                    getClass().getClassLoader().getResourceAsStream("certs/cacert.pem");
-            if (certStream == null) {
-                log.warn("Bundled Mozilla CA certificate file not found in resources");
-                return;
-            }
+            try (InputStream certStream =
+                    getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
+                if (certStream == null) {
+                    log.warn("Bundled Mozilla CA certificate file not found in resources");
+                    return;
+                }
 
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            Collection<? extends Certificate> certs = cf.generateCertificates(certStream);
-            certStream.close();
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                Collection<? extends Certificate> certs = cf.generateCertificates(certStream);
 
-            int loadedCount = 0;
-            int skippedCount = 0;
+                int loadedCount = 0;
+                int skippedCount = 0;
 
-            for (Certificate cert : certs) {
-                if (cert instanceof X509Certificate x509) {
-                    // Only add CA certificates to trust anchors
-                    if (isCA(x509)) {
-                        String fingerprint = sha256Fingerprint(x509);
-                        String alias = "mozilla-" + fingerprint;
-                        signingTrustAnchors.setCertificateEntry(alias, x509);
-                        loadedCount++;
-                    } else {
-                        skippedCount++;
+                for (Certificate cert : certs) {
+                    if (cert instanceof X509Certificate x509) {
+                        // Only add CA certificates to trust anchors
+                        if (isCA(x509)) {
+                            String fingerprint = sha256Fingerprint(x509);
+                            String alias = "mozilla-" + fingerprint;
+                            signingTrustAnchors.setCertificateEntry(alias, x509);
+                            loadedCount++;
+                        } else {
+                            skippedCount++;
+                        }
                     }
                 }
-            }
 
-            log.info(
-                    "Loaded {} Mozilla CA certificates as trust anchors (skipped {} non-CA certs)",
-                    loadedCount,
-                    skippedCount);
+                log.info(
+                        "Loaded {} Mozilla CA certificates as trust anchors (skipped {} non-CA certs)",
+                        loadedCount,
+                        skippedCount);
+            }
         } catch (Exception e) {
             log.error("Failed to load bundled Mozilla CA certificates: {}", e.getMessage(), e);
         }
