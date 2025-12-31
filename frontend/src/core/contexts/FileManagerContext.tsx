@@ -434,8 +434,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
     // Capture the list of files to delete upfront
     const fileIdsToDelete = [...selectedFileIds];
-    const filesToDelete = filteredFiles.filter(f => fileIdsToDelete.includes(f.id));
-
+    
     // Get all stored files to analyze lineages
     const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
 
