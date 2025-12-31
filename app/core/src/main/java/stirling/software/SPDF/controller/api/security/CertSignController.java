@@ -133,13 +133,13 @@ public class CertSignController {
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
             if (Boolean.TRUE.equals(showSignature)) {
-                SignatureOptions signatureOptions = new SignatureOptions();
-                signatureOptions.setVisualSignature(
-                        instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
-                signatureOptions.setPage(pageNumber);
+                try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                    signatureOptions.setVisualSignature(
+                            instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
+                    signatureOptions.setPage(pageNumber);
 
-                doc.addSignature(signature, instance, signatureOptions);
-
+                    doc.addSignature(signature, instance, signatureOptions);
+                }
             } else {
                 doc.addSignature(signature, instance);
             }
