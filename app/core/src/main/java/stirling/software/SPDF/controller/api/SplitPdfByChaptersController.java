@@ -125,10 +125,9 @@ public class SplitPdfByChaptersController {
     public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = null;
         Path zipFile = null;
 
-        try {
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
             boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());
             Integer bookmarkLevel =
                     request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
@@ -136,7 +135,6 @@ public class SplitPdfByChaptersController {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument", "Invalid argument: {0}", "bookmark level");
             }
-            sourceDocument = pdfDocumentFactory.load(file);
 
             PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
 
@@ -190,14 +188,10 @@ public class SplitPdfByChaptersController {
             Files.deleteIfExists(zipFile);
 
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
-            sourceDocument.close();
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
         } finally {
             try {
-                if (sourceDocument != null) {
-                    sourceDocument.close();
-                }
                 if (zipFile != null) {
                     Files.deleteIfExists(zipFile);
                 }

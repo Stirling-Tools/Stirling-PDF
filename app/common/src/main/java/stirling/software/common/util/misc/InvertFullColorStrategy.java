@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.imageio.ImageIO;
 
@@ -43,6 +44,8 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             try (PDDocument document = Loader.loadPDF(tempFile.getFile())) {
                 // Render each page and invert colors
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(
+                        true); // Enable subsampling to reduce memory usage
                 for (int page = 0; page < document.getNumberOfPages(); page++) {
                     BufferedImage image;
 
@@ -78,7 +81,8 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                                         document,
                                         pdPage,
                                         PDPageContentStream.AppendMode.OVERWRITE,
-                                        true)) {
+                                        true,
+                                        true)) { // resetContext=true ensures clean graphics state
                             contentStream.drawImage(
                                     pdImage,
                                     0,
@@ -128,7 +132,10 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     // Helper method to convert BufferedImage to InputStream
     private File convertToBufferedImageTpFile(BufferedImage image) throws IOException {
-        File file = File.createTempFile("image", ".png");
+        // Use Files.createTempFile instead of File.createTempFile for better security and modern
+        // Java practices
+        Path tempPath = Files.createTempFile("image", ".png");
+        File file = tempPath.toFile();
         ImageIO.write(image, "png", file);
         return file;
     }

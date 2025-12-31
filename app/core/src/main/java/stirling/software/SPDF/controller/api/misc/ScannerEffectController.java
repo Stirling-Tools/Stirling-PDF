@@ -463,7 +463,13 @@ public class ScannerEffectController {
             PDPage newPage = new PDPage(new PDRectangle(page.origW, page.origH));
             document.addPage(newPage);
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, newPage)) {
+            try (PDPageContentStream contentStream =
+                    new PDPageContentStream(
+                            document,
+                            newPage,
+                            PDPageContentStream.AppendMode.OVERWRITE,
+                            true,
+                            false)) {
                 PDImageXObject pdImage = LosslessFactory.createFromImage(document, page.image);
                 contentStream.drawImage(
                         pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);

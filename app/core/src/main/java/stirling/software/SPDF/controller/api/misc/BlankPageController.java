@@ -149,28 +149,27 @@ public class BlankPageController {
                 pageIndex++;
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ZipOutputStream zos = new ZipOutputStream(baos);
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ZipOutputStream zos = new ZipOutputStream(baos)) {
 
-            String filename =
-                    GeneralUtils.removeExtension(
-                            Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+                String filename =
+                        GeneralUtils.removeExtension(
+                                Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
-            if (!nonBlankPages.isEmpty()) {
-                createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
-            } else {
-                createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
+                if (!nonBlankPages.isEmpty()) {
+                    createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
+                } else {
+                    createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
+                }
+
+                if (!nonBlankPages.isEmpty() && !blankPages.isEmpty()) {
+                    createZipEntry(zos, blankPages, filename + "_blankPages.pdf");
+                }
+
+                log.info("Returning ZIP file: {}", filename + "_processed.zip");
+                return WebResponseUtils.baosToWebResponse(
+                        baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
             }
-
-            if (!nonBlankPages.isEmpty() && !blankPages.isEmpty()) {
-                createZipEntry(zos, blankPages, filename + "_blankPages.pdf");
-            }
-
-            zos.close();
-
-            log.info("Returning ZIP file: {}", filename + "_processed.zip");
-            return WebResponseUtils.baosToWebResponse(
-                    baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
 
         } catch (ExceptionUtils.OutOfMemoryDpiException e) {
             throw e;

@@ -80,7 +80,7 @@ import stirling.software.common.util.RegexPatternUtils;
  * <pre>{@code
  * // In controllers/services - use ExceptionUtils to create typed exceptions:
  * try {
- *     PDDocument doc = PDDocument.load(file);
+ *     PDDocument doc = Loader.loadPDF(file);
  * } catch (IOException e) {
  *     throw ExceptionUtils.createPdfCorruptedException("during load", e);
  * }

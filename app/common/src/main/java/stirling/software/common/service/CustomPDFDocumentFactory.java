@@ -11,20 +11,20 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.examples.util.DeletingRandomAccessFile;
 import org.apache.pdfbox.io.IOUtils;
-import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
-import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.DeletingRandomAccessFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -35,37 +35,35 @@ import stirling.software.common.util.TempFileRegistry;
  */
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class CustomPDFDocumentFactory {
 
     private final PdfMetadataService pdfMetadataService;
 
-    // Memory thresholds and limits
+    public static long SMALL_FILE_THRESHOLD =
+            10 * 1024 * 1024; // 10MB - Files smaller than this threshold are loaded entirely in
 
-    public static final long SMALL_FILE_THRESHOLD = 10 * 1024 * 1024; // 10 MB
-    // Files smaller than this threshold are loaded entirely in memory for better performance.
+    // Memory thresholds and limits
+    // These are hardcoded constants to keep the implementation lean
+    private long LARGE_FILE_THRESHOLD =
+            50 * 1024 * 1024; // 50MB - Files between SMALL and LARGE thresholds use file-based
+    // memory for better performance
     // These files use IOUtils.createMemoryOnlyStreamCache() which keeps all document data in RAM.
     // No temp files are created for document data, reducing I/O operations but consuming more
     // memory.
-
-    private static final long LARGE_FILE_THRESHOLD = 50 * 1024 * 1024; // 50 MB
-    // Files between SMALL and LARGE thresholds use file-based caching with ScratchFile,
+    // caching with temp files
     // but are loaded directly from byte arrays if provided that way.
     // When loading from byte arrays, once size exceeds this threshold, bytes are first
     // written to temp files before loading to reduce memory pressure.
+    private double MIN_FREE_MEMORY_PERCENTAGE = 10.0; // 10% minimum free memory percentage
+    private long MIN_FREE_MEMORY_BYTES = 100 * 1024 * 1024; // 100MB minimum free memory
+    public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService) {
+        this.pdfMetadataService = pdfMetadataService;
+    }
 
-    private static final long LARGE_FILE_USAGE = 10 * 1024 * 1024;
-
-    private static final long EXTREMELY_LARGE_THRESHOLD = 100 * 1024 * 1024; // 100 MB
-    // Files exceeding this threshold use specialized loading with RandomAccessReadBufferedFile
-    // which provides buffered access to the file without loading the entire content at once.
-    // These files are always processed using file-based caching with minimal memory footprint,
-    // trading some performance for significantly reduced memory usage.
-    // For extremely large PDFs, this prevents OutOfMemoryErrors at the cost of being more I/O
-    // bound.
-
-    private static final double MIN_FREE_MEMORY_PERCENTAGE = 30.0; // 30%
-    private static final long MIN_FREE_MEMORY_BYTES = 4L * 1024 * 1024 * 1024; // 4 GB
+    @PostConstruct
+    public void initializeProperties() {
+        // Configuration is now hardcoded to keep implementation lean
+    }
 
     // Counter for tracking temporary resources
     private static final AtomicLong tempCounter = new AtomicLong(0);
@@ -260,19 +258,20 @@ public class CustomPDFDocumentFactory {
             log.debug(
                     "Low memory detected ({}%), forcing file-based cache",
                     String.format(Locale.ROOT, "%.2f", freeMemoryPercent));
-            return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
+            return IOUtils.createTempFileOnlyStreamCache();
         } else if (contentSize < SMALL_FILE_THRESHOLD) {
             log.debug("Using memory-only cache for small document ({}KB)", contentSize / 1024);
             return IOUtils.createMemoryOnlyStreamCache();
         } else if (contentSize < LARGE_FILE_THRESHOLD) {
-            // For medium files (10-50MB), use a mixed approach
+            // For medium files (10-50MB), use file-based caching to prevent memory issues
+            // PDFBox 3.0 best practice: use temp file cache for all user-provided content
             log.debug(
-                    "Using mixed memory/file cache for medium document ({}MB)",
+                    "Using file-based cache for medium document ({}MB)",
                     contentSize / (1024 * 1024));
-            return createScratchFileCacheFunction(MemoryUsageSetting.setupMixed(LARGE_FILE_USAGE));
+            return IOUtils.createTempFileOnlyStreamCache();
         } else {
             log.debug("Using file-based cache for large document");
-            return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
+            return IOUtils.createTempFileOnlyStreamCache();
         }
     }
 
@@ -344,14 +343,15 @@ public class CustomPDFDocumentFactory {
         return document;
     }
 
-    /** Load a file with password */
+    /** Load a file with password using optimal RandomAccessRead implementation */
     private PDDocument loadFromFileWithPassword(
             File file, long size, StreamCacheCreateFunction cache, String password)
             throws IOException {
-        return Loader.loadPDF(new DeletingRandomAccessFile(file), password, null, null, cache);
+        RandomAccessRead reader = createOptimalReader(file, size);
+        return Loader.loadPDF(reader, password, null, null, cache);
     }
 
-    /** Load bytes with password */
+    /** Load bytes with password using optimal RandomAccessRead implementation */
     private PDDocument loadFromBytesWithPassword(
             byte[] bytes, long size, StreamCacheCreateFunction cache, String password)
             throws IOException {
@@ -365,29 +365,40 @@ public class CustomPDFDocumentFactory {
         return Loader.loadPDF(bytes, password, null, null, cache);
     }
 
-    private StreamCacheCreateFunction createScratchFileCacheFunction(MemoryUsageSetting settings) {
-        return () -> {
-            try {
-                return new ScratchFile(settings);
-            } catch (IOException e) {
-                throw new RuntimeException("ScratchFile initialization failed", e);
-            }
-        };
-    }
-
     private void postProcessDocument(PDDocument doc) throws IOException {
         pdfMetadataService.setDefaultMetadata(doc);
         removePassword(doc);
     }
 
+    /**
+     * Load a PDF from a file using the most appropriate RandomAccessRead implementation based on
+     * file size. Uses memory-mapped files for very large files when possible.
+     */
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
+        RandomAccessRead reader = createOptimalReader(file, size);
         try {
-            return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+            return Loader.loadPDF(reader, "", null, null, cache);
         } catch (IOException e) {
             ExceptionUtils.logException("PDF loading from file", e);
             throw ExceptionUtils.handlePdfException(e);
         }
+    }
+
+    /**
+     * Create the optimal RandomAccessRead implementation based on file size and characteristics.
+     * Uses buffered file access to ensure stability across platforms (avoiding Windows file locking
+     * issues with memory-mapped files).
+     *
+     * <p>Best Practice: Always use RandomAccessReadBufferedFile (via DeletingRandomAccessFile) to
+     * avoid Windows file locking issues that occur with RandomAccessReadMemoryMappedFile.
+     */
+    private RandomAccessRead createOptimalReader(File file, long size) throws IOException {
+        // Use DeletingRandomAccessFile (which extends RandomAccessReadBufferedFile) for temp files
+        // that should be cleaned up. We explicitly avoid RandomAccessReadMemoryMappedFile due to
+        // known file locking issues on Windows where the OS locks the file until JVM garbage
+        // collection, which is non-deterministic.
+        return new DeletingRandomAccessFile(file);
     }
 
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
@@ -408,14 +419,14 @@ public class CustomPDFDocumentFactory {
         }
     }
 
-    public PDDocument createNewDocument(MemoryUsageSetting settings) throws IOException {
-        PDDocument doc = new PDDocument(createScratchFileCacheFunction(settings));
+    public PDDocument createNewDocument(StreamCacheCreateFunction cacheFactory) throws IOException {
+        PDDocument doc = new PDDocument(cacheFactory);
         pdfMetadataService.setDefaultMetadata(doc);
         return doc;
     }
 
     public PDDocument createNewDocument() throws IOException {
-        return createNewDocument(MemoryUsageSetting.setupTempFileOnly());
+        return createNewDocument(IOUtils.createTempFileOnlyStreamCache());
     }
 
     public byte[] saveToBytes(PDDocument document) throws IOException {

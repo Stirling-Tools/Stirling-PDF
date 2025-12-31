@@ -63,6 +63,7 @@ public class FlattenController {
             // flatten whole page aka convert each page to image and re-add it (making text
             // unselectable)
             PDFRenderer pdfRenderer = new PDFRenderer(document);
+            pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
             PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
 
@@ -108,8 +109,16 @@ public class FlattenController {
                     PDPage page = new PDPage();
                     page.setMediaBox(document.getPage(i).getMediaBox());
                     newDocument.addPage(page);
+                    // resetContext=false: Preserve existing graphics state when overwriting.
+                    // Since OVERWRITE mode replaces all content, we don't need to reset the
+                    // context.
                     try (PDPageContentStream contentStream =
-                            new PDPageContentStream(newDocument, page)) {
+                            new PDPageContentStream(
+                                    newDocument,
+                                    page,
+                                    PDPageContentStream.AppendMode.OVERWRITE,
+                                    true,
+                                    false)) {
                         PDImageXObject pdImage = JPEGFactory.createFromImage(newDocument, image);
                         float pageWidth = page.getMediaBox().getWidth();
                         float pageHeight = page.getMediaBox().getHeight();

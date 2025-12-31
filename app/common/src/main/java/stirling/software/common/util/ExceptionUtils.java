@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * <pre>{@code
  * // In service layer - create exception with ExceptionUtils
  * try {
- *     PDDocument doc = PDDocument.load(file);
+ *     PDDocument doc = Loader.loadPDF(file);
  * } catch (IOException e) {
  *     throw ExceptionUtils.createPdfCorruptedException("during load", e);
  * }

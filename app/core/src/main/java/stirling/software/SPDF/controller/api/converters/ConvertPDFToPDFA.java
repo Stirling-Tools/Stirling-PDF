@@ -51,7 +51,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationTextMarkup;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
@@ -1211,7 +1211,7 @@ public class ConvertPDFToPDFA {
                 List<PDAnnotation> annotations = page.getAnnotations();
                 for (PDAnnotation annot : annotations) {
                     if (ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())
-                            && annot instanceof PDAnnotationTextMarkup highlight) {
+                            && annot instanceof PDAnnotationHighlight highlight) {
                         float[] colorComponents =
                                 highlight.getColor() != null
                                         ? highlight.getColor().getComponents()
@@ -1851,7 +1851,7 @@ public class ConvertPDFToPDFA {
                             doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
 
                 for (PDAnnotation annot : annotations) {
-                    if (annot instanceof PDAnnotationTextMarkup highlight
+                    if (annot instanceof PDAnnotationHighlight highlight
                             && ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())) {
 
                         PDColor color = highlight.getColor();
@@ -1973,7 +1973,7 @@ public class ConvertPDFToPDFA {
                 return annot.getAppearance() != null;
             }
 
-            if (annot instanceof PDAnnotationTextMarkup) {
+            if (annot instanceof PDAnnotationHighlight) {
                 return false; // Will be handled by flattening
             }
 

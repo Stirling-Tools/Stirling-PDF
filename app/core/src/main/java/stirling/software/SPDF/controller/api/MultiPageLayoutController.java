@@ -70,108 +70,112 @@ public class MultiPageLayoutController {
                         : (int) Math.sqrt(pagesPerSheet);
         int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
 
-        PDDocument sourceDocument = pdfDocumentFactory.load(file);
-        PDDocument newDocument =
-                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-        PDPage newPage = new PDPage(PDRectangle.A4);
-        newDocument.addPage(newPage);
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
+            try (PDDocument newDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+                int totalPages = sourceDocument.getNumberOfPages();
+                LayerUtility layerUtility = new LayerUtility(newDocument);
 
-        int totalPages = sourceDocument.getNumberOfPages();
-        float cellWidth = newPage.getMediaBox().getWidth() / cols;
-        float cellHeight = newPage.getMediaBox().getHeight() / rows;
+                // Calculate cell dimensions once (all output pages are A4) - declare outside try
+                // blocks
+                float cellWidth = PDRectangle.A4.getWidth() / cols;
+                float cellHeight = PDRectangle.A4.getHeight() / rows;
 
-        PDPageContentStream contentStream =
-                new PDPageContentStream(
-                        newDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true);
-        LayerUtility layerUtility = new LayerUtility(newDocument);
+                // Process pages in groups of pagesPerSheet, creating a new page and content stream
+                // for each group
+                for (int i = 0; i < totalPages; i++) {
+                    // Create a new output page for each group of pagesPerSheet
+                    if (i % pagesPerSheet == 0) {
+                        PDPage newPage = new PDPage(PDRectangle.A4);
+                        newDocument.addPage(newPage);
 
-        float borderThickness = 1.5f; // Specify border thickness as required
-        contentStream.setLineWidth(borderThickness);
-        contentStream.setStrokingColor(Color.BLACK);
+                        // Use try-with-resources for each content stream to ensure proper cleanup
+                        // resetContext=true: Start with a clean graphics state for new content
+                        try (PDPageContentStream contentStream =
+                                new PDPageContentStream(
+                                        newDocument,
+                                        newPage,
+                                        PDPageContentStream.AppendMode.APPEND,
+                                        true,
+                                        true)) {
+                            float borderThickness = 1.5f; // Specify border thickness as required
+                            contentStream.setLineWidth(borderThickness);
+                            contentStream.setStrokingColor(Color.BLACK);
 
-        for (int i = 0; i < totalPages; i++) {
-            if (i != 0 && i % pagesPerSheet == 0) {
-                // Close the current content stream and create a new page and content stream
-                contentStream.close();
-                newPage = new PDPage(PDRectangle.A4);
-                newDocument.addPage(newPage);
-                contentStream =
-                        new PDPageContentStream(
+                            // Process all pages in this group
+                            for (int j = 0; j < pagesPerSheet && (i + j) < totalPages; j++) {
+                                int pageIndex = i + j;
+                                PDPage sourcePage = sourceDocument.getPage(pageIndex);
+                                PDRectangle rect = sourcePage.getMediaBox();
+                                float scaleWidth = cellWidth / rect.getWidth();
+                                float scaleHeight = cellHeight / rect.getHeight();
+                                float scale = Math.min(scaleWidth, scaleHeight);
+
+                                int adjustedPageIndex = j % pagesPerSheet;
+                                int rowIndex = adjustedPageIndex / cols;
+                                int colIndex = adjustedPageIndex % cols;
+
+                                float x =
+                                        colIndex * cellWidth
+                                                + (cellWidth - rect.getWidth() * scale) / 2;
+                                float y =
+                                        newPage.getMediaBox().getHeight()
+                                                - ((rowIndex + 1) * cellHeight
+                                                        - (cellHeight - rect.getHeight() * scale)
+                                                                / 2);
+
+                                contentStream.saveGraphicsState();
+                                contentStream.transform(Matrix.getTranslateInstance(x, y));
+                                contentStream.transform(Matrix.getScaleInstance(scale, scale));
+
+                                PDFormXObject formXObject =
+                                        layerUtility.importPageAsForm(sourceDocument, pageIndex);
+                                contentStream.drawForm(formXObject);
+
+                                contentStream.restoreGraphicsState();
+
+                                if (addBorder) {
+                                    // Draw border around each page
+                                    float borderX = colIndex * cellWidth;
+                                    float borderY =
+                                            newPage.getMediaBox().getHeight()
+                                                    - (rowIndex + 1) * cellHeight;
+                                    contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
+                                    contentStream.stroke();
+                                }
+                            }
+                        } // contentStream is automatically closed here
+                    }
+                }
+
+                // If any source page is rotated, skip form copying/transformation entirely
+                boolean hasRotation = GeneralFormCopyUtils.hasAnyRotatedPage(sourceDocument);
+                if (hasRotation) {
+                    log.info("Source document has rotated pages; skipping form field copying.");
+                } else {
+                    try {
+                        GeneralFormCopyUtils.copyAndTransformFormFields(
+                                sourceDocument,
                                 newDocument,
-                                newPage,
-                                PDPageContentStream.AppendMode.APPEND,
-                                true,
-                                true);
-            }
+                                totalPages,
+                                pagesPerSheet,
+                                cols,
+                                rows,
+                                cellWidth,
+                                cellHeight);
+                    } catch (Exception e) {
+                        log.warn("Failed to copy and transform form fields: {}", e.getMessage(), e);
+                    }
+                }
 
-            PDPage sourcePage = sourceDocument.getPage(i);
-            PDRectangle rect = sourcePage.getMediaBox();
-            float scaleWidth = cellWidth / rect.getWidth();
-            float scaleHeight = cellHeight / rect.getHeight();
-            float scale = Math.min(scaleWidth, scaleHeight);
-
-            int adjustedPageIndex =
-                    i % pagesPerSheet; // Close the current content stream and create a new
-            // page and content stream
-            int rowIndex = adjustedPageIndex / cols;
-            int colIndex = adjustedPageIndex % cols;
-
-            float x = colIndex * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
-            float y =
-                    newPage.getMediaBox().getHeight()
-                            - ((rowIndex + 1) * cellHeight
-                                    - (cellHeight - rect.getHeight() * scale) / 2);
-
-            contentStream.saveGraphicsState();
-            contentStream.transform(Matrix.getTranslateInstance(x, y));
-            contentStream.transform(Matrix.getScaleInstance(scale, scale));
-
-            PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
-            contentStream.drawForm(formXObject);
-
-            contentStream.restoreGraphicsState();
-
-            if (addBorder) {
-                // Draw border around each page
-                float borderX = colIndex * cellWidth;
-                float borderY = newPage.getMediaBox().getHeight() - (rowIndex + 1) * cellHeight;
-                contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
-                contentStream.stroke();
-            }
-        }
-
-        contentStream.close();
-
-        // If any source page is rotated, skip form copying/transformation entirely
-        boolean hasRotation = GeneralFormCopyUtils.hasAnyRotatedPage(sourceDocument);
-        if (hasRotation) {
-            log.info("Source document has rotated pages; skipping form field copying.");
-        } else {
-            try {
-                GeneralFormCopyUtils.copyAndTransformFormFields(
-                        sourceDocument,
-                        newDocument,
-                        totalPages,
-                        pagesPerSheet,
-                        cols,
-                        rows,
-                        cellWidth,
-                        cellHeight);
-            } catch (Exception e) {
-                log.warn("Failed to copy and transform form fields: {}", e.getMessage(), e);
-            }
-        }
-
-        sourceDocument.close();
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        newDocument.save(baos);
-        newDocument.close();
-
-        byte[] result = baos.toByteArray();
-        return WebResponseUtils.bytesToWebResponse(
-                result,
-                GeneralUtils.generateFilename(
-                        file.getOriginalFilename(), "_multi_page_layout.pdf"));
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                newDocument.save(baos);
+                byte[] result = baos.toByteArray();
+                return WebResponseUtils.bytesToWebResponse(
+                        result,
+                        GeneralUtils.generateFilename(
+                                file.getOriginalFilename(), "_multi_page_layout.pdf"));
+            } // newDocument is closed here
+        } // sourceDocument is closed here
     }
 }
