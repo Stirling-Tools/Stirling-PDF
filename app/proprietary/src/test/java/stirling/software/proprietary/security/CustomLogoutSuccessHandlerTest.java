@@ -31,8 +31,7 @@ class CustomLogoutSuccessHandlerTest {
 
     @BeforeEach
     void setUp() {
-        customLogoutSuccessHandler =
-                new CustomLogoutSuccessHandler(securityProperties, appConfig, jwtService);
+        customLogoutSuccessHandler = new CustomLogoutSuccessHandler(securityProperties, jwtService);
     }
 
     @Test
