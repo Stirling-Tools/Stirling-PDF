@@ -17,15 +17,23 @@ import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 export function useViewerRightRailButtons() {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
-  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isSearchInterfaceVisible } = viewer;
+  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
   const { handleToolSelect } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
-  const { redactionsApplied } = useRedaction();
+  const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
   const { pendingCount } = useRedactionMode();
+
+  // Subscribe to immediate pan updates so button state stays in sync with actual pan state
+  // This handles cases where annotation/redaction tools disable pan mode
+  useEffect(() => {
+    return registerImmediatePanUpdate((newIsPanning) => {
+      setIsPanning(newIsPanning);
+    });
+  }, [registerImmediatePanUpdate]);
 
   const stripBasePath = useCallback((path: string) => {
     if (BASE_PATH && path.startsWith(BASE_PATH)) {
@@ -61,6 +69,7 @@ export function useViewerRightRailButtons() {
   // Lift i18n labels out of memo for clarity
   const searchLabel = t('rightRail.search', 'Search PDF');
   const panLabel = t('rightRail.panMode', 'Pan Mode');
+  const applyRedactionsLabel = t('rightRail.applyRedactionsFirst', 'Apply redactions first');
   const rotateLeftLabel = t('rightRail.rotateLeft', 'Rotate Left');
   const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
   const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
@@ -112,11 +121,12 @@ export function useViewerRightRailButtons() {
       {
         id: 'viewer-pan-mode',
         icon: <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />,
-        tooltip: panLabel,
-        ariaLabel: panLabel,
+        tooltip: (!isPanning && pendingCount > 0 && redactionActiveType !== null) ? applyRedactionsLabel : panLabel,
+        ariaLabel: (!isPanning && pendingCount > 0 && redactionActiveType !== null) ? applyRedactionsLabel : panLabel,
         section: 'top' as const,
         order: 20,
         active: isPanning,
+        disabled: !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
           viewer.panActions.togglePan();
           setIsPanning(prev => !prev);
@@ -245,6 +255,7 @@ export function useViewerRightRailButtons() {
     isPanning,
     searchLabel,
     panLabel,
+    applyRedactionsLabel,
     rotateLeftLabel,
     rotateRightLabel,
     sidebarLabel,
@@ -254,6 +265,8 @@ export function useViewerRightRailButtons() {
     annotationsLabel,
     isAnnotationsActive,
     handleToolSelect,
+    pendingCount,
+    redactionActiveType,
   ]);
 
   useRightRailButtons(viewerButtons);

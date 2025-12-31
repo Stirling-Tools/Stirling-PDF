@@ -117,11 +117,13 @@ interface ViewerContextType {
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => () => void;
   registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => () => void;
   registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => () => void;
+  registerImmediatePanUpdate: (callback: (isPanning: boolean) => void) => () => void;
 
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
   triggerImmediateZoomUpdate: (zoomPercent: number) => void;
   triggerImmediateSpreadUpdate: (mode: SpreadMode, isDualPage?: boolean) => void;
+  triggerImmediatePanUpdate: (isPanning: boolean) => void;
 
   // Action handlers - call EmbedPDF APIs directly
   scrollActions: ScrollActions;
@@ -192,6 +194,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     register: registerImmediateSpreadUpdate,
     trigger: triggerImmediateSpreadInternal,
   } = useImmediateNotifier<[SpreadMode, boolean]>();
+  const {
+    register: registerImmediatePanUpdate,
+    trigger: triggerImmediatePanInternal,
+  } = useImmediateNotifier<[boolean]>();
 
   const triggerImmediateZoomUpdate = useCallback(
     (percent: number) => {
@@ -212,6 +218,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       triggerImmediateSpreadInternal(mode, isDualPage);
     },
     [triggerImmediateSpreadInternal]
+  );
+
+  const triggerImmediatePanUpdate = useCallback(
+    (isPanning: boolean) => {
+      triggerImmediatePanInternal(isPanning);
+    },
+    [triggerImmediatePanInternal]
   );
 
   const registerBridge = useCallback(
@@ -352,9 +365,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
     registerImmediateSpreadUpdate,
+    registerImmediatePanUpdate,
     triggerImmediateScrollUpdate,
     triggerImmediateZoomUpdate,
     triggerImmediateSpreadUpdate,
+    triggerImmediatePanUpdate,
 
     // Actions
     scrollActions,

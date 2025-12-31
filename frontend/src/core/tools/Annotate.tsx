@@ -12,6 +12,27 @@ import { useAnnotationStyleState } from '@app/tools/annotate/useAnnotationStyleS
 import { useAnnotationSelection } from '@app/tools/annotate/useAnnotationSelection';
 import { AnnotationPanel } from '@app/tools/annotate/AnnotationPanel';
 
+// Tools that require drawing/interacting with the PDF and should disable pan mode
+const DRAWING_TOOLS: AnnotationToolId[] = [
+  'highlight',
+  'underline',
+  'strikeout',
+  'squiggly',
+  'ink',
+  'inkHighlighter',
+  'text',
+  'note',
+  'square',
+  'circle',
+  'line',
+  'lineArrow',
+  'polyline',
+  'polygon',
+  'stamp',
+  'signatureStamp',
+  'signatureInk',
+];
+
 const KNOWN_ANNOTATION_TOOLS: AnnotationToolId[] = [
   'select',
   'highlight',
@@ -52,7 +73,7 @@ const Annotate = (_props: BaseToolProps) => {
     setPlacementPreviewSize,
   } = useSignature();
   const viewerContext = useContext(ViewerContext);
-  const { getZoomState, registerImmediateZoomUpdate, applyChanges, activeFileIndex } = useViewer();
+  const { getZoomState, registerImmediateZoomUpdate, applyChanges, activeFileIndex, panActions } = useViewer();
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>('select');
   
@@ -257,6 +278,11 @@ const Annotate = (_props: BaseToolProps) => {
     // Clear selection state to show default controls
     setSelectedAnn(null);
     setSelectedAnnId(null);
+
+    // Disable pan mode when activating drawing tools to avoid conflict
+    if (DRAWING_TOOLS.includes(toolId)) {
+      panActions.disablePan();
+    }
 
     // Change the tool
     setActiveTool(toolId);
