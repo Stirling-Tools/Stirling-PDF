@@ -55,7 +55,8 @@ security:
     idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your IdP
     enableSingleLogout: true # set to 'true' to enable Single Logout (SP-initiated SLO). Logs the user out from the IdP
     idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your IdP
-    idpIssuer: "" # The ID of your IdP
+    idpIssuer: "" # The entity ID of your IdP (Deprecated. Use idpEntityId instead)
+    idpEntityId: '' # The entity ID of your IdP
     idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your IdP
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair

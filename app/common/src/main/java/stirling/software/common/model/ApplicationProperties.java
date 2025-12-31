@@ -226,8 +226,21 @@ public class ApplicationProperties {
 
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
-            private String idpIssuer;
+            @Deprecated(since = "2.2.1", forRemoval = true)
+            private String idpIssuer; // Legacy field name, use idpEntityId instead
+            private String idpEntityId; // IdP Entity ID (preferred field name)
             private Boolean enableSingleLogout = false;
+
+            /**
+             * Gets the IdP Entity ID, checking both idpEntityId (preferred) and idpIssuer (legacy).
+             */
+            @JsonIgnore
+            public String getIdpEntityIdOrIssuer() {
+                if (idpEntityId != null && !idpEntityId.isBlank()) {
+                    return idpEntityId;
+                }
+                return idpIssuer;
+            }
 
             @JsonProperty("idpCert")
             private String idpCert;
