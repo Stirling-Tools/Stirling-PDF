@@ -5,6 +5,7 @@ import { useFileContext } from '@app/contexts/file/fileHooks';
 import { StirlingFileStub } from '@app/types/fileContext';
 import type { FileId } from '@app/types/file';
 import { fileStorage } from '@app/services/fileStorage';
+import { usePendingFiles } from '@app/contexts/PendingFilesContext';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
@@ -22,6 +23,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { addFiles } = useFileHandler();
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
+  const { addPendingFiles, removePendingFiles } = usePendingFiles();
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
@@ -40,61 +42,103 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     onModalClose?.();
   }, [onModalClose]);
 
-  const handleFileUpload = useCallback(async (files: File[]) => {
+  const handleFileUpload = useCallback((files: File[]) => {
     if (customHandler) {
       // Use custom handler for special cases (like page insertion)
       customHandler(files, insertAfterPage);
+      closeFilesModal();
     } else {
-      // 1) Add via standard flow (auto-selects new files)
-      await addFiles(files);
-      // 2) Merge all requested file IDs (covers already-present files too)
-      const ids = files
-        .map((f) => fileCtx.findFileId(f) as FileId | undefined)
-        .filter((id): id is FileId => Boolean(id));
-      if (ids.length > 0) {
-        const currentSelected = fileCtx.selectors.getSelectedStirlingFileStubs().map((s) => s.id);
-        const nextSelection = Array.from(new Set([...currentSelected, ...ids]));
-        actions.setSelectedFiles(nextSelection);
-      }
-    }
-    closeFilesModal();
-  }, [addFiles, closeFilesModal, insertAfterPage, customHandler, actions, fileCtx]);
-
-  const handleRecentFileSelect = useCallback(async (stirlingFileStubs: StirlingFileStub[]) => {
-    if (customHandler) {
-      // Load the actual files from storage for custom handler
-      try {
-        const loadedFiles: File[] = [];
-        for (const stub of stirlingFileStubs) {
-          const stirlingFile = await fileStorage.getStirlingFile(stub.id);
-          if (stirlingFile) {
-            loadedFiles.push(stirlingFile);
-          }
-        }
+      // Add pending placeholders immediately for instant visual feedback
+      const pendingIds = addPendingFiles(files);
+      
+      // Close modal immediately so user sees the loading placeholders
+      closeFilesModal();
+      
+      // Process each file individually so they load one by one
+      files.forEach((file, index) => {
+        const pendingId = pendingIds[index];
         
-        if (loadedFiles.length > 0) {
-          customHandler(loadedFiles, insertAfterPage);
-        }
-      } catch (error) {
-        console.error('Failed to load files for custom handler:', error);
-      }
-    } else {
-      // Normal case - use addStirlingFileStubs to preserve metadata (auto-selects new)
-      if (actions.addStirlingFileStubs) {
-        await actions.addStirlingFileStubs(stirlingFileStubs, { selectFiles: true });
-        // Merge all requested IDs into selection (covers files that already existed)
-        const requestedIds = stirlingFileStubs.map((s) => s.id);
-        if (requestedIds.length > 0) {
-          const currentSelected = fileCtx.selectors.getSelectedStirlingFileStubs().map((s) => s.id);
-          const nextSelection = Array.from(new Set([...currentSelected, ...requestedIds]));
-          actions.setSelectedFiles(nextSelection);
-        }
-      } else {
-        console.error('addStirlingFileStubs action not available');
-      }
+        (async () => {
+          try {
+            // Add this single file
+            await addFiles([file]);
+            // Find and select the newly added file
+            const fileId = fileCtx.findFileId(file) as FileId | undefined;
+            if (fileId) {
+              const currentSelected = fileCtx.selectors.getSelectedStirlingFileStubs().map((s) => s.id);
+              const nextSelection = Array.from(new Set([...currentSelected, fileId]));
+              actions.setSelectedFiles(nextSelection);
+            }
+          } catch (error) {
+            console.error(`Failed to upload file ${file.name}:`, error);
+          } finally {
+            // Remove this file's pending placeholder when done
+            removePendingFiles([pendingId]);
+          }
+        })();
+      });
     }
-    closeFilesModal();
-  }, [actions.addStirlingFileStubs, closeFilesModal, customHandler, insertAfterPage, actions, fileCtx]);
+  }, [addFiles, closeFilesModal, insertAfterPage, customHandler, actions, fileCtx, addPendingFiles, removePendingFiles]);
+
+  const handleRecentFileSelect = useCallback((stirlingFileStubs: StirlingFileStub[]) => {
+    if (customHandler) {
+      // Close modal first, then load files for custom handler
+      closeFilesModal();
+      
+      (async () => {
+        try {
+          const loadedFiles: File[] = [];
+          for (const stub of stirlingFileStubs) {
+            const stirlingFile = await fileStorage.getStirlingFile(stub.id);
+            if (stirlingFile) {
+              loadedFiles.push(stirlingFile);
+            }
+          }
+          
+          if (loadedFiles.length > 0) {
+            customHandler(loadedFiles, insertAfterPage);
+          }
+        } catch (error) {
+          console.error('Failed to load files for custom handler:', error);
+        }
+      })();
+    } else {
+      // Create fake File objects for pending placeholders (using stub metadata)
+      const fakeFiles = stirlingFileStubs.map(stub => ({
+        name: stub.name,
+        size: stub.size,
+        lastModified: stub.lastModified,
+      } as File));
+      
+      // Add pending placeholders immediately for instant visual feedback
+      const pendingIds = addPendingFiles(fakeFiles);
+      
+      // Close modal immediately so user sees the loading placeholders
+      closeFilesModal();
+      
+      // Process each file individually so they load one by one
+      stirlingFileStubs.forEach((stub, index) => {
+        const pendingId = pendingIds[index];
+        
+        (async () => {
+          try {
+            if (actions.addStirlingFileStubs) {
+              await actions.addStirlingFileStubs([stub], { selectFiles: true });
+              // Add to selection
+              const currentSelected = fileCtx.selectors.getSelectedStirlingFileStubs().map((s) => s.id);
+              const nextSelection = Array.from(new Set([...currentSelected, stub.id]));
+              actions.setSelectedFiles(nextSelection);
+            }
+          } catch (error) {
+            console.error(`Failed to load file ${stub.name}:`, error);
+          } finally {
+            // Remove this file's pending placeholder when done
+            removePendingFiles([pendingId]);
+          }
+        })();
+      });
+    }
+  }, [actions.addStirlingFileStubs, closeFilesModal, customHandler, insertAfterPage, actions, fileCtx, addPendingFiles, removePendingFiles]);
 
   const setModalCloseCallback = useCallback((callback: () => void) => {
     setOnModalClose(() => callback);

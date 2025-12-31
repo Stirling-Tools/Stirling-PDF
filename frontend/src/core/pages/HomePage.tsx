@@ -12,6 +12,7 @@ import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { usePendingFiles } from "@app/contexts/PendingFilesContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
 import ToolPanel from "@app/components/tools/ToolPanel";
@@ -56,24 +57,27 @@ export default function HomePage() {
   const { activeFiles } = useFileContext();
   const { actions } = useNavigationActions();
   const { setActiveFileIndex } = useViewer();
+  const { hasPendingFiles } = usePendingFiles();
   const prevFileCountRef = useRef(activeFiles.length);
 
   // Auto-switch to viewer when going from 0 to 1 file
   // Skip this if PDF Text Editor is active - it handles its own empty state
+  // Skip this if there are pending files still uploading (wait for all uploads to complete)
   useEffect(() => {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
     if (prevCount === 0 && currentCount === 1) {
       // PDF Text Editor handles its own empty state with a dropzone
-      if (selectedToolKey !== 'pdfTextEditor') {
+      // Don't auto-navigate if more files are still being uploaded
+      if (selectedToolKey !== 'pdfTextEditor' && !hasPendingFiles) {
         actions.setWorkbench('viewer');
         setActiveFileIndex(0);
       }
     }
 
     prevFileCountRef.current = currentCount;
-  }, [activeFiles.length, actions, setActiveFileIndex, selectedToolKey]);
+  }, [activeFiles.length, actions, setActiveFileIndex, selectedToolKey, hasPendingFiles]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();

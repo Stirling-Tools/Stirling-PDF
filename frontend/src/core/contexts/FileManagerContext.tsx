@@ -263,7 +263,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     return safeToDelete;
   }, []);
 
-  // Shared internal delete logic
+  // Shared internal delete logic - uses optimistic updates for snappy UX
   const performFileDelete = useCallback(async (fileToRemove: StirlingFileStub, fileIndex: number) => {
     const deletedFileId = fileToRemove.id;
 
@@ -273,7 +273,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     // Get safe files to delete (respecting shared lineages)
     const filesToDelete = getSafeFilesToDelete([deletedFileId], allStoredStubs);
 
-    // Clear from selection immediately
+    // OPTIMISTIC UPDATE: Clear from selection immediately
     setSelectedFileIds(prev => prev.filter(id => !filesToDelete.includes(id)));
 
     // Clear from expanded state to prevent ghost entries
@@ -301,20 +301,26 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       return newCache;
     });
 
-    // Delete safe files from IndexedDB
-    try {
-      for (const fileId of filesToDelete) {
-        await fileStorage.deleteStirlingFile(fileId as FileId);
-      }
-    } catch (error) {
-      console.error('Failed to delete files from chain:', error);
-    }
-
-    // Call the parent's deletion logic for the main file only
+    // Call the parent's deletion logic for the main file only (triggers immediate UI update)
     onFileRemove(fileIndex);
 
-    // Refresh to ensure consistent state
-    await refreshRecentFiles();
+    // Delete files from IndexedDB in parallel in the background
+    (async () => {
+      try {
+        await Promise.all(
+          filesToDelete.map(fileId =>
+            fileStorage.deleteStirlingFile(fileId as FileId).catch(err => {
+              console.error(`Failed to delete file ${fileId}:`, err);
+            })
+          )
+        );
+        // Refresh to ensure consistent state
+        await refreshRecentFiles();
+      } catch (error) {
+        console.error('Failed to delete files from chain:', error);
+        await refreshRecentFiles();
+      }
+    })();
   }, [getSafeFilesToDelete, setSelectedFileIds, setExpandedFileIds, setLoadedHistoryFiles, onFileRemove, refreshRecentFiles]);
 
   const handleFileRemove = useCallback(async (index: number) => {
@@ -335,11 +341,11 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [filteredFiles, performFileDelete]);
 
-  // Handle deletion of specific history files (not index-based)
-  const handleHistoryFileRemove = useCallback(async (fileToRemove: StirlingFileStub) => {
+  // Handle deletion of specific history files (not index-based) - uses optimistic updates
+  const handleHistoryFileRemove = useCallback((fileToRemove: StirlingFileStub) => {
     const deletedFileId = fileToRemove.id;
 
-    // Clear from expanded state to prevent ghost entries
+    // OPTIMISTIC UPDATE: Clear from expanded state immediately
     setExpandedFileIds(prev => {
       const newExpanded = new Set(prev);
       newExpanded.delete(deletedFileId);
@@ -364,16 +370,18 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       return newCache;
     });
 
-    // Delete safe files from IndexedDB
-    try {
+    // Delete from IndexedDB in the background
+    (async () => {
+      try {
         await fileStorage.deleteStirlingFile(deletedFileId);
-    } catch (error) {
-      console.error('Failed to delete files from chain:', error);
-    }
-
-    // Refresh to ensure consistent state
-    await refreshRecentFiles();
-  }, [filteredFiles, onFileRemove, refreshRecentFiles, getSafeFilesToDelete]);
+        // Refresh to ensure consistent state
+        await refreshRecentFiles();
+      } catch (error) {
+        console.error('Failed to delete history file:', error);
+        await refreshRecentFiles();
+      }
+    })();
+  }, [refreshRecentFiles]);
 
   const handleFileDoubleClick = useCallback((file: StirlingFileStub) => {
     if (isFileSupported(file.name)) {
@@ -424,15 +432,66 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const handleDeleteSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;
 
-    try {
-      // Delete each selected file using the proven single delete logic
-      for (const fileId of selectedFileIds) {
-        await handleFileRemoveById(fileId);
-      }
-    } catch (error) {
-      console.error('Failed to delete selected files:', error);
+    // Capture the list of files to delete upfront
+    const fileIdsToDelete = [...selectedFileIds];
+    const filesToDelete = filteredFiles.filter(f => fileIdsToDelete.includes(f.id));
+
+    // Get all stored files to analyze lineages
+    const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
+
+    // Build complete list of file IDs to delete (including lineage files)
+    const allFileIdsToDelete = new Set<FileId>();
+    for (const fileId of fileIdsToDelete) {
+      const safeFilesToDelete = getSafeFilesToDelete([fileId], allStoredStubs);
+      safeFilesToDelete.forEach(id => allFileIdsToDelete.add(id as FileId));
     }
-  }, [selectedFileIds, handleFileRemoveById]);
+
+    // OPTIMISTIC UPDATE: Immediately clear all selected files from UI state
+    setSelectedFileIds([]);
+    setLastClickedIndex(null);
+
+    // Clear from expanded state to prevent ghost entries
+    setExpandedFileIds(prev => {
+      const newExpanded = new Set(prev);
+      allFileIdsToDelete.forEach(id => newExpanded.delete(id));
+      return newExpanded;
+    });
+
+    // Clear from history cache
+    setLoadedHistoryFiles(prev => {
+      const newCache = new Map(prev);
+      allFileIdsToDelete.forEach(id => newCache.delete(id as FileId));
+      // Also remove deleted files from any other file's history cache
+      for (const [mainFileId, historyFiles] of newCache.entries()) {
+        const filteredHistory = historyFiles.filter(histFile => !allFileIdsToDelete.has(histFile.id));
+        if (filteredHistory.length !== historyFiles.length) {
+          newCache.set(mainFileId, filteredHistory);
+        }
+      }
+      return newCache;
+    });
+
+    // Delete all files in parallel in the background
+    (async () => {
+      try {
+        // Delete all files from IndexedDB in parallel
+        await Promise.all(
+          Array.from(allFileIdsToDelete).map(fileId => 
+            fileStorage.deleteStirlingFile(fileId as FileId).catch(err => {
+              console.error(`Failed to delete file ${fileId}:`, err);
+            })
+          )
+        );
+
+        // Refresh once at the end to ensure consistent state
+        await refreshRecentFiles();
+      } catch (error) {
+        console.error('Failed to delete selected files:', error);
+        // Refresh to recover consistent state
+        await refreshRecentFiles();
+      }
+    })();
+  }, [selectedFileIds, filteredFiles, getSafeFilesToDelete, refreshRecentFiles]);
 
 
   const handleDownloadSelected = useCallback(async () => {

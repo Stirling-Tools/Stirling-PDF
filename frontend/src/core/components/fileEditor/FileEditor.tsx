@@ -3,6 +3,7 @@ import {
   Text, Center, Box, LoadingOverlay, Stack
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '@app/contexts/FileContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { zipFileService } from '@app/services/zipFileService';
@@ -10,11 +11,20 @@ import { detectFileExtension } from '@app/utils/fileUtils';
 import FileEditorThumbnail from '@app/components/fileEditor/FileEditorThumbnail';
 import AddFileCard from '@app/components/fileEditor/AddFileCard';
 import FilePickerModal from '@app/components/shared/FilePickerModal';
-import { FileId, StirlingFile } from '@app/types/fileContext';
+import { FileId, StirlingFile, StirlingFileStub } from '@app/types/fileContext';
 import { alert } from '@app/components/toast';
 import { downloadBlob } from '@app/utils/downloadUtils';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { usePendingFiles } from '@app/contexts/PendingFilesContext';
+
+// Grid constants for virtualization
+const GRID_CONSTANTS = {
+  ITEM_WIDTH: 320, // px - matches minmax(320px, 1fr)
+  ITEM_HEIGHT: 380, // px - approximate card height including gaps
+  ITEM_GAP: 24, // px - matches 1.5rem row gap
+  OVERSCAN: 2, // number of rows to render outside viewport
+};
 
 
 interface FileEditorProps {
@@ -56,6 +66,9 @@ const FileEditor = ({
 
   const [_status, _setStatus] = useState<string | null>(null);
   const [_error, _setError] = useState<string | null>(null);
+  
+  // Use shared pending files context for upload placeholders
+  const { pendingFiles, addPendingFiles, removePendingFiles } = usePendingFiles();
 
   // Toast helpers
   const showStatus = useCallback((message: string, type: 'neutral' | 'success' | 'warning' | 'error' = 'neutral') => {
@@ -88,6 +101,84 @@ const FileEditor = ({
   // Create refs for frequently changing values to stabilize callbacks
   const contextSelectedIdsRef = useRef<FileId[]>([]);
   contextSelectedIdsRef.current = contextSelectedIds;
+
+  // Virtualization state
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const [itemsPerRow, setItemsPerRow] = useState(4);
+
+  // Calculate items per row based on container width
+  const calculateItemsPerRow = useCallback(() => {
+    if (!gridContainerRef.current) return 4;
+    const containerWidth = gridContainerRef.current.offsetWidth;
+    if (containerWidth === 0) return 4;
+    
+    // Account for padding (1rem = 16px on each side)
+    const availableWidth = containerWidth - 32;
+    const itemWithGap = GRID_CONSTANTS.ITEM_WIDTH + GRID_CONSTANTS.ITEM_GAP;
+    const calculated = Math.floor((availableWidth + GRID_CONSTANTS.ITEM_GAP) / itemWithGap);
+    return Math.max(1, calculated);
+  }, []);
+
+  // Update items per row on resize
+  useEffect(() => {
+    const updateLayout = () => {
+      const newItemsPerRow = calculateItemsPerRow();
+      setItemsPerRow(newItemsPerRow);
+    };
+
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+
+    const resizeObserver = new ResizeObserver(updateLayout);
+    if (gridContainerRef.current) {
+      resizeObserver.observe(gridContainerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateLayout);
+      resizeObserver.disconnect();
+    };
+  }, [calculateItemsPerRow]);
+
+  // Combine all items for virtualization (AddFileCard + files + pending)
+  const allItems = useMemo(() => {
+    const items: Array<{ type: 'add' } | { type: 'file'; record: StirlingFileStub; index: number } | { type: 'pending'; pendingFile: typeof pendingFiles[0]; index: number }> = [];
+    
+    // Add file card (always first when files exist)
+    if (activeStirlingFileStubs.length > 0 || pendingFiles.length > 0) {
+      items.push({ type: 'add' });
+    }
+    
+    // Add actual files
+    activeStirlingFileStubs.forEach((record, index) => {
+      items.push({ type: 'file', record, index });
+    });
+    
+    // Add pending files
+    pendingFiles.forEach((pendingFile, index) => {
+      items.push({ type: 'pending', pendingFile, index });
+    });
+    
+    return items;
+  }, [activeStirlingFileStubs, pendingFiles]);
+
+  // Get scroll element for virtualizer
+  const getScrollElement = useCallback(() => scrollContainerRef.current, []);
+
+  // Row virtualizer
+  const rowCount = Math.ceil(allItems.length / itemsPerRow);
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement,
+    estimateSize: () => GRID_CONSTANTS.ITEM_HEIGHT,
+    overscan: GRID_CONSTANTS.OVERSCAN,
+  });
+
+  // Re-measure when items per row changes
+  useEffect(() => {
+    rowVirtualizer.measure();
+  }, [itemsPerRow, allItems.length]);
 
   // Use activeStirlingFileStubs directly - no conversion needed
   const localSelectedIds = contextSelectedIds;
@@ -133,32 +224,51 @@ const FileEditor = ({
 
   // Process uploaded files using context
   // ZIP extraction is now handled automatically in FileContext based on user preferences
-  const handleFileUpload = useCallback(async (uploadedFiles: File[]) => {
+  const handleFileUpload = useCallback((uploadedFiles: File[]) => {
     _setError(null);
 
-    try {
-      if (uploadedFiles.length > 0) {
-        // FileContext will automatically handle ZIP extraction based on user preferences
-        // - Respects autoUnzip setting
-        // - Respects autoUnzipFileLimit
-        // - HTML ZIPs stay intact
-        // - Non-ZIP files pass through unchanged
-        await addFiles(uploadedFiles, { selectFiles: true });
-        // After auto-selection, enforce maxAllowed if needed
-        if (Number.isFinite(maxAllowed)) {
-          const nowSelectedIds = selectors.getSelectedStirlingFileStubs().map(r => r.id);
-          if (nowSelectedIds.length > maxAllowed) {
-            setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
+    if (uploadedFiles.length > 0) {
+      // Create pending file placeholders immediately for instant visual feedback
+      const pendingIds = addPendingFiles(uploadedFiles);
+      
+      // Track completed files for status message
+      let completedCount = 0;
+      const totalCount = uploadedFiles.length;
+      
+      // Process each file individually so they load one by one
+      uploadedFiles.forEach((file, index) => {
+        const pendingId = pendingIds[index];
+        
+        (async () => {
+          try {
+            // FileContext will automatically handle ZIP extraction based on user preferences
+            await addFiles([file], { selectFiles: true });
+            
+            // After auto-selection, enforce maxAllowed if needed
+            if (Number.isFinite(maxAllowed)) {
+              const nowSelectedIds = selectors.getSelectedStirlingFileStubs().map(r => r.id);
+              if (nowSelectedIds.length > maxAllowed) {
+                setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
+              }
+            }
+            
+            completedCount++;
+            // Show status when all files are done
+            if (completedCount === totalCount) {
+              showStatus(`Added ${totalCount} file(s)`, 'success');
+            }
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
+            showError(`Error processing ${file.name}: ${errorMessage}`);
+            console.error('File processing error:', err);
+          } finally {
+            // Remove this file's pending placeholder when done
+            removePendingFiles([pendingId]);
           }
-        }
-        showStatus(`Added ${uploadedFiles.length} file(s)`, 'success');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
-      showError(errorMessage);
-      console.error('File processing error:', err);
+        })();
+      });
     }
-  }, [addFiles, showStatus, showError, selectors, maxAllowed, setSelectedFiles]);
+  }, [addFiles, addPendingFiles, removePendingFiles, showStatus, showError, selectors, maxAllowed, setSelectedFiles]);
 
   const toggleFile = useCallback((fileId: FileId) => {
     const currentSelectedIds = contextSelectedIdsRef.current;
@@ -351,6 +461,83 @@ const FileEditor = ({
   }, []);
 
 
+  // Render a single item based on its type
+  const renderItem = useCallback((item: typeof allItems[0]) => {
+    if (item.type === 'add') {
+      return (
+        <AddFileCard
+          key="add-file-card"
+          onFileSelect={handleFileUpload}
+        />
+      );
+    }
+    
+    if (item.type === 'file') {
+      const { record, index } = item;
+      return (
+        <FileEditorThumbnail
+          key={record.id}
+          file={record}
+          index={index}
+          totalFiles={activeStirlingFileStubs.length + pendingFiles.length}
+          selectedFiles={localSelectedIds}
+          selectionMode={selectionMode}
+          onToggleFile={toggleFile}
+          onCloseFile={handleCloseFile}
+          onViewFile={handleViewFile}
+          _onSetStatus={showStatus}
+          onReorderFiles={handleReorderFiles}
+          onDownloadFile={handleDownloadFile}
+          onUnzipFile={handleUnzipFile}
+          toolMode={toolMode}
+          isSupported={isFileSupported(record.name)}
+        />
+      );
+    }
+    
+    if (item.type === 'pending') {
+      const { pendingFile, index } = item;
+      const placeholderStub: StirlingFileStub = {
+        id: pendingFile.id,
+        name: pendingFile.name,
+        size: pendingFile.size,
+        lastModified: pendingFile.lastModified,
+        type: '',
+        thumbnailUrl: undefined,
+        versionNumber: 1,
+        isLeaf: true,
+        originalFileId: pendingFile.id,
+      };
+      return (
+        <FileEditorThumbnail
+          key={`pending-${pendingFile.id}`}
+          file={placeholderStub}
+          index={activeStirlingFileStubs.length + index}
+          totalFiles={activeStirlingFileStubs.length + pendingFiles.length}
+          selectedFiles={[]}
+          selectionMode={selectionMode}
+          onToggleFile={() => {}}
+          onCloseFile={() => {}}
+          onViewFile={() => {}}
+          _onSetStatus={() => {}}
+          onDownloadFile={() => {}}
+          toolMode={toolMode}
+          isSupported={true}
+          isLoading={true}
+        />
+      );
+    }
+    
+    return null;
+  }, [
+    handleFileUpload, activeStirlingFileStubs.length, pendingFiles.length,
+    localSelectedIds, selectionMode, toggleFile, handleCloseFile, handleViewFile,
+    showStatus, handleReorderFiles, handleDownloadFile, handleUnzipFile, toolMode, isFileSupported
+  ]);
+
+  // Calculate optimal grid width for centering
+  const gridWidth = itemsPerRow * GRID_CONSTANTS.ITEM_WIDTH + (itemsPerRow - 1) * GRID_CONSTANTS.ITEM_GAP;
+
   return (
     <Dropzone
       onDrop={handleFileUpload}
@@ -364,13 +551,10 @@ const FileEditor = ({
       activateOnClick={false}
       activateOnDrag={true}
     >
-      <Box pos="relative" style={{ overflow: 'auto' }}>
+      <Box pos="relative" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <LoadingOverlay visible={false} />
 
-        <Box p="md">
-
-
-        {activeStirlingFileStubs.length === 0 ? (
+        {activeStirlingFileStubs.length === 0 && pendingFiles.length === 0 ? (
           <Center h="60vh">
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">📁</Text>
@@ -379,57 +563,71 @@ const FileEditor = ({
             </Stack>
           </Center>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              rowGap: '1.5rem',
+          <Box 
+            ref={scrollContainerRef}
+            style={{ 
+              flex: 1, 
+              overflow: 'auto',
               padding: '1rem',
-              pointerEvents: 'auto'
             }}
           >
-            {/* Add File Card - only show when files exist */}
-            {activeStirlingFileStubs.length > 0 && (
-              <AddFileCard
-                key="add-file-card"
-                onFileSelect={handleFileUpload}
-              />
-            )}
+            <div
+              ref={gridContainerRef}
+              style={{
+                position: 'relative',
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  maxWidth: `${gridWidth}px`,
+                  margin: '0 auto',
+                  position: 'relative',
+                  height: '100%',
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const startIndex = virtualRow.index * itemsPerRow;
+                  const endIndex = Math.min(startIndex + itemsPerRow, allItems.length);
+                  const rowItems = allItems.slice(startIndex, endIndex);
 
-            {activeStirlingFileStubs.map((record, index) => {
-              return (
-                <FileEditorThumbnail
-                  key={record.id}
-                  file={record}
-                  index={index}
-                  totalFiles={activeStirlingFileStubs.length}
-                  selectedFiles={localSelectedIds}
-                  selectionMode={selectionMode}
-                  onToggleFile={toggleFile}
-                  onCloseFile={handleCloseFile}
-                  onViewFile={handleViewFile}
-                  _onSetStatus={showStatus}
-                  onReorderFiles={handleReorderFiles}
-                  onDownloadFile={handleDownloadFile}
-                  onUnzipFile={handleUnzipFile}
-                  toolMode={toolMode}
-                  isSupported={isFileSupported(record.name)}
-                />
-              );
-            })}
-          </div>
+                  return (
+                    <div
+                      key={virtualRow.index}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: `${GRID_CONSTANTS.ITEM_GAP}px`,
+                          justifyContent: 'flex-start',
+                        }}
+                      >
+                        {rowItems.map((item) => renderItem(item))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Box>
         )}
-      </Box>
 
-      {/* File Picker Modal */}
-      <FilePickerModal
-        opened={showFilePickerModal}
-        onClose={() => setShowFilePickerModal(false)}
-        storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
-        onSelectFiles={handleLoadFromStorage}
-      />
-
-
+        {/* File Picker Modal */}
+        <FilePickerModal
+          opened={showFilePickerModal}
+          onClose={() => setShowFilePickerModal(false)}
+          storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
+          onSelectFiles={handleLoadFromStorage}
+        />
       </Box>
     </Dropzone>
   );

@@ -7,6 +7,7 @@ import { useNavigationState, useNavigationActions } from '@app/contexts/Navigati
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { usePendingFiles } from '@app/contexts/PendingFilesContext';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -29,6 +30,9 @@ export default function Workbench() {
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
   const activeFiles = selectors.getFiles();
+  
+  // Check for pending files to show FileEditor with loading placeholders during upload
+  const { hasPendingFiles } = usePendingFiles();
   const {
     previewFile,
     pageEditorFunctions,
@@ -85,9 +89,20 @@ export default function Workbench() {
     }
 
     // For base workbenches (or custom views that don't handle empty state), show landing page when no files
-    if (activeFiles.length === 0) {
+    // Also check for pending files - show FileEditor with loading placeholders during upload
+    if (activeFiles.length === 0 && !hasPendingFiles) {
       return (
         <LandingPage
+        />
+      );
+    }
+
+    // If there are pending files but no real files, show FileEditor with loading placeholders
+    if (hasPendingFiles && activeFiles.length === 0) {
+      return (
+        <FileEditor
+          toolMode={!!selectedToolId}
+          supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
         />
       );
     }

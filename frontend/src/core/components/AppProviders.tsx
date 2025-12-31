@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
+import { PendingFilesProvider } from "@app/contexts/PendingFilesContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { FilesModalProvider } from "@app/contexts/FilesModalContext";
@@ -85,6 +86,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 <ScarfTrackingInitializer />
                 <AppConfigLoader />
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                  <PendingFilesProvider>
                   <AppInitializer />
                   <BrandingAssetManager />
                   <ToolRegistryProvider>
@@ -114,6 +116,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                         </FilesModalProvider>
                       </NavigationProvider>
                     </ToolRegistryProvider>
+                  </PendingFilesProvider>
                   </FileContextProvider>
               </AppConfigProvider>
           </BannerProvider>

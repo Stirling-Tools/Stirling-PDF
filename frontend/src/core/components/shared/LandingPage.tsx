@@ -14,6 +14,7 @@ import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
+import { usePendingFiles } from '@app/contexts/PendingFilesContext';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -32,9 +33,25 @@ const LandingPage = () => {
   const icons = useFileActionIcons();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  const { addPendingFiles, removePendingFiles } = usePendingFiles();
 
-  const handleFileDrop = async (files: File[]) => {
-    await addFiles(files);
+  const handleFileDrop = (files: File[]) => {
+    // Add pending placeholders immediately for instant visual feedback
+    const pendingIds = addPendingFiles(files);
+    
+    // Process each file individually so they load one by one
+    files.forEach((file, index) => {
+      const pendingId = pendingIds[index];
+      
+      addFiles([file])
+        .catch((err) => {
+          console.error(`Error uploading file ${file.name}:`, err);
+        })
+        .finally(() => {
+          // Remove this file's pending placeholder when done
+          removePendingFiles([pendingId]);
+        });
+    });
   };
 
   const handleOpenFilesModal = () => {
@@ -45,10 +62,25 @@ const LandingPage = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
-      await addFiles(files);
+      // Add pending placeholders immediately for instant visual feedback
+      const pendingIds = addPendingFiles(files);
+      
+      // Process each file individually so they load one by one
+      files.forEach((file, index) => {
+        const pendingId = pendingIds[index];
+        
+        addFiles([file])
+          .catch((err) => {
+            console.error(`Error uploading file ${file.name}:`, err);
+          })
+          .finally(() => {
+            // Remove this file's pending placeholder when done
+            removePendingFiles([pendingId]);
+          });
+      });
     }
     // Reset the input so the same file can be selected again
     event.target.value = '';
@@ -58,9 +90,24 @@ const LandingPage = () => {
     setMobileUploadModalOpen(true);
   };
 
-  const handleFilesReceivedFromMobile = async (files: File[]) => {
+  const handleFilesReceivedFromMobile = (files: File[]) => {
     if (files.length > 0) {
-      await addFiles(files);
+      // Add pending placeholders immediately for instant visual feedback
+      const pendingIds = addPendingFiles(files);
+      
+      // Process each file individually so they load one by one
+      files.forEach((file, index) => {
+        const pendingId = pendingIds[index];
+        
+        addFiles([file])
+          .catch((err) => {
+            console.error(`Error uploading file ${file.name}:`, err);
+          })
+          .finally(() => {
+            // Remove this file's pending placeholder when done
+            removePendingFiles([pendingId]);
+          });
+      });
     }
   };
 

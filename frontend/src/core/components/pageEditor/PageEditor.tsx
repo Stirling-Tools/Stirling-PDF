@@ -349,6 +349,10 @@ const PageEditor = ({
       ref={containerRef}
       pos="relative"
       data-scrolling-container="true"
+      style={{
+        height: '100%',
+        overflow: 'auto',
+      }}
       onMouseEnter={() => setIsContainerHovered(true)}
       onMouseLeave={() => setIsContainerHovered(false)}
     >

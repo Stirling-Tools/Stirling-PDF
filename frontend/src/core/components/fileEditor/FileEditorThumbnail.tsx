@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack } from '@mantine/core';
+import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack, Loader } from '@mantine/core';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
@@ -42,6 +42,7 @@ interface FileEditorThumbnailProps {
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
+  isLoading?: boolean;
 }
 
 const FileEditorThumbnail = ({
@@ -56,6 +57,7 @@ const FileEditorThumbnail = ({
   onDownloadFile,
   onUnzipFile,
   isSupported = true,
+  isLoading = false,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
@@ -243,7 +245,7 @@ const FileEditorThumbnail = ({
 
   // ---- Card interactions ----
   const handleCardClick = () => {
-    if (!isSupported) return;
+    if (!isSupported || isLoading) return;
     // Clear error state if file has an error (click to clear error)
     if (hasError) {
       try { fileActions.clearFileError(file.id); } catch (_e) { void _e; }
@@ -252,7 +254,7 @@ const FileEditorThumbnail = ({
   };
 
   const handleCardDoubleClick = () => {
-    if (!isSupported) return;
+    if (!isSupported || isLoading) return;
     onViewFile(file.id);
   };
 
@@ -289,7 +291,9 @@ const FileEditorThumbnail = ({
       >
         {/* Logo/checkbox area */}
         <div className={styles.logoMark}>
-          {hasError ? (
+          {isLoading ? (
+            <Loader size="sm" color="white" />
+          ) : hasError ? (
             <div className={styles.errorPill}>
               <span>{t('error._value', 'Error')}</span>
             </div>
@@ -313,46 +317,50 @@ const FileEditorThumbnail = ({
           {index + 1}
         </div>
 
-        {/* Action buttons group */}
+        {/* Action buttons group - hide when loading */}
         <div className={styles.headerActions}>
-          {isEncrypted && (
-            <Tooltip label={t('encryptedPdfUnlock.unlockPrompt', 'Unlock PDF to continue')}>
-              <ActionIcon
-                aria-label={t('encryptedPdfUnlock.unlockPrompt', 'Unlock PDF to continue')}
-                variant="subtle"
-                className={styles.headerIconButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openEncryptedUnlockPrompt(file.id);
-                }}
-              >
-                <LockOpenIcon fontSize="small" />
-              </ActionIcon>
-            </Tooltip>
+          {!isLoading && (
+            <>
+              {isEncrypted && (
+                <Tooltip label={t('encryptedPdfUnlock.unlockPrompt', 'Unlock PDF to continue')}>
+                  <ActionIcon
+                    aria-label={t('encryptedPdfUnlock.unlockPrompt', 'Unlock PDF to continue')}
+                    variant="subtle"
+                    className={styles.headerIconButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEncryptedUnlockPrompt(file.id);
+                    }}
+                  >
+                    <LockOpenIcon fontSize="small" />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+              {/* Pin/Unpin icon */}
+              <Tooltip label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}>
+                <ActionIcon
+                  aria-label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}
+                  variant="subtle"
+                  className={isPinned ? styles.pinned : styles.headerIconButton}
+                  data-tour="file-card-pin"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (actualFile) {
+                      if (isPinned) {
+                        unpinFile(actualFile);
+                        alert({ alertType: 'neutral', title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
+                      } else {
+                        pinFile(actualFile);
+                        alert({ alertType: 'success', title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
+                      }
+                    }
+                  }}
+                >
+                  {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+                </ActionIcon>
+              </Tooltip>
+            </>
           )}
-          {/* Pin/Unpin icon */}
-          <Tooltip label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}>
-            <ActionIcon
-              aria-label={isPinned ? t('unpin', 'Unpin File (replace after tool run)') : t('pin', 'Pin File (keep active after tool run)')}
-              variant="subtle"
-              className={isPinned ? styles.pinned : styles.headerIconButton}
-              data-tour="file-card-pin"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (actualFile) {
-                  if (isPinned) {
-                    unpinFile(actualFile);
-                    alert({ alertType: 'neutral', title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
-                  } else {
-                    pinFile(actualFile);
-                    alert({ alertType: 'success', title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
-                  }
-                }
-              }}
-            >
-              {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
-            </ActionIcon>
-          </Tooltip>
         </div>
       </div>
 
@@ -386,10 +394,23 @@ const FileEditorThumbnail = ({
       {/* Preview area */}
       <div
         className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}
-        style={isSupported || hasError ? undefined : { filter: 'grayscale(80%)', opacity: 0.6 }}
+        style={isSupported || hasError || isLoading ? undefined : { filter: 'grayscale(80%)', opacity: 0.6 }}
       >
         <div className={styles.previewPaper}>
-          {file.thumbnailUrl && (
+          {isLoading ? (
+            /* Loading spinner for files being uploaded */
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              gap: '0.75rem',
+            }}>
+              <Loader size="lg" color="var(--accent-interactive)" />
+              <Text size="xs" c="dimmed">Uploading...</Text>
+            </div>
+          ) : file.thumbnailUrl ? (
             <PrivateContent>
               <img
                 src={file.thumbnailUrl}
@@ -416,16 +437,18 @@ const FileEditorThumbnail = ({
               }}
             />
             </PrivateContent>
-          )}
+          ) : null}
         </div>
 
-        {/* Drag handle (span wrapper so we can attach a ref reliably) */}
-        <span ref={handleRef} className={styles.dragHandle} aria-hidden>
-          <DragIndicatorIcon fontSize="small" />
-        </span>
+        {/* Drag handle (span wrapper so we can attach a ref reliably) - hide when loading */}
+        {!isLoading && (
+          <span ref={handleRef} className={styles.dragHandle} aria-hidden>
+            <DragIndicatorIcon fontSize="small" />
+          </span>
+        )}
 
-        {/* Tool chain display at bottom */}
-        {file.toolHistory && (
+        {/* Tool chain display at bottom - hide when loading */}
+        {!isLoading && file.toolHistory && (
           <div style={{
             position: 'absolute',
             bottom: '4px',
@@ -448,12 +471,14 @@ const FileEditorThumbnail = ({
         )}
       </div>
 
-      {/* Hover Menu */}
-      <HoverActionMenu
-        show={showHoverMenu || isMobile}
-        actions={hoverActions}
-        position="outside"
-      />
+      {/* Hover Menu - hide when loading */}
+      {!isLoading && (
+        <HoverActionMenu
+          show={showHoverMenu || isMobile}
+          actions={hoverActions}
+          position="outside"
+        />
+      )}
 
       {/* Close Confirmation Modal */}
       <Modal
