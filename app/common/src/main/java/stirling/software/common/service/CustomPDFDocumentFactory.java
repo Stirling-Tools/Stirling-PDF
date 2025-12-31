@@ -56,6 +56,7 @@ public class CustomPDFDocumentFactory {
     // written to temp files before loading to reduce memory pressure.
     private double MIN_FREE_MEMORY_PERCENTAGE = 10.0; // 10% minimum free memory percentage
     private long MIN_FREE_MEMORY_BYTES = 100 * 1024 * 1024; // 100MB minimum free memory
+
     public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService) {
         this.pdfMetadataService = pdfMetadataService;
     }
