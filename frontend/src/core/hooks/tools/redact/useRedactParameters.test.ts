@@ -84,14 +84,14 @@ describe('useRedactParameters', () => {
       expect(result.current.getEndpointName()).toBe('/api/v1/security/auto-redact');
     });
 
-    test('should return null endpoint for manual mode (handled client-side)', () => {
+    test('should return empty endpoint for manual mode (handled client-side)', () => {
       const { result } = renderHook(() => useRedactParameters());
 
       act(() => {
         result.current.updateParameter('mode', 'manual');
       });
 
-      expect(result.current.getEndpointName()).toBeNull();
+      expect(result.current.getEndpointName()).toBe('');
     });
   });
 
