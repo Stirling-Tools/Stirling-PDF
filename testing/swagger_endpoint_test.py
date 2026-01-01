@@ -32,6 +32,7 @@ Options:
   --retries          HTTP retries with backoff
   --concurrency      Parallel workers
   --bearer           Bearer token (sets Authorization: Bearer ...)
+  --x-api-key        X-API-KEY header value
   --auth-header      Custom header in "Name: Value" form (can be used multiple times)
   --include-tags     Comma-separated list of tags to include
   --exclude-tags     Comma-separated list of tags to exclude
@@ -939,6 +940,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
 
     p.add_argument("--bearer", help="Bearer token (sets Authorization: Bearer ...)")
+    p.add_argument("--x-api-key", help="X-API-KEY header value")
     p.add_argument(
         "--auth-header",
         help='Custom header in "Name: Value" form (can be used multiple times)',
@@ -970,6 +972,9 @@ def _extra_headers_into(
     args: argparse.Namespace,
     sess: requests.Session,
 ) -> None:
+    if args.x_api_key:
+        if not (auth_header and auth_header[0].lower() == "x-api-key"):
+            sess.headers["X-API-KEY"] = args.x_api_key
     # add additional custom headers beyond the first (if provided multiple times)
     if args.auth_header:
         for raw in args.auth_header:
