@@ -45,7 +45,7 @@ public class BlankPageController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     public static boolean isBlankImage(
-        BufferedImage image, int threshold, double whitePercent, int blurSize) {
+            BufferedImage image, int threshold, double whitePercent, int blurSize) {
         if (image == null) {
             log.info("Error: Image is null");
             return false;
@@ -68,23 +68,23 @@ public class BlankPageController {
 
         double whitePixelPercentage = (whitePixels / (double) (width * height)) * 100;
         log.info(
-            String.format(
-                Locale.ROOT,
-                "Page has white pixel percent of %.2f%%",
-                whitePixelPercentage));
+                String.format(
+                        Locale.ROOT,
+                        "Page has white pixel percent of %.2f%%",
+                        whitePixelPercentage));
 
         return whitePixelPercentage >= whitePercent;
     }
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-blanks")
     @Operation(
-        summary = "Remove blank pages from a PDF file",
-        description =
-            "This endpoint removes blank pages from a given PDF file. Users can specify the"
-                + " threshold and white percentage to tune the detection of blank pages."
-                + " Input:PDF Output:PDF Type:SISO")
+            summary = "Remove blank pages from a PDF file",
+            description =
+                    "This endpoint removes blank pages from a given PDF file. Users can specify the"
+                            + " threshold and white percentage to tune the detection of blank pages."
+                            + " Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
-        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         int threshold = request.getThreshold();
         float whitePercent = request.getWhitePercent();
@@ -120,7 +120,7 @@ public class BlankPageController {
                         // Use global maximum DPI setting
                         int renderDpi = 30; // Default fallback
                         ApplicationProperties properties =
-                            ApplicationContextProvider.getBean(ApplicationProperties.class);
+                                ApplicationContextProvider.getBean(ApplicationProperties.class);
                         if (properties != null && properties.getSystem() != null) {
                             renderDpi = properties.getSystem().getMaxDPI();
                         }
@@ -128,12 +128,12 @@ public class BlankPageController {
                         final int currentPageIndex = pageIndex;
 
                         image =
-                            ExceptionUtils.handleOomRendering(
-                                currentPageIndex + 1,
-                                dpi,
-                                () ->
-                                    pdfRenderer.renderImageWithDPI(
-                                        currentPageIndex, dpi));
+                                ExceptionUtils.handleOomRendering(
+                                        currentPageIndex + 1,
+                                        dpi,
+                                        () ->
+                                                pdfRenderer.renderImageWithDPI(
+                                                        currentPageIndex, dpi));
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
                     }
                 }
@@ -153,8 +153,8 @@ public class BlankPageController {
             ZipOutputStream zos = new ZipOutputStream(baos);
 
             String filename =
-                GeneralUtils.removeExtension(
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+                    GeneralUtils.removeExtension(
+                            Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
             if (!nonBlankPages.isEmpty()) {
                 createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
@@ -170,7 +170,7 @@ public class BlankPageController {
 
             log.info("Returning ZIP file: {}", filename + "_processed.zip");
             return WebResponseUtils.baosToWebResponse(
-                baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
+                    baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
 
         } catch (ExceptionUtils.OutOfMemoryDpiException e) {
             throw e;
@@ -181,7 +181,7 @@ public class BlankPageController {
     }
 
     public void createZipEntry(ZipOutputStream zos, List<PDPage> pages, String entryName)
-        throws IOException {
+            throws IOException {
         try (PDDocument document = pdfDocumentFactory.createNewDocument()) {
 
             for (PDPage page : pages) {
