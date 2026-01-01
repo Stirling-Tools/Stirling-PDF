@@ -6,6 +6,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WebResponseUtils {
+
+    private static final ScheduledExecutorService cleanupExecutor =
+            Executors.newScheduledThreadPool(
+                    2,
+                    r -> {
+                        Thread t = new Thread(r, "temp-file-cleanup");
+                        t.setDaemon(true);
+                        return t;
+                    });
 
     public static ResponseEntity<byte[]> baosToWebResponse(
             ByteArrayOutputStream baos, String docName) throws IOException {
@@ -110,6 +122,12 @@ public class WebResponseUtils {
             TempFile outputTempFile, String docName, MediaType mediaType) throws IOException {
 
         Path path = outputTempFile.getFile().toPath().normalize();
+
+        if (!Files.exists(path)) {
+            outputTempFile.close(); // Clean up the temp file reference
+            throw new IOException("Temporary file no longer exists: " + path.toString());
+        }
+
         long len = Files.size(path);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(mediaType);
@@ -119,10 +137,33 @@ public class WebResponseUtils {
         StreamingResponseBody body =
                 os -> {
                     try (os) {
+                        if (!Files.exists(path)) {
+                            throw new IOException(
+                                    "Temporary file was deleted before response could be sent: "
+                                            + path.toString());
+                        }
                         Files.copy(path, os);
                         os.flush();
+                    } catch (Exception e) {
+                        log.error("Error streaming file response for: {}", path, e);
+                        throw e;
                     } finally {
-                        outputTempFile.close();
+                        cleanupExecutor.schedule(
+                                () -> {
+                                    try {
+                                        outputTempFile.close();
+                                        log.debug(
+                                                "Cleaned up streaming response temp file: {}",
+                                                path);
+                                    } catch (Exception e) {
+                                        log.warn(
+                                                "Error closing temp file during delayed cleanup: {}",
+                                                path,
+                                                e);
+                                    }
+                                },
+                                30,
+                                TimeUnit.SECONDS); // Delay cleanup by 30 seconds
                     }
                 };
 

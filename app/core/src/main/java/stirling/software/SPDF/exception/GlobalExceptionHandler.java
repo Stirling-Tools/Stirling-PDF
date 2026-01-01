@@ -1117,6 +1117,34 @@ public class GlobalExceptionHandler {
             return handleBaseApp((BaseAppException) processedException, request);
         }
 
+        // Check if this is a NoSuchFileException (temp file was deleted prematurely)
+        if (ex instanceof java.nio.file.NoSuchFileException) {
+            log.error(
+                    "Temporary file not found at {}: {}",
+                    request.getRequestURI(),
+                    ex.getMessage(),
+                    ex);
+
+            String message =
+                    getLocalizedMessage(
+                            "error.tempFileNotFound.detail",
+                            "The temporary file was not found. This may indicate a processing error or cleanup issue. Please try again.");
+            String title =
+                    getLocalizedMessage("error.tempFileNotFound.title", "Temporary File Not Found");
+
+            ProblemDetail problemDetail =
+                    createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
+            problemDetail.setType(URI.create("https://stirlingpdf.com/errors/temp-file-not-found"));
+            problemDetail.setTitle(title);
+            problemDetail.setProperty("title", title);
+            problemDetail.setProperty("errorCode", "E999");
+            problemDetail.setProperty(
+                    "hint.1",
+                    "This error usually occurs when temporary files are cleaned up before processing completes.");
+            problemDetail.setProperty("hint.2", "Try submitting your request again.");
+            return new ResponseEntity<>(problemDetail, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         log.error("IO error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
         String message =
