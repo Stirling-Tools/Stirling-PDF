@@ -1,7 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,7 +33,6 @@ import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.PDFService;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -47,7 +45,6 @@ public class SplitPdfBySectionsController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final PDFService pdfService;
 
     @PostMapping(value = "/split-pdf-by-sections", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -57,8 +54,8 @@ public class SplitPdfBySectionsController {
                             + " which page to split, and how to split"
                             + " ( halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> splitPdf(
-            @ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
+    public ResponseEntity<?> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
         SplitTypes splitMode =
@@ -77,9 +74,10 @@ public class SplitPdfBySectionsController {
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split");
 
             if (merge) {
-                TempFile tempFile = new TempFile(tempFileManager, ".pdf");
-                try (PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
-                        OutputStream out = Files.newOutputStream(tempFile.getPath())) {
+                try (PDDocument mergedDoc =
+                                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(
+                                        sourceDocument);
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     LayerUtility layerUtility = new LayerUtility(mergedDoc);
                     for (int pageIndex = 0;
                             pageIndex < sourceDocument.getNumberOfPages();
@@ -96,9 +94,9 @@ public class SplitPdfBySectionsController {
                             addPageToTarget(sourceDocument, pageIndex, mergedDoc, layerUtility);
                         }
                     }
-                    mergedDoc.save(out);
+                    mergedDoc.save(baos);
+                    return WebResponseUtils.baosToWebResponse(baos, filename + ".pdf");
                 }
-                return WebResponseUtils.pdfFileToWebResponse(tempFile, filename + ".pdf");
             } else {
                 TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
                 try (ZipOutputStream zipOut =
