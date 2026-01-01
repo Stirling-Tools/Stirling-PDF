@@ -315,6 +315,7 @@ def step_send_get_request_with_params(context, endpoint):
 def step_send_api_request(context, endpoint):
     url = f"http://localhost:8080{endpoint}"
     files = context.files if hasattr(context, "files") else {}
+    request_timeout = getattr(context, "request_timeout", 60)
 
     if not hasattr(context, "request_data") or context.request_data is None:
         context.request_data = {}
@@ -337,7 +338,9 @@ def step_send_api_request(context, endpoint):
         print(f"form_data {file.name} with {mime_type}")
         form_data.append((key, (file.name, file, mime_type)))
 
-    response = requests.post(url, files=form_data, headers=API_HEADERS)
+    response = requests.post(
+        url, files=form_data, headers=API_HEADERS, timeout=request_timeout
+    )
     context.response = response
 
 
