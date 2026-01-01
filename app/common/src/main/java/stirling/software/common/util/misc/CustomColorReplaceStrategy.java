@@ -146,7 +146,6 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
             // Save the modified PDF to a ByteArrayOutputStream
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             document.save(byteArrayOutputStream);
-            document.close();
 
             // Prepare the modified PDF for download
             ByteArrayInputStream inputStream =

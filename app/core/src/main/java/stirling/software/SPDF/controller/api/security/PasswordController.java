@@ -8,6 +8,7 @@ import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +31,7 @@ public class PasswordController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-password")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-password")
     @StandardPdfResponse
     @Operation(
             summary = "Remove password from a PDF file",
@@ -91,31 +92,34 @@ public class PasswordController {
         boolean preventPrinting = Boolean.TRUE.equals(request.getPreventPrinting());
         boolean preventPrintingFaithful = Boolean.TRUE.equals(request.getPreventPrintingFaithful());
 
-        PDDocument document = pdfDocumentFactory.load(fileInput);
-        AccessPermission ap = new AccessPermission();
-        ap.setCanAssembleDocument(!preventAssembly);
-        ap.setCanExtractContent(!preventExtractContent);
-        ap.setCanExtractForAccessibility(!preventExtractForAccessibility);
-        ap.setCanFillInForm(!preventFillInForm);
-        ap.setCanModify(!preventModify);
-        ap.setCanModifyAnnotations(!preventModifyAnnotations);
-        ap.setCanPrint(!preventPrinting);
-        ap.setCanPrintFaithful(!preventPrintingFaithful);
-        StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
+        try (PDDocument document = pdfDocumentFactory.load(fileInput)) {
+            AccessPermission ap = new AccessPermission();
+            ap.setCanAssembleDocument(!preventAssembly);
+            ap.setCanExtractContent(!preventExtractContent);
+            ap.setCanExtractForAccessibility(!preventExtractForAccessibility);
+            ap.setCanFillInForm(!preventFillInForm);
+            ap.setCanModify(!preventModify);
+            ap.setCanModifyAnnotations(!preventModifyAnnotations);
+            ap.setCanPrint(!preventPrinting);
+            ap.setCanPrintFaithful(!preventPrintingFaithful);
+            StandardProtectionPolicy spp =
+                    new StandardProtectionPolicy(ownerPassword, password, ap);
 
-        if (!"".equals(ownerPassword) || !"".equals(password)) {
-            spp.setEncryptionKeyLength(keyLength);
-        }
-        spp.setPermissions(ap);
-        document.protect(spp);
+            if (!"".equals(ownerPassword) || !"".equals(password)) {
+                spp.setEncryptionKeyLength(keyLength);
+            }
+            spp.setPermissions(ap);
+            document.protect(spp);
 
-        if ("".equals(ownerPassword) && "".equals(password))
+            if ("".equals(ownerPassword) && "".equals(password))
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document,
+                        GeneralUtils.generateFilename(
+                                fileInput.getOriginalFilename(), "_permissions.pdf"));
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            fileInput.getOriginalFilename(), "_permissions.pdf"));
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_passworded.pdf"));
+                            fileInput.getOriginalFilename(), "_passworded.pdf"));
+        }
     }
 }
