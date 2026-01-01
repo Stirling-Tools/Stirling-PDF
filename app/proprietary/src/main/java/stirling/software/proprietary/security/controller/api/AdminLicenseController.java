@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +61,12 @@ public class AdminLicenseController {
      * @return Map containing the installation ID
      */
     @GetMapping("/installation-id")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "401",
+                        description = "Unauthorized - Authentication required")
+            })
     @Operation(
             summary = "Get installation ID",
             description =
