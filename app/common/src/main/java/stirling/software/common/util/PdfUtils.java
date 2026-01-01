@@ -153,16 +153,14 @@ public class PdfUtils {
                     maxSafeDpi);
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
+        try (PDDocument document = pdfDocumentFactory.load(inputStream);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             if (!includeAnnotations) {
                 pdfRenderer.setAnnotationsFilter(annotation -> false);
             }
             int pageCount = document.getNumberOfPages();
-
-            // Create a ByteArrayOutputStream to save the image(s) to
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             if (singleImage) {
                 if ("tiff".equals(imageType.toLowerCase(Locale.ROOT))
@@ -399,9 +397,8 @@ public class PdfUtils {
      * @throws IOException if conversion fails
      */
     public PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
-        PDDocument imageDocument = null;
+        PDDocument imageDocument = new PDDocument();
         try {
-            imageDocument = new PDDocument();
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
@@ -450,15 +447,15 @@ public class PdfUtils {
                                 imageDocument, newPage, AppendMode.APPEND, true, true)) {
                     contentStream.drawImage(pdImage, 0, 0, width, height);
                 }
+                bim.flush();
             }
             return imageDocument;
         } catch (Exception e) {
-            if (imageDocument != null) {
-                try {
-                    imageDocument.close();
-                } catch (IOException ex) {
-                    // Ignore close exception
-                }
+            // Close the document if an exception occurs during creation
+            try {
+                imageDocument.close();
+            } catch (IOException ex) {
+                // Ignore close exception
             }
             throw e;
         }
