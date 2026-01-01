@@ -86,13 +86,10 @@ jobs:
               fi
             fi
           else
-            mapfile -t auth_users < <(jq -r '.repo_devs[]' .github/config/repo_devs.json)
-            mapfile -t repo_devs < <(jq -r '.repo_devs[]' .github/config/repo_devs.json)
-            auth_users+=("${repo_devs[@]}")
+            auth_users=("Frooodle" "sf298" "Ludy87" "LaserKaspar" "sbplat" "reecebrowne" "DarioGii" "ConnorYoh" "EthanHealy01" "jbrunton96" "balazs-szucs")
             is_auth=false; for u in "${auth_users[@]}"; do [ "$u" = "$PR_AUTHOR" ] && is_auth=true && break; done
             if [ "$is_auth" = true ]; then
               should=true
-              allow_fork=true
             fi
           fi
 
