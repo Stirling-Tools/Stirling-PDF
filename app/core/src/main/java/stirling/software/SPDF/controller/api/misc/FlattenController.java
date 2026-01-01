@@ -109,16 +109,14 @@ public class FlattenController {
                     PDPage page = new PDPage();
                     page.setMediaBox(document.getPage(i).getMediaBox());
                     newDocument.addPage(page);
-                    // resetContext=false: Preserve existing graphics state when overwriting.
-                    // Since OVERWRITE mode replaces all content, we don't need to reset the
-                    // context.
+                    // resetContext=true: Ensure clean graphics state when overwriting.
                     try (PDPageContentStream contentStream =
                             new PDPageContentStream(
                                     newDocument,
                                     page,
                                     PDPageContentStream.AppendMode.OVERWRITE,
                                     true,
-                                    false)) {
+                                    true)) {
                         PDImageXObject pdImage = JPEGFactory.createFromImage(newDocument, image);
                         float pageWidth = page.getMediaBox().getWidth();
                         float pageHeight = page.getMediaBox().getHeight();

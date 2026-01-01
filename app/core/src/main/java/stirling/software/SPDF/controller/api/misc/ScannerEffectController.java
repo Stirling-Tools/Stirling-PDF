@@ -469,7 +469,7 @@ public class ScannerEffectController {
                             newPage,
                             PDPageContentStream.AppendMode.OVERWRITE,
                             true,
-                            false)) {
+                            true)) {
                 PDImageXObject pdImage = LosslessFactory.createFromImage(document, page.image);
                 contentStream.drawImage(
                         pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);

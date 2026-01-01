@@ -152,6 +152,12 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
                     new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             InputStreamResource resource = new InputStreamResource(inputStream);
             return resource;
+        } finally {
+            try {
+                Files.deleteIfExists(file.toPath());
+            } catch (IOException e) {
+                log.warn("Failed to delete temporary file: {}", file.getAbsolutePath(), e);
+            }
         }
     }
 

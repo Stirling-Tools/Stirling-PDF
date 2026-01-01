@@ -20,11 +20,14 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 
+@Slf4j
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     public InvertFullColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
@@ -76,6 +79,18 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                         PDImageXObject pdImage =
                                 PDImageXObject.createFromFileByContent(tempImageFile, document);
 
+                        // Delete temp file immediately after loading into memory to prevent disk exhaustion
+                        // The file content is now in the PDImageXObject, so the file is no longer needed
+                        try {
+                            Files.deleteIfExists(tempImageFile.toPath());
+                            tempImageFile = null; // Mark as deleted to avoid double deletion
+                        } catch (IOException e) {
+                            log.warn(
+                                    "Failed to delete temporary image file: {}",
+                                    tempImageFile.getAbsolutePath(),
+                                    e);
+                        }
+
                         try (PDPageContentStream contentStream =
                                 new PDPageContentStream(
                                         document,
@@ -91,8 +106,16 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                                     pdPage.getMediaBox().getHeight());
                         }
                     } finally {
+                        // Safety net: ensure temp file is deleted even if an exception occurred
                         if (tempImageFile != null && tempImageFile.exists()) {
-                            Files.delete(tempImageFile.toPath());
+                            try {
+                                Files.deleteIfExists(tempImageFile.toPath());
+                            } catch (IOException e) {
+                                log.warn(
+                                        "Failed to delete temporary image file: {}",
+                                        tempImageFile.getAbsolutePath(),
+                                        e);
+                            }
                         }
                     }
                 }
