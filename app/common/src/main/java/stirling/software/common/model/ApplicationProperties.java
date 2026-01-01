@@ -484,6 +484,11 @@ public class ApplicationProperties {
                 return baseTmpDir;
             }
             String tmp = java.lang.System.getProperty("java.io.tmpdir");
+            // Check if the temp directory already ends with "stirling-pdf"
+            // This happens when java.io.tmpdir is set to our managed temp directory at startup
+            if (tmp.endsWith("stirling-pdf") || tmp.endsWith("stirling-pdf" + File.separator)) {
+                return tmp;
+            }
             return new File(tmp, "stirling-pdf").getPath();
         }
 

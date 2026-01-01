@@ -55,7 +55,38 @@ public class SPDFApplication {
         this.applicationProperties = applicationProperties;
     }
 
+    /**
+     * Configure the system temp directory to use our managed temp directory. This must be called
+     * before Spring initialization to ensure all libraries (including PDFBox) create temp files in
+     * our managed directory where they can be tracked and cleaned up.
+     */
+    private static void configureSystemTempDirectory() {
+        try {
+            // Get the default system temp directory
+            String systemTmpDir = System.getProperty("java.io.tmpdir");
+
+            // Create our managed temp directory
+            Path managedTempDir = Paths.get(systemTmpDir, "stirling-pdf");
+            if (!Files.exists(managedTempDir)) {
+                Files.createDirectories(managedTempDir);
+                log.info("Created managed temp directory: {}", managedTempDir);
+            }
+
+            // Set this as the system temp directory
+            // This will cause all temp file creation (including PDFBox) to use this directory
+            System.setProperty("java.io.tmpdir", managedTempDir.toString());
+            log.info("System temp directory configured to: {}", managedTempDir);
+        } catch (Exception e) {
+            log.error("Failed to configure system temp directory, using default", e);
+        }
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
+        // Configure system temp directory before Spring initialization
+        // This ensures all temp files (including those from PDFBox and other libraries)
+        // are created in our managed temp directory
+        configureSystemTempDirectory();
+
         SpringApplication app = new SpringApplication(SPDFApplication.class);
 
         Properties props = new Properties();
