@@ -79,74 +79,77 @@ public class SplitPdfBySectionsController {
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split");
 
             if (merge) {
-                TempFile tempFile = new TempFile(tempFileManager, ".pdf");
-                try (PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
-                        OutputStream out = Files.newOutputStream(tempFile.getPath())) {
-                    LayerUtility layerUtility = new LayerUtility(mergedDoc);
-                    for (int pageIndex = 0;
-                            pageIndex < sourceDocument.getNumberOfPages();
-                            pageIndex++) {
-                        if (pagesToSplit.contains(pageIndex)) {
-                            addSplitPageToTarget(
-                                    sourceDocument,
-                                    pageIndex,
-                                    mergedDoc,
-                                    layerUtility,
-                                    horiz,
-                                    verti);
-                        } else {
-                            addPageToTarget(sourceDocument, pageIndex, mergedDoc, layerUtility);
+                try (TempFile tempFile = new TempFile(tempFileManager, ".pdf")) {
+                    try (PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
+                            OutputStream out = Files.newOutputStream(tempFile.getPath())) {
+                        LayerUtility layerUtility = new LayerUtility(mergedDoc);
+                        for (int pageIndex = 0;
+                                pageIndex < sourceDocument.getNumberOfPages();
+                                pageIndex++) {
+                            if (pagesToSplit.contains(pageIndex)) {
+                                addSplitPageToTarget(
+                                        sourceDocument,
+                                        pageIndex,
+                                        mergedDoc,
+                                        layerUtility,
+                                        horiz,
+                                        verti);
+                            } else {
+                                addPageToTarget(sourceDocument, pageIndex, mergedDoc, layerUtility);
+                            }
                         }
+                        mergedDoc.save(out);
                     }
-                    mergedDoc.save(out);
+                    return WebResponseUtils.pdfFileToWebResponse(tempFile, filename + ".pdf");
                 }
-                return WebResponseUtils.pdfFileToWebResponse(tempFile, filename + ".pdf");
             } else {
-                TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
-                try (ZipOutputStream zipOut =
-                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                    for (int pageIndex = 0;
-                            pageIndex < sourceDocument.getNumberOfPages();
-                            pageIndex++) {
-                        int pageNum = pageIndex + 1;
-                        if (pagesToSplit.contains(pageIndex)) {
-                            for (int i = 0; i < horiz; i++) {
-                                for (int j = 0; j < verti; j++) {
-                                    try (PDDocument subDoc =
-                                            pdfDocumentFactory.createNewDocument()) {
-                                        LayerUtility subLayerUtility = new LayerUtility(subDoc);
-                                        addSingleSectionToTarget(
-                                                sourceDocument,
-                                                pageIndex,
-                                                subDoc,
-                                                subLayerUtility,
-                                                i,
-                                                j,
-                                                horiz,
-                                                verti);
-                                        int sectionNum = i * verti + j + 1;
-                                        String entryName =
-                                                filename
-                                                        + "_"
-                                                        + pageNum
-                                                        + "_"
-                                                        + sectionNum
-                                                        + ".pdf";
-                                        saveDocToZip(subDoc, zipOut, entryName);
+                try (TempFile zipTempFile = new TempFile(tempFileManager, ".zip")) {
+                    try (ZipOutputStream zipOut =
+                            new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                        for (int pageIndex = 0;
+                                pageIndex < sourceDocument.getNumberOfPages();
+                                pageIndex++) {
+                            int pageNum = pageIndex + 1;
+                            if (pagesToSplit.contains(pageIndex)) {
+                                for (int i = 0; i < horiz; i++) {
+                                    for (int j = 0; j < verti; j++) {
+                                        try (PDDocument subDoc =
+                                                pdfDocumentFactory.createNewDocument()) {
+                                            LayerUtility subLayerUtility = new LayerUtility(subDoc);
+                                            addSingleSectionToTarget(
+                                                    sourceDocument,
+                                                    pageIndex,
+                                                    subDoc,
+                                                    subLayerUtility,
+                                                    i,
+                                                    j,
+                                                    horiz,
+                                                    verti);
+                                            int sectionNum = i * verti + j + 1;
+                                            String entryName =
+                                                    filename
+                                                            + "_"
+                                                            + pageNum
+                                                            + "_"
+                                                            + sectionNum
+                                                            + ".pdf";
+                                            saveDocToZip(subDoc, zipOut, entryName);
+                                        }
                                     }
                                 }
-                            }
-                        } else {
-                            try (PDDocument subDoc = pdfDocumentFactory.createNewDocument()) {
-                                LayerUtility subLayerUtility = new LayerUtility(subDoc);
-                                addPageToTarget(sourceDocument, pageIndex, subDoc, subLayerUtility);
-                                String entryName = filename + "_" + pageNum + "_1.pdf";
-                                saveDocToZip(subDoc, zipOut, entryName);
+                            } else {
+                                try (PDDocument subDoc = pdfDocumentFactory.createNewDocument()) {
+                                    LayerUtility subLayerUtility = new LayerUtility(subDoc);
+                                    addPageToTarget(
+                                            sourceDocument, pageIndex, subDoc, subLayerUtility);
+                                    String entryName = filename + "_" + pageNum + "_1.pdf";
+                                    saveDocToZip(subDoc, zipOut, entryName);
+                                }
                             }
                         }
                     }
+                    return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
                 }
-                return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
             }
         }
     }
