@@ -10,9 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.MarkdownConversionResponse;
+import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
-import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -28,7 +28,7 @@ public class ConvertPDFToMarkdown {
             summary = "Convert PDF to Markdown",
             description =
                     "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
+    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PdfRequest file)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile(tempFileManager);

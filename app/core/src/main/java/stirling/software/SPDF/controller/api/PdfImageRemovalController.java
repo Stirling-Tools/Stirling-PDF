@@ -13,10 +13,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.SPDF.service.PdfImageRemovalService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
-import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -52,7 +52,7 @@ public class PdfImageRemovalController {
             description =
                     "This endpoint remove images from file to reduce the file size.Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
+    public ResponseEntity<byte[]> removeImages(@ModelAttribute PdfRequest file) throws IOException {
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(file);
 

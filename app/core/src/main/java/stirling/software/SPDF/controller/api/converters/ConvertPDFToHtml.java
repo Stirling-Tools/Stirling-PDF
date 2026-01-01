@@ -13,8 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -32,7 +32,8 @@ public class ConvertPDFToHtml {
             summary = "Convert PDF to HTML",
             description =
                     "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML Type:SISO")
-    public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PDFFile file) throws Exception {
+    public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PdfRequest file)
+            throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToHtml(inputFile);

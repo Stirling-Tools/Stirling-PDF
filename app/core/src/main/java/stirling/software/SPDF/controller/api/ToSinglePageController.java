@@ -18,9 +18,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
-import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -42,7 +42,7 @@ public class ToSinglePageController {
                             + " document. The width of the single page will be same as the input's"
                             + " width, but the height will be the sum of all the pages' heights."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToSinglePage(@ModelAttribute PDFFile request)
+    public ResponseEntity<byte[]> pdfToSinglePage(@ModelAttribute PdfRequest request)
             throws IOException {
 
         // Load the source document
