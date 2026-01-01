@@ -298,7 +298,9 @@ def save_generated_pdf(context, filename):
 def step_send_get_request(context, endpoint):
     base_url = "http://localhost:8080"
     full_url = f"{base_url}{endpoint}"
-    response = requests.get(full_url, headers=API_HEADERS)
+    response = requests.get(
+        full_url, headers=API_HEADERS, timeout=getattr(context, "request_timeout", 60)
+    )
     context.response = response
 
 
@@ -307,7 +309,12 @@ def step_send_get_request_with_params(context, endpoint):
     base_url = "http://localhost:8080"
     params = {row["parameter"]: row["value"] for row in context.table}
     full_url = f"{base_url}{endpoint}"
-    response = requests.get(full_url, params=params, headers=API_HEADERS)
+    response = requests.get(
+        full_url,
+        params=params,
+        headers=API_HEADERS,
+        timeout=getattr(context, "request_timeout", 60),
+    )
     context.response = response
 
 
@@ -315,7 +322,6 @@ def step_send_get_request_with_params(context, endpoint):
 def step_send_api_request(context, endpoint):
     url = f"http://localhost:8080{endpoint}"
     files = context.files if hasattr(context, "files") else {}
-    request_timeout = getattr(context, "request_timeout", 60)
 
     if not hasattr(context, "request_data") or context.request_data is None:
         context.request_data = {}
@@ -339,7 +345,10 @@ def step_send_api_request(context, endpoint):
         form_data.append((key, (file.name, file, mime_type)))
 
     response = requests.post(
-        url, files=form_data, headers=API_HEADERS, timeout=request_timeout
+        url,
+        files=form_data,
+        headers=API_HEADERS,
+        timeout=getattr(context, "request_timeout", 60),
     )
     context.response = response
 
