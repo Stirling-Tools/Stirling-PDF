@@ -1189,8 +1189,16 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(
-            Exception ex, HttpServletRequest request) {
+            Exception ex, HttpServletRequest request, HttpServletResponse response) {
         log.error("Unexpected error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+
+        // If response is already committed (e.g., during streaming), we can't send an error response
+        // Log the error and return null to let Spring handle it gracefully
+        if (response.isCommitted()) {
+            log.warn("Cannot send error response because response is already committed for URI: {}",
+                    request.getRequestURI());
+            return null; // Spring will handle gracefully
+        }
 
         String userMessage =
                 getLocalizedMessage(
