@@ -141,15 +141,21 @@ public class MetadataController {
                             && !key.contains("customValue")) {
                         info.setCustomMetadataValue(key, entry.getValue());
                     } else if (key.contains("customKey")) {
-                        int number =
-                                Integer.parseInt(
-                                        RegexPatternUtils.getInstance()
-                                                .getNumericExtractionPattern()
-                                                .matcher(key)
-                                                .replaceAll(""));
-                        String customKey = entry.getValue();
-                        String customValue = allRequestParams.get("customValue" + number);
-                        info.setCustomMetadataValue(customKey, customValue);
+                        try {
+                            int number =
+                                    Integer.parseInt(
+                                            RegexPatternUtils.getInstance()
+                                                    .getNumericExtractionPattern()
+                                                    .matcher(key)
+                                                    .replaceAll(""));
+                            String customKey = entry.getValue();
+                            String customValue = allRequestParams.get("customValue" + number);
+                            info.setCustomMetadataValue(customKey, customValue);
+                        } catch (NumberFormatException e) {
+                            // Skip invalid custom key entries that don't have valid numeric
+                            // suffixes
+                            log.warn("Skipping invalid custom key '{}': {}", key, e.getMessage());
+                        }
                     }
                 }
             }

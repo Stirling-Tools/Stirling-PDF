@@ -43,25 +43,17 @@ public class PasswordController {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
 
-        PDDocument document;
-        try {
-            document = pdfDocumentFactory.load(fileInput, password);
-        } catch (IOException e) {
-            // Handle password errors specifically
-            if (ExceptionUtils.isPasswordError(e)) {
-                throw ExceptionUtils.createPdfPasswordException(e);
-            }
-            throw ExceptionUtils.handlePdfException(e);
-        }
-
-        try {
+        try (PDDocument document = pdfDocumentFactory.load(fileInput, password)) {
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
                             fileInput.getOriginalFilename(), "_password_removed.pdf"));
         } catch (IOException e) {
-            document.close();
+            // Handle password errors specifically
+            if (ExceptionUtils.isPasswordError(e)) {
+                throw ExceptionUtils.createPdfPasswordException(e);
+            }
             ExceptionUtils.logException("password removal", e);
             throw ExceptionUtils.handlePdfException(e);
         }
@@ -105,13 +97,15 @@ public class PasswordController {
             StandardProtectionPolicy spp =
                     new StandardProtectionPolicy(ownerPassword, password, ap);
 
-            if (!"".equals(ownerPassword) || !"".equals(password)) {
+            if ((ownerPassword != null && ownerPassword.length() > 0)
+                    || (password != null && password.length() > 0)) {
                 spp.setEncryptionKeyLength(keyLength);
             }
             spp.setPermissions(ap);
             document.protect(spp);
 
-            if ("".equals(ownerPassword) && "".equals(password))
+            if ((ownerPassword == null || ownerPassword.length() == 0)
+                    && (password == null || password.length() == 0))
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(

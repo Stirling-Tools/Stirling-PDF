@@ -49,100 +49,103 @@ public class FlattenController {
     public ResponseEntity<byte[]> flatten(@ModelAttribute FlattenRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
-        PDDocument document = pdfDocumentFactory.load(file);
-        Boolean flattenOnlyForms = request.getFlattenOnlyForms();
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
+            Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
-        if (Boolean.TRUE.equals(flattenOnlyForms)) {
-            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
-            if (acroForm != null) {
-                acroForm.flatten();
-            }
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document, Filenames.toSimpleFileName(file.getOriginalFilename()));
-        } else {
-            // flatten whole page aka convert each page to image and re-add it (making text
-            // unselectable)
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
-            PDDocument newDocument =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document);
+            if (Boolean.TRUE.equals(flattenOnlyForms)) {
+                PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+                if (acroForm != null) {
+                    acroForm.flatten();
+                }
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document, Filenames.toSimpleFileName(file.getOriginalFilename()));
+            } else {
+                // flatten whole page aka convert each page to image and re-add it (making text
+                // unselectable)
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(
+                        true); // Enable subsampling to reduce memory usage
 
-            int defaultRenderDpi = 100; // Default fallback
-            ApplicationProperties properties =
-                    ApplicationContextProvider.getBean(ApplicationProperties.class);
-            Integer configuredMaxDpi = null;
-            if (properties != null && properties.getSystem() != null) {
-                configuredMaxDpi = properties.getSystem().getMaxDPI();
-            }
+                try (PDDocument newDocument =
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
 
-            int maxDpi =
-                    (configuredMaxDpi != null && configuredMaxDpi > 0)
-                            ? configuredMaxDpi
-                            : defaultRenderDpi;
-
-            Integer requestedDpi = request.getRenderDpi();
-            int renderDpiTemp = maxDpi;
-            if (requestedDpi != null) {
-                renderDpiTemp = Math.min(requestedDpi, maxDpi);
-                renderDpiTemp = Math.max(renderDpiTemp, 72);
-            }
-            final int renderDpi = renderDpiTemp;
-
-            int numPages = document.getNumberOfPages();
-            for (int i = 0; i < numPages; i++) {
-                final int pageIndex = i;
-                BufferedImage image = null;
-                try {
-                    // Validate dimensions BEFORE rendering to prevent OOM
-                    ExceptionUtils.validateRenderingDimensions(
-                            document.getPage(pageIndex), pageIndex + 1, renderDpi);
-
-                    // Wrap entire rendering operation to catch OutOfMemoryError from any depth
-                    image =
-                            ExceptionUtils.handleOomRendering(
-                                    pageIndex + 1,
-                                    renderDpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    pageIndex, renderDpi, ImageType.RGB));
-
-                    PDPage page = new PDPage();
-                    page.setMediaBox(document.getPage(i).getMediaBox());
-                    newDocument.addPage(page);
-                    // resetContext=true: Ensure clean graphics state when overwriting.
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument,
-                                    page,
-                                    PDPageContentStream.AppendMode.OVERWRITE,
-                                    true,
-                                    true)) {
-                        PDImageXObject pdImage = JPEGFactory.createFromImage(newDocument, image);
-                        float pageWidth = page.getMediaBox().getWidth();
-                        float pageHeight = page.getMediaBox().getHeight();
-
-                        contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
+                    int defaultRenderDpi = 100; // Default fallback
+                    ApplicationProperties properties =
+                            ApplicationContextProvider.getBean(ApplicationProperties.class);
+                    Integer configuredMaxDpi = null;
+                    if (properties != null && properties.getSystem() != null) {
+                        configuredMaxDpi = properties.getSystem().getMaxDPI();
                     }
-                } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-                    // Re-throw OutOfMemoryDpiException to be handled by GlobalExceptionHandler
-                    newDocument.close();
-                    document.close();
-                    throw e;
-                } catch (IOException e) {
-                    log.error("IOException during page processing: ", e);
-                    // Continue processing other pages
-                } catch (OutOfMemoryError e) {
-                    // Catch any OutOfMemoryError that escaped the inner try block
-                    newDocument.close();
-                    document.close();
-                    throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
-                } finally {
-                    // Help GC by clearing the image reference
-                    image = null;
+
+                    int maxDpi =
+                            (configuredMaxDpi != null && configuredMaxDpi > 0)
+                                    ? configuredMaxDpi
+                                    : defaultRenderDpi;
+
+                    Integer requestedDpi = request.getRenderDpi();
+                    int renderDpiTemp = maxDpi;
+                    if (requestedDpi != null) {
+                        renderDpiTemp = Math.min(requestedDpi, maxDpi);
+                        renderDpiTemp = Math.max(renderDpiTemp, 72);
+                    }
+                    final int renderDpi = renderDpiTemp;
+
+                    int numPages = document.getNumberOfPages();
+                    for (int i = 0; i < numPages; i++) {
+                        final int pageIndex = i;
+                        BufferedImage image = null;
+                        try {
+                            // Validate dimensions BEFORE rendering to prevent OOM
+                            ExceptionUtils.validateRenderingDimensions(
+                                    document.getPage(pageIndex), pageIndex + 1, renderDpi);
+
+                            // Wrap entire rendering operation to catch OutOfMemoryError from any
+                            // depth
+                            image =
+                                    ExceptionUtils.handleOomRendering(
+                                            pageIndex + 1,
+                                            renderDpi,
+                                            () ->
+                                                    pdfRenderer.renderImageWithDPI(
+                                                            pageIndex, renderDpi, ImageType.RGB));
+
+                            PDPage page = new PDPage();
+                            page.setMediaBox(document.getPage(i).getMediaBox());
+                            newDocument.addPage(page);
+                            // resetContext=true: Ensure clean graphics state when overwriting.
+                            try (PDPageContentStream contentStream =
+                                    new PDPageContentStream(
+                                            newDocument,
+                                            page,
+                                            PDPageContentStream.AppendMode.OVERWRITE,
+                                            true,
+                                            true)) {
+                                PDImageXObject pdImage =
+                                        JPEGFactory.createFromImage(newDocument, image);
+                                float pageWidth = page.getMediaBox().getWidth();
+                                float pageHeight = page.getMediaBox().getHeight();
+
+                                contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
+                            }
+                        } catch (ExceptionUtils.OutOfMemoryDpiException e) {
+                            // Re-throw OutOfMemoryDpiException to be handled by
+                            // GlobalExceptionHandler
+                            throw e;
+                        } catch (IOException e) {
+                            log.error("IOException during page processing: ", e);
+                            // Continue processing other pages
+                        } catch (OutOfMemoryError e) {
+                            // Catch any OutOfMemoryError that escaped the inner try block
+                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
+                        } finally {
+                            // Help GC by clearing the image reference
+                            image = null;
+                        }
+                    }
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            newDocument, Filenames.toSimpleFileName(file.getOriginalFilename()));
                 }
             }
-            return WebResponseUtils.pdfDocToWebResponse(
-                    newDocument, Filenames.toSimpleFileName(file.getOriginalFilename()));
         }
     }
 }

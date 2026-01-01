@@ -83,69 +83,66 @@ public class MultiPageLayoutController {
 
                 // Process pages in groups of pagesPerSheet, creating a new page and content stream
                 // for each group
-                for (int i = 0; i < totalPages; i++) {
+                for (int i = 0; i < totalPages; i += pagesPerSheet) {
                     // Create a new output page for each group of pagesPerSheet
-                    if (i % pagesPerSheet == 0) {
-                        PDPage newPage = new PDPage(PDRectangle.A4);
-                        newDocument.addPage(newPage);
+                    PDPage newPage = new PDPage(PDRectangle.A4);
+                    newDocument.addPage(newPage);
 
-                        // Use try-with-resources for each content stream to ensure proper cleanup
-                        // resetContext=true: Start with a clean graphics state for new content
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        newDocument,
-                                        newPage,
-                                        PDPageContentStream.AppendMode.APPEND,
-                                        true,
-                                        true)) {
-                            float borderThickness = 1.5f; // Specify border thickness as required
-                            contentStream.setLineWidth(borderThickness);
-                            contentStream.setStrokingColor(Color.BLACK);
+                    // Use try-with-resources for each content stream to ensure proper cleanup
+                    // resetContext=true: Start with a clean graphics state for new content
+                    try (PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    newDocument,
+                                    newPage,
+                                    PDPageContentStream.AppendMode.APPEND,
+                                    true,
+                                    true)) {
+                        float borderThickness = 1.5f; // Specify border thickness as required
+                        contentStream.setLineWidth(borderThickness);
+                        contentStream.setStrokingColor(Color.BLACK);
 
-                            // Process all pages in this group
-                            for (int j = 0; j < pagesPerSheet && (i + j) < totalPages; j++) {
-                                int pageIndex = i + j;
-                                PDPage sourcePage = sourceDocument.getPage(pageIndex);
-                                PDRectangle rect = sourcePage.getMediaBox();
-                                float scaleWidth = cellWidth / rect.getWidth();
-                                float scaleHeight = cellHeight / rect.getHeight();
-                                float scale = Math.min(scaleWidth, scaleHeight);
+                        // Process all pages in this group
+                        for (int j = 0; j < pagesPerSheet && (i + j) < totalPages; j++) {
+                            int pageIndex = i + j;
+                            PDPage sourcePage = sourceDocument.getPage(pageIndex);
+                            PDRectangle rect = sourcePage.getMediaBox();
+                            float scaleWidth = cellWidth / rect.getWidth();
+                            float scaleHeight = cellHeight / rect.getHeight();
+                            float scale = Math.min(scaleWidth, scaleHeight);
 
-                                int adjustedPageIndex = j % pagesPerSheet;
-                                int rowIndex = adjustedPageIndex / cols;
-                                int colIndex = adjustedPageIndex % cols;
+                            int adjustedPageIndex = j % pagesPerSheet;
+                            int rowIndex = adjustedPageIndex / cols;
+                            int colIndex = adjustedPageIndex % cols;
 
-                                float x =
-                                        colIndex * cellWidth
-                                                + (cellWidth - rect.getWidth() * scale) / 2;
-                                float y =
+                            float x =
+                                    colIndex * cellWidth
+                                            + (cellWidth - rect.getWidth() * scale) / 2;
+                            float y =
+                                    newPage.getMediaBox().getHeight()
+                                            - ((rowIndex + 1) * cellHeight
+                                                    - (cellHeight - rect.getHeight() * scale) / 2);
+
+                            contentStream.saveGraphicsState();
+                            contentStream.transform(Matrix.getTranslateInstance(x, y));
+                            contentStream.transform(Matrix.getScaleInstance(scale, scale));
+
+                            PDFormXObject formXObject =
+                                    layerUtility.importPageAsForm(sourceDocument, pageIndex);
+                            contentStream.drawForm(formXObject);
+
+                            contentStream.restoreGraphicsState();
+
+                            if (addBorder) {
+                                // Draw border around each page
+                                float borderX = colIndex * cellWidth;
+                                float borderY =
                                         newPage.getMediaBox().getHeight()
-                                                - ((rowIndex + 1) * cellHeight
-                                                        - (cellHeight - rect.getHeight() * scale)
-                                                                / 2);
-
-                                contentStream.saveGraphicsState();
-                                contentStream.transform(Matrix.getTranslateInstance(x, y));
-                                contentStream.transform(Matrix.getScaleInstance(scale, scale));
-
-                                PDFormXObject formXObject =
-                                        layerUtility.importPageAsForm(sourceDocument, pageIndex);
-                                contentStream.drawForm(formXObject);
-
-                                contentStream.restoreGraphicsState();
-
-                                if (addBorder) {
-                                    // Draw border around each page
-                                    float borderX = colIndex * cellWidth;
-                                    float borderY =
-                                            newPage.getMediaBox().getHeight()
-                                                    - (rowIndex + 1) * cellHeight;
-                                    contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
-                                    contentStream.stroke();
-                                }
+                                                - (rowIndex + 1) * cellHeight;
+                                contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
+                                contentStream.stroke();
                             }
-                        } // contentStream is automatically closed here
-                    }
+                        }
+                    } // contentStream is automatically closed here
                 }
 
                 // If any source page is rotated, skip form copying/transformation entirely

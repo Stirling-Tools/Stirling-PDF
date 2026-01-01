@@ -451,12 +451,6 @@ public class PdfUtils {
             }
             return imageDocument;
         } catch (Exception e) {
-            // Close the document if an exception occurs during creation
-            try {
-                imageDocument.close();
-            } catch (IOException ex) {
-                // Ignore close exception
-            }
             throw e;
         }
     }
