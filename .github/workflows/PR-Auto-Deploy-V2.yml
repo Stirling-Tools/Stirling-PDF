@@ -3,8 +3,6 @@ name: Auto PR V2 Deployment
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    paths-ignore:
-      - '.github/workflows/PR-Auto-Deploy-V2.yml'
   workflow_dispatch:
     inputs:
       pr:
