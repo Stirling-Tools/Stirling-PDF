@@ -136,6 +136,38 @@ public class SPDFApplication {
         printStartupLogs();
     }
 
+    private static void printStartupLogs() {
+        log.info("Stirling-PDF Started.");
+        String url = baseUrlStatic + ":" + serverPortStatic + contextPathStatic;
+        log.info("Navigate to {}", url);
+    }
+
+    public static void setServerPortStatic(String port) {
+        if ("auto".equalsIgnoreCase(port)) {
+            // Use Spring Boot's automatic port assignment (server.port=0)
+            SPDFApplication.serverPortStatic =
+                    "0"; // This will let Spring Boot assign an available port
+        } else {
+            SPDFApplication.serverPortStatic = port;
+        }
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        // webBrowser cleanup removed - desktop UI eliminated
+        // if (webBrowser != null) {
+        //     webBrowser.cleanup();
+        // }
+    }
+
+    @EventListener
+    public void onWebServerInitialized(WebServerInitializedEvent event) {
+        int actualPort = event.getWebServer().getPort();
+        serverPortStatic = String.valueOf(actualPort);
+        // Log the actual runtime port for Tauri to parse
+        log.info("Stirling-PDF running on port: {}", actualPort);
+    }
+
     @PostConstruct
     public void init() {
         String backendUrl = appConfig.getBackendUrl();
@@ -144,7 +176,7 @@ public class SPDFApplication {
         baseUrlStatic = backendUrl;
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = backendUrl + ":" + getStaticPort() + contextPath;
+        String url = backendUrl + ":" + serverPortStatic + contextPath;
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
@@ -180,38 +212,6 @@ public class SPDFApplication {
                 log.error("Error opening browser: {}", e.getMessage());
             }
         }
-    }
-
-    public static void setServerPortStatic(String port) {
-        if ("auto".equalsIgnoreCase(port)) {
-            // Use Spring Boot's automatic port assignment (server.port=0)
-            SPDFApplication.serverPortStatic =
-                    "0"; // This will let Spring Boot assign an available port
-        } else {
-            SPDFApplication.serverPortStatic = port;
-        }
-    }
-
-    @PreDestroy
-    public void cleanup() {
-        // webBrowser cleanup removed - desktop UI eliminated
-        // if (webBrowser != null) {
-        //     webBrowser.cleanup();
-        // }
-    }
-
-    @EventListener
-    public void onWebServerInitialized(WebServerInitializedEvent event) {
-        int actualPort = event.getWebServer().getPort();
-        serverPortStatic = String.valueOf(actualPort);
-        // Log the actual runtime port for Tauri to parse
-        log.info("Stirling-PDF running on port: {}", actualPort);
-    }
-
-    private static void printStartupLogs() {
-        log.info("Stirling-PDF Started.");
-        String url = baseUrlStatic + ":" + getStaticPort() + contextPathStatic;
-        log.info("Navigate to {}", url);
     }
 
     private static String[] getActiveProfile(String[] args) {
