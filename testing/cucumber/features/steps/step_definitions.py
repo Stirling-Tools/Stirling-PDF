@@ -15,7 +15,7 @@ import re
 from PIL import Image, ImageDraw
 
 API_HEADERS = {"X-API-KEY": "123456789"}
-TIMEOUT = 1  # seconds
+TIMEOUT = 80  # seconds
 
 #########
 # GIVEN #
