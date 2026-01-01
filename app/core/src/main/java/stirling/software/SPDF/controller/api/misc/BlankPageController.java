@@ -53,18 +53,20 @@ public class BlankPageController {
 
         // Convert to binary image based on the threshold
         int whitePixels = 0;
-        int totalPixels = image.getWidth() * image.getHeight();
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[] pixels = new int[width * height];
 
-        for (int i = 0; i < image.getHeight(); i++) {
-            for (int j = 0; j < image.getWidth(); j++) {
-                int color = image.getRGB(j, i) & 0xFF;
-                if (color >= 255 - threshold) {
-                    whitePixels++;
-                }
+        image.getRGB(0, 0, width, height, pixels, 0, width);
+
+        for (int pixel : pixels) {
+            int blue = pixel & 0xFF;
+            if (blue >= 255 - threshold) {
+                whitePixels++;
             }
         }
 
-        double whitePixelPercentage = (whitePixels / (double) totalPixels) * 100;
+        double whitePixelPercentage = (whitePixels / (double) (width * height)) * 100;
         log.info(
                 String.format(
                         Locale.ROOT,
