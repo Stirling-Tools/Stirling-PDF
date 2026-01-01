@@ -78,7 +78,7 @@ jobs:
           exit 1
 
       - name: Run Swagger endpoint tests - ${{ matrix.include-tags }}
-        run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080 --include-tags ${{ matrix.include-tags }}
+        run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080 --include-tags "${{ matrix.include-tags }}""
 
       - name: Stop Stirling PDF
         if: always()
