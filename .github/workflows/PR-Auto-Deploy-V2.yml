@@ -42,7 +42,7 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             let prNumber = context.eventName === 'workflow_dispatch'
-              ? parseInt(process.env.INPUT_PR, 10)
+              ? parseInt(context.payload.inputs.pr, 10)
               : context.payload.number;
 
             if (!Number.isInteger(prNumber)) { core.setFailed('Invalid PR number'); return; }
