@@ -63,9 +63,10 @@ public class SplitPdfBySectionsController {
                         .map(SplitTypes::valueOf)
                         .orElse(SplitTypes.SPLIT_ALL);
 
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
-            Set<Integer> pagesToSplit =
-                    getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(file, true)) {
+            int totalPages = sourceDocument.getNumberOfPages();
+            Set<Integer> customPagesToSplit =
+                    getCustomPagesToSplit(pageNumbers, splitMode, totalPages);
 
             // Process the PDF based on split parameters
             int horiz = request.getHorizontalDivisions() + 1;
@@ -79,10 +80,8 @@ public class SplitPdfBySectionsController {
                                         sourceDocument);
                         ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     LayerUtility layerUtility = new LayerUtility(mergedDoc);
-                    for (int pageIndex = 0;
-                            pageIndex < sourceDocument.getNumberOfPages();
-                            pageIndex++) {
-                        if (pagesToSplit.contains(pageIndex)) {
+                    for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                        if (shouldSplitPage(pageIndex, totalPages, splitMode, customPagesToSplit)) {
                             addSplitPageToTarget(
                                     sourceDocument,
                                     pageIndex,
@@ -101,11 +100,9 @@ public class SplitPdfBySectionsController {
                 TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                    for (int pageIndex = 0;
-                            pageIndex < sourceDocument.getNumberOfPages();
-                            pageIndex++) {
+                    for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                         int pageNum = pageIndex + 1;
-                        if (pagesToSplit.contains(pageIndex)) {
+                        if (shouldSplitPage(pageIndex, totalPages, splitMode, customPagesToSplit)) {
                             for (int i = 0; i < horiz; i++) {
                                 for (int j = 0; j < verti; j++) {
                                     try (PDDocument subDoc =
@@ -243,53 +240,37 @@ public class SplitPdfBySectionsController {
     }
 
     // Based on the mode, get the pages that need to be split and return the pages set
-    private Set<Integer> getPagesToSplit(String pageNumbers, SplitTypes splitMode, int totalPages) {
-        Set<Integer> pagesToSplit = new HashSet<>();
-
-        switch (splitMode) {
-            case CUSTOM:
-                if (pageNumbers == null || pageNumbers.isBlank()) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.argumentRequired",
-                            "{0} is required for {1} mode",
-                            "page numbers",
-                            "custom");
-                }
-                String[] pageOrderArr = pageNumbers.split(",");
-                List<Integer> pageListToSplit =
-                        GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
-                pagesToSplit.addAll(pageListToSplit);
-                break;
-
-            case SPLIT_ALL:
-                for (int i = 0; i < totalPages; i++) {
-                    pagesToSplit.add(i);
-                }
-                break;
-
-            case SPLIT_ALL_EXCEPT_FIRST:
-                for (int i = 1; i < totalPages; i++) {
-                    pagesToSplit.add(i);
-                }
-                break;
-
-            case SPLIT_ALL_EXCEPT_LAST:
-                for (int i = 0; i < totalPages - 1; i++) {
-                    pagesToSplit.add(i);
-                }
-                break;
-
-            case SPLIT_ALL_EXCEPT_FIRST_AND_LAST:
-                for (int i = 1; i < totalPages - 1; i++) {
-                    pagesToSplit.add(i);
-                }
-                break;
-
-            default:
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat", "Invalid {0} format: {1}", "split mode", splitMode);
+    private Set<Integer> getCustomPagesToSplit(
+            String pageNumbers, SplitTypes splitMode, int totalPages) {
+        if (splitMode != SplitTypes.CUSTOM) {
+            return Collections.emptySet();
         }
+        if (pageNumbers == null || pageNumbers.isBlank()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.argumentRequired",
+                    "{0} is required for {1} mode",
+                    "page numbers",
+                    "custom");
+        }
+        String[] pageOrderArr = pageNumbers.split(",");
+        List<Integer> pageListToSplit = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+        return new HashSet<>(pageListToSplit);
+    }
 
-        return pagesToSplit;
+    private boolean shouldSplitPage(
+            int pageIndex, int totalPages, SplitTypes splitMode, Set<Integer> customPagesToSplit) {
+        return switch (splitMode) {
+            case CUSTOM -> customPagesToSplit.contains(pageIndex);
+            case SPLIT_ALL -> true;
+            case SPLIT_ALL_EXCEPT_FIRST -> pageIndex > 0;
+            case SPLIT_ALL_EXCEPT_LAST -> pageIndex < totalPages - 1;
+            case SPLIT_ALL_EXCEPT_FIRST_AND_LAST -> pageIndex > 0 && pageIndex < totalPages - 1;
+            default ->
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "split mode",
+                            splitMode);
+        };
     }
 }
