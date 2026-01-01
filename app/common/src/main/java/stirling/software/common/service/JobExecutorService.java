@@ -3,7 +3,6 @@ package stirling.software.common.service;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -189,9 +188,8 @@ public class JobExecutorService {
                         }
                     };
 
-            // Queue the job and get the future
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
+            // Queue the job
+            jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
 
             // Return immediately with job ID
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
@@ -235,12 +233,19 @@ public class JobExecutorService {
             try {
                 log.debug("Running sync job with timeout {} ms", timeoutToUse);
 
+                // Create task in TaskManager for sync jobs as well, in case downstream components
+                // need to add progress notes
+                taskManager.createTask(jobId);
+
                 // Make jobId available to downstream components on the worker thread
                 stirling.software.common.util.JobContext.setJobId(jobId);
                 log.debug("Set jobId {} in JobContext for sync execution", jobId);
 
                 // Execute with timeout
                 Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
+
+                // Mark sync job as complete with the result
+                taskManager.setResult(jobId, result);
 
                 // If the result is already a ResponseEntity, return it directly
                 if (result instanceof ResponseEntity) {
@@ -251,6 +256,7 @@ public class JobExecutorService {
                 return handleResultForSyncJob(result);
             } catch (TimeoutException te) {
                 log.error("Synchronous job timed out after {} ms", timeoutToUse);
+                taskManager.setError(jobId, "Job timed out after " + timeoutToUse + " ms");
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
             } catch (RuntimeException e) {
@@ -263,14 +269,17 @@ public class JobExecutorService {
                                 stirling.software.common.util.ExceptionUtils
                                         .BaseValidationException) {
                     // Rethrow so GlobalExceptionHandler can handle with proper HTTP status codes
+                    taskManager.setError(jobId, e.getMessage());
                     throw e;
                 }
                 // Handle other RuntimeExceptions as generic errors
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
+                taskManager.setError(jobId, e.getMessage());
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job failed: " + e.getMessage()));
             } catch (Exception e) {
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
+                taskManager.setError(jobId, e.getMessage());
                 // Construct a JSON error response
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job failed: " + e.getMessage()));
