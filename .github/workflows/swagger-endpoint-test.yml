@@ -1,0 +1,93 @@
+name: Swagger Endpoint Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "testing/swagger_endpoint_test.py"
+      - ".github/workflows/swagger-endpoint-test.yml"
+
+jobs:
+  swagger-ci:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include-tags: ["Filter", "Security", "Pipeline", "Analysis", "Misc", "Info", "Job Management", "Convert", "General"]
+        # exclude-tags: ["Audit", "Admin Job Management", "Job Management", "Admin Settings"]
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up Java 21
+        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.12"
+          cache: "pip" # caching pip dependencies
+
+      - name: Install Python dependencies
+        run: pip install --upgrade pip requests
+
+      - name: Build Stirling PDF application
+        run: ./gradlew :stirling-pdf:bootJar
+        env:
+          DISABLE_ADDITIONAL_FEATURES: true
+          STIRLING_PDF_DESKTOP_UI: false
+
+      - name: Locate application jar
+        run: |
+          JAR_PATH=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
+            echo "Unable to find built jar" >&2
+            exit 1
+          fi
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+
+      - name: Start Stirling PDF
+        run: |
+          java -jar "$JAR_PATH" > server.log 2>&1 &
+          echo $! > server.pid
+
+      - name: Wait for application to be ready
+        run: |
+          for attempt in $(seq 1 30); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v1/api-docs || true)
+            if [ "$status" != "000" ] && [ "$status" -lt 500 ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Application did not become ready in time" >&2
+          cat server.log || true
+          exit 1
+
+      - name: Run Swagger endpoint tests - ${{ matrix.include-tags }}
+        run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080 --include-tags ${{ matrix.include-tags }}
+
+      - name: Stop Stirling PDF
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi
+
+      - name: Upload server logs
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: swagger-server-logs
+          path: server.log
+          if-no-files-found: ignore
