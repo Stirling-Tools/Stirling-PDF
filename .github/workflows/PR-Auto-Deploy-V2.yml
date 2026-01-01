@@ -11,6 +11,10 @@ on:
       allow_fork:
         description: "Allow deploying fork PR?"
         required: false
+        type: choice
+        options:
+          - "true"
+          - "false"
         default: "false"
 
 permissions:
