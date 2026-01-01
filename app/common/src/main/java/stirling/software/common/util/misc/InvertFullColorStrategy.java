@@ -79,8 +79,10 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                         PDImageXObject pdImage =
                                 PDImageXObject.createFromFileByContent(tempImageFile, document);
 
-                        // Delete temp file immediately after loading into memory to prevent disk exhaustion
-                        // The file content is now in the PDImageXObject, so the file is no longer needed
+                        // Delete temp file immediately after loading into memory to prevent disk
+                        // exhaustion
+                        // The file content is now in the PDImageXObject, so the file is no longer
+                        // needed
                         try {
                             Files.deleteIfExists(tempImageFile.toPath());
                             tempImageFile = null; // Mark as deleted to avoid double deletion
