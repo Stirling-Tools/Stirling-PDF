@@ -15,6 +15,7 @@ import re
 from PIL import Image, ImageDraw
 
 API_HEADERS = {"X-API-KEY": "123456789"}
+TIMEOUT = 1  # seconds
 
 #########
 # GIVEN #
@@ -299,7 +300,9 @@ def step_send_get_request(context, endpoint):
     base_url = "http://localhost:8080"
     full_url = f"{base_url}{endpoint}"
     response = requests.get(
-        full_url, headers=API_HEADERS, timeout=getattr(context, "request_timeout", 60)
+        full_url,
+        headers=API_HEADERS,
+        timeout=getattr(context, "request_timeout", TIMEOUT),
     )
     context.response = response
 
@@ -313,7 +316,7 @@ def step_send_get_request_with_params(context, endpoint):
         full_url,
         params=params,
         headers=API_HEADERS,
-        timeout=getattr(context, "request_timeout", 60),
+        timeout=getattr(context, "request_timeout", TIMEOUT),
     )
     context.response = response
 
@@ -348,7 +351,7 @@ def step_send_api_request(context, endpoint):
         url,
         files=form_data,
         headers=API_HEADERS,
-        timeout=getattr(context, "request_timeout", 60),
+        timeout=getattr(context, "request_timeout", TIMEOUT),
     )
     context.response = response
 
