@@ -110,6 +110,10 @@ public class TempFileShutdownHook implements DisposableBean {
                 }
             }
 
+            // Also clean up any remaining files in the managed temp directory
+            // This catches files created by external libraries (like Jetty) that weren't registered
+            cleanupManagedTempDirectory();
+
             log.info(
                     "Shutdown cleanup complete. Deleted {} files ({} failed) and {} directories ({} failed)",
                     deletedFileCount,
@@ -127,5 +131,62 @@ public class TempFileShutdownHook implements DisposableBean {
         } catch (Exception e) {
             log.error("Error during shutdown cleanup", e);
         }
+    }
+
+    /**
+     * Clean up the managed temp directory, removing any remaining files or subdirectories. This
+     * catches files created by external libraries (like Jetty) that weren't registered in our
+     * registry.
+     */
+    private void cleanupManagedTempDirectory() {
+        try {
+            String tmpDir = System.getProperty("java.io.tmpdir");
+            Path managedTmpDir = Path.of(tmpDir);
+
+            if (Files.exists(managedTmpDir) && Files.isDirectory(managedTmpDir)) {
+                log.debug(
+                        "Cleaning up remaining files in managed temp directory: {}", managedTmpDir);
+
+                // Use try-with-resources to ensure the stream is closed
+                try (var stream = Files.list(managedTmpDir)) {
+                    stream.forEach(
+                            path -> {
+                                try {
+                                    if (Files.isDirectory(path)) {
+                                        // Skip known important subdirectories
+                                        if (!isImportantDirectory(path)) {
+                                            GeneralUtils.deleteDirectory(path);
+                                            log.debug(
+                                                    "Deleted remaining temp subdirectory: {}",
+                                                    path);
+                                        }
+                                    } else {
+                                        Files.deleteIfExists(path);
+                                        log.debug("Deleted remaining temp file: {}", path);
+                                    }
+                                } catch (IOException e) {
+                                    log.debug(
+                                            "Could not delete remaining temp item during cleanup: {} - {}",
+                                            path,
+                                            e.getMessage());
+                                }
+                            });
+                }
+            }
+        } catch (IOException e) {
+            log.debug("Error cleaning up managed temp directory: {}", e.getMessage());
+        }
+    }
+
+    /** Check if a directory should be preserved (not deleted) during cleanup. */
+    private boolean isImportantDirectory(Path path) {
+        String dirName = path.getFileName().toString();
+        // Preserve LibreOffice, mobile scanner, and openCV output directories
+        return dirName.contains("libreoffice")
+                || dirName.contains("stirling-mobile-scanner")
+                || dirName.contains("openCV_output")
+                || dirName.contains("office2pdf")
+                || dirName.contains("pdfa_conversion")
+                || dirName.contains("xdg-");
     }
 }
