@@ -55,6 +55,10 @@ public class AuthController {
      * @return User and session information
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "401", description = "Invalid username or password")
+            })
     @PostMapping("/login")
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public ResponseEntity<?> login(
@@ -160,7 +164,7 @@ public class AuthController {
 
             if (auth == null
                     || !auth.isAuthenticated()
-                    || auth.getPrincipal().equals("anonymousUser")) {
+                    || "anonymousUser".equals(auth.getPrincipal())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Not authenticated"));
             }
