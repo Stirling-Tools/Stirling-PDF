@@ -17,8 +17,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include-tags: ["Filter", "Security", "Pipeline", "Analysis", "Misc", "Info", "Job Management", "Convert", "General"]
-        # exclude-tags: ["Audit", "Admin Job Management", "Job Management", "Admin Settings"]
+        include-tags:
+          [
+            "Filter",
+            "Security",
+            "Pipeline",
+            "Analysis",
+            "Misc",
+            "Info",
+            "Job Management",
+            "Convert",
+            "General",
+            "Authentication",
+            "Database",
+            "Database Management",
+          "Audit", "Admin Job Management", "Admin License Management", "Admin Settings"]
 
     steps:
       - name: Harden Runner

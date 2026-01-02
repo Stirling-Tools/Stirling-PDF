@@ -1022,10 +1022,10 @@ def main(argv: list[str]) -> int:
         status_text = "PASS" if r.success else ("SKIP" if r.skipped else "FAIL")
         expected = ",".join(r.expected) if r.expected else "<default>"
         print(
-            f"[{status_text}] {r.method} {r.path} -> {status_repr} (expected: {expected})"
+            f"[{status_text}] {r.method} {r.path} -> {status_repr} (expected: {expected}) | Message: {r.message}"
         )
-        if not r.success and not r.skipped and r.message:
-            print(f"    Details: {r.message}")
+        # if not r.success and not r.skipped and r.message:
+        #     print(f"    Details: {r.message}")
 
     total = len(results)
     ok = total - len(failures) - skipped
