@@ -58,3 +58,36 @@ licenses-frontend: &licenses-frontend
 licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - *build
+
+swagger-endpoint-test: &swagger-endpoint-test
+  # - "testing/swagger_endpoint_test.py"
+  # - ".github/workflows/swagger-endpoint-test.yml"
+  # - app/common/src/main/java/stirling/software/common/annotations/**
+  # - app/common/src/main/java/stirling/software/common/annotations/api/**
+  # - app/common/src/main/java/stirling/software/common/model/api/**
+  # - app/common/src/main/java/stirling/software/common/model/api/**/**
+  # - "app/(common|core)/src/main/java/stirling/software/SPDF/config/swagger/**"
+  # - app/core/src/main/java/stirling/software/common/controller/JobController.java
+  # - app/core/src/main/java/stirling/software/SPDF/config/GlobalErrorResponseCustomizer.java
+  # - app/core/src/main/java/stirling/software/SPDF/config/OpenApiConfig.java
+  - app/core/src/main/java/stirling/software/SPDF/controller/api/**
+  # - app/core/src/main/java/stirling/software/SPDF/controller/api/**/**
+  # - app/core/src/main/java/stirling/software/SPDF/controller/web/ConverterWebController.java
+  # - app/core/src/main/java/stirling/software/SPDF/controller/web/GeneralWebController.java
+  # - app/core/src/main/java/stirling/software/SPDF/controller/web/HomeWebController.java
+  # - app/core/src/main/java/stirling/software/SPDF/controller/web/MetricsController.java
+  # - app/core/src/main/java/stirling/software/SPDF/controller/web/OtherWebController.java
+  # - app/core/src/main/java/stirling/software/SPDF/controller/web/SecurityWebController.java
+  # - app/core/src/main/java/stirling/software/SPDF/controller/web/SignatureImageController.java
+  # - app/core/src/main/java/stirling/software/SPDF/model/api/**
+  # - app/core/src/main/java/stirling/software/SPDF/model/api/**/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/controller/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/controller/**/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/model/api/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/model/api/**/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/security/config/AccountWebController.java
+  # - app/proprietary/src/main/java/stirling/software/proprietary/security/controller/api/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/security/controller/api/**/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/security/controller/web/DatabaseWebController.java
+  # - app/proprietary/src/main/java/stirling/software/proprietary/security/model/api/**
+  # - app/proprietary/src/main/java/stirling/software/proprietary/security/model/api/**/**
