@@ -19,6 +19,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -357,6 +359,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/account")
+    @ApiResponses(value = {@ApiResponse(responseCode = "401", description = "User not authenticated")})
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @Operation(summary = "Get account page data")
     public ResponseEntity<AccountData> getAccountData(Authentication authentication) {

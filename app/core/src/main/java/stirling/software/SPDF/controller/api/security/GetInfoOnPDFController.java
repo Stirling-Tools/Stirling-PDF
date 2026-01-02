@@ -70,7 +70,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -1191,7 +1191,7 @@ public class GetInfoOnPDFController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
-    @StandardPdfResponse
+    @JsonDataResponse
     @Operation(
             summary = "Get comprehensive PDF information",
             description =
