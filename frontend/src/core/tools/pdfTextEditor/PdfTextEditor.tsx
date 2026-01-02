@@ -207,7 +207,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     unregisterCustomWorkbenchView,
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
-    setLeftPanelView,
   } = useToolWorkflow();
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
