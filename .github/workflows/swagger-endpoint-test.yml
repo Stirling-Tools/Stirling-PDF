@@ -92,8 +92,8 @@ jobs:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
 
-      # - name: Install Python dependencies
-      #   run: pip install --upgrade pip requests
+      - name: Install Python dependencies
+        run: pip install --require-hashes -r ./.github/scripts/requirements_swagger.txt
 
       - name: Build Stirling PDF application
         run: ./gradlew :stirling-pdf:bootJar
