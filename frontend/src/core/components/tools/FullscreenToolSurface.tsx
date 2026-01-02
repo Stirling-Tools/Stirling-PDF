@@ -10,6 +10,7 @@ import { useFocusTrap } from '@app/hooks/useFocusTrap';
 import { useLogoPath } from '@app/hooks/useLogoPath';
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { Tooltip } from '@app/components/shared/Tooltip';
+import { RankedSearchItem } from '@app/utils/toolSearch';
 import '@app/components/tools/ToolPanel.css';
 import { ToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
@@ -17,7 +18,7 @@ import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 interface FullscreenToolSurfaceProps {
   searchQuery: string;
   toolRegistry: Partial<Record<ToolId, ToolRegistryEntry>>;
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: RankedSearchItem[];
   selectedToolKey: string | null;
   showDescriptions: boolean;
   matchedTextMap: Map<string, string>;

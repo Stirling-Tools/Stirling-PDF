@@ -1273,6 +1273,8 @@ cbzOptions = "CBZ to PDF Options"
 optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
 cbzOutputOptions = "PDF to CBZ Options"
 cbzDpi = "DPI for image rendering"
+subtoolName = "Convert from {{from}} to {{to}}"
+subtoolDescription = "Convert {{from}} files to {{to}} format"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"

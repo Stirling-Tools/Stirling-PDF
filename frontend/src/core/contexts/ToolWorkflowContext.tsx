@@ -4,6 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToolManagement, type ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 import { PageEditorFunctions } from '@app/types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '@app/data/toolsTaxonomy';
@@ -11,7 +12,7 @@ import { useNavigationActions, useNavigationState } from '@app/contexts/Navigati
 import { ToolId, isValidToolId } from '@app/types/toolId';
 import { WorkbenchType, getDefaultWorkbench, isBaseWorkbench } from '@app/types/workbench';
 import { useNavigationUrlSync } from '@app/hooks/useUrlSync';
-import { filterToolRegistryByQuery } from '@app/utils/toolSearch';
+import { filterToolRegistryWithSubTools, RankedSearchItem } from '@app/utils/toolSearch';
 import { useToolHistory } from '@app/hooks/tools/useUserToolActivity';
 import {
   ToolWorkflowState,
@@ -21,6 +22,8 @@ import {
 import type { ToolPanelMode } from '@app/constants/toolPanel';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
+import { useMultipleEndpointsEnabled } from '@app/hooks/useEndpointConfig';
+import { getAllConversionEndpointNames } from '@app/utils/subToolExpansion';
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
@@ -70,7 +73,9 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
+  filteredTools: RankedSearchItem[]; // Filtered by search (includes sub-tools)
+  conversionEndpointStatus?: Record<string, boolean>;
+  conversionEndpointsLoading?: boolean;
   isPanelVisible: boolean;
 
   // Tool History
@@ -99,8 +104,13 @@ interface ToolWorkflowProviderProps {
 }
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
   const { preferences, updatePreference } = usePreferences();
+
+  // Fetch endpoint availability for all conversion sub-tools
+  const conversionEndpoints = useMemo(() => getAllConversionEndpointNames(), []);
+  const { endpointStatus, loading: conversionEndpointsLoading } = useMultipleEndpointsEnabled(conversionEndpoints);
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
@@ -323,10 +333,18 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, [setReaderMode]);
 
   // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
+  // Includes sub-tools for supported parent tools (e.g., Convert PDF to PNG)
+  // Only shows sub-tools for available endpoints
   const filteredTools = useMemo(() => {
     if (!toolRegistry) return [];
-    return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
-  }, [toolRegistry, state.searchQuery]);
+    return filterToolRegistryWithSubTools(
+      toolRegistry,
+      state.searchQuery,
+      t,
+      endpointStatus,
+      conversionEndpointsLoading
+    );
+  }, [toolRegistry, state.searchQuery, t, endpointStatus, conversionEndpointsLoading]);
 
   const isPanelVisible = useMemo(() =>
     state.sidebarsVisible && !state.readerMode && state.leftPanelView !== 'hidden',
@@ -374,6 +392,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     // Computed
     filteredTools,
+    conversionEndpointStatus: endpointStatus,
+    conversionEndpointsLoading,
     isPanelVisible,
 
     // Tool History
@@ -408,6 +428,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     handleBackToTools,
     handleReaderToggle,
     filteredTools,
+    endpointStatus,
+    conversionEndpointsLoading,
     isPanelVisible,
     favoriteTools,
     toggleFavorite,
