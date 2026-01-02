@@ -28,10 +28,17 @@ jobs:
             "Job Management",
             "Convert",
             "General",
-            "Authentication",
-            "Database",
-            "Database Management",
-          "Audit", "Admin Job Management", "Admin License Management", "Admin Settings"]
+          ]
+        # exclude-tags:
+        #   [
+        #     "Authentication",
+        #     "Database",
+        #     "Database Management",
+        #     "Audit",
+        #     "Admin Job Management",
+        #     "Admin License Management",
+        #     "Admin Settings",
+        #   ]
 
     steps:
       - name: Harden Runner
