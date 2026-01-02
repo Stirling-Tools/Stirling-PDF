@@ -3,15 +3,42 @@ name: Swagger Endpoint Tests
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - "testing/swagger_endpoint_test.py"
-      - ".github/workflows/swagger-endpoint-test.yml"
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
+  files-changed:
+    name: detect what files changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      swagger-endpoint-test: ${{ steps.changes.outputs.swagger-endpoint-test || steps.workflow_dispatch_changes.outputs.swagger-endpoint-test }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Check for file changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: changes
+        with:
+          filters: .github/config/.files.yaml
+
+      - name: Dispatch swagger-endpoint-test job
+        if: github.event_name == 'workflow_dispatch'
+        id: workflow_dispatch_changes
+        run: echo "swagger-endpoint-test=true" >> $GITHUB_OUTPUT
+
   swagger-ci:
+    if: needs.files-changed.outputs.swagger-endpoint-test == 'true'
+    needs: files-changed
     runs-on: ubuntu-latest
 
     strategy:
