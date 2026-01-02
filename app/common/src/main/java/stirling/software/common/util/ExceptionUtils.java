@@ -1215,8 +1215,6 @@ public class ExceptionUtils {
                 "E073",
                 "error.invalidComparator",
                 "Invalid comparator format: only 'greater', 'equal', and 'less' are supported"),
-        REQUEST_VALIDATION_FAILED(
-                "E074", "error.requestValidationFailed", "Request validation failed"),
 
         // System errors
         MD5_ALGORITHM("E080", "error.md5Algorithm", "MD5 algorithm not available"),
@@ -1340,17 +1338,6 @@ public class ExceptionUtils {
         protected BaseValidationException(String message, Throwable cause, String errorCode) {
             super(message, cause);
             this.errorCode = errorCode;
-        }
-    }
-
-    /** Exception thrown when request validation fails for @Valid payloads. */
-    public static class RequestValidationException extends BaseValidationException {
-        public RequestValidationException(String message, String errorCode) {
-            super(message, errorCode);
-        }
-
-        public RequestValidationException(String message, Throwable cause, String errorCode) {
-            super(message, cause, errorCode);
         }
     }
 
