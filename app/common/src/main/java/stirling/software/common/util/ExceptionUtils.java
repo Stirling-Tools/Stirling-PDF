@@ -946,17 +946,6 @@ public class ExceptionUtils {
     }
 
     /**
-     * Create a RequestValidationException for @Valid payloads.
-     *
-     * @return RequestValidationException with user-friendly message
-     */
-    public static RequestValidationException createRequestValidationException() {
-        String message = getMessage(ErrorCode.REQUEST_VALIDATION_FAILED);
-        return new RequestValidationException(
-                message, ErrorCode.REQUEST_VALIDATION_FAILED.getCode());
-    }
-
-    /**
      * Create an OutOfMemoryDpiException for memory/image size errors when rendering PDF images with
      * DPI. Handles OutOfMemoryError and related conditions (e.g., NegativeArraySizeException) that
      * result from images exceeding Java's array/memory limits.
