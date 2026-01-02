@@ -645,8 +645,10 @@ class GetInfoOnPDFControllerTest {
         @Test
         @DisplayName("Should determine page orientation correctly")
         void testGetPageOrientation() {
-            Assertions.assertEquals("Landscape", GetInfoOnPDFController.getPageOrientation(800, 600));
-            Assertions.assertEquals("Portrait", GetInfoOnPDFController.getPageOrientation(600, 800));
+            Assertions.assertEquals(
+                    "Landscape", GetInfoOnPDFController.getPageOrientation(800, 600));
+            Assertions.assertEquals(
+                    "Portrait", GetInfoOnPDFController.getPageOrientation(600, 800));
             Assertions.assertEquals("Square", GetInfoOnPDFController.getPageOrientation(600, 600));
         }
 
