@@ -14,7 +14,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-@Schema(description = "PDF file input - either upload a file or provide a server-side file ID")
+@Schema(
+        description =
+                """
+        PDF input – **exactly one** of the two fields must be provided:
+        - Either upload a file via 'fileInput'
+        - OR reference a server-side file via 'fileId'
+        **Do not send both or none** – this will result in a validation error.
+        """)
 public class PDFFile {
 
     @Schema(
@@ -31,7 +38,11 @@ public class PDFFile {
     @AssertTrue(message = "Either fileInput or fileId must be provided")
     @Schema(hidden = true)
     public boolean isValid() {
-        boolean hasFileInput = fileInput != null && !fileInput.isEmpty();
+        boolean hasFileInput =
+                fileInput != null
+                        && !fileInput.isEmpty()
+                        && fileInput.getContentType() != null
+                        && fileInput.getContentType().equals(MediaType.APPLICATION_PDF_VALUE);
         boolean hasFileId = fileId != null && !fileId.trim().isEmpty();
 
         return hasFileInput != hasFileId;

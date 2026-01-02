@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +55,8 @@ import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -67,11 +70,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
-import stirling.software.SPDF.model.api.security.PdfRequest;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -93,6 +98,23 @@ public class GetInfoOnPDFController {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
         if (outline == null) return;
@@ -470,9 +492,6 @@ public class GetInfoOnPDFController {
     }
 
     private static void validatePdfFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("PDF file is required");
-        }
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -483,8 +502,19 @@ public class GetInfoOnPDFController {
         }
 
         String contentType = file.getContentType();
-        if (contentType != null && !"application/pdf".equals(contentType)) {
+        if (contentType != null && !isAllowedContentType(contentType)) {
             log.warn("File content type is {}, expected application/pdf", contentType);
+            throw ExceptionUtils.createRequestValidationException();
+        }
+    }
+
+    private static boolean isAllowedContentType(String contentType) {
+        try {
+            MediaType mediaType = MediaType.parseMediaType(contentType);
+            return mediaType.isCompatibleWith(MediaType.APPLICATION_PDF);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid content type provided: {}", contentType);
+            return false;
         }
     }
 
@@ -1196,7 +1226,7 @@ public class GetInfoOnPDFController {
             summary = "Get comprehensive PDF information",
             description =
                     "Extracts all available information from a PDF file. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PdfRequest request)
+    public ResponseEntity<byte[]> getPdfInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();
 

@@ -521,28 +521,36 @@ public class GlobalExceptionHandler {
                                                 error.getField(), error.getDefaultMessage()))
                         .toList();
 
+        RequestValidationException validationException =
+                ExceptionUtils.createRequestValidationException();
+
         String title =
                 getLocalizedMessage(
                         "error.validation.title", ErrorTitles.REQUEST_VALIDATION_FAILED_DEFAULT);
-        String detail = getLocalizedMessage("error.validation.detail", "Validation failed");
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, detail, request);
-        problemDetail.setType(URI.create(ErrorTypes.VALIDATION));
-        problemDetail.setTitle(title);
-        problemDetail.setProperty("title", title); // Ensure serialization
-        problemDetail.setProperty("errors", errors);
-        addStandardHints(
-                problemDetail,
-                "error.validation.hints",
-                List.of(
-                        "Review the 'errors' list and correct the specified fields.",
-                        "Ensure data types and formats match the API schema.",
-                        "Resend the request after fixing validation issues."));
-        problemDetail.setProperty(
-                "actionRequired", "Correct the invalid fields and resend the request.");
+        ResponseEntity<ProblemDetail> response =
+                createProblemDetailResponse(
+                        validationException,
+                        HttpStatus.BAD_REQUEST,
+                        ErrorTypes.VALIDATION,
+                        title,
+                        request);
 
-        return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
+        ProblemDetail problemDetail = response.getBody();
+        if (problemDetail != null) {
+            problemDetail.setProperty("errors", errors);
+            addStandardHints(
+                    problemDetail,
+                    "error.validation.hints",
+                    List.of(
+                            "Review the 'errors' list and correct the specified fields.",
+                            "Ensure data types and formats match the API schema.",
+                            "Resend the request after fixing validation issues."));
+            problemDetail.setProperty(
+                    "actionRequired", "Correct the invalid fields and resend the request.");
+        }
+
+        return response;
     }
 
     /**
