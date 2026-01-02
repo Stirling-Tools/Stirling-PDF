@@ -223,14 +223,39 @@ public class SettingsController {
 
         // SAML2 settings
         ApplicationProperties.Security.SAML2 saml2 = security.getSaml2();
+        ApplicationProperties.Security.SAML2.Provider saml2Provider = saml2.getProvider();
         settings.put(
                 "saml2",
-                Map.of(
-                        "enabled", saml2.getEnabled(),
-                        "provider", saml2.getIdpIssuer() != null ? saml2.getIdpIssuer() : "",
-                        "autoCreateUser", saml2.getAutoCreateUser(),
-                        "blockRegistration", saml2.getBlockRegistration(),
-                        "registrationId", saml2.getRegistrationId()));
+                Map.ofEntries(
+                        Map.entry("enabled", saml2.getEnabled()),
+                        Map.entry("autoCreateUser", saml2.getAutoCreateUser()),
+                        Map.entry("blockRegistration", saml2.getBlockRegistration()),
+                        Map.entry("registrationId", saml2.getRegistrationId()),
+                        Map.entry(
+                                "metadataUri",
+                                saml2.getEffectiveMetadataUri() != null
+                                        ? saml2.getEffectiveMetadataUri()
+                                        : ""),
+                        Map.entry("enableSingleLogout", saml2.getEnableSingleLogout()),
+                        Map.entry(
+                                "provider",
+                                Map.of(
+                                        "name",
+                                                saml2Provider.getName() != null
+                                                        ? saml2Provider.getName()
+                                                        : "",
+                                        "singleLoginUrl",
+                                                saml2Provider.getSingleLoginUrl() != null
+                                                        ? saml2Provider.getSingleLoginUrl()
+                                                        : "",
+                                        "singleLogoutUrl",
+                                                saml2Provider.getSingleLogoutUrl() != null
+                                                        ? saml2Provider.getSingleLogoutUrl()
+                                                        : "",
+                                        "entityId",
+                                                saml2Provider.getEntityId() != null
+                                                        ? saml2Provider.getEntityId()
+                                                        : ""))));
 
         return ResponseEntity.ok(settings);
     }
@@ -307,35 +332,62 @@ public class SettingsController {
         // SAML2 settings
         if (settings.containsKey("saml2")) {
             Map<String, Object> saml2 = (Map<String, Object>) settings.get("saml2");
+            ApplicationProperties.Security.SAML2 saml2Config =
+                    applicationProperties.getSecurity().getSaml2();
+
             if (saml2.containsKey("enabled")) {
                 GeneralUtils.saveKeyToSettings("security.saml2.enabled", saml2.get("enabled"));
-                applicationProperties
-                        .getSecurity()
-                        .getSaml2()
-                        .setEnabled((Boolean) saml2.get("enabled"));
-            }
-            if (saml2.containsKey("provider")) {
-                GeneralUtils.saveKeyToSettings("security.saml2.provider", saml2.get("provider"));
-                applicationProperties
-                        .getSecurity()
-                        .getSaml2()
-                        .setProvider((String) saml2.get("provider"));
+                saml2Config.setEnabled((Boolean) saml2.get("enabled"));
             }
             if (saml2.containsKey("autoCreateUser")) {
                 GeneralUtils.saveKeyToSettings(
                         "security.saml2.autoCreateUser", saml2.get("autoCreateUser"));
-                applicationProperties
-                        .getSecurity()
-                        .getSaml2()
-                        .setAutoCreateUser((Boolean) saml2.get("autoCreateUser"));
+                saml2Config.setAutoCreateUser((Boolean) saml2.get("autoCreateUser"));
             }
             if (saml2.containsKey("blockRegistration")) {
                 GeneralUtils.saveKeyToSettings(
                         "security.saml2.blockRegistration", saml2.get("blockRegistration"));
-                applicationProperties
-                        .getSecurity()
-                        .getSaml2()
-                        .setBlockRegistration((Boolean) saml2.get("blockRegistration"));
+                saml2Config.setBlockRegistration((Boolean) saml2.get("blockRegistration"));
+            }
+            if (saml2.containsKey("metadataUri")) {
+                GeneralUtils.saveKeyToSettings(
+                        "security.saml2.metadataUri", saml2.get("metadataUri"));
+                saml2Config.setMetadataUri((String) saml2.get("metadataUri"));
+            }
+            if (saml2.containsKey("enableSingleLogout")) {
+                GeneralUtils.saveKeyToSettings(
+                        "security.saml2.enableSingleLogout", saml2.get("enableSingleLogout"));
+                saml2Config.setEnableSingleLogout((Boolean) saml2.get("enableSingleLogout"));
+            }
+
+            // Provider (IdP) settings
+            if (saml2.containsKey("provider")) {
+                Map<String, Object> provider = (Map<String, Object>) saml2.get("provider");
+                ApplicationProperties.Security.SAML2.Provider providerConfig =
+                        saml2Config.getProvider();
+
+                if (provider.containsKey("name")) {
+                    GeneralUtils.saveKeyToSettings(
+                            "security.saml2.provider.name", provider.get("name"));
+                    providerConfig.setName((String) provider.get("name"));
+                }
+                if (provider.containsKey("singleLoginUrl")) {
+                    GeneralUtils.saveKeyToSettings(
+                            "security.saml2.provider.singleLoginUrl",
+                            provider.get("singleLoginUrl"));
+                    providerConfig.setSingleLoginUrl((String) provider.get("singleLoginUrl"));
+                }
+                if (provider.containsKey("singleLogoutUrl")) {
+                    GeneralUtils.saveKeyToSettings(
+                            "security.saml2.provider.singleLogoutUrl",
+                            provider.get("singleLogoutUrl"));
+                    providerConfig.setSingleLogoutUrl((String) provider.get("singleLogoutUrl"));
+                }
+                if (provider.containsKey("entityId")) {
+                    GeneralUtils.saveKeyToSettings(
+                            "security.saml2.provider.entityId", provider.get("entityId"));
+                    providerConfig.setEntityId((String) provider.get("entityId"));
+                }
             }
         }
 

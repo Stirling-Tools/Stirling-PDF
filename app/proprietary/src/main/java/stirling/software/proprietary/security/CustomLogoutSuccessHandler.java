@@ -95,40 +95,38 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private boolean handleSamlLogout(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
-        if (authentication instanceof Saml2Authentication samlAuthentication) {
-            CustomSaml2AuthenticatedPrincipal principal =
-                    (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
-            String nameId = principal.nameId();
+        if (securityProperties.getSaml2().getEnableSingleLogout()) {
+            log.info("SP-initiated SLO detected, logging out via IdP");
 
-            if (securityProperties.getSaml2().getEnableSingleLogout()) {
-                log.info("SAML user {} logging out via IdP SLO (session-based)", nameId);
+            if (authentication instanceof Saml2Authentication samlAuthentication) {
                 try {
-                    samlLogoutHandler.onLogoutSuccess(request, response, authentication);
+                    samlLogoutHandler.onLogoutSuccess(request, response, samlAuthentication);
                 } catch (Exception e) {
-                    log.error("SAML SLO failed, falling back to local logout", e);
+                    log.error("SP-initiated SLO failed, falling back to local logout", e);
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
+
+                return true;
             } else {
-                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                // Reconstruct Saml2Authentication from JWT claims for SLO
+                Optional<Saml2Authentication> reconstructedAuth =
+                        reconstructSaml2AuthenticationFromJwt(request);
+
+                if (reconstructedAuth.isPresent()) {
+                    Saml2Authentication samlAuth = reconstructedAuth.get();
+
+                    try {
+                        samlLogoutHandler.onLogoutSuccess(request, response, samlAuth);
+                    } catch (Exception e) {
+                        log.error("SP-initiated SLO failed, falling back to local logout", e);
+                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    }
+
+                    return true;
+                }
             }
-
-            return true;
-        }
-
-        // Reconstruct Saml2Authentication from JWT claims for SLO
-        Optional<Saml2Authentication> reconstructedAuth =
-                reconstructSaml2AuthenticationFromJwt(request);
-
-        if (reconstructedAuth.isPresent()) {
-            Saml2Authentication samlAuth = reconstructedAuth.get();
-
-            try {
-                samlLogoutHandler.onLogoutSuccess(request, response, samlAuth);
-            } catch (Exception e) {
-                log.error("SAML SLO failed, falling back to local logout", e);
-                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-            }
-
+        } else {
+            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
             return true;
         }
 

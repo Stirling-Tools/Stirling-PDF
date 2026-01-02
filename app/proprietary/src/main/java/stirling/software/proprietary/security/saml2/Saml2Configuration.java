@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @Configuration
@@ -59,7 +60,7 @@ public class Saml2Configuration {
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
-    public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
+    public RelyingPartyRegistrationRepository relyingPartyRegistrations() {
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
         Optional<IdpMetadataInfo> metadataInfo = loadIdpMetadata(samlConf);
 
@@ -76,8 +77,8 @@ public class Saml2Configuration {
         Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
 
         // Load SP private key and certificate
-        Resource privateKeyResource = samlConf.getPrivateKey();
-        Resource certificateResource = samlConf.getSpCert();
+        Resource privateKeyResource = samlConf.getSp().getPrivateKeyResource();
+        Resource certificateResource = samlConf.getSp().getCertResource();
 
         log.debug("Loading SP private key from: {}", privateKeyResource.getDescription());
         if (!privateKeyResource.exists()) {
@@ -116,19 +117,19 @@ public class Saml2Configuration {
                 metadataInfo
                         .map(IdpMetadataInfo::entityId)
                         .filter(id -> id != null && !id.isBlank())
-                        .orElseGet(samlConf::getIdpEntityIdOrIssuer);
+                        .orElseGet(() -> samlConf.getProvider().getEntityId());
 
         String idpSingleLoginUrl =
                 metadataInfo
                         .map(IdpMetadataInfo::singleSignOnServiceUrl)
                         .filter(url -> url != null && !url.isBlank())
-                        .orElseGet(samlConf::getIdpSingleLoginUrl);
+                        .orElseGet(() -> samlConf.getProvider().getSingleLoginUrl());
 
         String idpSingleLogoutUrl =
                 metadataInfo
                         .map(IdpMetadataInfo::singleLogoutServiceUrl)
                         .filter(url -> url != null && !url.isBlank())
-                        .orElseGet(samlConf::getIdpSingleLogoutUrl);
+                        .orElseGet(() -> samlConf.getProvider().getSingleLogoutUrl());
 
         // Validate required IdP configuration
         if (idpEntityId == null || idpEntityId.isBlank()) {
@@ -190,7 +191,7 @@ public class Saml2Configuration {
         log.info(
                 "SAML2 configuration initialized successfully. Registration ID: {}, IdP: {}",
                 samlConf.getRegistrationId(),
-                samlConf.getIdpIssuer());
+                idpEntityId);
         return new InMemoryRelyingPartyRegistrationRepository(rp);
     }
 
@@ -249,7 +250,7 @@ public class Saml2Configuration {
 
     private X509Certificate loadIdpCertificateFromResource(SAML2 samlConf) {
         try {
-            Resource idpCertResource = samlConf.getIdpCert();
+            Resource idpCertResource = samlConf.getProvider().getCertResource();
             if (idpCertResource == null) {
                 throw new IllegalStateException("SAML2 IdP certificate resource is not defined");
             }
@@ -274,18 +275,72 @@ public class Saml2Configuration {
         log.info(
                 "Applying IdP metadata overrides for registration: {}",
                 samlConf.getRegistrationId());
-        overrideIfPresent(metadataInfo.entityId(), samlConf::setIdpIssuer);
-        overrideIfPresent(metadataInfo.singleSignOnServiceUrl(), samlConf::setIdpSingleLoginUrl);
-        overrideIfPresent(metadataInfo.singleLogoutServiceUrl(), samlConf::setIdpSingleLogoutUrl);
+        SAML2.Provider provider = samlConf.getProvider();
+        overrideIfPresent(metadataInfo.entityId(), provider::setEntityId);
+        overrideIfPresent(metadataInfo.singleSignOnServiceUrl(), provider::setSingleLoginUrl);
+        overrideIfPresent(metadataInfo.singleLogoutServiceUrl(), provider::setSingleLogoutUrl);
+
+        // Persist discovered metadata values to settings.yml
+        persistMetadataToSettings(metadataInfo);
+    }
+
+    /**
+     * Persists IdP metadata discovered values to settings.yml. This ensures the discovered
+     * configuration is saved for future reference and survives restarts even if the metadata
+     * endpoint becomes unavailable.
+     */
+    private void persistMetadataToSettings(IdpMetadataInfo metadataInfo) {
+        log.info(
+                "Migrating discovered IdP metadata to SAML configuration. Existing configuration will be overridden.");
+
+        try {
+            boolean anyPersisted = false;
+
+            if (hasText(metadataInfo.entityId())) {
+                GeneralUtils.saveKeyToSettings(
+                        "security.saml2.provider.entityId", metadataInfo.entityId());
+                log.info("  -> Persisted provider.entityId: {}", metadataInfo.entityId());
+                anyPersisted = true;
+            }
+
+            if (hasText(metadataInfo.singleSignOnServiceUrl())) {
+                GeneralUtils.saveKeyToSettings(
+                        "security.saml2.provider.singleLoginUrl",
+                        metadataInfo.singleSignOnServiceUrl());
+                log.info(
+                        "  -> Persisted provider.singleLoginUrl: {}",
+                        metadataInfo.singleSignOnServiceUrl());
+                anyPersisted = true;
+            }
+
+            if (hasText(metadataInfo.singleLogoutServiceUrl())) {
+                GeneralUtils.saveKeyToSettings(
+                        "security.saml2.provider.singleLogoutUrl",
+                        metadataInfo.singleLogoutServiceUrl());
+                log.info(
+                        "  -> Persisted provider.singleLogoutUrl: {}",
+                        metadataInfo.singleLogoutServiceUrl());
+                anyPersisted = true;
+            }
+
+            if (anyPersisted) {
+                log.info(
+                        "IdP metadata successfully persisted to settings.yml. These values will be used as fallback if metadataUri becomes unavailable.");
+            }
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to persist IdP metadata to settings.yml: {}. SAML will still work but discovered values won't be saved.",
+                    e.getMessage());
+        }
     }
 
     private Optional<IdpMetadataInfo> loadIdpMetadata(SAML2 samlConf) {
-        String metadataLocation = samlConf.getIdpMetadataUriLocation();
+        String metadataLocation = samlConf.getEffectiveMetadataUri();
         if (metadataLocation == null || metadataLocation.isBlank()) {
             return Optional.empty();
         }
 
-        try (InputStream metadataStream = samlConf.getIdpMetadataUri()) {
+        try (InputStream metadataStream = samlConf.getMetadataUriAsStream()) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
 
