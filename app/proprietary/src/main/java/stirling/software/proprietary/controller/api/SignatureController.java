@@ -123,7 +123,10 @@ public class SignatureController {
      */
     @DeleteMapping("/{signatureId}")
     @ApiResponses(
-            value = {@ApiResponse(responseCode = "401", description = "User not authenticated")})
+            value = {
+                @ApiResponse(responseCode = "401", description = "User not authenticated"),
+                @ApiResponse(responseCode = "404", description = "Signature not found")
+            })
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
         try {
