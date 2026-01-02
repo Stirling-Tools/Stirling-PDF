@@ -35,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @DisplayName("GetInfoOnPDF Controller Tests")
@@ -178,7 +178,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createPdfWithMetadata();
             MockMultipartFile mockFile = documentToMultipartFile(document, "test.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
@@ -216,7 +216,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("Test content with some words");
             MockMultipartFile mockFile = documentToMultipartFile(document, "basic.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
@@ -251,7 +251,7 @@ class GetInfoOnPDFControllerTest {
             document.addPage(new PDPage(PDRectangle.LETTER));
 
             MockMultipartFile mockFile = documentToMultipartFile(document, "multipage.pdf");
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
@@ -288,7 +288,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createPdfWithMetadata();
             MockMultipartFile mockFile = documentToMultipartFile(document, "metadata.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -322,7 +322,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("No metadata");
             MockMultipartFile mockFile = documentToMultipartFile(document, "no-metadata.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -357,7 +357,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("Not encrypted");
             MockMultipartFile mockFile = documentToMultipartFile(document, "unencrypted.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -384,7 +384,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("Test permissions");
             MockMultipartFile mockFile = documentToMultipartFile(document, "permissions.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -420,7 +420,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("Document to test form fields section");
             MockMultipartFile mockFile = documentToMultipartFile(document, "test-forms.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -448,7 +448,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("No form fields");
             MockMultipartFile mockFile = documentToMultipartFile(document, "no-forms.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -482,7 +482,7 @@ class GetInfoOnPDFControllerTest {
             document.addPage(new PDPage(PDRectangle.LETTER));
 
             MockMultipartFile mockFile = documentToMultipartFile(document, "dimensions.pdf");
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -518,7 +518,7 @@ class GetInfoOnPDFControllerTest {
             document.addPage(page);
 
             MockMultipartFile mockFile = documentToMultipartFile(document, "rotated.pdf");
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -547,7 +547,7 @@ class GetInfoOnPDFControllerTest {
         @Test
         @DisplayName("Should reject null file")
         void testValidation_NullFile() throws IOException {
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(null);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -568,7 +568,7 @@ class GetInfoOnPDFControllerTest {
                     new MockMultipartFile(
                             "file", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]);
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(emptyFile);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -624,7 +624,7 @@ class GetInfoOnPDFControllerTest {
                         public void transferTo(java.io.File dest) throws IllegalStateException {}
                     };
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(largeFile);
 
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
@@ -710,7 +710,7 @@ class GetInfoOnPDFControllerTest {
             try {
                 MockMultipartFile mockFile = loadPdfFromResources("example.pdf");
 
-                PDFFile request = new PDFFile();
+                PdfRequest request = new PdfRequest();
                 request.setFileInput(mockFile);
 
                 try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
@@ -747,7 +747,7 @@ class GetInfoOnPDFControllerTest {
             try {
                 MockMultipartFile mockFile = loadPdfFromResources("tables.pdf");
 
-                PDFFile request = new PDFFile();
+                PdfRequest request = new PdfRequest();
                 request.setFileInput(mockFile);
 
                 try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
@@ -783,7 +783,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("Test PDF/A");
             MockMultipartFile mockFile = documentToMultipartFile(document, "pdfa.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
@@ -818,7 +818,7 @@ class GetInfoOnPDFControllerTest {
             PDDocument document = createSimplePdfWithText("Document for image statistics");
             MockMultipartFile mockFile = documentToMultipartFile(document, "no-images.pdf");
 
-            PDFFile request = new PDFFile();
+            PdfRequest request = new PdfRequest();
             request.setFileInput(mockFile);
 
             PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
