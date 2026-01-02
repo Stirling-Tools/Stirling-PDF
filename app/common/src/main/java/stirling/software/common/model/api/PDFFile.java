@@ -30,8 +30,10 @@ public class PDFFile {
 
     @AssertTrue(message = "Either fileInput or fileId must be provided")
     @Schema(hidden = true)
-    private boolean isValid() {
-        return (fileInput != null && (fileId == null || fileId.trim().isEmpty()))
-                || (fileId != null && !fileId.trim().isEmpty() && fileInput == null);
+    public boolean isValid() {
+        boolean hasFileInput = fileInput != null && !fileInput.isEmpty();
+        boolean hasFileId = fileId != null && !fileId.trim().isEmpty();
+
+        return hasFileInput != hasFileId;
     }
 }

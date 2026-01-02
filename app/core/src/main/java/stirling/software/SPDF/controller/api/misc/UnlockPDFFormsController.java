@@ -20,9 +20,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
-import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -44,7 +44,7 @@ public class UnlockPDFFormsController {
             description =
                     "Removing read-only property from form fields making them fillable"
                             + "Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<byte[]> unlockPDFForms(@ModelAttribute PdfRequest file) {
+    public ResponseEntity<byte[]> unlockPDFForms(@ModelAttribute PDFFile file) {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 

@@ -17,9 +17,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
-import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -37,7 +37,7 @@ public class RemoveCertSignController {
             description =
                     "This endpoint accepts a PDF file and returns the PDF file without the digital"
                             + " signature. Input:PDF, Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeCertSignPDF(@ModelAttribute PdfRequest request)
+    public ResponseEntity<byte[]> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
 

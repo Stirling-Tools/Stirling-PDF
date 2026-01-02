@@ -23,13 +23,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
-import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.SPDF.model.json.PdfJsonDocument;
 import stirling.software.SPDF.model.json.PdfJsonMetadata;
 import stirling.software.SPDF.service.PdfJsonConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -50,7 +50,7 @@ public class ConvertPdfJsonController {
             description =
                     "Extracts PDF text, fonts, and metadata into an editable JSON structure for the text editor tool. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> convertPdfToJson(
-            @ModelAttribute PdfRequest request,
+            @ModelAttribute PDFFile request,
             @RequestParam(value = "lightweight", defaultValue = "false") boolean lightweight)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -98,7 +98,7 @@ public class ConvertPdfJsonController {
                     "Extracts document metadata, fonts, and page dimensions for the text editor tool. Caches the document for"
                             + " subsequent page requests. Returns a server-generated jobId scoped to the"
                             + " authenticated user. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<byte[]> extractPdfMetadata(@ModelAttribute PdfRequest request)
+    public ResponseEntity<byte[]> extractPdfMetadata(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
         if (inputFile == null) {

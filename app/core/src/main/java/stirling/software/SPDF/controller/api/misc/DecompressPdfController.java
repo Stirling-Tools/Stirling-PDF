@@ -20,9 +20,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -39,7 +39,7 @@ public class DecompressPdfController {
     @Operation(
             summary = "Decompress PDF streams",
             description = "Fully decompresses all PDF streams including text content")
-    public ResponseEntity<byte[]> decompressPdf(@ModelAttribute PdfRequest request)
+    public ResponseEntity<byte[]> decompressPdf(@ModelAttribute PDFFile request)
             throws IOException {
 
         MultipartFile file = request.getFileInput();

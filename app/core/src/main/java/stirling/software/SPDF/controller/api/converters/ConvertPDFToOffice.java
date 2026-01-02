@@ -20,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
-import stirling.software.SPDF.model.api.security.PdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
@@ -99,8 +99,7 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PdfRequest file)
-            throws Exception {
+    public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
