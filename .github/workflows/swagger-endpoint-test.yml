@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   files-changed:
     name: detect what files changed
@@ -18,7 +22,7 @@ jobs:
       swagger-endpoint-test: ${{ steps.changes.outputs.swagger-endpoint-test || steps.workflow_dispatch_changes.outputs.swagger-endpoint-test }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -88,8 +92,8 @@ jobs:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
 
-      - name: Install Python dependencies
-        run: pip install --upgrade pip requests
+      # - name: Install Python dependencies
+      #   run: pip install --upgrade pip requests
 
       - name: Build Stirling PDF application
         run: ./gradlew :stirling-pdf:bootJar
@@ -141,3 +145,4 @@ jobs:
           name: swagger-server-logs
           path: server.log
           if-no-files-found: ignore
+          retention-days: 3
