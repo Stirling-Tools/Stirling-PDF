@@ -63,6 +63,7 @@ import os
 import re
 import sys
 import threading
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Iterable
 
@@ -102,37 +103,10 @@ DEFAULT_SKIP_ENDPOINTS = {
     ("get", "/api/v1/general/job/{jobId}"),
     ("delete", "/api/v1/general/job/{jobId}"),
     # Job Management end
-    #
-    # ("get", "/api/v1/admin/job/stats"),
-    # ("get", "/api/v1/audit/data"),
-    # ("get", "/api/v1/audit/export/csv"),
-    # ("get", "/api/v1/audit/export/json"),
-    # ("get", "/api/v1/audit/stats"),
-    # ("get", "/api/v1/audit/types"),
-    # ("get", "/api/v1/admin/job/queue/stats"),
-    # ("post", "/api/v1/pipeline/handleData"),
-    # ("post", "/api/v1/admin/job/cleanup"),
-    # ("post", "/api/v1/misc/ocr-pdf"),
-    # ("delete", "/api/v1/audit/cleanup/before"),
-    # Buggy endpoints
-    # ("post", "/api/v1/convert/cbr/pdf"),  # Invalid CBR file
-    # ("post", "/api/v1/convert/html/pdf"),
-    # ("post", "/api/v1/convert/pdf/img"),
-    # ("post", "/api/v1/convert/file/pdf"),  # unoconvert
-    # ("post", "/api/v1/convert/eml/pdf"),
-    # ("post", "/api/v1/convert/url/pdf"),  # URL input not handled properly
-    # ("post", "/api/v1/security/auto-redact"),  # Fails due to PDF sample file issue
-    # check inputs
-    # ("post", "/api/v1/security/cert-sign"),
-    # ("post", "/api/v1/general/crop"),
-    # ("post", "/api/v1/general/overlay-pdfs"),
-    # temporary skips
-    # ("get", "/api/v1/admin/settings/section/{sectionName}"),
-    # ("get", "/api/v1/admin/settings/key/{key}"),
-    # ("get", "/api/v1/admin/settings/delta"),
-    # ("get", "/api/v1/admin/settings"),
-    # Could not find the Qt platform plugin headless error
-    # ("post", "/api/v1/convert/ebook/pdf"),
+    #######################################################################
+    # Convert start
+    ("post", "/api/v1/convert/url/pdf"),  # URL input not handled properly
+    # convert end
 }
 
 
@@ -1055,12 +1029,39 @@ def main(argv: list[str]) -> int:
 
     total = len(results)
     ok = total - len(failures) - skipped
+    status_counts = Counter(
+        r.status_code for r in results if r.status_code is not None
+    )
+    error_codes = [
+        400,
+        401,
+        404,
+        409,
+        422,
+        429,
+        500,
+        502,
+        503,
+        504,
+    ]
+    err_count = sum(1 for r in results if r.status_code is None)
     print("\n=== Summary ===")
     print(f"Total endpoints tested: {total}")
-    print(f"Successful responses:  {ok}")
-    print(f"Failed responses:      {len(failures)}")
-    print(f"Skipped:               {skipped}")
-    print(f"Disabled (403 noted):  {disabled}")
+    print(f"Successful responses:   {ok}")
+    print(f"Failed responses:       {len(failures)}")
+    print(f"Skipped:                {skipped}")
+    print(f"Disabled (403 noted):   {disabled}")
+    print("")
+    for code in error_codes:
+        if code in status_counts:
+            print(f"{code}:                    {status_counts.get(code, 0)}")
+    if err_count:
+        print(f"ERR:                    {err_count}")
+    other_codes = sorted(code for code in status_counts if code not in error_codes)
+    if other_codes:
+        print("Other status codes:")
+        for code in other_codes:
+            print(f"  {code}: {status_counts[code]}")
 
     # In CI, you might want to exit with 0 even if there are disabled/skipped tests
     return 0 if not failures else 1

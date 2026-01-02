@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -163,6 +165,12 @@ public class ConvertPdfJsonController {
     }
 
     @GetMapping(value = "/pdf/text-editor/page/{jobId}/{pageNumber}")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "410",
+                        description = "Cached document expired or not found")
+            })
     @Operation(
             summary = "Extract single page from cached PDF for text editor",
             description =
