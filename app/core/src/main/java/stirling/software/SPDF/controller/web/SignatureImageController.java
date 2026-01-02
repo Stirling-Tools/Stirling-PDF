@@ -50,12 +50,7 @@ public class SignatureImageController {
      * community: tries shared only
      */
     @GetMapping("/signatures/{fileName}")
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "404",
-                        description = "Signature not found")
-            })
+    @ApiResponses(value = {@ApiResponse(responseCode = "404", description = "Signature not found")})
     public ResponseEntity<byte[]> getSignature(@PathVariable(name = "fileName") String fileName) {
         try {
             byte[] imageBytes = null;

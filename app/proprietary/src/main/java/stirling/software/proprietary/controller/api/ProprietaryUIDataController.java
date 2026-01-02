@@ -359,7 +359,8 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/account")
-    @ApiResponses(value = {@ApiResponse(responseCode = "401", description = "User not authenticated")})
+    @ApiResponses(
+            value = {@ApiResponse(responseCode = "401", description = "User not authenticated")})
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @Operation(summary = "Get account page data")
     public ResponseEntity<AccountData> getAccountData(Authentication authentication) {

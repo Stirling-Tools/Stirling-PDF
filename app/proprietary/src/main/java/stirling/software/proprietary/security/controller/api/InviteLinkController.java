@@ -10,13 +10,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import stirling.software.common.annotations.api.InviteApi;
 import stirling.software.common.model.ApplicationProperties;
@@ -353,12 +353,7 @@ public class InviteLinkController {
      * @return Invite details if valid, error otherwise
      */
     @GetMapping("/validate/{token}")
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "404",
-                        description = "Invalid invite link")
-            })
+    @ApiResponses(value = {@ApiResponse(responseCode = "404", description = "Invalid invite link")})
     public ResponseEntity<?> validateInviteToken(@PathVariable String token) {
         try {
             Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);
@@ -411,12 +406,7 @@ public class InviteLinkController {
      * @return Success or error response
      */
     @PostMapping("/accept/{token}")
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "404",
-                        description = "Invalid invite link")
-            })
+    @ApiResponses(value = {@ApiResponse(responseCode = "404", description = "Invalid invite link")})
     public ResponseEntity<?> acceptInvite(
             @PathVariable String token,
             @RequestParam(name = "email", required = false) String email,

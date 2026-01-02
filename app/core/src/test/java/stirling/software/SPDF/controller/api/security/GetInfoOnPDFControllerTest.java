@@ -40,11 +40,11 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @DisplayName("GetInfoOnPDF Controller Tests")
 @ExtendWith(MockitoExtension.class)
-class GetInfoOnPDFTest {
+class GetInfoOnPDFControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private GetInfoOnPDF getInfoOnPDF;
+    @InjectMocks private GetInfoOnPDFController getInfoOnPDF;
 
     private ObjectMapper objectMapper;
 
@@ -645,9 +645,9 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should determine page orientation correctly")
         void testGetPageOrientation() {
-            Assertions.assertEquals("Landscape", GetInfoOnPDF.getPageOrientation(800, 600));
-            Assertions.assertEquals("Portrait", GetInfoOnPDF.getPageOrientation(600, 800));
-            Assertions.assertEquals("Square", GetInfoOnPDF.getPageOrientation(600, 600));
+            Assertions.assertEquals("Landscape", GetInfoOnPDFController.getPageOrientation(800, 600));
+            Assertions.assertEquals("Portrait", GetInfoOnPDFController.getPageOrientation(600, 800));
+            Assertions.assertEquals("Square", GetInfoOnPDFController.getPageOrientation(600, 600));
         }
 
         @ParameterizedTest
@@ -659,7 +659,7 @@ class GetInfoOnPDFTest {
         })
         @DisplayName("Should identify standard page sizes")
         void testGetPageSize(float width, float height, String expected) {
-            Assertions.assertEquals(expected, GetInfoOnPDF.getPageSize(width, height));
+            Assertions.assertEquals(expected, GetInfoOnPDFController.getPageSize(width, height));
         }
 
         @Test
@@ -667,7 +667,7 @@ class GetInfoOnPDFTest {
         void testCheckForStandard_PdfA() throws IOException {
             // This would require a real PDF/A document or mocking
             PDDocument document = createSimplePdfWithText("Test");
-            boolean result = GetInfoOnPDF.checkForStandard(document, "PDF/A");
+            boolean result = GetInfoOnPDFController.checkForStandard(document, "PDF/A");
             Assertions.assertFalse(result); // Simple PDF is not PDF/A compliant
             document.close();
         }
@@ -675,7 +675,7 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should handle null document in checkForStandard")
         void testCheckForStandard_NullDocument() {
-            boolean result = GetInfoOnPDF.checkForStandard(null, "PDF/A");
+            boolean result = GetInfoOnPDFController.checkForStandard(null, "PDF/A");
             Assertions.assertFalse(result);
         }
 
@@ -683,7 +683,7 @@ class GetInfoOnPDFTest {
         @DisplayName("Should get PDF/A conformance level")
         void testGetPdfAConformanceLevel() throws IOException {
             PDDocument document = createSimplePdfWithText("Test");
-            String level = GetInfoOnPDF.getPdfAConformanceLevel(document);
+            String level = GetInfoOnPDFController.getPdfAConformanceLevel(document);
             Assertions.assertNull(level);
             document.close();
         }
@@ -692,7 +692,7 @@ class GetInfoOnPDFTest {
         @DisplayName("Should handle encrypted document in getPdfAConformanceLevel")
         void testGetPdfAConformanceLevel_EncryptedDocument() throws IOException {
             PDDocument document = createEncryptedPdf();
-            String level = GetInfoOnPDF.getPdfAConformanceLevel(document);
+            String level = GetInfoOnPDFController.getPdfAConformanceLevel(document);
             Assertions.assertNull(level); // Encrypted documents return null
             document.close();
         }

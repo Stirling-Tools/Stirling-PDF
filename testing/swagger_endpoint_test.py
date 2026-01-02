@@ -1061,7 +1061,8 @@ def main(argv: list[str]) -> int:
     if other_codes:
         print("Other status codes:")
         for code in other_codes:
-            print(f"  {code}: {status_counts[code]}")
+            if code != 403:
+                print(f"  {code}: {status_counts[code]}")
 
     # In CI, you might want to exit with 0 even if there are disabled/skipped tests
     return 0 if not failures else 1
