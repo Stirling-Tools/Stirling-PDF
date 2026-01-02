@@ -36,11 +36,23 @@ export interface ConvertParameters extends BaseParameters {
   pdfaOptions: {
     outputFormat: string;
   };
+  cbrOptions: {
+    optimizeForEbook: boolean;
+  };
+  pdfToCbrOptions: {
+    dpi: number;
+  };
   cbzOptions: {
     optimizeForEbook: boolean;
   };
   cbzOutputOptions: {
     dpi: number;
+  };
+  ebookOptions?: {
+    embedAllFonts: boolean;
+    includeTableOfContents: boolean;
+    includePageNumbers: boolean;
+    optimizeForEbook: boolean;
   };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
@@ -75,11 +87,23 @@ export const defaultParameters: ConvertParameters = {
   pdfaOptions: {
     outputFormat: 'pdfa-1',
   },
+  cbrOptions: {
+    optimizeForEbook: false,
+  },
+  pdfToCbrOptions: {
+    dpi: 150,
+  },
   cbzOptions: {
     optimizeForEbook: false,
   },
   cbzOutputOptions: {
     dpi: 150,
+  },
+  ebookOptions: {
+    embedAllFonts: false,
+    includeTableOfContents: false,
+    includePageNumbers: false,
+    optimizeForEbook: false,
   },
   isSmartDetection: false,
   smartDetectionType: 'none',

@@ -22,7 +22,8 @@ const ConvertToPdfaSettings = ({
 
   const pdfaFormatOptions = [
     { value: 'pdfa-1', label: 'PDF/A-1b' },
-    { value: 'pdfa', label: 'PDF/A-2b' }
+    { value: 'pdfa', label: 'PDF/A-2b' },
+    { value: 'pdfa-3', label: 'PDF/A-3b' }
   ];
 
   return (
@@ -50,7 +51,7 @@ const ConvertToPdfaSettings = ({
           data-testid="pdfa-output-format-select"
         />
         <Text size="xs" c="dimmed">
-          {t("convert.pdfaNote", "PDF/A-1b is more compatible, PDF/A-2b supports more features.")}
+          {t("convert.pdfaNote", "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files.")}
         </Text>
       </Stack>
     </Stack>

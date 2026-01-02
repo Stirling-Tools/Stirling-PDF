@@ -5,6 +5,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
@@ -83,7 +84,7 @@ public class SsrfProtectionService {
                 return false;
             }
 
-            return config.getAllowedDomains().contains(host.toLowerCase());
+            return config.getAllowedDomains().contains(host.toLowerCase(Locale.ROOT));
 
         } catch (Exception e) {
             log.debug("Failed to parse URL for MAX security check: {}", url, e);
@@ -101,7 +102,7 @@ public class SsrfProtectionService {
                 return false;
             }
 
-            String hostLower = host.toLowerCase();
+            String hostLower = host.toLowerCase(Locale.ROOT);
 
             // Check explicit blocked domains
             if (config.getBlockedDomains().contains(hostLower)) {
@@ -111,7 +112,7 @@ public class SsrfProtectionService {
 
             // Check internal TLD patterns
             for (String tld : config.getInternalTlds()) {
-                if (hostLower.endsWith(tld.toLowerCase())) {
+                if (hostLower.endsWith(tld.toLowerCase(Locale.ROOT))) {
                     log.debug("URL blocked by internal TLD pattern '{}': {}", tld, url);
                     return false;
                 }
@@ -123,9 +124,11 @@ public class SsrfProtectionService {
                         config.getAllowedDomains().stream()
                                 .anyMatch(
                                         domain ->
-                                                hostLower.equals(domain.toLowerCase())
+                                                hostLower.equals(domain.toLowerCase(Locale.ROOT))
                                                         || hostLower.endsWith(
-                                                                "." + domain.toLowerCase()));
+                                                                "."
+                                                                        + domain.toLowerCase(
+                                                                                Locale.ROOT)));
 
                 if (!isAllowed) {
                     log.debug("URL not in allowed domains list: {}", url);

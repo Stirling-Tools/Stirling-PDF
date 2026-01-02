@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -18,7 +18,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -117,7 +116,7 @@ public class ConvertImgPDFController {
                             newPdfBytes,
                             "webp".equalsIgnoreCase(imageFormat)
                                     ? "png"
-                                    : imageFormat.toUpperCase(),
+                                    : imageFormat.toUpperCase(Locale.ROOT),
                             colorTypeResult,
                             singleImage,
                             dpi,
@@ -279,19 +278,9 @@ public class ConvertImgPDFController {
             optimizeForEbook = false;
         }
 
-        byte[] pdfBytes;
-        try {
-            pdfBytes =
-                    CbzUtils.convertCbzToPdf(
-                            file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid CBZ file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid CBZ file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] pdfBytes =
+                CbzUtils.convertCbzToPdf(
+                        file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
@@ -313,17 +302,7 @@ public class ConvertImgPDFController {
             dpi = 300;
         }
 
-        byte[] cbzBytes;
-        try {
-            cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
 
@@ -348,19 +327,9 @@ public class ConvertImgPDFController {
             optimizeForEbook = false;
         }
 
-        byte[] pdfBytes;
-        try {
-            pdfBytes =
-                    CbrUtils.convertCbrToPdf(
-                            file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid CBR file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid CBR file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] pdfBytes =
+                CbrUtils.convertCbrToPdf(
+                        file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
@@ -382,17 +351,7 @@ public class ConvertImgPDFController {
             dpi = 300;
         }
 
-        byte[] cbrBytes;
-        try {
-            cbrBytes = PdfToCbrUtils.convertPdfToCbr(file, dpi, pdfDocumentFactory);
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage() == null ? "Invalid PDF file" : ex.getMessage();
-            Map<String, Object> errorBody =
-                    Map.of("error", "Invalid PDF file", "message", message, "trace", "");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorBody);
-        }
+        byte[] cbrBytes = PdfToCbrUtils.convertPdfToCbr(file, dpi, pdfDocumentFactory);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbr");
 
@@ -421,7 +380,7 @@ public class ConvertImgPDFController {
     /**
      * Rearranges the pages of the given PDF document based on the specified page order.
      *
-     * @param pdfBytes The byte array of the original PDF file.
+     * @param pdfFile The MultipartFile of the original PDF file.
      * @param pageOrderArr An array of page numbers indicating the new order.
      * @return A byte array of the rearranged PDF.
      * @throws IOException If an error occurs while processing the PDF.
@@ -429,35 +388,31 @@ public class ConvertImgPDFController {
     private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr)
             throws IOException {
         // Load the input PDF
-        PDDocument document = pdfDocumentFactory.load(pdfFile);
-        int totalPages = document.getNumberOfPages();
-        List<Integer> newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            int totalPages = document.getNumberOfPages();
+            List<Integer> newPageOrder =
+                    GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
 
-        // Create a new list to hold the pages in the new order
-        List<PDPage> newPages = new ArrayList<>();
-        for (int pageIndex : newPageOrder) {
-            newPages.add(document.getPage(pageIndex));
-        }
+            // Create a new list to hold the pages in the new order
+            List<PDPage> newPages = new ArrayList<>();
+            for (int pageIndex : newPageOrder) {
+                newPages.add(document.getPage(pageIndex));
+            }
 
-        // Remove all the pages from the original document
-        for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
-            document.removePage(i);
-        }
+            // Remove all the pages from the original document
+            for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
+                document.removePage(i);
+            }
 
-        // Add the pages in the new order
-        for (PDPage page : newPages) {
-            document.addPage(page);
-        }
+            // Add the pages in the new order
+            for (PDPage page : newPages) {
+                document.addPage(page);
+            }
 
-        // Convert PDDocument to byte array
-        byte[] newPdfBytes;
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // Convert PDDocument to byte array
             document.save(baos);
-            newPdfBytes = baos.toByteArray();
-        } finally {
-            document.close();
+            return baos.toByteArray();
         }
-
-        return newPdfBytes;
     }
 }

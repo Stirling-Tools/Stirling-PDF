@@ -14,12 +14,10 @@ Usage:
 # Sample for Windows:
 # python .github/scripts/check_language_toml.py --reference-file frontend/public/locales/en-GB/translation.toml --branch "" --files frontend/public/locales/de-DE/translation.toml frontend/public/locales/fr-FR/translation.toml
 
-import copy
 import glob
 import os
 import argparse
 import re
-import json
 import tomllib  # Python 3.11+ (stdlib)
 import tomli_w  # For writing TOML files
 
@@ -38,7 +36,7 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     duplicates = []
 
     # Load TOML file
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         data = tomllib.load(file)
 
     def process_dict(obj, current_prefix=""):
@@ -67,7 +65,7 @@ def parse_toml_file(file_path):
     :param file_path: Path to the TOML file.
     :return: Dictionary with flattened keys.
     """
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         data = tomllib.load(file)
 
     def flatten_dict(d, parent_key="", sep="."):
@@ -193,13 +191,13 @@ def check_for_differences(reference_file, file_list, branch, actor):
         basename_current_file = os.path.basename(os.path.join(branch, file_normpath))
         locale_dir = os.path.basename(os.path.dirname(file_normpath))
 
-        if (
-            basename_current_file == basename_reference_file
-            and locale_dir == "en-GB"
-        ):
+        if basename_current_file == basename_reference_file and locale_dir == "en-GB":
             continue
 
-        if not file_normpath.endswith(".toml") or basename_current_file != "translation.toml":
+        if (
+            not file_normpath.endswith(".toml")
+            or basename_current_file != "translation.toml"
+        ):
             continue
 
         only_reference_file = False
@@ -288,7 +286,9 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Find missing keys in TOML translation files")
+    parser = argparse.ArgumentParser(
+        description="Find missing keys in TOML translation files"
+    )
     parser.add_argument(
         "--actor",
         required=False,

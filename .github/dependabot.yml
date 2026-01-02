@@ -6,18 +6,65 @@
 version: 2
 updates:
   - package-ecosystem: "gradle" # See documentation for possible values
-    directory: "/" # Location of package manifests
+    directories: 
+      - "/" # Location of package manifests
+      - "/app/common"
+      - "/app/core"
+      - "/app/proprietary"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
     rebase-strategy: "auto"
 
   - package-ecosystem: "docker"
     directory: "/" # Location of Dockerfile
     schedule:
       interval: "weekly"
+    rebase-strategy: "auto"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    rebase-strategy: "auto"
+
+  - package-ecosystem: npm
+    directory: /devTools
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: docker
+    directory: /docker/backend
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: docker
+    directory: /docker/embedded
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: docker
+    directory: /docker/frontend
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: cargo
+    directory: /frontend/src-tauri
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: pip
+    directory: /testing/cucumber
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "auto"

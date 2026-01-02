@@ -295,9 +295,9 @@ describe('Login', () => {
     await user.click(oauthButton);
 
     await waitFor(() => {
-      // Should use 'authentik' directly, NOT map to 'oidc'
+      // Should use full path directly, NOT map to 'oidc'
       expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'authentik',
+        provider: '/oauth2/authorization/authentik',
         options: { redirectTo: '/auth/callback' }
       });
     });
@@ -338,10 +338,10 @@ describe('Login', () => {
     await user.click(oauthButton);
 
     await waitFor(() => {
-      // Should use 'mycompany' directly - this is the critical fix
+      // Should use full path directly - this is the critical fix
       // Previously it would map unknown providers to 'oidc'
       expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'mycompany',
+        provider: '/oauth2/authorization/mycompany',
         options: { redirectTo: '/auth/callback' }
       });
     });
@@ -382,9 +382,9 @@ describe('Login', () => {
     await user.click(oauthButton);
 
     await waitFor(() => {
-      // Should use 'oidc' when explicitly configured
+      // Should use full path when explicitly configured
       expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'oidc',
+        provider: '/oauth2/authorization/oidc',
         options: { redirectTo: '/auth/callback' }
       });
     });
