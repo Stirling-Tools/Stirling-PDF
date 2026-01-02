@@ -107,6 +107,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   const [customViewRegistry, setCustomViewRegistry] = React.useState<Record<string, CustomWorkbenchViewRegistration>>({});
   const [customViewData, setCustomViewData] = React.useState<Record<string, any>>({});
+  // Track workbenches that are in the process of being registered (view registered but data not yet set)
+  const [pendingWorkbenches, setPendingWorkbenches] = React.useState<Set<WorkbenchType>>(new Set());
 
   // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
@@ -166,6 +168,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []);
 
   const registerCustomWorkbenchView = useCallback((view: CustomWorkbenchViewRegistration) => {
+    // Mark this workbench as pending (registration in progress)
+    setPendingWorkbenches(prev => new Set(prev).add(view.workbenchId));
     setCustomViewRegistry(prev => ({ ...prev, [view.id]: view }));
   }, []);
 
@@ -192,6 +196,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return updated;
     });
 
+    // Clear pending state for this workbench
+    if (removedView) {
+      setPendingWorkbenches(prev => {
+        const next = new Set(prev);
+        next.delete(removedView!.workbenchId);
+        return next;
+      });
+    }
+
     if (removedView && navigationState.workbench === removedView.workbenchId) {
       actions.setWorkbench(getDefaultWorkbench());
     }
@@ -199,6 +212,18 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
   const setCustomWorkbenchViewData = useCallback((id: string, data: any) => {
     setCustomViewData(prev => ({ ...prev, [id]: data }));
+    // Clear the pending state for this view's workbench (registration complete)
+    setCustomViewRegistry(currentRegistry => {
+      const view = currentRegistry[id];
+      if (view) {
+        setPendingWorkbenches(prev => {
+          const next = new Set(prev);
+          next.delete(view.workbenchId);
+          return next;
+        });
+      }
+      return currentRegistry; // Don't modify registry, just read it
+    });
   }, []);
 
   const clearCustomWorkbenchViewData = useCallback((id: string) => {
@@ -219,6 +244,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }));
   }, [customViewRegistry, customViewData]);
 
+  // Validate custom workbench views - reset to default if view is missing
+  // but NOT if registration is still in progress (tracked via pendingWorkbenches)
   useEffect(() => {
     if (isBaseWorkbench(navigationState.workbench)) {
       return;
@@ -228,11 +255,16 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return;
     }
 
+    // Don't reset if this workbench is still being registered
+    if (pendingWorkbenches.has(navigationState.workbench)) {
+      return;
+    }
+
     const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
     if (!currentCustomView || currentCustomView.data == null) {
       actions.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, customWorkbenchViews, navigationState.workbench, navigationState.pendingNavigation, navigationState.showNavigationWarning]);
+  }, [actions, customWorkbenchViews, navigationState.workbench, navigationState.pendingNavigation, navigationState.showNavigationWarning, pendingWorkbenches]);
 
   // Persisted via PreferencesContext; no direct localStorage writes needed here
 

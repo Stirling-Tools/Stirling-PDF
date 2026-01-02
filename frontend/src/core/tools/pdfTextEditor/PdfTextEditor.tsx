@@ -1702,7 +1702,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     viewLabel,
   ]);
 
-  // Cleanup ONLY on component unmount (not on re-renders)
+  // Cleanup backend cache on component unmount
   useEffect(() => {
     return () => {
       // Clear backend cache when leaving the tool
@@ -1713,9 +1713,6 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           console.warn('[PdfTextEditor] Failed to clear cache on unmount:', error);
         });
       }
-      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
-      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
-      setLeftPanelView('toolPicker');
     };
   }, []); // Empty deps = cleanup only on unmount
 
