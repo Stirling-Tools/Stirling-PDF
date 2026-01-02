@@ -68,6 +68,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -75,9 +79,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.ErrorResponse;
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -98,6 +104,7 @@ public class GetInfoOnPDFController {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final FileStorage fileStorage;
 
     /**
      * Initialize data binder for multipart file uploads. This method registers a custom editor for
@@ -230,7 +237,8 @@ public class GetInfoOnPDFController {
                 try (PDDocument parsedDocument = parser.parse()) {
                     if (!(parsedDocument instanceof PreflightDocument preflightDocument)) {
                         log.debug(
-                                "Parsed document is not a PreflightDocument; unable to validate claimed PDF/A {}",
+                                "Parsed document is not a PreflightDocument; unable to validate"
+                                        + " claimed PDF/A {}",
                                 version);
                         return false;
                     }
@@ -302,7 +310,8 @@ public class GetInfoOnPDFController {
                     } catch (XmpParsingException e) {
                         // XMP parsing failed, but we already checked raw metadata above
                         log.debug(
-                                "XMP parsing failed for standard check, but raw metadata was already checked: {}",
+                                "XMP parsing failed for standard check, but raw metadata was"
+                                        + " already checked: {}",
                                 e.getMessage());
                     }
                 }
@@ -492,7 +501,6 @@ public class GetInfoOnPDFController {
     }
 
     private static void validatePdfFile(MultipartFile file) {
-
         if (file.getSize() > MAX_FILE_SIZE) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.fileSizeLimit",
@@ -500,11 +508,20 @@ public class GetInfoOnPDFController {
                     file.getSize(),
                     MAX_FILE_SIZE);
         }
-
         String contentType = file.getContentType();
         if (contentType != null && !isAllowedContentType(contentType)) {
             log.warn("File content type is {}, expected application/pdf", contentType);
-            throw ExceptionUtils.createRequestValidationException();
+            throw ExceptionUtils.createPdfFileRequiredException();
+        }
+    }
+
+    private static void validatePdfFileSize(long fileSize) {
+        if (fileSize > MAX_FILE_SIZE) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileSizeLimit",
+                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
+                    fileSize,
+                    MAX_FILE_SIZE);
         }
     }
 
@@ -1221,21 +1238,49 @@ public class GetInfoOnPDFController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Invalid input provided",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ErrorResponse.class)))
+            })
     @JsonDataResponse
     @Operation(
             summary = "Get comprehensive PDF information",
             description =
-                    "Extracts all available information from a PDF file. Input:PDF Output:JSON Type:SISO")
+                    "Extracts all available information from a PDF file. Input:PDF Output:JSON"
+                            + " Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();
+        long fileSizeInBytes;
 
         // Validate input
         try {
-            validatePdfFile(inputFile);
+            if (inputFile == null) {
+                String fileId = request.getFileId();
+                if (fileId == null || fileId.isBlank()) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.pdfRequired", "PDF file is required");
+                }
+                fileSizeInBytes = fileStorage.getFileSize(fileId);
+                validatePdfFileSize(fileSizeInBytes);
+                inputFile = fileStorage.retrieveFile(fileId);
+                validatePdfFile(inputFile);
+            } else {
+                validatePdfFile(inputFile);
+                fileSizeInBytes = inputFile.getSize();
+            }
         } catch (IllegalArgumentException e) {
             log.error("Invalid PDF file: {}", e.getMessage());
             return createErrorResponse("Invalid PDF file: " + e.getMessage());
+        } catch (IOException e) {
+            log.error("Failed to resolve file: {}", e.getMessage(), e);
+            return createErrorResponse("Unable to resolve PDF file: " + e.getMessage());
         }
 
         boolean readonly = true;
@@ -1244,7 +1289,7 @@ public class GetInfoOnPDFController {
             ObjectNode jsonOutput = objectMapper.createObjectNode();
 
             ObjectNode metadata = extractMetadata(pdfBoxDoc);
-            ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, inputFile.getSize());
+            ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, fileSizeInBytes);
             ObjectNode docInfoNode = extractDocumentInfo(pdfBoxDoc);
             ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc);
             ObjectNode encryption = extractEncryptionInfo(pdfBoxDoc);
