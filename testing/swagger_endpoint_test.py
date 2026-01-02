@@ -94,42 +94,45 @@ DEFAULT_RETRIES = 1
 DEFAULT_CONCURRENCY = 100
 
 DEFAULT_SKIP_ENDPOINTS = {
-    ("get", "/api/v1/admin/job/stats"),
-    ("get", "/api/v1/audit/data"),
-    ("get", "/api/v1/audit/export/csv"),
-    ("get", "/api/v1/audit/export/json"),
-    ("get", "/api/v1/audit/stats"),
-    ("get", "/api/v1/audit/types"),
+    # Job Management start
     ("get", "/api/v1/general/files/{fileId}/metadata"),
     ("get", "/api/v1/general/files/{fileId}"),
     ("get", "/api/v1/general/job/{jobId}/result/files"),
     ("get", "/api/v1/general/job/{jobId}/result"),
     ("get", "/api/v1/general/job/{jobId}"),
-    ("get", "/api/v1/admin/job/queue/stats"),
-    ("post", "/api/v1/pipeline/handleData"),
-    ("post", "/api/v1/admin/job/cleanup"),
-    ("post", "/api/v1/misc/ocr-pdf"),
-    ("delete", "/api/v1/audit/cleanup/before"),
     ("delete", "/api/v1/general/job/{jobId}"),
+    # Job Management end
+    #
+    # ("get", "/api/v1/admin/job/stats"),
+    # ("get", "/api/v1/audit/data"),
+    # ("get", "/api/v1/audit/export/csv"),
+    # ("get", "/api/v1/audit/export/json"),
+    # ("get", "/api/v1/audit/stats"),
+    # ("get", "/api/v1/audit/types"),
+    # ("get", "/api/v1/admin/job/queue/stats"),
+    # ("post", "/api/v1/pipeline/handleData"),
+    # ("post", "/api/v1/admin/job/cleanup"),
+    # ("post", "/api/v1/misc/ocr-pdf"),
+    # ("delete", "/api/v1/audit/cleanup/before"),
     # Buggy endpoints
-    ("post", "/api/v1/convert/cbr/pdf"),  # Invalid CBR file
-    ("post", "/api/v1/convert/html/pdf"),
-    ("post", "/api/v1/convert/pdf/img"),
-    ("post", "/api/v1/convert/file/pdf"),  # unoconvert
-    ("post", "/api/v1/convert/eml/pdf"),
-    ("post", "/api/v1/convert/url/pdf"),  # URL input not handled properly
-    ("post", "/api/v1/security/auto-redact"),  # Fails due to PDF sample file issue
+    # ("post", "/api/v1/convert/cbr/pdf"),  # Invalid CBR file
+    # ("post", "/api/v1/convert/html/pdf"),
+    # ("post", "/api/v1/convert/pdf/img"),
+    # ("post", "/api/v1/convert/file/pdf"),  # unoconvert
+    # ("post", "/api/v1/convert/eml/pdf"),
+    # ("post", "/api/v1/convert/url/pdf"),  # URL input not handled properly
+    # ("post", "/api/v1/security/auto-redact"),  # Fails due to PDF sample file issue
     # check inputs
-    ("post", "/api/v1/security/cert-sign"),
-    ("post", "/api/v1/general/crop"),
-    ("post", "/api/v1/general/overlay-pdfs"),
+    # ("post", "/api/v1/security/cert-sign"),
+    # ("post", "/api/v1/general/crop"),
+    # ("post", "/api/v1/general/overlay-pdfs"),
     # temporary skips
-    ("get", "/api/v1/admin/settings/section/{sectionName}"),
-    ("get", "/api/v1/admin/settings/key/{key}"),
-    ("get", "/api/v1/admin/settings/delta"),
-    ("get", "/api/v1/admin/settings"),
+    # ("get", "/api/v1/admin/settings/section/{sectionName}"),
+    # ("get", "/api/v1/admin/settings/key/{key}"),
+    # ("get", "/api/v1/admin/settings/delta"),
+    # ("get", "/api/v1/admin/settings"),
     # Could not find the Qt platform plugin headless error
-    ("post", "/api/v1/convert/ebook/pdf"),
+    # ("post", "/api/v1/convert/ebook/pdf"),
 }
 
 
@@ -808,7 +811,7 @@ class SwaggerTester:
             f"Choosing sample file for field '{field_name}' (path hint: {path_hint})",
             file=sys.stderr,
         )
-        print(f"  Schema contentMediaType: {content_type}", file=sys.stderr)
+        # print(f"  Schema contentMediaType: {content_type}", file=sys.stderr)
         print(f"  Field name lower: {name_lower}", file=sys.stderr)
         print(f"  Path hint lower: {path_lower}", file=sys.stderr)
 
