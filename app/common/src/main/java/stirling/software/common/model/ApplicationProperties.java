@@ -214,97 +214,182 @@ public class ApplicationProperties {
         @Setter
         @ToString
         public static class SAML2 {
-            private String provider;
             private Boolean enabled = false;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
-
-            @ToString.Exclude
-            @JsonProperty("idpMetadataUri")
-            private String idpMetadataUri;
-
-            private String idpSingleLogoutUrl;
-            private String idpSingleLoginUrl;
-            @Deprecated(since = "2.2.1", forRemoval = true)
-            private String idpIssuer; // Legacy field name, use idpEntityId instead
-            private String idpEntityId; // IdP Entity ID (preferred field name)
             private Boolean enableSingleLogout = false;
 
-            /**
-             * Gets the IdP Entity ID, checking both idpEntityId (preferred) and idpIssuer (legacy).
-             */
-            @JsonIgnore
-            public String getIdpEntityIdOrIssuer() {
-                if (idpEntityId != null && !idpEntityId.isBlank()) {
-                    return idpEntityId;
-                }
-                return idpIssuer;
-            }
+            @ToString.Exclude private String metadataUri;
 
-            @JsonProperty("idpCert")
+            private Provider provider = new Provider();
+            private SP sp = new SP();
+
+            // Legacy field mappings for backward compatibility
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
+            private String idpMetadataUri;
+
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
+            private String idpSingleLogoutUrl;
+
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
+            private String idpSingleLoginUrl;
+
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
+            private String idpIssuer;
+
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
+            private String idpEntityId;
+
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
             private String idpCert;
 
-            @ToString.Exclude
-            @JsonProperty("privateKey")
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
             private String privateKey;
 
-            @ToString.Exclude
-            @JsonProperty("spCert")
+            @Deprecated(since = "2.1.5", forRemoval = true)
+            @JsonIgnore
             private String spCert;
 
-            @JsonIgnore
-            public InputStream getIdpMetadataUri() throws IOException {
-                if (idpMetadataUri == null || idpMetadataUri.isBlank()) {
-                    throw new IOException("security.saml2.idpMetadataUri is not configured");
+            /** Migrate legacy flat properties to new nested structure on set. */
+            public void setIdpMetadataUri(String value) {
+                this.idpMetadataUri = value;
+                if (value != null
+                        && !value.isBlank()
+                        && (metadataUri == null || metadataUri.isBlank())) {
+                    this.metadataUri = value;
                 }
-                if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
+            }
+
+            public void setIdpSingleLoginUrl(String value) {
+                this.idpSingleLoginUrl = value;
+                if (value != null && !value.isBlank()) {
+                    this.provider.setSingleLoginUrl(value);
+                }
+            }
+
+            public void setIdpSingleLogoutUrl(String value) {
+                this.idpSingleLogoutUrl = value;
+                if (value != null && !value.isBlank()) {
+                    this.provider.setSingleLogoutUrl(value);
+                }
+            }
+
+            public void setIdpIssuer(String value) {
+                this.idpIssuer = value;
+                if (value != null && !value.isBlank()) {
+                    this.provider.setEntityId(value);
+                }
+            }
+
+            public void setIdpEntityId(String value) {
+                this.idpEntityId = value;
+                if (value != null && !value.isBlank()) {
+                    this.provider.setEntityId(value);
+                }
+            }
+
+            public void setIdpCert(String value) {
+                this.idpCert = value;
+                if (value != null && !value.isBlank()) {
+                    this.provider.setCert(value);
+                }
+            }
+
+            public void setPrivateKey(String value) {
+                this.privateKey = value;
+                if (value != null && !value.isBlank()) {
+                    this.sp.setPrivateKey(value);
+                }
+            }
+
+            public void setSpCert(String value) {
+                this.spCert = value;
+                if (value != null && !value.isBlank()) {
+                    this.sp.setCert(value);
+                }
+            }
+
+            @JsonIgnore
+            public InputStream getMetadataUriAsStream() throws IOException {
+                String uri = getEffectiveMetadataUri();
+                if (uri == null || uri.isBlank()) {
+                    throw new IOException("security.saml2.metadataUri is not configured");
+                }
+                if (uri.startsWith("classpath:")) {
+                    return new ClassPathResource(uri.substring("classpath:".length()))
                             .getInputStream();
                 }
                 try {
-                    URI uri = new URI(idpMetadataUri);
-                    URL url = uri.toURL();
+                    URI parsedUri = new URI(uri);
+                    URL url = parsedUri.toURL();
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod("GET");
                     return connection.getInputStream();
                 } catch (URISyntaxException e) {
-                    throw new IOException("Invalid URI format: " + idpMetadataUri, e);
+                    throw new IOException("Invalid URI format: " + uri, e);
                 }
             }
 
             @JsonIgnore
-            public String getIdpMetadataUriLocation() {
-                return idpMetadataUri;
+            public String getEffectiveMetadataUri() {
+                if (metadataUri != null && !metadataUri.isBlank()) {
+                    return metadataUri;
+                }
+                return idpMetadataUri; // Legacy fallback
             }
 
-            @JsonIgnore
-            public Resource getSpCert() {
-                if (spCert == null) return null;
-                if (spCert.startsWith("classpath:")) {
-                    return new ClassPathResource(spCert.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(spCert);
+            /** IdP configuration - manual fallback when metadata is unavailable. */
+            @Data
+            public static class Provider {
+                private String name = ""; // Display name only
+                private String singleLoginUrl;
+                private String singleLogoutUrl;
+                private String entityId;
+                @ToString.Exclude private String cert;
+
+                @JsonIgnore
+                public Resource getCertResource() {
+                    if (cert == null) return null;
+                    if (cert.startsWith("classpath:")) {
+                        return new ClassPathResource(cert.substring("classpath:".length()));
+                    } else {
+                        return new FileSystemResource(cert);
+                    }
                 }
             }
 
-            @JsonIgnore
-            public Resource getIdpCert() {
-                if (idpCert == null) return null;
-                if (idpCert.startsWith("classpath:")) {
-                    return new ClassPathResource(idpCert.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(idpCert);
-                }
-            }
+            /** Service Provider (SP) credentials for signing SAML requests. */
+            @Data
+            public static class SP {
+                @ToString.Exclude private String privateKey;
+                @ToString.Exclude private String cert;
 
-            @JsonIgnore
-            public Resource getPrivateKey() {
-                if (privateKey == null) return null;
-                if (privateKey.startsWith("classpath:")) {
-                    return new ClassPathResource(privateKey.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(privateKey);
+                @JsonIgnore
+                public Resource getPrivateKeyResource() {
+                    if (privateKey == null) return null;
+                    if (privateKey.startsWith("classpath:")) {
+                        return new ClassPathResource(privateKey.substring("classpath:".length()));
+                    } else {
+                        return new FileSystemResource(privateKey);
+                    }
+                }
+
+                @JsonIgnore
+                public Resource getCertResource() {
+                    if (cert == null) return null;
+                    if (cert.startsWith("classpath:")) {
+                        return new ClassPathResource(cert.substring("classpath:".length()));
+                    } else {
+                        return new FileSystemResource(cert);
+                    }
                 }
             }
         }

@@ -47,22 +47,23 @@ security:
     provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
-    provider: "" # The name of your Provider
+    enableSingleLogout: false # set to 'true' to enable Single Logout (SP-initiated SLO). Logs the user out from the IdP
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     registrationId: stirling # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
-    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # The uri for your Provider's metadata
-    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your IdP
-    enableSingleLogout: true # set to 'true' to enable Single Logout (SP-initiated SLO). Logs the user out from the IdP
-    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your IdP
-    idpIssuer: "" # The entity ID of your IdP (Deprecated. Use idpEntityId instead)
-    idpEntityId: '' # The entity ID of your IdP
-    idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your IdP
-    privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
-    spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
+    metadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # RECOMMENDED: Your IdP's metadata URI. When provided, IdP config is auto-discovered.
+    provider: # IdP manual configuration - use if metadataUri is not available
+      name: "" # Display name for your IdP (optional)
+      singleLoginUrl: "" # SSO URL
+      singleLogoutUrl: "" # SLO URL
+      entityId: '' # IdP Entity ID
+      cert: classpath:okta.cert # IdP signing certificate
+    sp: # Service Provider (your app) credentials for signing SAML requests. Generated from your keypair
+      privateKey: classpath:saml-private-key.key # Your private key.
+      cert: classpath:saml-public-cert.crt # Your signing certificate.
     # IMPORTANT: For SAML setup, download your SP metadata from the BACKEND URL: http://localhost:8080/saml2/service-provider-metadata/{registrationId}
     # Do NOT use the frontend dev server URL (localhost:5173) as it will generate incorrect ACS URLs. Always use the backend URL (localhost:8080) for SAML configuration.
-  jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
+  jwt:
     persistence: true # Set to 'true' to enable JWT key store
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
