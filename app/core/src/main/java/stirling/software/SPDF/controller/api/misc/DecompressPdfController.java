@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,10 +13,14 @@ import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +29,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -34,17 +40,41 @@ import stirling.software.common.util.WebResponseUtils;
 public class DecompressPdfController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final FileStorage fileStorage;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     @AutoJobPostMapping(value = "/decompress-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Decompress PDF streams",
             description = "Fully decompresses all PDF streams including text content")
-    public ResponseEntity<byte[]> decompressPdf(@ModelAttribute PDFFile request)
+    public ResponseEntity<byte[]> decompressPdf(@Valid @ModelAttribute PDFFile request)
             throws IOException {
+        MultipartFile inputFile;
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
 
-        MultipartFile file = request.getFileInput();
-
-        try (PDDocument document = pdfDocumentFactory.load(file)) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             // Process all objects in document
             processAllObjects(document);
 
@@ -55,7 +85,8 @@ public class DecompressPdfController {
             // Return the PDF as a response
             return WebResponseUtils.bytesToWebResponse(
                     baos.toByteArray(),
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_decompressed.pdf"));
         }
     }
 

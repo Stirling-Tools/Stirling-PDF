@@ -1,19 +1,25 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +29,8 @@ import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
@@ -37,6 +45,26 @@ public class ConvertPDFToOffice {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
+    private final FileStorage fileStorage;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinderForPDFFile(WebDataBinder binder, WebRequest webRequest) {
+        if (binder.getTarget() instanceof PDFFile) {
+            binder.registerCustomEditor(
+                    MultipartFile.class,
+                    new PropertyEditorSupport() {
+                        @Override
+                        public void setAsText(String text) throws IllegalArgumentException {
+                            setValue(null);
+                        }
+                    });
+        }
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
     @Operation(
@@ -99,8 +127,16 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
-        MultipartFile inputFile = file.getFileInput();
+    public ResponseEntity<byte[]> processPdfToXML(@Valid @ModelAttribute PDFFile request)
+            throws Exception {
+        MultipartFile inputFile;
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
 
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");

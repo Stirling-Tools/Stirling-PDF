@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
+import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.util.*;
 
@@ -12,9 +13,13 @@ import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,20 +28,49 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.AnalysisApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
+import stirling.software.common.util.ExceptionUtils;
 
 @AnalysisApi
 @RequiredArgsConstructor
 public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final FileStorage fileStorage;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     @AutoJobPostMapping(value = "/page-count", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF page count",
             description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Integer> getPageCount(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+    public Map<String, Integer> getPageCount(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
+        MultipartFile inputFile;
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             return Map.of("pageCount", document.getNumberOfPages());
         }
     }
@@ -46,12 +80,24 @@ public class AnalysisController {
     @Operation(
             summary = "Get basic PDF information",
             description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getBasicInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+    public Map<String, Object> getBasicInfo(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
+        MultipartFile inputFile;
+        long fileSizeInBytes;
+
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+        fileSizeInBytes = request.resolveFileSize(fileStorage);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             Map<String, Object> info = new HashMap<>();
             info.put("pageCount", document.getNumberOfPages());
             info.put("pdfVersion", document.getVersion());
-            info.put("fileSize", file.getFileInput().getSize());
+            info.put("fileSize", fileSizeInBytes);
             return info;
         }
     }
@@ -63,11 +109,20 @@ public class AnalysisController {
     @Operation(
             summary = "Get PDF document properties",
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
-    public Map<String, String> getDocumentProperties(@ModelAttribute PDFFile file)
+    public Map<String, String> getDocumentProperties(@Valid @ModelAttribute PDFFile request)
             throws IOException {
+        MultipartFile inputFile;
+
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
         // Load the document in read-only mode to prevent modifications and ensure the integrity of
         // the original file.
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput(), true)) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile, true)) {
             PDDocumentInformation info = document.getDocumentInformation();
             Map<String, String> properties = new HashMap<>();
             properties.put("title", info.getTitle());
@@ -87,9 +142,18 @@ public class AnalysisController {
     @Operation(
             summary = "Get page dimensions for all pages",
             description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
-    public List<Map<String, Float>> getPageDimensions(@ModelAttribute PDFFile file)
+    public List<Map<String, Float>> getPageDimensions(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+        MultipartFile inputFile;
+
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             List<Map<String, Float>> dimensions = new ArrayList<>();
             PDPageTree pages = document.getPages();
 
@@ -109,8 +173,18 @@ public class AnalysisController {
             summary = "Get form field information",
             description =
                     "Returns count and details of form fields. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getFormFields(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+    public Map<String, Object> getFormFields(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
+        MultipartFile inputFile;
+
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             Map<String, Object> formInfo = new HashMap<>();
             PDAcroForm form = document.getDocumentCatalog().getAcroForm();
 
@@ -132,8 +206,18 @@ public class AnalysisController {
     @Operation(
             summary = "Get annotation information",
             description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getAnnotationInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+    public Map<String, Object> getAnnotationInfo(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
+        MultipartFile inputFile;
+
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             Map<String, Object> annotInfo = new HashMap<>();
             int totalAnnotations = 0;
             Map<String, Integer> annotationTypes = new HashMap<>();
@@ -158,8 +242,18 @@ public class AnalysisController {
             summary = "Get font information",
             description =
                     "Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getFontInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+    public Map<String, Object> getFontInfo(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
+        MultipartFile inputFile;
+
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             Map<String, Object> fontInfo = new HashMap<>();
             Set<String> fontNames = new HashSet<>();
 
@@ -181,8 +275,18 @@ public class AnalysisController {
             summary = "Get security information",
             description =
                     "Returns encryption and permission details. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getSecurityInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+    public Map<String, Object> getSecurityInfo(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
+        MultipartFile inputFile;
+
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             Map<String, Object> securityInfo = new HashMap<>();
             PDEncryption encryption = document.getEncryption();
 

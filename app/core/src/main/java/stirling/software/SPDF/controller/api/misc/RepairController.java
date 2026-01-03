@@ -1,15 +1,20 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +25,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -36,6 +42,24 @@ public class RepairController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
+    private final FileStorage fileStorage;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
@@ -53,9 +77,16 @@ public class RepairController {
                     "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is"
                             + " first saved to a temporary location, repaired, read back, and then"
                             + " returned as a response. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile file)
+    public ResponseEntity<byte[]> repairPdf(@Valid @ModelAttribute PDFFile request)
             throws IOException, InterruptedException {
-        MultipartFile inputFile = file.getFileInput();
+        MultipartFile inputFile;
+        // Validate input
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
 
         // Use TempFile with try-with-resources for automatic cleanup
         try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");

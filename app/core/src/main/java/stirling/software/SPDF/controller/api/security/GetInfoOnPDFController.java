@@ -8,7 +8,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,7 +21,14 @@ import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
-import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.PDJavascriptNameTreeNode;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
@@ -68,10 +80,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -79,7 +87,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.swagger.ErrorResponse;
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -497,41 +504,6 @@ public class GetInfoOnPDFController {
             return zonedDateTime.format(formatter);
         } else {
             return null;
-        }
-    }
-
-    private static void validatePdfFile(MultipartFile file) {
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileSizeLimit",
-                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
-                    file.getSize(),
-                    MAX_FILE_SIZE);
-        }
-        String contentType = file.getContentType();
-        if (contentType != null && !isAllowedContentType(contentType)) {
-            log.warn("File content type is {}, expected application/pdf", contentType);
-            throw ExceptionUtils.createPdfFileRequiredException();
-        }
-    }
-
-    private static void validatePdfFileSize(long fileSize) {
-        if (fileSize > MAX_FILE_SIZE) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileSizeLimit",
-                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
-                    fileSize,
-                    MAX_FILE_SIZE);
-        }
-    }
-
-    private static boolean isAllowedContentType(String contentType) {
-        try {
-            MediaType mediaType = MediaType.parseMediaType(contentType);
-            return mediaType.isCompatibleWith(MediaType.APPLICATION_PDF);
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid content type provided: {}", contentType);
-            return false;
         }
     }
 
@@ -1238,16 +1210,6 @@ public class GetInfoOnPDFController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "400",
-                        description = "Invalid input provided",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        schema = @Schema(implementation = ErrorResponse.class)))
-            })
     @JsonDataResponse
     @Operation(
             summary = "Get comprehensive PDF information",
@@ -1256,36 +1218,19 @@ public class GetInfoOnPDFController {
                             + " Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile = request.getFileInput();
+        MultipartFile inputFile;
         long fileSizeInBytes;
 
         // Validate input
-        try {
-            if (inputFile == null) {
-                String fileId = request.getFileId();
-                if (fileId == null || fileId.isBlank()) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.pdfRequired", "PDF file is required");
-                }
-                fileSizeInBytes = fileStorage.getFileSize(fileId);
-                validatePdfFileSize(fileSizeInBytes);
-                inputFile = fileStorage.retrieveFile(fileId);
-                validatePdfFile(inputFile);
-            } else {
-                validatePdfFile(inputFile);
-                fileSizeInBytes = inputFile.getSize();
-            }
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid PDF file: {}", e.getMessage());
-            return createErrorResponse("Invalid PDF file: " + e.getMessage());
-        } catch (IOException e) {
-            log.error("Failed to resolve file: {}", e.getMessage(), e);
-            return createErrorResponse("Unable to resolve PDF file: " + e.getMessage());
+        inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
         }
+        request.validatePdfFile(inputFile);
+        fileSizeInBytes = request.resolveFileSize(fileStorage);
 
-        boolean readonly = true;
-
-        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly)) {
+        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, true)) {
             ObjectNode jsonOutput = objectMapper.createObjectNode();
 
             ObjectNode metadata = extractMetadata(pdfBoxDoc);
