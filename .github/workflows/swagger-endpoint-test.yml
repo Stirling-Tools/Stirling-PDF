@@ -62,7 +62,7 @@ jobs:
       - name: Build Stirling PDF application
         run: ./gradlew :stirling-pdf:bootJar
         env:
-          DISABLE_ADDITIONAL_FEATURES: true
+          DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Locate and upload JAR
