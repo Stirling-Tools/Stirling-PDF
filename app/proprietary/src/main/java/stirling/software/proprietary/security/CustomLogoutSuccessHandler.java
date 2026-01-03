@@ -1,18 +1,16 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -33,7 +31,6 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
-import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
@@ -41,7 +38,6 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";
-    public static final String KEYCLOAK_LOGOUT_PATH = "/protocol/openid-connect/logout";
     private static final Map<String, String> endSessionEndpointCache = new ConcurrentHashMap<>();
 
     private final ApplicationProperties.Security securityProperties;
@@ -69,12 +65,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             throws IOException {
 
         if (!response.isCommitted()) {
-            if (handleSamlLogout(request, response, authentication)) {
-                return;
-            }
-
             if (authentication != null) {
-                // Check for JWT-based authentication and extract authType claim
+                // Extract authType claim and determine logout strategy
                 String authType;
                 if (authentication instanceof JwtAuthenticationToken jwtAuthToken) {
                     authType =
@@ -86,8 +78,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     log.debug("{} logout detected", authType);
 
                     switch (authType) {
-                        case "OAUTH2" -> getAuthRedirect(request, response, jwtAuthToken);
-                        case "SAML2" -> {}
+                        case "OAUTH2" -> handleOidcLogout(request, response, jwtAuthToken);
+                        case "SAML2" -> handleSamlLogout(request, response, jwtAuthToken);
                         default ->
                                 getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                     }
@@ -100,13 +92,11 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         }
     }
 
-    /**
-     * Handles SAML logout - either via IdP Single Logout (SLO) or local logout.
-     *
-     * @return true if this was a SAML user and logout was handled, false otherwise
-     */
-    private boolean handleSamlLogout(
-            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+    /** Handles SAML logout - either via IdP Single Logout (SLO) or local logout. */
+    private void handleSamlLogout(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            JwtAuthenticationToken jwtAuthenticationToken)
             throws IOException {
         // Logout locally if this is a SAMLResponse from to /logout instead of /logout/saml2/slo
         String samlResponse = request.getParameter("SAMLResponse");
@@ -115,35 +105,17 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 log.info(
                         "Received SAML LogoutResponse at /logout endpoint, completing logout locally");
                 getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                return true;
             }
         }
-
         if (securityProperties.getSaml2().getEnableSingleLogout()) {
             log.info("SP-initiated SLO detected, logging out via IdP");
 
-            if (authentication instanceof Saml2Authentication samlAuthentication) {
-                if (samlLogoutHandler != null) {
-                    try {
-                        samlLogoutHandler.onLogoutSuccess(request, response, samlAuthentication);
-                    } catch (Exception e) {
-                        log.error("SP-initiated SLO failed, falling back to local logout", e);
-                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                    }
-                } else {
-                    log.warn(
-                            "SAML SLO enabled but handler not configured, performing local logout only");
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                }
+            // Reconstruct Saml2Authentication from JWT claims for SLO
+            Optional<Saml2Authentication> reconstructedAuth =
+                    reconstructSaml2AuthenticationFromJwt(jwtAuthenticationToken);
 
-                return true;
-            } else {
-                // Reconstruct Saml2Authentication from JWT claims for SLO
-                Optional<Saml2Authentication> reconstructedAuth =
-                        reconstructSaml2AuthenticationFromJwt(request);
-
-                if (reconstructedAuth.isPresent()) {
-                    Saml2Authentication samlAuth = reconstructedAuth.get();
+            if (reconstructedAuth.isPresent()) {
+                Saml2Authentication samlAuth = reconstructedAuth.get();
 
                     if (samlLogoutHandler != null) {
                         try {
@@ -157,35 +129,24 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                                 "SAML SLO enabled but handler not configured, performing local logout only");
                         getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                     }
-
-                    return true;
                 }
             }
         }
-
-        return false;
     }
 
     /**
      * Reconstructs a Saml2Authentication from JWT claims for SAML Single Logout. This allows SLO to
      * work even with stateless JWT sessions by extracting the SAML attributes that were stored in
      * the JWT during initial authentication.
+     *
+     * @param jwtAuthenticationToken The JWT authentication token containing SAML claims
+     * @return Optional containing reconstructed Saml2Authentication, or empty if reconstruction
+     *     fails
      */
-    @SuppressWarnings("unchecked")
     private Optional<Saml2Authentication> reconstructSaml2AuthenticationFromJwt(
-            HttpServletRequest request) {
+            JwtAuthenticationToken jwtAuthenticationToken) {
         try {
-            String token = jwtService.extractToken(request);
-            if (token == null || token.isBlank()) {
-                return Optional.empty();
-            }
-
-            Map<String, Object> claims = jwtService.extractClaims(token);
-            Object authType = claims.get("authType");
-
-            if (authType == null || !"SAML2".equalsIgnoreCase(authType.toString())) {
-                return Optional.empty();
-            }
+            Map<String, Object> claims = jwtAuthenticationToken.getToken().getClaims();
 
             // Extract SAML claims from JWT
             String username = (String) claims.get("sub");
@@ -238,7 +199,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     // Redirect for JWT-based OAuth2 authentication logout
-    private void getAuthRedirect(
+    private void handleOidcLogout(
             HttpServletRequest request,
             HttpServletResponse response,
             JwtAuthenticationToken jwtAuthenticationToken)
@@ -251,36 +212,36 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         String issuer = null;
         String clientId = null;
 
-        if (oauth.getClient() != null && oauth.getClient().getKeycloak() != null) {
-            KeycloakProvider keycloak = oauth.getClient().getKeycloak();
-            if (keycloak.getIssuer() != null && !keycloak.getIssuer().isBlank()) {
-                issuer = keycloak.getIssuer();
-                clientId = keycloak.getClientId();
-            } else if (oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
-                issuer = oauth.getIssuer();
-                clientId = oauth.getClientId();
+        var jwtIssuer = jwtAuthenticationToken.getToken().getIssuer();
+        if (jwtIssuer != null) {
+            issuer = jwtIssuer.toString();
+            log.debug("Using issuer from validated JWT token: {}", issuer);
+        }
+
+        // Fallback: Use configured issuer if JWT doesn't contain one
+        if (issuer == null) {
+            if (oauth.getClient() != null && oauth.getClient().getKeycloak() != null) {
+                KeycloakProvider keycloak = oauth.getClient().getKeycloak();
+                if (keycloak.getIssuer() != null && !keycloak.getIssuer().isBlank()) {
+                    issuer = keycloak.getIssuer();
+                }
             }
-        } else if (oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
-            issuer = oauth.getIssuer();
+            if (issuer == null && oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
+                issuer = oauth.getIssuer();
+            }
+            if (issuer != null) {
+                log.debug("Using issuer from configuration: {}", issuer);
+            }
+        }
+
+        if (oauth.getClient() != null && oauth.getClient().getKeycloak() != null) {
+            clientId = oauth.getClient().getKeycloak().getClientId();
+        }
+        if (clientId == null && oauth.getClientId() != null) {
             clientId = oauth.getClientId();
         }
 
-        // Fallback: extract issuer from JWT token if not found in configuration
-        if (issuer == null) {
-            var jwtIssuer = jwtAuthenticationToken.getToken().getIssuer();
-            if (jwtIssuer != null) {
-                issuer = jwtIssuer.toString();
-                log.debug("Using issuer from JWT token: {}", issuer);
-            }
-        }
-
         String endSessionEndpoint = getEndSessionEndpoint(oauth, issuer);
-
-        // If no endpoint found, try Keycloak fallback
-        if (endSessionEndpoint == null && issuer != null) {
-            endSessionEndpoint = issuer + "/protocol/openid-connect/logout";
-            log.debug("Using Keycloak fallback logout path: {}", endSessionEndpoint);
-        }
 
         if (endSessionEndpoint != null) {
             StringBuilder logoutUrlBuilder = new StringBuilder(endSessionEndpoint);
@@ -320,94 +281,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             } else {
                 response.sendRedirect(redirectUrl);
             }
-        }
-    }
-
-    /**
-     * Handles OIDC logout with hybrid endpoint discovery Tries: 1. Configured endpoint 2.
-     * Discovered endpoint 3. Keycloak fallback (if isKeycloak=true) 4. Local logout
-     */
-    private void handleOidcLogout(
-            HttpServletResponse response,
-            OAuth2AuthenticationToken oAuthToken,
-            OAUTH2 oauth,
-            String redirectUrl)
-            throws IOException {
-
-        String issuer = null;
-        String clientId = null;
-
-        boolean isKeycloak =
-                "keycloak".equalsIgnoreCase(oAuthToken.getAuthorizedClientRegistrationId());
-        if (isKeycloak) {
-            KeycloakProvider keycloak = oauth.getClient().getKeycloak();
-
-            if (keycloak.getIssuer() != null && !keycloak.getIssuer().isBlank()) {
-                issuer = keycloak.getIssuer();
-                clientId = keycloak.getClientId();
-            } else if (oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
-                issuer = oauth.getIssuer();
-                clientId = oauth.getClientId();
-            }
-        } else if (oauth.getIssuer() != null && !oauth.getIssuer().isBlank()) {
-            issuer = oauth.getIssuer();
-            clientId = oauth.getClientId();
-        }
-
-        String endSessionEndpoint = getEndSessionEndpoint(oauth, issuer);
-
-        // If no endpoint found and this is Keycloak, try the hardcoded path
-        if (endSessionEndpoint == null && isKeycloak && issuer != null) {
-            endSessionEndpoint = issuer + "/protocol/openid-connect/logout";
-            log.debug("Using Keycloak fallback logout path: {}", endSessionEndpoint);
-        }
-
-        if (endSessionEndpoint != null) {
-            StringBuilder logoutUrlBuilder = new StringBuilder(endSessionEndpoint);
-
-            // Extract id_token_hint if available
-            Object principal = oAuthToken.getPrincipal();
-
-            if (principal instanceof OidcUser oidcUser) {
-                String idToken = oidcUser.getIdToken().getTokenValue();
-                logoutUrlBuilder
-                        .append(
-                                endSessionEndpoint.contains("?")
-                                        ? "&"
-                                        : "?") // Handle existing params
-                        .append("id_token_hint=")
-                        .append(idToken)
-                        .append("&post_logout_redirect_uri=")
-                        .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
-
-                // client_id is optional when id_token_hint is present, but included for
-                // compatibility
-                if (clientId != null && !clientId.isBlank()) {
-                    logoutUrlBuilder.append("&client_id=").append(clientId);
-                }
-
-                log.info("Session-aware OIDC logout: {}", endSessionEndpoint);
-            } else {
-                logoutUrlBuilder.append(endSessionEndpoint.contains("?") ? "&" : "?");
-                if (clientId != null && !clientId.isBlank()) {
-                    logoutUrlBuilder.append("client_id=").append(clientId).append("&");
-                }
-                logoutUrlBuilder
-                        .append("post_logout_redirect_uri=")
-                        .append(URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8));
-            }
-
-            String logoutUrl = logoutUrlBuilder.toString();
-            log.debug("OIDC logout URL: {}", logoutUrl);
-
-            response.sendRedirect(logoutUrl);
-        } else {
-            // No OIDC logout endpoint available - fallback to local logout
-            log.info(
-                    "No OIDC logout endpoint available for issuer: {}. Using local logout: {}",
-                    issuer,
-                    redirectUrl);
-            response.sendRedirect(redirectUrl);
         }
     }
 

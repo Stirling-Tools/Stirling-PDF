@@ -102,12 +102,6 @@ export default defineConfig(({ mode }) => {
           secure: false,
           xfwd: true,
         },
-        '/logout': {
-          target: 'http://localhost:8080',
-          changeOrigin: true,
-          secure: false,
-          xfwd: true,
-        },
       },
     },
     base: process.env.RUN_SUBPATH ? `/${process.env.RUN_SUBPATH}` : './',

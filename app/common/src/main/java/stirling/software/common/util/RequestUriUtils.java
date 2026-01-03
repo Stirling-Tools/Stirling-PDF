@@ -166,7 +166,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/auth/login")
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
                 || trimmedUri.startsWith(
-                        "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers + enableLogin)
+                        "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
+                // enableLogin)
                 || trimmedUri.startsWith(
                         "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")

@@ -1,45 +1,26 @@
 package stirling.software.proprietary.security;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClient.RequestHeadersUriSpec;
-import org.springframework.web.client.RestClient.ResponseSpec;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.oauth2.KeycloakProvider;
-import stirling.software.proprietary.security.saml2.CertificateUtils;
-import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,7 +49,7 @@ class CustomLogoutSuccessHandlerTest {
         when(securityProperties.getSaml2()).thenReturn(saml2);
         when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");
-        when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
+        when(response.encodeRedirectURL(anyString())).thenReturn(logoutPath);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
 
@@ -85,7 +66,7 @@ class CustomLogoutSuccessHandlerTest {
         when(securityProperties.getSaml2()).thenReturn(saml2);
         when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");
-        when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
+        when(response.encodeRedirectURL(anyString())).thenReturn(logoutPath);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
 
@@ -1006,6 +987,7 @@ class CustomLogoutSuccessHandlerTest {
         // Test that API requests (Accept: application/json) get JSON response with logout URL
         String issuerUrl = "https://keycloak.example.com/realms/test";
         String clientId = "stirling-pdf";
+        String endSessionEndpoint = issuerUrl + "/protocol/openid-connect/logout";
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -1020,7 +1002,6 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
         ApplicationProperties.Security.OAUTH2.Client client =
                 mock(ApplicationProperties.Security.OAUTH2.Client.class);
-        KeycloakProvider keycloakProvider = mock(KeycloakProvider.class);
 
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
@@ -1038,13 +1019,12 @@ class CustomLogoutSuccessHandlerTest {
 
         when(jwtAuth.getToken()).thenReturn(jwt);
         when(jwt.getClaims()).thenReturn(Map.of("authType", "OAUTH2"));
+        when(jwt.getIssuer()).thenReturn(new java.net.URL(issuerUrl));
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
-        when(client.getEndSessionEndpoint()).thenReturn(null);
-        when(client.getKeycloak()).thenReturn(keycloakProvider);
-        when(keycloakProvider.getIssuer()).thenReturn(issuerUrl);
-        when(keycloakProvider.getClientId()).thenReturn(clientId);
+        when(client.getEndSessionEndpoint()).thenReturn(endSessionEndpoint); // Configured endpoint
+        when(oauth.getClientId()).thenReturn(clientId);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
 
@@ -1064,6 +1044,7 @@ class CustomLogoutSuccessHandlerTest {
         // Test that XHR requests (X-Requested-With: XMLHttpRequest) get JSON response
         String issuerUrl = "https://keycloak.example.com/realms/test";
         String clientId = "stirling-pdf";
+        String endSessionEndpoint = issuerUrl + "/protocol/openid-connect/logout";
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -1078,7 +1059,6 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
         ApplicationProperties.Security.OAUTH2.Client client =
                 mock(ApplicationProperties.Security.OAUTH2.Client.class);
-        KeycloakProvider keycloakProvider = mock(KeycloakProvider.class);
 
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
@@ -1096,13 +1076,12 @@ class CustomLogoutSuccessHandlerTest {
 
         when(jwtAuth.getToken()).thenReturn(jwt);
         when(jwt.getClaims()).thenReturn(Map.of("authType", "OAUTH2"));
+        when(jwt.getIssuer()).thenReturn(new java.net.URL(issuerUrl));
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
-        when(client.getEndSessionEndpoint()).thenReturn(null);
-        when(client.getKeycloak()).thenReturn(keycloakProvider);
-        when(keycloakProvider.getIssuer()).thenReturn(issuerUrl);
-        when(keycloakProvider.getClientId()).thenReturn(clientId);
+        when(client.getEndSessionEndpoint()).thenReturn(endSessionEndpoint); // Configured endpoint
+        when(oauth.getClientId()).thenReturn(clientId);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
 
@@ -1116,6 +1095,7 @@ class CustomLogoutSuccessHandlerTest {
         // Test that browser requests (no Accept: application/json) get redirected
         String issuerUrl = "https://keycloak.example.com/realms/test";
         String clientId = "stirling-pdf";
+        String endSessionEndpoint = issuerUrl + "/protocol/openid-connect/logout";
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -1130,7 +1110,6 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
         ApplicationProperties.Security.OAUTH2.Client client =
                 mock(ApplicationProperties.Security.OAUTH2.Client.class);
-        KeycloakProvider keycloakProvider = mock(KeycloakProvider.class);
 
         when(response.isCommitted()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
@@ -1144,18 +1123,17 @@ class CustomLogoutSuccessHandlerTest {
 
         when(jwtAuth.getToken()).thenReturn(jwt);
         when(jwt.getClaims()).thenReturn(Map.of("authType", "OAUTH2"));
+        when(jwt.getIssuer()).thenReturn(new java.net.URL(issuerUrl));
 
         when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oauth.getClient()).thenReturn(client);
-        when(client.getEndSessionEndpoint()).thenReturn(null);
-        when(client.getKeycloak()).thenReturn(keycloakProvider);
-        when(keycloakProvider.getIssuer()).thenReturn(issuerUrl);
-        when(keycloakProvider.getClientId()).thenReturn(clientId);
+        when(client.getEndSessionEndpoint()).thenReturn(endSessionEndpoint); // Configured endpoint
+        when(oauth.getClientId()).thenReturn(clientId);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
 
         // Verify redirect (not JSON)
-        verify(response).sendRedirect(contains(issuerUrl + "/protocol/openid-connect/logout"));
+        verify(response).sendRedirect(contains(endSessionEndpoint));
         verify(response).sendRedirect(contains("client_id=" + clientId));
         verify(response).sendRedirect(contains("post_logout_redirect_uri="));
     }
