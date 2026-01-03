@@ -64,7 +64,6 @@ jobs:
         env:
           DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: false
-          SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
 
       - name: Locate and upload JAR
         run: |
@@ -146,6 +145,7 @@ jobs:
 
       - name: Start Stirling PDF
         run: |
+          export SECURITY_CUSTOMGLOBALAPIKEY=123456789
           java -jar "$JAR_PATH" > server.log 2>&1 &
           echo $! > server.pid
 
