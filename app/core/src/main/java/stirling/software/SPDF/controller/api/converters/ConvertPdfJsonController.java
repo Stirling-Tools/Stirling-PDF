@@ -81,10 +81,8 @@ public class ConvertPdfJsonController {
             @Valid @ModelAttribute PDFFile request,
             @RequestParam(value = "lightweight", defaultValue = "false") boolean lightweight)
             throws Exception {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -135,10 +133,8 @@ public class ConvertPdfJsonController {
                             + " Output:JSON Type:SISO")
     public ResponseEntity<byte[]> extractPdfMetadata(@Valid @ModelAttribute PDFFile request)
             throws Exception {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");

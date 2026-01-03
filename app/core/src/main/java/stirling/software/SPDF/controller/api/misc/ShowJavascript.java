@@ -61,9 +61,8 @@ public class ShowJavascript {
             description = "desc. Input:PDF Output:JS Type:SISO")
     public ResponseEntity<byte[]> extractHeader(@Valid @ModelAttribute PDFFile request)
             throws Exception {
-        MultipartFile inputFile;
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");

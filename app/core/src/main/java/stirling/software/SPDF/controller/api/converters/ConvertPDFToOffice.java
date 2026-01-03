@@ -129,9 +129,8 @@ public class ConvertPDFToOffice {
                             + " Type:SISO")
     public ResponseEntity<byte[]> processPdfToXML(@Valid @ModelAttribute PDFFile request)
             throws Exception {
-        MultipartFile inputFile;
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");

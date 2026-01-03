@@ -71,9 +71,8 @@ public class UnlockPDFFormsController {
                             + "Input:PDF, Output:PDF. Type:SISO")
     public ResponseEntity<byte[]> unlockPDFForms(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");

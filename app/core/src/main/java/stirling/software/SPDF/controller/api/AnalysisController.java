@@ -62,9 +62,8 @@ public class AnalysisController {
             description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
     public Map<String, Integer> getPageCount(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -82,17 +81,14 @@ public class AnalysisController {
             description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getBasicInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-        long fileSizeInBytes;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
         }
         request.validatePdfFile(inputFile);
-        fileSizeInBytes = request.resolveFileSize(fileStorage);
+        long fileSizeInBytes = request.resolveFileSize(fileStorage);
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             Map<String, Object> info = new HashMap<>();
             info.put("pageCount", document.getNumberOfPages());
@@ -111,10 +107,8 @@ public class AnalysisController {
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
     public Map<String, String> getDocumentProperties(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -144,10 +138,8 @@ public class AnalysisController {
             description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
     public List<Map<String, Float>> getPageDimensions(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -175,10 +167,8 @@ public class AnalysisController {
                     "Returns count and details of form fields. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getFormFields(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -208,10 +198,8 @@ public class AnalysisController {
             description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getAnnotationInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -244,10 +232,8 @@ public class AnalysisController {
                     "Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getFontInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -277,10 +263,8 @@ public class AnalysisController {
                     "Returns encryption and permission details. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getSecurityInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-
         // Validate input
-        inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");

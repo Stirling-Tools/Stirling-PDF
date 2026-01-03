@@ -1218,66 +1218,69 @@ public class GetInfoOnPDFController {
                             + " Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
-        MultipartFile inputFile;
-        long fileSizeInBytes;
-
-        // Validate input
-        inputFile = request.resolveFile(fileStorage);
-        if (inputFile == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.pdfRequired", "PDF file is required");
-        }
-        request.validatePdfFile(inputFile);
-        fileSizeInBytes = request.resolveFileSize(fileStorage);
-
-        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, true)) {
-            ObjectNode jsonOutput = objectMapper.createObjectNode();
-
-            ObjectNode metadata = extractMetadata(pdfBoxDoc);
-            ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, fileSizeInBytes);
-            ObjectNode docInfoNode = extractDocumentInfo(pdfBoxDoc);
-            ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc);
-            ObjectNode encryption = extractEncryptionInfo(pdfBoxDoc);
-            ObjectNode permissionsNode = extractPermissions(pdfBoxDoc);
-            ObjectNode other = extractOtherInfo(pdfBoxDoc);
-            ObjectNode formFieldsNode = extractFormFields(pdfBoxDoc);
-
-            // Generate summary data
-            String pdfaConformanceLevel = getPdfAConformanceLevel(pdfBoxDoc);
-            Boolean pdfaValidationPassed = null;
-            if (pdfaConformanceLevel != null) {
-                pdfaValidationPassed = validatePdfAWithPreflight(pdfBoxDoc, pdfaConformanceLevel);
+        try {
+            // Validate input
+            MultipartFile inputFile = request.resolveFile(fileStorage);
+            if (inputFile == null) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.pdfRequired", "PDF file is required");
             }
-            ObjectNode summaryData =
-                    generatePDFSummaryData(pdfBoxDoc, pdfaConformanceLevel, pdfaValidationPassed);
+            request.validatePdfFile(inputFile);
+            long fileSizeInBytes = request.resolveFileSize(fileStorage);
 
-            // Extract per-page information
-            ObjectNode pageInfoParent = extractPerPageInfo(pdfBoxDoc);
+            try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, true)) {
+                ObjectNode jsonOutput = objectMapper.createObjectNode();
 
-            // Assemble final JSON output
-            jsonOutput.set("Metadata", metadata);
-            jsonOutput.set("BasicInfo", basicInfo);
-            jsonOutput.set("DocumentInfo", docInfoNode);
-            jsonOutput.set("Compliancy", compliancy);
-            jsonOutput.set("Encryption", encryption);
-            jsonOutput.set("Permissions", permissionsNode);
-            jsonOutput.set("FormFields", formFieldsNode);
-            jsonOutput.set("Other", other);
-            jsonOutput.set("PerPageInfo", pageInfoParent);
+                ObjectNode metadata = extractMetadata(pdfBoxDoc);
+                ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, fileSizeInBytes);
+                ObjectNode docInfoNode = extractDocumentInfo(pdfBoxDoc);
+                ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc);
+                ObjectNode encryption = extractEncryptionInfo(pdfBoxDoc);
+                ObjectNode permissionsNode = extractPermissions(pdfBoxDoc);
+                ObjectNode other = extractOtherInfo(pdfBoxDoc);
+                ObjectNode formFieldsNode = extractFormFields(pdfBoxDoc);
 
-            if (summaryData != null && !summaryData.isEmpty()) {
-                jsonOutput.set("SummaryData", summaryData);
+                // Generate summary data
+                String pdfaConformanceLevel = getPdfAConformanceLevel(pdfBoxDoc);
+                Boolean pdfaValidationPassed = null;
+                if (pdfaConformanceLevel != null) {
+                    pdfaValidationPassed =
+                            validatePdfAWithPreflight(pdfBoxDoc, pdfaConformanceLevel);
+                }
+                ObjectNode summaryData =
+                        generatePDFSummaryData(
+                                pdfBoxDoc, pdfaConformanceLevel, pdfaValidationPassed);
+
+                // Extract per-page information
+                ObjectNode pageInfoParent = extractPerPageInfo(pdfBoxDoc);
+
+                // Assemble final JSON output
+                jsonOutput.set("Metadata", metadata);
+                jsonOutput.set("BasicInfo", basicInfo);
+                jsonOutput.set("DocumentInfo", docInfoNode);
+                jsonOutput.set("Compliancy", compliancy);
+                jsonOutput.set("Encryption", encryption);
+                jsonOutput.set("Permissions", permissionsNode);
+                jsonOutput.set("FormFields", formFieldsNode);
+                jsonOutput.set("Other", other);
+                jsonOutput.set("PerPageInfo", pageInfoParent);
+
+                if (summaryData != null && !summaryData.isEmpty()) {
+                    jsonOutput.set("SummaryData", summaryData);
+                }
+                // Convert to JSON string
+                String jsonString =
+                        objectMapper
+                                .writerWithDefaultPrettyPrinter()
+                                .writeValueAsString(jsonOutput);
+                return WebResponseUtils.bytesToWebResponse(
+                        jsonString.getBytes(StandardCharsets.UTF_8),
+                        "response.json",
+                        MediaType.APPLICATION_JSON);
             }
-
-            // Convert to JSON string
-            String jsonString =
-                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonOutput);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    jsonString.getBytes(StandardCharsets.UTF_8),
-                    "response.json",
-                    MediaType.APPLICATION_JSON);
-
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error while processing PDF: {}", e.getMessage());
+            return createErrorResponse("Validation error: " + e.getMessage());
         } catch (IOException e) {
             log.error("IO error while processing PDF: {}", e.getMessage(), e);
             return createErrorResponse("Error reading PDF file: " + e.getMessage());
