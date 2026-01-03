@@ -64,6 +64,7 @@ jobs:
         env:
           DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: false
+          SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
 
       - name: Locate and upload JAR
         run: |
@@ -173,7 +174,7 @@ jobs:
         run: pip install --require-hashes -r ./.github/scripts/requirements_swagger.txt
 
       - name: Run Swagger endpoint tests - ${{ matrix.include-tags }}
-        run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080 --include-tags "${{ matrix.include-tags }}"
+        run: python testing/swagger_endpoint_test.py --base-url http://localhost:8080 --include-tags "${{ matrix.include-tags }}" --x-api-key 123456789
 
       - name: Stop Stirling PDF
         if: always()
