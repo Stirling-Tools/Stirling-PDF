@@ -14,6 +14,7 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -149,9 +150,20 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 }
 
                 if (jwtService.isJwtEnabled()) {
-                    String jwt =
-                            jwtService.generateToken(
-                                    authentication, Map.of("authType", AuthenticationType.OAUTH2));
+                    // Build JWT claims with authType and optionally id_token for OIDC logout
+                    Map<String, Object> claims = new java.util.HashMap<>();
+                    claims.put("authType", AuthenticationType.OAUTH2);
+
+                    // Store OIDC id_token for proper SSO logout
+                    if (principal instanceof OidcUser oidcUser) {
+                        String idToken = oidcUser.getIdToken().getTokenValue();
+                        if (idToken != null && !idToken.isBlank()) {
+                            claims.put("id_token", idToken);
+                            log.debug("Stored OIDC id_token in JWT claims for SSO logout");
+                        }
+                    }
+
+                    String jwt = jwtService.generateToken(authentication, claims);
 
                     // Build context-aware redirect URL based on the original request
                     String redirectUrl =

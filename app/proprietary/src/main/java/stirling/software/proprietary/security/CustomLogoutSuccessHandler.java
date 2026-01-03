@@ -3,12 +3,12 @@ package stirling.software.proprietary.security;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -32,6 +32,8 @@ import stirling.software.common.util.UrlUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
@@ -72,23 +74,28 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             }
 
             if (authentication != null) {
-                if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
-                    // Handle OAuth2 logout redirection
-                    getRedirectOauth2(request, response, oAuthToken);
-                } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
-                    // Handle Username/Password logout
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                } else {
-                    // Handle unknown authentication types
-                    log.error(
-                            "Authentication class unknown: {}",
-                            authentication.getClass().getSimpleName());
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                // Check for JWT-based authentication and extract authType claim
+                String authType;
+                if (authentication instanceof JwtAuthenticationToken jwtAuthToken) {
+                    authType =
+                            (String)
+                                    jwtAuthToken
+                                            .getToken()
+                                            .getClaims()
+                                            .getOrDefault("authType", AuthenticationType.WEB);
+                    log.debug("{} logout detected", authType);
+
+                    switch (authType) {
+                        case "OAUTH2" -> getAuthRedirect(request, response, jwtAuthToken);
+                        case "SAML2" -> {}
+                        default ->
+                                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    }
                 }
             } else {
-                // Redirect to login page after logout (handles error parameters if present)
-                String queryParams = checkForErrors(request);
-                getRedirectStrategy().sendRedirect(request, response, "/login?" + queryParams);
+                // Redirect to login page after logout
+                String path = checkForErrors(request);
+                getRedirectStrategy().sendRedirect(request, response, path);
             }
         }
     }
@@ -230,33 +237,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         }
     }
 
-    // Redirect for OAuth2 authentication logout
-    private void getRedirectOauth2(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            OAuth2AuthenticationToken oAuthToken)
-            throws IOException {
-        String registrationId;
-        OAUTH2 oauth = securityProperties.getOauth2();
-        String path = checkForErrors(request);
-
-        String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
-        registrationId = oAuthToken.getAuthorizedClientRegistrationId();
-
-        // Redirect based on OAuth2 provider
-        switch (registrationId.toLowerCase(Locale.ROOT)) {
-            case "github", "google" -> {
-                // These providers don't support OIDC logout
-                log.info(
-                        "No logout URL for {} available. Redirecting to local logout: {}",
-                        registrationId,
-                        redirectUrl);
-                response.sendRedirect(redirectUrl);
-            }
-            default -> handleOidcLogout(response, oAuthToken, oauth, redirectUrl);
-        }
-    }
-
     // Redirect for JWT-based OAuth2 authentication logout
     private void getAuthRedirect(
             HttpServletRequest request,
@@ -305,6 +285,13 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         if (endSessionEndpoint != null) {
             StringBuilder logoutUrlBuilder = new StringBuilder(endSessionEndpoint);
             logoutUrlBuilder.append(endSessionEndpoint.contains("?") ? "&" : "?");
+
+            // Extract id_token from JWT claims for proper OIDC logout
+            String idToken = (String) jwtAuthenticationToken.getToken().getClaims().get("id_token");
+            if (idToken != null && !idToken.isBlank()) {
+                logoutUrlBuilder.append("id_token_hint=").append(idToken).append("&");
+                log.debug("Including id_token_hint in OIDC logout for proper SSO logout");
+            }
 
             // Use client_id and post_logout_redirect_uri
             if (clientId != null && !clientId.isBlank()) {
