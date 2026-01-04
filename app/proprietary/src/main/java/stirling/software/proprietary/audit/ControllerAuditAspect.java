@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.service.AuditService;
 
@@ -37,7 +38,7 @@ import stirling.software.proprietary.service.AuditService;
 @Slf4j
 @RequiredArgsConstructor
 @org.springframework.core.annotation.Order(
-        10) // Lower precedence (higher number) - executes after AutoJobAspect
+        0) // Highest precedence - runs on request thread before AutoJobAspect
 public class ControllerAuditAspect {
 
     private final AuditService auditService;
@@ -121,6 +122,16 @@ public class ControllerAuditAspect {
         HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
         HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
 
+        // Capture principal, origin, and IP (runs on request thread before AutoJobAspect)
+        String capturedPrincipal = auditService.captureCurrentPrincipal();
+        String capturedOrigin = auditService.captureCurrentOrigin();
+        // Extract IP directly from the request we already have (more reliable than
+        // RequestContextHolder)
+        String capturedIp = null;
+        if (req != null && auditConfig.isLogIpAddresses()) {
+            capturedIp = AuditUtils.extractClientIp(req);
+        }
+
         long start = System.currentTimeMillis();
 
         // Use AuditUtils to create the base audit data
@@ -176,13 +187,15 @@ public class ControllerAuditAspect {
                 String typeString = auditedAnnotation.typeString();
                 if (eventType == AuditEventType.HTTP_REQUEST
                         && StringUtils.isNotEmpty(typeString)) {
-                    auditService.audit(typeString, data, level);
+                    auditService.audit(
+                            capturedPrincipal, capturedOrigin, capturedIp, typeString, data, level);
                     return result;
                 }
             }
 
-            // Use the enum type
-            auditService.audit(eventType, data, level);
+            // Use the enum type with captured principal, origin, and IP
+            auditService.audit(
+                    capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
         }
         return result;
     }
@@ -194,6 +207,14 @@ public class ControllerAuditAspect {
         RequestMapping cm = method.getDeclaringClass().getAnnotation(RequestMapping.class);
         if (cm != null && cm.value().length > 0) base = cm.value()[0];
         String mp = "";
+
+        // First check for AutoJobPostMapping (which is also a POST)
+        AutoJobPostMapping autoJob = method.getAnnotation(AutoJobPostMapping.class);
+        if (autoJob != null && autoJob.value().length > 0) {
+            return base + autoJob.value()[0];
+        }
+
+        // Fall back to standard mappings
         Annotation ann =
                 switch (httpMethod) {
                     case "GET" -> method.getAnnotation(GetMapping.class);

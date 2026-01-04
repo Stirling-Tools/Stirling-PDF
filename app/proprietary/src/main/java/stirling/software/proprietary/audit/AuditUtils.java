@@ -48,17 +48,6 @@ public class AuditUtils {
             ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
         Map<String, Object> data = new HashMap<>();
 
-        // Common data for all levels
-        data.put("timestamp", Instant.now().toString());
-
-        // Add principal if available
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getName() != null) {
-            data.put("principal", auth.getName());
-        } else {
-            data.put("principal", "system");
-        }
-
         // Add class name and method name only at VERBOSE level
         if (auditLevel.includes(AuditLevel.VERBOSE)) {
             data.put("className", joinPoint.getTarget().getClass().getName());
@@ -102,7 +91,6 @@ public class AuditUtils {
 
         // STANDARD level HTTP data
         if (auditLevel.includes(AuditLevel.STANDARD)) {
-            data.put("clientIp", req.getRemoteAddr());
             data.put(
                     "sessionId",
                     req.getSession(false) != null ? req.getSession(false).getId() : null);
@@ -423,5 +411,39 @@ public class AuditUtils {
         return request != null
                 && !RequestUriUtils.isTrackableResource(
                         request.getContextPath(), request.getRequestURI());
+    }
+
+    /**
+     * Extract client IP address from HTTP request, preferring forwarded headers for use behind
+     * proxies/load balancers. Truncates to 45 characters to fit database column constraints.
+     *
+     * @param request The HTTP request (may be null)
+     * @return The client IP address, or null if not available
+     */
+    public static String extractClientIp(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        // Prefer X-Forwarded-For header (used by most proxies/load balancers)
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            // X-Forwarded-For can be a comma-separated list: "client, proxy1, proxy2"
+            // Take the first (client) IP
+            String first = xff.split(",")[0].trim();
+            return first.length() > 45 ? first.substring(0, 45) : first;
+        }
+
+        // Try X-Real-IP header (used by some reverse proxies like nginx)
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.length() > 45 ? realIp.substring(0, 45) : realIp;
+        }
+
+        // Fall back to remote address
+        String remoteAddr = request.getRemoteAddr();
+        return remoteAddr != null && remoteAddr.length() > 45
+                ? remoteAddr.substring(0, 45)
+                : remoteAddr;
     }
 }

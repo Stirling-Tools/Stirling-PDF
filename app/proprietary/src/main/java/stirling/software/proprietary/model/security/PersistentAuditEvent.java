@@ -13,6 +13,7 @@ import lombok.*;
             @jakarta.persistence.Index(name = "idx_audit_timestamp", columnList = "timestamp"),
             @jakarta.persistence.Index(name = "idx_audit_principal", columnList = "principal"),
             @jakarta.persistence.Index(name = "idx_audit_type", columnList = "type"),
+            @jakarta.persistence.Index(name = "idx_audit_origin", columnList = "origin"),
             @jakarta.persistence.Index(
                     name = "idx_audit_principal_type",
                     columnList = "principal,type"),
@@ -33,7 +34,14 @@ public class PersistentAuditEvent {
     private String principal;
     private String type;
 
-    @Lob private String data; // JSON blob
+    @Column(columnDefinition = "TEXT")
+    private String data; // JSON blob
 
     private Instant timestamp;
+
+    @Column(length = 45) // Max length for IPv6 (xxx:xxx:xxx:xxx:xxx:xxx:xxx:xxx)
+    private String ipAddress;
+
+    @Column(length = 10) // "WEB", "API", or "SYSTEM"
+    private String origin;
 }

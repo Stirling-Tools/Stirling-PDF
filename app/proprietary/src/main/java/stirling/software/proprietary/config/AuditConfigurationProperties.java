@@ -23,6 +23,7 @@ public class AuditConfigurationProperties {
     private final boolean enabled;
     private final int level;
     private final int retentionDays;
+    private final boolean logIpAddresses;
 
     public AuditConfigurationProperties(ApplicationProperties applicationProperties) {
         ApplicationProperties.Premium.EnterpriseFeatures.Audit auditConfig =
@@ -37,11 +38,15 @@ public class AuditConfigurationProperties {
         // Retention days (0 means infinite)
         this.retentionDays = auditConfig.getRetentionDays();
 
+        // IP address logging (default false for privacy)
+        this.logIpAddresses = auditConfig.isLogIpAddresses();
+
         log.debug(
-                "Initialized audit configuration: enabled={}, level={}, retentionDays={} (0=infinite)",
+                "Initialized audit configuration: enabled={}, level={}, retentionDays={} (0=infinite), logIpAddresses={}",
                 this.enabled,
                 this.level,
-                this.retentionDays);
+                this.retentionDays,
+                this.logIpAddresses);
     }
 
     /**
