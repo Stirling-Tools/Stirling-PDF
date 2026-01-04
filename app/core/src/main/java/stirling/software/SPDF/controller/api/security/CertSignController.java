@@ -75,6 +75,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -104,13 +105,15 @@ public class CertSignController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ServerCertificateServiceInterface serverCertificateService;
+    private final FileStorage fileStorage;
 
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
-            @Autowired(required = false)
-                    ServerCertificateServiceInterface serverCertificateService) {
+            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
+            FileStorage fileStorage) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
+        this.fileStorage = fileStorage;
     }
 
     private static void sign(
@@ -139,11 +142,12 @@ public class CertSignController {
                     signatureOptions.setPage(pageNumber);
 
                     doc.addSignature(signature, instance, signatureOptions);
+                    doc.saveIncremental(output);
                 }
             } else {
                 doc.addSignature(signature, instance);
+                doc.saveIncremental(output);
             }
-            doc.saveIncremental(output);
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
         }
@@ -164,12 +168,26 @@ public class CertSignController {
                             + " file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
-        MultipartFile pdf = request.getFileInput();
+        // Validate input
+        MultipartFile inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+
         String certType = request.getCertType();
+
+        // PEM
         MultipartFile privateKeyFile = request.getPrivateKeyFile();
         MultipartFile certFile = request.getCertFile();
+
+        // PKCS12 / PFX
         MultipartFile p12File = request.getP12File();
-        MultipartFile jksfile = request.getJksFile();
+
+        // JKS
+        MultipartFile jksFile = request.getJksFile();
+
         String password = request.getPassword();
         Boolean showSignature = request.getShowSignature();
         String reason = request.getReason();
@@ -213,11 +231,11 @@ public class CertSignController {
                 ks.load(p12File.getInputStream(), password.toCharArray());
                 break;
             case "JKS":
-                jksfile =
+                jksFile =
                         validateFilePresent(
-                                jksfile, "JKS keystore", "JKS keystore file is required");
+                                jksFile, "JKS keystore", "JKS keystore file is required");
                 ks = KeyStore.getInstance("JKS");
-                ks.load(jksfile.getInputStream(), password.toCharArray());
+                ks.load(jksFile.getInputStream(), password.toCharArray());
                 break;
             case "SERVER":
                 if (serverCertificateService == null) {
@@ -248,7 +266,7 @@ public class CertSignController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(
                 pdfDocumentFactory,
-                pdf,
+                inputFile,
                 baos,
                 createSignature,
                 showSignature,
@@ -260,7 +278,7 @@ public class CertSignController {
         // Return the signed PDF
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
+                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_signed.pdf"));
     }
 
     private MultipartFile validateFilePresent(
