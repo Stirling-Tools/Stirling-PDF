@@ -29,6 +29,7 @@ def _run_latex(engine: str, tex_filename: str) -> subprocess.CompletedProcess:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         timeout=30,
+        cwd=OUTPUT_DIR,
     )
 
 

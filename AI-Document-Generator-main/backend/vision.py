@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, List, Optional
+import time
 
 from config import CLIENT_MODE, SMART_MODEL, get_chat_model, logger
 from langchain_utils import to_lc_messages
@@ -30,7 +31,18 @@ def vision_layout_from_images(image_urls: List[str], doc_type: str) -> Optional[
         llm = get_chat_model(SMART_MODEL, max_tokens=2800)
         if not llm:
             return None
+        start = time.perf_counter()
         response = llm.invoke(to_lc_messages(messages))
+        elapsed = time.perf_counter() - start
+        content = response.content or ""
+        usage = getattr(response, "usage_metadata", None)
+        logger.info(
+            "[IMPORT] vision model=%s elapsed=%.2fs chars=%s usage=%s",
+            SMART_MODEL,
+            elapsed,
+            len(str(content)),
+            usage,
+        )
         return response.content
     except Exception as exc:
         logger.error("[IMPORT] vision generation failed: %s", exc)

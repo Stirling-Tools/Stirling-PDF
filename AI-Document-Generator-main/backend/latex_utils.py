@@ -5,7 +5,12 @@ from functools import lru_cache
 from typing import List, Optional
 
 ALLOWED_LATEX_PACKAGES = {
+    "courier",
+    "graphicx",
     "geometry",
+    "helvet",
+    "lmodern",
+    "mathpazo",
     "xcolor",
     "tabularx",
     "paracol",
@@ -423,15 +428,13 @@ def clean_generated_latex(latex_code: str) -> str:
         upgrade_tabular_tables_to_longtable(
             ensure_longtable_support(
                 normalize_tabular_like_begins(
-                    strip_placeholder_rules(
-                        strip_number_grouping_junk(
-                            fix_tabular_row_endings(
-                                strip_leading_pagebreaks(
-                                    remove_leading_pagebreaks(
-                                        strip_missing_packages(
-                                            sanitize_latex(
-                                                ensure_full_latex_document(latex_code)
-                                            )
+                    strip_number_grouping_junk(
+                        fix_tabular_row_endings(
+                            strip_leading_pagebreaks(
+                                remove_leading_pagebreaks(
+                                    strip_missing_packages(
+                                        sanitize_latex(
+                                            ensure_full_latex_document(latex_code)
                                         )
                                     )
                                 )
@@ -442,6 +445,80 @@ def clean_generated_latex(latex_code: str) -> str:
             )
         )
     )
+
+
+def apply_style_overrides(latex_code: str, style_profile: dict) -> str:
+    """Apply deterministic font + accent styling without altering layout."""
+    if not latex_code:
+        return latex_code
+
+    code = latex_code
+    font = (style_profile or {}).get("font_preference") or ""
+    accent = (style_profile or {}).get("color_accent") or ""
+
+    font_map = {
+        "serif": ("mathpazo", "\\renewcommand{\\familydefault}{\\rmdefault}"),
+        "sans": ("helvet", "\\renewcommand{\\familydefault}{\\sfdefault}"),
+        "helvet": ("helvet", "\\renewcommand{\\familydefault}{\\sfdefault}"),
+        "mono": ("courier", "\\renewcommand{\\familydefault}{\\ttdefault}"),
+        "modern": ("lmodern", None),
+    }
+    pkg = None
+    family_cmd = None
+    if isinstance(font, str):
+        pkg, family_cmd = font_map.get(font.lower(), (None, None))
+
+    if pkg:
+        code = re.sub(
+            r"^\\usepackage\{(helvet|mathpazo|lmodern|courier)\}\s*$",
+            "",
+            code,
+            flags=re.MULTILINE,
+        )
+        code = re.sub(
+            r"^\\renewcommand\{\\familydefault\}\{\\(sfdefault|rmdefault|ttdefault)\}\s*$",
+            "",
+            code,
+            flags=re.MULTILINE,
+        )
+
+    def _ensure_package_and_command(text: str) -> str:
+        if not pkg:
+            return text
+        insert = f"\\usepackage{{{pkg}}}\n"
+        if family_cmd:
+            insert += family_cmd + "\n"
+        if r"\begin{document}" in text:
+            return re.sub(r"(\\begin\{document\})", insert + r"\1", text, count=1)
+        return insert + text
+
+    code = _ensure_package_and_command(code)
+
+    if accent:
+        accent_hex_match = re.fullmatch(r"#?([0-9a-fA-F]{6})", str(accent).strip())
+        if accent_hex_match:
+            accent_line = f"\\definecolor{{accent}}{{HTML}}{{{accent_hex_match.group(1).upper()}}}"
+        else:
+            accent_name = re.sub(r"[^A-Za-z]+", "", str(accent)) or "blue"
+            accent_line = f"\\colorlet{{accent}}{{{accent_name}}}"
+
+        if re.search(r"^\\definecolor\{accent\}|^\\colorlet\{accent\}", code, flags=re.MULTILINE):
+            code = re.sub(r"^\\definecolor\{accent\}.*$", accent_line, code, flags=re.MULTILINE)
+            code = re.sub(r"^\\colorlet\{accent\}.*$", accent_line, code, flags=re.MULTILINE)
+        else:
+            needs_xcolor = r"\usepackage{xcolor}" not in code
+            insert = ""
+            if needs_xcolor:
+                insert += "\\usepackage{xcolor}\n"
+            insert += accent_line + "\n"
+            if r"\usepackage{xcolor}" in code:
+                code = re.sub(r"(\\usepackage\{xcolor\}[^\n]*\n)", r"\1" + insert, code, count=1)
+            elif r"\begin{document}" in code:
+                code = re.sub(r"(\\begin\{document\})", insert + r"\1", code, count=1)
+            else:
+                code = insert + code
+
+    return code
 
 
 def ensure_full_latex_document(text: str) -> str:
@@ -465,5 +542,6 @@ __all__ = [
     "fix_tabular_row_endings",
     "rebalance_invoice_tables",
     "clean_generated_latex",
+    "apply_style_overrides",
     "ensure_full_latex_document",
 ]

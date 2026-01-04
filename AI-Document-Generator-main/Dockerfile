@@ -1,7 +1,9 @@
+# syntax=docker/dockerfile:1.5
 FROM python:3.11-slim
 
 # Install full TeXLive so LLM outputs (siunitx, paracol, tikz, etc.) compile reliably.
-RUN apt-get update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
       texlive-full \
       latexmk \
@@ -15,7 +17,8 @@ WORKDIR /app
 
 # Copy backend files
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
 COPY backend/ .
 

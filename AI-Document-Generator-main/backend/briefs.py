@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import json
 from typing import Any, Dict, List, Optional
+import time
 
 from config import CLIENT_MODE, FAST_MODEL, SMART_MODEL, get_chat_model, logger
 from langchain_utils import to_lc_messages
@@ -144,7 +145,18 @@ def classify_intent_with_llm(prompt: str, history: List[Dict[str, str]], current
         if not llm:
             logger.info("[INTENT] skip llm classify: no LangChain client")
             return None
+        start = time.perf_counter()
         response = llm.invoke(to_lc_messages(conversation))
+        elapsed = time.perf_counter() - start
+        content = response.content or ""
+        usage = getattr(response, "usage_metadata", None)
+        logger.info(
+            "[INTENT] llm_classify model=%s elapsed=%.2fs chars=%s usage=%s",
+            FAST_MODEL or SMART_MODEL,
+            elapsed,
+            len(str(content)),
+            usage,
+        )
         content = response.content
         if not content:
             logger.info("[INTENT] llm_classify empty content")
@@ -222,7 +234,18 @@ def detect_fabrication_opt_in(prompt: str, history: List[Dict[str, str]]) -> boo
         )
         if not llm:
             return False
+        start = time.perf_counter()
         response = llm.invoke(to_lc_messages(conversation))
+        elapsed = time.perf_counter() - start
+        content = response.content or ""
+        usage = getattr(response, "usage_metadata", None)
+        logger.info(
+            "[INTENT] fabrication-check model=%s elapsed=%.2fs chars=%s usage=%s",
+            FAST_MODEL or SMART_MODEL,
+            elapsed,
+            len(str(content)),
+            usage,
+        )
         content = response.content
         if not content:
             return False
@@ -357,6 +380,7 @@ def _ai_missing_message(
         llm = get_chat_model(SMART_MODEL, max_tokens=400)
         if not llm:
             return None
+        start = time.perf_counter()
         response = llm.invoke(
             to_lc_messages(
                 [
@@ -364,6 +388,16 @@ def _ai_missing_message(
                     {"role": "user", "content": user_text},
                 ]
             )
+        )
+        elapsed = time.perf_counter() - start
+        content = response.content or ""
+        usage = getattr(response, "usage_metadata", None)
+        logger.info(
+            "[AI] missing-questions model=%s elapsed=%.2fs chars=%s usage=%s",
+            SMART_MODEL,
+            elapsed,
+            len(str(content)),
+            usage,
         )
         return response.content
     except Exception as exc:

@@ -6,7 +6,12 @@ from typing import Dict, List, Optional, Any
 
 # Shared rules
 ALLOWED_LATEX_PACKAGES = [
+    "courier",
+    "graphicx",
     "geometry",
+    "helvet",
+    "lmodern",
+    "mathpazo",
     "xcolor",
     "tabularx",
     "paracol",
@@ -50,7 +55,7 @@ def latex_system_prompt(style_profile: Dict[str, Any], document_type: str, templ
         f"- " + "\n- ".join(LATEX_RULES) + "\n"
         "2) Use only the allowlisted packages:\n"
         f"- " + "\n- ".join(ALLOWED_LATEX_PACKAGES) + "\n"
-        f"3) Respect preferred font ({safe_style['font_preference']}), tone ({safe_style['tone']}), and color accent ({safe_style['color_accent']}).\n"
+        f"3) Respect preferred font ({safe_style['font_preference']}), tone ({safe_style['tone']}), and color accent ({safe_style['color_accent']}). Use the accent token name 'accent' (e.g., \\color{{accent}} or \\textcolor{{accent}}{{...}}).\n"
         "4) If a template hint is provided, stay close to its layout and styling.\n"
         "5) Do NOT add placeholder images or black boxes; omit images entirely unless an explicit path or real image content is provided. Do not use \\rule, tikz, or colored rectangles as image stand-ins.\n"
         "6) Return a full compilable document."

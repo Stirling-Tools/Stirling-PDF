@@ -1,24 +1,45 @@
 import os
+import mimetypes
 import subprocess
 import uuid
+from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 import re
 import time
 import threading
 import queue
+import urllib.error
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 from flask import Flask, jsonify, request, send_file, Response, stream_with_context
 from flask_cors import CORS
 import json
 
-from ai_generation import generate_latex_with_llm, generate_latex_with_llm_stream
+from ai_generation import (
+    generate_latex_with_llm,
+    generate_latex_with_llm_stream,
+    generate_outline_with_llm,
+    generate_section_draft,
+    generate_field_values,
+    generate_template_fill_stream,
+)
 from briefs import gather_brief, _preprocess_intent
-from config import CLIENT_MODE, SMART_MODEL, OUTPUT_DIR, get_chat_model, logger
+from config import (
+    CLIENT_MODE,
+    SMART_MODEL,
+    OUTPUT_DIR,
+    ASSETS_DIR,
+    TEMPLATE_DIR,
+    JAVA_BACKEND_URL,
+    PREVIEW_MAX_INFLIGHT,
+    get_chat_model,
+    logger,
+)
 from langchain_utils import to_lc_messages
 from document_types import detect_document_type
-from latex_utils import clean_generated_latex
+from latex_utils import apply_style_overrides, clean_generated_latex
 from pdf_utils import compile_latex_to_pdf, render_pdf_to_images
 from pdf_text_editor import convert_pdf_to_text_editor_document
 from storage import (
@@ -50,6 +71,65 @@ def log_job_request_sequence() -> None:
 
 def _json_body() -> Dict[str, Any]:
     return request.get_json(silent=True) or {}
+
+
+def _java_url(path: str) -> str:
+    base = JAVA_BACKEND_URL.rstrip("/")
+    if not path.startswith("/"):
+        path = "/" + path
+    return f"{base}{path}"
+
+
+def _java_request_json(method: str, path: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    url = _java_url(path)
+    data = None
+    headers = {"Content-Type": "application/json"}
+    if payload is not None:
+        data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            body = resp.read().decode("utf-8")
+            return json.loads(body) if body else {}
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8") if exc.fp else ""
+        logger.error("[JAVA] %s %s failed status=%s detail=%s", method, path, exc.code, detail)
+        raise
+
+
+def _fetch_ai_session(session_id: str) -> Dict[str, Any]:
+    return _java_request_json("GET", f"/api/v1/ai/create/internal/sessions/{session_id}")
+
+
+def _update_ai_session(session_id: str, payload: Dict[str, Any]) -> None:
+    _java_request_json("POST", f"/api/v1/ai/create/internal/sessions/{session_id}/update", payload)
+
+
+def _sanitize_doc_type(value: str) -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9_]+", "", (value or "").lower())
+    return cleaned or "miscellaneous"
+
+
+def _select_template(doc_type: str, template_id: Optional[str]) -> Optional[str]:
+    safe_doc_type = _sanitize_doc_type(doc_type)
+    base_dir = Path(TEMPLATE_DIR) / safe_doc_type
+    if not base_dir.exists() or not base_dir.is_dir():
+        return None
+
+    if template_id:
+        safe_template = re.sub(r"[^a-zA-Z0-9_-]+", "", template_id)
+        if safe_template:
+            candidate = base_dir / f"{safe_template}.tex"
+            if candidate.exists():
+                return candidate.read_text(encoding="utf-8", errors="replace")
+
+    default_path = base_dir / "default.tex"
+    if default_path.exists():
+        return default_path.read_text(encoding="utf-8", errors="replace")
+
+    for tex_file in sorted(base_dir.glob("*.tex")):
+        return tex_file.read_text(encoding="utf-8", errors="replace")
+    return None
 
 
 @app.route("/api/intent/check", methods=["POST"])
@@ -137,6 +217,7 @@ def pdf_answer() -> Any:
         llm = get_chat_model(model_name, max_tokens=220)
         if not llm:
             return jsonify({"error": "PDF Q&A unavailable (no AI client configured)."}), 503
+        start = time.perf_counter()
         response = llm.invoke(
             to_lc_messages(
                 [
@@ -144,6 +225,16 @@ def pdf_answer() -> Any:
                     {"role": "user", "content": user_prompt},
                 ]
             )
+        )
+        elapsed = time.perf_counter() - start
+        content = response.content or ""
+        usage = getattr(response, "usage_metadata", None)
+        logger.info(
+            "[PDF-ANSWER] model=%s elapsed=%.2fs chars=%s usage=%s",
+            model_name,
+            elapsed,
+            len(str(content)),
+            usage,
         )
         answer = response.content
         if not answer or not str(answer).strip():
@@ -216,7 +307,7 @@ def generate() -> Any:
         brief.get("structured_brief"),
         edit_mode=edit_mode,
     )
-    latex_code = clean_generated_latex(latex_code_raw)
+    latex_code = apply_style_overrides(clean_generated_latex(latex_code_raw), style_profile)
 
     doc_type = detect_document_type(prompt, latex_code)
     save_user_style(user_id, {"last_doc_type": doc_type})
@@ -351,6 +442,8 @@ def generate_stream() -> Any:
             chunk_queue.put(("done", None))
 
     def submit_preview(latex: str, progress: int) -> None:
+        if len(preview_tasks) >= PREVIEW_MAX_INFLIGHT:
+            return
         preview_job_id = f"{job_id}-preview-{progress}"
 
         def _run_compile() -> Optional[str]:
@@ -462,7 +555,7 @@ def generate_stream() -> Any:
                 )
 
             # Final compilation with complete LaTeX
-            latex_code = clean_generated_latex(accumulated_latex)
+            latex_code = apply_style_overrides(clean_generated_latex(accumulated_latex), style_profile)
             final_doc_type = detect_document_type(prompt, latex_code)
             save_user_style(user_id, {"last_doc_type": final_doc_type})
             if not skip_template and not edit_mode:
@@ -517,6 +610,173 @@ def generate_stream() -> Any:
         return jsonify({"error": "Unable to start streaming response", "detail": str(exc)}), 500
 
 
+@app.route("/api/create/sessions/<session_id>/stream", methods=["GET"])
+def create_stream(session_id: str) -> Any:
+    phase = (request.args.get("phase") or "outline").strip().lower()
+    try:
+        session = _fetch_ai_session(session_id)
+    except Exception:  # noqa: BLE001
+        return jsonify({"error": "Session not found"}), 404
+
+    user_id = session.get("userId", "default_user")
+    prompt = session.get("promptLatest") or session.get("promptInitial") or ""
+    doc_type = session.get("docType") or detect_document_type(prompt, None)
+    template_id = session.get("templateId")
+    outline_text = session.get("outlineText") or ""
+    constraints = session.get("outlineConstraints")
+    if isinstance(constraints, str) and constraints.strip():
+        try:
+            constraints = json.loads(constraints)
+        except json.JSONDecodeError:
+            constraints = None
+    draft_sections_raw = session.get("draftSections")
+    draft_sections = None
+    if isinstance(draft_sections_raw, list):
+        draft_sections = draft_sections_raw
+    elif isinstance(draft_sections_raw, str) and draft_sections_raw.strip():
+        try:
+            draft_sections = json.loads(draft_sections_raw)
+        except json.JSONDecodeError:
+            draft_sections = None
+    style_profile = load_user_style(user_id)
+
+    def sse(data: Dict[str, Any]) -> str:
+        return f"data: {json.dumps(data)}\n\n"
+
+    def generate():
+        yield sse({"type": "phase_changed", "phase": phase})
+
+        if phase == "outline":
+            outline = generate_outline_with_llm(prompt, doc_type, constraints)
+            _update_ai_session(
+                session_id,
+                {
+                    "outlineText": outline,
+                    "outlineConstraints": json.dumps(constraints, ensure_ascii=True) if constraints else None,
+                    "docType": doc_type,
+                    "status": "OUTLINE_PENDING",
+                },
+            )
+            yield sse({"type": "outline_ready", "outlineText": outline})
+            yield sse({"type": "phase_complete", "phase": "outline"})
+            return
+
+        if phase == "draft":
+            base_outline = outline_text or prompt
+            sections = generate_section_draft(prompt, doc_type, base_outline, constraints)
+            _update_ai_session(
+                session_id,
+                {
+                    "draftSections": json.dumps(sections, ensure_ascii=True),
+                    "outlineConstraints": json.dumps(constraints, ensure_ascii=True) if constraints else None,
+                    "docType": doc_type,
+                    "status": "DRAFT_READY",
+                },
+            )
+            yield sse({"type": "draft_sections", "sections": sections})
+            yield sse({"type": "phase_complete", "phase": "draft", "sections": sections})
+            return
+
+        if phase == "polish":
+            accumulated = ""
+            template_latex = _select_template(doc_type, template_id)
+            if template_latex:
+                for chunk in generate_template_fill_stream(
+                    template_latex,
+                    doc_type,
+                    outline_text or prompt,
+                    draft_sections=draft_sections,
+                    constraints=constraints,
+                    style_profile=style_profile,
+                ):
+                    accumulated += chunk
+                    yield sse({"type": "latex_delta", "phase": "polish", "delta": chunk})
+            else:
+                section_text = ""
+                if draft_sections:
+                    section_text = "\n".join(
+                        f"{section.get('label', 'Section')}: {section.get('value', '')}"
+                        for section in draft_sections
+                    )
+                constraint_text = ""
+                if constraints:
+                    tone = constraints.get("tone")
+                    audience = constraints.get("audience")
+                    pages = constraints.get("pageCount")
+                    constraint_text = f"Tone: {tone}. Audience: {audience}. Target pages: {pages}."
+                polish_prompt = (
+                    f"Create a polished LaTeX document for a {doc_type}.\n"
+                    "Use the provided section content and keep the substance consistent.\n"
+                    f"{constraint_text}\n"
+                    "Keep the final document within the target page count.\n"
+                )
+                for chunk in generate_latex_with_llm_stream(
+                    polish_prompt,
+                    [],
+                    style_profile,
+                    doc_type,
+                    None,
+                    None,
+                    section_text or outline_text or prompt,
+                    edit_mode=True,
+                ):
+                    accumulated += chunk
+                    yield sse({"type": "latex_delta", "phase": "polish", "delta": chunk})
+
+            accumulated = apply_style_overrides(accumulated, style_profile)
+            _update_ai_session(
+                session_id,
+                {"polishedLatex": accumulated, "docType": doc_type, "status": "POLISHED_READY"},
+            )
+
+            pdf_job_id = f"{session_id}-polished"
+            pdf_path = compile_latex_to_pdf(accumulated, pdf_job_id, log_errors=False)
+            if pdf_path and os.path.exists(pdf_path):
+                pdf_url = f"/output/{pdf_job_id}.pdf"
+                yield sse({"type": "save_complete", "docId": session_id, "pdfUrl": pdf_url})
+
+            yield sse({"type": "phase_complete", "phase": "polish", "latex": accumulated})
+            return
+
+        yield sse({"type": "error", "message": f"Unknown phase: {phase}"})
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/api/create/sessions/<session_id>/fields", methods=["POST"])
+def fill_fields(session_id: str) -> Any:
+    try:
+        session = _fetch_ai_session(session_id)
+    except Exception:  # noqa: BLE001
+        return jsonify({"error": "Session not found"}), 404
+
+    data = _json_body()
+    fields = data.get("fields") or []
+    extra_prompt = data.get("extraPrompt") or ""
+    if not isinstance(fields, list):
+        return jsonify({"error": "Fields must be a list"}), 400
+
+    prompt = session.get("promptLatest") or session.get("promptInitial") or ""
+    if extra_prompt:
+        prompt = f"{prompt}\n{extra_prompt}"
+    doc_type = session.get("docType") or detect_document_type(prompt, None)
+    constraints = session.get("outlineConstraints")
+    if isinstance(constraints, str) and constraints.strip():
+        try:
+            constraints = json.loads(constraints)
+        except json.JSONDecodeError:
+            constraints = None
+
+    filled = generate_field_values(prompt, doc_type, fields, constraints)
+    return jsonify({"fields": filled})
+
+
+
+
 @app.route("/api/progressive_render", methods=["POST"])
 def progressive_render() -> Any:
     """Compile arbitrary LaTeX (partial or masked) for progressive previews."""
@@ -533,12 +793,13 @@ def progressive_render() -> Any:
     return jsonify({"error": "Progressive compilation failed"}), 500
 
 
-@app.route("/output/<filename>", methods=["GET"])
-def serve_pdf(filename: str) -> Any:
-    """Serve generated PDF files."""
+@app.route("/output/<path:filename>", methods=["GET"])
+def serve_output_file(filename: str) -> Any:
+    """Serve generated PDF files and stored assets."""
     file_path = os.path.join(OUTPUT_DIR, filename)
     if os.path.exists(file_path):
-        return send_file(file_path, mimetype="application/pdf")
+        mime_type, _ = mimetypes.guess_type(file_path)
+        return send_file(file_path, mimetype=mime_type or "application/octet-stream")
     return jsonify({"error": "File not found"}), 404
 
 
@@ -550,6 +811,30 @@ def list_versions(user_id: str) -> Any:
 @app.route("/api/style/<user_id>", methods=["GET"])
 def get_style(user_id: str) -> Any:
     return jsonify({"style": load_user_style(user_id)})
+
+
+@app.route("/api/style/<user_id>", methods=["POST"])
+def update_style(user_id: str) -> Any:
+    data = _json_body()
+    if not isinstance(data, dict):
+        return jsonify({"error": "Style payload must be an object"}), 400
+    current = load_user_style(user_id) or {}
+    merged = {**current, **data}
+    save_user_style(user_id, merged)
+    return jsonify({"style": merged})
+
+
+@app.route("/api/style/apply", methods=["POST"])
+def apply_style() -> Any:
+    data = _json_body()
+    latex = data.get("latex")
+    style = data.get("style") or {}
+    if not latex or not isinstance(latex, str):
+        return jsonify({"error": "Missing LaTeX payload"}), 400
+    if not isinstance(style, dict):
+        return jsonify({"error": "Style payload must be an object"}), 400
+    updated = apply_style_overrides(latex, style)
+    return jsonify({"latex": updated})
 
 
 @app.route("/api/import_template", methods=["POST"])
@@ -583,6 +868,31 @@ Body text goes here.
     sanitized = clean_generated_latex(layout_latex)
     save_user_template(user_id, doc_type, sanitized)
     return jsonify({"message": "Template imported", "docType": doc_type, "pages": len(images)})
+
+
+@app.route("/api/assets/upload", methods=["POST"])
+def upload_asset() -> Any:
+    file = request.files.get("file")
+    if not file:
+        return jsonify({"error": "Missing file"}), 400
+
+    _, ext = os.path.splitext(file.filename or "")
+    ext = ext.lower()
+    if ext not in {".png", ".jpg", ".jpeg", ".gif"}:
+        return jsonify({"error": "Unsupported file type"}), 400
+
+    asset_id = f"{uuid.uuid4().hex}{ext}"
+    output_path = os.path.join(ASSETS_DIR, asset_id)
+    os.makedirs(ASSETS_DIR, exist_ok=True)
+    file.save(output_path)
+
+    return jsonify(
+        {
+            "assetId": asset_id,
+            "assetUrl": f"/output/assets/{asset_id}",
+            "latexPath": f"assets/{asset_id}",
+        }
+    )
 
 
 @app.route("/api/pdf-editor/document", methods=["GET"])

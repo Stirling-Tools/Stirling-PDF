@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.5
 # ==============================================================================
 # Multi-stage Dockerfile for Stirling-PDF – image with everything included
 # Includes: LibreOffice, Calibre, Tesseract, OCRmyPDF, unoserver, WeasyPrint, etc.
@@ -15,7 +16,8 @@ COPY gradle gradle/
 COPY app/core/build.gradle core/.
 COPY app/common/build.gradle common/.
 COPY app/proprietary/build.gradle proprietary/.
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+RUN --mount=type=cache,target=/home/gradle/.gradle \
+    ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
 
 # Set the working directory
 WORKDIR /app
@@ -24,7 +26,8 @@ WORKDIR /app
 COPY . .
 
 # Build the application (server-only JAR - no UI, includes security features controlled at runtime)
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+RUN --mount=type=cache,target=/home/gradle/.gradle \
+    DISABLE_ADDITIONAL_FEATURES=false \
     STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
@@ -40,7 +43,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
 # Install core runtime dependencies + tools required by Stirling-PDF features
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
     openjdk-21-jre-headless \
     ffmpeg poppler-utils ocrmypdf \
@@ -146,13 +150,15 @@ ENV VERSION_TAG=$VERSION_TAG \
 # ==============================================================================
 # Python virtual environment for additional Python tools (WeasyPrint, OpenCV, etc.)
 # ==============================================================================
-RUN python3 -m venv /opt/venv --system-site-packages \
-    && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m venv /opt/venv --system-site-packages \
+    && /opt/venv/bin/pip install weasyprint pdf2image opencv-python-headless \
     && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
 
 # Separate venv for unoserver (keeps it isolated)
-RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir unoserver
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m venv /opt/unoserver-venv --system-site-packages \
+    && /opt/unoserver-venv/bin/pip install unoserver
 
 # Make unoserver tools available in main venv PATH
 RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \

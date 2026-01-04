@@ -37,6 +37,7 @@ Stage 1: Outline
 - User can edit any section.
 - "Approve and Continue" triggers the next stage.
 - Input box remains visible for reprompt.
+- Edit/lock rules within stages are MVP-flexible and will be refined later.
 
 Stage 2: Rough Draft
 - AI fills a full rough draft from the approved outline.
@@ -45,12 +46,12 @@ Stage 2: Rough Draft
 
 Stage 3: Polished Template
 - AI applies a LaTeX template for the chosen doc type.
-- Style edits allowed, substance locked unless full redraft.
+- Style edits and locking rules are TBD for MVP.
 - Company templates available (pro tier).
 
-Stage 4: Share
-- Default is a share link.
-- Optional email send.
+Stage 4: Share (post-MVP)
+- MVP can be download-only.
+- Share links and email are post-MVP.
 
 ## Data Model (Java)
 Session
@@ -70,7 +71,7 @@ Session
 
 Templates
 - template_id
-- owner_id or team_id
+- owner_id (team visibility rules TBD)
 - doc_type
 - latex_source
 - created_at
@@ -97,7 +98,7 @@ Frontend -> Java (public)
   body: { outlineText }
 - POST /ai/sessions/:id/reprompt
   body: { prompt }
-- POST /ai/sessions/:id/share
+- POST /ai/sessions/:id/share (post-MVP)
   body: { email? }
 
 Python -> Java (internal tools)
@@ -134,6 +135,7 @@ Nodes
 - GenerateDraft
 - ApplyTemplate
 - SaveAndReturn
+Note: Node boundaries are provisional for MVP and may change.
 
 State
 - sessionId
@@ -167,7 +169,7 @@ Phase 2: Draft + Polish
 
 Phase 3: Share + Save
 - Java stores polished LaTeX + PDF.
-- Share by link + optional email.
+- MVP can be download-only; share is post-MVP.
 
 Phase 4: Hardening
 - Rate limits on AI endpoints.

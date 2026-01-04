@@ -71,6 +71,12 @@ public class AiProxyController {
         return proxy("GET", "/api/style/" + userId, request, false);
     }
 
+    @PostMapping("/style/{userId}")
+    public ResponseEntity<StreamingResponseBody> updateStyle(
+            @PathVariable("userId") String userId, HttpServletRequest request) {
+        return proxy("POST", "/api/style/" + userId, request, false);
+    }
+
     @PostMapping("/import_template")
     public ResponseEntity<StreamingResponseBody> importTemplate(HttpServletRequest request) {
         return proxy("POST", "/api/import_template", request, false);
