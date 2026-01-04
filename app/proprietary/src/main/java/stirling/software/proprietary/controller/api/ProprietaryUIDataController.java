@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -202,7 +203,7 @@ public class ProprietaryUIDataController {
 
         SAML2 saml2 = securityProps.getSaml2();
         if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
-            String samlIdp = saml2.getProvider();
+            String samlIdp = saml2.getIdpIssuer();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
             // For SAML, we need to use the backend URL directly, not a relative path
@@ -371,6 +372,13 @@ public class ProprietaryUIDataController {
 
         if (principal instanceof UserDetails detailsUser) {
             username = detailsUser.getUsername();
+        } else if (principal instanceof Jwt jwt) {
+            username = jwt.getSubject();
+
+            switch (jwt.getClaimAsString("authType")) {
+                case "OAUTH2" -> isOAuth2Login = true;
+                case "SAML2" -> isSaml2Login = true;
+            }
         } else if (principal instanceof OAuth2User oAuth2User) {
             username = oAuth2User.getName();
             isOAuth2Login = true;

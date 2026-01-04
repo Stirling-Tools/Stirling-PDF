@@ -53,9 +53,6 @@ public class OAuth2Configuration {
             ApplicationProperties applicationProperties, @Lazy UserService userService) {
         this.userService = userService;
         this.applicationProperties = applicationProperties;
-        log.info(
-                "OAuth2Configuration initialized - OAuth2 enabled: {}",
-                applicationProperties.getSecurity().getOauth2().getEnabled());
     }
 
     @Bean
@@ -222,8 +219,6 @@ public class OAuth2Configuration {
                     name,
                     oauth.getIssuer(),
                     REDIRECT_URI_PATH + name);
-        } else {
-            log.warn("OIDC OAuth2 provider validation failed - provider will not be registered");
         }
 
         return isValid

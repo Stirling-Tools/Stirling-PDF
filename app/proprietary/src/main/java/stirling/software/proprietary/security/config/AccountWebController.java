@@ -121,7 +121,7 @@ public class AccountWebController {
         SAML2 saml2 = securityProps.getSaml2();
 
         if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
-            String samlIdp = saml2.getProvider();
+            String samlIdp = saml2.getIdpIssuer();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
             if (applicationProperties.getPremium().getProFeatures().isSsoAutoLogin()) {
