@@ -8,7 +8,7 @@
 }
 
 .containerWithThumbnail {
-  background-color: transparent;
+  background-color: white;
 }
 
 .containerWithoutThumbnail {
@@ -27,6 +27,7 @@
   height: 100%;
   object-fit: contain;
   filter: grayscale(10%) contrast(95%) brightness(105%);
+  opacity: 0.3;
 }
 
 /* Quick grid overlay styles - EXACT copy from stamp */
