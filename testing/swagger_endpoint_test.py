@@ -109,6 +109,16 @@ DEFAULT_SKIP_ENDPOINTS = {
     # Convert start
     ("post", "/api/v1/convert/url/pdf"),  # URL input not handled properly
     # convert end
+    #######################################################################
+    # Pipeline start
+    ("post", "/api/v1/pipeline/handleData"),
+    # Pipeline end
+    #######################################################################
+    # Convert start
+    ("post", "/api/v1/convert/pdf/text-editor/partial/{jobId}"),
+    ("get", "/api/v1/convert/pdf/text-editor/page/{jobId}/{pageNumber}"),
+    ("post", "/api/v1/convert/pdf/text-editor/clear-cache/{jobId}"),
+    # Convert end
 }
 
 
@@ -819,7 +829,7 @@ class SwaggerTester:
         if content_type and content_type.startswith("image/"):
             return self._open_file(IMAGE_SAMPLE_FILE, content_type)
 
-        if "extract-attachments" in path_lower:
+        if "extract-attachments" in path_lower or "delete-attachment" in path_lower or "rename-attachment" in path_lower:
             return self._open_file(
                 PDF_WITH_ATTACHMENTS_SAMPLE_FILE, "application/pdf"
             )

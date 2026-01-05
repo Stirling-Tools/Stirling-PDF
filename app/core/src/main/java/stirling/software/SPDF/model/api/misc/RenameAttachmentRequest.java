@@ -13,11 +13,15 @@ public class RenameAttachmentRequest extends PDFFile {
 
     @Schema(
             description = "The current name of the attachment to rename",
+            example = "stirling-pdf.txt",
+            format = "string",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String attachmentName;
 
     @Schema(
             description = "The new name for the attachment",
+            example = "renamed-stirling-pdf.txt",
+            format = "string",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String newName;
 }

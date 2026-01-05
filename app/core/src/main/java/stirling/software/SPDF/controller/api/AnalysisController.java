@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,7 +61,7 @@ public class AnalysisController {
     @Operation(
             summary = "Get PDF page count",
             description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Integer> getPageCount(@Valid @ModelAttribute PDFFile request)
+    public ResponseEntity<Map<String, Integer>> getPageCount(@Valid @ModelAttribute PDFFile request)
             throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
@@ -70,7 +71,7 @@ public class AnalysisController {
         }
         request.validatePdfFile(inputFile);
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
-            return Map.of("pageCount", document.getNumberOfPages());
+            return ResponseEntity.ok(Map.of("pageCount", document.getNumberOfPages()));
         }
     }
 
@@ -79,7 +80,7 @@ public class AnalysisController {
     @Operation(
             summary = "Get basic PDF information",
             description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getBasicInfo(@Valid @ModelAttribute PDFFile request)
+    public ResponseEntity<Map<String, Object>> getBasicInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
@@ -94,7 +95,7 @@ public class AnalysisController {
             info.put("pageCount", document.getNumberOfPages());
             info.put("pdfVersion", document.getVersion());
             info.put("fileSize", fileSizeInBytes);
-            return info;
+            return ResponseEntity.ok(info);
         }
     }
 
@@ -105,8 +106,8 @@ public class AnalysisController {
     @Operation(
             summary = "Get PDF document properties",
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
-    public Map<String, String> getDocumentProperties(@Valid @ModelAttribute PDFFile request)
-            throws IOException {
+    public ResponseEntity<Map<String, String>> getDocumentProperties(
+            @Valid @ModelAttribute PDFFile request) throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
@@ -127,7 +128,7 @@ public class AnalysisController {
             properties.put("producer", info.getProducer());
             properties.put("creationDate", info.getCreationDate().toString());
             properties.put("modificationDate", info.getModificationDate().toString());
-            return properties;
+            return ResponseEntity.ok(properties);
         }
     }
 
@@ -136,8 +137,8 @@ public class AnalysisController {
     @Operation(
             summary = "Get page dimensions for all pages",
             description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
-    public List<Map<String, Float>> getPageDimensions(@Valid @ModelAttribute PDFFile request)
-            throws IOException {
+    public ResponseEntity<List<Map<String, Float>>> getPageDimensions(
+            @Valid @ModelAttribute PDFFile request) throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
@@ -155,7 +156,7 @@ public class AnalysisController {
                 pageDim.put("height", page.getBBox().getHeight());
                 dimensions.add(pageDim);
             }
-            return dimensions;
+            return ResponseEntity.ok(dimensions);
         }
     }
 
@@ -165,7 +166,7 @@ public class AnalysisController {
             summary = "Get form field information",
             description =
                     "Returns count and details of form fields. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getFormFields(@Valid @ModelAttribute PDFFile request)
+    public ResponseEntity<Map<String, Object>> getFormFields(@Valid @ModelAttribute PDFFile request)
             throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
@@ -187,7 +188,7 @@ public class AnalysisController {
                 formInfo.put("hasXFA", false);
                 formInfo.put("isSignaturesExist", false);
             }
-            return formInfo;
+            return ResponseEntity.ok(formInfo);
         }
     }
 
@@ -196,8 +197,8 @@ public class AnalysisController {
     @Operation(
             summary = "Get annotation information",
             description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getAnnotationInfo(@Valid @ModelAttribute PDFFile request)
-            throws IOException {
+    public ResponseEntity<Map<String, Object>> getAnnotationInfo(
+            @Valid @ModelAttribute PDFFile request) throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
@@ -220,7 +221,7 @@ public class AnalysisController {
 
             annotInfo.put("totalCount", totalAnnotations);
             annotInfo.put("typeBreakdown", annotationTypes);
-            return annotInfo;
+            return ResponseEntity.ok(annotInfo);
         }
     }
 
@@ -230,7 +231,7 @@ public class AnalysisController {
             summary = "Get font information",
             description =
                     "Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getFontInfo(@Valid @ModelAttribute PDFFile request)
+    public ResponseEntity<Map<String, Object>> getFontInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
@@ -251,7 +252,7 @@ public class AnalysisController {
 
             fontInfo.put("fontCount", fontNames.size());
             fontInfo.put("fonts", fontNames);
-            return fontInfo;
+            return ResponseEntity.ok(fontInfo);
         }
     }
 
@@ -261,8 +262,8 @@ public class AnalysisController {
             summary = "Get security information",
             description =
                     "Returns encryption and permission details. Input:PDF Output:JSON Type:SISO")
-    public Map<String, Object> getSecurityInfo(@Valid @ModelAttribute PDFFile request)
-            throws IOException {
+    public ResponseEntity<Map<String, Object>> getSecurityInfo(
+            @Valid @ModelAttribute PDFFile request) throws IOException {
         // Validate input
         MultipartFile inputFile = request.resolveFile(fileStorage);
         if (inputFile == null) {
@@ -296,7 +297,7 @@ public class AnalysisController {
                 securityInfo.put("isEncrypted", false);
             }
 
-            return securityInfo;
+            return ResponseEntity.ok(securityInfo);
         }
     }
 }

@@ -94,7 +94,6 @@ jobs:
           [
             "Filter",
             "Security",
-            "Pipeline",
             "Analysis",
             "Misc",
             "Info",
@@ -111,6 +110,7 @@ jobs:
         #     "Admin Job Management",
         #     "Admin License Management",
         #     "Admin Settings",
+        #     "Pipeline",
         #   ]
 
     steps:

@@ -10,8 +10,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import stirling.software.common.util.ExceptionUtils;
-
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
