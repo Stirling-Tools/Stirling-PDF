@@ -1,6 +1,8 @@
 package stirling.software.proprietary.security.oauth2;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -60,7 +62,16 @@ public class CustomOAuth2AuthenticationFailureHandler
                     "OAuth2 Authentication error: {}",
                     errorCode != null ? errorCode : exception.getMessage(),
                     exception);
-            getRedirectStrategy().sendRedirect(request, response, "/login?errorOAuth=" + errorCode);
+            String safeError =
+                    URLEncoder.encode(
+                            errorCode != null ? errorCode : "oauth2AuthenticationError",
+                            StandardCharsets.UTF_8);
+            getRedirectStrategy()
+                    .sendRedirect(
+                            request,
+                            response,
+                            request.getContextPath() + "/auth/callback?errorOAuth=" + safeError);
+            return;
         }
         log.error("Unhandled authentication exception", exception);
         super.onAuthenticationFailure(request, response, exception);

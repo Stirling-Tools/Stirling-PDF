@@ -343,74 +343,100 @@ public class ReactRoutingController {
                     </style>
                     <script>
                       (function() {
-                        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-                        const searchParams = new URLSearchParams(window.location.search);
-                        const token = hashParams.get('access_token') || hashParams.get('token') || searchParams.get('access_token');
-                        const errorCode = searchParams.get('errorOAuth')
-                          || searchParams.get('error')
-                          || hashParams.get('error')
-                          || searchParams.get('error_description')
-                          || hashParams.get('error_description');
-                        const isDesktopPopup = !!window.opener;
-                        const serverUrl = %s;
-                        const iconEl = document.getElementById('auth-icon');
-                        const titleEl = document.getElementById('auth-title');
-                        const messageEl = document.getElementById('auth-message');
-                        const detailsEl = document.getElementById('auth-error-details');
+                        const run = () => {
+                          const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+                          const searchParams = new URLSearchParams(window.location.search);
+                          const token = hashParams.get('access_token') || hashParams.get('token') || searchParams.get('access_token');
+                          const errorCode = searchParams.get('errorOAuth')
+                            || searchParams.get('error')
+                            || hashParams.get('error')
+                            || searchParams.get('error_description')
+                            || hashParams.get('error_description');
+                          const isDesktopPopup = !!window.opener;
+                          const serverUrl = %s;
+                          const iconEl = document.getElementById('auth-icon');
+                          const titleEl = document.getElementById('auth-title');
+                          const messageEl = document.getElementById('auth-message');
+                          const detailsEl = document.getElementById('auth-error-details');
 
-                        const showError = (message, details) => {
-                          if (iconEl) {
-                            iconEl.textContent = '✗';
-                            iconEl.classList.add('error');
+                          const sendDeepLink = (type, value, key) => {
+                            try {
+                              const encodedValue = encodeURIComponent(value || '');
+                              const encodedServer = encodeURIComponent(serverUrl);
+                              const hashKey = key || 'access_token';
+                              const deepLink = `stirlingpdf://auth/sso-complete?server=${encodedServer}#${hashKey}=${encodedValue}&type=${type}`;
+                              window.location.href = deepLink;
+                            } catch (_) {
+                              // ignore deep link errors
+                            }
+                          };
+
+                          const showError = (message, details) => {
+                            if (iconEl) {
+                              iconEl.textContent = '✗';
+                              iconEl.classList.add('error');
+                            }
+                            if (titleEl) {
+                              titleEl.textContent = 'Authentication failed';
+                            }
+                            if (messageEl) {
+                              messageEl.textContent = message;
+                            }
+                            if (detailsEl && details) {
+                              detailsEl.textContent = details;
+                              detailsEl.style.display = 'block';
+                            }
+                          };
+
+                          if (token) {
+                            try { localStorage.setItem('stirling_jwt', token); } catch (_) {}
+                            try { window.dispatchEvent(new Event('jwt-available')); } catch (_) {}
+
+                            if (isDesktopPopup) {
+                              try { window.opener.postMessage({ type: 'stirling-desktop-sso', token }, '*'); } catch (_) {}
+                              setTimeout(() => { try { window.close(); } catch (_) {} }, 150);
+                            }
+
+                            setTimeout(() => {
+                              sendDeepLink('sso-selfhosted', token, 'access_token');
+                            }, 200);
+
+                            return;
                           }
-                          if (titleEl) {
-                            titleEl.textContent = 'Authentication failed';
+
+                          if (errorCode) {
+                            const isCancelled = errorCode === 'access_denied';
+                            if (isDesktopPopup) {
+                              try {
+                                window.opener.postMessage(
+                                  { type: 'stirling-desktop-sso-error', error: errorCode },
+                                  '*'
+                                );
+                              } catch (_) {
+                                // ignore postMessage errors
+                              }
+                            }
+                            sendDeepLink('sso-error', errorCode, 'error');
+                            showError(
+                              isCancelled
+                                ? 'Authentication was cancelled. You can close this window and try again.'
+                                : 'Authentication was not successful. You can close this window and try again.',
+                              errorCode
+                            );
+                            return;
                           }
-                          if (messageEl) {
-                            messageEl.textContent = message;
-                          }
-                          if (detailsEl && details) {
-                            detailsEl.textContent = details;
-                            detailsEl.style.display = 'block';
-                          }
+
+                          showError(
+                            'Authentication did not complete. You can close this window and try again.',
+                            'missing_token'
+                          );
                         };
 
-                        if (token) {
-                          try { localStorage.setItem('stirling_jwt', token); } catch (_) {}
-                          try { window.dispatchEvent(new Event('jwt-available')); } catch (_) {}
-
-                          if (isDesktopPopup) {
-                            try { window.opener.postMessage({ type: 'stirling-desktop-sso', token }, '*'); } catch (_) {}
-                            setTimeout(() => { try { window.close(); } catch (_) {} }, 150);
-                            return;
-                          }
-
-                          try {
-                            const deepLink = `stirlingpdf://auth/sso-complete?server=${encodeURIComponent(serverUrl)}#access_token=${encodeURIComponent(token)}&type=sso-selfhosted`;
-                            window.location.href = deepLink;
-                            return;
-                          } catch (_) {
-                            // ignore deep link errors
-                          }
-
-                          return;
+                        if (document.readyState === 'loading') {
+                          document.addEventListener('DOMContentLoaded', run);
+                        } else {
+                          run();
                         }
-
-                        if (errorCode) {
-                          const isCancelled = errorCode === 'access_denied';
-                          showError(
-                            isCancelled
-                              ? 'Authentication was cancelled. You can close this window and try again.'
-                              : 'Authentication was not successful. You can close this window and try again.',
-                            errorCode
-                          );
-                          return;
-                        }
-
-                        showError(
-                          'Authentication did not complete. You can close this window and try again.',
-                          'missing_token'
-                        );
                       })();
                     </script>
                   </head>

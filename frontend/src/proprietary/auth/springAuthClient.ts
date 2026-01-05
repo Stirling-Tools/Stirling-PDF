@@ -13,6 +13,7 @@ import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
 import { resetOAuthState } from '@app/auth/oauthStorage';
 import { clearPlatformAuthAfterSignOut } from '@app/extensions/authSessionCleanup';
+import { startOAuthNavigation } from '@app/extensions/oauthNavigation';
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -269,6 +270,10 @@ class SpringAuthClient {
       // Use the full path provided by the backend
       // This supports both OAuth2 (/oauth2/authorization/...) and SAML2 (/saml2/authenticate/...)
       const redirectUrl = params.provider;
+      const handled = await startOAuthNavigation(redirectUrl);
+      if (handled) {
+        return { error: null };
+      }
       // console.log('[SpringAuth] Redirecting to SSO:', redirectUrl);
       // Use window.location.assign for full page navigation
       window.location.assign(redirectUrl);

@@ -597,11 +597,22 @@ export class AuthService {
       };
 
       const handleMessage = async (event: MessageEvent) => {
-        if (event.origin !== expectedOrigin) {
+        const isSameWindow = event.source === authWindow;
+        if (!isSameWindow && event.origin !== expectedOrigin) {
           return;
         }
 
-        const data = event.data as { type?: string; token?: string; access_token?: string };
+        const data = event.data as {
+          type?: string;
+          token?: string;
+          access_token?: string;
+          error?: string;
+        };
+        if (data?.type === 'stirling-desktop-sso-error') {
+          cleanup();
+          reject(new Error(data.error || 'Authentication was not successful.'));
+          return;
+        }
         if (!data || data.type !== 'stirling-desktop-sso') {
           return;
         }
@@ -743,6 +754,17 @@ export class AuthService {
           const hash = parsed.hash.replace(/^#/, '');
           const params = new URLSearchParams(hash);
           const type = params.get('type') || parsed.searchParams.get('type');
+          const error = params.get('error') || parsed.searchParams.get('error');
+          if (type === 'sso-error' || error) {
+            completed = true;
+            if (unlisten) unlisten();
+            clearTimeout(timeoutId);
+            if (localPollId !== null) {
+              window.clearInterval(localPollId);
+            }
+            reject(new Error(error || 'Authentication was not successful.'));
+            return;
+          }
           if (type !== 'sso' && type !== 'sso-selfhosted') {
             return;
           }
