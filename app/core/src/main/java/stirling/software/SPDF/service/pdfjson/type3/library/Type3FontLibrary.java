@@ -220,6 +220,9 @@ public class Type3FontLibrary {
     }
 
     private byte[] loadResourceBytes(String location) throws IOException {
+        if (location == null || location.isBlank()) {
+            throw new IOException("Resource location is null or blank");
+        }
         String resolved = resolveLocation(location);
         Resource resource = resourceLoader.getResource(resolved);
         if (!resource.exists()) {
