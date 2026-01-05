@@ -103,7 +103,22 @@ function App() {
         setStyleDraft={workflow.setStyleDraft}
         applyStyleAndRegenerate={workflow.applyStyleAndRegenerate}
         onAddPromptInfo={workflow.addPromptForFields}
-        onStageSelect={(nextStage) => workflow.setStage(nextStage)}
+        onStageSelect={(nextStage) => {
+          if (workflow.isGenerating || workflow.isStageLoading) return
+          if (nextStage === 'text' && workflow.stage === 'outline') {
+            workflow.approveOutline()
+            return
+          }
+          if (nextStage === 'styling' && workflow.stage === 'text') {
+            workflow.approveDraft()
+            return
+          }
+          if (nextStage === 'review' && workflow.stage === 'styling') {
+            workflow.saveAndReview()
+            return
+          }
+          workflow.setStage(nextStage)
+        }}
         imagePlaceholdersCount={workflow.imagePlaceholdersCount}
         isAssetUploading={workflow.isAssetUploading}
         assetError={workflow.assetError}

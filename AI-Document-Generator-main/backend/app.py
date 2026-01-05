@@ -72,6 +72,11 @@ def log_job_request_sequence() -> None:
 def _json_body() -> Dict[str, Any]:
     return request.get_json(silent=True) or {}
 
+def _require_ai_enabled() -> Optional[Any]:
+    if CLIENT_MODE != "langchain":
+        return jsonify({"error": "AI is disabled. Set OPENAI_API_KEY to enable AI features."}), 503
+    return None
+
 
 def _java_url(path: str) -> str:
     base = JAVA_BACKEND_URL.rstrip("/")
@@ -612,6 +617,9 @@ def generate_stream() -> Any:
 
 @app.route("/api/create/sessions/<session_id>/stream", methods=["GET"])
 def create_stream(session_id: str) -> Any:
+    disabled = _require_ai_enabled()
+    if disabled:
+        return disabled
     phase = (request.args.get("phase") or "outline").strip().lower()
     try:
         session = _fetch_ai_session(session_id)
@@ -749,9 +757,14 @@ def create_stream(session_id: str) -> Any:
 
 @app.route("/api/create/sessions/<session_id>/fields", methods=["POST"])
 def fill_fields(session_id: str) -> Any:
+    disabled = _require_ai_enabled()
+    if disabled:
+        return disabled
     try:
+        logger.info("[AI create] fill_fields session_id=%s", session_id)
         session = _fetch_ai_session(session_id)
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[AI create] fill_fields session lookup failed session_id=%s error=%s", session_id, exc)
         return jsonify({"error": "Session not found"}), 404
 
     data = _json_body()

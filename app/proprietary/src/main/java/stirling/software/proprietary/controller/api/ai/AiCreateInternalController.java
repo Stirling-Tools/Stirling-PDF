@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.ai.AiCreateSession;
 import stirling.software.proprietary.model.ai.AiCreateSessionStatus;
@@ -17,6 +18,7 @@ import stirling.software.proprietary.service.ai.AiCreateSessionService;
 @RestController
 @RequestMapping("/api/v1/ai/create/internal")
 @RequiredArgsConstructor
+@Slf4j
 public class AiCreateInternalController {
 
     private final AiCreateSessionService sessionService;
@@ -24,6 +26,7 @@ public class AiCreateInternalController {
     @GetMapping("/sessions/{sessionId}")
     public ResponseEntity<AiCreateController.AiCreateSessionResponse> getSession(
             @PathVariable String sessionId) {
+        log.info("AI create internal getSession sessionId={}", sessionId);
         AiCreateSession session = sessionService.getSession(sessionId);
         return ResponseEntity.ok(AiCreateController.AiCreateSessionResponse.from(session));
     }
@@ -31,6 +34,7 @@ public class AiCreateInternalController {
     @PostMapping("/sessions/{sessionId}/update")
     public ResponseEntity<AiCreateController.AiCreateSessionResponse> updateSession(
             @PathVariable String sessionId, @RequestBody UpdateSessionRequest request) {
+        log.info("AI create internal updateSession sessionId={}", sessionId);
         AiCreateSession session =
                 sessionService.applyInternalUpdate(
                         sessionId,

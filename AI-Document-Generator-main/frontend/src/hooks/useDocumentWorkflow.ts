@@ -900,6 +900,11 @@ export function useDocumentWorkflow() {
 
   const fillFieldsFromAI = useCallback(async (extraPrompt?: string) => {
     if (!_aiSessionId) return
+    console.debug('[AI create] fillFieldsFromAI start', {
+      sessionId: _aiSessionId,
+      hasExtraPrompt: Boolean(extraPrompt?.trim()),
+      outlineCount: outlineRows.length,
+    })
     setIsStageLoading(true)
     try {
       const res = await fetch(`/api/v1/ai/create/sessions/${_aiSessionId}/fields`, {
@@ -914,6 +919,19 @@ export function useDocumentWorkflow() {
         }),
       })
       const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (res.status === 503) {
+          addMessage('assistant', data.error || 'AI is disabled. Set an API key to enable AI features.')
+          autoFilledRef.current = true
+          autoFillAttemptsRef.current = 0
+          return
+        }
+        console.warn('[AI create] fillFieldsFromAI failed', {
+          sessionId: _aiSessionId,
+          status: res.status,
+          data,
+        })
+      }
       if (!res.ok) {
         throw new Error(data.error || 'Failed to auto-fill fields')
       }
@@ -950,7 +968,7 @@ export function useDocumentWorkflow() {
     } finally {
       setIsStageLoading(false)
     }
-  }, [_aiSessionId, outlineRows, autoFillFieldsFromPrompt, prompt, stage, view])
+  }, [_aiSessionId, outlineRows, autoFillFieldsFromPrompt, prompt, stage, view, addMessage])
 
   const addPromptForFields = useCallback(
     (extraPrompt: string) => {
@@ -1085,15 +1103,19 @@ export function useDocumentWorkflow() {
     setIsGenerating(true)
     setIsLivePreviewing(true)
     try {
-      await fetch(`/api/v1/ai/create/sessions/${_aiSessionId}/outline`, {
+      const res = await fetch(`/api/v1/ai/create/sessions/${_aiSessionId}/outline`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ outlineText, constraints: outlineConstraints }),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to approve outline')
+      }
       await runDraft(_aiSessionId)
     } catch (error) {
       console.error('Outline approval failed:', error)
-      addMessage('assistant', 'Failed to approve outline. Please try again.')
+      addMessage('assistant', error instanceof Error ? error.message : 'Failed to approve outline. Please try again.')
     } finally {
       setIsGenerating(false)
       setIsLivePreviewing(false)
@@ -1116,16 +1138,20 @@ export function useDocumentWorkflow() {
     setIsGenerating(true)
     setIsLivePreviewing(true)
     try {
-      await fetch(`/api/v1/ai/create/sessions/${_aiSessionId}/draft`, {
+      const res = await fetch(`/api/v1/ai/create/sessions/${_aiSessionId}/draft`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ draftSections }),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to approve draft')
+      }
       setStage('styling')
       await runPolish(_aiSessionId)
     } catch (error) {
       console.error('Draft approval failed:', error)
-      addMessage('assistant', 'Failed to approve draft. Please try again.')
+      addMessage('assistant', error instanceof Error ? error.message : 'Failed to approve draft. Please try again.')
     } finally {
       setIsGenerating(false)
       setIsLivePreviewing(false)
@@ -1229,6 +1255,12 @@ export function useDocumentWorkflow() {
       })
 
       const createData = await createResponse.json().catch(() => ({}))
+      console.debug('[AI create] create session response', {
+        status: createResponse.status,
+        ok: createResponse.ok,
+        sessionId: createData.sessionId,
+        error: createData.error,
+      })
       if (!createResponse.ok || !createData.sessionId) {
         throw new Error(createData.error || 'Failed to create AI session')
       }

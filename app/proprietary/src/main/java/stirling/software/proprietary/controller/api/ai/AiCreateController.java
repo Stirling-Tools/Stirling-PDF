@@ -49,6 +49,12 @@ public class AiCreateController {
         }
         AiCreateSession session =
                 sessionService.createSession(request.prompt(), request.docType(), request.templateId());
+        log.info(
+                "AI create session created sessionId={} userId={} docType={} templateId={}",
+                session.getSessionId(),
+                session.getUserId(),
+                session.getDocType(),
+                session.getTemplateId());
         return ResponseEntity.ok(new CreateSessionResponse(session.getSessionId()));
     }
 
@@ -122,6 +128,7 @@ public class AiCreateController {
     public ResponseEntity<StreamingResponseBody> fillFields(
             @PathVariable String sessionId, HttpServletRequest request) {
         sessionService.getSessionForCurrentUser(sessionId);
+        log.info("AI create fillFields sessionId={}", sessionId);
         return proxy("POST", "/api/create/sessions/" + sessionId + "/fields", request, false);
     }
 

@@ -23,6 +23,9 @@ os.makedirs(TEMPLATE_DIR, exist_ok=True)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL")
 JAVA_BACKEND_URL = os.environ.get("JAVA_BACKEND_URL", "http://localhost:8080")
+
+if not OPENAI_API_KEY:
+    raise RuntimeError("OPENAI_API_KEY is required to start the AI backend.")
 # Default to GPT-5.1 for full document generation (smart model).
 # Allow override via SMART_MODEL or legacy OPENAI_MODEL.
 SMART_MODEL = os.environ.get("SMART_MODEL") or os.environ.get("OPENAI_MODEL") or "gpt-5.1"

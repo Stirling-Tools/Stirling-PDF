@@ -35,6 +35,7 @@ services:
       - OPENAI_API_KEY=sk-proj-mVg... etc please insert
       - SMART_MODEL=gpt-5.1
       - FAST_MODEL=gpt-4.1-nano
+      - JAVA_BACKEND_URL=http://backend:8080
     networks:
       - ai-stack
 
