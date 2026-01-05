@@ -562,7 +562,7 @@ export class AuthService {
 
     // Ensure backend redirects back to /auth/callback
     try {
-      document.cookie = `stirling_redirect_path=${encodeURIComponent('/auth/callback')}; path=/; max-age=300; SameSite=Lax`;
+      document.cookie = `stirling_redirect_path=${encodeURIComponent('/auth/callback?tauri=1')}; path=/; max-age=300; SameSite=Lax`;
     } catch {
       // ignore cookie errors
     }

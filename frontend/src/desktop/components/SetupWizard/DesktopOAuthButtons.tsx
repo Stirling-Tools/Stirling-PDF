@@ -73,6 +73,7 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
         ? error.message
         : t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.');
 
+      await authService.localClearAuth().catch(() => {});
       onError(errorMessage);
       setOauthLoading(false);
     }
