@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
 
-import io.github.pixee.security.Filenames;
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
 
