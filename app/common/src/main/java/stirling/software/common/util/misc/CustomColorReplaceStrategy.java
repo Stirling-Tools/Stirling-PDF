@@ -22,6 +22,8 @@ import org.apache.pdfbox.text.TextPosition;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
@@ -60,7 +62,11 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
         }
 
         // Create a temporary file, with the original filename from the multipart file
-        File file = Files.createTempFile("temp", getFileInput().getOriginalFilename()).toFile();
+        String safeSuffix = Filenames.toSimpleFileName(getFileInput().getOriginalFilename());
+        if (safeSuffix == null || safeSuffix.isBlank()) {
+            safeSuffix = ".tmp";
+        }
+        File file = Files.createTempFile("temp", safeSuffix).toFile();
 
         // Transfer the content of the multipart file to the file
         getFileInput().transferTo(file);

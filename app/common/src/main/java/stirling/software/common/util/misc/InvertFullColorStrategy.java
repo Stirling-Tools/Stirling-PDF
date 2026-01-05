@@ -19,6 +19,8 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.ApplicationContextProvider;
@@ -32,10 +34,11 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     @Override
     public InputStreamResource replace() throws IOException {
-        try (TempFile tempFile =
-                new TempFile(
-                        Files.createTempFile("temp", getFileInput().getOriginalFilename())
-                                .toFile())) {
+        String safeSuffix = Filenames.toSimpleFileName(getFileInput().getOriginalFilename());
+        if (safeSuffix == null || safeSuffix.isBlank()) {
+            safeSuffix = ".tmp";
+        }
+        try (TempFile tempFile = new TempFile(Files.createTempFile("temp", safeSuffix).toFile())) {
             // Transfer the content of the multipart file to the file
             getFileInput().transferTo(tempFile.getFile());
 

@@ -7,6 +7,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
@@ -52,6 +54,10 @@ public class EmailService {
                 || file.getOriginalFilename().isEmpty()) {
             throw new MessagingException("An attachment is required to send the email.");
         }
+        String safeFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
+        if (safeFilename == null || safeFilename.isBlank()) {
+            throw new MessagingException("An attachment is required to send the email.");
+        }
 
         ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
 
@@ -70,7 +76,7 @@ public class EmailService {
         helper.setFrom(mailProperties.getFrom());
 
         // Adds the attachment to the email
-        helper.addAttachment(file.getOriginalFilename(), file);
+        helper.addAttachment(safeFilename, file);
 
         // Sends the email via the configured mail sender
         mailSender.send(message);
