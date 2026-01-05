@@ -27,6 +27,8 @@ class CustomLogoutSuccessHandlerTest {
 
     @Mock private JwtServiceInterface jwtService;
 
+    @Mock private ApplicationProperties.Security.SAML2 saml2;
+
     private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
     @BeforeEach
@@ -41,6 +43,8 @@ class CustomLogoutSuccessHandlerTest {
         String logoutPath = "/login?logout=true";
 
         when(response.isCommitted()).thenReturn(false);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
@@ -56,6 +60,8 @@ class CustomLogoutSuccessHandlerTest {
         String logoutPath = "/login?logout=true";
 
         when(response.isCommitted()).thenReturn(false);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 

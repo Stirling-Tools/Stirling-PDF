@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, waitFor, cleanup } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import AuthCallback from '@app/routes/AuthCallback';
 
