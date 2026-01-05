@@ -1,6 +1,3 @@
-import { connectionModeService } from '@app/services/connectionModeService';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-
 /**
  * Desktop-specific OAuth callback handling for self-hosted SSO flows.
  */
@@ -24,21 +21,5 @@ export async function handleAuthCallbackSuccess(token: string): Promise<void> {
     }, 150);
   }
 
-  // Desktop fallback flow (when popup was blocked and we navigated directly)
-  const pending = localStorage.getItem('desktop_self_hosted_sso_pending');
-  if (!pending) {
-    return;
-  }
-
-  try {
-    const parsed = JSON.parse(pending) as { serverUrl?: string } | null;
-    if (parsed?.serverUrl) {
-      await connectionModeService.switchToSelfHosted({ url: parsed.serverUrl });
-      await tauriBackendService.initializeExternalBackend();
-    }
-  } catch (desktopError) {
-    console.error('[AuthCallback] Desktop fallback completion failed:', desktopError);
-  } finally {
-    localStorage.removeItem('desktop_self_hosted_sso_pending');
-  }
+  // No-op beyond popup notification; deep link flow handles desktop completion.
 }
