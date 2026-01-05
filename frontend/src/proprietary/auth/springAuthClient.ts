@@ -12,7 +12,7 @@ import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
 import { resetOAuthState } from '@app/auth/oauthStorage';
-import { invoke } from '@tauri-apps/api/core';
+import { clearPlatformAuthAfterSignOut } from '@app/extensions/authSessionCleanup';
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -322,15 +322,10 @@ class SpringAuthClient {
         console.warn('[SpringAuth] Failed to clear cookies on sign out', err);
       }
 
-      // If running in the desktop app, also clear persisted desktop credentials
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        try {
-          await invoke('clear_auth_token');
-          await invoke('clear_user_info');
-          console.debug('[SpringAuth] Cleared desktop auth data (keyring + user info)');
-        } catch (desktopError) {
-          console.warn('[SpringAuth] Failed to clear desktop auth data', desktopError);
-        }
+      try {
+        await clearPlatformAuthAfterSignOut();
+      } catch (cleanupError) {
+        console.warn('[SpringAuth] Failed to run platform auth cleanup', cleanupError);
       }
 
       // Notify listeners
@@ -341,6 +336,11 @@ class SpringAuthClient {
       console.error('[SpringAuth] signOut error:', error);
       // Still remove token even if backend call fails
       localStorage.removeItem('stirling_jwt');
+      try {
+        await clearPlatformAuthAfterSignOut();
+      } catch (cleanupError) {
+        console.warn('[SpringAuth] Failed to run platform auth cleanup after error', cleanupError);
+      }
       return {
         error: { message: getErrorMessage(error, 'Logout failed') },
       };

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { springAuth } from '@app/auth/springAuthClient';
+import { clearPlatformAuthOnLoginInit } from '@app/extensions/authSessionCleanup';
 import type { Session, User, AuthError, AuthChangeEvent } from '@app/auth/springAuthClient';
 
 /**
@@ -80,16 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
       }
 
-      // In desktop builds, also clear the desktop auth store/keyring to avoid auto-login on reload
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        try {
-          const { authService } = await import('@app/services/authService');
-          // Do a local clear only; avoid backend logout here to prevent double-calls/toasts
-          await authService.localClearAuth();
-        } catch (desktopErr) {
-          console.warn('[Auth] Failed to clear desktop auth state after signOut', desktopErr);
-        }
-      }
     } catch (err) {
       console.error('[Auth] Unexpected error during sign out:', err);
       setError(err as AuthError);
@@ -105,14 +96,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.debug('[Auth] Initializing auth...');
-        // Force-clear any stale cached token in desktop keyring on startup of auth page to prevent auto-login loops after logout
-        if (typeof window !== 'undefined' && (window as any).__TAURI__ && window.location.pathname.startsWith('/login')) {
-          try {
-            const { authService } = await import('@app/services/authService');
-            await authService.localClearAuth();
-          } catch (desktopErr) {
-            console.warn('[Auth] Failed to clear desktop auth state on login page init', desktopErr);
-          }
+        // Clear any platform-specific cached auth on login page init.
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
+          await clearPlatformAuthOnLoginInit();
         }
 
         // Skip config check entirely - let the app handle login state

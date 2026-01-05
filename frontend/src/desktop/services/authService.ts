@@ -696,23 +696,32 @@ export class AuthService {
     return new Promise<UserInfo>((resolve, reject) => {
       let completed = false;
       let unlisten: (() => void) | null = null;
+      let localPollId: number | null = null;
 
       const timeoutId = window.setTimeout(() => {
         if (!completed) {
+          completed = true;
+          if (localPollId !== null) {
+            window.clearInterval(localPollId);
+          }
           if (unlisten) unlisten();
           reject(new Error('SSO login timed out. Please try again.'));
         }
       }, 120_000);
 
-      const localPollId = window.setInterval(async () => {
+      localPollId = window.setInterval(async () => {
         if (completed) {
-          window.clearInterval(localPollId);
+          if (localPollId !== null) {
+            window.clearInterval(localPollId);
+          }
           return;
         }
         const token = localStorage.getItem('stirling_jwt');
         if (token) {
           completed = true;
-          window.clearInterval(localPollId);
+          if (localPollId !== null) {
+            window.clearInterval(localPollId);
+          }
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
           try {
@@ -745,7 +754,9 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
-          window.clearInterval(localPollId);
+          if (localPollId !== null) {
+            window.clearInterval(localPollId);
+          }
 
           const userInfo = await this.completeSelfHostedSession(serverUrl, token);
           // Ensure connection mode is set and backend is ready (in case caller doesn't)
@@ -760,7 +771,9 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
-          window.clearInterval(localPollId);
+          if (localPollId !== null) {
+            window.clearInterval(localPollId);
+          }
           reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
         }
       }).then((fn) => {
