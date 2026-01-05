@@ -34,8 +34,8 @@ public class GeneralFile {
             description =
                     "Uploaded file (multipart upload). "
                             + "Use this field for direct file submission from the client.",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            format = "binary")
+            format = "binary",
+            type = "string")
     private MultipartFile fileInput;
 
     @Schema(
@@ -56,17 +56,5 @@ public class GeneralFile {
         boolean hasFileInput = fileInput != null && !fileInput.isEmpty();
         boolean hasFileId = fileId != null && !fileId.trim().isEmpty();
         return hasFileInput ^ hasFileId; // XOR – exactly one must be true
-    }
-
-    private static final long MAX_FILE_SIZE = 100L * 1024 * 1024; // 100 MB
-
-    private void validateFileSize(long fileSize) {
-        if (fileSize > MAX_FILE_SIZE) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileSizeLimit",
-                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
-                    fileSize,
-                    MAX_FILE_SIZE);
-        }
     }
 }

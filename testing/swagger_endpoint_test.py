@@ -80,6 +80,7 @@ MARKDOWN_SAMPLE_FILE = "testing/samples/sample.md"
 CBZ_SAMPLE_FILE = "testing/samples/sample.cbz"
 CBR_SAMPLE_FILE = "testing/samples/sample.cbr"
 CHAPTERED_PDF_SAMPLE_FILE = "testing/samples/split_pdf_by_chapters_sample.pdf"
+SAMPLE_VECTOR_SIGN_FILE = "testing/samples/sample_vector_sign.pdf"
 CERT_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.pem"
 KEY_SAMPLE_FILE = "app/core/src/test/resources/certs/test-key.pem"
 PKCS12_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.p12"
@@ -563,9 +564,12 @@ class SwaggerTester:
 
         schema = self._ensure_object_schema(schema)
         properties = schema.get("properties", {}) or {}
+        prefer_file_input = "fileInput" in properties
         for name, prop_schema in properties.items():
+            if prefer_file_input and name == "fileId":
+                continue
             resolved = self._resolve_schema(prop_schema)
-            if self._is_binary_schema(resolved):
+            if self._is_binary_schema(resolved) or name == "fileInput":
                 file_tuple, fh = self._binary_sample_for(
                     name, resolved, path_hint, method
                 )
@@ -849,8 +853,11 @@ class SwaggerTester:
         ):
             return self._open_file(CBZ_SAMPLE_FILE, "application/vnd.comicbook+zip")
 
-        if "split-pdf-by-chapters" in path_lower or "remove-cert-sign" in path_lower:
+        if "split-pdf-by-chapters" in path_lower:
             return self._open_file(CHAPTERED_PDF_SAMPLE_FILE, "application/pdf")
+
+        if "remove-cert-sign" in path_lower:
+            return self._open_file(SAMPLE_VECTOR_SIGN_FILE, "application/pdf")
 
         if (
             ("cert" in name_lower

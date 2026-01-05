@@ -44,7 +44,8 @@ public class PDFFile {
                     "Uploaded PDF file (multipart upload). "
                             + "Use this field for direct file submission from the client.",
             contentMediaType = MediaType.APPLICATION_PDF_VALUE,
-            format = "binary")
+            format = "binary",
+            type = "string")
     private MultipartFile fileInput;
 
     @Schema(
