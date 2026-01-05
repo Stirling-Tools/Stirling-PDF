@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Box, Center, Text, ActionIcon } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -11,6 +11,8 @@ import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
+import { useRedaction } from '@app/contexts/RedactionContext';
+import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile } from '@app/types/fileContext';
@@ -46,14 +48,15 @@ const EmbedPdfViewerContent = ({
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
+    scrollActions,
     panActions: _panActions,
     rotationActions: _rotationActions,
     getScrollState,
     getRotationState,
-    isAnnotationMode,
     setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
+    setApplyChanges,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -75,6 +78,21 @@ const EmbedPdfViewerContent = ({
   // annotation history changes, and cleared after we successfully apply changes.
   const hasAnnotationChangesRef = useRef(false);
 
+  // Scroll position preservation system
+  // We continuously track the last known good scroll position, so we always have it available
+  const lastKnownScrollPageRef = useRef<number>(1);
+  const pendingScrollRestoreRef = useRef<number | null>(null);
+  const scrollRestoreAttemptsRef = useRef<number>(0);
+  
+  // Track the file ID we should be viewing after a save (to handle list reordering)
+  const pendingFileIdRef = useRef<string | null>(null);
+
+  // Get redaction context
+  const { redactionsApplied, setRedactionsApplied } = useRedaction();
+  
+  // Ref for redaction pending tracker API
+  const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
+
   // Get current file from FileContext
   const { selectors, state } = useFileState();
   const { actions } = useFileActions();
@@ -85,16 +103,61 @@ const EmbedPdfViewerContent = ({
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
 
-  // Check if we're in an annotation tool
   const { selectedTool } = useNavigationState();
-  // Tools that require the annotation layer (Sign, Add Text, Add Image, Annotate)
+
   const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
+  const isSignatureMode = isInAnnotationTool;
+  const isManualRedactMode = selectedTool === 'redact';
 
-  // Sync isAnnotationMode in ViewerContext with current tool
+  // Enable annotations only when annotation tool is selected
+  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode;
+
+  // Enable redaction only when redaction tool is selected
+  const shouldEnableRedaction = selectedTool === 'redact';
+
+  // Track previous annotation/redaction state to detect tool switches
+  const prevEnableAnnotationsRef = useRef(shouldEnableAnnotations);
+  const prevEnableRedactionRef = useRef(shouldEnableRedaction);
+  
+  // Track scroll position whenever scrollState changes from the context
+  // This ensures we always have the most up-to-date position
   useEffect(() => {
-    setAnnotationMode(isInAnnotationTool);
-  }, [isInAnnotationTool, setAnnotationMode]);
+    if (scrollState.currentPage > 0) {
+      lastKnownScrollPageRef.current = scrollState.currentPage;
+    }
+  }, [scrollState.currentPage]);
+  
+  // Preserve scroll position when switching between annotation and redaction tools
+  // Using useLayoutEffect to capture synchronously before DOM updates
+  useLayoutEffect(() => {
+    const annotationsChanged = prevEnableAnnotationsRef.current !== shouldEnableAnnotations;
+    const redactionChanged = prevEnableRedactionRef.current !== shouldEnableRedaction;
+    
+    if (annotationsChanged || redactionChanged) {
+      // Read scroll state directly AND use the tracked value - take whichever is valid
+      const currentScrollState = getScrollState();
+      const pageFromState = currentScrollState.currentPage;
+      const pageFromRef = lastKnownScrollPageRef.current;
+      
+      // Use the current state if valid, otherwise fall back to tracked ref
+      const pageToRestore = pageFromState > 0 ? pageFromState : pageFromRef;
+      
+      if (pageToRestore > 0) {
+        pendingScrollRestoreRef.current = pageToRestore;
+        scrollRestoreAttemptsRef.current = 0;
+      }
+      
+      prevEnableAnnotationsRef.current = shouldEnableAnnotations;
+      prevEnableRedactionRef.current = shouldEnableRedaction;
+    }
+  }, [shouldEnableAnnotations, shouldEnableRedaction, getScrollState]);
 
+  // Keep annotation mode enabled when entering placement tools without overriding manual toggles
+  useEffect(() => {
+    if (isInAnnotationTool) {
+      setAnnotationMode(true);
+    }
+  }, [isInAnnotationTool, setAnnotationMode]);
   const isPlacementOverlayActive = Boolean(
     isInAnnotationTool && isPlacementMode && signatureConfig
   );
@@ -123,6 +186,20 @@ const EmbedPdfViewerContent = ({
       setActiveFileIndex(0);
     }
   }, [activeFiles.length, activeFileIndex]);
+
+  // After saving a file, the list may reorder (sorted by version).
+  // Track the saved file's ID and update activeFileIndex to follow it.
+  useEffect(() => {
+    if (pendingFileIdRef.current && activeFiles.length > 0) {
+      const targetFileId = pendingFileIdRef.current;
+      const newIndex = activeFiles.findIndex(f => f.fileId === targetFileId);
+      if (newIndex !== -1 && newIndex !== activeFileIndex) {
+        setActiveFileIndex(newIndex);
+      }
+      // Clear the pending file ID once we've found and switched to it
+      pendingFileIdRef.current = null;
+    }
+  }, [activeFiles, activeFileIndex, setActiveFileIndex]);
 
   // Determine which file to display
   const currentFile = React.useMemo(() => {
@@ -259,8 +336,31 @@ const EmbedPdfViewerContent = ({
     }
 
     const checkForChanges = () => {
+      // Check for annotation history changes (using ref that's updated by useEffect)
       const hasAnnotationChanges = hasAnnotationChangesRef.current;
-      return hasAnnotationChanges;
+      
+      // Check for pending redactions
+      const hasPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      
+      // Always consider applied redactions as unsaved until export
+      const hasAppliedRedactions = redactionsApplied;
+
+      // When in redact mode, still include annotation changes (users may draw)
+      if (isManualRedactMode) {
+        console.log('[Viewer] Checking for unsaved changes (redact mode):', {
+          hasPendingRedactions,
+          hasAppliedRedactions,
+          hasAnnotationChanges,
+        });
+      } else {
+        console.log('[Viewer] Checking for unsaved changes:', {
+          hasAnnotationChanges,
+          hasPendingRedactions,
+          hasAppliedRedactions,
+        });
+      }
+
+      return hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions;
     };
 
     registerUnsavedChangesChecker(checkForChanges);
@@ -268,13 +368,34 @@ const EmbedPdfViewerContent = ({
     return () => {
       unregisterUnsavedChangesChecker();
     };
-  }, [previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, isManualRedactMode, redactionsApplied]);
 
-  // Apply changes - save annotations to new file version
+  // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
     if (!currentFile || activeFileIds.length === 0) return;
 
     try {
+      console.log('[Viewer] Applying changes - exporting PDF with annotations/redactions');
+
+      // Use the continuously tracked scroll position - more reliable than reading at this moment
+      const pageToRestore = lastKnownScrollPageRef.current;
+
+      // Step 0: Commit any pending redactions before export
+      const hadPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      
+      // Mark redactions as applied BEFORE committing, so the button stays enabled during the save process
+      // This ensures the button doesn't become disabled when pendingCount becomes 0
+      if (hadPendingRedactions || redactionsApplied) {
+        setRedactionsApplied(true);
+      }
+      
+      if (hadPendingRedactions) {
+        console.log('[Viewer] Committing pending redactions before export');
+        redactionTrackerRef.current?.commitAllPending();
+        // Give a small delay for the commit to process
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       // Step 1: Export PDF with annotations using EmbedPDF
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
@@ -287,33 +408,142 @@ const EmbedPdfViewerContent = ({
       const file = new File([blob], filename, { type: 'application/pdf' });
 
       // Step 3: Create StirlingFiles and stubs for version history
-      const parentStub = selectors.getStirlingFileStub(activeFileIds[0]);
+      // Only consume the current file, not all active files
+      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      if (!currentFileId) throw new Error('Current file ID not found');
+      
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
       const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
 
-      // Step 4: Consume files (replace in context)
-      await actions.consumeFiles(activeFileIds, stirlingFiles, stubs);
+      // Store the page to restore after file replacement triggers re-render
+      pendingScrollRestoreRef.current = pageToRestore;
+      scrollRestoreAttemptsRef.current = 0;
+      
+      // Store the new file ID so we can track it after the list reorders
+      const newFileId = stubs[0]?.id;
+      if (newFileId) {
+        pendingFileIdRef.current = newFileId;
+      }
+
+      // Step 4: Consume only the current file (replace in context)
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
 
       // Mark annotations as saved so navigation away from the viewer is allowed.
       hasAnnotationChangesRef.current = false;
       setHasUnsavedChanges(false);
+      setRedactionsApplied(false);
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
-  }, [currentFile, activeFileIds, exportActions, actions, selectors, setHasUnsavedChanges]);
+  }, [currentFile, activeFiles, activeFileIndex, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
 
-  // Expose annotation apply via a global event so tools (like Annotate) can
-  // trigger saves from the left sidebar without tight coupling.
+  // Discard pending redactions but save already-applied ones
+  // This is called when user clicks "Discard & Leave" - we want to:
+  // 1. NOT commit pending redaction marks (they get discarded)
+  // 2. Save the PDF with already-applied redactions (if any)
+  const discardAndSaveApplied = useCallback(async () => {
+    // Only save if there are applied redactions to preserve
+    if (!redactionsApplied || !currentFile || activeFileIds.length === 0) {
+      return;
+    }
+
+    try {
+      console.log('[Viewer] Discarding pending marks but saving applied redactions');
+
+      // Export PDF WITHOUT committing pending marks - this saves only applied redactions
+      const arrayBuffer = await exportActions.saveAsCopy();
+      if (!arrayBuffer) {
+        throw new Error('Failed to export PDF');
+      }
+
+      // Convert ArrayBuffer to File
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const filename = currentFile.name || 'document.pdf';
+      const file = new File([blob], filename, { type: 'application/pdf' });
+
+      // Create StirlingFiles and stubs for version history
+      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      if (!currentFileId) throw new Error('Current file ID not found');
+      
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
+      if (!parentStub) throw new Error('Parent stub not found');
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+
+      // Consume only the current file (replace in context)
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+
+      // Clear flags
+      hasAnnotationChangesRef.current = false;
+      setRedactionsApplied(false);
+      
+      console.log('[Viewer] Applied redactions saved, pending marks discarded');
+    } catch (error) {
+      console.error('Failed to save applied redactions:', error);
+    }
+  }, [redactionsApplied, currentFile, activeFiles, activeFileIndex, activeFileIds.length, exportActions, actions, selectors, setRedactionsApplied]);
+
+  // Restore scroll position after file replacement or tool switch
+  // Uses polling with retries to ensure the scroll succeeds
   useEffect(() => {
-    const handler = () => {
-      void applyChanges();
+    if (pendingScrollRestoreRef.current === null) return;
+    
+    const pageToRestore = pendingScrollRestoreRef.current;
+    const maxAttempts = 10;
+    const attemptInterval = 100; // ms between attempts
+    
+    const attemptScroll = () => {
+      const currentState = getScrollState();
+      const targetPage = Math.min(pageToRestore, currentState.totalPages);
+      
+      // Only attempt if we have valid state (totalPages > 0 means PDF is loaded)
+      if (currentState.totalPages > 0 && targetPage > 0) {
+        scrollActions.scrollToPage(targetPage, 'instant');
+        
+        // Check if scroll succeeded after a brief delay
+        setTimeout(() => {
+          const afterState = getScrollState();
+          if (afterState.currentPage === targetPage || scrollRestoreAttemptsRef.current >= maxAttempts) {
+            // Success or max attempts reached - clear pending
+            pendingScrollRestoreRef.current = null;
+            scrollRestoreAttemptsRef.current = 0;
+          } else {
+            // Scroll might not have worked, retry
+            scrollRestoreAttemptsRef.current++;
+            if (scrollRestoreAttemptsRef.current < maxAttempts) {
+              setTimeout(attemptScroll, attemptInterval);
+            } else {
+              // Give up after max attempts
+              pendingScrollRestoreRef.current = null;
+              scrollRestoreAttemptsRef.current = 0;
+            }
+          }
+        }, 50);
+      } else if (scrollRestoreAttemptsRef.current < maxAttempts) {
+        // PDF not ready yet, retry
+        scrollRestoreAttemptsRef.current++;
+        setTimeout(attemptScroll, attemptInterval);
+      } else {
+        // Give up after max attempts
+        pendingScrollRestoreRef.current = null;
+        scrollRestoreAttemptsRef.current = 0;
+      }
     };
-    window.addEventListener('stirling-annotations-apply', handler);
+    
+    // Start attempting after initial delay
+    const timer = setTimeout(attemptScroll, 150);
+    return () => clearTimeout(timer);
+  }, [scrollState.totalPages, scrollActions, getScrollState]);
+
+  // Register applyChanges with ViewerContext so tools can access it directly
+  useEffect(() => {
+    setApplyChanges(applyChanges);
     return () => {
-      window.removeEventListener('stirling-annotations-apply', handler);
+      setApplyChanges(null);
     };
-  }, [applyChanges]);
+  }, [applyChanges, setApplyChanges]);
 
   // Register viewer right-rail buttons
   useViewerRightRailButtons();
@@ -370,11 +600,14 @@ const EmbedPdfViewerContent = ({
               key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
               file={effectiveFile.file}
               url={effectiveFile.url}
-              enableAnnotations={isAnnotationMode}
+              enableAnnotations={shouldEnableAnnotations}
               showBakedAnnotations={isAnnotationsVisible}
+              enableRedaction={shouldEnableRedaction}
+              isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               annotationApiRef={annotationApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
+              redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
@@ -432,6 +665,10 @@ const EmbedPdfViewerContent = ({
         <NavigationWarningModal
           onApplyAndContinue={async () => {
             await applyChanges();
+          }}
+          onDiscardAndContinue={async () => {
+            // Save applied redactions (if any) while discarding pending ones
+            await discardAndSaveApplied();
           }}
         />
       )}
