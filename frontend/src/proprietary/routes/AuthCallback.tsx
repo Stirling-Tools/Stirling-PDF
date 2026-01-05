@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { springAuth } from '@app/auth/springAuthClient';
 import { handleAuthCallbackSuccess } from '@app/extensions/authCallback';
+import styles from '@app/routes/AuthCallback.module.css';
 
 /**
  * OAuth Callback Handler
@@ -72,17 +73,12 @@ export default function AuthCallback() {
   }, [navigate]);
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh'
-    }}>
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-        <div className="text-gray-600">
-          Completing authentication...
-        </div>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <div className={`${styles.icon} ${styles.iconNeutral}`}>...</div>
+        <div className={styles.title}>Completing authentication</div>
+        <div className={styles.message}>Please wait while we finish signing you in.</div>
+        <div className={styles.loadingExtra}>You can close this window once it completes.</div>
       </div>
     </div>
   );

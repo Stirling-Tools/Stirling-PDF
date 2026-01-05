@@ -221,13 +221,159 @@ public class ReactRoutingController {
                     <meta charset="utf-8" />
                     <base href="%s" />
                     <title>Authentication Complete</title>
+                    <style>
+                      * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                      }
+
+                      body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                        text-align: center;
+                        padding: 50px 20px;
+                        background: #f5f5f5;
+                        min-height: 100vh;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      }
+
+                      .container {
+                        background: #ffffff;
+                        border-radius: 12px;
+                        padding: 40px;
+                        max-width: 420px;
+                        width: 100%%;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        border: 1px solid #e5e7eb;
+                        color: #1a1a1a;
+                      }
+
+                      .icon {
+                        font-size: 48px;
+                        margin-bottom: 16px;
+                        color: #2e7d32;
+                      }
+
+                      .icon.error {
+                        color: #d32f2f;
+                      }
+
+                      h1 {
+                        font-size: 24px;
+                        font-weight: 600;
+                        margin-bottom: 12px;
+                        color: #1a1a1a;
+                      }
+
+                      p {
+                        color: #666;
+                        line-height: 1.6;
+                        font-size: 15px;
+                      }
+
+                      .error-details {
+                        background: #ffebee;
+                        border: 1px solid #ffcdd2;
+                        padding: 16px;
+                        border-radius: 8px;
+                        margin-top: 20px;
+                        font-size: 14px;
+                        color: #c62828;
+                        word-break: break-word;
+                        text-align: left;
+                        line-height: 1.5;
+                        display: none;
+                      }
+
+                      @media (prefers-color-scheme: dark) {
+                        body {
+                          background: #1a1a1a;
+                          color: #e0e0e0;
+                        }
+
+                        .container {
+                          background: #2d2d2d;
+                          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                          border-color: #374151;
+                          color: #e5e7eb;
+                        }
+
+                        .icon {
+                          color: #66bb6a;
+                        }
+
+                        .icon.error {
+                          color: #ef5350;
+                        }
+
+                        h1 {
+                          color: #f5f5f5;
+                        }
+
+                        p {
+                          color: #b0b0b0;
+                        }
+
+                        .error-details {
+                          background: #3d2020;
+                          border: 1px solid #5d3030;
+                          color: #ef9a9a;
+                        }
+                      }
+
+                      @media (max-width: 480px) {
+                        body {
+                          padding: 20px 16px;
+                        }
+
+                        .container {
+                          padding: 32px 24px;
+                        }
+
+                        h1 {
+                          font-size: 20px;
+                        }
+
+                        .icon {
+                          font-size: 40px;
+                        }
+                      }
+                    </style>
                     <script>
                       (function() {
                         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
                         const searchParams = new URLSearchParams(window.location.search);
                         const token = hashParams.get('access_token') || hashParams.get('token') || searchParams.get('access_token');
+                        const errorCode = searchParams.get('errorOAuth')
+                          || searchParams.get('error')
+                          || hashParams.get('error')
+                          || searchParams.get('error_description')
+                          || hashParams.get('error_description');
                         const isDesktopPopup = !!window.opener;
                         const serverUrl = %s;
+                        const iconEl = document.getElementById('auth-icon');
+                        const titleEl = document.getElementById('auth-title');
+                        const messageEl = document.getElementById('auth-message');
+                        const detailsEl = document.getElementById('auth-error-details');
+
+                        const showError = (message, details) => {
+                          if (iconEl) {
+                            iconEl.textContent = '✗';
+                            iconEl.classList.add('error');
+                          }
+                          if (titleEl) {
+                            titleEl.textContent = 'Authentication failed';
+                          }
+                          if (messageEl) {
+                            messageEl.textContent = message;
+                          }
+                          if (detailsEl && details) {
+                            detailsEl.textContent = details;
+                            detailsEl.style.display = 'block';
+                          }
+                        };
 
                         if (token) {
                           try { localStorage.setItem('stirling_jwt', token); } catch (_) {}
@@ -246,12 +392,35 @@ public class ReactRoutingController {
                           } catch (_) {
                             // ignore deep link errors
                           }
+
+                          return;
                         }
+
+                        if (errorCode) {
+                          const isCancelled = errorCode === 'access_denied';
+                          showError(
+                            isCancelled
+                              ? 'Authentication was cancelled. You can close this window and try again.'
+                              : 'Authentication was not successful. You can close this window and try again.',
+                            errorCode
+                          );
+                          return;
+                        }
+
+                        showError(
+                          'Authentication did not complete. You can close this window and try again.',
+                          'missing_token'
+                        );
                       })();
                     </script>
                   </head>
                   <body>
-                    <p>Authentication complete. You can close this window.</p>
+                    <div class="container">
+                      <div class="icon" id="auth-icon">&#10003;</div>
+                      <h1 id="auth-title">Authentication complete</h1>
+                      <p id="auth-message">You can close this window and return to Stirling PDF.</p>
+                      <div class="error-details" id="auth-error-details"></div>
+                    </div>
                   </body>
                 </html>
                 """
