@@ -673,28 +673,55 @@ public class ConvertPDFToPDFA {
                     if (descriptor == null) continue;
 
                     // Check if this is a Type1 font
-                    if (fontNameStr.contains("Type1")
-                            || descriptor.getFontFile() != null
-                            || (descriptor.getFontFile2() == null
-                                    && descriptor.getFontFile3() == null)) {
+                    boolean isType1 =
+                            isType1Font(font)
+                                    || descriptor.getFontFile() != null
+                                    || (descriptor.getFontFile2() == null
+                                            && descriptor.getFontFile3() == null);
 
-                        String existingCharSet =
-                                descriptor.getCOSObject().getString(COSName.CHAR_SET);
+                    if (isType1) {
+                        COSDictionary descDict = descriptor.getCOSObject();
+                        String existingCharSet = descDict.getString(COSName.CHAR_SET);
 
-                        // Only add CharSet if it is completely missing.
-                        // Overwriting an existing CharSet is dangerous because if the font is
-                        // subsetted,
-                        // forcing a full standard CharSet will cause validation errors (glyphs
-                        // listed
-                        // but not in font file).
-                        if (existingCharSet == null || existingCharSet.trim().isEmpty()) {
-                            String glyphSet = buildStandardType1GlyphSet();
-                            if (!glyphSet.isEmpty()) {
-                                descriptor.getCOSObject().setString(COSName.CHAR_SET, glyphSet);
+                        // Check if font is embedded and if CharSet might be invalid
+                        boolean fontEmbedded = font.isEmbedded();
+                        boolean hasFontFile =
+                                descriptor.getFontFile() != null
+                                        || descriptor.getFontFile2() != null
+                                        || descriptor.getFontFile3() != null;
+
+                        // For PDF/A compliance: if CharSet exists but font is subsetted or
+                        // we can't verify it matches the font file, remove it to avoid validation
+                        // errors
+                        if (existingCharSet != null && !existingCharSet.trim().isEmpty()) {
+                            // If the font appears to be subsetted (indicated by subset prefix in
+                            // name)
+                            // or if we can't verify the CharSet is correct, remove it
+                            if (fontNameStr.contains("+") || fontNameStr.contains("Subset")) {
+                                descDict.removeItem(COSName.CHAR_SET);
                                 log.debug(
-                                        "Added missing CharSet for Type1 font {} with {} glyphs",
-                                        fontNameStr,
-                                        countGlyphs(glyphSet));
+                                        "Removed potentially invalid CharSet from subsetted Type1 font: {}",
+                                        fontNameStr);
+                            } else if (!hasFontFile && fontEmbedded) {
+                                // Font is embedded but we can't verify CharSet, remove it
+                                descDict.removeItem(COSName.CHAR_SET);
+                                log.debug(
+                                        "Removed unverifiable CharSet from embedded Type1 font: {}",
+                                        fontNameStr);
+                            }
+                        } else if (existingCharSet == null || existingCharSet.trim().isEmpty()) {
+                            // Only add CharSet if font is not subsetted and we can verify it
+                            if (!fontNameStr.contains("+")
+                                    && !fontNameStr.contains("Subset")
+                                    && hasFontFile) {
+                                String glyphSet = buildStandardType1GlyphSet();
+                                if (!glyphSet.isEmpty()) {
+                                    descDict.setString(COSName.CHAR_SET, glyphSet);
+                                    log.debug(
+                                            "Added missing CharSet for Type1 font {} with {} glyphs",
+                                            fontNameStr,
+                                            countGlyphs(glyphSet));
+                                }
                             }
                         }
                     }
@@ -1352,12 +1379,21 @@ public class ConvertPDFToPDFA {
 
             for (COSBase base : ocgArray) {
                 if (base instanceof COSDictionary ocgDict) {
-                    if (!ocgDict.containsKey(COSName.NAME)) {
+                    // Ensure Name entry exists and is not empty
+                    String nameValue = ocgDict.getString(COSName.NAME);
+                    if (nameValue == null || nameValue.trim().isEmpty()) {
                         String newName = "Layer " + unnamedCount++;
                         ocgDict.setString(COSName.NAME, newName);
-                        log.debug("Fixed OCG missing name, set to: {}", newName);
+                        log.debug("Fixed OCG missing or empty name, set to: {}", newName);
                     }
                 }
+            }
+        } else if (ocgs instanceof COSDictionary ocgDict) {
+            // Handle case where OCGS is a single dictionary instead of array
+            String nameValue = ocgDict.getString(COSName.NAME);
+            if (nameValue == null || nameValue.trim().isEmpty()) {
+                ocgDict.setString(COSName.NAME, "Layer 1");
+                log.debug("Fixed single OCG missing or empty name");
             }
         }
     }
@@ -1863,9 +1899,29 @@ public class ConvertPDFToPDFA {
         Map<String, COSBase> knownTintTransforms = new HashMap<>();
         Set<COSBase> visitedResources = new HashSet<>();
 
+        // Process all pages first to collect all separation color spaces
         for (PDPage page : doc.getPages()) {
             PDResources resources = page.getResources();
             processResourcesForSeparation(resources, knownTintTransforms, visitedResources);
+        }
+
+        // Process document-level resources if they exist
+        PDDocumentCatalog catalog = doc.getDocumentCatalog();
+        if (catalog != null) {
+            PDResources docResources =
+                    catalog.getAcroForm() != null
+                            ? catalog.getAcroForm().getDefaultResources()
+                            : null;
+            if (docResources != null) {
+                processResourcesForSeparation(docResources, knownTintTransforms, visitedResources);
+            }
+        }
+
+        // Second pass: ensure all separations with the same name use the same tintTransform
+        visitedResources.clear();
+        for (PDPage page : doc.getPages()) {
+            PDResources resources = page.getResources();
+            enforceSeparationConsistency(resources, knownTintTransforms, visitedResources);
         }
     }
 
@@ -1930,7 +1986,77 @@ public class ConvertPDFToPDFA {
                             log.debug("Unified TintTransform for Separation color: {}", name);
                         }
                     } else {
+                        // Store the first encountered tintTransform for this color name
                         knownTintTransforms.put(name, tintTransform);
+                    }
+                }
+            }
+        }
+    }
+
+    private void enforceSeparationConsistency(
+            PDResources resources,
+            Map<String, COSBase> knownTintTransforms,
+            Set<COSBase> visitedResources) {
+        if (resources == null) return;
+
+        // Prevent infinite recursion
+        if (!visitedResources.add(resources.getCOSObject())) {
+            return;
+        }
+
+        // Check defined ColorSpaces
+        COSDictionary csDict =
+                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.COLORSPACE);
+        if (csDict != null) {
+            for (COSName name : csDict.keySet()) {
+                COSBase csVal = csDict.getDictionaryObject(name);
+                enforceSeparationTintTransform(csVal, knownTintTransforms);
+            }
+        }
+
+        // Recursively check XObjects (Forms)
+        COSDictionary xObjDict =
+                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
+        if (xObjDict != null) {
+            for (COSName name : xObjDict.keySet()) {
+                COSBase xObj = xObjDict.getDictionaryObject(name);
+                if (xObj instanceof COSStream stream) {
+                    COSName type = (COSName) stream.getDictionaryObject(COSName.SUBTYPE);
+                    if (COSName.FORM.equals(type)) {
+                        COSBase formRes = stream.getDictionaryObject(COSName.RESOURCES);
+                        if (formRes instanceof COSDictionary formResDict) {
+                            enforceSeparationConsistency(
+                                    new PDResources(formResDict),
+                                    knownTintTransforms,
+                                    visitedResources);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void enforceSeparationTintTransform(
+            COSBase cs, Map<String, COSBase> knownTintTransforms) {
+        if (cs instanceof COSArray arr && arr.size() >= 4) {
+            COSBase type = arr.getObject(0);
+            if (COSName.SEPARATION.equals(type)) {
+                COSBase nameBase = arr.getObject(1);
+                if (nameBase instanceof COSName colorName) {
+                    String name = colorName.getName();
+                    COSBase tintTransform = arr.getObject(3);
+
+                    // Ensure all separations with the same name use the same tintTransform
+                    // reference
+                    if (knownTintTransforms.containsKey(name)) {
+                        COSBase known = knownTintTransforms.get(name);
+                        if (known != tintTransform) {
+                            arr.set(3, known);
+                            log.debug(
+                                    "Enforced consistent TintTransform for Separation color: {}",
+                                    name);
+                        }
                     }
                 }
             }
