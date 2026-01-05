@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -310,6 +311,9 @@ public class PdfJsonFallbackFontService {
                                     "classpath:/static/fonts/DejaVuSansMono-BoldOblique.ttf",
                                     "DejaVuSansMono-BoldOblique",
                                     "ttf")));
+    private static final Pattern BOLD_WEIGHT_PATTERN = Pattern.compile(".*[_-]?[6-9]00(wght)?.*");
+    private static final Pattern DELIMITER_PATTERN = Pattern.compile("[-_,+]");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 
     private final ResourceLoader resourceLoader;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
@@ -418,16 +422,18 @@ public class PdfJsonFallbackFontService {
             // Normalize font name: remove subset prefix (e.g. "PXAAAC+"), convert to lowercase,
             // remove spaces
             String normalized =
-                    originalFontName
-                            .replaceAll("^[A-Z]{6}\\+", "") // Remove subset prefix
-                            .toLowerCase()
-                            .replaceAll("\\s+", ""); // Remove spaces (e.g. "Times New Roman" ->
+                    WHITESPACE_PATTERN
+                            .matcher(
+                                    originalFontName
+                                            .replaceAll("^[A-Z]{6}\\+", "") // Remove subset prefix
+                                            .toLowerCase())
+                            .replaceAll(""); // Remove spaces (e.g. "Times New Roman" ->
             // "timesnewroman")
 
             // Extract base name without weight/style suffixes
             // Split on common delimiters: hyphen, underscore, comma, plus
             // Handles: "Arimo_700wght" -> "arimo", "Arial-Bold" -> "arial", "Arial,Bold" -> "arial"
-            String baseName = normalized.split("[-_,+]")[0];
+            String baseName = DELIMITER_PATTERN.split(normalized)[0];
 
             String aliasedFontId = FONT_NAME_ALIASES.get(baseName);
             if (aliasedFontId != null) {
@@ -470,7 +476,7 @@ public class PdfJsonFallbackFontService {
 
         // Check for numeric weight indicators (600-900 = bold)
         // Handles: "Arimo_700wght", "Arial-700", "Font-w700"
-        if (normalizedFontName.matches(".*[_-]?[6-9]00(wght)?.*")) {
+        if (BOLD_WEIGHT_PATTERN.matcher(normalizedFontName).matches()) {
             return true;
         }
 

@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -37,6 +38,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class ConvertPdfJsonController {
 
+    private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
     private final PdfJsonConversionService pdfJsonConversionService;
 
     @Autowired(required = false)
@@ -60,7 +62,9 @@ public class ConvertPdfJsonController {
         String originalName = inputFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
-                        ? Filenames.toSimpleFileName(originalName).replaceFirst("[.][^.]+$", "")
+                        ? FILE_EXTENSION_PATTERN
+                                .matcher(Filenames.toSimpleFileName(originalName))
+                                .replaceFirst("")
                         : "document";
         String docName = baseName + ".json";
         return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
@@ -83,7 +87,9 @@ public class ConvertPdfJsonController {
         String originalName = jsonFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
-                        ? Filenames.toSimpleFileName(originalName).replaceFirst("[.][^.]+$", "")
+                        ? FILE_EXTENSION_PATTERN
+                                .matcher(Filenames.toSimpleFileName(originalName))
+                                .replaceFirst("")
                         : "document";
         String docName = baseName.endsWith(".pdf") ? baseName : baseName + ".pdf";
         return WebResponseUtils.bytesToWebResponse(pdfBytes, docName);
@@ -116,7 +122,9 @@ public class ConvertPdfJsonController {
         String originalName = inputFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
-                        ? Filenames.toSimpleFileName(originalName).replaceFirst("[.][^.]+$", "")
+                        ? FILE_EXTENSION_PATTERN
+                                .matcher(Filenames.toSimpleFileName(originalName))
+                                .replaceFirst("")
                         : "document";
         String docName = baseName + "_metadata.json";
 
@@ -153,7 +161,9 @@ public class ConvertPdfJsonController {
 
         String baseName =
                 (filename != null && !filename.isBlank())
-                        ? Filenames.toSimpleFileName(filename).replaceFirst("[.][^.]+$", "")
+                        ? FILE_EXTENSION_PATTERN
+                                .matcher(Filenames.toSimpleFileName(filename))
+                                .replaceFirst("")
                         : Optional.ofNullable(document.getMetadata())
                                 .map(PdfJsonMetadata::getTitle)
                                 .filter(title -> title != null && !title.isBlank())

@@ -10,6 +10,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
@@ -32,8 +33,9 @@ import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
 @Slf4j
 public class SignatureService implements PersonalSignatureServiceInterface {
 
+    private static final Pattern VALID_FILENAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     private final String SIGNATURE_BASE_PATH;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final String ALL_USERS_FOLDER = "ALL_USERS";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Storage limits per user
@@ -366,7 +368,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
             throw new IllegalArgumentException("Invalid filename");
         }
-        if (!fileName.matches("^[a-zA-Z0-9_.-]+$")) {
+        if (!VALID_FILENAME_PATTERN.matcher(fileName).matches()) {
             throw new IllegalArgumentException("Filename contains invalid characters");
         }
     }

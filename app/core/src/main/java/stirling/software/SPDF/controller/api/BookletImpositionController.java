@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -37,6 +38,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class BookletImpositionController {
 
+    private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(
@@ -93,7 +95,9 @@ public class BookletImpositionController {
         byte[] result = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 result,
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                FILE_EXTENSION_PATTERN
+                                .matcher(Filenames.toSimpleFileName(file.getOriginalFilename()))
+                                .replaceFirst("")
                         + "_booklet.pdf");
     }
 

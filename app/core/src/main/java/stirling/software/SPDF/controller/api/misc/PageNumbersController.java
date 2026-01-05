@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -34,6 +35,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class PageNumbersController {
 
+    private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(value = "/add-page-numbers", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -84,8 +86,9 @@ public class PageNumbersController {
         }
 
         final String baseFilename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
+                FILE_EXTENSION_PATTERN
+                        .matcher(Filenames.toSimpleFileName(file.getOriginalFilename()))
+                        .replaceFirst("");
 
         List<Integer> pagesToNumberList =
                 GeneralUtils.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());

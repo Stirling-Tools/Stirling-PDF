@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -26,6 +27,9 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @Slf4j
 @Controller
 public class ReactRoutingController {
+
+    private static final Pattern BASE_HREF_PATTERN =
+            Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
 
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
@@ -79,9 +83,9 @@ public class ReactRoutingController {
             html = html.replace("%BASE_URL%", baseUrl);
             // Also rewrite any existing <base> tag (Vite may have baked one in)
             html =
-                    html.replaceFirst(
-                            "<base href=\\\"[^\\\"]*\\\"\\s*/?>",
-                            "<base href=\\\"" + baseUrl + "\\\" />");
+                    BASE_HREF_PATTERN
+                            .matcher(html)
+                            .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
 
             // Inject context path as a global variable for API calls
             String contextPathScript =
