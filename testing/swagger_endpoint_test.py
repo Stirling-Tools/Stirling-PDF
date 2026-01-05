@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 Swagger endpoint integration test runner.
@@ -829,10 +828,12 @@ class SwaggerTester:
         if content_type and content_type.startswith("image/"):
             return self._open_file(IMAGE_SAMPLE_FILE, content_type)
 
-        if "extract-attachments" in path_lower or "delete-attachment" in path_lower or "rename-attachment" in path_lower:
-            return self._open_file(
-                PDF_WITH_ATTACHMENTS_SAMPLE_FILE, "application/pdf"
-            )
+        if (
+            "extract-attachments" in path_lower
+            or "delete-attachment" in path_lower
+            or "rename-attachment" in path_lower
+        ):
+            return self._open_file(PDF_WITH_ATTACHMENTS_SAMPLE_FILE, "application/pdf")
 
         if "ebook" in path_lower:
             return self._open_file(EPUB_SAMPLE_FILE, "application/epub+zip")
@@ -850,10 +851,8 @@ class SwaggerTester:
             return self._open_file(MARKDOWN_SAMPLE_FILE, "text/markdown")
 
         if (
-            content_type
-            and content_type in {"application/vnd.comicbook+rar"}
-            or "cbr/pdf" in path_lower
-        ):
+            content_type and content_type in {"application/vnd.comicbook+rar"}
+        ) or "cbr/pdf" in path_lower:
             return self._open_file(CBR_SAMPLE_FILE, "application/vnd.comicbook+rar")
 
         if (
@@ -870,11 +869,14 @@ class SwaggerTester:
             return self._open_file(SAMPLE_VECTOR_SIGN_FILE, "application/pdf")
 
         if (
-            ("cert" in name_lower
-            or "certificate" in name_lower
-            or "cert" in path_lower
-            or (content_type and "pkcs" in content_type))
-            and "privatekeyfile" != name_lower and field_name != "fileInput"
+            (
+                "cert" in name_lower
+                or "certificate" in name_lower
+                or "cert" in path_lower
+                or (content_type and "pkcs" in content_type)
+            )
+            and "privatekeyfile" != name_lower
+            and field_name != "fileInput"
         ):
             if (
                 "p12" in name_lower
@@ -1076,9 +1078,7 @@ def main(argv: list[str]) -> int:
 
     total = len(results)
     ok = total - len(failures) - skipped
-    status_counts = Counter(
-        r.status_code for r in results if r.status_code is not None
-    )
+    status_counts = Counter(r.status_code for r in results if r.status_code is not None)
     error_codes = [
         400,
         401,
