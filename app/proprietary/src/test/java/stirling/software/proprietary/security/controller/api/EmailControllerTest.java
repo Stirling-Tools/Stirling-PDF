@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -56,7 +57,12 @@ class EmailControllerTest {
 
         var request =
                 multipart("/api/v1/general/send-email")
-                        .file("fileInput", "dummy-content".getBytes())
+                        .file(
+                                new MockMultipartFile(
+                                        "fileInput",
+                                        "dummy.txt",
+                                        "text/plain",
+                                        "dummy-content".getBytes()))
                         .param("subject", "Test Email")
                         .param("body", "This is a test email.");
 
