@@ -41,28 +41,29 @@ public class RemoveCertSignController {
             throws Exception {
         MultipartFile pdf = request.getFileInput();
 
-        // Load the PDF document
-        PDDocument document = pdfDocumentFactory.load(pdf);
+        // Load the PDF document with proper resource management
+        try (PDDocument document = pdfDocumentFactory.load(pdf)) {
 
-        // Get the document catalog
-        PDDocumentCatalog catalog = document.getDocumentCatalog();
+            // Get the document catalog
+            PDDocumentCatalog catalog = document.getDocumentCatalog();
 
-        // Get the AcroForm
-        PDAcroForm acroForm = catalog.getAcroForm();
-        if (acroForm != null) {
-            // Remove signature fields safely
-            List<PDField> fieldsToRemove =
-                    acroForm.getFields().stream()
-                            .filter(field -> field instanceof PDSignatureField)
-                            .toList();
+            // Get the AcroForm
+            PDAcroForm acroForm = catalog.getAcroForm();
+            if (acroForm != null) {
+                // Remove signature fields safely
+                List<PDField> fieldsToRemove =
+                        acroForm.getFields().stream()
+                                .filter(field -> field instanceof PDSignatureField)
+                                .toList();
 
-            if (!fieldsToRemove.isEmpty()) {
-                acroForm.flatten(fieldsToRemove, false);
+                if (!fieldsToRemove.isEmpty()) {
+                    acroForm.flatten(fieldsToRemove, false);
+                }
             }
+            // Return the modified PDF as a response
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_unsigned.pdf"));
         }
-        // Return the modified PDF as a response
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_unsigned.pdf"));
     }
 }

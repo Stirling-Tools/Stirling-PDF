@@ -98,60 +98,67 @@ public class WatermarkController {
         String customColor = request.getCustomColor();
         boolean convertPdfToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
 
-        // Load the input PDF
-        PDDocument document = pdfDocumentFactory.load(pdfFile);
+        // Load the input PDF with proper resource management
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-        // Create a page in the document
-        for (PDPage page : document.getPages()) {
+            // Create a page in the document
+            for (PDPage page : document.getPages()) {
+                // Get the page's content stream
+                try (PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                document,
+                                page,
+                                PDPageContentStream.AppendMode.APPEND,
+                                true,
+                                true)) {
 
-            // Get the page's content stream
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+                    // Set transparency
+                    PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                    graphicsState.setNonStrokingAlphaConstant(opacity);
+                    contentStream.setGraphicsStateParameters(graphicsState);
 
-            // Set transparency
-            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(opacity);
-            contentStream.setGraphicsStateParameters(graphicsState);
-
-            if ("text".equalsIgnoreCase(watermarkType)) {
-                addTextWatermark(
-                        contentStream,
-                        watermarkText,
-                        document,
-                        page,
-                        rotation,
-                        widthSpacer,
-                        heightSpacer,
-                        fontSize,
-                        alphabet,
-                        customColor);
-            } else if ("image".equalsIgnoreCase(watermarkType)) {
-                addImageWatermark(
-                        contentStream,
-                        watermarkImage,
-                        document,
-                        page,
-                        rotation,
-                        widthSpacer,
-                        heightSpacer,
-                        fontSize);
+                    if ("text".equalsIgnoreCase(watermarkType)) {
+                        addTextWatermark(
+                                contentStream,
+                                watermarkText,
+                                document,
+                                page,
+                                rotation,
+                                widthSpacer,
+                                heightSpacer,
+                                fontSize,
+                                alphabet,
+                                customColor);
+                    } else if ("image".equalsIgnoreCase(watermarkType)) {
+                        addImageWatermark(
+                                contentStream,
+                                watermarkImage,
+                                document,
+                                page,
+                                rotation,
+                                widthSpacer,
+                                heightSpacer,
+                                fontSize);
+                    }
+                }
             }
 
-            // Close the content stream
-            contentStream.close();
+            if (convertPdfToImage) {
+                try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
+                    // Return the watermarked PDF as a response
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            convertedPdf,
+                            GeneralUtils.generateFilename(
+                                    pdfFile.getOriginalFilename(), "_watermarked.pdf"));
+                }
+            } else {
+                // Return the watermarked PDF as a response
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document,
+                        GeneralUtils.generateFilename(
+                                pdfFile.getOriginalFilename(), "_watermarked.pdf"));
+            }
         }
-
-        if (convertPdfToImage) {
-            PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
-            document.close();
-            document = convertedPdf;
-        }
-
-        // Return the watermarked PDF as a response
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_watermarked.pdf"));
     }
 
     private void addTextWatermark(

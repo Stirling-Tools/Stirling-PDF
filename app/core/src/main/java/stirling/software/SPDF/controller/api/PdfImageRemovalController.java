@@ -53,25 +53,28 @@ public class PdfImageRemovalController {
                     "This endpoint remove images from file to reduce the file size.Input:PDF"
                             + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
-        // Load the PDF document
-        PDDocument document = pdfDocumentFactory.load(file);
+        // Load the PDF document with proper resource management
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
 
-        // Remove images from the PDF document using the service
-        PDDocument modifiedDocument = pdfImageRemovalService.removeImagesFromPdf(document);
+            // Remove images from the PDF document using the service
+            try (PDDocument modifiedDocument =
+                    pdfImageRemovalService.removeImagesFromPdf(document)) {
 
-        // Create a ByteArrayOutputStream to hold the modified PDF data
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                // Create a ByteArrayOutputStream to hold the modified PDF data
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        // Save the modified PDF document to the output stream
-        modifiedDocument.save(outputStream);
-        modifiedDocument.close();
+                // Save the modified PDF document to the output stream
+                modifiedDocument.save(outputStream);
 
-        // Generate a new filename for the modified PDF
-        String mergedFileName =
-                GeneralUtils.generateFilename(
-                        file.getFileInput().getOriginalFilename(), "_images_removed.pdf");
+                // Generate a new filename for the modified PDF
+                String mergedFileName =
+                        GeneralUtils.generateFilename(
+                                file.getFileInput().getOriginalFilename(), "_images_removed.pdf");
 
-        // Convert the byte array to a web response and return it
-        return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);
+                // Convert the byte array to a web response and return it
+                return WebResponseUtils.bytesToWebResponse(
+                        outputStream.toByteArray(), mergedFileName);
+            }
+        }
     }
 }

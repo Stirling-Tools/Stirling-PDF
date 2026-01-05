@@ -67,39 +67,40 @@ public class SanitizeController {
         boolean removeLinks = Boolean.TRUE.equals(request.getRemoveLinks());
         boolean removeFonts = Boolean.TRUE.equals(request.getRemoveFonts());
 
-        PDDocument document = pdfDocumentFactory.load(inputFile, true);
-        if (removeJavaScript) {
-            sanitizeJavaScript(document);
+        try (PDDocument document = pdfDocumentFactory.load(inputFile, true)) {
+            if (removeJavaScript) {
+                sanitizeJavaScript(document);
+            }
+
+            if (removeEmbeddedFiles) {
+                sanitizeEmbeddedFiles(document);
+            }
+
+            if (removeXMPMetadata) {
+                sanitizeXMPMetadata(document);
+            }
+
+            if (removeMetadata) {
+                sanitizeDocumentInfoMetadata(document);
+            }
+
+            if (removeLinks) {
+                sanitizeLinks(document);
+            }
+
+            if (removeFonts) {
+                sanitizeFonts(document);
+            }
+
+            // Save the sanitized document to output stream
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            document.save(outputStream);
+
+            return WebResponseUtils.bytesToWebResponse(
+                    outputStream.toByteArray(),
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_sanitized.pdf"));
         }
-
-        if (removeEmbeddedFiles) {
-            sanitizeEmbeddedFiles(document);
-        }
-
-        if (removeXMPMetadata) {
-            sanitizeXMPMetadata(document);
-        }
-
-        if (removeMetadata) {
-            sanitizeDocumentInfoMetadata(document);
-        }
-
-        if (removeLinks) {
-            sanitizeLinks(document);
-        }
-
-        if (removeFonts) {
-            sanitizeFonts(document);
-        }
-
-        // Save the sanitized document to output stream
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        document.save(outputStream);
-        document.close();
-
-        return WebResponseUtils.bytesToWebResponse(
-                outputStream.toByteArray(),
-                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_sanitized.pdf"));
     }
 
     private static void sanitizeJavaScript(PDDocument document) throws IOException {

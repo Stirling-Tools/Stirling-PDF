@@ -80,7 +80,7 @@ import stirling.software.common.util.RegexPatternUtils;
  * <pre>{@code
  * // In controllers/services - use ExceptionUtils to create typed exceptions:
  * try {
- *     PDDocument doc = PDDocument.load(file);
+ *     PDDocument doc = Loader.loadPDF(file);
  * } catch (IOException e) {
  *     throw ExceptionUtils.createPdfCorruptedException("during load", e);
  * }
@@ -1117,6 +1117,34 @@ public class GlobalExceptionHandler {
             return handleBaseApp((BaseAppException) processedException, request);
         }
 
+        // Check if this is a NoSuchFileException (temp file was deleted prematurely)
+        if (ex instanceof java.nio.file.NoSuchFileException) {
+            log.error(
+                    "Temporary file not found at {}: {}",
+                    request.getRequestURI(),
+                    ex.getMessage(),
+                    ex);
+
+            String message =
+                    getLocalizedMessage(
+                            "error.tempFileNotFound.detail",
+                            "The temporary file was not found. This may indicate a processing error or cleanup issue. Please try again.");
+            String title =
+                    getLocalizedMessage("error.tempFileNotFound.title", "Temporary File Not Found");
+
+            ProblemDetail problemDetail =
+                    createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
+            problemDetail.setType(URI.create("https://stirlingpdf.com/errors/temp-file-not-found"));
+            problemDetail.setTitle(title);
+            problemDetail.setProperty("title", title);
+            problemDetail.setProperty("errorCode", "E999");
+            problemDetail.setProperty(
+                    "hint.1",
+                    "This error usually occurs when temporary files are cleaned up before processing completes.");
+            problemDetail.setProperty("hint.2", "Try submitting your request again.");
+            return new ResponseEntity<>(problemDetail, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         log.error("IO error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
         String message =
@@ -1161,8 +1189,18 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(
-            Exception ex, HttpServletRequest request) {
+            Exception ex, HttpServletRequest request, HttpServletResponse response) {
         log.error("Unexpected error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+
+        // If response is already committed (e.g., during streaming), we can't send an error
+        // response
+        // Log the error and return null to let Spring handle it gracefully
+        if (response.isCommitted()) {
+            log.warn(
+                    "Cannot send error response because response is already committed for URI: {}",
+                    request.getRequestURI());
+            return null; // Spring will handle gracefully
+        }
 
         String userMessage =
                 getLocalizedMessage(

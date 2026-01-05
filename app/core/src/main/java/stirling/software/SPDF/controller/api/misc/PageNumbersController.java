@@ -65,113 +65,114 @@ public class PageNumbersController {
             }
         }
 
-        PDDocument document = pdfDocumentFactory.load(file);
-
-        float marginFactor =
-                switch (customMargin == null ? "" : customMargin.toLowerCase(Locale.ROOT)) {
-                    case "small" -> 0.02f;
-                    case "large" -> 0.05f;
-                    case "x-large" -> 0.075f;
-                    case "medium" -> 0.035f;
-                    default -> 0.035f;
-                };
-
-        if (pagesToNumber == null || pagesToNumber.isEmpty()) {
-            pagesToNumber = "all";
-        }
-        if (customText == null || customText.isEmpty()) {
-            customText = "{n}";
-        }
-
-        final String baseFilename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
-
-        List<Integer> pagesToNumberList =
-                GeneralUtils.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());
-
-        // Clamp position to 1..9 (1 = top-left, 9 = bottom-right)
-        int pos = Math.max(1, Math.min(9, position));
-
-        for (int i : pagesToNumberList) {
-            PDPage page = document.getPage(i);
-            PDRectangle pageSize = page.getMediaBox();
-
-            String text =
-                    customText
-                            .replace("{n}", String.valueOf(pageNumber))
-                            .replace("{total}", String.valueOf(document.getNumberOfPages()))
-                            .replace(
-                                    "{filename}",
-                                    GeneralUtils.removeExtension(
-                                            Filenames.toSimpleFileName(
-                                                    file.getOriginalFilename())));
-
-            PDType1Font currentFont =
-                    switch (fontType == null ? "" : fontType.toLowerCase(Locale.ROOT)) {
-                        case "courier" -> new PDType1Font(Standard14Fonts.FontName.COURIER);
-                        case "times" -> new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
-                        default -> new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
+            float marginFactor =
+                    switch (customMargin == null ? "" : customMargin.toLowerCase(Locale.ROOT)) {
+                        case "small" -> 0.02f;
+                        case "large" -> 0.05f;
+                        case "x-large" -> 0.075f;
+                        case "medium" -> 0.035f;
+                        default -> 0.035f;
                     };
 
-            // Text dimensions and font metrics
-            float textWidth = currentFont.getStringWidth(text) / 1000f * fontSize;
-            float ascent = currentFont.getFontDescriptor().getAscent() / 1000f * fontSize;
-            float descent = currentFont.getFontDescriptor().getDescent() / 1000f * fontSize;
-
-            // Derive column/row in range 1..3 (1 = left/top, 2 = center/middle, 3 = right/bottom)
-            int col = ((pos - 1) % 3) + 1; // 1 = left, 2 = center, 3 = right
-            int row = ((pos - 1) / 3) + 1; // 1 = top, 2 = middle, 3 = bottom
-
-            // Anchor coordinates with margin
-            float leftX = pageSize.getLowerLeftX() + marginFactor * pageSize.getWidth();
-            float midX = pageSize.getLowerLeftX() + pageSize.getWidth() / 2f;
-            float rightX = pageSize.getUpperRightX() - marginFactor * pageSize.getWidth();
-
-            float botY = pageSize.getLowerLeftY() + marginFactor * pageSize.getHeight();
-            float midY = pageSize.getLowerLeftY() + pageSize.getHeight() / 2f;
-            float topY = pageSize.getUpperRightY() - marginFactor * pageSize.getHeight();
-
-            // Horizontal alignment: left = anchor, center = centered, right = right-aligned
-            float x =
-                    switch (col) {
-                        case 1 -> leftX;
-                        case 2 -> midX - textWidth / 2f;
-                        default -> rightX - textWidth;
-                    };
-
-            // Vertical alignment (baseline!):
-            // top    = align text top at topY,
-            // middle = optical middle using ascent/descent,
-            // bottom = baseline at botY
-            float y =
-                    switch (row) {
-                        case 1 -> topY - ascent;
-                        case 2 -> midY - (ascent + descent) / 2f;
-                        default -> botY;
-                    };
-
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
-                contentStream.beginText();
-                contentStream.setFont(currentFont, fontSize);
-                contentStream.setNonStrokingColor(color);
-                contentStream.newLineAtOffset(x, y);
-                contentStream.showText(text);
-                contentStream.endText();
+            if (pagesToNumber == null || pagesToNumber.isEmpty()) {
+                pagesToNumber = "all";
+            }
+            if (customText == null || customText.isEmpty()) {
+                customText = "{n}";
             }
 
-            pageNumber++;
+            List<Integer> pagesToNumberList =
+                    GeneralUtils.parsePageList(
+                            pagesToNumber.split(","), document.getNumberOfPages());
+
+            // Clamp position to 1..9 (1 = top-left, 9 = bottom-right)
+            int pos = Math.max(1, Math.min(9, position));
+
+            for (int i : pagesToNumberList) {
+                PDPage page = document.getPage(i);
+                PDRectangle pageSize = page.getMediaBox();
+
+                String text =
+                        customText
+                                .replace("{n}", String.valueOf(pageNumber))
+                                .replace("{total}", String.valueOf(document.getNumberOfPages()))
+                                .replace(
+                                        "{filename}",
+                                        GeneralUtils.removeExtension(
+                                                Filenames.toSimpleFileName(
+                                                        file.getOriginalFilename())));
+
+                PDType1Font currentFont =
+                        switch (fontType == null ? "" : fontType.toLowerCase(Locale.ROOT)) {
+                            case "courier" -> new PDType1Font(Standard14Fonts.FontName.COURIER);
+                            case "times" -> new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
+                            default -> new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                        };
+
+                // Text dimensions and font metrics
+                float textWidth = currentFont.getStringWidth(text) / 1000f * fontSize;
+                float ascent = currentFont.getFontDescriptor().getAscent() / 1000f * fontSize;
+                float descent = currentFont.getFontDescriptor().getDescent() / 1000f * fontSize;
+
+                // Derive column/row in range 1..3 (1 = left/top, 2 = center/middle, 3 =
+                // right/bottom)
+                int col = ((pos - 1) % 3) + 1; // 1 = left, 2 = center, 3 = right
+                int row = ((pos - 1) / 3) + 1; // 1 = top, 2 = middle, 3 = bottom
+
+                // Anchor coordinates with margin
+                float leftX = pageSize.getLowerLeftX() + marginFactor * pageSize.getWidth();
+                float midX = pageSize.getLowerLeftX() + pageSize.getWidth() / 2f;
+                float rightX = pageSize.getUpperRightX() - marginFactor * pageSize.getWidth();
+
+                float botY = pageSize.getLowerLeftY() + marginFactor * pageSize.getHeight();
+                float midY = pageSize.getLowerLeftY() + pageSize.getHeight() / 2f;
+                float topY = pageSize.getUpperRightY() - marginFactor * pageSize.getHeight();
+
+                // Horizontal alignment: left = anchor, center = centered, right = right-aligned
+                float x =
+                        switch (col) {
+                            case 1 -> leftX;
+                            case 2 -> midX - textWidth / 2f;
+                            default -> rightX - textWidth;
+                        };
+
+                // Vertical alignment (baseline!):
+                // top    = align text top at topY,
+                // middle = optical middle using ascent/descent,
+                // bottom = baseline at botY
+                float y =
+                        switch (row) {
+                            case 1 -> topY - ascent;
+                            case 2 -> midY - (ascent + descent) / 2f;
+                            default -> botY;
+                        };
+
+                try (PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                document,
+                                page,
+                                PDPageContentStream.AppendMode.APPEND,
+                                true,
+                                true)) {
+                    contentStream.beginText();
+                    contentStream.setFont(currentFont, fontSize);
+                    contentStream.setNonStrokingColor(color);
+                    contentStream.newLineAtOffset(x, y);
+                    contentStream.showText(text);
+                    contentStream.endText();
+                }
+
+                pageNumber++;
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            document.save(baos);
+
+            return WebResponseUtils.bytesToWebResponse(
+                    baos.toByteArray(),
+                    GeneralUtils.generateFilename(
+                            file.getOriginalFilename(), "_page_numbers_added.pdf"));
         }
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
-        document.close();
-
-        return WebResponseUtils.bytesToWebResponse(
-                baos.toByteArray(),
-                GeneralUtils.generateFilename(
-                        file.getOriginalFilename(), "_page_numbers_added.pdf"));
     }
 }

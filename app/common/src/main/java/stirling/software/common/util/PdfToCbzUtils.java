@@ -55,6 +55,7 @@ public class PdfToCbzUtils {
 
     private static byte[] createCbzFromPdf(PDDocument document, int dpi) throws IOException {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
+        pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
 
         try (ByteArrayOutputStream cbzOutputStream = new ByteArrayOutputStream();
                 ZipOutputStream zipOut = new ZipOutputStream(cbzOutputStream)) {
