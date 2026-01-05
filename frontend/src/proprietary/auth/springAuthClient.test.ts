@@ -248,7 +248,8 @@ describe('SpringAuthClient', () => {
 
   describe('signOut', () => {
     let mockForm: { method: string; action: string; style: { display: string }; submit: ReturnType<typeof vi.fn> };
-    let appendChildSpy: ReturnType<typeof vi.spyOn>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let appendChildSpy: any;
 
     beforeEach(() => {
       // Mock form creation and submission
@@ -259,7 +260,7 @@ describe('SpringAuthClient', () => {
         submit: vi.fn(),
       };
       vi.spyOn(document, 'createElement').mockReturnValue(mockForm as unknown as HTMLElement);
-      appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockForm as unknown as HTMLFormElement);
+      appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
     });
 
     afterEach(() => {
