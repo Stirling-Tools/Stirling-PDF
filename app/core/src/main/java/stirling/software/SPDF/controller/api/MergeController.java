@@ -57,12 +57,20 @@ public class MergeController {
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
-        for (PDDocument doc : documents) {
-            for (PDPage page : doc.getPages()) {
-                mergedDoc.addPage(page);
+        boolean success = false;
+        try {
+            for (PDDocument doc : documents) {
+                for (PDPage page : doc.getPages()) {
+                    mergedDoc.addPage(page);
+                }
+            }
+            success = true;
+            return mergedDoc;
+        } finally {
+            if (!success) {
+                mergedDoc.close();
             }
         }
-        return mergedDoc;
     }
 
     // Re-order files to match the explicit order provided by the front-end.
@@ -363,9 +371,18 @@ public class MergeController {
 
                 // Save the modified document to a temporary file
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
-                mergedDocument.save(outputTempFile.getFile());
+                try {
+                    mergedDocument.save(outputTempFile.getFile());
+                } catch (Exception e) {
+                    outputTempFile.close();
+                    outputTempFile = null;
+                    throw e;
+                }
             }
         } catch (Exception ex) {
+            if (outputTempFile != null) {
+                outputTempFile.close();
+            }
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
             } else {
