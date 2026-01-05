@@ -26,23 +26,29 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
+import stirling.software.common.util.ApplicationContextProvider;
 
 @DisplayName("GetInfoOnPDF Controller Tests")
 @ExtendWith(MockitoExtension.class)
 class GetInfoOnPDFControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private FileStorage fileStorage;
 
     @InjectMocks private GetInfoOnPDFController getInfoOnPDF;
 
@@ -582,6 +588,15 @@ class GetInfoOnPDFControllerTest {
         @Test
         @DisplayName("Should reject file that exceeds max size")
         void testValidation_TooLargeFile() throws IOException {
+            ApplicationContext mockContext = Mockito.mock(ApplicationContext.class);
+            ApplicationProperties properties = new ApplicationProperties();
+            ApplicationProperties.System system = new ApplicationProperties.System();
+            system.setFileUploadLimit("100MB");
+            properties.setSystem(system);
+            Mockito.when(mockContext.getBean(ApplicationProperties.class)).thenReturn(properties);
+            ReflectionTestUtils.setField(
+                    ApplicationContextProvider.class, "applicationContext", mockContext);
+
             MultipartFile largeFile =
                     new MultipartFile() {
                         @Override
@@ -627,14 +642,19 @@ class GetInfoOnPDFControllerTest {
             PDFFile request = new PDFFile();
             request.setFileInput(largeFile);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            try {
+                ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
-            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
+                String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
-            Assertions.assertTrue(jsonNode.has("error"));
-            Assertions.assertTrue(
-                    jsonNode.get("error").asText().contains("exceeds maximum allowed size"));
+                Assertions.assertTrue(jsonNode.has("error"));
+                Assertions.assertTrue(
+                        jsonNode.get("error").asText().contains("exceeds maximum allowed size"));
+            } finally {
+                ReflectionTestUtils.setField(
+                        ApplicationContextProvider.class, "applicationContext", null);
+            }
         }
     }
 
