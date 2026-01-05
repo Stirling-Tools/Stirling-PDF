@@ -137,7 +137,7 @@ jobs:
           fi
           echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
 
-      - name: Set up Java 21 (nur für java -jar)
+      - name: Set up Java 21
         uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
         with:
           distribution: temurin

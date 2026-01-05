@@ -14,8 +14,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
+import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 
 @Data
 @Slf4j
@@ -49,7 +52,7 @@ public class PDFFile {
                     "Identifier of a PDF file previously stored on the server. "
                             + "Alternative to uploading a new file via `fileInput`. "
                             + "Typically used in asynchronous workflows to reference an existing file.",
-            example = "abc123-def456-ghi789")
+            example = "1234abcd-56ef-78gh-90ij-9876klmnopqr")
     private String fileId;
 
     /**
@@ -64,8 +67,25 @@ public class PDFFile {
         return hasFileInput ^ hasFileId; // XOR – exactly one must be true
     }
 
-    @Deprecated(since = "3.0", forRemoval = true)
-    private static final long MAX_FILE_SIZE = 100L * 1024 * 1024; // 100 MB
+    /**
+     * Resolves the actual MultipartFile, either from direct upload or by retrieving the server-side
+     * file using the provided fileId.
+     *
+     * @param fileStorage the service used to access stored files
+     * @param inputFile the directly uploaded file (may be null)
+     * @return the resolved MultipartFile, or null if no valid input was provided
+     * @throws IOException if retrieval of a server-side file fails
+     */
+    public MultipartFile resolveFile(FileStorage fileStorage, MultipartFile inputFile)
+            throws IOException {
+        if (inputFile != null && !inputFile.isEmpty()) {
+            return inputFile;
+        }
+        if (fileId == null || fileId.isBlank()) {
+            return null;
+        }
+        return fileStorage.retrieveFile(fileId);
+    }
 
     /**
      * Resolves the actual MultipartFile, either from direct upload or by retrieving the server-side
@@ -76,13 +96,7 @@ public class PDFFile {
      * @throws IOException if retrieval of a server-side file fails
      */
     public MultipartFile resolveFile(FileStorage fileStorage) throws IOException {
-        if (fileInput != null && !fileInput.isEmpty()) {
-            return fileInput;
-        }
-        if (fileId == null || fileId.isBlank()) {
-            return null;
-        }
-        return fileStorage.retrieveFile(fileId);
+        return resolveFile(fileStorage, this.fileInput);
     }
 
     /** Returns the size of the input PDF in bytes. */
@@ -97,12 +111,24 @@ public class PDFFile {
     }
 
     private void validatePdfFileSize(long fileSize) {
-        if (fileSize > MAX_FILE_SIZE) {
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        String fileUploadLimit =
+                properties != null ? properties.getSystem().getFileUploadLimit() : null;
+        if (fileUploadLimit == null || fileUploadLimit.isBlank()) {
+            return;
+        }
+        Long maxBytes = GeneralUtils.convertSizeToBytes(fileUploadLimit);
+        if (maxBytes == null) {
+            log.warn("Invalid file upload limit configured: {}", fileUploadLimit);
+            return;
+        }
+        if (fileSize > maxBytes) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.fileSizeLimit",
                     "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
                     fileSize,
-                    MAX_FILE_SIZE);
+                    maxBytes);
         }
     }
 

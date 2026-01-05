@@ -41,6 +41,7 @@ import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -169,7 +170,7 @@ public class CertSignController {
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
         // Validate input
-        MultipartFile inputFile = request.resolveFile(fileStorage);
+        MultipartFile inputFile = request.resolveFile(fileStorage, request.getFileInput());
         if (inputFile == null) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.pdfRequired", "PDF file is required");
@@ -297,18 +298,45 @@ public class CertSignController {
         try (PEMParser pemParser =
                 new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
             Object pemObject = pemParser.readObject();
+            if (pemObject == null) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM private key file is empty");
+            }
+            if (pemObject instanceof X509CertificateHolder) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM private key file contains a certificate, not a private key");
+            }
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
             PrivateKeyInfo pkInfo;
             if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo pkcs8EncryptedPrivateKeyInfo) {
-                InputDecryptorProvider decProv =
-                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                try {
+                    InputDecryptorProvider decProv =
+                            new JceOpenSSLPKCS8DecryptorProviderBuilder()
+                                    .build(password.toCharArray());
+                    pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                } catch (PKCSException e) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidArgument",
+                            "Invalid argument: {0}",
+                            "PEM private key password is incorrect or key is corrupted");
+                }
+            } else if (pemObject instanceof PrivateKeyInfo privateKeyInfo) {
+                pkInfo = privateKeyInfo;
             } else if (pemObject instanceof PEMEncryptedKeyPair pemEncryptedKeyPair) {
                 PEMDecryptorProvider decProv =
                         new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
                 pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+            } else if (pemObject instanceof PEMKeyPair pemKeyPair) {
+                pkInfo = pemKeyPair.getPrivateKeyInfo();
             } else {
-                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "Unsupported PEM private key format");
             }
             return converter.getPrivateKey(pkInfo);
         }
@@ -317,7 +345,14 @@ public class CertSignController {
     private Certificate getCertificateFromPEM(byte[] pemBytes)
             throws IOException, CertificateException {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(pemBytes)) {
-            return CertificateFactory.getInstance("X.509").generateCertificate(bis);
+            try {
+                return CertificateFactory.getInstance("X.509").generateCertificate(bis);
+            } catch (CertificateException e) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM certificate file is invalid or does not contain a certificate");
+            }
         }
     }
 

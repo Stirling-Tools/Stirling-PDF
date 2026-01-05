@@ -81,6 +81,7 @@ CBZ_SAMPLE_FILE = "testing/samples/sample.cbz"
 CBR_SAMPLE_FILE = "testing/samples/sample.cbr"
 CHAPTERED_PDF_SAMPLE_FILE = "testing/samples/split_pdf_by_chapters_sample.pdf"
 CERT_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.pem"
+KEY_SAMPLE_FILE = "app/core/src/test/resources/certs/test-key.pem"
 PKCS12_SAMPLE_FILE = "app/core/src/test/resources/certs/test-cert.p12"
 PDF_WITH_ATTACHMENTS_SAMPLE_FILE = "testing/samples/pdf_with_attachments.pdf"
 EPUB_SAMPLE_FILE = "testing/samples/sample.epub"
@@ -571,6 +572,10 @@ class SwaggerTester:
                 open_files.append(fh)
                 files.append((name, file_tuple))
             else:
+                password_value = self._password_for_field(name, resolved)
+                if password_value is not None:
+                    fields[name] = password_value
+                    continue
                 example = self._generate_example(resolved)
                 if isinstance(example, (dict, list)):
                     fields[name] = json.dumps(example)
@@ -587,6 +592,10 @@ class SwaggerTester:
         schema = self._ensure_object_schema(schema)
         for name, prop_schema in (schema.get("properties", {}) or {}).items():
             resolved = self._resolve_schema(prop_schema)
+            password_value = self._password_for_field(name, resolved)
+            if password_value is not None:
+                fields[name] = password_value
+                continue
             example = self._generate_example(resolved)
             if isinstance(example, (dict, list)):
                 fields[name] = json.dumps(example)
@@ -648,6 +657,16 @@ class SwaggerTester:
     # -----------------------------
     # Example generation
     # -----------------------------
+    def _password_for_field(
+        self, name: str, schema: dict[str, Any] | None
+    ) -> str | None:
+        name_lower = name.lower()
+        if "password" in name_lower or "passphrase" in name_lower:
+            return "password"
+        if schema and schema.get("format") == "password":
+            return "password"
+        return None
+
     def _generate_example(self, schema: dict[str, Any] | None, depth: int = 0) -> Any:
         if schema is None or depth > 6:
             return "example"
@@ -691,7 +710,11 @@ class SwaggerTester:
             result: dict[str, Any] = {}
             for name, subschema in properties.items():
                 resolved = self._resolve_schema(subschema)
-                result[name] = self._generate_example(resolved, depth + 1)
+                password_value = self._password_for_field(name, resolved)
+                if password_value is not None:
+                    result[name] = password_value
+                else:
+                    result[name] = self._generate_example(resolved, depth + 1)
             if not result and schema.get("additionalProperties"):
                 additional_schema = self._resolve_schema(
                     schema.get("additionalProperties")
@@ -830,17 +853,24 @@ class SwaggerTester:
             return self._open_file(CHAPTERED_PDF_SAMPLE_FILE, "application/pdf")
 
         if (
-            "cert" in name_lower
+            ("cert" in name_lower
             or "certificate" in name_lower
             or "cert" in path_lower
-            or (content_type and "pkcs" in content_type)
+            or (content_type and "pkcs" in content_type))
+            and "privatekeyfile" != name_lower and field_name != "fileInput"
         ):
-            if "p12" in name_lower or "pkcs" in name_lower or "cert-sign" in path_lower:
+            if (
+                "p12" in name_lower
+                or "pfx" in name_lower
+                or "pkcs" in name_lower
+                or "keystore" in name_lower
+                or (content_type and "pkcs" in content_type)
+            ):
                 return self._open_file(PKCS12_SAMPLE_FILE, "application/x-pkcs12")
             return self._open_file(CERT_SAMPLE_FILE, "application/x-pem-file")
 
         if "key" in name_lower:
-            return self._open_file(CERT_SAMPLE_FILE, "application/x-pem-file")
+            return self._open_file(KEY_SAMPLE_FILE, "application/x-pem-file")
 
         if content_type and content_type in {
             "application/x-pkcs12",
