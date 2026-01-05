@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
 
+import io.github.pixee.security.Filenames;
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
 
@@ -37,6 +38,12 @@ public class GeneralUtils {
      * Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe.
      */
     private static final int MAX_DNS_ADDRESSES = 20;
+
+    /**
+     * Maximum filename length to prevent filesystem issues.
+     */
+    private static final int MAX_FILENAME_LENGTH = 255;
+    private static final String FALLBACK_FILENAME = "uploaded-file";
 
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
@@ -1129,5 +1136,35 @@ public class GeneralUtils {
                 }
             }
         }
+    }
+
+    public String sanitizeFilename(String input) {(String originalFilename) {
+        if (originalFilename == null) {
+            return FALLBACK_FILENAME;
+        }
+        String trimmedFilename = originalFilename.strip();
+        if (trimmedFilename.isEmpty()) {
+            return FALLBACK_FILENAME;
+        }
+        if (trimmedFilename.length() > MAX_FILENAME_LENGTH) {
+            trimmedFilename = trimmedFilename.substring(0, MAX_FILENAME_LENGTH);
+        }
+        String safeFilename = Filenames.toSimpleFileName(trimmedFilename);
+        if (safeFilename == null || safeFilename.isBlank()) {
+            safeFilename = FALLBACK_FILENAME;
+        }
+        StringBuilder cleanedFilename = new StringBuilder(safeFilename.length());
+        for (int i = 0; i < safeFilename.length(); i++) {
+            char current = safeFilename.charAt(i);
+            cleanedFilename.append(Character.isISOControl(current) ? '_' : current);
+        }
+        String cleanedValue = cleanedFilename.toString().strip();
+        if (cleanedValue.isEmpty()) {
+            cleanedValue = FALLBACK_FILENAME;
+        }
+        if (cleanedValue.length() > MAX_FILENAME_LENGTH) {
+            cleanedValue = cleanedValue.substring(0, MAX_FILENAME_LENGTH);
+        }
+        return cleanedValue;
     }
 }

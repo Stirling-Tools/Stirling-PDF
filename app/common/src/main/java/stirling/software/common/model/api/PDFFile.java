@@ -40,6 +40,8 @@ import stirling.software.common.util.GeneralUtils;
                 """)
 public class PDFFile {
 
+    private static final int MAX_FILENAME_LENGTH = 255;
+
     @Schema(
             description =
                     "Uploaded PDF file (multipart upload). "
@@ -68,8 +70,6 @@ public class PDFFile {
         boolean hasFileId = fileId != null && !fileId.trim().isEmpty();
         return hasFileInput ^ hasFileId; // XOR – exactly one must be true
     }
-
-    private static final int MAX_FILENAME_LENGTH = 255;
 
     /** Validates that uploaded filenames are safe and not attempting path traversal. */
     @AssertTrue(message = "Uploaded filename is invalid or unsafe")
@@ -143,6 +143,12 @@ public class PDFFile {
         return fileStorage.getFileSize(fileId);
     }
 
+    /**
+     * Validates the size of the PDF file against configured limits.
+     *
+     * @param fileSize the size of the file in bytes
+     * @throws IllegalArgumentException if the file size exceeds the configured limit
+     */
     private void validatePdfFileSize(long fileSize) {
         ApplicationProperties properties =
                 ApplicationContextProvider.getBean(ApplicationProperties.class);
@@ -166,8 +172,11 @@ public class PDFFile {
     }
 
     /**
-     * Validates a directly uploaded PDF file: - Checks size limit (100 MB) - Verifies Content-Type
-     * compatibility with application/pdf
+     * Validates the size and content type of the provided PDF file.
+     *
+     * @param file the PDF file to validate
+     * @throws IllegalArgumentException if the file size exceeds the configured limit or if the
+     *     content type is not PDF
      */
     public void validatePdfFile(MultipartFile file) {
         validatePdfFileSize(file.getSize());
@@ -179,6 +188,12 @@ public class PDFFile {
         }
     }
 
+    /**
+     * Checks if the provided content type is allowed.
+     *
+     * @param contentType the content type to check
+     * @return true if the content type is compatible with PDF, false otherwise
+     */
     private boolean isAllowedContentType(String contentType) {
         try {
             MediaType mediaType = MediaType.parseMediaType(contentType);

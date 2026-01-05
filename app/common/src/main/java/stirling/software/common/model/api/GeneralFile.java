@@ -1,5 +1,7 @@
 package stirling.software.common.model.api;
 
+import java.io.IOException;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -35,6 +38,8 @@ import stirling.software.common.util.GeneralUtils;
                 - Use `fileId` when continuing processing on a file that was previously uploaded and stored on the server.
                 """)
 public class GeneralFile {
+
+    private static final int MAX_FILENAME_LENGTH = 255;
 
     @Schema(
             description =
@@ -64,8 +69,6 @@ public class GeneralFile {
         return hasFileInput ^ hasFileId; // XOR – exactly one must be true
     }
 
-    private static final int MAX_FILENAME_LENGTH = 255;
-
     /** Validates that uploaded filenames are safe and not attempting path traversal. */
     @AssertTrue(message = "Uploaded filename is invalid or unsafe")
     @Schema(hidden = true)
@@ -93,6 +96,49 @@ public class GeneralFile {
             }
         }
         return true;
+    }
+
+    /**
+     * Resolves the actual MultipartFile, either from direct upload or by retrieving the server-side
+     * file using the provided fileId.
+     *
+     * @param fileStorage the service used to access stored files
+     * @param inputFile the directly uploaded file (may be null)
+     * @return the resolved MultipartFile, or null if no valid input was provided
+     * @throws IOException if retrieval of a server-side file fails
+     */
+    public MultipartFile resolveFile(FileStorage fileStorage, MultipartFile inputFile)
+            throws IOException {
+        if (inputFile != null && !inputFile.isEmpty()) {
+            return inputFile;
+        }
+        if (fileId == null || fileId.isBlank()) {
+            return null;
+        }
+        return fileStorage.retrieveFile(fileId);
+    }
+
+    /**
+     * Resolves the actual MultipartFile, either from direct upload or by retrieving the server-side
+     * file using the provided fileId.
+     *
+     * @param fileStorage the service used to access stored files
+     * @return the resolved MultipartFile, or null if no valid input was provided
+     * @throws IOException if retrieval of a server-side file fails
+     */
+    public MultipartFile resolveFile(FileStorage fileStorage) throws IOException {
+        return resolveFile(fileStorage, this.fileInput);
+    }
+
+    /** Returns the size of the input PDF in bytes. */
+    public long resolveFileSize(FileStorage fileStorage) throws IOException {
+        if (fileInput != null && !fileInput.isEmpty()) {
+            return fileInput.getSize();
+        }
+        if (fileId == null || fileId.isBlank()) {
+            return 0L;
+        }
+        return fileStorage.getFileSize(fileId);
     }
 
     /**
