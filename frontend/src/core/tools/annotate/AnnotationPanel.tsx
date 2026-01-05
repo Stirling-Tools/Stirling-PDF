@@ -1305,7 +1305,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         disabled={applyDisabled}
         onClick={onApplyChanges}
       >
-        {t('annotation.applyChanges', 'Apply Changes')}
+        {t('annotation.saveChanges', 'Save Changes')}
       </Button>
 
       <SuggestedToolsSection />

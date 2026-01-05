@@ -12,6 +12,27 @@ import { useAnnotationStyleState } from '@app/tools/annotate/useAnnotationStyleS
 import { useAnnotationSelection } from '@app/tools/annotate/useAnnotationSelection';
 import { AnnotationPanel } from '@app/tools/annotate/AnnotationPanel';
 
+// Tools that require drawing/interacting with the PDF and should disable pan mode
+const DRAWING_TOOLS: AnnotationToolId[] = [
+  'highlight',
+  'underline',
+  'strikeout',
+  'squiggly',
+  'ink',
+  'inkHighlighter',
+  'text',
+  'note',
+  'square',
+  'circle',
+  'line',
+  'lineArrow',
+  'polyline',
+  'polygon',
+  'stamp',
+  'signatureStamp',
+  'signatureInk',
+];
+
 const KNOWN_ANNOTATION_TOOLS: AnnotationToolId[] = [
   'select',
   'highlight',
@@ -52,9 +73,12 @@ const Annotate = (_props: BaseToolProps) => {
     setPlacementPreviewSize,
   } = useSignature();
   const viewerContext = useContext(ViewerContext);
-  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const { getZoomState, registerImmediateZoomUpdate, applyChanges, activeFileIndex, panActions } = useViewer();
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>('select');
+  
+  // Track the previous file index to detect file switches
+  const prevFileIndexRef = useRef<number>(activeFileIndex);
   const activeToolRef = useRef<AnnotationToolId>('select');
   const wasAnnotateActiveRef = useRef<boolean>(false);
   const [selectedTextDraft, setSelectedTextDraft] = useState<string>('');
@@ -143,9 +167,11 @@ const Annotate = (_props: BaseToolProps) => {
     setTextAlignment,
   } = styleActions;
 
-  const handleApplyChanges = useCallback(() => {
-    window.dispatchEvent(new CustomEvent('stirling-annotations-apply'));
-  }, []);
+  const handleApplyChanges = useCallback(async () => {
+    if (applyChanges) {
+      await applyChanges();
+    }
+  }, [applyChanges]);
 
   useEffect(() => {
     const isAnnotateActive = workbench === 'viewer' && selectedTool === 'annotate';
@@ -205,6 +231,35 @@ const Annotate = (_props: BaseToolProps) => {
     annotationApiRef?.current?.activateAnnotationTool?.(activeTool, toolOptions);
   }, [viewerContext?.isAnnotationMode, signatureApiRef, activeTool, buildToolOptions, stampImageData, stampImageSize]);
 
+  // Reset to 'select' mode when switching between files
+  // The new PDF gets a fresh EmbedPDF instance - forcing user to re-select tool ensures it works properly
+  useEffect(() => {
+    if (prevFileIndexRef.current !== activeFileIndex) {
+      prevFileIndexRef.current = activeFileIndex;
+      
+      // Reset to select mode when switching files
+      // This forces the user to re-select their tool, which ensures proper activation on the new PDF
+      if (activeTool !== 'select') {
+        setActiveTool('select');
+        activeToolRef.current = 'select';
+        
+        // Clean up placement mode if we were in stamp tool
+        setPlacementMode(false);
+        setSignatureConfig(null);
+        
+        // Small delay to ensure the new EmbedPDF instance is ready, then activate select mode
+        const timer = setTimeout(() => {
+          if (annotationApiRef?.current) {
+            annotationApiRef.current.deselectAnnotation?.();
+            annotationApiRef.current.activateAnnotationTool?.('select');
+          }
+        }, 100);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [activeFileIndex, activeTool, setPlacementMode, setSignatureConfig]);
+
   const activateAnnotationTool = (toolId: AnnotationToolId) => {
     // If leaving stamp tool, clean up placement mode
     if (activeTool === 'stamp' && toolId !== 'stamp') {
@@ -223,6 +278,11 @@ const Annotate = (_props: BaseToolProps) => {
     // Clear selection state to show default controls
     setSelectedAnn(null);
     setSelectedAnnId(null);
+
+    // Disable pan mode when activating drawing tools to avoid conflict
+    if (DRAWING_TOOLS.includes(toolId)) {
+      panActions.disablePan();
+    }
 
     // Change the tool
     setActiveTool(toolId);

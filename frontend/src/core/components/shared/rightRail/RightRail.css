@@ -71,6 +71,10 @@
   color: var(--right-rail-icon);
 }
 
+.right-rail-icon[data-active="true"] {
+  color: #fff;
+}
+
 .right-rail-icon[aria-disabled="true"],
 .right-rail-icon[disabled] {
   color: var(--right-rail-icon-disabled) !important;

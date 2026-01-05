@@ -4,13 +4,16 @@ import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { Z_INDEX_TOAST } from "@app/styles/zIndex";
 
 interface NavigationWarningModalProps {
   onApplyAndContinue?: () => Promise<void>;
   onExportAndContinue?: () => Promise<void>;
+  /** Called when discarding - allows saving applied changes while discarding pending ones */
+  onDiscardAndContinue?: () => Promise<void>;
 }
 
-const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: NavigationWarningModalProps) => {
+const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, onDiscardAndContinue }: NavigationWarningModalProps) => {
   const { t } = useTranslation();
   const { showNavigationWarning, hasUnsavedChanges, pendingNavigation, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
     useNavigationGuard();
@@ -19,7 +22,11 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
     cancelNavigation();
   };
 
-  const handleDiscardChanges = () => {
+  const handleDiscardChanges = async () => {
+    // If a discard handler is provided, call it to save any already-applied changes, then discard the unsaved changes
+    if (onDiscardAndContinue) {
+      await onDiscardAndContinue();
+    }
     setHasUnsavedChanges(false);
     confirmNavigation();
   };
@@ -32,14 +39,15 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
     confirmNavigation();
   };
 
-  const _handleExportAndContinue = async () => {
+  const handleExportAndContinue = async () => {
     if (onExportAndContinue) {
       await onExportAndContinue();
     }
     setHasUnsavedChanges(false);
     confirmNavigation();
   };
-  const BUTTON_WIDTH = "10rem";
+
+  const BUTTON_WIDTH = "12rem";
 
   // Only show modal if there are unsaved changes AND there's an actual pending navigation
   // This prevents the modal from showing due to spurious state updates
@@ -56,6 +64,7 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
       size="auto"
       closeOnClickOutside={true}
       closeOnEscape={true}
+      zIndex={Z_INDEX_TOAST}
     >
       <Stack>
         <Stack  ta="center"  p="md">
@@ -83,6 +92,11 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
                 {t("applyAndContinue", "Apply & Leave")}
               </Button>
             )}
+            {onExportAndContinue && (
+              <Button variant="filled"  onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+                {t("exportAndContinue", "Export & Leave")}
+              </Button>
+            )}
           </Group>
         </Group>
 
@@ -97,6 +111,11 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue }: Nav
           {onApplyAndContinue && (
             <Button variant="filled" onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
               {t("applyAndContinue", "Apply & Leave")}
+            </Button>
+          )}
+          {onExportAndContinue && (
+            <Button variant="filled" onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
+              {t("exportAndContinue", "Export & Leave")}
             </Button>
           )}
         </Stack>

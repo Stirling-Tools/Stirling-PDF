@@ -77,3 +77,32 @@ export const useRedactAdvancedTips = (): TooltipContent => {
     ]
   };
 };
+
+export const useRedactManualTips = (): TooltipContent => {
+  const { t } = useTranslation();
+
+  return {
+    header: {
+      title: t("redact.tooltip.manual.header.title", "Manual Redaction Controls")
+    },
+    tips: [
+      {
+        title: t("redact.tooltip.manual.markText.title", "Mark Text Tool"),
+        description: t("redact.tooltip.manual.markText.text", "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."),
+      },
+      {
+        title: t("redact.tooltip.manual.markArea.title", "Mark Area Tool"),
+        description: t("redact.tooltip.manual.markArea.text", "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."),
+      },
+      {
+        title: t("redact.tooltip.manual.apply.title", "Apply Redactions"),
+        description: t("redact.tooltip.manual.apply.text", "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."),
+        bullets: [
+          t("redact.tooltip.manual.apply.bullet1", "Mark as many areas as needed before applying"),
+          t("redact.tooltip.manual.apply.bullet2", "All pending redactions are applied at once"),
+          t("redact.tooltip.manual.apply.bullet3", "Redactions cannot be undone after applying")
+        ]
+      }
+    ]
+  };
+};

@@ -10,6 +10,7 @@ export interface RightRailRenderContext {
 	allButtonsDisabled: boolean;
 	action?: RightRailAction;
 	triggerAction: () => void;
+	active: boolean;
 }
 
 export interface RightRailButtonConfig {
@@ -35,4 +36,6 @@ export interface RightRailButtonConfig {
 	render?: (ctx: RightRailRenderContext) => React.ReactNode;
 	/** Optional className applied to wrapper when using default renderer */
 	className?: string;
+	/** Optional active state to highlight the control */
+	active?: boolean;
 }
