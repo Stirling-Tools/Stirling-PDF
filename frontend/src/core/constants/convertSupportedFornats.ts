@@ -12,10 +12,10 @@ export const CONVERT_SUPPORTED_FORMATS = [
   'sda', 'sdc', 'sdd', 'sdw', 'stc', 'std', 'sti', 'stw', 'sxd', 'sxg', 'sxi', 'sxw',
   // Email formats
   'eml',
+  // Ebook formats
+  'epub', 'mobi', 'azw3', 'fb2',
   // Archive formats
-  'zip', 'cbz',
+  'zip', 'cbr', 'cbz',
   // Other
   'dbf', 'fods', 'vsd', 'vor', 'vor3', 'vor4', 'uop', 'pct', 'ps', 'pdf',
 ];
-
-

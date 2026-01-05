@@ -152,6 +152,12 @@ describe('Convert Tool Integration Tests', () => {
         pdfaOptions: {
           outputFormat: ''
         },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
+        },
         cbzOptions: {
           optimizeForEbook: false
         },
@@ -225,6 +231,12 @@ describe('Convert Tool Integration Tests', () => {
         pdfaOptions: {
           outputFormat: ''
         },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
+        },
         cbzOptions: {
           optimizeForEbook: false
         },
@@ -275,6 +287,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
         },
         cbzOptions: {
           optimizeForEbook: false
@@ -335,6 +353,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
         },
         cbzOptions: {
           optimizeForEbook: false
@@ -400,6 +424,12 @@ describe('Convert Tool Integration Tests', () => {
         pdfaOptions: {
           outputFormat: ''
         },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
+        },
         cbzOptions: {
           optimizeForEbook: false
         },
@@ -462,6 +492,12 @@ describe('Convert Tool Integration Tests', () => {
         pdfaOptions: {
           outputFormat: ''
         },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
+        },
         cbzOptions: {
           optimizeForEbook: false
         },
@@ -520,6 +556,12 @@ describe('Convert Tool Integration Tests', () => {
         pdfaOptions: {
           outputFormat: ''
         },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
+        },
         cbzOptions: {
           optimizeForEbook: false
         },
@@ -574,6 +616,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
         },
         cbzOptions: {
           optimizeForEbook: false
@@ -632,6 +680,12 @@ describe('Convert Tool Integration Tests', () => {
         pdfaOptions: {
           outputFormat: ''
         },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
+        },
         cbzOptions: {
           optimizeForEbook: false
         },
@@ -685,6 +739,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
         },
         cbzOptions: {
           optimizeForEbook: false
@@ -746,6 +806,12 @@ describe('Convert Tool Integration Tests', () => {
         pdfaOptions: {
           outputFormat: ''
         },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
+        },
         cbzOptions: {
           optimizeForEbook: false
         },
@@ -804,6 +870,12 @@ describe('Convert Tool Integration Tests', () => {
         },
         pdfaOptions: {
           outputFormat: ''
+        },
+        cbrOptions: {
+          optimizeForEbook: false
+        },
+        pdfToCbrOptions: {
+          dpi: 150
         },
         cbzOptions: {
           optimizeForEbook: false
