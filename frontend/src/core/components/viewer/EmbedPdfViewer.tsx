@@ -439,6 +439,52 @@ const EmbedPdfViewerContent = ({
     }
   }, [currentFile, activeFiles, activeFileIndex, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
 
+  // Discard pending redactions but save already-applied ones
+  // This is called when user clicks "Discard & Leave" - we want to:
+  // 1. NOT commit pending redaction marks (they get discarded)
+  // 2. Save the PDF with already-applied redactions (if any)
+  const discardAndSaveApplied = useCallback(async () => {
+    // Only save if there are applied redactions to preserve
+    if (!redactionsApplied || !currentFile || activeFileIds.length === 0) {
+      return;
+    }
+
+    try {
+      console.log('[Viewer] Discarding pending marks but saving applied redactions');
+
+      // Export PDF WITHOUT committing pending marks - this saves only applied redactions
+      const arrayBuffer = await exportActions.saveAsCopy();
+      if (!arrayBuffer) {
+        throw new Error('Failed to export PDF');
+      }
+
+      // Convert ArrayBuffer to File
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const filename = currentFile.name || 'document.pdf';
+      const file = new File([blob], filename, { type: 'application/pdf' });
+
+      // Create StirlingFiles and stubs for version history
+      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      if (!currentFileId) throw new Error('Current file ID not found');
+      
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
+      if (!parentStub) throw new Error('Parent stub not found');
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+
+      // Consume only the current file (replace in context)
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+
+      // Clear flags
+      hasAnnotationChangesRef.current = false;
+      setRedactionsApplied(false);
+      
+      console.log('[Viewer] Applied redactions saved, pending marks discarded');
+    } catch (error) {
+      console.error('Failed to save applied redactions:', error);
+    }
+  }, [redactionsApplied, currentFile, activeFiles, activeFileIndex, activeFileIds.length, exportActions, actions, selectors, setRedactionsApplied]);
+
   // Restore scroll position after file replacement or tool switch
   // Uses polling with retries to ensure the scroll succeeds
   useEffect(() => {
@@ -619,6 +665,10 @@ const EmbedPdfViewerContent = ({
         <NavigationWarningModal
           onApplyAndContinue={async () => {
             await applyChanges();
+          }}
+          onDiscardAndContinue={async () => {
+            // Save applied redactions (if any) while discarding pending ones
+            await discardAndSaveApplied();
           }}
         />
       )}

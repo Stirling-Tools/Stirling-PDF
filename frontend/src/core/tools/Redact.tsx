@@ -12,6 +12,7 @@ import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput"
 import ManualRedactionControls from "@app/components/tools/redact/ManualRedactionControls";
 import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
+import { useFileState } from "@app/contexts/file/fileHooks";
 
 const Redact = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -34,6 +35,10 @@ const Redact = (props: BaseToolProps) => {
     props
   );
 
+  // Get total file count from context (any files in workbench, not just selected)
+  const { state: fileState } = useFileState();
+  const hasAnyFiles = fileState.files.ids.length > 0;
+
   // Tooltips for each step
   const modeTips = useRedactModeTips();
   const wordsTips = useRedactWordsTips();
@@ -50,10 +55,11 @@ const Redact = (props: BaseToolProps) => {
   }, [workbench, redactionConfig, base.params.parameters.mode, base.params.updateParameter]);
 
   // Handle mode change - navigate to viewer when manual mode is selected
+  // Manual mode works with any files in workbench (not just selected files)
   const handleModeChange = (mode: RedactMode) => {
     base.params.updateParameter('mode', mode);
     
-    if (mode === 'manual' && base.hasFiles) {
+    if (mode === 'manual' && hasAnyFiles) {
       // Set redaction config and navigate to viewer
       setRedactionConfig(base.params.parameters);
       setRedactionMode(true);
@@ -63,14 +69,15 @@ const Redact = (props: BaseToolProps) => {
   };
 
   // When files are added and in manual mode, navigate to viewer
+  // Uses hasAnyFiles since manual mode works with any files in workbench
   useEffect(() => {
-    if (base.params.parameters.mode === 'manual' && base.hasFiles && !hasOpenedViewer.current) {
+    if (base.params.parameters.mode === 'manual' && hasAnyFiles && !hasOpenedViewer.current) {
       setRedactionConfig(base.params.parameters);
       setRedactionMode(true);
       navActions.setWorkbench('viewer');
       hasOpenedViewer.current = true;
     }
-  }, [base.hasFiles, base.params.parameters, navActions, setRedactionConfig, setRedactionMode]);
+  }, [hasAnyFiles, base.params.parameters, navActions, setRedactionConfig, setRedactionMode]);
 
   // Reset viewer flag when mode changes back to automatic
   useEffect(() => {
@@ -94,11 +101,15 @@ const Redact = (props: BaseToolProps) => {
 
   // Build conditional steps based on redaction mode
   const buildSteps = () => {
+    // Method step is always expandable (even without files selected)
+    // Only collapse on results or user preference
+    const methodStepCollapsed = base.hasResults ? true : methodCollapsed;
+    
     const steps = [
-      // Method selection step (always present)
+      // Method selection step (always present and always expandable)
       {
         title: t("redact.modeSelector.title", "Redaction Method"),
-        isCollapsed: getActualCollapsedState(methodCollapsed),
+        isCollapsed: methodStepCollapsed,
         onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setMethodCollapsed(!methodCollapsed),
         tooltip: modeTips,
         content: (
@@ -106,7 +117,8 @@ const Redact = (props: BaseToolProps) => {
             mode={base.params.parameters.mode}
             onModeChange={handleModeChange}
             disabled={base.endpointLoading}
-            hasFiles={base.hasFiles}
+            hasFilesSelected={base.hasFiles}
+            hasAnyFiles={hasAnyFiles}
           />
         ),
       }
@@ -140,12 +152,13 @@ const Redact = (props: BaseToolProps) => {
       );
     } else if (base.params.parameters.mode === 'manual') {
       // Manual mode - show redaction controls
+      // Uses hasAnyFiles since manual mode works with any files in workbench (viewer-powered)
       steps.push({
         title: t("redact.manual.controlsTitle", "Manual Redaction Controls"),
         isCollapsed: false,
         onCollapsedClick: () => {},
         tooltip: manualTips,
-        content: <ManualRedactionControls disabled={!base.hasFiles} />,
+        content: <ManualRedactionControls disabled={!hasAnyFiles} />,
       });
     }
 
