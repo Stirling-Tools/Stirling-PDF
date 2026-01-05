@@ -199,7 +199,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ filteredTools, onSelect, 
                                 height="1rem"
                                 style={{ marginRight: '4px', opacity: 0.6 }}
                               />
-                              <ToolIcon icon={displayEntry.icon} marginRight="0" style={{ opacity: available ? 1 : 0.4 }} />
+                              <ToolIcon icon={displayEntry.icon} marginRight="0" opacity={available ? 1 : 0.4} />
                             </div>
                           }
                           fullWidth
