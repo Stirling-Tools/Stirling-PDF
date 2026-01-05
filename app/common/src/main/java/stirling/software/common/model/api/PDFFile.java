@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.AssertTrue;
@@ -66,6 +67,37 @@ public class PDFFile {
         boolean hasFileInput = fileInput != null && !fileInput.isEmpty();
         boolean hasFileId = fileId != null && !fileId.trim().isEmpty();
         return hasFileInput ^ hasFileId; // XOR – exactly one must be true
+    }
+
+    private static final int MAX_FILENAME_LENGTH = 255;
+
+    /** Validates that uploaded filenames are safe and not attempting path traversal. */
+    @AssertTrue(message = "Uploaded filename is invalid or unsafe")
+    @Schema(hidden = true)
+    public boolean isSafeFileName() {
+        if (fileInput == null || fileInput.isEmpty()) {
+            return true;
+        }
+        String originalFilename = fileInput.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            return false;
+        }
+        String safeFilename = Filenames.toSimpleFileName(originalFilename);
+        if (safeFilename == null || safeFilename.isBlank()) {
+            return false;
+        }
+        if (!safeFilename.equals(originalFilename)) {
+            return false;
+        }
+        if (originalFilename.length() > MAX_FILENAME_LENGTH) {
+            return false;
+        }
+        for (int i = 0; i < originalFilename.length(); i++) {
+            if (Character.isISOControl(originalFilename.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
