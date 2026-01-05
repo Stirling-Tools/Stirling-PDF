@@ -138,12 +138,7 @@ public class ReactRoutingController {
     }
 
     @GetMapping(value = "/auth/callback", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> serveAuthCallback(HttpServletRequest request) {
-        String tauriParam = request.getParameter("tauri");
-        if (!"1".equals(tauriParam)) {
-            String html = cachedIndexHtml != null ? cachedIndexHtml : processIndexHtml();
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(html);
-        }
+    public ResponseEntity<String> serveAuthCallback() {
         if (cachedCallbackHtml == null) {
             cachedCallbackHtml = buildCallbackHtml();
         }

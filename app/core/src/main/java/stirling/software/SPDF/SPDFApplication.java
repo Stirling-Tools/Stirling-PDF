@@ -285,27 +285,11 @@ public class SPDFApplication {
             if (hasPort || defaultHttp || defaultHttps) {
                 return trimmedBase;
             }
-
-            if (uri.getScheme() != null && uri.getHost() != null) {
-                int parsedPort = Integer.parseInt(port);
-                java.net.URI rebuilt =
-                        new java.net.URI(
-                                uri.getScheme(),
-                                uri.getUserInfo(),
-                                uri.getHost(),
-                                parsedPort,
-                                uri.getPath(),
-                                uri.getQuery(),
-                                uri.getFragment());
-                return rebuilt.toString();
-            }
         } catch (java.net.URISyntaxException e) {
             // If parsing fails, fall back to a simple suffix check
             if (trimmedBase.matches(".+:\\d+$")) {
                 return trimmedBase;
             }
-        } catch (NumberFormatException e) {
-            // ignore invalid port, fall back to suffix append
         }
 
         return trimmedBase + ":" + port;
