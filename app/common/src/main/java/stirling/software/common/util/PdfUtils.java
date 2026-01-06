@@ -119,11 +119,11 @@ public class PdfUtils {
 
     public boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();
-        PDDocument tempDoc = new PDDocument();
-        tempDoc.addPage(page);
-        String pageText = textStripper.getText(tempDoc);
-        tempDoc.close();
-        return pageText.contains(phrase);
+        try (PDDocument tempDoc = new PDDocument()) {
+            tempDoc.addPage(page);
+            String pageText = textStripper.getText(tempDoc);
+            return pageText.contains(phrase);
+        }
     }
 
     public byte[] convertFromPdf(
@@ -153,16 +153,14 @@ public class PdfUtils {
                     maxSafeDpi);
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
+        try (PDDocument document = pdfDocumentFactory.load(inputStream);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             if (!includeAnnotations) {
                 pdfRenderer.setAnnotationsFilter(annotation -> false);
             }
             int pageCount = document.getNumberOfPages();
-
-            // Create a ByteArrayOutputStream to save the image(s) to
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             if (singleImage) {
                 if ("tiff".equals(imageType.toLowerCase(Locale.ROOT))
@@ -400,55 +398,61 @@ public class PdfUtils {
      */
     public PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
         PDDocument imageDocument = new PDDocument();
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
-        pdfRenderer.setSubsamplingAllowed(true);
-        for (int page = 0; page < document.getNumberOfPages(); ++page) {
-            final int pageIndex = page;
-            BufferedImage bim;
+        try {
+            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            pdfRenderer.setSubsamplingAllowed(true);
+            for (int page = 0; page < document.getNumberOfPages(); ++page) {
+                final int pageIndex = page;
+                BufferedImage bim;
 
-            // Use global maximum DPI setting, fallback to 300 if not set
-            int renderDpi = 300; // Default fallback
-            ApplicationProperties properties =
-                    ApplicationContextProvider.getBean(ApplicationProperties.class);
-            if (properties != null && properties.getSystem() != null) {
-                renderDpi = properties.getSystem().getMaxDPI();
-            }
-            final int dpi = renderDpi;
-
-            try {
-                bim =
-                        ExceptionUtils.handleOomRendering(
-                                pageIndex + 1,
-                                dpi,
-                                () ->
-                                        pdfRenderer.renderImageWithDPI(
-                                                pageIndex, dpi, ImageType.RGB));
-            } catch (IllegalArgumentException e) {
-                if (e.getMessage() != null
-                        && e.getMessage().contains("Maximum size of image exceeded")) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.pageTooBigFor300Dpi",
-                            "PDF page {0} is too large to render at 300 DPI. The resulting image"
-                                    + " would exceed Java's maximum array size. Please use a lower DPI"
-                                    + " value for PDF-to-image conversion.",
-                            pageIndex + 1);
+                // Use global maximum DPI setting, fallback to 300 if not set
+                int renderDpi = 300; // Default fallback
+                ApplicationProperties properties =
+                        ApplicationContextProvider.getBean(ApplicationProperties.class);
+                if (properties != null && properties.getSystem() != null) {
+                    renderDpi = properties.getSystem().getMaxDPI();
                 }
-                throw e;
+                final int dpi = renderDpi;
+
+                try {
+                    bim =
+                            ExceptionUtils.handleOomRendering(
+                                    pageIndex + 1,
+                                    dpi,
+                                    () ->
+                                            pdfRenderer.renderImageWithDPI(
+                                                    pageIndex, dpi, ImageType.RGB));
+                } catch (IllegalArgumentException e) {
+                    if (e.getMessage() != null
+                            && e.getMessage().contains("Maximum size of image exceeded")) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.pageTooBigFor300Dpi",
+                                "PDF page {0} is too large to render at 300 DPI. The resulting image"
+                                        + " would exceed Java's maximum array size. Please use a lower DPI"
+                                        + " value for PDF-to-image conversion.",
+                                pageIndex + 1);
+                    }
+                    throw e;
+                }
+                PDPage originalPage = document.getPage(page);
+
+                float width = originalPage.getMediaBox().getWidth();
+                float height = originalPage.getMediaBox().getHeight();
+
+                PDPage newPage = new PDPage(new PDRectangle(width, height));
+                imageDocument.addPage(newPage);
+                PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
+                try (PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                imageDocument, newPage, AppendMode.APPEND, true, true)) {
+                    contentStream.drawImage(pdImage, 0, 0, width, height);
+                }
+                bim.flush();
             }
-            PDPage originalPage = document.getPage(page);
-
-            float width = originalPage.getMediaBox().getWidth();
-            float height = originalPage.getMediaBox().getHeight();
-
-            PDPage newPage = new PDPage(new PDRectangle(width, height));
-            imageDocument.addPage(newPage);
-            PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(imageDocument, newPage, AppendMode.APPEND, true, true);
-            contentStream.drawImage(pdImage, 0, 0, width, height);
-            contentStream.close();
+            return imageDocument;
+        } catch (Exception e) {
+            throw e;
         }
-        return imageDocument;
     }
 
     private BufferedImage prepareImageForPdfToImage(int maxWidth, int height, String imageType) {

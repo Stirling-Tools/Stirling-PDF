@@ -97,7 +97,12 @@ public class CbzUtils {
                                         new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
                         document.addPage(page);
                         try (PDPageContentStream contentStream =
-                                new PDPageContentStream(document, page)) {
+                                new PDPageContentStream(
+                                        document,
+                                        page,
+                                        PDPageContentStream.AppendMode.OVERWRITE,
+                                        true,
+                                        true)) {
                             contentStream.drawImage(pdImage, 0, 0);
                         }
                     } catch (IOException e) {

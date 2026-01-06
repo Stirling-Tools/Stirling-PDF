@@ -37,6 +37,7 @@ dependencies {
     api 'com.drewnoakes:metadata-extractor:2.19.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
+    api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
     api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
     api 'com.github.junrar:junrar:7.5.7' // RAR archive support for CBR files

@@ -2,7 +2,7 @@ import { SpreadMode } from '@embedpdf/plugin-spread/react';
 import { PdfBookmarkObject } from '@embedpdf/models';
 
 export interface ScrollAPIWrapper {
-  scrollToPage: (params: { pageNumber: number }) => void;
+  scrollToPage: (params: { pageNumber: number; behavior?: ScrollBehavior }) => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
 }
