@@ -7,14 +7,14 @@ import { CertSignParameters, defaultParameters } from '@app/hooks/tools/certSign
 export const buildCertSignFormData = (parameters: CertSignParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
-  
+
   // Handle sign mode
   if (parameters.signMode === 'AUTO') {
     formData.append('certType', 'SERVER');
   } else {
     formData.append('certType', parameters.certType);
     formData.append('password', parameters.password);
-    
+
     // Add certificate files based on type (only for manual mode)
     switch (parameters.certType) {
       case 'PEM':
@@ -26,6 +26,7 @@ export const buildCertSignFormData = (parameters: CertSignParameters, file: File
         }
         break;
       case 'PKCS12':
+      case 'PFX':
         if (parameters.p12File) {
           formData.append('p12File', parameters.p12File);
         }
@@ -37,7 +38,7 @@ export const buildCertSignFormData = (parameters: CertSignParameters, file: File
         break;
     }
   }
-  
+
   // Add signature appearance options if enabled
   if (parameters.showSignature) {
     formData.append('showSignature', 'true');
@@ -47,7 +48,7 @@ export const buildCertSignFormData = (parameters: CertSignParameters, file: File
     formData.append('pageNumber', parameters.pageNumber.toString());
     formData.append('showLogo', parameters.showLogo.toString());
   }
-  
+
   return formData;
 };
 

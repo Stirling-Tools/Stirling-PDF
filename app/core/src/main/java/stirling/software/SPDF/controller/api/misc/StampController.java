@@ -134,60 +134,65 @@ public class StampController {
                 };
 
         // Load the input PDF
-        PDDocument document = pdfDocumentFactory.load(pdfFile);
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-        List<Integer> pageNumbers = request.getPageNumbersList(document, true);
+            List<Integer> pageNumbers = request.getPageNumbersList(document, true);
 
-        for (int pageIndex : pageNumbers) {
-            int zeroBasedIndex = pageIndex - 1;
-            if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
-                PDPage page = document.getPage(zeroBasedIndex);
-                PDRectangle pageSize = page.getMediaBox();
-                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+            for (int pageIndex : pageNumbers) {
+                int zeroBasedIndex = pageIndex - 1;
+                if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
+                    PDPage page = document.getPage(zeroBasedIndex);
+                    PDRectangle pageSize = page.getMediaBox();
+                    float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
 
-                PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+                    PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    document,
+                                    page,
+                                    PDPageContentStream.AppendMode.APPEND,
+                                    true,
+                                    true);
 
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setNonStrokingAlphaConstant(opacity);
-                contentStream.setGraphicsStateParameters(graphicsState);
+                    PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                    graphicsState.setNonStrokingAlphaConstant(opacity);
+                    contentStream.setGraphicsStateParameters(graphicsState);
 
-                if ("text".equalsIgnoreCase(stampType)) {
-                    addTextStamp(
-                            contentStream,
-                            stampText,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            alphabet,
-                            overrideX,
-                            overrideY,
-                            margin,
-                            customColor);
-                } else if ("image".equalsIgnoreCase(stampType)) {
-                    addImageStamp(
-                            contentStream,
-                            stampImage,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            overrideX,
-                            overrideY,
-                            margin);
+                    if ("text".equalsIgnoreCase(stampType)) {
+                        addTextStamp(
+                                contentStream,
+                                stampText,
+                                document,
+                                page,
+                                rotation,
+                                position,
+                                fontSize,
+                                alphabet,
+                                overrideX,
+                                overrideY,
+                                margin,
+                                customColor);
+                    } else if ("image".equalsIgnoreCase(stampType)) {
+                        addImageStamp(
+                                contentStream,
+                                stampImage,
+                                document,
+                                page,
+                                rotation,
+                                position,
+                                fontSize,
+                                overrideX,
+                                overrideY,
+                                margin);
+                    }
+
+                    contentStream.close();
                 }
-
-                contentStream.close();
             }
+            // Return the stamped PDF as a response
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
         }
-        // Return the stamped PDF as a response
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
     }
 
     private void addTextStamp(
