@@ -559,26 +559,34 @@ export class AuthService {
     const fullUrl = providerPath.startsWith('http')
       ? providerPath
       : `${trimmedServer}${providerPath.startsWith('/') ? providerPath : `/${providerPath}`}`;
+    let authUrl = fullUrl;
+    try {
+      const parsed = new URL(fullUrl);
+      parsed.searchParams.set('tauri', '1');
+      authUrl = parsed.toString();
+    } catch {
+      // ignore URL parsing failures
+    }
 
     // Ensure backend redirects back to /auth/callback
     try {
-      document.cookie = `stirling_redirect_path=${encodeURIComponent('/auth/callback')}; path=/; max-age=300; SameSite=Lax`;
+      document.cookie = `stirling_redirect_path=${encodeURIComponent('/auth/callback?tauri=1')}; path=/; max-age=300; SameSite=Lax`;
     } catch {
       // ignore cookie errors
     }
 
     // Force a real popup so the main webview stays on the app
-    const authWindow = window.open(fullUrl, 'stirling-desktop-sso', 'width=900,height=900');
+    const authWindow = window.open(authUrl, 'stirling-desktop-sso', 'width=900,height=900');
 
     // Fallback: use Tauri shell.open and wait for deep link back
     if (!authWindow) {
-      if (await this.openInSystemBrowser(fullUrl)) {
+      if (await this.openInSystemBrowser(authUrl)) {
         return this.waitForDeepLinkCompletion(trimmedServer);
       }
       throw new Error('Unable to open browser window for SSO. Please allow pop-ups and try again.');
     }
 
-    const expectedOrigin = new URL(fullUrl).origin;
+    const expectedOrigin = new URL(authUrl).origin;
 
     // Always also listen for deep link completion in case the opener messaging path fails
     const deepLinkPromise = this.waitForDeepLinkCompletion(trimmedServer).catch((err) => {
