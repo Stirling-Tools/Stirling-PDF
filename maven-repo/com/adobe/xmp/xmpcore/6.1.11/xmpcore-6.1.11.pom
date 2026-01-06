@@ -1,0 +1,211 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ======================================================================= -->
+	<!-- P R O J E C T -->
+	<!-- ======================================================================= -->
+	<groupId>com.adobe.xmp</groupId>
+	<artifactId>xmpcore</artifactId>
+	<version>6.1.11</version>
+	<packaging>bundle</packaging>
+
+	<name>Adobe XMPCore</name>
+	<description>The Adobe XMP Core library</description>
+	<url>https://www.adobe.com/devnet/xmp/library/eula-xmp-library-java.html</url>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+	
+	<scm>
+		<connection>scm:git:git@git.corp.adobe.com:coretech/xmp-java.git</connection>
+		<developerConnection>scm:git:git@git.corp.adobe.com:coretech/xmp-java.git</developerConnection>
+		<url>https://git.corp.adobe.com/coretech/xmp-java/tree/mvncentral/core</url>
+		<tag>xmpcore-6.1.11</tag>
+	</scm>
+
+	<licenses>
+		<license>
+			<name>The BSD 3-Clause License (BSD3)</name>
+			<url>https://opensource.org/licenses/BSD-3-Clause</url>
+		</license>
+	</licenses>
+	
+	<developers>
+		<developer>
+			<name>Priyanka Gupta</name>
+			<email>prigupta@adobe.com</email>
+			<organization>adobe</organization>
+			<organizationUrl>https://www.adobe.com/</organizationUrl>
+		</developer>
+	</developers>
+	
+	<properties>
+		<skip.checkstyle>true</skip.checkstyle>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<!-- ======================================================================= -->
+	<!-- B U I L D -->
+	<!-- ======================================================================= -->
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.2</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Export-Package>
+							com.adobe.internal.xmp,
+							com.adobe.internal.xmp.options,
+							com.adobe.internal.xmp.properties,
+							com.adobe.internal.xmp.utils,
+							com.adobe.xmp.core.map
+						</Export-Package>
+						<Private-Package>
+							com.adobe.internal.xmp.impl,
+							com.adobe.internal.xmp.impl.xpath
+						</Private-Package>
+						<Import-Package>
+							javax.xml.parsers,
+							org.w3c.dom,
+							org.xml.sax
+						</Import-Package>
+						<Include-Resource>
+							{maven-resources}
+						</Include-Resource>
+						<Bundle-SymbolicName>com.adobe.xmp.xmpcore</Bundle-SymbolicName>
+						<Bundle-Vendor>Adobe Systems Incorporated</Bundle-Vendor>
+					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+				  	<includes> <!-- Not all tests follow the surefire naming convention -->
+						<include>**/*.java</include>
+				  	</includes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- needed to copy the test files -->
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-test-resources</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/test-classes</outputDirectory>
+							<resources>
+								<resource> <!-- Core Unit tests -->
+									<directory>src/test/java</directory>
+									<excludes>
+									  <exclude>**/*.java</exclude>
+									</excludes>
+								</resource>
+								<resource> <!-- Core API tests -->
+									<directory>src/test/resources</directory>
+									<excludes>
+									  <exclude>**/*.java</exclude>
+									</excludes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<excludePackageNames>
+						com.adobe.internal.xmp.impl,com.adobe.internal.xmp.impl.xpath
+					</excludePackageNames>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- ======================================================================= -->
+	<!-- D E P E N D E N C I E S -->
+	<!-- ======================================================================= -->
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit-addons</groupId>
+			<artifactId>junit-addons</artifactId>
+			<version>1.4</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>xercesImpl</artifactId>
+					<groupId>xerces</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+		<groupId>xerces</groupId>
+			<artifactId>xercesImpl</artifactId>
+			<version>[2.11.0]</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+</project>

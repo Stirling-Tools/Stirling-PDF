@@ -1,0 +1,454 @@
+<?xml version="1.0"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific collectionsuage governing permissions and
+   limitations under the License.
+-->
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-parent</artifactId>
+    <version>39</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>commons-collections</groupId>
+  <artifactId>commons-collections</artifactId>
+  <version>3.2.2</version>
+  <name>Apache Commons Collections</name>
+
+  <inceptionYear>2001</inceptionYear>
+  <description>Types that extend and augment the Java Collections Framework.</description>
+
+  <url>http://commons.apache.org/collections/</url>
+
+  <issueManagement>
+    <system>jira</system>
+    <url>http://issues.apache.org/jira/browse/COLLECTIONS</url>
+  </issueManagement>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/commons/proper/collections/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/commons/proper/collections/trunk</developerConnection>
+    <url>http://svn.apache.org/viewvc/commons/proper/collections/trunk</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <name>Stephen Colebourne</name>
+      <id>scolebourne</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Morgan Delagrange</name>
+      <id>morgand</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Matthew Hawthorne</name>
+      <id>matth</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Geir Magnusson</name>
+      <id>geirm</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Craig McClanahan</name>
+      <id>craigmcc</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Phil Steitz</name>
+      <id>psteitz</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Arun M. Thomas</name>
+      <id>amamment</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Rodney Waldhoff</name>
+      <id>rwaldhoff</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Henri Yandell</name>
+      <id>bayard</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>James Carman</name>
+      <id>jcarman</id>
+      <email></email>
+      <organization></organization>
+    </developer>
+    <developer>
+      <name>Robert Burrell Donkin</name>
+      <id>rdonkin</id>
+    </developer>
+  </developers>
+  
+  <contributors>
+    <contributor>
+      <name>Rafael U. C. Afonso</name>
+    </contributor>
+    <contributor>
+      <name>Max Rydahl Andersen</name>
+    </contributor>
+    <contributor>
+      <name>Federico Barbieri</name>
+    </contributor>
+    <contributor>
+      <name>Arron Bates</name>
+    </contributor>
+    <contributor>
+      <name>Nicola Ken Barozzi</name>
+    </contributor>
+    <contributor>
+      <name>Sebastian Bazley</name>
+    </contributor>
+    <contributor>
+      <name>Matt Benson</name>
+    </contributor>
+    <contributor>
+      <name>Ola Berg</name>
+    </contributor>
+    <contributor>
+      <name>Christopher Berry</name>
+    </contributor>
+    <contributor>
+      <name>Nathan Beyer</name>
+    </contributor>
+    <contributor>
+      <name>Janek Bogucki</name>
+    </contributor>
+    <contributor>
+      <name>Chuck Burdick</name>
+    </contributor>
+    <contributor>
+      <name>Dave Bryson</name>
+    </contributor>
+    <contributor>
+      <name>Julien Buret</name>
+    </contributor>
+    <contributor>
+      <name>Jonathan Carlson</name>
+    </contributor>
+    <contributor>
+      <name>Ram Chidambaram</name>
+    </contributor>
+    <contributor>
+      <name>Steve Clark</name>
+    </contributor>
+    <contributor>
+      <name>Eric Crampton</name>
+    </contributor>
+    <contributor>
+      <name>Dimiter Dimitrov</name>
+    </contributor>
+    <contributor>
+      <name>Peter Donald</name>
+    </contributor>
+    <contributor>
+      <name>Steve Downey</name>
+    </contributor>
+    <contributor>
+      <name>Rich Dougherty</name>
+    </contributor>
+    <contributor>
+      <name>Tom Dunham</name>
+    </contributor>
+    <contributor>
+      <name>Stefano Fornari</name>
+    </contributor>
+    <contributor>
+      <name>Andrew Freeman</name>
+    </contributor>
+    <contributor>
+      <name>Gerhard Froehlich</name>
+    </contributor>
+    <contributor>
+      <name>Paul Jack</name>
+    </contributor>
+    <contributor>
+      <name>Eric Johnson</name>
+    </contributor>
+    <contributor>
+      <name>Kent Johnson</name>
+    </contributor>
+    <contributor>
+      <name>Marc Johnson</name>
+    </contributor>
+    <contributor>
+      <name>Nissim Karpenstein</name>
+    </contributor>
+    <contributor>
+      <name>Shinobu Kawai</name>
+    </contributor>
+    <contributor>
+      <name>Mohan Kishore</name>
+    </contributor>
+    <contributor>
+      <name>Simon Kitching</name>
+    </contributor>
+    <contributor>
+      <name>Thomas Knych</name>
+    </contributor>
+    <contributor>
+      <name>Serge Knystautas</name>
+    </contributor>
+    <contributor>
+      <name>Peter KoBek</name>
+    </contributor>
+    <contributor>
+      <name>Jordan Krey</name>
+    </contributor>
+    <contributor>
+      <name>Olaf Krische</name>
+    </contributor>
+    <contributor>
+      <name>Guilhem Lavaux</name>
+    </contributor>
+    <contributor>
+      <name>Paul Legato</name>
+    </contributor>
+    <contributor>
+      <name>David Leppik</name>
+    </contributor>
+    <contributor>
+      <name>Berin Loritsch</name>
+    </contributor>
+    <contributor>
+      <name>Hendrik Maryns</name>
+    </contributor>
+    <contributor>
+      <name>Stefano Mazzocchi</name>
+    </contributor>
+    <contributor>
+      <name>Brian McCallister</name>
+    </contributor>
+    <contributor>
+      <name>Steven Melzer</name>
+    </contributor>
+    <contributor>
+      <name>Leon Messerschmidt</name>
+    </contributor>
+    <contributor>
+      <name>Mauricio S. Moura</name>
+    </contributor>
+    <contributor>
+      <name>Kasper Nielsen</name>
+    </contributor>
+    <contributor>
+      <name>Stanislaw Osinski</name>
+    </contributor>
+    <contributor>
+      <name>Alban Peignier</name>
+    </contributor>
+    <contributor>
+      <name>Mike Pettypiece</name>
+    </contributor>
+    <contributor>
+      <name>Steve Phelps</name>
+    </contributor>
+    <contributor>
+      <name>Ilkka Priha</name>
+    </contributor>
+    <contributor>
+      <name>Jonas Van Poucke</name>
+    </contributor>
+    <contributor>
+      <name>Will Pugh</name>
+    </contributor>
+    <contributor>
+      <name>Herve Quiroz</name>
+    </contributor>
+    <contributor>
+      <name>Daniel Rall</name>
+    </contributor>
+    <contributor>
+      <name>Robert Ribnitz</name>
+    </contributor>
+    <contributor>
+      <name>Huw Roberts</name>
+    </contributor>
+    <contributor>
+      <name>Henning P. Schmiedehausen</name>
+    </contributor>
+    <contributor>
+      <name>Howard Lewis Ship</name>
+    </contributor>
+    <contributor>
+      <name>Joe Raysa</name>
+    </contributor>
+    <contributor>
+      <name>Thomas Schapitz</name>
+    </contributor>
+    <contributor>
+      <name>Jon Schewe</name>
+    </contributor>
+    <contributor>
+      <name>Andreas Schlosser</name>
+    </contributor>
+    <contributor>
+      <name>Christian Siefkes</name>
+    </contributor>
+    <contributor>
+      <name>Michael Smith</name>
+    </contributor>
+    <contributor>
+      <name>Stephen Smith</name>
+    </contributor>
+    <contributor>
+      <name>Jan Sorensen</name>
+    </contributor>
+    <contributor>
+      <name>Jon S. Stevens </name>
+    </contributor>
+    <contributor>
+      <name>James Strachan</name>
+    </contributor>
+    <contributor>
+      <name>Leo Sutic</name>
+    </contributor>
+    <contributor>
+      <name>Chris Tilden</name>
+    </contributor>
+    <contributor>
+      <name>Neil O'Toole</name>
+    </contributor>
+    <contributor>
+      <name>Jeff Turner</name>
+    </contributor>
+    <contributor>
+      <name>Kazuya Ujihara</name>
+    </contributor>
+    <contributor>
+      <name>Jeff Varszegi</name>
+    </contributor>
+    <contributor>
+      <name>Ralph Wagner</name>
+    </contributor>
+    <contributor>
+      <name>David Weinrich</name>
+    </contributor>
+    <contributor>
+      <name>Dieter Wimberger</name>
+    </contributor>
+    <contributor>
+      <name>Serhiy Yevtushenko</name>
+    </contributor>
+    <contributor>
+      <name>Jason van Zyl</name>
+    </contributor>
+  </contributors>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <properties>
+    <maven.compile.source>1.2</maven.compile.source>
+    <maven.compile.target>1.2</maven.compile.target>
+    <commons.componentid>collections</commons.componentid>
+    <commons.release.version>3.2.2</commons.release.version>
+    <commons.rc.version>RC3</commons.rc.version>
+    <commons.binary.suffix>-bin</commons.binary.suffix>
+    <commons.jira.id>COLLECTIONS</commons.jira.id>
+    <commons.jira.pid>12310465</commons.jira.pid>
+  </properties> 
+
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <testSourceDirectory>src/test</testSourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <includes>
+              <include>org/apache/commons/collections/TestAllPackages.java</include>
+            </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                <ant antfile="build-testframework.xml" target="jar">
+                  <property name="component.version"    value="${project.version}"/>
+                  <property name="test.classes"         value="${project.build.directory}/test-classes"/>
+                  <property name="dist.home"            value="${project.build.directory}"/>
+                  <property name="maven.compile.source" value="${maven.compile.source}"/>
+                  <property name="maven.compile.target" value="${maven.compile.target}"/>
+                </ant>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/bin.xml</descriptor>
+            <descriptor>src/assembly/src.xml</descriptor>
+          </descriptors>
+          <tarLongFileMode>gnu</tarLongFileMode>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>data/test/*</exclude>
+            <exclude>maven-eclipse.xml</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
+</project>

@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-parent</artifactId>
+        <version>1.17.8</version>
+    </parent>
+
+    <artifactId>byte-buddy-agent</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <bytebuddy.agent>net.bytebuddy.agent.Installer</bytebuddy.agent>
+        <attach.package.sun>com.sun.tools.attach</attach.package.sun>
+        <attach.package.ibm>com.ibm.tools.attach</attach.package.ibm>
+        <packages.list>net.bytebuddy.agent,net.bytebuddy.agent.utility.nullability</packages.list>
+        <native.compiler.32>i686-w64-mingw32-gcc</native.compiler.32>
+        <native.compiler.64>x86_64-w64-mingw32-gcc</native.compiler.64>
+        <net.bytebuddy.test.jnapath />
+    </properties>
+
+    <name>Byte Buddy agent</name>
+    <description>The Byte Buddy agent offers convenience for attaching an agent to the local or a remote VM.
+    </description>
+
+    <!--
+      The JNA dependency can be excluded safely. Byte Buddy will safely discover the
+      non-availability and not use the corresponding virtual machine implementation. The
+      implementation requires Java 7+ and is deactivated on Java 6 VMs.
+    -->
+
+    <dependencies>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>${version.jna}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>${version.jna}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${version.junit}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${version.mockito}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy-agent</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Include last version of Byte Buddy manually. -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.17.7</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>..</directory>
+                <targetPath>META-INF</targetPath>
+                <filtering>true</filtering>
+                <includes>
+                    <include>LICENSE</include>
+                    <include>NOTICE</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <!-- Allow for specifying a custom library path for JNA. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${version.plugin.surefire}</version>
+                <configuration combine.children="append">
+                    <argLine>-Djna.library.path=${net.bytebuddy.test.jnapath} ${surefire.arguments}</argLine>
+                </configuration>
+            </plugin>
+            <!-- Create manifest file which is required for creating an OSGi bundle. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${version.plugin.jar}</version>
+                <configuration>
+                    <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+            </plugin>
+            <!-- Specify OSGi packaging and agent manifest headers. -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>${version.plugin.bundle}</version>
+                <executions>
+                    <execution>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                        <configuration>
+                            <instructions>
+                                <Multi-Release>true</Multi-Release>
+                                <Premain-Class>${bytebuddy.agent}</Premain-Class>
+                                <Agent-Class>${bytebuddy.agent}</Agent-Class>
+                                <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                                <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                                <Can-Set-Native-Method-Prefix>true</Can-Set-Native-Method-Prefix>
+                                <Import-Package>
+                                    ${attach.package.sun};resolution:="optional",
+                                    ${attach.package.ibm};resolution:="optional",
+                                    com.sun.jna;resolution:="optional",
+                                    com.sun.jna.platform;resolution:="optional",
+                                    com.sun.jna.platform.win32;resolution:="optional",
+                                    com.sun.jna.win32;resolution:="optional",
+                                    com.sun.jna.ptr;resolution:="optional"
+                                </Import-Package>
+                                <Export-Package>${packages.list}</Export-Package>
+                            </instructions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Create a module-info.class file. -->
+            <plugin>
+                <groupId>codes.rafael.modulemaker</groupId>
+                <artifactId>modulemaker-maven-plugin</artifactId>
+                <version>${version.plugin.modulemaker}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm</artifactId>
+                        <version>${version.asm}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>make-module</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${modulemaker.skip}</skip>
+                            <name>${project.groupId}.agent</name>
+                            <version>${project.version}</version>
+                            <multirelease>true</multirelease>
+                            <packages>${packages.list}</packages>
+                            <exports>${packages.list}</exports>
+                            <requires>java.instrument</requires>
+                            <static-requires>
+                                jdk.attach,
+                                com.sun.jna,
+                                com.sun.jna.platform,
+                                com.github.spotbugs.annotations
+                            </static-requires>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>native-compile</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>${version.plugin.exec}</version>
+                        <executions>
+                            <execution>
+                                <id>compile-32</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${native.compiler.32}</executable>
+                                    <arguments>
+                                        <argument>-shared</argument>
+                                        <argument>-o</argument>
+                                        <argument>
+                                            ${project.basedir}/src/main/resources/win32-x86/attach_hotspot_windows.dll
+                                        </argument>
+                                        <argument>${project.basedir}/src/main/c/attach_hotspot_windows.c</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>compile-64</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${native.compiler.64}</executable>
+                                    <arguments>
+                                        <argument>-shared</argument>
+                                        <argument>-o</argument>
+                                        <argument>
+                                            ${project.basedir}/src/main/resources/win32-x86-64/attach_hotspot_windows.dll
+                                        </argument>
+                                        <argument>${project.basedir}/src/main/c/attach_hotspot_windows.c</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>multi-release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>${version.plugin.compiler}</version>
+                        <executions>
+                            <execution>
+                                <id>multi-release</id>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <phase>prepare-package</phase>
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}/META-INF/versions/9
+                                    </outputDirectory>
+                                    <target>1.8</target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>${version.plugin.antrun}</version>
+                        <executions>
+                            <execution>
+                                <id>modify-source-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${bytebuddy.original-sources}</skip>
+                                    <target>
+                                        <delete dir="${project.build.directory}/sources-copy" failonerror="false" />
+                                        <unzip src="${project.build.directory}/byte-buddy-agent-${project.version}-sources.jar" dest="${project.build.directory}/sources-copy" />
+                                        <copy todir="${project.build.directory}/sources-copy/META-INF/versions/9">
+                                            <fileset dir="${project.build.directory}/sources-copy">
+                                                <include name="net/bytebuddy/**/*.java" />
+                                            </fileset>
+                                        </copy>
+                                        <delete file="${project.build.directory}/byte-buddy-agent-${project.version}-sources.jar" />
+                                        <zip basedir="${project.build.directory}/sources-copy" destfile="${project.build.directory}/byte-buddy-agent-${project.version}-sources.jar" modificationtime="${project.build.outputTimestamp}" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

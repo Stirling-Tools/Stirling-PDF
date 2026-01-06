@@ -1,0 +1,120 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>jakarta.enterprise</groupId>
+		<artifactId>jakarta.enterprise.cdi-parent</artifactId>
+		<version>4.0.1</version>
+	</parent>
+
+	<artifactId>jakarta.enterprise.lang-model</artifactId>
+	<packaging>jar</packaging>
+
+	<name>CDI Language Model</name>
+	<description>Build Compatible (Reflection-Free) Java Language Model for CDI</description>
+
+	<licenses>
+		<license>
+			<name>Apache License 2.0</name>
+			<url>https://repository.jboss.org/licenses/apache-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<properties>
+		<maven.compiler.release>11</maven.compiler.release>
+		<maven-bundle-plugin.version>5.1.2</maven-bundle-plugin.version>
+		<maven-javadoc-plugin>3.2.0</maven-javadoc-plugin>
+		<maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}/..</directory>
+				<includes>
+					<include>LICENSE.txt</include>
+					<include>NOTICE.md</include>
+				</includes>
+				<targetPath>META-INF</targetPath>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<compilerArgs>
+						<arg>-Xlint:all</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>${maven-bundle-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>bundle-manifest</id>
+						<phase>process-classes</phase>
+						<goals>
+							<goal>manifest</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<instructions>
+						<Export-Package>
+							jakarta.enterprise.lang.model.*;version=4.0,
+						</Export-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+			<!-- Add the OSGi Manifest to the main jar -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<archive>
+						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>${maven-javadoc-plugin}</version>
+				<configuration>
+					<docfilessubdirs>true</docfilessubdirs>
+					<description>Jakarta CDI Language Model</description>
+					<doctitle>Jakarta CDI Language Model</doctitle>
+					<windowtitle>Jakarta CDI Language Model</windowtitle>
+					<header><![CDATA[<br>Jakarta CDI Language Model ${project.version}]]>
+					</header>
+					<bottom><![CDATA[
+Comments to: <a href="mailto:cdi-dev@eclipse.org">cdi-dev@eclipse.org</a>.<br>
+Copyright &#169; 2018,2020 Eclipse Foundation.<br>
+Use is subject to <a href="{@docRoot}/doc-files/speclicense.html" target="_top">license terms</a>.]]>
+					</bottom>
+				</configuration>
+
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+
+</project>

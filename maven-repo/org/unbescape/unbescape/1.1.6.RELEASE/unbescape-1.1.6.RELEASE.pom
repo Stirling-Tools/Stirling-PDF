@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ========================================================================= -->
+<!--                                                                           -->
+<!--   Copyright (c) 2014-2017, The UNBESCAPE team (http://www.unbescape.org)  -->
+<!--                                                                           -->
+<!--   Licensed under the Apache License, Version 2.0 (the "License");         -->
+<!--   you may not use this file except in compliance with the License.        -->
+<!--   You may obtain a copy of the License at                                 -->
+<!--                                                                           -->
+<!--       http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                           -->
+<!--   Unless required by applicable law or agreed to in writing, software     -->
+<!--   distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!--   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!--   implied. See the License for the specific language governing            -->
+<!--   permissions and limitations under the License.                          -->
+<!--                                                                           -->
+<!-- ========================================================================= -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.unbescape</groupId>
+  <artifactId>unbescape</artifactId>
+  <packaging>jar</packaging>
+  <version>1.1.6.RELEASE</version>
+  <name>unbescape</name>
+  <url>http://www.unbescape.org</url>
+
+  <description>Advanced yet easy-to-use escape/unescape library for Java</description>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>The UNBESCAPE team</name>
+    <url>http://www.unbescape.org</url>
+  </organization>
+  
+  <scm>
+    <url>scm:git:git@github.com:unbescape/unbescape.git</url>
+    <connection>scm:git:git@github.com:unbescape/unbescape.git</connection>
+    <developerConnection>scm:git:git@github.com:unbescape/unbescape.git</developerConnection>
+    <tag>unbescape-1.1.6.RELEASE</tag>
+  </scm>
+  
+  <developers>
+    <developer>
+      <id>danielfernandez</id>
+      <name>Daniel Fernandez</name>
+      <email>daniel.fernandez AT 11thlabs DOT org</email>
+      <roles>
+        <role>Project Admin</role>
+        <role>Lead Developer</role>
+      </roles>
+    </developer>
+  </developers>
+  
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+    </repository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <properties>
+    <maven.compile.source>6</maven.compile.source>
+    <maven.compile.target>6</maven.compile.target>
+    <!-- These are needed for showing the build timestamp correctly at the unbescape.properties file -->
+    <timestamp>${maven.build.timestamp}</timestamp>
+    <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
+    <!-- A project-name-based approach is adopted for the module name (instead of a reverse-DNS one) -->
+    <module.name>${project.artifactId}</module.name>
+  </properties>
+
+
+  <build>
+
+    <resources>
+    
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>org/unbescape/unbescape.properties</exclude>
+        </excludes>
+      </resource>
+
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>org/unbescape/unbescape.properties</include>
+        </includes>
+        <filtering>true</filtering>
+      </resource>
+
+      <resource>
+          <directory>.</directory>
+          <targetPath>META-INF</targetPath>
+          <includes>
+              <include>LICENSE.txt</include>
+              <include>NOTICE.txt</include>
+          </includes>
+      </resource>
+      
+    </resources>
+    
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+    </testResources>
+    
+    <plugins>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.7.0</version>
+        <configuration>
+          <source>${maven.compile.source}</source>
+          <target>${maven.compile.target}</target>
+          <encoding>US-ASCII</encoding>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <encoding>US-ASCII</encoding>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <show>protected</show>
+          <noqualifier>java.lang</noqualifier>
+          <overview>${basedir}/src/main/javadoc/overview.html</overview>
+          <javadocDirectory>${basedir}/src/main/javadoc</javadocDirectory>
+          <reportOutputDirectory>${project.reporting.outputDirectory}/api/${project.artifactId}/apidocs</reportOutputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+            <addMavenDescriptor>false</addMavenDescriptor>
+            <manifest>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <!-- These two entries are non-standard, specified by the Apache Software Foundation in -->
+              <!-- their release preparation procedures as a way to pass this information on to the   -->
+              <!-- library users. See: http://commons.apache.org/releases/prepare.html                -->
+              <X-Compile-Source-JDK>${maven.compile.source}</X-Compile-Source-JDK>
+              <X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK>
+              <!-- Setting this automatic module name will fix the module name used by unbescape even -->
+              <!-- if the library is not yet fully modularised.                                       -->
+              <Automatic-Module-Name>${module.name}</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+      </plugin>
+	  
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/dist.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly-deps</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+    
+  </build>
+
+  <dependencies>
+
+
+  </dependencies>
+
+  
+</project>

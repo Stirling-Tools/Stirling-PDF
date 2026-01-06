@@ -1,0 +1,60 @@
+<project>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>xml-apis</groupId>
+	<artifactId>xml-apis</artifactId>
+	<name>XML Commons External Components XML APIs</name>
+	<version>1.4.01</version>
+	<description>xml-commons provides an Apache-hosted set of DOM, SAX, and 
+    JAXP interfaces for use in other xml-based projects. Our hope is that we 
+    can standardize on both a common version and packaging scheme for these 
+    critical XML standards interfaces to make the lives of both our developers 
+    and users easier. The External Components portion of xml-commons contains 
+    interfaces that are defined by external standards organizations. For DOM, 
+    that's the W3C; for SAX it's David Megginson and sax.sourceforge.net; for 
+    JAXP it's Sun.</description>
+	<url>http://xml.apache.org/commons/components/external/</url>
+	<issueManagement>
+		<system>bugzilla</system>
+		<url>http://issues.apache.org/bugzilla/</url>
+	</issueManagement>
+	<mailingLists>
+		<mailingList>
+			<name>XML Commons Developer's List</name>
+			<subscribe>commons-dev-subscribe@xml.apache.org</subscribe>
+			<unsubscribe>commons-dev-unsubscribe@xml.apache.org</unsubscribe>
+			<post>commons-dev@xml.apache.org</post>
+			<archive>http://mail-archives.apache.org/mod_mbox/xml-commons-dev/</archive>
+		</mailingList>
+	</mailingLists>
+	<scm>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/xml/commons/tags/xml-commons-external-1_4_01/</connection>
+		<url>https://svn.apache.org/viewvc/xml/commons/tags/xml-commons-external-1_4_01/</url>
+	</scm>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+        <license>
+            <name>The SAX License</name>
+            <url>http://www.saxproject.org/copying.html</url>
+            <distribution>repo</distribution>
+        </license>
+        <license>
+            <name>The W3C License</name>
+            <url>http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/java-binding.zip</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>xml-apis</id>
+            <name>Apache Software Foundation</name>
+            <email>commons-dev@xml.apache.org</email>
+            <url>http://xml.apache.org/commons/</url>
+            <organization>Apache Software Foundation</organization>
+            <organizationUrl>http://www.apache.org</organizationUrl>
+        </developer>
+    </developers>	
+</project>

@@ -1,0 +1,485 @@
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>18</version>
+        <relativePath />
+    </parent>
+    
+    <groupId>org.apache.pdfbox</groupId>
+    <artifactId>jbig2-imageio</artifactId>
+    <version>3.0.4</version>
+	
+    <name>PDFBox JBIG2 ImageIO plugin</name>
+	
+    <description>
+	Java Image I/O plugin for reading JBIG2-compressed image data. 
+	Formerly known as the levigo JBig2 ImageIO plugin (com.levigo.jbig2:levigo-jbig2-imageio).
+    </description>
+	
+    <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://pdfbox.apache.org</url>
+    </organization>
+  
+
+    <issueManagement>
+        <system>jira</system>
+        <url>https://issues.apache.org/jira/browse/PDFBOX</url>
+    </issueManagement>
+
+    <!-- Developers listed by PMC Chair, PMC all alphabetical-->
+    <developers>
+        <developer>
+            <id>lehmi</id>
+            <name>Andreas Lehmkühler</name>
+            <roles>
+                <role>PMC Chair</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>adam</id>
+            <name>Adam Nichols</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>blitchfield</id>
+            <name>Ben Litchfield</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>carrier</id>
+            <name>Brian Carrier</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>danielwilson</id>
+            <name>Daniel Wilson</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>gbailleul</id>
+            <name>Guillaume Bailleul</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>hennejg</id>
+            <name>Jörg Henne</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>holdersn</id>
+            <name>Sebastian Holder</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>jahewson</id>
+            <name>John Hewson</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>jeremias</id>
+            <name>Jeremias Maerki</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>kjackson</id>
+            <name>Kevin Jackson</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>koch</id>
+            <name>Johannes Koch</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>koehlecn</id>
+            <name>Carolin Köhler</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>mmayer</id>
+            <name>Matthäus Mayer</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>msayhoun</id>
+            <name>Maruan Sayhoun</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>pkoch</id>
+            <name>Phillipp Koch</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>tallison</id>
+            <name>Tim Allison</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>tchojecki</id>
+            <name>Thomas Chojecki</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>tboehme</id>
+            <name>Timo Boehme</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>tilman</id>
+            <name>Tilman Hausherr</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>vfed</id>
+            <name>Villu Ruusmann</name>
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>leleueri</id>
+            <name>Eric Leleu</name>
+            <roles>
+                <role>Emeritus PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>jukka</id>
+            <name>Jukka Zitting</name>
+            <roles>
+                <role>Emeritus PMC Member</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <scm>
+      <connection>scm:git:http://git-wip-us.apache.org/repos/asf/pdfbox-jbig2.git</connection>
+      <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/pdfbox-jbig2.git</developerConnection>
+      <url>https://git-wip-us.apache.org/repos/asf?p=pdfbox-jbig2.git</url>
+      <tag>3.0.4</tag>
+  </scm>
+	
+    <dependencies>
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.13.2</version>
+		<scope>test</scope>
+	</dependency>
+    </dependencies>
+
+    <!-- enable the usage of external testfiles with -Dskip-external-testfiles=false  -->
+    <properties>
+        <skip-external-testfiles>true</skip-external-testfiles>
+    </properties>
+
+	<build>
+		<plugins>
+                    <plugin>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules combine.children="append">
+                                        <requireMavenVersion>
+                                            <version>3.2.0</version>
+                                        </requireMavenVersion>
+                                    </rules>    
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<debug>false</debug>
+					<optimize>true</optimize>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<!-- Keep changes in the local repo, push will be done afterwards -->
+					<pushChanges>false</pushChanges>
+					<localCheckout>true</localCheckout>
+					<!-- Use a better name for the tag -->
+					<tagNameFormat>${project.artifactId}-${project.version}</tagNameFormat>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.maven.scm</groupId>
+						<artifactId>maven-scm-provider-gitexe</artifactId>
+						<version>1.12.2</version>
+					</dependency>
+					<dependency>
+						<groupId>org.apache.maven.scm</groupId>
+  						<artifactId>maven-scm-api</artifactId>
+						<version>1.12.2</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.6</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <phase>package</phase>
+                <configuration>
+                  <finalName>jbig2-imageio-${project.version}</finalName>
+                  <descriptors>
+                    <descriptor>assembly.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <executions>
+                    <execution>
+                        <id>Testfiles</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skip-external-testfiles}</skip>
+                            <url>https://github.com/apache/pdfbox-testfiles/raw/master/jbig2/build-files/build-testfiles.zip</url>
+                            <unpack>true</unpack>
+                            <outputDirectory>${project.build.directory}/images</outputDirectory>
+                            <sha512>5185b59b4117d830a05a225e7e4b3a8239f249c78f6133204d62d510991daf769d287cd704ba91895964ff3df8722fb304d1e571f3b4d250e663a064c53a3091</sha512>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>org.apache.pdfbox.jbig2</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.rat</groupId>
+					<artifactId>apache-rat-plugin</artifactId>
+					<version>0.13</version>
+					<configuration>
+						<excludes>
+							<exclude>src/test/resources/images/*</exclude>
+							<exclude>src/test/resources/images/arith/*</exclude>
+							<exclude>src/test/resources/org/apache/pdfbox/jbig2/github/*</exclude>
+						</excludes>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+   <profiles>
+        <profile>
+            <id>pedantic</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>6.5.3</version>
+                        <configuration>
+                            <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    <profile>
+      <id>apache-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.8</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>deploy</phase>
+                <configuration>
+                  <tasks>
+                    <mkdir dir="${basedir}/target/${project.version}" />
+                    <copy todir="${basedir}/target/${project.version}" flatten="true">
+                      <fileset dir="${basedir}">
+                        <include name="RELEASE-NOTES.txt" />
+                        <include name="target/*-src.zip*" />
+                        <include name="target/*-${project.version}.jar*" />
+                      </fileset>
+                    </copy>
+                    <checksum algorithm="SHA-512" fileext=".sha512">
+                      <fileset dir="${basedir}/target/${project.version}">
+                        <include name="*.zip" />
+                        <include name="*.jar" />
+                      </fileset>
+                    </checksum>
+                    <checksum file="${basedir}/target/${project.version}/jbig2-imageio-${project.version}-src.zip" algorithm="SHA-512" property="checksum" />
+                    <echo file="${basedir}/target/vote.txt">
+From: ${username}@apache.org
+To: dev@pdfbox.apache.org
+Subject: [VOTE] Release Apache PDFBox JBIG2 ImageIO ${project.version}
+
+A candidate for the PDFBox JBIG2 ImageIO ${project.version} release is available at:
+
+    https://dist.apache.org/repos/dist/dev/pdfbox/jbig2-imageio-${project.version}/
+
+The release candidate is a zip archive of the sources in:
+
+    https://github.com/apache/pdfbox-jbig2/tree/jbig2-imageio-${project.version}/
+
+The SHA-512 checksum of the archive is ${checksum}.
+
+Please vote on releasing this package as Apache PDFBox JBIG2 ImageIO ${project.version}.
+The vote is open for the next 72 hours and passes if a majority of at
+least three +1 PDFBox PMC votes are cast.
+
+    [ ] +1 Release this package as Apache PDFBox JBIG2 ImageIO ${project.version}
+    [ ] -1 Do not release this package because...${line.separator}
+                    </echo>
+                    <echo />
+                    <echo>
+The release candidate has been prepared in:
+
+    ${basedir}/target/${project.version}
+
+A release vote template has been generated for you:
+
+    file://${basedir}/target/vote.txt
+                    </echo>
+                    <echo />
+                  </tasks>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                 <groupId>org.apache.ant</groupId>
+                 <artifactId>ant-nodeps</artifactId>
+                 <version>1.8.1</version>
+               </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+	</profiles>
+
+</project>

@@ -1,0 +1,412 @@
+<!--
+  ~ JBoss, Home of Professional Open Source
+  ~ Copyright 2018, Red Hat, Inc., and individual contributors
+  ~ by the @authors tag. See the copyright.txt in the distribution for a
+  ~ full listing of individual contributors.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>jakarta.enterprise</groupId>
+		<artifactId>jakarta.enterprise.cdi-parent</artifactId>
+		<version>4.0.1</version>
+	</parent>
+
+	<artifactId>jakarta.enterprise.cdi-api</artifactId>
+	<packaging>jar</packaging>
+
+	<name>CDI APIs</name>
+	<description>APIs for CDI (Contexts and Dependency Injection for Java)</description>
+
+	<url>http://cdi-spec.org</url>
+	<licenses>
+		<license>
+			<name>Apache License 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<issueManagement>
+		<system>Jakarta CDI Issues</system>
+		<url>https://github.com/eclipse-ee4j/cdi/issues</url>
+	</issueManagement>
+
+	<organization>
+		<name>JBoss by Red Hat, Inc.</name>
+		<url>https://jboss.org</url>
+	</organization>
+
+	<inceptionYear>2008</inceptionYear>
+
+	<developers>
+		<developer>
+			<name>Antoine Sabot-Durand</name>
+			<id>asabotdu</id>
+			<timezone>CET</timezone>
+			<organization>Red Hat Inc.</organization>
+			<roles>
+				<role>Specfication Lead</role>
+			</roles>
+			<email>asd[at]redhat[dot]com</email>
+		</developer>
+
+		<developer>
+			<name>Martin Kouba</name>
+			<id>mkouba</id>
+			<organization>Red Hat Inc.</organization>
+			<roles>
+				<role>RI tech lead</role>
+			</roles>
+			<email>mkouba[at]redhat[dot]com</email>
+		</developer>
+
+		<developer>
+			<name>Tomas Remes</name>
+			<id>tremes</id>
+			<organization>Red Hat Inc.</organization>
+			<roles>
+				<role>TCK tech lead</role>
+			</roles>
+			<email>tremes[at]redhat[dot]com</email>
+		</developer>
+
+		<developer>
+			<name>Mark Struberg</name>
+			<id>mstruberg</id>
+			<timezone>CET</timezone>
+			<roles>
+				<role>Implementation developer</role>
+			</roles>
+			<email>struberg[at]yahoo[dot]de</email>
+		</developer>
+
+		<developer>
+			<name>John D. Ament</name>
+			<id>johndament</id>
+			<organization>Independent</organization>
+			<timezone>EST</timezone>
+			<roles>
+				<role>EG Member</role>
+			</roles>
+			<email>johndament[at]apache[dot]org</email>
+		</developer>
+
+		<developer>
+			<name>Matej Novotny</name>
+			<id>manovotn</id>
+			<organization>Red Hat Inc.</organization>
+			<roles>
+				<role>TCK and RI developer</role>
+			</roles>
+			<email>manovotn[at]redhat[dot]com</email>
+		</developer>
+
+		<developer>
+			<name>Mark Paluch</name>
+			<id>mp911de</id>
+			<organization>Independent</organization>
+			<timezone>CET</timezone>
+			<roles>
+				<role>EG Member</role>
+			</roles>
+			<email>mpaluch[at]paluch[dot]biz</email>
+		</developer>
+
+	</developers>
+
+
+	<properties>
+		<annotation.api.version>2.1.0</annotation.api.version>
+		<atinject.api.version>2.0.1</atinject.api.version>
+		<uel.api.version>5.0.0</uel.api.version>
+		<interceptor.api.version>2.1.0</interceptor.api.version>
+
+		<maven.compiler.release>11</maven.compiler.release>
+		<maven-bundle-plugin.version>5.1.2</maven-bundle-plugin.version>
+		<maven-javadoc-plugin>3.3.0</maven-javadoc-plugin>
+		<maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<!-- Configure all dependencies (e.g. testing) -->
+	<dependencyManagement>
+		<dependencies>
+
+			<dependency>
+				<groupId>org.testng</groupId>
+				<artifactId>testng</artifactId>
+				<version>6.8.8</version>
+			</dependency>
+
+			<dependency>
+				<groupId>jakarta.enterprise</groupId>
+				<artifactId>jakarta.enterprise.lang-model</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>jakarta.annotation</groupId>
+				<artifactId>jakarta.annotation-api</artifactId>
+				<version>${annotation.api.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>jakarta.inject</groupId>
+				<artifactId>jakarta.inject-api</artifactId>
+				<version>${atinject.api.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>jakarta.el</groupId>
+				<artifactId>jakarta.el-api</artifactId>
+				<version>${uel.api.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>jakarta.interceptor</groupId>
+				<artifactId>jakarta.interceptor-api</artifactId>
+				<version>${interceptor.api.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>jakarta.enterprise</groupId>
+			<artifactId>jakarta.enterprise.lang-model</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.el</groupId>
+			<artifactId>jakarta.el-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.interceptor</groupId>
+			<artifactId>jakarta.interceptor-api</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>jakarta.annotation</groupId>
+					<artifactId>jakarta.annotation-api</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.inject</groupId>
+			<artifactId>jakarta.inject-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<scm>
+		<connection>scm:git:git@github.com:cdi-spec/cdi.git</connection>
+		<url>scm:git:git@github.com:cdi-spec/cdi.git</url>
+		<developerConnection>scm:git:git@github.com:cdi-spec/cdi.git</developerConnection>
+	  <tag>4.0.1</tag>
+  </scm>
+
+	<profiles>
+		<profile>
+			<id>jboss-public-repository</id>
+			<activation>
+				<property>
+					<name>jboss-public-repository</name>
+					<value>!false</value>
+				</property>
+			</activation>
+			<repositories>
+				<repository>
+					<id>jboss-public-repository-group</id>
+					<name>JBoss Public Maven Repository Group</name>
+					<url>https://repository.jboss.org/nexus/content/groups/public</url>
+					<releases>
+						<enabled>true</enabled>
+						<updatePolicy>never</updatePolicy>
+					</releases>
+					<snapshots>
+						<enabled>false</enabled>
+						<updatePolicy>never</updatePolicy>
+					</snapshots>
+				</repository>
+			</repositories>
+			<pluginRepositories>
+				<pluginRepository>
+					<id>jboss-public-repository-group</id>
+					<name>JBoss Public Maven Repository Group</name>
+					<url>https://repository.jboss.org/nexus/content/groups/public</url>
+					<releases>
+						<enabled>true</enabled>
+						<updatePolicy>never</updatePolicy>
+					</releases>
+					<snapshots>
+						<enabled>false</enabled>
+						<updatePolicy>never</updatePolicy>
+					</snapshots>
+				</pluginRepository>
+			</pluginRepositories>
+		</profile>
+	</profiles>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}/..</directory>
+				<includes>
+					<include>LICENSE.txt</include>
+					<include>NOTICE.md</include>
+				</includes>
+				<targetPath>META-INF</targetPath>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<filtering>true</filtering>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<compilerArgs>
+						<arg>-Xlint:all</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>${maven-bundle-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>bundle-manifest</id>
+						<phase>process-classes</phase>
+						<goals>
+							<goal>manifest</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<instructions>
+						<Automatic-Module-Name>jakarta.cdi</Automatic-Module-Name>
+						<Export-Package>
+							jakarta.decorator;version=4.0,
+							jakarta.enterprise.*;version=4.0,
+						</Export-Package>
+						<Import-Package>
+							jakarta.el; version=4.0,
+							*
+						</Import-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+			<!-- Add the OSGi Manifest to the main jar -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<archive>
+						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${maven-surefire-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>default-test</id>
+						<configuration>
+							<systemPropertyVariables>
+								<serviceDir>${project.build.testOutputDirectory}/META-INF/services/</serviceDir>
+							</systemPropertyVariables>
+							<excludes>
+								<exclude>**/privileged/**</exclude>
+							</excludes>
+							<useModulePath>false</useModulePath>
+						</configuration>
+					</execution>
+					<execution>
+						<id>privileged-test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<systemPropertyVariables>
+								<serviceDir>${project.build.testOutputDirectory}/META-INF/services/</serviceDir>
+							</systemPropertyVariables>
+							<includes>
+								<include>**/privileged/**</include>
+							</includes>
+							<argLine>-Djava.security.manager -Djava.security.policy="${project.build.testOutputDirectory}/java.policy"</argLine>
+							<forkCount>1</forkCount>
+							<useModulePath>false</useModulePath>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>${maven-javadoc-plugin}</version>
+				<configuration>
+					<docfilessubdirs>true</docfilessubdirs>
+					<description>Jakarta Context Dependency Injection API</description>
+					<doctitle>Jakarta Context Dependency Injection API</doctitle>
+					<detectJavaApiLink>false</detectJavaApiLink>
+					<windowtitle>Jakarta Context Dependency Injection API</windowtitle>
+					<header><![CDATA[<br>Jakarta Context Dependency Injection ${project.version}]]>
+					</header>
+					<bottom><![CDATA[
+Comments to: <a href="mailto:cdi-dev@eclipse.org">cdi-dev@eclipse.org</a>.<br>
+Copyright &#169; 2018,2022 Eclipse Foundation.<br>
+Use is subject to <a href="{@docRoot}/doc-files/speclicense.html" target="_top">license terms</a>.]]>
+					</bottom>
+				</configuration>
+
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+
+</project>

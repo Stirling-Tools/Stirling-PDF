@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.openjfx</groupId>
+  <artifactId>javafx-base</artifactId>
+  <version>21</version>
+  <parent>
+    <groupId>org.openjfx</groupId>
+    <artifactId>javafx</artifactId>
+    <version>21</version>
+  </parent>
+  <dependencies>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-base</artifactId>
+      <version>21</version>
+      <classifier>${javafx.platform}</classifier>
+    </dependency>
+  </dependencies>
+</project>

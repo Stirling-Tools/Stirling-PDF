@@ -1,0 +1,732 @@
+<!--
+   Copyright (C) 2013, 2014 Brett Wooldridge
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <sureFireOptions11>--add-modules=ALL-MODULE-PATH</sureFireOptions11>
+      <sureFireForks11>false</sureFireForks11>
+      <!--java11.sourceDirectory>${project.basedir}/src/main/java11</java11.sourceDirectory -->
+      <!--java11.build.outputDirectory>${project.build.directory}/classes-java11</java11.build.outputDirectory -->
+      <artifact.classifier />
+
+      <!-- When releasing a new version, this property controls whether the staged artifacts will be automatically
+           released in Nexus. If this is set to false (-DautoReleaseStagedArtifacts=false), artifacts will need to
+           be manually released via the Nexus UI at https://oss.sonatype.org -->
+      <autoReleaseStagedArtifacts>true</autoReleaseStagedArtifacts>
+
+      <commons.csv.version>1.12.0</commons.csv.version>
+      <docker.maven.plugin.fabric8.version>0.45.0</docker.maven.plugin.fabric8.version>
+      <felix.bundle.plugin.version>5.1.9</felix.bundle.plugin.version>
+      <felix.version>7.0.5</felix.version>
+      <h2.version>2.3.232</h2.version>
+      <hibernate.version>5.4.24.Final</hibernate.version>
+      <javassist.version>3.29.2-GA</javassist.version>
+      <jndi.version>0.11.4.1</jndi.version>
+      <junit.version>4.13.2</junit.version>
+      <log4j.version>2.25.1</log4j.version>
+      <maven.release.version>3.0.1</maven.release.version>
+      <metrics.version>3.2.5</metrics.version>
+      <metrics5.version>5.0.0-rc17</metrics5.version>
+      <micrometer.version>1.5.4</micrometer.version>
+      <mockito.version>3.7.7</mockito.version>
+      <pax.exam.version>4.14.0</pax.exam.version>
+      <pax.url.version>2.5.4</pax.url.version>
+      <postgresql.version>42.7.7</postgresql.version>
+      <simpleclient.version>0.16.0</simpleclient.version>
+      <slf4j.version>2.0.17</slf4j.version>
+      <testcontainers.version>1.20.3</testcontainers.version>
+   </properties>
+
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP</artifactId>
+   <version>6.3.3</version>
+   <packaging>bundle</packaging>
+
+   <name>HikariCP</name>
+   <description>Ultimate JDBC Connection Pool</description>
+   <url>https://github.com/brettwooldridge/HikariCP</url>
+   <inceptionYear>2013</inceptionYear>
+
+   <organization>
+      <name>Zaxxer.com</name>
+      <url>https://github.com/brettwooldridge</url>
+   </organization>
+
+   <scm>
+      <connection>scm:git:https://github.com/brettwooldridge/HikariCP.git</connection>
+      <developerConnection>scm:git:https://github.com/brettwooldridge/HikariCP.git</developerConnection>
+      <url>https://github.com/brettwooldridge/HikariCP</url>
+      <tag>HikariCP-6.3.3</tag>
+   </scm>
+
+   <distributionManagement>
+      <snapshotRepository>
+         <id>ossrh</id>
+         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      </snapshotRepository>
+   </distributionManagement>
+
+   <issueManagement>
+      <url>https://github.com/brettwooldridge/HikariCP/issues</url>
+   </issueManagement>
+
+   <licenses>
+      <license>
+         <name>The Apache Software License, Version 2.0</name>
+         <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+         <distribution>repo</distribution>
+      </license>
+   </licenses>
+
+   <developers>
+      <developer>
+         <name>Brett Wooldridge</name>
+         <email>brett.wooldridge@gmail.com</email>
+      </developer>
+   </developers>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-api</artifactId>
+         <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-core</artifactId>
+         <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.testcontainers</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>${testcontainers.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-compress</artifactId>
+         <version>1.27.1</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-lang3</artifactId>
+         <version>3.18.0</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-csv</artifactId>
+         <version>${commons.csv.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.mockito</groupId>
+         <artifactId>mockito-core</artifactId>
+         <version>${mockito.version}</version>
+         <scope>test</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>org.hamcrest</groupId>
+               <artifactId>hamcrest-core</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>${junit.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.javassist</groupId>
+         <artifactId>javassist</artifactId>
+         <version>${javassist.version}</version>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.micrometer</groupId>
+         <artifactId>micrometer-core</artifactId>
+         <version>${micrometer.version}</version>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>org.postgresql</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>${postgresql.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-core</artifactId>
+         <version>${hibernate.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <artifactId>jboss-logging</artifactId>
+               <groupId>org.jboss.logging</groupId>
+            </exclusion>
+            <exclusion>
+               <artifactId>jboss-logging-annotations</artifactId>
+               <groupId>org.jboss.logging</groupId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>io.dropwizard.metrics</groupId>
+         <artifactId>metrics-core</artifactId>
+         <version>${metrics.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.dropwizard.metrics</groupId>
+         <artifactId>metrics-healthchecks</artifactId>
+         <version>${metrics.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.dropwizard.metrics5</groupId>
+         <artifactId>metrics-core</artifactId>
+         <version>${metrics5.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>io.prometheus</groupId>
+         <artifactId>simpleclient</artifactId>
+         <version>${simpleclient.version}</version>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+      <dependency>
+         <groupId>simple-jndi</groupId>
+         <artifactId>simple-jndi</artifactId>
+         <version>${jndi.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-slf4j2-impl</artifactId>
+         <version>${log4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <!-- OSGi test -->
+      <dependency>
+         <groupId>javax.inject</groupId>
+         <artifactId>javax.inject</artifactId>
+         <version>1</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.felix</groupId>
+         <artifactId>org.apache.felix.framework</artifactId>
+         <version>${felix.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.ops4j.pax.exam</groupId>
+         <artifactId>pax-exam-container-native</artifactId>
+         <version>${pax.exam.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.ops4j.pax.exam</groupId>
+         <artifactId>pax-exam-junit4</artifactId>
+         <version>${pax.exam.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.ops4j.pax.exam</groupId>
+         <artifactId>pax-exam-link-assembly</artifactId>
+         <version>${pax.exam.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.ops4j.pax.exam</groupId>
+         <artifactId>pax-exam-link-mvn</artifactId>
+         <version>${pax.exam.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.ops4j.pax.url</groupId>
+         <artifactId>pax-url-aether</artifactId>
+         <version>${pax.url.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.ops4j.pax.url</groupId>
+         <artifactId>pax-url-reference</artifactId>
+         <version>${pax.url.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>com.h2database</groupId>
+         <artifactId>h2</artifactId>
+         <version>${h2.version}</version>
+         <scope>test</scope>
+      </dependency>
+   </dependencies>
+
+   <build>
+      <pluginManagement>
+         <plugins>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-resources-plugin</artifactId>
+               <version>3.3.1</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-install-plugin</artifactId>
+               <version>3.1.4</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-clean-plugin</artifactId>
+               <version>3.2.0</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-compiler-plugin</artifactId>
+               <version>3.10.1</version>
+               <configuration>
+                  <source>11</source>
+                  <target>11</target>
+                  <compilerArgs>-Xlint</compilerArgs>
+               </configuration>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-deploy-plugin</artifactId>
+               <version>2.8.2</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-gpg-plugin</artifactId>
+               <version>3.0.1</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-release-plugin</artifactId>
+               <version>2.5.3</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.sonatype.plugins</groupId>
+               <artifactId>nexus-staging-maven-plugin</artifactId>
+               <version>1.6.12</version>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-surefire-plugin</artifactId>
+               <version>3.0.0-M8</version>
+               <configuration>
+                  <!-- Sets the VM argument line used when unit tests are run. -->
+                  <argLine>${surefireArgLine} ${sureFireOptions11}</argLine>
+                  <reuseForks>${sureFireForks11}</reuseForks>
+                  <useModulePath>false</useModulePath>
+               </configuration>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-source-plugin</artifactId>
+               <version>3.0.1</version>
+               <configuration>
+                  <!-- outputDirectory>/absolute/path/to/the/output/directory</outputDirectory>
+                     <finalName>filename-of-generated-jar-file</finalName -->
+                  <attach>true</attach>
+               </configuration>
+               <executions>
+                  <execution>
+                     <id>attach-sources</id>
+                     <goals>
+                        <goal>jar-no-fork</goal>
+                     </goals>
+                  </execution>
+               </executions>
+            </plugin>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-javadoc-plugin</artifactId>
+               <version>3.11.2</version>
+               <configuration>
+                  <show>public</show>
+                  <attach>true</attach>
+                  <maxmemory>1024m</maxmemory>
+                  <legacyMode>true</legacyMode>
+                  <sourceFileExcludes>
+                     <sourceFileExclude>**\/module-info.java</sourceFileExclude>
+                     <sourceFileExclude>**\/HikariConfigurationUtil.java</sourceFileExclude>
+                     <sourceFileExclude>**\/HikariConnectionProvider.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Prometheus*Tracker.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Micrometer*Tracker.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Dropwizard*Tracker.java</sourceFileExclude>
+                     <sourceFileExclude>**\/Coda*Tracker.java</sourceFileExclude>
+                  </sourceFileExcludes>
+                  <disableSourcepathUsage>true</disableSourcepathUsage>
+                  <bottom><![CDATA[Copyright © {inceptionYear}–{currentYear} Brett Wooldridge. All rights reserved.]]></bottom>
+               </configuration>
+               <executions>
+                  <execution>
+                     <id>attach-javadoc</id>
+                     <phase>package</phase>
+                     <goals>
+                        <goal>jar</goal>
+                     </goals>
+                  </execution>
+               </executions>
+            </plugin>
+         </plugins>
+      </pluginManagement>
+
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.4.1</version>
+            <executions>
+               <execution>
+                  <id>enforce-maven</id>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <requireMavenVersion>
+                           <version>(3.0.0,)</version>
+                        </requireMavenVersion>
+                     </rules>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.8</version>
+            <executions>
+               <execution>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>build-classpath</goal>
+                  </goals>
+                  <configuration>
+                     <outputProperty>maven.compile.classpath</outputProperty>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+         </plugin>
+
+         <plugin>
+            <!-- Generate proxies -->
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.6.0</version>
+            <extensions>true</extensions>
+            <executions>
+               <execution>
+                  <phase>compile</phase>
+                  <!-- phase>generate-test-sources</phase -->
+                  <goals>
+                     <goal>exec</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <executable>java</executable>
+               <arguments>
+                  <argument>-cp</argument>
+                  <argument>${project.build.outputDirectory}${path.separator}${maven.compile.classpath}</argument>
+                  <argument>com.zaxxer.hikari.util.JavassistProxyFactory</argument>
+                  <argument>${project.basedir}</argument>
+               </arguments>
+            </configuration>
+         </plugin>
+
+         <plugin>
+            <!-- The Docker Maven plugin is used to create docker image with the fat jar -->
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <version>${docker.maven.plugin.fabric8.version}</version>
+            <configuration>
+               <logDate>default</logDate>
+               <autoPull>true</autoPull>
+               <images>
+                  <!-- Postgres Image is used 'as-is' and iked into the service s linimage -->
+                  <image>
+                     <alias>db</alias>
+                     <name>postgres:16</name>
+                     <run>
+                        <env>
+                           <POSTGRES_PASSWORD>password</POSTGRES_PASSWORD>
+                        </env>
+                        <wait>
+                           <log>database system is ready to accept connections</log>
+                           <time>20000</time>
+                        </wait>
+                        <log>
+                           <prefix>DB</prefix>
+                           <color>yellow</color>
+                        </log>
+                     </run>
+                  </image>
+               </images>
+            </configuration>
+
+            <!-- Hooking into the lifecycle -->
+            <executions>
+               <execution>
+                  <id>start</id>
+                  <phase>pre-integration-test</phase>
+                  <goals>
+                     <goal>build</goal>
+                     <goal>start</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <id>stop</id>
+                  <phase>post-integration-test</phase>
+                  <goals>
+                     <goal>stop</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.8</version>
+            <executions>
+               <!-- Prepares the property pointing to the JaCoCo runtime agent which is passed as VM argument when Maven the Surefire plugin is executed. -->
+               <execution>
+                  <goals>
+                     <goal>prepare-agent</goal>
+                  </goals>
+                  <configuration>
+                     <!-- Sets the path to the file which contains the execution data. -->
+                     <destFile>${project.build.directory}/coverage-reports/jacoco.exec</destFile>
+                     <!-- Sets the name of the property containing the settings for JaCoCo runtime agent. -->
+                     <propertyName>surefireArgLine</propertyName>
+                     <excludes>
+                        <exclude>**/com/zaxxer/hikari/util/JavassistProxyFactory*</exclude>
+                        <exclude>**/com/zaxxer/hikari/pool/HikariProxy*</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
+                     </excludes>
+                  </configuration>
+               </execution>
+               <!-- Ensures that the code coverage report for unit tests is created after unit tests have been run. -->
+               <execution>
+                  <id>report</id>
+                  <phase>test</phase>
+                  <goals>
+                     <goal>report</goal>
+                  </goals>
+                  <configuration>
+                     <!-- Sets the path to the file which contains the execution data. -->
+                     <dataFile>${project.build.directory}/coverage-reports/jacoco.exec</dataFile>
+                     <excludes>
+                        <exclude>**/com/zaxxer/hikari/pool/HikariProxy*</exclude>
+                        <exclude>**/com/zaxxer/hikari/metrics/**</exclude>
+                     </excludes>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>3.0.0-M3</version>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>integration-test</goal>
+                     <goal>verify</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <version>${felix.bundle.plugin.version}</version>
+            <extensions>true</extensions>
+            <configuration>
+               <classifier>${artifact.classifier}</classifier>
+               <instructions>
+                  <Automatic-Module-Name>com.zaxxer.hikari</Automatic-Module-Name>
+                  <!-- Multi-Release>true</Multi-Release-->
+                  <Bundle-Name>HikariCP</Bundle-Name>
+                  <Export-Package>
+                     com.zaxxer.hikari,
+                     com.zaxxer.hikari.hibernate,
+                     com.zaxxer.hikari.metrics,
+                     com.zaxxer.hikari.metrics.dropwizard,
+                     com.zaxxer.hikari.metrics.micrometer,
+                     com.zaxxer.hikari.metrics.prometheus
+                  </Export-Package>
+                  <Private-Package>com.zaxxer.hikari.*</Private-Package>
+                  <Include-Resource>target/classes/module-info.class</Include-Resource>
+                  <_exportcontents>
+                     com.zaxxer.hikari.pool,
+                     com.zaxxer.hikari.util
+                  </_exportcontents>
+                  <Import-Package>
+                     javax.management,
+                     javax.naming,
+                     javax.naming.spi,
+                     javax.sql,
+                     javax.sql.rowset,
+                     javax.sql.rowset.serial,
+                     javax.sql.rowset.spi,
+                     com.codahale.metrics;resolution:=optional,
+                     com.codahale.metrics.health;resolution:=optional,
+                     io.dropwizard.metrics5;resolution:=optional,
+                     io.micrometer.core.instrument;resolution:=optional,
+                     org.slf4j;version="[1.6,2)",
+                     org.hibernate;resolution:=optional,
+                     org.hibernate.cfg;resolution:=optional,
+                     org.hibernate.engine.jdbc.connections.spi;resolution:=optional,
+                     org.hibernate.service;resolution:=optional,
+                     org.hibernate.service.spi;resolution:=optional
+                  </Import-Package>
+                  <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+                  <DynamicImport-Package>*</DynamicImport-Package>
+               </instructions>
+            </configuration>
+            <executions>
+               <!-- This execution makes sure that the manifest is available when the tests are executed -->
+               <execution>
+                  <goals>
+                     <goal>manifest</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+
+   <profiles>
+      <profile>
+         <id>felix</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>pax.exam.framework</name>
+               <value>felix</value>
+            </property>
+         </activation>
+         <properties>
+            <pax.exam.framework>felix</pax.exam.framework>
+            <pax.exam.logging>none</pax.exam.logging>
+         </properties>
+         <dependencies>
+            <dependency>
+               <groupId>org.apache.felix</groupId>
+               <artifactId>org.apache.felix.framework</artifactId>
+               <version>${felix.version}</version>
+               <scope>test</scope>
+            </dependency>
+         </dependencies>
+      </profile>
+
+      <profile>
+         <id>release</id>
+         <activation>
+            <property>
+               <name>performRelease</name>
+               <value>true</value>
+            </property>
+         </activation>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-source-plugin</artifactId>
+                  <version>3.3.0</version>
+                  <executions>
+                     <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                           <goal>jar-no-fork</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+
+               <!-- For release: mvn release:perform -Darguments=-Dgpg.passphrase=PASSPHRASE
+                      With gpg2 you don't need to pass the passphrase; the GPG agent will prompt for it. -->
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-gpg-plugin</artifactId>
+                  <executions>
+                     <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>sign</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+
+               <!-- nexus-staging-maven-plugin replaces the standard maven-deploy-plugin for releases and
+                    is useful for ensuring artifacts are all-or-nothing, as well as allowing artifacts to
+                    be reviewed before they're made public -->
+               <plugin>
+                  <groupId>org.sonatype.plugins</groupId>
+                  <artifactId>nexus-staging-maven-plugin</artifactId>
+                  <extensions>true</extensions>
+                  <configuration>
+                     <autoReleaseAfterClose>${autoReleaseStagedArtifacts}</autoReleaseAfterClose>
+                     <nexusUrl>https://ossrh-staging-api.central.sonatype.com</nexusUrl>
+                     <serverId>ossrh</serverId>
+                  </configuration>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
+   </profiles>
+</project>

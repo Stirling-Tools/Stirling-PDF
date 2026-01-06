@@ -1,0 +1,187 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.fasterxml</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>68</version>
+    </parent>
+    <artifactId>classmate</artifactId>
+    <name>ClassMate</name>
+    <version>1.7.1</version>
+    <packaging>bundle</packaging>
+    <description>Library for introspecting types with full generic information
+        including resolving of field and method types.
+    </description>
+    <url>https://github.com/FasterXML/java-classmate</url>
+    <scm>
+        <connection>scm:git:git@github.com:FasterXML/java-classmate.git</connection>
+        <developerConnection>scm:git:git@github.com:FasterXML/java-classmate.git</developerConnection>
+        <url>https://github.com/FasterXML/java-classmate</url>
+	<tag>classmate-1.7.1</tag>
+    </scm>
+    <developers>
+        <developer>
+            <id>tatu</id>
+            <name>Tatu Saloranta</name>
+            <email>tatu@fasterxml.com</email>
+        </developer>
+        <developer>
+            <id>blangel</id>
+            <name>Brian Langel</name>
+            <email>blangel@ocheyedan.net</email>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <version.jdk>1.8</version.jdk>
+
+	<osgi.export>com.fasterxml.classmate;version=${project.version},
+com.fasterxml.classmate.*;version=${project.version}
+</osgi.export>
+	<osgi.private>com.fasterxml.classmate.util.*</osgi.private>
+    </properties>
+
+    <!-- Licensing -->
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <organization>
+        <name>fasterxml.com</name>
+        <url>https://fasterxml.com</url>
+    </organization>
+
+    <dependencies>
+        <!-- and for testing, JUnit is needed -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${version.junit}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 26-Sep-2025, tatu: Ensure we use new Sonatype Central Portal: -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${version.jdk}</source>
+                    <target>${version.jdk}</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-javadoc-plugin</artifactId>
+                 <configuration>
+                    <source>${version.jdk}</source>
+                    <encoding>UTF-8</encoding>
+                    <links>
+	 	      <link>https://docs.oracle.com/javase/8/docs/api/</link>
+                    </links>
+                 </configuration>
+                 <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                 </executions>
+            </plugin>
+	    <!--  22-Mar-2019, tatu: Add rudimentary JDK9+ module info. To build with JDK 8
+		  will have to use `moduleInfoFile` which is not optimal but anything else
+		  requires JDK 9+.
+              -->
+	    <plugin>
+              <groupId>org.moditect</groupId>
+              <artifactId>moditect-maven-plugin</artifactId>
+              <executions>
+		<execution>
+		  <id>add-module-infos</id>
+		  <phase>package</phase>
+		  <goals>
+		    <goal>add-module-info</goal>
+		  </goals>
+		  <configuration>
+		    <overwriteExistingFiles>true</overwriteExistingFiles>
+		    <module>
+                      <moduleInfoFile>src/moditect/module-info.java</moduleInfoFile>
+		    </module>
+		  </configuration>
+		</execution>
+              </executions>
+	    </plugin>
+
+            <!-- 11-Oct-2023, tatu: Try to produce Code coverage: -->
+            <plugin>
+              <groupId>org.jacoco</groupId>
+              <artifactId>jacoco-maven-plugin</artifactId>
+              <executions>
+               <execution>
+                 <goals>
+                   <goal>prepare-agent</goal>
+                 </goals>
+               </execution>
+               <!-- attached to Maven test phase -->
+               <execution>
+                 <id>report</id>
+                 <phase>test</phase>
+                 <goals>
+                   <goal>report</goal>
+                 </goals>
+               </execution>
+             </executions>
+           </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <excludes>
+              <exclude>**/failing/*.java</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    <!-- NOTE: repositories from parent POM -->
+</project>

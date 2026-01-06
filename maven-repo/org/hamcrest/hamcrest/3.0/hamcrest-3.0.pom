@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.hamcrest</groupId>
+  <artifactId>hamcrest</artifactId>
+  <version>3.0</version>
+  <name>Hamcrest</name>
+  <description>Core API and libraries of hamcrest matcher framework.</description>
+  <url>http://hamcrest.org/JavaHamcrest/</url>
+  <licenses>
+    <license>
+      <name>BSD-3-Clause</name>
+      <url>https://raw.githubusercontent.com/hamcrest/JavaHamcrest/master/LICENSE</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>joewalnes</id>
+      <name>Joe Walnes</name>
+    </developer>
+    <developer>
+      <id>npryce</id>
+      <name>Nat Pryce</name>
+    </developer>
+    <developer>
+      <id>sf105</id>
+      <name>Steve Freeman</name>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/hamcrest/JavaHamcrest.git</connection>
+    <developerConnection>scm:git:ssh://github.com/hamcrest/JavaHamcrest.git</developerConnection>
+    <url>https://github.com/hamcrest/JavaHamcrest</url>
+  </scm>
+</project>

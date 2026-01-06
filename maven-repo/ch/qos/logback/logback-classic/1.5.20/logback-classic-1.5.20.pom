@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-parent</artifactId>
+    <version>1.5.20</version>
+  </parent>
+
+  <artifactId>logback-classic</artifactId>
+  <packaging>jar</packaging>
+  <name>Logback Classic Module</name>
+  <description>logback-classic module</description>
+
+  <properties>
+    <module-name>ch.qos.logback.classic</module-name>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+<!--     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-ext</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency> -->
+
+<!--     <dependency>
+      <groupId>ch.qos.cal10n.plugins</groupId>
+      <artifactId>maven-cal10n-plugin</artifactId>
+      <version>${cal10n.version}</version>
+      <scope>test</scope>
+    </dependency> -->
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <type>test-jar</type>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Must be after log4j-over-slf4j:
+         * we want to use the classes from log4j-over-slf4j (so it must come first);
+         * we want to use log4j.dtd from log4j. -->
+    <dependency>
+      <groupId>ch.qos.reload4j</groupId>
+      <artifactId>reload4j</artifactId>
+      <version>1.2.18.4</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dom4j</groupId>
+      <artifactId>dom4j</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.mail</groupId>
+      <artifactId>jakarta.mail-api</artifactId>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.activation</groupId>
+      <artifactId>jakarta.activation-api</artifactId>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.angus</groupId>
+      <artifactId>angus-mail</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.janino</groupId>
+      <artifactId>janino</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.main</artifactId>
+      <version>5.6.10</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+
+    <plugins>
+
+       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+            </manifestEntries>
+            <manifestFile>
+              ${project.build.outputDirectory}/META-INF/MANIFEST.MF
+            </manifestFile>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>bundle-test-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>${maven-antrun-plugin.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-junit</artifactId>
+            <version>${ant.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-junitlauncher</artifactId>
+            <version>${ant.version}</version>
+          </dependency>
+
+          <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-jupiter-api.version}</version>
+          </dependency>
+
+
+          <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit-vintage-engine.version}</version>
+          </dependency>
+
+          <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <version>${hamcrest.version}</version>
+          </dependency>
+
+        </dependencies>
+
+        <executions>
+           <execution>
+            <id>ant-integration-test</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <property name="slf4j.version" value="${slf4j.version}"/>
+                <ant antfile="${basedir}/integration.xml"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration combine.self="append">
+          <compilerArgs>
+            <arg>add-reads</arg>
+            <arg>ch.qos.logback.core=ch.qos.logback.core=org.codehaus.janino.commons.compiler,org.codehaus.janino.janino</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-test</id>
+            <configuration>
+              <!-- x-show-module-resolution -->
+              <argLine>
+                --add-modules jakarta.mail
+                --add-modules jakarta.servlet
+                --add-opens ch.qos.logback.core/ch.qos.logback.core.testUtil=java.naming
+                --add-opens ch.qos.logback.classic/ch.qos.logback.classic.issue.github450=ch.qos.logback.core
+                --add-opens ch.qos.logback.classic/ch.qos.logback.classic.testUtil=ch.qos.logback.core
+                --add-opens ch.qos.logback.classic/ch.qos.logback.classic.jsonTest=ALL-UNNAMED
+              </argLine>
+              <parallel>classes</parallel>
+              <threadCount>8</threadCount>
+              <forkCount>1C</forkCount>
+              <reuseForks>true</reuseForks>
+              <reportFormat>plain</reportFormat>
+              <trimStackTrace>false</trimStackTrace>
+              <!-- See https://issues.apache.org/jira/browse/SUREFIRE-1265 -->
+              <!--<childDelegation>true</childDelegation>-->
+              <useModulePath>true</useModulePath>
+
+              <excludes>
+                <exclude>**/test_osgi/BundleTest.java</exclude>
+                <exclude>org.slf4j.implTest.MultithreadedInitializationTest.java</exclude>
+                <exclude>org.slf4j.implTest.InitializationOutputTest.java</exclude>
+                <exclude>ch.qos.logback.classic.util.ContextInitializerTest.java</exclude>
+                <exclude>ch.qos.logback.classic.spi.InvocationTest.java</exclude>
+                <exclude>ch.qos.logback.classic.issue.github450.SLF4JIssue450Test</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>singleJVM</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <forkCount>4</forkCount>
+              <reuseForks>false</reuseForks>
+              <argLine>
+                --add-opens ch.qos.logback.classic/ch.qos.logback.classic.issue.github450=ch.qos.logback.core
+              </argLine>
+              <includes>
+                <include>org.slf4j.implTest.MultithreadedInitializationTest.java</include>
+                <include>org.slf4j.implTest.InitializationOutputTest.java</include>
+                <include>ch.qos.logback.classic.util.ContextInitializerTest.java</include>
+                <include>ch.qos.logback.classic.spi.InvocationTest.java</include>
+                <include>ch.qos.logback.classic.issue.github450.SLF4JIssue450Test</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <instructions>
+            <Export-Package>ch.qos.logback.classic*</Export-Package>
+            <!-- LB-CLASSIC It is necessary to specify the rolling
+                 file packages as classes are created via IOC (xml
+                 config files). They won't be found by Bnd's analysis
+                 of java code. -->
+            <Import-Package>
+              ch.qos.logback.classic*;version="${range;[==,+);${version_cleanup;${project.version}}}",
+              sun.reflect;resolution:=optional,
+              jakarta.*;resolution:=optional,
+              org.xml.*;resolution:=optional,
+              ch.qos.logback.core.rolling,
+              ch.qos.logback.core.rolling.helper,
+              ch.qos.logback.core.read,
+              *
+            </Import-Package>
+            <!-- Needed to integrate ServiceLoader mechanism with OSGi -->
+            <Require-Capability><![CDATA[
+              osgi.extender;filter:="(&(osgi.extender=osgi.serviceloader.processor)(version>=1.0.0)(!(version>=2.0.0)))";resolution:=optional,
+              osgi.extender;filter:="(&(osgi.extender=osgi.serviceloader.registrar)(version>=1.0.0)(!(version>=2.0.0)))",
+              osgi.serviceloader;filter:="(osgi.serviceloader=ch.qos.logback.classic.spi.Configurator)";osgi.serviceloader="ch.qos.logback.classic.spi.Configurator";resolution:=optional;cardinality:=multiple
+            ]]></Require-Capability>
+            <Provide-Capability><![CDATA[
+              osgi.service;objectClass:List<String>="jakarta.servlet.ServletContainerInitializer";effective:=active,
+              osgi.service;objectClass:List<String>="org.slf4j.spi.SLF4JServiceProvider";effective:=active,
+              osgi.serviceloader;osgi.serviceloader="jakarta.servlet.ServletContainerInitializer";register:="ch.qos.logback.classic.servlet.LogbackServletContainerInitializer",
+              osgi.serviceloader;osgi.serviceloader="org.slf4j.spi.SLF4JServiceProvider";register:="ch.qos.logback.classic.spi.LogbackServiceProvider"
+            ]]></Provide-Capability>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
