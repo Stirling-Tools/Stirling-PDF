@@ -18,13 +18,13 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
   const { t } = useTranslation();
 
   return (
-    <Card withBorder p={0} h={`calc(${modalHeight} * 0.32 - 1rem)`} style={{ flex: 1, overflow: 'hidden' }}>
-      <Box bg="gray.4" p="sm" style={{ borderTopLeftRadius: 'var(--mantine-radius-md)', borderTopRightRadius: 'var(--mantine-radius-md)' }}>
+    <Card withBorder p={0} mah={`calc(${modalHeight} * 0.45)`} style={{ overflow: 'hidden', flexShrink: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box bg="gray.4" p="sm" style={{ borderTopLeftRadius: 'var(--mantine-radius-md)', borderTopRightRadius: 'var(--mantine-radius-md)', flexShrink: 0 }}>
         <Text size="sm" fw={500} ta="center" c="white">
           {t('fileManager.details', 'File Details')}
         </Text>
       </Box>
-      <ScrollArea style={{ flex: 1 }} p="md">
+      <ScrollArea style={{ flex: 1, minHeight: 0 }} p="md">
         <Stack gap="sm">
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">

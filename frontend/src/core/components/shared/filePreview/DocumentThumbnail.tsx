@@ -41,7 +41,12 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
             src={thumbnail}
             alt={`Preview of ${file.name}`}
             fit="contain"
-            style={{ maxWidth: '100%', maxHeight: '100%' }}
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '100%',
+              width: 'auto',
+              height: 'auto'
+            }}
           />
         </PrivateContent>
         {children}
