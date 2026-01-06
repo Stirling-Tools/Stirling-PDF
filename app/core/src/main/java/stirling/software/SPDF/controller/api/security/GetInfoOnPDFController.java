@@ -4,31 +4,22 @@ import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.io.RandomAccessReadBuffer;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
-import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
-import org.apache.pdfbox.pdmodel.PDJavascriptNameTreeNode;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
+import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
@@ -235,17 +226,26 @@ public class GetInfoOnPDFController {
             return false;
         }
 
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            document.save(baos);
+        // Use Stream-to-File pattern: save to temp file instead of loading into memory
+        // This prevents OutOfMemoryError on large PDFs
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("preflight-", ".pdf");
 
-            try (RandomAccessReadBuffer source = new RandomAccessReadBuffer(baos.toByteArray())) {
+            // Save document to temp file (avoids loading entire document into memory)
+            try (var outputStream = Files.newOutputStream(tempFile)) {
+                document.save(outputStream);
+            }
+
+            // Use RandomAccessReadBufferedFile for efficient file-based reading
+            // This avoids Windows file locking issues that occur with memory-mapped files
+            try (RandomAccessRead source = new RandomAccessReadBufferedFile(tempFile.toFile())) {
                 PreflightParser parser = new PreflightParser(source);
 
                 try (PDDocument parsedDocument = parser.parse()) {
                     if (!(parsedDocument instanceof PreflightDocument preflightDocument)) {
                         log.debug(
-                                "Parsed document is not a PreflightDocument; unable to validate"
-                                        + " claimed PDF/A {}",
+                                "Parsed document is not a PreflightDocument; unable to validate claimed PDF/A {}",
                                 version);
                         return false;
                     }
@@ -281,6 +281,19 @@ public class GetInfoOnPDFController {
             log.debug("IOException during PDF/A validation: {}", e.getMessage());
         } catch (Exception e) {
             log.debug("Unexpected error during PDF/A validation: {}", e.getMessage());
+        } finally {
+            // Explicitly clean up temp file to prevent disk exhaustion
+            // This must be in finally block to ensure cleanup even on exceptions
+            if (tempFile != null) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException e) {
+                    log.warn(
+                            "Failed to delete temp file during PDF/A validation cleanup: {}",
+                            tempFile,
+                            e);
+                }
+            }
         }
 
         return false;
@@ -317,8 +330,7 @@ public class GetInfoOnPDFController {
                     } catch (XmpParsingException e) {
                         // XMP parsing failed, but we already checked raw metadata above
                         log.debug(
-                                "XMP parsing failed for standard check, but raw metadata was"
-                                        + " already checked: {}",
+                                "XMP parsing failed for standard check, but raw metadata was already checked: {}",
                                 e.getMessage());
                     }
                 }
@@ -1214,8 +1226,7 @@ public class GetInfoOnPDFController {
     @Operation(
             summary = "Get comprehensive PDF information",
             description =
-                    "Extracts all available information from a PDF file. Input:PDF Output:JSON"
-                            + " Type:SISO")
+                    "Extracts all available information from a PDF file. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@Valid @ModelAttribute PDFFile request)
             throws IOException {
         try {
@@ -1268,11 +1279,13 @@ public class GetInfoOnPDFController {
                 if (summaryData != null && !summaryData.isEmpty()) {
                     jsonOutput.set("SummaryData", summaryData);
                 }
+
                 // Convert to JSON string
                 String jsonString =
                         objectMapper
                                 .writerWithDefaultPrettyPrinter()
                                 .writeValueAsString(jsonOutput);
+
                 return WebResponseUtils.bytesToWebResponse(
                         jsonString.getBytes(StandardCharsets.UTF_8),
                         "response.json",
