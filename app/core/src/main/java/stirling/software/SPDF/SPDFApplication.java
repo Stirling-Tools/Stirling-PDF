@@ -275,23 +275,62 @@ public class SPDFApplication {
                 (backendUrl == null || backendUrl.isBlank())
                         ? "http://localhost"
                         : backendUrl.trim().replaceAll("/+$", "");
+        boolean hasScheme = trimmedBase.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+        String baseForParsing = hasScheme ? trimmedBase : "http://" + trimmedBase;
+        Integer parsedPort = parsePort(port);
 
         try {
-            java.net.URI uri = new java.net.URI(trimmedBase);
-            boolean hasPort = uri.getPort() != -1;
-            boolean defaultHttp = "http".equalsIgnoreCase(uri.getScheme()) && "80".equals(port);
-            boolean defaultHttps = "https".equalsIgnoreCase(uri.getScheme()) && "443".equals(port);
-
-            if (hasPort || defaultHttp || defaultHttps) {
-                return trimmedBase;
+            java.net.URI uri = new java.net.URI(baseForParsing);
+            String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
+            String host = uri.getHost();
+            if (host == null) {
+                return appendPortFallback(trimmedBase, parsedPort);
             }
+
+            boolean defaultHttp =
+                    "http".equalsIgnoreCase(scheme) && Integer.valueOf(80).equals(parsedPort);
+            boolean defaultHttps =
+                    "https".equalsIgnoreCase(scheme) && Integer.valueOf(443).equals(parsedPort);
+
+            int effectivePort = uri.getPort();
+            if (effectivePort == -1 && parsedPort != null && !defaultHttp && !defaultHttps) {
+                effectivePort = parsedPort;
+            }
+
+            java.net.URI rebuilt =
+                    new java.net.URI(
+                            scheme,
+                            uri.getUserInfo(),
+                            host,
+                            effectivePort,
+                            uri.getPath(),
+                            uri.getQuery(),
+                            uri.getFragment());
+            return rebuilt.toString();
         } catch (java.net.URISyntaxException e) {
-            // If parsing fails, fall back to a simple suffix check
-            if (trimmedBase.matches(".+:\\d+$")) {
-                return trimmedBase;
-            }
+            return appendPortFallback(trimmedBase, parsedPort);
         }
+    }
 
+    private static Integer parsePort(String port) {
+        if (port == null || port.isBlank()) {
+            return null;
+        }
+        try {
+            int parsed = Integer.parseInt(port);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static String appendPortFallback(String trimmedBase, Integer port) {
+        if (port == null) {
+            return trimmedBase;
+        }
+        if (trimmedBase.matches(".+:\\d+$")) {
+            return trimmedBase;
+        }
         return trimmedBase + ":" + port;
     }
 }
