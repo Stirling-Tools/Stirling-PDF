@@ -1,3 +1,6 @@
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+
 configurations {
     vendored
 }
@@ -29,37 +32,46 @@ tasks.register("vendorAllDeps") {
                 cfg.canBeResolved && includeConfigNames.contains(cfg.name)
             }.each { cfg ->
                 println "Resolving ${p.path}:${cfg.name}"
-                def resolved = cfg.resolvedConfiguration.resolvedArtifacts
+                def directModuleIds = cfg.incoming.resolutionResult.root.dependencies
+                    .findAll { it instanceof ResolvedDependencyResult }
+                    .collect { it.selected.id }
+                    .findAll { it instanceof ModuleComponentIdentifier }
 
-                resolved.each { art ->
-                    def id = art.moduleVersion.id
-
+                directModuleIds.each { moduleId ->
                     // ✅ Skip: keine eigenen Project-Artefakte vendoren
-                    if (id.group == p.group?.toString()) {
+                    if (moduleId.group == p.group?.toString()) {
                         return
                     }
 
-                    def groupPath = id.group.replace('.', '/')
-                    def artifactDir = new File(localMavenRepo, "${groupPath}/${id.name}/${id.version}")
+                    def groupPath = moduleId.group.replace('.', '/')
+                    def artifactDir = new File(localMavenRepo, "${groupPath}/${moduleId.module}/${moduleId.version}")
                     artifactDir.mkdirs()
 
-                    // 1) Artifact (jar/…)
-                    def ext = (art.extension ?: "jar")
-                    def artifactKey = "${id.group}:${id.name}:${id.version}:${ext}"
+                    def dependencyNotation = "${moduleId.group}:${moduleId.module}:${moduleId.version}"
+                    def dep = p.dependencies.create(dependencyNotation)
+                    def depConf = p.configurations.detachedConfiguration(dep)
+                    depConf.setTransitive(false)
 
-                    if (seenArtifacts.add(artifactKey)) {
-                        copy {
-                            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-                            from art.file
-                            into artifactDir
-                            rename { "${id.name}-${id.version}.${ext}" }
+                    // 1) Artifacts (nur direkte Module, keine Transitives)
+                    depConf.resolvedConfiguration.lenientConfiguration.artifacts.each { art ->
+                        def ext = (art.extension ?: "jar")
+                        def classifier = art.classifier ? "-${art.classifier}" : ""
+                        def artifactKey = "${moduleId.group}:${moduleId.module}:${moduleId.version}:${ext}:${classifier}"
+
+                        if (seenArtifacts.add(artifactKey)) {
+                            copy {
+                                duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+                                from art.file
+                                into artifactDir
+                                rename { "${moduleId.module}-${moduleId.version}${classifier}.${ext}" }
+                            }
                         }
                     }
 
                     // 2) POM
-                    def pomKey = "${id.group}:${id.name}:${id.version}:pom"
+                    def pomKey = "${moduleId.group}:${moduleId.module}:${moduleId.version}:pom"
                     if (seenPoms.add(pomKey)) {
-                        def pomDep = p.dependencies.create("${id.group}:${id.name}:${id.version}@pom")
+                        def pomDep = p.dependencies.create("${dependencyNotation}@pom")
                         def pomConf = p.configurations.detachedConfiguration(pomDep)
                         pomConf.setTransitive(false)
                         def pomFile = pomConf.singleFile
@@ -68,7 +80,7 @@ tasks.register("vendorAllDeps") {
                             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
                             from pomFile
                             into artifactDir
-                            rename { "${id.name}-${id.version}.pom" }
+                            rename { "${moduleId.module}-${moduleId.version}.pom" }
                         }
                     }
                 }
