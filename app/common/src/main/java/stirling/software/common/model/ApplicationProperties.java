@@ -720,6 +720,8 @@ public class ApplicationProperties {
         public static class UnoServerEndpoint {
             private String host = "127.0.0.1";
             private int port = 2003;
+            private String hostLocation = "auto"; // auto|local|remote
+            private String protocol = "http"; // http|https
         }
 
         @Data

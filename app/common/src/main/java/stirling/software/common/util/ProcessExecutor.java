@@ -370,17 +370,67 @@ public class ProcessExecutor {
         List<String> updated = stripUnoEndpointArgs(command);
         String host = endpoint.getHost();
         int port = endpoint.getPort();
+        String hostLocation = endpoint.getHostLocation();
+        String protocol = endpoint.getProtocol();
+
+        // Normalize and validate host
         if (host == null || host.isBlank()) {
             host = "127.0.0.1";
         }
+
+        // Normalize and validate port
         if (port <= 0) {
             port = 2003;
         }
+
+        // Normalize and validate hostLocation (only auto|local|remote allowed)
+        if (hostLocation == null) {
+            hostLocation = "auto";
+        } else {
+            hostLocation = hostLocation.trim().toLowerCase(java.util.Locale.ROOT);
+            if (!Set.of("auto", "local", "remote").contains(hostLocation)) {
+                log.warn(
+                        "Invalid hostLocation '{}' for endpoint {}:{}, defaulting to 'auto'",
+                        hostLocation,
+                        host,
+                        port);
+                hostLocation = "auto";
+            }
+        }
+
+        // Normalize and validate protocol (only http|https allowed)
+        if (protocol == null) {
+            protocol = "http";
+        } else {
+            protocol = protocol.trim().toLowerCase(java.util.Locale.ROOT);
+            if (!Set.of("http", "https").contains(protocol)) {
+                log.warn(
+                        "Invalid protocol '{}' for endpoint {}:{}, defaulting to 'http'",
+                        protocol,
+                        host,
+                        port);
+                protocol = "http";
+            }
+        }
+
         int insertIndex = Math.min(1, updated.size());
         updated.add(insertIndex++, "--host");
         updated.add(insertIndex++, host);
         updated.add(insertIndex++, "--port");
-        updated.add(insertIndex, String.valueOf(port));
+        updated.add(insertIndex++, String.valueOf(port));
+
+        // Only inject --host-location if non-default (for compatibility with older unoconvert)
+        if (!"auto".equals(hostLocation)) {
+            updated.add(insertIndex++, "--host-location");
+            updated.add(insertIndex++, hostLocation);
+        }
+
+        // Only inject --protocol if non-default (for compatibility with older unoconvert)
+        if (!"http".equals(protocol)) {
+            updated.add(insertIndex++, "--protocol");
+            updated.add(insertIndex, protocol);
+        }
+
         return updated;
     }
 
@@ -388,11 +438,18 @@ public class ProcessExecutor {
         List<String> stripped = new ArrayList<>(command.size());
         for (int i = 0; i < command.size(); i++) {
             String arg = command.get(i);
-            if ("--host".equals(arg) || "--port".equals(arg)) {
+            if ("--host".equals(arg)
+                    || "--port".equals(arg)
+                    || "--host-location".equals(arg)
+                    || "--protocol".equals(arg)) {
                 i++;
                 continue;
             }
-            if (arg != null && (arg.startsWith("--host=") || arg.startsWith("--port="))) {
+            if (arg != null
+                    && (arg.startsWith("--host=")
+                            || arg.startsWith("--port=")
+                            || arg.startsWith("--host-location=")
+                            || arg.startsWith("--protocol="))) {
                 continue;
             }
             stripped.add(arg);
@@ -404,6 +461,8 @@ public class ProcessExecutor {
         if (command == null || command.isEmpty()) {
             throw new IllegalArgumentException("Command must not be empty");
         }
+
+        // Validate all arguments for null bytes and newlines (actual security concerns)
         for (String arg : command) {
             if (arg == null) {
                 throw new IllegalArgumentException("Command contains null argument");
@@ -411,38 +470,64 @@ public class ProcessExecutor {
             if (arg.indexOf('\0') >= 0 || arg.indexOf('\n') >= 0 || arg.indexOf('\r') >= 0) {
                 throw new IllegalArgumentException("Command contains invalid characters");
             }
-            if (containsDisallowedToken(arg)) {
-                throw new IllegalArgumentException("Command contains disallowed token");
-            }
         }
+
+        // Validate executable (first argument)
         String executable = command.get(0);
         if (executable == null || executable.isBlank()) {
             throw new IllegalArgumentException("Command executable must not be empty");
         }
+
+        // Check for path traversal in executable
         if (executable.contains("..")) {
-            throw new IllegalArgumentException("Command executable contains invalid path segment");
+            throw new IllegalArgumentException(
+                    "Command executable contains path traversal: " + executable);
         }
+
+        // Handle absolute paths
         if (executable.contains("/") || executable.contains("\\")) {
-            if (!Files.exists(Path.of(executable))) {
+            Path execPath;
+            try {
+                execPath = Path.of(executable);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid executable path: " + executable, e);
+            }
+
+            if (!Files.exists(execPath)) {
                 throw new IllegalArgumentException(
                         "Command executable does not exist: " + executable);
             }
+
+            if (!Files.isRegularFile(execPath)) {
+                throw new IllegalArgumentException(
+                        "Command executable is not a regular file: " + executable);
+            }
+
+            // For absolute paths, verify the filename is in allowlist
+            Path fileNamePath = execPath.getFileName();
+            if (fileNamePath == null) {
+                throw new IllegalArgumentException(
+                        "Command executable has no filename component: " + executable);
+            }
+            String filename = fileNamePath.toString();
+
+            // Strip .exe extension on Windows for allowlist matching
+            if (filename.toLowerCase(java.util.Locale.ROOT).endsWith(".exe")) {
+                filename = filename.substring(0, filename.length() - 4);
+            }
+
+            if (!ALLOWED_EXECUTABLES.contains(filename)) {
+                throw new IllegalArgumentException(
+                        "Command executable filename not in allowlist: " + filename);
+            }
             return;
         }
+
+        // Relative executable name - must be in allowlist
         if (!ALLOWED_EXECUTABLES.contains(executable)) {
             throw new IllegalArgumentException(
                     "Command executable is not in allowlist: " + executable);
         }
-    }
-
-    private boolean containsDisallowedToken(String value) {
-        return value.contains("&&")
-                || value.contains("||")
-                || value.contains("..")
-                || value.contains(";")
-                || value.contains("|")
-                || value.contains("`")
-                || value.contains("$(");
     }
 
     private static Set<String> initAllowedExecutables() {

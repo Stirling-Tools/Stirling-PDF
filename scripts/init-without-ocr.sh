@@ -4,6 +4,39 @@ set -euo pipefail
 
 log() { printf '%s\n' "$*" >&2; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
+
+run_with_timeout() {
+  local secs=$1; shift
+  if command_exists timeout; then
+    timeout "${secs}s" "$@"
+  else
+    "$@"
+  fi
+}
+
+tcp_port_check() {
+  local host=$1
+  local port=$2
+  local timeout_secs=${3:-5}
+
+  # Try nc first (most portable)
+  if command_exists nc; then
+    run_with_timeout "$timeout_secs" nc -z "$host" "$port" 2>/dev/null
+    return $?
+  fi
+
+  # Fallback to /dev/tcp (bash-specific)
+  if [ -n "${BASH_VERSION:-}" ] && command_exists bash; then
+    run_with_timeout "$timeout_secs" bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null
+    local result=$?
+    exec 3>&- 2>/dev/null || true
+    return $result
+  fi
+
+  # No TCP check method available
+  return 2
+}
+
 UNOSERVER_PIDS=()
 UNOSERVER_PORTS=()
 UNOSERVER_UNO_PORTS=()
@@ -37,6 +70,15 @@ run_as_runtime_user() {
   fi
 }
 
+run_as_runtime_user_with_timeout() {
+  local secs=$1; shift
+  if command_exists timeout; then
+    run_as_runtime_user timeout "${secs}s" "$@"
+  else
+    run_as_runtime_user "$@"
+  fi
+}
+
 CONFIG_FILE=${CONFIG_FILE:-/configs/settings.yml}
 
 read_setting_value() {
@@ -49,6 +91,7 @@ read_setting_value() {
       val=$2
       sub(/#.*/, "", val)
       gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
+      gsub(/^["'"'"']|["'"'"']$/, "", val)
       print val
       exit
     }
@@ -92,18 +135,59 @@ start_unoserver_instance() {
 
 start_unoserver_watchdog() {
   local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
-  if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
-    interval=30
-  fi
+  case "$interval" in
+    ''|*[!0-9]*) interval=30 ;;
+  esac
   (
     while true; do
       local i=0
       while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
         local pid=${UNOSERVER_PIDS[$i]}
+        local port=${UNOSERVER_PORTS[$i]}
+        local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+        local needs_restart=false
+
+        # Check 1: PID exists
         if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
-          local port=${UNOSERVER_PORTS[$i]}
-          local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+          log "unoserver PID ${pid} not found for port ${port}"
+          needs_restart=true
+        else
+          # PID exists, now check if server is actually healthy
+          local health_ok=false
+
+          # Check 2A: Health check with unoping (best - checks actual server health)
+          if [ -n "$UNOPING_BIN" ]; then
+            if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
+              health_ok=true
+            else
+              log "unoserver health check failed (unoping) for port ${port}, trying TCP fallback"
+            fi
+          fi
+
+          # Check 2B: Fallback to TCP port check (verifies service is listening)
+          if [ "$health_ok" = false ]; then
+            tcp_port_check "127.0.0.1" "$port" 5
+            local tcp_rc=$?
+            if [ $tcp_rc -eq 0 ]; then
+              health_ok=true
+            elif [ $tcp_rc -eq 2 ]; then
+              log "No TCP check available; falling back to PID-only for port ${port}"
+              health_ok=true
+            else
+              log "unoserver TCP check failed for port ${port}"
+              needs_restart=true
+            fi
+          fi
+        fi
+
+        if [ "$needs_restart" = true ]; then
           log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+          # Kill the old process if it exists
+          if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            kill -TERM "$pid" 2>/dev/null || true
+            sleep 1
+            kill -KILL "$pid" 2>/dev/null || true
+          fi
           start_unoserver_instance "$port" "$uno_port"
           UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
         fi
@@ -128,9 +212,9 @@ start_unoserver_pool() {
 
   local count
   count="$(get_unoserver_count)"
-  if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-    count=1
-  fi
+  case "$count" in
+    ''|*[!0-9]*) count=1 ;;
+  esac
   if [ "$count" -le 0 ]; then
     count=1
   fi
@@ -257,21 +341,23 @@ if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
 
   check_unoserver_port_ready() {
     local port=$1
-    if [ -z "$UNOPING_BIN" ]; then
-      log "WARNING: unoping not found; falling back to unoconvert --version for readiness."
-      if command_exists timeout; then
-        run_as_runtime_user timeout 5s "$UNOCONVERT_BIN" --version >/dev/null 2>&1
-        return $?
+
+    # Try unoping first (best - checks actual server health)
+    if [ -n "$UNOPING_BIN" ]; then
+      if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
+        return 0
       fi
-      run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1
-      return $?
     fi
-    if command_exists timeout; then
-      run_as_runtime_user timeout 5s "$UNOPING_BIN" --host 127.0.0.1 --port "$port" \
-        >/dev/null 2>&1
-      return $?
+
+    # Fallback to TCP port check (verifies service is listening)
+    tcp_port_check "127.0.0.1" "$port" 5
+    local tcp_rc=$?
+    if [ $tcp_rc -eq 0 ] || [ $tcp_rc -eq 2 ]; then
+      # Success or unsupported (assume ready if can't check)
+      return 0
     fi
-    run_as_runtime_user "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1
+
+    return 1
   }
 
   check_unoserver_ready() {

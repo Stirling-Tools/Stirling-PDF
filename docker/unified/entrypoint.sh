@@ -27,13 +27,14 @@ setup_ocr() {
     fi
 
     # Install additional languages if specified
-    if [[ -n "$TESSERACT_LANGS" ]]; then
+    if [ -n "$TESSERACT_LANGS" ]; then
         SPACE_SEPARATED_LANGS=$(echo $TESSERACT_LANGS | tr ',' ' ')
-        pattern='^[a-zA-Z]{2,4}(_[a-zA-Z]{2,4})?$'
         for LANG in $SPACE_SEPARATED_LANGS; do
-            if [[ $LANG =~ $pattern ]]; then
-                apk add --no-cache "tesseract-ocr-data-$LANG" 2>/dev/null || true
-            fi
+            case "$LANG" in
+                [a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z]_[a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z]_[a-zA-Z][a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z][a-zA-Z]_[a-zA-Z][a-zA-Z][a-zA-Z][a-zA-Z])
+                    apk add --no-cache "tesseract-ocr-data-$LANG" 2>/dev/null || true
+                    ;;
+            esac
         done
     fi
 }
@@ -92,6 +93,47 @@ run_as_user() {
     fi
 }
 
+run_with_timeout() {
+    local secs=$1; shift
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "${secs}s" "$@"
+    else
+        "$@"
+    fi
+}
+
+run_as_user_with_timeout() {
+    local secs=$1; shift
+    if command -v timeout >/dev/null 2>&1; then
+        run_as_user timeout "${secs}s" "$@"
+    else
+        run_as_user "$@"
+    fi
+}
+
+tcp_port_check() {
+    local host=$1
+    local port=$2
+    local timeout_secs=${3:-5}
+
+    # Try nc first (most portable)
+    if command -v nc >/dev/null 2>&1; then
+        run_with_timeout "$timeout_secs" nc -z "$host" "$port" 2>/dev/null
+        return $?
+    fi
+
+    # Fallback to /dev/tcp (bash-specific)
+    if [ -n "${BASH_VERSION:-}" ] && command -v bash >/dev/null 2>&1; then
+        run_with_timeout "$timeout_secs" bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null
+        local result=$?
+        exec 3>&- 2>/dev/null || true
+        return $result
+    fi
+
+    # No TCP check method available
+    return 2
+}
+
 CONFIG_FILE=${CONFIG_FILE:-/configs/settings.yml}
 UNOSERVER_PIDS=()
 UNOSERVER_PORTS=()
@@ -107,6 +149,7 @@ read_setting_value() {
             val=$2
             sub(/#.*/, "", val)
             gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
+            gsub(/^["'"'"']|["'"'"']$/, "", val)
             print val
             exit
         }
@@ -146,18 +189,59 @@ start_unoserver_instance() {
 
 start_unoserver_watchdog() {
     local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
-    if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
-        interval=30
-    fi
+    case "$interval" in
+        ''|*[!0-9]*) interval=30 ;;
+    esac
     (
         while true; do
             local i=0
             while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
                 local pid=${UNOSERVER_PIDS[$i]}
+                local port=${UNOSERVER_PORTS[$i]}
+                local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+                local needs_restart=false
+
+                # Check 1: PID exists
                 if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
-                    local port=${UNOSERVER_PORTS[$i]}
-                    local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+                    echo "unoserver PID ${pid} not found for port ${port}"
+                    needs_restart=true
+                else
+                    # PID exists, now check if server is actually healthy
+                    local health_ok=false
+
+                    # Check 2A: Health check with unoping (best - checks actual server health)
+                    if command -v unoping >/dev/null 2>&1; then
+                        if run_as_user_with_timeout 5 unoping --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
+                            health_ok=true
+                        else
+                            echo "unoserver health check failed (unoping) for port ${port}, trying TCP fallback"
+                        fi
+                    fi
+
+                    # Check 2B: Fallback to TCP port check (verifies service is listening)
+                    if [ "$health_ok" = false ]; then
+                        tcp_port_check "127.0.0.1" "$port" 5
+                        local tcp_rc=$?
+                        if [ $tcp_rc -eq 0 ]; then
+                            health_ok=true
+                        elif [ $tcp_rc -eq 2 ]; then
+                            echo "No TCP check available; falling back to PID-only for port ${port}"
+                            health_ok=true
+                        else
+                            echo "unoserver TCP check failed for port ${port}"
+                            needs_restart=true
+                        fi
+                    fi
+                fi
+
+                if [ "$needs_restart" = true ]; then
                     echo "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+                    # Kill the old process if it exists
+                    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                        kill -TERM "$pid" 2>/dev/null || true
+                        sleep 1
+                        kill -KILL "$pid" 2>/dev/null || true
+                    fi
                     start_unoserver_instance "$port" "$uno_port"
                     UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
                 fi
@@ -182,9 +266,9 @@ start_unoserver_pool() {
 
     local count
     count="$(get_unoserver_count)"
-    if ! [[ "$count" =~ ^[0-9]+$ ]]; then
-        count=1
-    fi
+    case "$count" in
+        ''|*[!0-9]*) count=1 ;;
+    esac
     if [ "$count" -le 0 ]; then
         count=1
     fi

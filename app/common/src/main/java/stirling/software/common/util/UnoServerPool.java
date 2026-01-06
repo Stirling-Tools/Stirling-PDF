@@ -3,24 +3,28 @@ package stirling.software.common.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import stirling.software.common.model.ApplicationProperties;
 
 public class UnoServerPool {
 
     private final List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints;
-    private final List<Semaphore> semaphores;
-    private final AtomicInteger nextIndex = new AtomicInteger();
+    private final BlockingQueue<Integer> availableIndices;
 
     public UnoServerPool(List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints) {
         if (endpoints == null || endpoints.isEmpty()) {
             this.endpoints = Collections.emptyList();
-            this.semaphores = Collections.emptyList();
+            this.availableIndices = new LinkedBlockingQueue<>();
         } else {
             this.endpoints = new ArrayList<>(endpoints);
-            this.semaphores = buildSemaphores(this.endpoints.size());
+            this.availableIndices = new LinkedBlockingQueue<>();
+            // Initialize queue with all endpoint indices
+            for (int i = 0; i < this.endpoints.size(); i++) {
+                this.availableIndices.offer(i);
+            }
         }
     }
 
@@ -30,45 +34,37 @@ public class UnoServerPool {
 
     public UnoServerLease acquireEndpoint() throws InterruptedException {
         if (endpoints.isEmpty()) {
-            return new UnoServerLease(defaultEndpoint(), null);
+            return new UnoServerLease(defaultEndpoint(), null, this);
         }
 
-        int size = endpoints.size();
-        int startIndex = Math.floorMod(nextIndex.getAndIncrement(), size);
-        for (int i = 0; i < size; i++) {
-            int index = (startIndex + i) % size;
-            Semaphore semaphore = semaphores.get(index);
-            if (semaphore.tryAcquire()) {
-                return new UnoServerLease(endpoints.get(index), semaphore);
-            }
-        }
+        // Block until an endpoint index becomes available
+        Integer index = availableIndices.take();
+        return new UnoServerLease(endpoints.get(index), index, this);
+    }
 
-        Semaphore semaphore = semaphores.get(startIndex);
-        semaphore.acquire();
-        return new UnoServerLease(endpoints.get(startIndex), semaphore);
+    private void releaseEndpoint(Integer index) {
+        if (index != null) {
+            availableIndices.offer(index);
+        }
     }
 
     private static ApplicationProperties.ProcessExecutor.UnoServerEndpoint defaultEndpoint() {
         return new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
     }
 
-    private static List<Semaphore> buildSemaphores(int count) {
-        List<Semaphore> list = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            list.add(new Semaphore(1, true));
-        }
-        return list;
-    }
-
     public static class UnoServerLease implements AutoCloseable {
         private final ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint;
-        private final Semaphore semaphore;
+        private final Integer index;
+        private final UnoServerPool pool;
+        private final AtomicBoolean closed = new AtomicBoolean(false);
 
         public UnoServerLease(
                 ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint,
-                Semaphore semaphore) {
+                Integer index,
+                UnoServerPool pool) {
             this.endpoint = endpoint;
-            this.semaphore = semaphore;
+            this.index = index;
+            this.pool = pool;
         }
 
         public ApplicationProperties.ProcessExecutor.UnoServerEndpoint getEndpoint() {
@@ -77,8 +73,12 @@ public class UnoServerPool {
 
         @Override
         public void close() {
-            if (semaphore != null) {
-                semaphore.release();
+            // Idempotent close: only release once even if close() called multiple times
+            if (!closed.compareAndSet(false, true)) {
+                return;
+            }
+            if (pool != null && index != null) {
+                pool.releaseEndpoint(index);
             }
         }
     }
