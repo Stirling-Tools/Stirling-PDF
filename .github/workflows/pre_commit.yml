@@ -59,7 +59,7 @@ jobs:
           cache: "gradle"
 
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew build --build-cache
 
       - name: git add
         run: |

@@ -45,7 +45,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew build --build-cache
         env:
           DISABLE_ADDITIONAL_FEATURES: true
 

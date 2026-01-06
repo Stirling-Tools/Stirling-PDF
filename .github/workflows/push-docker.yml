@@ -49,7 +49,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Run Gradle Command
-        run: ./gradlew clean build
+        run: ./gradlew build --build-cache
         env:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false

@@ -51,6 +51,7 @@ jobs:
       security-events: write
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         jdk-version: [17, 21]
         spring-security: [true, false]
@@ -70,7 +71,7 @@ jobs:
           cache: "gradle"
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build -PnoSpotless
+        run: ./gradlew build -PnoSpotless --build-cache
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
@@ -126,7 +127,7 @@ jobs:
           cache: "gradle"
 
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs --build-cache
         env:
           DISABLE_ADDITIONAL_FEATURES: true
 
@@ -191,7 +192,7 @@ jobs:
           cache: "gradle"
 
       - name: check the licenses for compatibility
-        run: ./gradlew clean checkLicense
+        run: ./gradlew checkLicense --build-cache
 
       - name: FAILED - check the licenses for compatibility
         if: failure()
@@ -268,6 +269,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         include:
           - docker-rev: docker/embedded/Dockerfile
@@ -300,7 +302,7 @@ jobs:
           cache: "gradle"
 
       - name: Build application
-        run: ./gradlew clean build
+        run: ./gradlew build --build-cache
         env:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false

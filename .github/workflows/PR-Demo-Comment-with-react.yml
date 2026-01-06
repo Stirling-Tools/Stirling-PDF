@@ -165,7 +165,7 @@ jobs:
           else
             export DISABLE_ADDITIONAL_FEATURES=false
           fi
-          ./gradlew clean build
+          ./gradlew build --build-cache
         env:
           STIRLING_PDF_DESKTOP_UI: false
 

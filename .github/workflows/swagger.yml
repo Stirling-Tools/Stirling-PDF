@@ -43,10 +43,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
 
       - name: Generate Swagger documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs --build-cache
 
       - name: Upload Swagger Documentation to SwaggerHub
-        run: ./gradlew swaggerhubUpload
+        run: ./gradlew swaggerhubUpload --build-cache
         env:
           SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
           SWAGGERHUB_USER: "Frooodle"

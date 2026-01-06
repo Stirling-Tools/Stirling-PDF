@@ -340,7 +340,7 @@ jobs:
       - name: Check licenses and generate report
         id: license-check
         run: |
-          ./gradlew clean checkLicense generateLicenseReport || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
+          ./gradlew checkLicense generateLicenseReport --build-cache || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
           DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: true
