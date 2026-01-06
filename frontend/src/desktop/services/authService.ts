@@ -592,7 +592,7 @@ export class AuthService {
 
       const handleMessage = async (event: MessageEvent) => {
         const isSameWindow = event.source === authWindow;
-        if (!isSameWindow && event.origin !== expectedOrigin) {
+        if (!isSameWindow || event.origin !== expectedOrigin) {
           return;
         }
 
