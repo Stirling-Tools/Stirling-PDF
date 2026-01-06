@@ -54,8 +54,9 @@ springBoot {
 }
 
 repositories {
-    mavenCentral()
+    maven { url = 'https://repo.oracle.com/maven' }
     maven { url = 'https://build.shibboleth.net/maven/releases' }
+    maven { url = 'https://maven.intern-lan.de/repository/maven-public/' }
 }
 
 allprojects {
