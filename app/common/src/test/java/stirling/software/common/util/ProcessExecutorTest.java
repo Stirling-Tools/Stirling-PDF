@@ -49,8 +49,6 @@ public class ProcessExecutorTest {
 
         // Check the exception message to ensure it indicates the command was not allowed
         String errorMessage = thrown.getMessage();
-        assertTrue(
-                errorMessage.contains("allowlist"),
-                "Unexpected error message: " + errorMessage);
+        assertTrue(errorMessage.contains("allowlist"), "Unexpected error message: " + errorMessage);
     }
 }
