@@ -29,94 +29,8 @@ ext {
     junitPlatformVersion = "1.12.2"
 }
 
-def localMavenRepo = file("${rootDir}/maven-repo")
-if (localMavenRepo.exists()) {
-    println "Adding local maven repo at ${localMavenRepo}"
-    repositories {
-        maven {
-            url localMavenRepo.toURI()
-        }
-    }
-}
-
-configurations {
-    vendored
-}
-
-tasks.register("vendorAllDeps") {
-    group = "vendor"
-    description = "Vendors ALL resolved external dependencies into ./maven-repo"
-
-    doLast {
-        localMavenRepo.mkdirs()
-
-        def includeConfigNames = [
-                "compileClasspath",
-                "runtimeClasspath",
-                "annotationProcessor",
-                "testCompileClasspath",
-                "testRuntimeClasspath"
-        ] as Set
-
-        def seenArtifacts = new HashSet<String>()
-        def seenPoms = new HashSet<String>()
-
-        allprojects.each { p ->
-            p.configurations.findAll { cfg ->
-                cfg.canBeResolved && includeConfigNames.contains(cfg.name)
-            }.each { cfg ->
-                println "Resolving ${p.path}:${cfg.name}"
-                def resolved = cfg.resolvedConfiguration.resolvedArtifacts
-
-                resolved.each { art ->
-                    def id = art.moduleVersion.id
-
-                    // ✅ Skip: keine eigenen Project-Artefakte vendoren
-                    if (id.group == p.group?.toString()) {
-                        return
-                    }
-
-                    def groupPath = id.group.replace('.', '/')
-                    def artifactDir = new File(localMavenRepo, "${groupPath}/${id.name}/${id.version}")
-                    artifactDir.mkdirs()
-
-                    // 1) Artifact (jar/…)
-                    def ext = (art.extension ?: "jar")
-                    def artifactKey = "${id.group}:${id.name}:${id.version}:${ext}"
-
-                    if (seenArtifacts.add(artifactKey)) {
-                        copy {
-                            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-                            from art.file
-                            into artifactDir
-                            rename { "${id.name}-${id.version}.${ext}" }
-                        }
-                    }
-
-                    // 2) POM
-                    def pomKey = "${id.group}:${id.name}:${id.version}:pom"
-                    if (seenPoms.add(pomKey)) {
-                        def pomDep = p.dependencies.create("${id.group}:${id.name}:${id.version}@pom")
-                        def pomConf = p.configurations.detachedConfiguration(pomDep)
-                        pomConf.setTransitive(false)
-                        def pomFile = pomConf.singleFile
-
-                        copy {
-                            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-                            from pomFile
-                            into artifactDir
-                            rename { "${id.name}-${id.version}.pom" }
-                        }
-                    }
-                }
-            }
-        }
-
-        println "Done. Vendored artifacts: ${seenArtifacts.size()}, poms: ${seenPoms.size()}"
-        println "Local repo: ${localMavenRepo}"
-    }
-}
-
+ext.localMavenRepo = file("${rootDir}/maven-repo")
+apply from: "${rootDir}/gradle/vendorAllDeps.gradle"
 
 ext.isSecurityDisabled = { ->
     System.getenv('DOCKER_ENABLE_SECURITY') == 'false' ||
@@ -143,7 +57,7 @@ springBoot {
 }
 
 repositories {
-    maven { url = localMavenRepo }
+    maven { url localMavenRepo.toURI() }
     mavenCentral()
     maven { url = 'https://build.shibboleth.net/maven/releases' }
 }
@@ -230,7 +144,7 @@ subprojects {
      }
 
     repositories {
-        maven { url = localMavenRepo }
+        maven { url localMavenRepo.toURI() }
         mavenCentral()
     }
 
