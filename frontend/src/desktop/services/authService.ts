@@ -822,10 +822,9 @@ export class AuthService {
    * Save JWT + user info for self-hosted SSO logins
    */
   async completeSelfHostedSession(serverUrl: string, token: string): Promise<UserInfo> {
-    await this.saveTokenEverywhere(token);
-
     const userInfo = await this.fetchSelfHostedUserInfo(serverUrl, token);
 
+    await this.saveTokenEverywhere(token);
     await invoke('save_user_info', {
       username: userInfo.username,
       email: userInfo.email || null,
@@ -855,10 +854,7 @@ export class AuthService {
       };
     } catch (error) {
       console.error('[Desktop AuthService] Failed to fetch user info after SSO:', error);
-      return {
-        username: 'User',
-        email: undefined,
-      };
+      throw error;
     }
   }
 
