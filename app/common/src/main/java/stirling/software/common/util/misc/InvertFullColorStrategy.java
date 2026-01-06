@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.imageio.ImageIO;
 
@@ -19,11 +20,14 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 
+@Slf4j
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     public InvertFullColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
@@ -43,6 +47,8 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             try (PDDocument document = Loader.loadPDF(tempFile.getFile())) {
                 // Render each page and invert colors
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(
+                        true); // Enable subsampling to reduce memory usage
                 for (int page = 0; page < document.getNumberOfPages(); page++) {
                     BufferedImage image;
 
@@ -73,12 +79,27 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                         PDImageXObject pdImage =
                                 PDImageXObject.createFromFileByContent(tempImageFile, document);
 
+                        // Delete temp file immediately after loading into memory to prevent disk
+                        // exhaustion
+                        // The file content is now in the PDImageXObject, so the file is no longer
+                        // needed
+                        try {
+                            Files.deleteIfExists(tempImageFile.toPath());
+                            tempImageFile = null; // Mark as deleted to avoid double deletion
+                        } catch (IOException e) {
+                            log.warn(
+                                    "Failed to delete temporary image file: {}",
+                                    tempImageFile.getAbsolutePath(),
+                                    e);
+                        }
+
                         try (PDPageContentStream contentStream =
                                 new PDPageContentStream(
                                         document,
                                         pdPage,
                                         PDPageContentStream.AppendMode.OVERWRITE,
-                                        true)) {
+                                        true,
+                                        true)) { // resetContext=true ensures clean graphics state
                             contentStream.drawImage(
                                     pdImage,
                                     0,
@@ -87,8 +108,16 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                                     pdPage.getMediaBox().getHeight());
                         }
                     } finally {
+                        // Safety net: ensure temp file is deleted even if an exception occurred
                         if (tempImageFile != null && tempImageFile.exists()) {
-                            Files.delete(tempImageFile.toPath());
+                            try {
+                                Files.deleteIfExists(tempImageFile.toPath());
+                            } catch (IOException e) {
+                                log.warn(
+                                        "Failed to delete temporary image file: {}",
+                                        tempImageFile.getAbsolutePath(),
+                                        e);
+                            }
                         }
                     }
                 }
@@ -128,7 +157,10 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     // Helper method to convert BufferedImage to InputStream
     private File convertToBufferedImageTpFile(BufferedImage image) throws IOException {
-        File file = File.createTempFile("image", ".png");
+        // Use Files.createTempFile instead of File.createTempFile for better security and modern
+        // Java practices
+        Path tempPath = Files.createTempFile("image", ".png");
+        File file = tempPath.toFile();
         ImageIO.write(image, "png", file);
         return file;
     }
