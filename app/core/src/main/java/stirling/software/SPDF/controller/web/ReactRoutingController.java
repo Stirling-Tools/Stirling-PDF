@@ -15,6 +15,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.util.HtmlUtils;
+import org.springframework.web.util.JavaScriptUtils;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -165,7 +167,14 @@ public class ReactRoutingController {
 
     private String buildFallbackHtml() {
         String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
-        String serverUrl = "(window.location.origin + '" + baseUrl + "')";
+
+        // Escape for HTML attribute context
+        String escapedBaseUrlHtml = HtmlUtils.htmlEscape(baseUrl);
+
+        // Escape for JavaScript string context
+        String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
+
+        String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
         return """
                 <!doctype html>
                 <html>
@@ -212,12 +221,19 @@ public class ReactRoutingController {
                   </body>
                 </html>
                 """
-                .formatted(baseUrl, baseUrl, serverUrl);
+                .formatted(escapedBaseUrlHtml, escapedBaseUrlJs, serverUrl);
     }
 
     private String buildCallbackHtml() {
         String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
-        String serverUrl = "(window.location.origin + '" + baseUrl + "')";
+
+        // Escape for HTML attribute context
+        String escapedBaseUrlHtml = HtmlUtils.htmlEscape(baseUrl);
+
+        // Escape for JavaScript string context
+        String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
+
+        String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
         return """
                 <!doctype html>
                 <html>
@@ -451,6 +467,6 @@ public class ReactRoutingController {
                   </body>
                 </html>
                 """
-                .formatted(baseUrl, serverUrl);
+                .formatted(escapedBaseUrlHtml, serverUrl);
     }
 }
