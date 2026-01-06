@@ -98,6 +98,7 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: "gradle"
 
       - name: Build Java backend with JLink
         working-directory: ./

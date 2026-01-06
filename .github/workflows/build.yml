@@ -67,6 +67,7 @@ jobs:
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
+          cache: "gradle"
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: ./gradlew clean build -PnoSpotless
@@ -122,6 +123,7 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: "gradle"
 
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
@@ -186,6 +188,7 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: "gradle"
 
       - name: check the licenses for compatibility
         run: ./gradlew clean checkLicense
@@ -231,6 +234,7 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: "gradle"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
@@ -293,6 +297,7 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: "gradle"
 
       - name: Build application
         run: ./gradlew clean build
