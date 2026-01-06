@@ -20,7 +20,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +33,6 @@ public class CustomOAuth2AuthenticationFailureHandler
 
     private static final String SPA_REDIRECT_COOKIE = "stirling_redirect_path";
     private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
-    private static final String TAURI_SESSION_KEY = "stirling_tauri_oauth";
 
     @Override
     @Audited(type = AuditEventType.USER_FAILED_LOGIN, level = AuditLevel.BASIC)
@@ -99,7 +97,7 @@ public class CustomOAuth2AuthenticationFailureHandler
         String redirectPath =
                 extractRedirectPathFromCookie(request)
                         .orElseGet(() -> defaultCallbackPath(contextPath));
-        if (isTauriSession(request) || isTauriState(request)) {
+        if (isTauriState(request)) {
             redirectPath = appendQueryParam(redirectPath, "tauri", "1");
         }
         String resolvedPath =
@@ -155,16 +153,6 @@ public class CustomOAuth2AuthenticationFailureHandler
                         .maxAge(0)
                         .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-    }
-
-    private boolean isTauriSession(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            return false;
-        }
-        Object value = session.getAttribute(TAURI_SESSION_KEY);
-        session.removeAttribute(TAURI_SESSION_KEY);
-        return Boolean.TRUE.equals(value);
     }
 
     private boolean isTauriState(HttpServletRequest request) {

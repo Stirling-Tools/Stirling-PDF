@@ -568,13 +568,6 @@ export class AuthService {
       // ignore URL parsing failures
     }
 
-    // Ensure backend redirects back to /auth/callback
-    try {
-      document.cookie = `stirling_redirect_path=${encodeURIComponent('/auth/callback?tauri=1')}; path=/; max-age=300; SameSite=Lax`;
-    } catch {
-      // ignore cookie errors
-    }
-
     // Force a real popup so the main webview stays on the app
     const authWindow = window.open(authUrl, 'stirling-desktop-sso', 'width=900,height=900');
 
@@ -588,19 +581,12 @@ export class AuthService {
 
     const expectedOrigin = new URL(authUrl).origin;
 
-    // Always also listen for deep link completion in case the opener messaging path fails
-    const deepLinkPromise = this.waitForDeepLinkCompletion(trimmedServer).catch((err) => {
-      console.warn('[Desktop AuthService] Deep link completion failed or timed out:', err);
-      return null;
-    });
-
     return new Promise<UserInfo>((resolve, reject) => {
       let completed = false;
 
       const cleanup = () => {
         window.removeEventListener('message', handleMessage);
         clearInterval(windowCheck);
-        clearInterval(localTokenCheck);
         clearTimeout(timeoutId);
       };
 
@@ -648,16 +634,6 @@ export class AuthService {
         }
       };
 
-      // If deep link finishes first, resolve
-      deepLinkPromise.then(async (dlResult) => {
-        if (completed || !dlResult) return;
-        completed = true;
-        cleanup();
-        resolve(dlResult);
-      }).catch(() => {
-        // ignore deep link errors here
-      });
-
       window.addEventListener('message', handleMessage);
 
       const windowCheck = window.setInterval(() => {
@@ -666,29 +642,6 @@ export class AuthService {
           reject(new Error('Authentication window was closed before completion'));
         }
       }, 500);
-
-      const localTokenCheck = window.setInterval(async () => {
-        if (completed) {
-          clearInterval(localTokenCheck);
-          return;
-        }
-        const token = localStorage.getItem('stirling_jwt');
-        if (token) {
-          completed = true;
-          cleanup();
-          try {
-            const userInfo = await this.completeSelfHostedSession(trimmedServer, token);
-            try {
-              authWindow.close();
-            } catch (_) {
-              // ignore close errors
-            }
-            resolve(userInfo);
-          } catch (err) {
-            reject(err instanceof Error ? err : new Error('Failed to complete login'));
-          }
-        }
-      }, 1000);
 
       const timeoutId = window.setTimeout(() => {
         if (!completed) {
@@ -715,44 +668,14 @@ export class AuthService {
     return new Promise<UserInfo>((resolve, reject) => {
       let completed = false;
       let unlisten: (() => void) | null = null;
-      let localPollId: number | null = null;
 
       const timeoutId = window.setTimeout(() => {
         if (!completed) {
           completed = true;
-          if (localPollId !== null) {
-            window.clearInterval(localPollId);
-          }
           if (unlisten) unlisten();
           reject(new Error('SSO login timed out. Please try again.'));
         }
       }, 120_000);
-
-      localPollId = window.setInterval(async () => {
-        if (completed) {
-          if (localPollId !== null) {
-            window.clearInterval(localPollId);
-          }
-          return;
-        }
-        const token = localStorage.getItem('stirling_jwt');
-        if (token) {
-          completed = true;
-          if (localPollId !== null) {
-            window.clearInterval(localPollId);
-          }
-          if (unlisten) unlisten();
-          clearTimeout(timeoutId);
-          try {
-            const userInfo = await this.completeSelfHostedSession(serverUrl, token);
-            await connectionModeService.switchToSelfHosted({ url: serverUrl });
-            await tauriBackendService.initializeExternalBackend();
-            resolve(userInfo);
-          } catch (err) {
-            reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
-          }
-        }
-      }, 1000);
 
       listen<string>('deep-link', async (event) => {
         const url = event.payload;
@@ -767,9 +690,6 @@ export class AuthService {
             completed = true;
             if (unlisten) unlisten();
             clearTimeout(timeoutId);
-            if (localPollId !== null) {
-              window.clearInterval(localPollId);
-            }
             reject(new Error(error || 'Authentication was not successful.'));
             return;
           }
@@ -784,9 +704,6 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
-          if (localPollId !== null) {
-            window.clearInterval(localPollId);
-          }
 
           const userInfo = await this.completeSelfHostedSession(serverUrl, token);
           // Ensure connection mode is set and backend is ready (in case caller doesn't)
@@ -801,9 +718,6 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
-          if (localPollId !== null) {
-            window.clearInterval(localPollId);
-          }
           reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
         }
       }).then((fn) => {
