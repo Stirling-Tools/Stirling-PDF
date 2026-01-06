@@ -15,7 +15,16 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description = "The type of the digital certificate",
-            allowableValues = {"PEM", "PKCS12", "PFX", "JKS", "SERVER"},
+            allowableValues = {
+                "PEM",
+                "PKCS12",
+                "PFX",
+                "JKS",
+                "SERVER",
+                "WINDOWS_STORE",
+                "MAC_KEYCHAIN",
+                "PKCS11"
+            },
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String certType;
 
@@ -41,6 +50,15 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(description = "The password for the keystore or the private key", format = "password")
     private String password;
+
+    @Schema(
+            description =
+                    "The alias of the certificate to use when loading from OS keystores or"
+                            + " PKCS11 tokens")
+    private String certAlias;
+
+    @Schema(description = "PKCS11 configuration file for hardware-backed certificates")
+    private MultipartFile pkcs11ConfigFile;
 
     @Schema(
             description = "Whether to visually show the signature in the PDF file",

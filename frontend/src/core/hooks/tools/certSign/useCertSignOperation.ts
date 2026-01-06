@@ -14,6 +14,9 @@ export const buildCertSignFormData = (parameters: CertSignParameters, file: File
   } else {
     formData.append('certType', parameters.certType);
     formData.append('password', parameters.password);
+    if (['WINDOWS_STORE', 'MAC_KEYCHAIN', 'PKCS11'].includes(parameters.certType) && parameters.certAlias) {
+      formData.append('certAlias', parameters.certAlias);
+    }
     
     // Add certificate files based on type (only for manual mode)
     switch (parameters.certType) {
@@ -30,9 +33,19 @@ export const buildCertSignFormData = (parameters: CertSignParameters, file: File
           formData.append('p12File', parameters.p12File);
         }
         break;
+      case 'PFX':
+        if (parameters.p12File) {
+          formData.append('p12File', parameters.p12File);
+        }
+        break;
       case 'JKS':
         if (parameters.jksFile) {
           formData.append('jksFile', parameters.jksFile);
+        }
+        break;
+      case 'PKCS11':
+        if (parameters.pkcs11ConfigFile) {
+          formData.append('pkcs11ConfigFile', parameters.pkcs11ConfigFile);
         }
         break;
     }

@@ -5,12 +5,14 @@ export interface CertSignParameters extends BaseParameters {
   // Sign mode selection
   signMode: 'MANUAL' | 'AUTO';
   // Certificate signing options (only for manual mode)
-  certType: '' | 'PEM' | 'PKCS12' | 'PFX' | 'JKS';
+  certType: '' | 'PEM' | 'PKCS12' | 'PFX' | 'JKS' | 'WINDOWS_STORE' | 'MAC_KEYCHAIN' | 'PKCS11';
   privateKeyFile?: File;
   certFile?: File;
   p12File?: File;
   jksFile?: File;
   password: string;
+  certAlias: string;
+  pkcs11ConfigFile?: File;
   
   // Signature appearance options
   showSignature: boolean;
@@ -25,6 +27,7 @@ export const defaultParameters: CertSignParameters = {
   signMode: 'MANUAL',
   certType: '',
   password: '',
+  certAlias: '',
   showSignature: false,
   reason: '',
   location: '',
@@ -59,6 +62,11 @@ export const useCertSignParameters = (): CertSignParametersHook => {
           return !!params.p12File;
         case 'JKS':
           return !!params.jksFile;
+        case 'WINDOWS_STORE':
+        case 'MAC_KEYCHAIN':
+          return !!params.certAlias;
+        case 'PKCS11':
+          return !!(params.certAlias && params.pkcs11ConfigFile);
         default:
           return false;
       }

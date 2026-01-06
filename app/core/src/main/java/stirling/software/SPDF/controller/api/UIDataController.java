@@ -6,15 +6,34 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.Dependency;
 import stirling.software.SPDF.model.SignatureFile;
+import stirling.software.SPDF.model.api.security.CertStoreEntriesRequest;
 import stirling.software.SPDF.service.SharedSignatureService;
 import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
@@ -190,6 +210,51 @@ public class UIDataController {
         return ResponseEntity.ok(data);
     }
 
+    @PostMapping(
+            value = "/cert-store-entries",
+            consumes = {
+                MediaType.MULTIPART_FORM_DATA_VALUE,
+                MediaType.APPLICATION_FORM_URLENCODED_VALUE
+            })
+    @Operation(summary = "Get available certificates from OS-backed stores")
+    public ResponseEntity<CertificateStoreEntriesData> getCertificateStoreEntries(
+            @org.springframework.web.bind.annotation.ModelAttribute CertStoreEntriesRequest request)
+            throws Exception {
+        String certType = request.getCertType();
+        MultipartFile pkcs11ConfigFile = request.getPkcs11ConfigFile();
+        String password = request.getPassword();
+
+        if (certType == null || certType.isBlank()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.optionsNotSpecified",
+                    "{0} options are not specified",
+                    "certificate store type");
+        }
+
+        ensureDesktopMode(certType);
+
+        KeyStore keyStore = loadCertificateStore(certType, pkcs11ConfigFile, password);
+        List<CertificateStoreEntry> entries = new ArrayList<>();
+        Enumeration<String> aliases = keyStore.aliases();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            if (!keyStore.isKeyEntry(alias)) {
+                continue;
+            }
+            Certificate certificate = keyStore.getCertificate(alias);
+            if (certificate instanceof X509Certificate x509Certificate) {
+                entries.add(buildCertificateEntry(alias, x509Certificate));
+            }
+        }
+        entries.sort(
+                Comparator.comparing(
+                        CertificateStoreEntry::getDisplayName, String::compareToIgnoreCase));
+
+        CertificateStoreEntriesData data = new CertificateStoreEntriesData();
+        data.setEntries(entries);
+        return ResponseEntity.ok(data);
+    }
+
     private List<String> getAvailableTesseractLanguages() {
         String tessdataDir = applicationProperties.getSystem().getTessdataDir();
         java.io.File[] files = new java.io.File(tessdataDir).listFiles();
@@ -202,6 +267,91 @@ public class UIDataController {
                 .filter(lang -> !"osd".equalsIgnoreCase(lang))
                 .sorted()
                 .toList();
+    }
+
+    private void ensureDesktopMode(String certType) {
+        boolean isDesktopMode =
+                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+        if (!isDesktopMode) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "certificate type " + certType + " requires desktop mode");
+        }
+    }
+
+    private KeyStore loadCertificateStore(
+            String certType, MultipartFile pkcs11ConfigFile, String password)
+            throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
+        switch (certType) {
+            case "WINDOWS_STORE":
+                KeyStore windowsStore = KeyStore.getInstance("Windows-MY");
+                windowsStore.load(null, null);
+                return windowsStore;
+            case "MAC_KEYCHAIN":
+                KeyStore keychainStore = KeyStore.getInstance("KeychainStore");
+                keychainStore.load(null, null);
+                return keychainStore;
+            case "PKCS11":
+                if (pkcs11ConfigFile == null || pkcs11ConfigFile.isEmpty()) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidArgument",
+                            "Invalid argument: {0}",
+                            "PKCS11 configuration file is required");
+                }
+                Provider pkcs11Provider = loadPkcs11Provider(pkcs11ConfigFile);
+                KeyStore pkcs11Store = KeyStore.getInstance("PKCS11", pkcs11Provider);
+                pkcs11Store.load(null, password != null ? password.toCharArray() : null);
+                return pkcs11Store;
+            default:
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "certificate store type: " + certType);
+        }
+    }
+
+    private Provider loadPkcs11Provider(MultipartFile configFile) throws IOException {
+        Provider baseProvider = Security.getProvider("SunPKCS11");
+        if (baseProvider == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "SunPKCS11 provider is not available in this JVM");
+        }
+        java.io.File tempFile = java.io.File.createTempFile("spdf-pkcs11", ".cfg");
+        FileUtils.copyInputStreamToFile(configFile.getInputStream(), tempFile);
+        Provider provider = baseProvider.configure(tempFile.getAbsolutePath());
+        Security.addProvider(provider);
+        return provider;
+    }
+
+    private CertificateStoreEntry buildCertificateEntry(String alias, X509Certificate certificate) {
+        String displayName = getCertificateDisplayName(certificate);
+        return new CertificateStoreEntry(
+                alias,
+                displayName,
+                certificate.getSubjectX500Principal().getName(),
+                certificate.getIssuerX500Principal().getName(),
+                certificate.getSerialNumber().toString(),
+                formatDate(certificate.getNotBefore()),
+                formatDate(certificate.getNotAfter()),
+                certificate.getNotBefore().getTime(),
+                certificate.getNotAfter().getTime());
+    }
+
+    private String getCertificateDisplayName(X509Certificate certificate) {
+        X500Name x500Name = new X500Name(certificate.getSubjectX500Principal().getName());
+        RDN[] cnRdns = x500Name.getRDNs(BCStyle.CN);
+        if (cnRdns != null && cnRdns.length > 0 && cnRdns[0].getFirst() != null) {
+            return IETFUtils.valueToString(cnRdns[0].getFirst().getValue());
+        }
+        return certificate.getSubjectX500Principal().getName();
+    }
+
+    private String formatDate(Date date) {
+        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
+                Instant.ofEpochMilli(date.getTime()).atOffset(ZoneOffset.UTC));
     }
 
     private List<FontResource> getFontNames() {
@@ -286,6 +436,24 @@ public class UIDataController {
     @Data
     public static class OcrData {
         private List<String> languages;
+    }
+
+    @Data
+    public static class CertificateStoreEntriesData {
+        private List<CertificateStoreEntry> entries;
+    }
+
+    @Data
+    public static class CertificateStoreEntry {
+        private final String alias;
+        private final String displayName;
+        private final String subject;
+        private final String issuer;
+        private final String serialNumber;
+        private final String notBefore;
+        private final String notAfter;
+        private final long notBeforeEpochMs;
+        private final long notAfterEpochMs;
     }
 
     @Data

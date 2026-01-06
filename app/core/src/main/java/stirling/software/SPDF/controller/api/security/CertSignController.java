@@ -170,7 +170,9 @@ public class CertSignController {
         MultipartFile certFile = request.getCertFile();
         MultipartFile p12File = request.getP12File();
         MultipartFile jksfile = request.getJksFile();
+        MultipartFile pkcs11ConfigFile = request.getPkcs11ConfigFile();
         String password = request.getPassword();
+        String certAlias = request.getCertAlias();
         Boolean showSignature = request.getShowSignature();
         String reason = request.getReason();
         String location = request.getLocation();
@@ -188,6 +190,7 @@ public class CertSignController {
 
         KeyStore ks = null;
         String keystorePassword = password;
+        boolean aliasRequired = false;
 
         switch (certType) {
             case "PEM":
@@ -201,8 +204,9 @@ public class CertSignController {
                 ks.load(null);
                 PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
                 Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
+                String pemAlias = StringUtils.isBlank(certAlias) ? "alias" : certAlias;
                 ks.setKeyEntry(
-                        "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
+                        pemAlias, privateKey, password.toCharArray(), new Certificate[] {cert});
                 break;
             case "PKCS12":
             case "PFX":
@@ -237,6 +241,30 @@ public class CertSignController {
                 ks = serverCertificateService.getServerKeyStore();
                 keystorePassword = serverCertificateService.getServerCertificatePassword();
                 break;
+            case "WINDOWS_STORE":
+                ensureDesktopMode(certType);
+                ks = KeyStore.getInstance("Windows-MY");
+                ks.load(null, null);
+                aliasRequired = true;
+                break;
+            case "MAC_KEYCHAIN":
+                ensureDesktopMode(certType);
+                ks = KeyStore.getInstance("KeychainStore");
+                ks.load(null, null);
+                aliasRequired = true;
+                break;
+            case "PKCS11":
+                ensureDesktopMode(certType);
+                pkcs11ConfigFile =
+                        validateFilePresent(
+                                pkcs11ConfigFile,
+                                "PKCS11 configuration",
+                                "PKCS11 configuration file is required");
+                Provider pkcs11Provider = loadPkcs11Provider(pkcs11ConfigFile);
+                ks = KeyStore.getInstance("PKCS11", pkcs11Provider);
+                ks.load(null, password != null ? password.toCharArray() : null);
+                aliasRequired = true;
+                break;
             default:
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",
@@ -244,7 +272,16 @@ public class CertSignController {
                         "certificate type: " + certType);
         }
 
-        CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
+        if (aliasRequired && StringUtils.isBlank(certAlias)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "certificate alias is required for the selected certificate store");
+        }
+
+        KeyStoreSelection selection = selectKeyStoreEntry(ks, certAlias, keystorePassword);
+        CreateSignature createSignature =
+                new CreateSignature(selection.keystore(), selection.password());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(
                 pdfDocumentFactory,
@@ -272,6 +309,77 @@ public class CertSignController {
                     argumentName + " - " + errorDescription);
         }
         return file;
+    }
+
+    private void ensureDesktopMode(String certType) {
+        boolean isDesktopMode =
+                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+        if (!isDesktopMode) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "certificate type " + certType + " requires desktop mode");
+        }
+    }
+
+    private KeyStoreSelection selectKeyStoreEntry(
+            KeyStore keystore, String certAlias, String password)
+            throws KeyStoreException,
+                    NoSuchAlgorithmException,
+                    UnrecoverableKeyException,
+                    CertificateException,
+                    IOException {
+        if (StringUtils.isBlank(certAlias)) {
+            char[] passwordChars = password != null ? password.toCharArray() : new char[0];
+            return new KeyStoreSelection(keystore, passwordChars);
+        }
+        if (!keystore.containsAlias(certAlias)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "certificate alias not found: " + certAlias);
+        }
+        if (!keystore.isKeyEntry(certAlias)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "certificate alias does not reference a private key: " + certAlias);
+        }
+        char[] keyPassword = password != null ? password.toCharArray() : null;
+        Key key = keystore.getKey(certAlias, keyPassword);
+        if (!(key instanceof PrivateKey privateKey)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "certificate alias does not contain a private key: " + certAlias);
+        }
+        Certificate[] chain = keystore.getCertificateChain(certAlias);
+        if (chain == null || chain.length == 0) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "certificate chain not found for alias: " + certAlias);
+        }
+        KeyStore filtered = KeyStore.getInstance("PKCS12");
+        filtered.load(null);
+        char[] entryPassword = password != null ? password.toCharArray() : new char[0];
+        filtered.setKeyEntry(certAlias, privateKey, entryPassword, chain);
+        return new KeyStoreSelection(filtered, entryPassword);
+    }
+
+    private Provider loadPkcs11Provider(MultipartFile configFile) throws IOException {
+        Provider baseProvider = Security.getProvider("SunPKCS11");
+        if (baseProvider == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "SunPKCS11 provider is not available in this JVM");
+        }
+        File tempFile = File.createTempFile("spdf-pkcs11", ".cfg");
+        FileUtils.copyInputStreamToFile(configFile.getInputStream(), tempFile);
+        Provider provider = baseProvider.configure(tempFile.getAbsolutePath());
+        Security.addProvider(provider);
+        return provider;
     }
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
@@ -410,4 +518,6 @@ public class CertSignController {
             }
         }
     }
+
+    private record KeyStoreSelection(KeyStore keystore, char[] password) {}
 }
