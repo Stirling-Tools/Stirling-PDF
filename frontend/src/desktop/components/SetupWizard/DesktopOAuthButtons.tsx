@@ -6,7 +6,8 @@ import { BASE_PATH } from '@app/constants/app';
 import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
 import '@app/routes/authShared/auth.css';
 
-export type OAuthProviderId = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc' | string;
+type KnownProviderId = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
+export type OAuthProviderId = KnownProviderId | string;
 
 export interface DesktopSSOProvider {
   id: OAuthProviderId;
@@ -78,7 +79,7 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
     }
   };
 
-  const providerConfig: Record<string, { label: string; file: string }> = {
+  const providerConfig: Record<KnownProviderId, { label: string; file: string }> = {
     google: { label: 'Google', file: 'google.svg' },
     github: { label: 'GitHub', file: 'github.svg' },
     keycloak: { label: 'Keycloak', file: 'keycloak.svg' },
@@ -86,6 +87,8 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
     apple: { label: 'Apple', file: 'apple.svg' },
     oidc: { label: 'OpenID', file: 'oidc.svg' },
   };
+  const isKnownProvider = (id: OAuthProviderId): id is KnownProviderId =>
+    (id as KnownProviderId) in providerConfig;
   const GENERIC_PROVIDER_ICON = 'oidc.svg';
 
   if (providers.length === 0) {
@@ -97,7 +100,9 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
       {providers
         .filter((providerConfigEntry) => providerConfigEntry && providerConfigEntry.id)
         .map((providerEntry) => {
-          const iconConfig = providerConfig[providerEntry.id];
+          const iconConfig = isKnownProvider(providerEntry.id)
+            ? providerConfig[providerEntry.id]
+            : undefined;
           const label =
             providerEntry.label ||
             iconConfig?.label ||
