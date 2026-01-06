@@ -139,11 +139,12 @@ public class CertSignController {
                     signatureOptions.setPage(pageNumber);
 
                     doc.addSignature(signature, instance, signatureOptions);
+                    doc.saveIncremental(output);
                 }
             } else {
                 doc.addSignature(signature, instance);
+                doc.saveIncremental(output);
             }
-            doc.saveIncremental(output);
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
         }
