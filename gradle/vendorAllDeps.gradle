@@ -8,6 +8,9 @@ tasks.register("vendorAllDeps") {
 
     doLast {
         def localMavenRepo = rootProject.ext.localMavenRepo
+        if (localMavenRepo.exists()) {
+            localMavenRepo.deleteDir()
+        }
         localMavenRepo.mkdirs()
 
         def includeConfigNames = [
