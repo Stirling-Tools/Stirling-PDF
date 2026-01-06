@@ -181,7 +181,7 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
     position: 'relative' as const,
     width: '100%',
     aspectRatio: `${(pageSize?.widthPts ?? 595.28) / (pageSize?.heightPts ?? 841.89)} / 1`,
-    backgroundColor: pageThumbnail ? 'transparent' : 'rgba(255,255,255,0.03)',
+    backgroundColor: pageThumbnail ? 'white' : 'rgba(255,255,255,0.03)',
     border: '1px solid var(--border-default, #333)',
     overflow: 'hidden' as const
   }), [pageSize, pageThumbnail]);
