@@ -51,7 +51,6 @@ jobs:
       security-events: write
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         jdk-version: [17, 21]
         spring-security: [true, false]
@@ -285,7 +284,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         include:
           - docker-rev: docker/embedded/Dockerfile
