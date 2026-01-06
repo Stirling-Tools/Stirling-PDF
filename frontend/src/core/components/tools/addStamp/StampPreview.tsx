@@ -4,6 +4,7 @@ import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { A4_ASPECT_RATIO, getFirstSelectedPage, getFontFamily, computeStampPreviewStyle, getAlphabetPreviewScale } from '@app/components/tools/addStamp/StampPreviewUtils';
 import styles from '@app/components/tools/addStamp/StampPreview.module.css';
+import {PrivateContent} from "@app/components/shared/PrivateContent";
 
 type Props = {
   parameters: AddStampParameters;
@@ -255,20 +256,22 @@ export default function StampPreview({ parameters, onParameterChange, file, show
         <div className={styles.divider} />
         <div className={styles.previewLabel}>Preview Stamp</div>
       </div>
-      <div 
-        ref={containerRef} 
+      <div
+        ref={containerRef}
         className={`${styles.container} ${styles.containerBorder} ${pageThumbnail ? styles.containerWithThumbnail : styles.containerWithoutThumbnail}`}
-        style={style.container as React.CSSProperties} 
-        onPointerMove={handlePointerMove} 
+        style={style.container as React.CSSProperties}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
         {pageThumbnail && (
-          <img
-            src={pageThumbnail}
-            alt="page preview"
-            className={styles.pageThumbnail}
-            draggable={false}
-          />
+          <PrivateContent>
+            <img
+              src={pageThumbnail}
+              alt="page preview"
+              className={styles.pageThumbnail}
+              draggable={false}
+            />
+          </PrivateContent>
         )}
         {parameters.stampType === 'text' && (
           <div
