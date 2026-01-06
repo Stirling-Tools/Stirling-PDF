@@ -5,7 +5,7 @@ on:
     types: [opened, edited]
     branches: [main]
 
-permissions:  # required for secure-repo hardening
+permissions: # required for secure-repo hardening
   contents: read
 
 jobs:

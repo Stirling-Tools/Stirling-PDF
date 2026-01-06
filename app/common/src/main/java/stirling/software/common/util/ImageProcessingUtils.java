@@ -63,15 +63,16 @@ public class ImageProcessingUtils {
         } else {
             int width = image.getWidth();
             int height = image.getHeight();
+            int[] pixels = new int[width * height];
+
+            image.getRGB(0, 0, width, height, pixels, 0, width);
+
             byte[] data = new byte[width * height * 3];
             int index = 0;
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int rgb = image.getRGB(x, y);
-                    data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
-                    data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
-                    data[index++] = (byte) (rgb & 0xFF); // Blue
-                }
+            for (int rgb : pixels) {
+                data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
+                data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
+                data[index++] = (byte) (rgb & 0xFF); // Blue
             }
             return data;
         }

@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -808,6 +810,56 @@ public class GlobalExceptionHandler {
                 .body(problemDetail);
     }
 
+    /**
+     * Handle 406 Not Acceptable errors when error responses cannot match client Accept header.
+     *
+     * <p>When thrown: When the client sends Accept: application/pdf but the server needs to return
+     * a JSON error response (e.g., when an attachment is not found).
+     *
+     * <p>This handler writes directly to HttpServletResponse to bypass Spring's content negotiation
+     * and ensure error responses are always delivered as JSON.
+     *
+     * @param ex the HttpMediaTypeNotAcceptableException
+     * @param request the HTTP servlet request
+     * @param response the HTTP servlet response
+     */
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public void handleMediaTypeNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex,
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        log.warn(
+                "Media type not acceptable at {}: client accepts {}, server supports {}",
+                request.getRequestURI(),
+                request.getHeader("Accept"),
+                ex.getSupportedMediaTypes());
+
+        // Write JSON error response directly, bypassing content negotiation
+        response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
+        response.setContentType("application/problem+json");
+        response.setCharacterEncoding("UTF-8");
+
+        String errorJson =
+                String.format(
+                        """
+                {
+                    "type": "about:blank",
+                    "title": "Not Acceptable",
+                    "status": 406,
+                    "detail": "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.",
+                    "instance": "%s",
+                    "timestamp": "%s",
+                    "hints": ["Error responses are always returned as application/json or application/problem+json", "Set Accept header to include application/json for proper error handling"]
+                }
+                """,
+                        request.getRequestURI(), Instant.now().toString());
+
+        response.getWriter().write(errorJson);
+        response.getWriter().flush();
+    }
+
     // ===========================================================================================
     // JAVA STANDARD EXCEPTIONS
     // ===========================================================================================
@@ -963,9 +1015,8 @@ public class GlobalExceptionHandler {
 
         // Check if this RuntimeException wraps a typed exception from job execution
         Throwable cause = ex.getCause();
-        if (cause instanceof BaseAppException) {
+        if (cause instanceof BaseAppException appEx) {
             // Delegate to specific BaseAppException handlers
-            BaseAppException appEx = (BaseAppException) cause;
             if (appEx instanceof PdfPasswordException) {
                 return handlePdfPassword((PdfPasswordException) appEx, request);
             } else if (appEx instanceof PdfCorruptedException
@@ -979,9 +1030,8 @@ public class GlobalExceptionHandler {
             } else {
                 return handleBaseApp(appEx, request);
             }
-        } else if (cause instanceof BaseValidationException) {
+        } else if (cause instanceof BaseValidationException valEx) {
             // Delegate to validation exception handlers
-            BaseValidationException valEx = (BaseValidationException) cause;
             if (valEx instanceof CbrFormatException
                     || valEx instanceof CbzFormatException
                     || valEx instanceof EmlFormatException) {
@@ -992,6 +1042,9 @@ public class GlobalExceptionHandler {
         } else if (cause instanceof IOException) {
             // Unwrap and handle IOException (may contain PDF-specific errors)
             return handleIOException((IOException) cause, request);
+        } else if (cause instanceof IllegalArgumentException) {
+            // Unwrap and handle IllegalArgumentException (business logic validation errors)
+            return handleIllegalArgument((IllegalArgumentException) cause, request);
         }
 
         // Not a wrapped exception - treat as unexpected error

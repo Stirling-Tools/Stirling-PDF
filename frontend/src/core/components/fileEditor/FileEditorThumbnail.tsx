@@ -112,6 +112,7 @@ const FileEditorThumbnail = ({
   }, [file.name]);
 
   const isCBZ = extLower === 'cbz';
+  const isCBR = extLower === 'cbr';
 
   const pageLabel = useMemo(
     () =>
@@ -226,7 +227,7 @@ const FileEditorThumbnail = ({
           alert({ alertType: 'success', title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
         }
       },
-      hidden: !isZipFile || !onUnzipFile || isCBZ,
+      hidden: !isZipFile || !onUnzipFile || isCBZ || isCBR,
     },
     {
       id: 'close',
@@ -238,7 +239,7 @@ const FileEditorThumbnail = ({
       },
       color: 'red',
     }
-  ], [t, file.id, file.name, isZipFile, onViewFile, onDownloadFile, onUnzipFile, handleCloseWithConfirmation]);
+  ], [t, file.id, file.name, isZipFile, isCBR, onViewFile, onDownloadFile, onUnzipFile, handleCloseWithConfirmation]);
 
   // ---- Card interactions ----
   const handleCardClick = () => {
