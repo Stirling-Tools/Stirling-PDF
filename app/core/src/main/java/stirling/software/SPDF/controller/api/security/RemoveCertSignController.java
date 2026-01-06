@@ -72,28 +72,30 @@ public class RemoveCertSignController {
         }
         request.validatePdfFile(inputFile);
 
-        // Load the PDF document
-        PDDocument document = pdfDocumentFactory.load(inputFile);
+        // Load the PDF document with proper resource management
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
-        // Get the document catalog
-        PDDocumentCatalog catalog = document.getDocumentCatalog();
+            // Get the document catalog
+            PDDocumentCatalog catalog = document.getDocumentCatalog();
 
-        // Get the AcroForm
-        PDAcroForm acroForm = catalog.getAcroForm();
-        if (acroForm != null) {
-            // Remove signature fields safely
-            List<PDField> fieldsToRemove =
-                    acroForm.getFields().stream()
-                            .filter(PDSignatureField.class::isInstance)
-                            .toList();
+            // Get the AcroForm
+            PDAcroForm acroForm = catalog.getAcroForm();
+            if (acroForm != null) {
+                // Remove signature fields safely
+                List<PDField> fieldsToRemove =
+                        acroForm.getFields().stream()
+                                .filter(field -> field instanceof PDSignatureField)
+                                .toList();
 
-            if (!fieldsToRemove.isEmpty()) {
-                acroForm.flatten(fieldsToRemove, false);
+                if (!fieldsToRemove.isEmpty()) {
+                    acroForm.flatten(fieldsToRemove, false);
+                }
             }
+            // Return the modified PDF as a response
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(
+                            inputFile.getOriginalFilename(), "_unsigned.pdf"));
         }
-        // Return the modified PDF as a response
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_unsigned.pdf"));
     }
 }

@@ -87,26 +87,28 @@ public class PdfImageRemovalController {
                     "error.pdfRequired", "PDF file is required");
         }
         request.validatePdfFile(inputFile);
-        // Load the PDF document
+        // Load the PDF document with proper resource management
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
             // Remove images from the PDF document using the service
-            PDDocument modifiedDocument = pdfImageRemovalService.removeImagesFromPdf(document);
+            try (PDDocument modifiedDocument =
+                    pdfImageRemovalService.removeImagesFromPdf(document)) {
 
-            // Create a ByteArrayOutputStream to hold the modified PDF data
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                // Create a ByteArrayOutputStream to hold the modified PDF data
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-            // Save the modified PDF document to the output stream
-            modifiedDocument.save(outputStream);
-            modifiedDocument.close();
+                // Save the modified PDF document to the output stream
+                modifiedDocument.save(outputStream);
 
-            // Generate a new filename for the modified PDF
-            String mergedFileName =
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_images_removed.pdf");
+                // Generate a new filename for the modified PDF
+                String mergedFileName =
+                        GeneralUtils.generateFilename(
+                                inputFile.getOriginalFilename(), "_images_removed.pdf");
 
-            // Convert the byte array to a web response and return it
-            return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);
+                // Convert the byte array to a web response and return it
+                return WebResponseUtils.bytesToWebResponse(
+                        outputStream.toByteArray(), mergedFileName);
+            }
         }
     }
 }
