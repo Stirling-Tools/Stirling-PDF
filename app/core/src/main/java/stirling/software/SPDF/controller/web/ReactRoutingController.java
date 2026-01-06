@@ -42,6 +42,9 @@ public class ReactRoutingController {
     public void init() {
         log.info("Static files custom path: {}", InstallationPathConfig.getStaticPath());
 
+        // Always initialize callback HTML (used for OAuth desktop flow)
+        this.cachedCallbackHtml = buildCallbackHtml();
+
         // Check for external index.html first (customFiles/static/)
         Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
         log.debug("Checking for custom index.html at: {}", externalIndexPath);
@@ -64,7 +67,6 @@ public class ReactRoutingController {
 
         // Neither external nor classpath index.html exists - cache fallback once
         this.cachedIndexHtml = buildFallbackHtml();
-        this.cachedCallbackHtml = buildCallbackHtml();
         this.indexHtmlExists = true;
         this.useExternalIndexHtml = false;
         this.loggedMissingIndex = true;
@@ -146,9 +148,7 @@ public class ReactRoutingController {
 
     @GetMapping(value = "/auth/callback/tauri", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveTauriAuthCallback(HttpServletRequest request) {
-        if (cachedCallbackHtml == null) {
-            cachedCallbackHtml = buildCallbackHtml();
-        }
+        // cachedCallbackHtml is always initialized in @PostConstruct
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedCallbackHtml);
     }
 
