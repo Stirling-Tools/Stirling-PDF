@@ -4,8 +4,6 @@ import static stirling.software.proprietary.security.model.AuthenticationType.OA
 import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +19,6 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.savedrequest.SavedRequest;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -44,9 +41,6 @@ import stirling.software.proprietary.security.service.UserService;
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
-
-    private static final String SPA_REDIRECT_COOKIE = "stirling_redirect_path";
-    private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
 
     private final LoginAttemptService loginAttemptService;
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
@@ -210,52 +204,28 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                         resolveOriginFromReferer(request)
                                                 .orElseGet(() -> buildOriginFromRequest(request)));
         clearRedirectCookie(response);
-        return origin + redirectPath + "#access_token=" + jwt;
+
+        // Extract nonce from state for CSRF validation in callback
+        String nonce = TauriOAuthUtils.extractNonceFromRequest(request);
+        String url = origin + redirectPath + "#access_token=" + jwt;
+        if (nonce != null) {
+            url +=
+                    "&nonce="
+                            + java.net.URLEncoder.encode(
+                                    nonce, java.nio.charset.StandardCharsets.UTF_8);
+        }
+        return url;
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
-        if (isTauriState(request)) {
-            return defaultTauriCallbackPath(contextPath);
+        if (TauriOAuthUtils.isTauriState(request)) {
+            return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
         }
-        return extractRedirectPathFromCookie(request)
-                .filter(path -> path.startsWith("/"))
-                .orElseGet(() -> defaultCallbackPath(contextPath));
-    }
-
-    private Optional<String> extractRedirectPathFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return Optional.empty();
+        String cookiePath = TauriOAuthUtils.extractRedirectPathFromCookie(request);
+        if (cookiePath != null && cookiePath.startsWith("/")) {
+            return cookiePath;
         }
-        for (Cookie cookie : cookies) {
-            if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
-                String value = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8).trim();
-                if (!value.isEmpty()) {
-                    return Optional.of(value);
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    private String defaultCallbackPath(String contextPath) {
-        if (contextPath == null
-                || contextPath.isBlank()
-                || "/".equals(contextPath)
-                || "\\".equals(contextPath)) {
-            return DEFAULT_CALLBACK_PATH;
-        }
-        return contextPath + DEFAULT_CALLBACK_PATH;
-    }
-
-    private String defaultTauriCallbackPath(String contextPath) {
-        String base = defaultCallbackPath(contextPath);
-        return base + "/tauri";
-    }
-
-    private boolean isTauriState(HttpServletRequest request) {
-        String state = request.getParameter("state");
-        return state != null && state.startsWith("tauri:");
+        return TauriOAuthUtils.defaultCallbackPath(contextPath);
     }
 
     private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
@@ -339,7 +309,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
     private void clearRedirectCookie(HttpServletResponse response) {
         ResponseCookie cookie =
-                ResponseCookie.from(SPA_REDIRECT_COOKIE, "")
+                ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
                         .path("/")
                         .sameSite("Lax")
                         .maxAge(0)

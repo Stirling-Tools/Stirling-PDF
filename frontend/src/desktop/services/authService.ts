@@ -521,10 +521,14 @@ export class AuthService {
 
   /**
    * Self-hosted SSO/OAuth2 flow for the desktop app.
-   * Opens a popup to the server's auth endpoint and listens for the AuthCallback page
-   * to postMessage the JWT back to the main window.
+1   * Opens the system browser and waits for a deep link callback with the JWT.
    */
   async loginWithSelfHostedOAuth(providerPath: string, serverUrl: string): Promise<UserInfo> {
+    // Generate and store nonce for CSRF protection
+    const nonce = crypto.randomUUID();
+    sessionStorage.setItem('oauth_nonce', nonce);
+    console.log('[Desktop AuthService] Generated OAuth nonce for CSRF protection');
+
     const trimmedServer = serverUrl.replace(/\/+$/, '');
     const fullUrl = providerPath.startsWith('http')
       ? providerPath
@@ -533,106 +537,26 @@ export class AuthService {
     try {
       const parsed = new URL(fullUrl);
       parsed.searchParams.set('tauri', '1');
+      parsed.searchParams.set('nonce', nonce);
       authUrl = parsed.toString();
     } catch {
       // ignore URL parsing failures
     }
 
-    // Force a real popup so the main webview stays on the app
-    const authWindow = window.open(authUrl, 'stirling-desktop-sso', 'width=900,height=900');
-
-    // Fallback: use Tauri shell.open and wait for deep link back
-    if (!authWindow) {
-      if (await this.openInSystemBrowser(authUrl)) {
-        return this.waitForDeepLinkCompletion(trimmedServer);
-      }
-      throw new Error('Unable to open browser window for SSO. Please allow pop-ups and try again.');
+    // Open in system browser and wait for deep link callback
+    if (await this.openInSystemBrowser(authUrl)) {
+      return this.waitForDeepLinkCompletion(trimmedServer);
     }
 
-    const expectedOrigin = new URL(authUrl).origin;
-
-    return new Promise<UserInfo>((resolve, reject) => {
-      let completed = false;
-
-      const cleanup = () => {
-        window.removeEventListener('message', handleMessage);
-        clearInterval(windowCheck);
-        clearTimeout(timeoutId);
-      };
-
-      const handleMessage = async (event: MessageEvent) => {
-        const isSameWindow = event.source === authWindow;
-        if (!isSameWindow || event.origin !== expectedOrigin) {
-          return;
-        }
-
-        const data = event.data as {
-          type?: string;
-          token?: string;
-          access_token?: string;
-          error?: string;
-        };
-        if (data?.type === 'stirling-desktop-sso-error') {
-          cleanup();
-          reject(new Error(data.error || 'Authentication was not successful.'));
-          return;
-        }
-        if (!data || data.type !== 'stirling-desktop-sso') {
-          return;
-        }
-
-        const token = data.token || data.access_token;
-        if (!token) {
-          cleanup();
-          reject(new Error('No token returned from SSO'));
-          return;
-        }
-
-        completed = true;
-        cleanup();
-
-        try {
-          const userInfo = await this.completeSelfHostedSession(trimmedServer, token);
-          try {
-            authWindow.close();
-          } catch (closeError) {
-            console.warn('Could not close auth window:', closeError);
-          }
-          resolve(userInfo);
-        } catch (err) {
-          reject(err instanceof Error ? err : new Error('Failed to complete login'));
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-
-      const windowCheck = window.setInterval(() => {
-        if (authWindow.closed && !completed) {
-          cleanup();
-          reject(new Error('Authentication window was closed before completion'));
-        }
-      }, 500);
-
-      const timeoutId = window.setTimeout(() => {
-        if (!completed) {
-          cleanup();
-          try {
-            authWindow.close();
-          } catch {
-            // ignore close errors
-          }
-          reject(new Error('SSO login timed out. Please try again.'));
-        }
-      }, 120_000);
-    });
+    throw new Error('Unable to open system browser for SSO. Please check your system settings.');
   }
 
   /**
-   * Wait for a deep-link event to complete self-hosted SSO (used when popup cannot open)
+   * Wait for a deep-link event to complete self-hosted SSO after system browser OAuth
    */
   private async waitForDeepLinkCompletion(serverUrl: string): Promise<UserInfo> {
     if (!isTauri()) {
-      throw new Error('Unable to open browser window for SSO. Please allow pop-ups and try again.');
+      throw new Error('Deep link authentication is only supported in Tauri desktop app.');
     }
 
     return new Promise<UserInfo>((resolve, reject) => {
@@ -643,6 +567,7 @@ export class AuthService {
         if (!completed) {
           completed = true;
           if (unlisten) unlisten();
+          sessionStorage.removeItem('oauth_nonce');
           reject(new Error('SSO login timed out. Please try again.'));
         }
       }, 120_000);
@@ -660,6 +585,7 @@ export class AuthService {
             completed = true;
             if (unlisten) unlisten();
             clearTimeout(timeoutId);
+            sessionStorage.removeItem('oauth_nonce');
             reject(new Error(error || 'Authentication was not successful.'));
             return;
           }
@@ -671,9 +597,25 @@ export class AuthService {
             return;
           }
 
+          // CSRF Protection: Validate nonce before accepting token
+          const nonceFromUrl = params.get('nonce') || parsed.searchParams.get('nonce');
+          const storedNonce = sessionStorage.getItem('oauth_nonce');
+
+          if (!nonceFromUrl || !storedNonce || nonceFromUrl !== storedNonce) {
+            completed = true;
+            if (unlisten) unlisten();
+            clearTimeout(timeoutId);
+            sessionStorage.removeItem('oauth_nonce');
+            console.error('[Desktop AuthService] Nonce validation failed - potential CSRF attack');
+            reject(new Error('Invalid authentication state. Nonce validation failed.'));
+            return;
+          }
+
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
+          sessionStorage.removeItem('oauth_nonce');
+          console.log('[Desktop AuthService] Nonce validated successfully');
 
           const userInfo = await this.completeSelfHostedSession(serverUrl, token);
           // Ensure connection mode is set and backend is ready (in case caller doesn't)
@@ -688,6 +630,7 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
+          sessionStorage.removeItem('oauth_nonce');
           reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
         }
       }).then((fn) => {

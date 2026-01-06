@@ -181,22 +181,21 @@ public class ReactRoutingController {
                         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
                         const searchParams = new URLSearchParams(window.location.search);
                         const token = hashParams.get('access_token') || hashParams.get('token') || searchParams.get('access_token');
-                        const isDesktopPopup = !!window.opener;
                         const serverUrl = %s;
 
                         if (token) {
-                          try { localStorage.setItem('stirling_jwt', token); } catch (_) {}
-                          try { window.dispatchEvent(new Event('jwt-available')); } catch (_) {}
+                          // Extract nonce from URL to send back to desktop app for validation
+                          const nonceFromUrl = hashParams.get('nonce') || searchParams.get('nonce');
 
-                          if (isDesktopPopup) {
-                            try { window.opener.postMessage({ type: 'stirling-desktop-sso', token }, '*'); } catch (_) {}
-                            setTimeout(() => { try { window.close(); } catch (_) {} }, 150);
-                            return;
-                          }
+                          console.log('[Fallback Auth] Token received, sending to desktop app via deep link');
 
-                          // Trigger deep link back to desktop app with token + server info
+                          // Send token + nonce via deep link to desktop app
+                          // Desktop app will validate nonce before accepting token
                           try {
-                            const deepLink = `stirlingpdf://auth/sso-complete?server=${encodeURIComponent(serverUrl)}#access_token=${encodeURIComponent(token)}&type=sso-selfhosted`;
+                            const encodedToken = encodeURIComponent(token);
+                            const encodedServer = encodeURIComponent(serverUrl);
+                            const encodedNonce = nonceFromUrl ? encodeURIComponent(nonceFromUrl) : '';
+                            const deepLink = `stirlingpdf://auth/sso-complete?server=${encodedServer}#access_token=${encodedToken}&nonce=${encodedNonce}&type=sso-selfhosted`;
                             window.location.href = deepLink;
                             return;
                           } catch (_) {
@@ -357,7 +356,6 @@ public class ReactRoutingController {
                             || hashParams.get('error')
                             || searchParams.get('error_description')
                             || hashParams.get('error_description');
-                          const isDesktopPopup = !!window.opener;
                           const serverUrl = %s;
                           const iconEl = document.getElementById('auth-icon');
                           const titleEl = document.getElementById('auth-title');
@@ -394,16 +392,24 @@ public class ReactRoutingController {
                           };
 
                           if (token) {
-                            try { localStorage.setItem('stirling_jwt', token); } catch (_) {}
-                            try { window.dispatchEvent(new Event('jwt-available')); } catch (_) {}
+                            // Extract nonce from URL to send back to desktop app for validation
+                            // (System browser doesn't have access to desktop app's sessionStorage)
+                            const nonceFromUrl = hashParams.get('nonce') || searchParams.get('nonce');
 
-                            if (isDesktopPopup) {
-                              try { window.opener.postMessage({ type: 'stirling-desktop-sso', token }, '*'); } catch (_) {}
-                              setTimeout(() => { try { window.close(); } catch (_) {} }, 150);
-                            }
+                            console.log('[Auth Callback] Token received, sending to desktop app via deep link');
 
+                            // Send token + nonce via deep link to desktop app
+                            // Desktop app will validate nonce before accepting token
                             setTimeout(() => {
-                              sendDeepLink('sso-selfhosted', token, 'access_token');
+                              try {
+                                const encodedToken = encodeURIComponent(token);
+                                const encodedServer = encodeURIComponent(serverUrl);
+                                const encodedNonce = nonceFromUrl ? encodeURIComponent(nonceFromUrl) : '';
+                                const deepLink = `stirlingpdf://auth/sso-complete?server=${encodedServer}#access_token=${encodedToken}&nonce=${encodedNonce}&type=sso-selfhosted`;
+                                window.location.href = deepLink;
+                              } catch (err) {
+                                console.error('[Auth Callback] Failed to trigger deep link:', err);
+                              }
                             }, 200);
 
                             return;
@@ -411,21 +417,11 @@ public class ReactRoutingController {
 
                           if (errorCode) {
                             const isCancelled = errorCode === 'access_denied';
-                            if (isDesktopPopup) {
-                              try {
-                                window.opener.postMessage(
-                                  { type: 'stirling-desktop-sso-error', error: errorCode },
-                                  '*'
-                                );
-                              } catch (_) {
-                                // ignore postMessage errors
-                              }
-                            }
                             sendDeepLink('sso-error', errorCode, 'error');
                             showError(
                               isCancelled
-                                ? 'Authentication was cancelled. You can close this window and try again.'
-                                : 'Authentication was not successful. You can close this window and try again.',
+                                ? 'Authentication was cancelled. You can close this window and return to the app.'
+                                : 'Authentication was not successful. You can close this window and return to the app.',
                               errorCode
                             );
                             return;

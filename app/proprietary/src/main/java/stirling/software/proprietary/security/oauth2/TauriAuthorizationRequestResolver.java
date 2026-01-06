@@ -46,8 +46,13 @@ public class TauriAuthorizationRequestResolver implements OAuth2AuthorizationReq
             return authorizationRequest;
         }
 
-        return OAuth2AuthorizationRequest.from(authorizationRequest)
-                .state(TAURI_STATE_PREFIX + state)
-                .build();
+        // Extract nonce from request for CSRF protection
+        String nonce = request.getParameter("nonce");
+        String customState = TAURI_STATE_PREFIX + state;
+        if (nonce != null && !nonce.isBlank()) {
+            customState = customState + ":" + nonce;
+        }
+
+        return OAuth2AuthorizationRequest.from(authorizationRequest).state(customState).build();
     }
 }
