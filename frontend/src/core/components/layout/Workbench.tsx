@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { Box } from '@mantine/core';
+import html2canvas from 'html2canvas';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
@@ -29,8 +30,10 @@ export default function Workbench() {
   const { selectors } = useFileState();
   const { workbench: currentView, viewerTransition } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
-  const setCurrentView = navActions.setWorkbench;
   const activeFiles = selectors.getFiles();
+
+  // Ref for capturing screenshot during TopControls transitions
+  const mainContentRef = useRef<HTMLDivElement>(null);
   const {
     previewFile,
     pageEditorFunctions,
@@ -83,9 +86,86 @@ export default function Workbench() {
       handleToolSelect('convert');
       sessionStorage.removeItem('previousMode');
     } else {
-      setCurrentView('fileEditor');
+      navActions.setWorkbench('fileEditor');
     }
   };
+
+  // Capture screenshot helper for TopControls transitions
+  const captureMainContentScreenshot = useCallback(async (): Promise<string | null> => {
+    if (!mainContentRef.current) return null;
+
+    try {
+      const canvas = await html2canvas(mainContentRef.current, {
+        backgroundColor: null,
+        scale: 1,
+        logging: false,
+        useCORS: true,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+        x: 0,
+        y: 0,
+      });
+
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.warn('Failed to capture screenshot:', error);
+      return null;
+    }
+  }, []);
+
+  // Wrapper for setCurrentView that adds transition when switching to viewer
+  const setCurrentView = useCallback(async (view: typeof currentView) => {
+    // If switching to viewer from fileEditor or pageEditor, add transition
+    if (view === 'viewer' && (currentView === 'fileEditor' || currentView === 'pageEditor')) {
+      const screenshot = await captureMainContentScreenshot();
+
+      // Get the active file's thumbnail for the zoom animation
+      const activeFile = activeFiles[activeFileIndex];
+      const activeStub = activeFile ? selectors.getStirlingFileStub(activeFile.fileId) : null;
+      const thumbnailUrl = activeStub?.thumbnailUrl || '';
+
+      if (screenshot && thumbnailUrl && activeFile) {
+        // Find the actual file card element in the DOM
+        const fileCard = document.querySelector(`[data-file-id="${activeFile.fileId}"]`) as HTMLElement;
+
+        let sourceRect: DOMRect;
+
+        if (fileCard) {
+          // Find the thumbnail image inside the card
+          const thumbnailImg = fileCard.querySelector('img') as HTMLImageElement;
+          if (thumbnailImg) {
+            sourceRect = thumbnailImg.getBoundingClientRect();
+          } else {
+            // Fallback to card position if no image found
+            sourceRect = fileCard.getBoundingClientRect();
+          }
+        } else {
+          // Fallback to center if card not found (might be scrolled out of view)
+          const centerX = window.innerWidth / 2;
+          const centerY = window.innerHeight / 2;
+          const thumbnailSize = 200;
+
+          sourceRect = new DOMRect(
+            centerX - thumbnailSize / 2,
+            centerY - thumbnailSize / 2,
+            thumbnailSize,
+            thumbnailSize
+          );
+        }
+
+        navActions.startViewerTransition(
+          sourceRect,
+          thumbnailUrl,
+          currentView,
+          screenshot
+        );
+      }
+    }
+
+    navActions.setWorkbench(view);
+  }, [currentView, navActions, captureMainContentScreenshot, activeFiles, activeFileIndex, selectors]);
 
   const renderMainContent = () => {
     // During viewer transition with screenshot, show screenshot overlay
@@ -256,6 +336,7 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
+        ref={mainContentRef}
         className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',

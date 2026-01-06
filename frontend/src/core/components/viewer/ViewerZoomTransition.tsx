@@ -133,8 +133,13 @@ export const ViewerZoomTransition: React.FC = () => {
     };
   }, [viewerTransition.isAnimating, actions]);
 
-  // Don't render if not animating or missing data
-  if (!viewerTransition.isAnimating || !viewerTransition.sourceRect || !viewerTransition.sourceThumbnailUrl) {
+  // Don't render if not animating
+  if (!viewerTransition.isAnimating) {
+    return null;
+  }
+
+  // If no sourceRect or thumbnail, we're transitioning from TopControls (screenshot only, no thumbnail zoom)
+  if (!viewerTransition.sourceRect || !viewerTransition.sourceThumbnailUrl) {
     return null;
   }
 
@@ -149,7 +154,7 @@ export const ViewerZoomTransition: React.FC = () => {
     height: `${sourceRect.height}px`,
     borderRadius: '8px',
     overflow: 'hidden',
-    zIndex: 1,
+    zIndex: 10000,
   };
 
   // Calculate target styles based on PDF page position (if found)
