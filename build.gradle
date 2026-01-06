@@ -24,7 +24,7 @@ ext {
     springSecuritySamlVersion = "6.5.6"
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.27.0"
-    googleJavaFormatVersion = "1.33.0"
+    googleJavaFormatVersion = "1.28.0"
     logback = "1.5.23"
     junitPlatformVersion = "1.12.2"
 }
