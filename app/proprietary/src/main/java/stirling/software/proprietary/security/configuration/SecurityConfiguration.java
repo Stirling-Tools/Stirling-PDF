@@ -1,5 +1,8 @@
 package stirling.software.proprietary.security.configuration;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,6 +23,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
@@ -29,6 +36,12 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,6 +59,7 @@ import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.proprietary.security.oauth2.TauriAuthorizationRequestResolver;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
@@ -82,6 +96,7 @@ public class SecurityConfiguration {
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -102,6 +117,7 @@ public class SecurityConfiguration {
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
                     OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
             stirling.software.proprietary.service.UserLicenseSettingsService
                     licenseSettingsService) {
         this.userDetailsService = userDetailsService;
@@ -120,6 +136,7 @@ public class SecurityConfiguration {
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+        this.clientRegistrationRepository = clientRegistrationRepository;
         this.licenseSettingsService = licenseSettingsService;
     }
 
@@ -201,7 +218,10 @@ public class SecurityConfiguration {
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
+                    .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class)
+                    .addFilterBefore(
+                            new TauriRedirectCookieFilter(),
+                            OAuth2AuthorizationRequestRedirectFilter.class);
 
             http.sessionManagement(
                     sessionManagement ->
@@ -290,6 +310,15 @@ public class SecurityConfiguration {
                 http.oauth2Login(
                         oauth2 -> {
                             oauth2.loginPage("/login")
+                                    .authorizationEndpoint(
+                                            authorizationEndpoint -> {
+                                                if (clientRegistrationRepository != null) {
+                                                    authorizationEndpoint
+                                                            .authorizationRequestResolver(
+                                                                    new TauriAuthorizationRequestResolver(
+                                                                            clientRegistrationRepository));
+                                                }
+                                            })
                                     .successHandler(
                                             new CustomOAuth2AuthenticationSuccessHandler(
                                                     loginAttemptService,
@@ -380,5 +409,36 @@ public class SecurityConfiguration {
                 userDetailsService,
                 jwtAuthenticationEntryPoint,
                 securityProperties);
+    }
+
+    private static class TauriRedirectCookieFilter extends OncePerRequestFilter {
+        private static final String REDIRECT_COOKIE = "stirling_redirect_path";
+        private static final String TAURI_REDIRECT_PATH = "/auth/callback?tauri=1";
+        private static final String TAURI_SESSION_KEY = "stirling_tauri_oauth";
+
+        @Override
+        protected void doFilterInternal(
+                HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                throws ServletException, IOException {
+            String tauriParam = request.getParameter("tauri");
+            if ("1".equals(tauriParam)) {
+                String uri = request.getRequestURI();
+                if (uri != null
+                        && (uri.contains("/oauth2/authorization/")
+                                || uri.contains("/saml2/authenticate/"))) {
+                    request.getSession(true).setAttribute(TAURI_SESSION_KEY, Boolean.TRUE);
+                    String encoded = URLEncoder.encode(TAURI_REDIRECT_PATH, StandardCharsets.UTF_8);
+                    ResponseCookie cookie =
+                            ResponseCookie.from(REDIRECT_COOKIE, encoded)
+                                    .path("/")
+                                    .sameSite("Lax")
+                                    .maxAge(300)
+                                    .build();
+                    response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                }
+            }
+
+            filterChain.doFilter(request, response);
+        }
     }
 }

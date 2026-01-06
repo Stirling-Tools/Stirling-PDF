@@ -214,6 +214,9 @@ public class CustomOAuth2AuthenticationSuccessHandler
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
+        if (isTauriState(request)) {
+            return defaultTauriCallbackPath(contextPath);
+        }
         return extractRedirectPathFromCookie(request)
                 .filter(path -> path.startsWith("/"))
                 .orElseGet(() -> defaultCallbackPath(contextPath));
@@ -243,6 +246,16 @@ public class CustomOAuth2AuthenticationSuccessHandler
             return DEFAULT_CALLBACK_PATH;
         }
         return contextPath + DEFAULT_CALLBACK_PATH;
+    }
+
+    private String defaultTauriCallbackPath(String contextPath) {
+        String base = defaultCallbackPath(contextPath);
+        return base + "/tauri";
+    }
+
+    private boolean isTauriState(HttpServletRequest request) {
+        String state = request.getParameter("state");
+        return state != null && state.startsWith("tauri:");
     }
 
     private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
