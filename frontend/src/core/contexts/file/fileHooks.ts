@@ -42,10 +42,12 @@ export function useCurrentFile(): { file?: File; record?: StirlingFileStub } {
   const { state, selectors } = useFileState();
 
   const primaryFileId = state.files.ids[0];
+  const primaryFileRecord = primaryFileId ? state.files.byId[primaryFileId] : undefined;
+
   return useMemo(() => ({
     file: primaryFileId ? selectors.getFile(primaryFileId) : undefined,
     record: primaryFileId ? selectors.getStirlingFileStub(primaryFileId) : undefined
-  }), [primaryFileId, selectors]);
+  }), [primaryFileId, primaryFileRecord, selectors]);
 }
 
 /**
@@ -58,7 +60,7 @@ export function useFileSelection() {
   // Memoize selected files to avoid recreating arrays
   const selectedFiles = useMemo(() => {
     return selectors.getSelectedFiles();
-  }, [state.ui.selectedFileIds, selectors]);
+  }, [state.ui.selectedFileIds, state.files.byId, selectors]);
 
   return useMemo(() => ({
     selectedFiles,
@@ -112,12 +114,13 @@ export function useFileUI() {
  * Hook for specific file by ID (optimized for individual file access)
  */
 export function useStirlingFileStub(fileId: FileId): { file?: File; record?: StirlingFileStub } {
-  const { selectors } = useFileState();
+  const { state, selectors } = useFileState();
+  const fileRecord = state.files.byId[fileId];
 
   return useMemo(() => ({
     file: selectors.getFile(fileId),
     record: selectors.getStirlingFileStub(fileId)
-  }), [fileId, selectors]);
+  }), [fileId, fileRecord, selectors]);
 }
 
 /**
@@ -130,7 +133,7 @@ export function useAllFiles(): { files: StirlingFile[]; fileStubs: StirlingFileS
     files: selectors.getFiles(),
     fileStubs: selectors.getStirlingFileStubs(),
     fileIds: state.files.ids
-  }), [state.files.ids, selectors]);
+  }), [state.files.ids, state.files.byId, selectors]);
 }
 
 /**
@@ -143,7 +146,7 @@ export function useSelectedFiles(): { selectedFiles: StirlingFile[]; selectedFil
     selectedFiles: selectors.getSelectedFiles(),
     selectedFileStubs: selectors.getSelectedStirlingFileStubs(),
     selectedFileIds: state.ui.selectedFileIds
-  }), [state.ui.selectedFileIds, selectors]);
+  }), [state.ui.selectedFileIds, state.files.byId, selectors]);
 }
 
 // Navigation management removed - moved to NavigationContext
