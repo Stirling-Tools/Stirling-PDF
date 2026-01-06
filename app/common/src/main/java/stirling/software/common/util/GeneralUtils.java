@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -332,6 +334,33 @@ public class GeneralUtils {
     }
 
     /**
+     * Checks whether a URL is safe for server-side fetches without making a network request.
+     *
+     * @param urlStr the URL to validate
+     * @return {@code true} if the URL uses http/https and resolves to a non-sensitive address
+     */
+    public boolean isUrlAllowedForServerFetch(String urlStr) {
+        if (urlStr == null || urlStr.isBlank()) {
+            return false;
+        }
+        try {
+            URL url = URI.create(urlStr).toURL();
+            String protocol = url.getProtocol();
+            if (!"http".equals(protocol) && !"https".equals(protocol)) {
+                return false;
+            }
+            String host = url.getHost();
+            if (host == null || host.isBlank()) {
+                return false;
+            }
+            return !isDisallowedNetworkLocation(host);
+        } catch (Exception e) {
+            log.debug("URL {} is not allowed for server fetch: {}", urlStr, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Determines whether the specified host resolves to a disallowed network location, such as
      * local, private, multicast, or reserved ranges. Excessive DNS results are also blocked.
      *
@@ -538,42 +567,11 @@ public class GeneralUtils {
         sizeStr = sizeStr.replace(",", ".").replace(" ", "");
 
         try {
-            if (sizeStr.endsWith("TB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024L
-                                * 1024L
-                                * 1024L
-                                * 1024L);
-            } else if (sizeStr.endsWith("GB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024L
-                                * 1024L
-                                * 1024L);
-            } else if (sizeStr.endsWith("MB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024L
-                                * 1024L);
-            } else if (sizeStr.endsWith("KB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024L);
-            } else if (!sizeStr.isEmpty() && sizeStr.charAt(sizeStr.length() - 1) == 'B') {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
-            } else {
-                // Use provided default unit or fall back to MB
-                String unit = defaultUnit != null ? defaultUnit.toUpperCase(Locale.ROOT) : "MB";
-                double value = Double.parseDouble(sizeStr);
-                return switch (unit) {
-                    case "TB" -> (long) (value * 1024L * 1024L * 1024L * 1024L);
-                    case "GB" -> (long) (value * 1024L * 1024L * 1024L);
-                    case "MB" -> (long) (value * 1024L * 1024L);
-                    case "KB" -> (long) (value * 1024L);
-                    case "B" -> (long) value;
-                    default -> (long) (value * 1024L * 1024L); // Default to MB
-                };
+            Long bytes = parseSizeToBytes(sizeStr, defaultUnit);
+            if (bytes == null) {
+                log.warn("Failed to parse size string '{}': value out of range or invalid", sizeStr);
             }
+            return bytes;
         } catch (NumberFormatException e) {
             log.warn("Failed to parse size string '{}': {}", sizeStr, e.getMessage());
             return null;
@@ -594,6 +592,44 @@ public class GeneralUtils {
     private boolean isValidSizeUnit(String unit) {
         // Use a precomputed Set for O(1) lookup, normalize using a locale-safe toUpperCase
         return unit != null && VALID_SIZE_UNITS.contains(unit.toUpperCase(Locale.ROOT));
+    }
+
+    private Long parseSizeToBytes(String sizeStr, String defaultUnit) {
+        if (sizeStr.endsWith("TB")) {
+            return convertDecimalToBytes(sizeStr.substring(0, sizeStr.length() - 2), 1024L * 1024L
+                    * 1024L * 1024L);
+        } else if (sizeStr.endsWith("GB")) {
+            return convertDecimalToBytes(
+                    sizeStr.substring(0, sizeStr.length() - 2), 1024L * 1024L * 1024L);
+        } else if (sizeStr.endsWith("MB")) {
+            return convertDecimalToBytes(sizeStr.substring(0, sizeStr.length() - 2), 1024L * 1024L);
+        } else if (sizeStr.endsWith("KB")) {
+            return convertDecimalToBytes(sizeStr.substring(0, sizeStr.length() - 2), 1024L);
+        } else if (!sizeStr.isEmpty() && sizeStr.charAt(sizeStr.length() - 1) == 'B') {
+            return convertDecimalToBytes(sizeStr.substring(0, sizeStr.length() - 1), 1L);
+        }
+        // Use provided default unit or fall back to MB
+        String unit = defaultUnit != null ? defaultUnit.toUpperCase(Locale.ROOT) : "MB";
+        return switch (unit) {
+            case "TB" -> convertDecimalToBytes(sizeStr, 1024L * 1024L * 1024L * 1024L);
+            case "GB" -> convertDecimalToBytes(sizeStr, 1024L * 1024L * 1024L);
+            case "MB" -> convertDecimalToBytes(sizeStr, 1024L * 1024L);
+            case "KB" -> convertDecimalToBytes(sizeStr, 1024L);
+            case "B" -> convertDecimalToBytes(sizeStr, 1L);
+            default -> convertDecimalToBytes(sizeStr, 1024L * 1024L); // Default to MB
+        };
+    }
+
+    private Long convertDecimalToBytes(String value, long multiplier) {
+        BigDecimal parsed = new BigDecimal(value);
+        if (parsed.signum() < 0) {
+            return null;
+        }
+        BigDecimal bytes = parsed.multiply(BigDecimal.valueOf(multiplier));
+        if (bytes.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) > 0) {
+            return null;
+        }
+        return bytes.setScale(0, RoundingMode.DOWN).longValue();
     }
 
     /* Enhanced byte formatting with TB/PB support and better precision. */

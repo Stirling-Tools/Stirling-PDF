@@ -952,6 +952,12 @@ public class CompressController {
         boolean autoMode = false;
         if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1) {
             expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
+            if (expectedOutputSize == null || expectedOutputSize <= 0) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "expected output size: " + expectedOutputSizeString);
+            }
             autoMode = true;
         }
 
