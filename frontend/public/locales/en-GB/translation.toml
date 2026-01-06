@@ -2655,6 +2655,7 @@ chooseJksFile = "Choose JKS File"
 chooseP12File = "Choose PKCS12 File"
 choosePfxFile = "Choose PFX File"
 choosePrivateKey = "Choose Private Key File"
+choosePkcs11Config = "Choose PKCS#11 Config File"
 location = "Location"
 logoTitle = "Logo"
 name = "Name"
@@ -2663,8 +2664,18 @@ pageNumber = "Page Number"
 password = "Certificate Password"
 passwordOptional = "Leave empty if no password"
 reason = "Reason"
+refreshStoreCertificates = "Refresh"
+selectStoreCertificate = "Select a certificate"
 serverCertMessage = "Using server certificate - no files or password required"
 showLogo = "Show Logo"
+storeCertificateExpires = "Expires"
+storeCertificateIssuer = "Issuer"
+storeCertificateSubject = "Subject"
+storeCertificates = "Available Certificates"
+storeCertificatesError = "Failed to load certificates"
+loadingStoreCertificates = "Loading certificates..."
+pin = "Token PIN / Password"
+pinOptional = "Leave empty if not required"
 
 [certSign.signMode]
 stepTitle = "Sign Mode"
@@ -2692,6 +2703,11 @@ text = "Need recipient <b>Trusted</b> status? <b>Manual</b>. Need a fast, tamper
 
 [certSign.certTypeStep]
 stepTitle = "Certificate Format"
+
+[certSign.certType]
+windowsStore = "Windows Store"
+macKeychain = "macOS Keychain"
+pkcs11 = "PKCS#11"
 
 [certSign.certFiles]
 stepTitle = "Certificate Files"

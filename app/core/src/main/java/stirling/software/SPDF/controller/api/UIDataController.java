@@ -10,7 +10,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
-import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -20,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Stream;
 
-import org.apache.commons.io.FileUtils;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -32,6 +30,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,6 +46,8 @@ import stirling.software.SPDF.model.Dependency;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.model.api.security.CertStoreEntriesRequest;
 import stirling.software.SPDF.service.SharedSignatureService;
+import stirling.software.SPDF.util.DesktopModeUtils;
+import stirling.software.SPDF.util.Pkcs11ProviderLoader;
 import stirling.software.common.annotations.api.UiDataApi;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -218,8 +219,7 @@ public class UIDataController {
             })
     @Operation(summary = "Get available certificates from OS-backed stores")
     public ResponseEntity<CertificateStoreEntriesData> getCertificateStoreEntries(
-            @org.springframework.web.bind.annotation.ModelAttribute CertStoreEntriesRequest request)
-            throws Exception {
+            @ModelAttribute CertStoreEntriesRequest request) throws Exception {
         String certType = request.getCertType();
         MultipartFile pkcs11ConfigFile = request.getPkcs11ConfigFile();
         String password = request.getPassword();
@@ -270,9 +270,7 @@ public class UIDataController {
     }
 
     private void ensureDesktopMode(String certType) {
-        boolean isDesktopMode =
-                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
-        if (!isDesktopMode) {
+        if (!DesktopModeUtils.isDesktopMode()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidArgument",
                     "Invalid argument: {0}",
@@ -299,7 +297,7 @@ public class UIDataController {
                             "Invalid argument: {0}",
                             "PKCS11 configuration file is required");
                 }
-                Provider pkcs11Provider = loadPkcs11Provider(pkcs11ConfigFile);
+                Provider pkcs11Provider = Pkcs11ProviderLoader.loadProvider(pkcs11ConfigFile);
                 KeyStore pkcs11Store = KeyStore.getInstance("PKCS11", pkcs11Provider);
                 pkcs11Store.load(null, password != null ? password.toCharArray() : null);
                 return pkcs11Store;
@@ -309,21 +307,6 @@ public class UIDataController {
                         "Invalid argument: {0}",
                         "certificate store type: " + certType);
         }
-    }
-
-    private Provider loadPkcs11Provider(MultipartFile configFile) throws IOException {
-        Provider baseProvider = Security.getProvider("SunPKCS11");
-        if (baseProvider == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidArgument",
-                    "Invalid argument: {0}",
-                    "SunPKCS11 provider is not available in this JVM");
-        }
-        java.io.File tempFile = java.io.File.createTempFile("spdf-pkcs11", ".cfg");
-        FileUtils.copyInputStreamToFile(configFile.getInputStream(), tempFile);
-        Provider provider = baseProvider.configure(tempFile.getAbsolutePath());
-        Security.addProvider(provider);
-        return provider;
     }
 
     private CertificateStoreEntry buildCertificateEntry(String alias, X509Certificate certificate) {

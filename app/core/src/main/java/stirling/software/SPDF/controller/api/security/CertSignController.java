@@ -73,6 +73,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.util.DesktopModeUtils;
+import stirling.software.SPDF.util.Pkcs11ProviderLoader;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
@@ -260,7 +262,7 @@ public class CertSignController {
                                 pkcs11ConfigFile,
                                 "PKCS11 configuration",
                                 "PKCS11 configuration file is required");
-                Provider pkcs11Provider = loadPkcs11Provider(pkcs11ConfigFile);
+                Provider pkcs11Provider = Pkcs11ProviderLoader.loadProvider(pkcs11ConfigFile);
                 ks = KeyStore.getInstance("PKCS11", pkcs11Provider);
                 ks.load(null, password != null ? password.toCharArray() : null);
                 aliasRequired = true;
@@ -312,9 +314,7 @@ public class CertSignController {
     }
 
     private void ensureDesktopMode(String certType) {
-        boolean isDesktopMode =
-                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
-        if (!isDesktopMode) {
+        if (!DesktopModeUtils.isDesktopMode()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidArgument",
                     "Invalid argument: {0}",
@@ -365,21 +365,6 @@ public class CertSignController {
         char[] entryPassword = password != null ? password.toCharArray() : new char[0];
         filtered.setKeyEntry(certAlias, privateKey, entryPassword, chain);
         return new KeyStoreSelection(filtered, entryPassword);
-    }
-
-    private Provider loadPkcs11Provider(MultipartFile configFile) throws IOException {
-        Provider baseProvider = Security.getProvider("SunPKCS11");
-        if (baseProvider == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidArgument",
-                    "Invalid argument: {0}",
-                    "SunPKCS11 provider is not available in this JVM");
-        }
-        File tempFile = File.createTempFile("spdf-pkcs11", ".cfg");
-        FileUtils.copyInputStreamToFile(configFile.getInputStream(), tempFile);
-        Provider provider = baseProvider.configure(tempFile.getAbsolutePath());
-        Security.addProvider(provider);
-        return provider;
     }
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
