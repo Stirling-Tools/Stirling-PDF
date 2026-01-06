@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-parent</artifactId>
+    <version>2.0.17</version>
+    <relativePath>../parent/pom.xml</relativePath>
+  </parent>
+
+  <artifactId>slf4j-api</artifactId>
+
+  <packaging>jar</packaging>
+  <name>SLF4J API Module</name>
+  <description>The slf4j API</description>
+
+  <url>http://www.slf4j.org</url>
+
+  <properties>
+    <module-name>org.slf4j</module-name>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>once</forkMode>
+          <reportFormat>plain</reportFormat>
+          <trimStackTrace>false</trimStackTrace>
+          <excludes>
+            <exclude>**/AllTest.java</exclude>
+            <exclude>**/PackageTest.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>bundle-test-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Import-Package>org.slf4j.spi;version="${range;[===,+);${version_cleanup;${project.version}}}"</Import-Package>
+            <!-- Export the client/user package of slf4j-api version 1 to make the slf4j-api bundle in version 2 usable for bundles that only import slf4j-1.x -->
+            <_exportcontents><![CDATA[
+              *,\
+              org.slf4j;version="${latest.1.version}",\
+              org.slf4j.helpers;version="${latest.1.version}"
+            ]]></_exportcontents>
+            <Require-Capability><![CDATA[
+              osgi.extender;filter:="(&(osgi.extender=osgi.serviceloader.processor)(version>=1.0.0)(!(version>=2.0.0)))",
+              osgi.serviceloader;filter:="(osgi.serviceloader=org.slf4j.spi.SLF4JServiceProvider)";osgi.serviceloader="org.slf4j.spi.SLF4JServiceProvider"
+            ]]></Require-Capability>
+          </instructions>
+        </configuration>
+      </plugin>
+
+    </plugins>
+
+  </build>
+
+</project>

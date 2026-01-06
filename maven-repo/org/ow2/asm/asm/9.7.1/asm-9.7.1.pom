@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.ow2.asm</groupId>
+  <artifactId>asm</artifactId>
+  <version>9.7.1</version>
+  <name>asm</name>
+  <description>ASM, a very small and fast Java bytecode manipulation framework</description>
+  <url>http://asm.ow2.io/</url>
+  <inceptionYear>2000</inceptionYear>
+  <organization>
+    <name>OW2</name>
+    <url>http://www.ow2.org/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>BSD-3-Clause</name>
+      <url>https://asm.ow2.io/license.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>ebruneton</id>
+      <name>Eric Bruneton</name>
+      <email>ebruneton@free.fr</email>
+      <roles>
+        <role>Creator</role>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>eu</id>
+      <name>Eugene Kuleshov</name>
+      <email>eu@javatx.org</email>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>forax</id>
+      <name>Remi Forax</name>
+      <email>forax@univ-mlv.fr</email>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+  </developers>
+  <mailingLists>
+    <mailingList>
+      <name>ASM Users List</name>
+      <subscribe>https://mail.ow2.org/wws/subscribe/asm</subscribe>
+      <post>asm@objectweb.org</post>
+      <archive>https://mail.ow2.org/wws/arc/asm/</archive>
+    </mailingList>
+    <mailingList>
+      <name>ASM Team List</name>
+      <subscribe>https://mail.ow2.org/wws/subscribe/asm-team</subscribe>
+      <post>asm-team@objectweb.org</post>
+      <archive>https://mail.ow2.org/wws/arc/asm-team/</archive>
+    </mailingList>
+  </mailingLists>
+  <scm>
+    <connection>scm:git:https://gitlab.ow2.org/asm/asm/</connection>
+    <developerConnection>scm:git:https://gitlab.ow2.org/asm/asm/</developerConnection>
+    <url>https://gitlab.ow2.org/asm/asm/</url>
+  </scm>
+  <issueManagement>
+    <url>https://gitlab.ow2.org/asm/asm/issues</url>
+  </issueManagement>
+  <parent>
+    <groupId>org.ow2</groupId>
+    <artifactId>ow2</artifactId>
+    <version>1.5.1</version>
+  </parent>
+</project>

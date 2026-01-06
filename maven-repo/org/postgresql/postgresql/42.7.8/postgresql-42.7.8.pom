@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.postgresql</groupId>
+  <artifactId>postgresql</artifactId>
+  <version>42.7.8</version>
+  <name>PostgreSQL JDBC Driver</name>
+  <description>PostgreSQL JDBC Driver Postgresql</description>
+  <url>https://jdbc.postgresql.org</url>
+  <inceptionYear>1997</inceptionYear>
+  <organization>
+    <name>PostgreSQL Global Development Group</name>
+    <url>https://jdbc.postgresql.org/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>BSD-2-Clause</name>
+      <url>https://jdbc.postgresql.org/about/license.html</url>
+      <distribution>repo</distribution>
+      <comments>BSD-2-Clause, copyright PostgreSQL Global Development Group</comments>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>davecramer</id>
+      <name>Dave Cramer</name>
+    </developer>
+    <developer>
+      <id>jurka</id>
+      <name>Kris Jurka</name>
+    </developer>
+    <developer>
+      <id>oliver</id>
+      <name>Oliver Jowett</name>
+    </developer>
+    <developer>
+      <id>ringerc</id>
+      <name>Craig Ringer</name>
+    </developer>
+    <developer>
+      <id>vlsi</id>
+      <name>Vladimir Sitnikov</name>
+    </developer>
+    <developer>
+      <id>bokken</id>
+      <name>Brett Okken</name>
+    </developer>
+  </developers>
+  <mailingLists>
+    <mailingList>
+      <name>PostgreSQL JDBC development list</name>
+      <subscribe>https://lists.postgresql.org/</subscribe>
+      <unsubscribe>https://lists.postgresql.org/unsubscribe/</unsubscribe>
+      <post>pgsql-jdbc@postgresql.org</post>
+      <archive>https://www.postgresql.org/list/pgsql-jdbc/</archive>
+    </mailingList>
+  </mailingLists>
+  <scm>
+    <connection>scm:git:https://github.com/pgjdbc/pgjdbc.git</connection>
+    <developerConnection>scm:git:https://github.com/pgjdbc/pgjdbc.git</developerConnection>
+    <url>https://github.com/pgjdbc/pgjdbc</url>
+  </scm>
+  <issueManagement>
+    <system>GitHub issues</system>
+    <url>https://github.com/pgjdbc/pgjdbc/issues</url>
+  </issueManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>checker-qual</artifactId>
+      <version>3.49.5</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.waffle</groupId>
+      <artifactId>waffle-jna</artifactId>
+      <version>1.9.1</version>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+</project>

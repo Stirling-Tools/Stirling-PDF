@@ -1,0 +1,41 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>net.java.dev.stax-utils</groupId>
+  <artifactId>stax-utils</artifactId>
+  <version>20070216</version>
+  <packaging>jar</packaging>
+  <name>StAX Utilities Project</name>
+  <description>Provides a set of utility classes to integrate StAX into existing XML processing applications.</description>
+  <url>http://java.net/projects/stax-utils/</url>
+  <licenses>
+    <license>
+      <name>BSD</name>
+      <url>http://www.opensource.org/licenses/bsd-license.html</url>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://svn.java.net/svn/stax-utils~svn/trunk/</url>
+	<connection>scm:svn:https://svn.java.net/svn/stax-utils~svn/trunk/</connection>
+  </scm>
+  <developers>
+    <developer>
+	  <id>neerajbj</id>
+	  <name>neerajbj</name>
+	</developer>
+    <developer>
+	  <id>ryan_shoemaker</id>
+	  <name>Ryan Shoemaker</name>
+	</developer>
+    <developer>
+	  <id>kohsuke</id>
+	  <name>Kohsuke Kawaguchi</name>
+	</developer>
+  </developers>
+  <dependencies>
+    <dependency>
+      <groupId>com.bea.xml</groupId>
+      <artifactId>jsr173-ri</artifactId>
+      <version>1.0</version>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,0 +1,207 @@
+<!--
+
+    This file is part of veraPDF Validation Model API, a module of the veraPDF project.
+    Copyright (c) 2015-2025, veraPDF Consortium <info@verapdf.org>
+    All rights reserved.
+
+    veraPDF Validation Model API is free software: you can redistribute it and/or modify
+    it under the terms of either:
+
+    The GNU General public license GPLv3+.
+    You should have received a copy of the GNU General Public License
+    along with veraPDF Validation Model API as the LICENSE.GPL file in the root of the source
+    tree.  If not, see http://www.gnu.org/licenses/ or
+    https://www.gnu.org/licenses/gpl-3.0.en.html.
+
+    The Mozilla Public License MPLv2+.
+    You should have received a copy of the Mozilla Public License along with
+    veraPDF Validation Model API as the LICENSE.MPL file in the root of the source tree.
+    If a copy of the MPL was not distributed with this file, you can obtain one at
+    http://mozilla.org/MPL/2.0/.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.verapdf</groupId>
+    <artifactId>verapdf-parent</artifactId>
+    <version>1.28.2</version>
+    <relativePath />
+  </parent>
+
+  <groupId>org.verapdf</groupId>
+  <artifactId>pdf-model</artifactId>
+  <version>1.28.2</version>
+
+  <name>veraPDF Validation Model API</name>
+  <description>Java interfaces for the veraPDF Validation model, generated from the Xtext DSL.</description>
+
+  <url>https://github.com/veraPDF/veraPDF-model/</url>
+  <inceptionYear>2015</inceptionYear>
+
+  <scm>
+    <url>https://github.com/veraPDF/veraPDF-model/</url>
+    <connection>scm:git:https://github.com/veraPDF/veraPDF-model.git</connection>
+    <developerConnection>scm:git:git@github.com:veraPDF/veraPDF-model.git</developerConnection>
+  </scm>
+
+  <repositories>
+    <repository>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>vera-dev</id>
+      <name>Vera development</name>
+      <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>vera-dev</id>
+      <name>Vera development</name>
+      <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <properties>
+    <verapdf.model.syntax.version>1.28.2</verapdf.model.syntax.version>
+    <xtext.version>2.26.0</xtext.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>clean</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>generated-model/java/</directory>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.xtext</groupId>
+        <artifactId>xtext-maven-plugin</artifactId>
+        <version>${xtext.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <languages>
+            <language>
+              <setup>org.verapdf.ModelStandaloneSetup</setup>
+              <outputConfigurations>
+                <outputConfiguration>
+                  <outputDirectory>generated-model/java/</outputDirectory>
+                </outputConfiguration>
+              </outputConfigurations>
+            </language>
+          </languages>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>org.verapdf</artifactId>
+            <version>${verapdf.model.syntax.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.xtend</groupId>
+        <artifactId>xtend-maven-plugin</artifactId>
+        <version>${xtext.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>xtend-install-debug-info</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-source-plugin</artifactId>
+         <inherited>true</inherited>
+         <executions>
+           <!-- here we override the super-pom attach-sources executionid which
+           calls sources:jar goal. That goals forks the lifecycle, causing
+           the generate-sources phase to be called twice for the install goal.
+           This causes any other plugin bound to the generate-sources phase to
+           be called twice which usually has nasty side effects, let alone
+           creating duplicate processing and longer build times. -->
+           <execution>
+             <id>attach-sources</id>
+             <phase>DISABLE_FORKED_LIFECYCLE_MSOURCES-13</phase>
+           </execution>
+           <execution>
+             <id>attach-sources-no-fork</id>
+             <inherited>true</inherited>
+             <goals>
+               <goal>jar-no-fork</goal>
+             </goals>
+           </execution>
+         </executions>
+        </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>generated-model/java/</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>Java 1.8</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <properties>
+        <additionalparam>-Xdoclint:none</additionalparam>
+      </properties>
+    </profile>
+  </profiles>
+
+</project>

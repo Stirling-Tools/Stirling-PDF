@@ -1,0 +1,231 @@
+<!--
+~ Copyright 2015-2025 Ping Identity Corporation
+~
+~ This program is free software; you can redistribute it and/or modify
+~ it under the terms of the GNU General Public License (GPLv2 only)
+~ or the terms of the GNU Lesser General Public License (LGPLv2.1 only)
+~ as published by the Free Software Foundation.
+~
+~ This program is distributed in the hope that it will be useful,
+~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+~ GNU General Public License for more details.
+~
+~ You should have received a copy of the GNU General Public License
+~ along with this program; if not, see <http://www.gnu.org/licenses>.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+      <groupId>com.unboundid.product.scim2</groupId>
+      <artifactId>scim2-parent</artifactId>
+      <version>4.1.0</version>
+      <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>scim2-sdk-common</artifactId>
+    <packaging>jar</packaging>
+    <name>UnboundID SCIM2 SDK Common</name>
+    <description>
+      The UnboundID SCIM 2 SDK is a comprehensive Java library that supports the
+      SCIM protocol and communication with SCIM services. This SDK assists with
+      managing requests, responses, and errors, and it also offers support for
+      SCIM filter expressions, attribute paths, and CRUD operations on SCIM data.
+      See https://simplecloud.info for more information.
+    </description>
+    <inceptionYear>2015</inceptionYear>
+    <url>https://github.com/pingidentity/scim2</url>
+    <scm>
+      <url>https://github.com/pingidentity/scim2</url>
+      <connection>scm:git:https://github.com/pingidentity/scim2</connection>
+    </scm>
+    <organization>
+      <name>Ping Identity Corporation</name>
+      <url>https://www.pingidentity.com</url>
+    </organization>
+    <developers>
+      <developer>
+        <id>unboundid</id>
+        <name>UnboundID Corp.</name>
+        <email>support@pingidentity.com</email>
+      </developer>
+    </developers>
+    <licenses>
+      <license>
+        <name>GNU General Public License version 2 (GPLv2)</name>
+        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+      </license>
+      <license>
+        <name>GNU Lesser General Public License version 2.1 (LGPLv2.1)</name>
+        <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
+      </license>
+      <license>
+        <name>UnboundID SCIM2 SDK Free Use License</name>
+        <url>https://github.com/pingidentity/scim2</url>
+        <comments>This license is available in the source code repository at the provided URL.</comments>
+      </license>
+    </licenses>
+
+    <properties>
+      <build.product.name>${project.name}</build.product.name>
+      <build.product.short.name>${project.artifactId}</build.product.short.name>
+      <build.version>${project.version}</build.version>
+      <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>gen-sources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <!-- Generate the Version.java file. -->
+                <copy todir="target/java-gen">
+                  <fileset dir="src/main/stubs" />
+                  <globmapper from="*.java.stub" to="*.java" />
+                  <filterset>
+                    <filter token="PRODUCT_NAME" value="${build.product.name}" />
+                    <filter token="SHORT_NAME" value="${build.product.short.name}" />
+                    <filter token="VERSION" value="${build.version}" />
+                    <filter token="BUILD_TIMESTAMP" value="${build.timestamp}" />
+                    <filter token="GIT_PATH" value="${scmBranch}" />
+                    <filter token="GIT_REVISION" value="${buildNumber}" />
+                  </filterset>
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- A jar of the project sources is required for publishing to
+            Maven Central. -->
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <archive>
+                <addMavenDescriptor>false</addMavenDescriptor>
+              </archive>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-test-jar</id>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-javadoc-archive</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <quiet>true</quiet>
+              <linksource>true</linksource>
+              <excludePackageNames>${javadoc.excludedPackageNames}</excludePackageNames>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-revision-number</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>create-timestamp</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>create-timestamp</goal>
+            </goals>
+            <configuration>
+              <timestampFormat>yyyy-MM-dd HH:mm:ss</timestampFormat>
+              <timestampPropertyName>build.timestamp</timestampPropertyName>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-generated-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>target/java-gen</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-parent</artifactId>
+        <version>1.5.20</version>
+    </parent>
+
+    <artifactId>logback-core</artifactId>
+    <packaging>jar</packaging>
+    <name>Logback Core Module</name>
+    <description>logback-core module</description>
+
+    <properties>
+        <module-name>ch.qos.logback.core</module-name>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>commons-compiler</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.fusesource.jansi</groupId>
+            <artifactId>jansi</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.tukaani</groupId>
+            <artifactId>xz</artifactId>
+            <!-- exclude xz from the runtime during tests -->
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.mail</groupId>
+            <artifactId>jakarta.mail-api</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <executions>
+
+                    <execution>
+                        <id>default-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>${jdk.version}</release>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>java21-compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>21</release>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/main/java21</compileSourceRoot>
+                            </compileSourceRoots>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>test-compile</phase>
+                        <configuration>
+                            <testExcludes>
+                                <exclude>**/COWArrayListConcurrencyTest.java</exclude>
+                            </testExcludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <!--<argLine>XXadd-opens ch.qos.logback.core/ch.qos.logback.core.testUtil=java.naming</argLine>-->
+                            <!--<argLine>add-opens ch.qos.logback.core/ch.qos.logback.core.testUtil=java.naming
+                               ==-add-opens org.tukaani.xz/org.tukaani.xz=ch.qos.logback.core
+                                         add-reads ch.qos.logback.core=ALL-UNNAMED</argLine>-->
+                            <argLine>
+                                --add-opens ch.qos.logback.core/ch.qos.logback.core.testUtil=java.naming
+
+                                --add-reads ch.qos.logback.core=ALL-UNNAMED
+                            </argLine>
+                            <parallel>classes</parallel>
+                            <threadCount>20</threadCount>
+                            <!--<useUnlimitedThreads>false</useUnlimitedThreads>-->
+                            <forkCount>5</forkCount>
+                            <reuseForks>true</reuseForks>
+                            <reportFormat>plain</reportFormat>
+                            <trimStackTrace>false</trimStackTrace>
+                            <!-- See https://issues.apache.org/jira/browse/SUREFIRE-1265 -->
+                            <childDelegation>true</childDelegation>
+                            <excludes>
+                                <exclude>**/All*Test.java</exclude>
+                                <exclude>**/PackageTest.java</exclude>
+                                <!-- ConsoleAppenderTest redirects System.out which is not well tolerated by Maven -->
+                                <exclude>**/ConsoleAppenderTest.java</exclude>
+                                <exclude>ch.qos.logback.core.blackbox.rolling.helper.JDKOnlyCompressTest</exclude>
+                            </excludes>
+
+                            <classpathDependencyExcludes>
+                                <classpathDependencyExclude>org.tukaani:xz</classpathDependencyExclude>
+                            </classpathDependencyExcludes>
+                        </configuration>
+                    </execution>
+                </executions>
+
+
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+
+                <configuration>
+                    <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>bundle-test-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <instructions>
+                        <Multi-Release>true</Multi-Release>
+                        <Export-Package>ch.qos.logback.core*</Export-Package>
+                        <Import-Package>
+                            ch.qos.logback.core*;version="${range;[==,+);${version_cleanup;${project.version}}}",
+                            jakarta.*;resolution:=optional,
+                            org.xml.*;resolution:=optional,
+                            org.fusesource.jansi;resolution:=optional,
+                            org.codehaus.janino;resolution:=optional,
+                            org.codehaus.commons.compiler;resolution:=optional,
+                            org.tukaani.xz;resolution:=optional,
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

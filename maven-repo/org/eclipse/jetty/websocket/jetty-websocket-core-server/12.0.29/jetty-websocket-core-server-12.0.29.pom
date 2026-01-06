@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.eclipse.jetty.websocket</groupId>
+    <artifactId>jetty-websocket</artifactId>
+    <version>12.0.29</version>
+  </parent>
+  <artifactId>jetty-websocket-core-server</artifactId>
+  <name>Core :: Websocket :: Server</name>
+
+  <properties>
+    <bundle-symbolic-name>${project.groupId}.core.server</bundle-symbolic-name>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-core-common</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>

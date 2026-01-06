@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion> 
+  <parent>
+    <groupId>com.fasterxml.jackson.jakarta.rs</groupId>
+    <artifactId>jackson-jakarta-rs-providers</artifactId>
+    <version>2.19.2</version>
+  </parent>
+  <artifactId>jackson-jakarta-rs-base</artifactId>
+  <name>Jackson Jakarta-RS: base</name>
+  <packaging>bundle</packaging>
+  <description>Pile of code that is shared by all Jackson-based Jakarta-RS
+providers.
+  </description>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <properties>
+    <osgi.export>
+${project.groupId}.annotation.*;version=${project.version}
+,${project.groupId}.base.*;version=${project.version}
+,${project.groupId}.cfg.*;version=${project.version}
+,${project.groupId}.util.*;version=${project.version}
+</osgi.export>
+    <osgi.import>jakarta.ws.rs;version="${jakarta.ws.rs.version}"
+,jakarta.ws.rs.core;version="${jakarta.ws.rs.version}"
+,jakarta.ws.rs.ext;version="${jakarta.ws.rs.version}",
+*
+</osgi.import>
+  </properties>
+
+  <dependencies>
+    <!-- Extends Jackson core, mapper -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <!-- test deps should come from parent -->
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+      </plugin>
+      <!-- 05-Jul-2020, tatu: Add generation of Gradle Module Metadata -->
+      <!-- 28-Feb-2025, jjohannes: Apply plugin last as it has to be the last of all 'package phase' plugins -->
+      <plugin>
+        <groupId>org.gradlex</groupId>
+        <artifactId>gradle-module-metadata-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

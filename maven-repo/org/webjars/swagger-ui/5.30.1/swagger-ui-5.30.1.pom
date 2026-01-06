@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <packaging>jar</packaging>
+    <groupId>org.webjars</groupId>
+    <artifactId>swagger-ui</artifactId>
+    <version>5.30.1</version>
+    <name>Swagger UI</name>
+    <description>WebJar for Swagger UI</description>
+    <url>https://www.webjars.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <scm>
+        <url>https://github.com/swagger-api/swagger-ui</url>
+        <connection>https://github.com/swagger-api/swagger-ui.git</connection>
+        <developerConnection>https://github.com/swagger-api/swagger-ui.git</developerConnection>
+        <tag>v5.30.1</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>webjars</id>
+            <url>https://www.webjars.org</url>
+        </developer>
+    </developers>
+
+    <licenses>
+        
+            <license>
+                
+                    <name>Apache-2.0</name>
+                
+                
+                <distribution>repo</distribution>
+            </license>
+        
+    </licenses>
+
+    
+    <issueManagement>
+        <url>https://github.com/swagger-api/swagger-ui/issues</url>
+    </issueManagement>
+    
+
+    <dependencies>
+        
+        
+    </dependencies>
+
+</project>

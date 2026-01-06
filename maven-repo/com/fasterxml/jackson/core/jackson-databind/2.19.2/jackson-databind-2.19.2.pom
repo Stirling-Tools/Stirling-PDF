@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.fasterxml.jackson</groupId>
+    <artifactId>jackson-base</artifactId>
+    <version>2.19.2</version>
+  </parent>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-databind</artifactId>
+  <version>2.19.2</version>
+  <name>jackson-databind</name>
+  <packaging>jar</packaging>
+  <description>General data-binding functionality for Jackson: works on core streaming API</description>
+  <url>https://github.com/FasterXML/jackson</url>
+  <inceptionYear>2008</inceptionYear>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <scm>
+    <connection>scm:git:git@github.com:FasterXML/jackson-databind.git</connection>
+    <developerConnection>scm:git:git@github.com:FasterXML/jackson-databind.git</developerConnection>
+    <url>https://github.com/FasterXML/jackson-databind</url>
+    <tag>jackson-databind-2.19.2</tag>
+  </scm>
+
+  <properties>
+    <!-- Until Jackson 2.11 (inclusive) baseline was JDK 7 (except for annotations/streaming),
+         with 2.12 baseline became JDK8
+      -->
+    <javac.src.version>1.8</javac.src.version>
+    <javac.target.version>1.8</javac.target.version>
+
+    <!-- 12-Nov-2022, tatu: [databind#3659] Verify Android SDK compatibility.
+
+         Baseline compatibility:
+
+         * Jackson 2.13 compatible with Android SDK 24 and up
+         * Jackson 2.14 - 2.18 compatible with Android SDK 26 and up
+
+      -->
+    <version.android.sdk>26</version.android.sdk>
+    <version.android.sdk.signature>0.12.0</version.android.sdk.signature>
+
+    <version.bytebuddy>1.15.10</version.bytebuddy>
+    <version.mockito>4.11.0</version.mockito>
+
+    <!-- 07-Apr-2025, tatu: For some reason, release fails due to missing
+           jacoco... so disable for now
+      -->
+    <jacocoStrict>false</jacocoStrict>
+
+    <!-- Can not use default, since group id != Java package name here -->
+    <osgi.export>com.fasterxml.jackson.databind.*;version=${project.version}</osgi.export>
+    <!-- fix for databind#2299: using jackson-databind in an OSGi environment under Android --> 
+    <osgi.import>
+        org.w3c.dom.bootstrap;resolution:=optional,
+        *
+    </osgi.import>
+
+    <!-- Generate PackageVersion.java into this directory. -->
+    <packageVersion.dir>com/fasterxml/jackson/databind/cfg</packageVersion.dir>
+    <packageVersion.package>com.fasterxml.jackson.databind.cfg</packageVersion.package>
+
+    <!-- for Reproducible Builds -->
+    <project.build.outputTimestamp>2025-07-18T17:49:02Z</project.build.outputTimestamp>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- We need to specify later Bytebuddy version because Mockito 4.11.0 depends on earlier
+           Bytebuddy which does not support JDK 21, since 2.17-->
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>${version.bytebuddy}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>${version.bytebuddy}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <!-- Builds on core streaming API; also needs core annotations -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <!-- 06-Mar-2017, tatu: Although bom provides for dependencies, some legacy
+             usage seems to benefit from actually specifying version here in case
+             it is dependent on transitively
+        -->
+      <version>${jackson.version.annotations}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson.version.core}</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency> <!-- added in 2.16 -->
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava-testlib</artifactId>
+      <version>31.1-jre</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- For testing TestNoClassDefFoundDeserializer -->
+    <dependency>
+      <groupId>javax.measure</groupId>
+      <artifactId>jsr-275</artifactId>
+      <version>0.9.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- For heap usage testing see https://github.com/FasterXML/jackson-databind/pull/3675 -->
+    <dependency>
+      <groupId>org.openjdk.jol</groupId>
+      <artifactId>jol-core</artifactId>
+      <version>0.16</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Since 2.17, started using Mockito instead of Powermock -->
+    <!-- For testing with static methods -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${version.mockito}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>${version.mockito}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Dependencies for testing "type pollution", see:
+         https://github.com/FasterXML/jackson-databind/pull/4848
+      -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-engine</artifactId>
+      <version>1.10.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.micronaut.test</groupId>
+      <artifactId>micronaut-test-type-pollution</artifactId>
+      <version>4.6.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <!-- Alas, need to include snapshot reference since otherwise can not find
+       snapshot of parent... -->
+  <repositories>
+    <!-- 13-May-2025, tatu: now access snapshots via Central Portal -->
+    <repository>
+      <id>central-snapshots</id>
+      <name>Sonatype Central Portal (snapshots)</name>
+      <url>https://central.sonatype.com/repository/maven-snapshots</url>
+      <releases><enabled>false</enabled></releases>
+      <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+  </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <executions>
+	<execution>
+          <goals>
+            <goal>prepare-agent</goal>
+          </goals>
+        </execution>
+        <!-- attached to Maven verify phase (could use test too) -->
+        <execution>
+	  <id>report</id>
+	  <phase>verify</phase>
+	  <goals>
+	    <goal>report</goal>
+	    </goals>
+	  </execution>
+	</executions>
+      </plugin>
+
+      <!-- Important: enable enforcer plug-in: -->
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions> <!-- or?  combine.children="merge"> -->
+          <execution>
+            <id>enforce-properties</id>
+	    <phase>validate</phase>
+            <goals><goal>enforce</goal></goals>
+          </execution>
+          <execution>
+            <id>enforce-jacoco-exec</id>
+            <phase>verify</phase>
+            <goals>
+                <goal>enforce</goal>
+            </goals>
+            <configuration>
+                <rules>
+                    <requireFilesExist>
+                        <files>
+                            <file>${project.build.directory}/jacoco.exec</file>
+                        </files>
+                    </requireFilesExist>
+                </rules>
+                <fail>${jacocoStrict}</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${version.plugin.surefire}</version>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <classpathDependencyExcludes>
+            <exclude>javax.measure:jsr-275</exclude>
+          </classpathDependencyExcludes>
+          <excludes>
+            <exclude>com.fasterxml.jackson.databind.MapperFootprintTest</exclude>
+          </excludes>
+          <test>com.fasterxml.jackson.databind.PrimarySuite</test>
+          <!-- 26-Nov-2019, tatu: moar parallelism! Per-class basis, safe, efficient enough
+                  ... although not 100% sure this makes much difference TBH
+            -->
+          <threadCount>4</threadCount>
+          <parallel>classes</parallel>
+        </configuration>
+      </plugin>
+
+      <!-- parent definitions should be ok, but need to add more links -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <links combine.children="append">
+	    <!-- 13-Feb-2025, tatu: Should change link when 2.19.0 released -->
+            <link>https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-annotations/2.18.4</link>
+            <link>https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-core/2.18.4</link>
+          </links>
+        </configuration>
+      </plugin>
+
+      <!-- settings are fine, but needed to trigger execution! -->
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+      </plugin>
+
+      <!--  04-Mar-2019, tatu: Add rudimentary JDK9+ module info. To build with JDK 8
+             will have to use `moduleInfoFile` as anything else requires JDK 9+
+        -->
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+      </plugin>
+      <!-- 03-Nov-2020, tatu: Add LICENSE from main level -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.gradlex</groupId>
+        <artifactId>gradle-module-metadata-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- 12-Nov-2022, tatu: [databind#3659] add verification of compatibility
+	   wrt Android SDK versions using AnimalSniffer with "gummy bears" signatures.
+
+           To be run from CI, but manually with:
+
+              mvn animal-sniffer:check
+	-->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>1.22</version>
+        <configuration>
+          <signature>
+            <groupId>com.toasttab.android</groupId>
+            <artifactId>gummy-bears-api-${version.android.sdk}</artifactId>
+            <version>${version.android.sdk.signature}</version>
+          </signature>
+          <ignores>
+            <!-- These are only accessed (safely) via "Java7SupportImpl.java" so ignore
+              -->
+            <ignore>java.beans.ConstructorProperties</ignore>
+            <ignore>java.beans.Transient</ignore>
+          </ignores>
+        </configuration>
+      </plugin>
+
+     </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+        <skipTests>true</skipTests>
+      </properties>
+    </profile>
+    <!-- 07-Dec-2021, tatu: This is a huge mess, sorry folks... -->
+    <profile>
+      <id>java11</id>
+      <activation>
+        <jdk>11</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-test-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/test-jdk11/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <inherited>true</inherited>
+            <configuration>
+              <!-- Enable Java 11+ for all sources so that Intellij picks the right language level -->
+              <source>11</source>
+              <release>11</release>
+              <compilerArgs>
+                <arg>-parameters</arg>
+              </compilerArgs>
+              <fork>true</fork>
+              <useIncrementalCompilation>true</useIncrementalCompilation>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!-- And different set up for JDK 17 -->
+      <id>java17</id>
+      <activation>
+        <jdk>17</jdk>
+      </activation>
+      <properties>
+        <argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-test-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/test-jdk11/java</source>
+                    <source>src/test-jdk17/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <inherited>true</inherited>
+            <configuration>
+              <!-- Enable Java 17 for all sources so that Intellij picks the right language level -->
+              <source>17</source>
+              <release>17</release>
+              <compilerArgs>
+                <arg>-parameters</arg>
+              </compilerArgs>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>type-pollution-test</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration>
+                  <test>com.fasterxml.jackson.databind.typepollution.TypePollutionSuite</test>
+                  <threadCount>1</threadCount>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!-- And different set up for JDK 21 -->
+      <id>java21</id>
+      <activation>
+        <jdk>[21,)</jdk>
+      </activation>
+      <properties>
+        <argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-test-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/test-jdk11/java</source>
+                    <source>src/test-jdk17/java</source>
+                    <source>src/test-jdk21/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <inherited>true</inherited>
+            <configuration>
+              <!-- Enable Java 21 for all sources so that Intellij picks the right language level -->
+              <source>21</source>
+              <release>21</release>
+              <compilerArgs>
+                <arg>-parameters</arg>
+              </compilerArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>errorprone</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <compilerArgs>
+                <arg>-XDcompilePolicy=simple</arg>
+                <arg>
+                  -Xplugin:ErrorProne
+                  <!--
+                  Disable all checks in test code. Bugs in tests can hide runtime failures,
+                  however these can be enabled later on. Many issues may require sub-optional
+                  code to reproduce failures.
+                  -->
+                  -XepExcludedPaths:.*/src/test/java/.*
+
+                  <!-- ############### -->
+                  <!-- UPGRADED CHECKS -->
+                  <!-- ############### -->
+
+                  <!-- Boxed primitive equality checks can be dangerous when presented with unexpected inputs -->
+                  -Xep:BoxedPrimitiveEquality:ERROR
+
+                  <!-- ############### -->
+                  <!-- DISABLED CHECKS -->
+                  <!-- ############### -->
+
+                  <!-- UnusedVariable is great at catching mistakes quickly, but
+                  requires a few suppressions to avoid noise. Deferring to avoid noise
+                  with the introduction of ErrorProne. -->
+                  -Xep:UnusedVariable:OFF
+                  <!--
+                  Disabled to avoid potential API changes. It's not clear if custom JsonNode types
+                  exist, and if any do implement equals without hashCode, it's likely they cause bugs.
+                  I plan to try fixing this separately.
+                  -->
+                  -Xep:EqualsHashCode:OFF
+                  <!-- Style: javadoc tag validation -->
+                  -Xep:MissingSummary:OFF
+                  -Xep:InvalidInlineTag:OFF
+                  -Xep:EmptyBlockTag:OFF
+                  -Xep:AlmostJavadoc:OFF
+                  -Xep:InvalidLink:OFF
+                  <!-- Style: low reward for enabling. -->
+                  -Xep:UnnecessaryParentheses:OFF
+                  <!-- Style: low signal -->
+                  -Xep:InconsistentCapitalization:OFF
+                  <!-- Style: requires specific comments when switch branches neither break nor return -->
+                  -Xep:FallThrough:OFF
+                  <!-- Style: disable noisy check for importing common names from nested classes -->
+                  -Xep:BadImport:OFF
+                  <!-- Style: requires a default case when not all cases are handled -->
+                  -Xep:MissingCasesInEnumSwitch:OFF
+                  <!-- Style: avoid clashes with java.lang. Possibly worth enabling, but this can be done later -->
+                  -Xep:JavaLangClash:OFF
+                  <!-- These can likely be updated from protected to private, but it's relatively low signal -->
+                  -Xep:ProtectedMembersInFinalClass:OFF
+                  <!-- These can likely be updated from public to protected, but it's relatively low signal -->
+                  -Xep:PublicConstructorForAbstractClass:OFF
+                  <!-- jackson-databind doesn't have a logger, in many cases there's no way to pre-validate inputs -->
+                  -Xep:EmptyCatch:OFF
+                  -Xep:EqualsGetClass:OFF
+                  <!-- Noisy check that's largely unnecessary unless the result is mutated.
+                  Returning only immutable collections requires additional overhead and
+                  impact must be carefully considered. -->
+                  -Xep:MixedMutabilityReturnType:OFF
+                  <!-- Noisy in jackson and libraries which must interact with generics -->
+                  -Xep:TypeParameterUnusedInFormals:OFF
+                  <!-- Check is noisy around code that's meant to handle types that are considered obsolete -->
+                  -Xep:JdkObsolete:OFF
+                  <!-- Avoid noise from tests -->
+                  -Xep:JUnit3FloatingPointComparisonWithoutDelta:OFF
+                  <!-- Disable the StringSplitter check because it requires a guava dependency -->
+                  -Xep:StringSplitter:OFF
+                  <!-- Disable checks which require custom annotations -->
+                  -Xep:AnnotateFormatMethod:OFF
+                  -Xep:GuardedBy:OFF
+                  <!-- This check is generally high signal, however it is noisy in
+                  low level projects which implement caches and interning. -->
+                  -Xep:ReferenceEquality:OFF
+                </arg>
+              </compilerArgs>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>com.google.errorprone</groupId>
+                  <artifactId>error_prone_core</artifactId>
+                  <version>2.4.0</version>
+                </path>
+              </annotationProcessorPaths>
+            	<fork>true</fork>
+            	<useIncrementalCompilation>true</useIncrementalCompilation>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

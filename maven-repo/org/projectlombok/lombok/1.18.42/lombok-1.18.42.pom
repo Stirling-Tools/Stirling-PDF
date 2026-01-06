@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.projectlombok</groupId>
+	<artifactId>lombok</artifactId>
+	<packaging>jar</packaging>
+	<version>1.18.42</version>
+	<name>Project Lombok</name>
+	<url>https://projectlombok.org</url>
+	<description>Spice up your java: Automatic Resource Management, automatic generation of getters, setters, equals, hashCode and toString, and more!</description>
+	<dependencies></dependencies>
+	<licenses>
+		<license>
+			<name>The MIT License</name>
+			<url>https://projectlombok.org/LICENSE</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:git:git://github.com/projectlombok/lombok.git</connection>
+		<url>http://github.com/projectlombok/lombok</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/projectlombok/lombok/issues</url>
+	</issueManagement>
+	<developers>
+		<developer>
+			<id>rzwitserloot</id>
+			<name>Reinier Zwitserloot</name>
+			<email>reinier@projectlombok.org</email>
+			<url>http://zwitserloot.com</url>
+			<timezone>Europe/Amsterdam</timezone>
+		</developer>
+		<developer>
+			<id>rspilker</id>
+			<name>Roel Spilker</name>
+			<email>roel@projectlombok.org</email>
+			<timezone>Europe/Amsterdam</timezone>
+		</developer>
+	</developers>
+</project>
+

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.mockito</groupId>
+  <artifactId>mockito-junit-jupiter</artifactId>
+  <version>5.17.0</version>
+  <name>mockito-junit-jupiter</name>
+  <description>Mockito JUnit 5 support</description>
+  <url>https://github.com/mockito/mockito</url>
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>mockitoguy</id>
+      <name>Szczepan Faber</name>
+      <url>https://github.com/mockitoguy</url>
+      <roles>
+        <role>Core developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>bric3</id>
+      <name>Brice Dutheil</name>
+      <url>https://github.com/bric3</url>
+      <roles>
+        <role>Core developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>raphw</id>
+      <name>Rafael Winterhalter</name>
+      <url>https://github.com/raphw</url>
+      <roles>
+        <role>Core developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>TimvdLippe</id>
+      <name>Tim van der Lippe</name>
+      <url>https://github.com/TimvdLippe</url>
+      <roles>
+        <role>Core developer</role>
+      </roles>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/mockito/mockito.git</url>
+  </scm>
+  <issueManagement>
+    <system>GitHub issues</system>
+    <url>https://github.com/mockito/mockito/issues</url>
+  </issueManagement>
+  <ciManagement>
+    <system>GH Actions</system>
+    <url>https://github.com/mockito/mockito/actions</url>
+  </ciManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.17.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.11.4</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+</project>

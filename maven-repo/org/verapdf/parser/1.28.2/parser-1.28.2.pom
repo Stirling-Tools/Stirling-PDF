@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    This file is part of veraPDF Parser, a module of the veraPDF project.
+    Copyright (c) 2015-2025, veraPDF Consortium <info@verapdf.org>
+    All rights reserved.
+
+    veraPDF Parser is free software: you can redistribute it and/or modify
+    it under the terms of either:
+
+    The GNU General public license GPLv3+.
+    You should have received a copy of the GNU General Public License
+    along with veraPDF Parser as the LICENSE.GPL file in the root of the source
+    tree.  If not, see http://www.gnu.org/licenses/ or
+    https://www.gnu.org/licenses/gpl-3.0.en.html.
+
+    The Mozilla Public License MPLv2+.
+    You should have received a copy of the Mozilla Public License along with
+    veraPDF Parser as the LICENSE.MPL file in the root of the source tree.
+    If a copy of the MPL was not distributed with this file, you can obtain one at
+    http://mozilla.org/MPL/2.0/.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <artifactId>verapdf-parent</artifactId>
+      <groupId>org.verapdf</groupId>
+      <version>1.28.2</version>
+    </parent>
+
+    <groupId>org.verapdf</groupId>
+    <artifactId>parser</artifactId>
+    <version>1.28.2</version>
+
+    <name>veraPDF Parser</name>
+    <description>veraPDF tools for parsing, modifying and creating PDF documents.</description>
+
+    <scm>
+      <url>https://github.com/veraPDF/veraPDF-parser/</url>
+      <connection>scm:git:https://github.com/veraPDF/veraPDF-parser.git</connection>
+      <developerConnection>scm:git:git@github.com:veraPDF/veraPDF-parser.git</developerConnection>
+    </scm>
+
+    <repositories>
+      <repository>
+        <snapshots>
+          <enabled>true</enabled>
+        </snapshots>
+        <id>vera-dev</id>
+        <name>Vera development</name>
+        <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+      </repository>
+    </repositories>
+    <pluginRepositories>
+      <pluginRepository>
+        <snapshots>
+          <enabled>false</enabled>
+        </snapshots>
+        <id>vera-dev</id>
+        <name>Vera development</name>
+        <url>https://artifactory.openpreservation.org/artifactory/vera-dev</url>
+      </pluginRepository>
+    </pluginRepositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+              <groupId>org.jacoco</groupId>
+              <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>versions-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <!-- regular resource processing for everything except logback.xml -->
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+    </build>
+
+    <reporting>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <configuration>
+            <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+            <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+          </configuration>
+          <reportSets>
+            <reportSet>
+              <reports>
+                <report>index</report>
+                <report>dependencies</report>
+                <report>project-team</report>
+                <report>mailing-list</report>
+                <report>cim</report>
+                <report>issue-tracking</report>
+                <report>license</report>
+                <report>scm</report>
+              </reports>
+            </reportSet>
+          </reportSets>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <failOnError>false</failOnError>
+            <dependencySourceExcludes>
+              <!-- exclude ONLY commons-cli artifacts -->
+              <dependencySourceExclude>junit:*</dependencySourceExclude>
+              <dependencySourceExclude>org.apache:*</dependencySourceExclude>
+              <dependencySourceExclude>org.junit:*</dependencySourceExclude>
+              <dependencySourceExclude>org.hamcrest.*</dependencySourceExclude>
+              <dependencySourceExclude>org.log4j.*</dependencySourceExclude>
+            </dependencySourceExcludes>
+            <includeDependencySources>true</includeDependencySources>
+            <show>public</show>
+          </configuration>
+        </plugin>
+      </plugins>
+    </reporting>
+
+</project>
