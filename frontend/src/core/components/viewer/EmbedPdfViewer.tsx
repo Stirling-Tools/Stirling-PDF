@@ -41,6 +41,9 @@ const EmbedPdfViewerContent = ({
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
 
+  // Get viewer transition state for fade-in animation
+  const { viewerTransition } = useNavigationState();
+
   const {
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
@@ -563,7 +566,8 @@ const EmbedPdfViewerContent = ({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        contain: 'layout style paint'
+        contain: 'layout style paint',
+        opacity: viewerTransition.isAnimating ? 0 : 1,
       }}>
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
@@ -635,6 +639,8 @@ const EmbedPdfViewerContent = ({
             justifyContent: "center",
             pointerEvents: "none",
             background: "transparent",
+            opacity: viewerTransition.isAnimating ? 0 : 1,
+            transition: 'opacity 300ms ease-in',
           }}
         >
           <div style={{ pointerEvents: "auto" }}>

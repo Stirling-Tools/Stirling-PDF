@@ -399,3 +399,15 @@
   font-size: 0.875rem;
   opacity: 0.8;
 }
+
+/* =========================
+   Viewer Transition Fade
+   ========================= */
+
+.fileEditorContainer {
+  transition: opacity 300ms ease-out;
+}
+
+.fileEditorFadingOut {
+  opacity: 0;
+}

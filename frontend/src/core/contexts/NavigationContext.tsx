@@ -11,6 +11,16 @@ import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
  * maintain clear separation of concerns.
  */
 
+// Viewer transition animation state
+export interface ViewerTransitionState {
+  isAnimating: boolean;
+  sourceRect: DOMRect | null;
+  sourceThumbnailUrl: string | null;
+  transitionType: 'fileEditor' | 'pageEditor' | null;
+  editorScreenshotUrl: string | null;
+  isZooming: boolean;
+}
+
 // Navigation state
 interface NavigationContextState {
   workbench: WorkbenchType;
@@ -18,6 +28,7 @@ interface NavigationContextState {
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
+  viewerTransition: ViewerTransitionState;
 }
 
 // Navigation actions
@@ -27,7 +38,10 @@ type NavigationAction =
   | { type: 'SET_TOOL_AND_WORKBENCH'; payload: { toolId: ToolId | null; workbench: WorkbenchType } }
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
   | { type: 'SET_PENDING_NAVIGATION'; payload: { navigationFn: (() => void) | null } }
-  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } };
+  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } }
+  | { type: 'START_VIEWER_TRANSITION'; payload: { sourceRect: DOMRect; sourceThumbnailUrl: string; transitionType: 'fileEditor' | 'pageEditor'; editorScreenshotUrl?: string } }
+  | { type: 'END_VIEWER_TRANSITION' }
+  | { type: 'START_ZOOM' };
 
 // Navigation reducer
 const navigationReducer = (state: NavigationContextState, action: NavigationAction): NavigationContextState => {
@@ -54,6 +68,41 @@ const navigationReducer = (state: NavigationContextState, action: NavigationActi
     case 'SHOW_NAVIGATION_WARNING':
       return { ...state, showNavigationWarning: action.payload.show };
 
+    case 'START_VIEWER_TRANSITION':
+      return {
+        ...state,
+        viewerTransition: {
+          isAnimating: true,
+          sourceRect: action.payload.sourceRect,
+          sourceThumbnailUrl: action.payload.sourceThumbnailUrl,
+          transitionType: action.payload.transitionType,
+          editorScreenshotUrl: action.payload.editorScreenshotUrl || null,
+          isZooming: false
+        }
+      };
+
+    case 'END_VIEWER_TRANSITION':
+      return {
+        ...state,
+        viewerTransition: {
+          isAnimating: false,
+          sourceRect: null,
+          sourceThumbnailUrl: null,
+          transitionType: null,
+          editorScreenshotUrl: null,
+          isZooming: false
+        }
+      };
+
+    case 'START_ZOOM':
+      return {
+        ...state,
+        viewerTransition: {
+          ...state.viewerTransition,
+          isZooming: true
+        }
+      };
+
     default:
       return state;
   }
@@ -65,7 +114,15 @@ const initialState: NavigationContextState = {
   selectedTool: null,
   hasUnsavedChanges: false,
   pendingNavigation: null,
-  showNavigationWarning: false
+  showNavigationWarning: false,
+  viewerTransition: {
+    isAnimating: false,
+    sourceRect: null,
+    sourceThumbnailUrl: null,
+    transitionType: null,
+    editorScreenshotUrl: null,
+    isZooming: false
+  }
 };
 
 // Navigation context actions interface
@@ -82,6 +139,9 @@ export interface NavigationContextActions {
   cancelNavigation: () => void;
   clearToolSelection: () => void;
   handleToolSelect: (toolId: string) => void;
+  startViewerTransition: (sourceRect: DOMRect, sourceThumbnailUrl: string, transitionType: 'fileEditor' | 'pageEditor', editorScreenshotUrl?: string) => void;
+  endViewerTransition: () => void;
+  startZoom: () => void;
 }
 
 // Context state values
@@ -91,6 +151,7 @@ export interface NavigationContextStateValue {
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
+  viewerTransition: ViewerTransitionState;
 }
 
 export interface NavigationContextActionsValue {
@@ -252,7 +313,7 @@ export const NavigationProvider: React.FC<{
 
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
-      
+
       // If switching away from current tool and have unsaved changes, show warning
       if (hasUnsavedChanges && state.selectedTool && state.selectedTool !== toolId) {
         dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: performToolSelect } });
@@ -261,6 +322,21 @@ export const NavigationProvider: React.FC<{
         performToolSelect();
       }
     }, [toolRegistry, state.hasUnsavedChanges, state.selectedTool]);
+
+    const startViewerTransition = useCallback((sourceRect: DOMRect, sourceThumbnailUrl: string, transitionType: 'fileEditor' | 'pageEditor', editorScreenshotUrl?: string) => {
+      dispatch({
+        type: 'START_VIEWER_TRANSITION',
+        payload: { sourceRect, sourceThumbnailUrl, transitionType, editorScreenshotUrl }
+      });
+    }, []);
+
+    const endViewerTransition = useCallback(() => {
+      dispatch({ type: 'END_VIEWER_TRANSITION' });
+    }, []);
+
+    const startZoom = useCallback(() => {
+      dispatch({ type: 'START_ZOOM' });
+    }, []);
 
   // Memoize the actions object to prevent unnecessary context updates
   // This is critical to avoid infinite loops when effects depend on actions
@@ -277,6 +353,9 @@ export const NavigationProvider: React.FC<{
     cancelNavigation,
     clearToolSelection,
     handleToolSelect,
+    startViewerTransition,
+    endViewerTransition,
+    startZoom,
   }), [
     setWorkbench,
     setSelectedTool,
@@ -290,6 +369,9 @@ export const NavigationProvider: React.FC<{
     cancelNavigation,
     clearToolSelection,
     handleToolSelect,
+    startViewerTransition,
+    endViewerTransition,
+    startZoom,
   ]);
 
   const stateValue: NavigationContextStateValue = {
@@ -297,7 +379,8 @@ export const NavigationProvider: React.FC<{
     selectedTool: state.selectedTool,
     hasUnsavedChanges: state.hasUnsavedChanges,
     pendingNavigation: state.pendingNavigation,
-    showNavigationWarning: state.showNavigationWarning
+    showNavigationWarning: state.showNavigationWarning,
+    viewerTransition: state.viewerTransition
   };
 
   // Also memoize the context value to prevent unnecessary re-renders

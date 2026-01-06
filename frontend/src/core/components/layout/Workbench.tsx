@@ -18,6 +18,7 @@ import Viewer from '@app/components/viewer/Viewer';
 import LandingPage from '@app/components/shared/LandingPage';
 import Footer from '@app/components/shared/Footer';
 import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
+import { ViewerZoomTransition } from '@app/components/viewer/ViewerZoomTransition';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -26,7 +27,7 @@ export default function Workbench() {
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
-  const { workbench: currentView } = useNavigationState();
+  const { workbench: currentView, viewerTransition } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
   const activeFiles = selectors.getFiles();
@@ -87,6 +88,54 @@ export default function Workbench() {
   };
 
   const renderMainContent = () => {
+    // During viewer transition with screenshot, show screenshot overlay
+    if (viewerTransition.isAnimating && viewerTransition.editorScreenshotUrl) {
+      const viewerContent = (
+        <Viewer
+          sidebarsVisible={sidebarsVisible}
+          setSidebarsVisible={setSidebarsVisible}
+          previewFile={previewFile}
+          onClose={handlePreviewClose}
+          activeFileIndex={activeFileIndex}
+          setActiveFileIndex={setActiveFileIndex}
+        />
+      );
+
+      // Screenshot fades out in 200ms when zoom starts
+      const screenshotOverlay = (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            opacity: viewerTransition.isZooming ? 0 : 1,
+            transition: viewerTransition.isZooming ? 'opacity 0.2s ease-out' : 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          <img
+            src={viewerTransition.editorScreenshotUrl}
+            alt="Loading..."
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'fill',
+              display: 'block',
+            }}
+          />
+        </div>
+      );
+
+      return (
+        <>
+          {viewerContent}
+          {screenshotOverlay}
+        </>
+      );
+    }
+
     // Check for custom workbench views first
     if (!isBaseWorkbench(currentView)) {
       const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
@@ -212,17 +261,22 @@ export default function Workbench() {
           transition: 'opacity 0.15s ease-in-out',
         }}
       >
-        {renderMainContent()}
+{renderMainContent()}
       </Box>
 
-      <Footer
-        analyticsEnabled={config?.enableAnalytics === true}
-        termsAndConditions={config?.termsAndConditions}
-        privacyPolicy={config?.privacyPolicy}
-        cookiePolicy={config?.cookiePolicy}
-        impressum={config?.impressum}
-        accessibilityStatement={config?.accessibilityStatement}
-      />
+      {/* Viewer Zoom Transition Overlay */}
+      <ViewerZoomTransition />
+
+      <Box style={{ position: 'relative', zIndex: 100 }}>
+        <Footer
+          analyticsEnabled={config?.enableAnalytics === true}
+          termsAndConditions={config?.termsAndConditions}
+          privacyPolicy={config?.privacyPolicy}
+          cookiePolicy={config?.cookiePolicy}
+          impressum={config?.impressum}
+          accessibilityStatement={config?.accessibilityStatement}
+        />
+      </Box>
     </Box>
   );
 }
