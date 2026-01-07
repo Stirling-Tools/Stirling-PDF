@@ -19,6 +19,9 @@ export interface ViewerTransitionState {
   transitionType: 'fileEditor' | 'pageEditor' | null;
   editorScreenshotUrl: string | null;
   isZooming: boolean;
+  transitionDirection: 'enter' | 'exit' | null;
+  exitTargetRect: DOMRect | null;
+  exitFileId: string | null;
 }
 
 // Navigation state
@@ -41,7 +44,8 @@ type NavigationAction =
   | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } }
   | { type: 'START_VIEWER_TRANSITION'; payload: { sourceRect: DOMRect; sourceThumbnailUrl: string; transitionType: 'fileEditor' | 'pageEditor'; editorScreenshotUrl?: string } }
   | { type: 'END_VIEWER_TRANSITION' }
-  | { type: 'START_ZOOM' };
+  | { type: 'START_ZOOM' }
+  | { type: 'START_EXIT_TRANSITION'; payload: { exitTargetRect: DOMRect; sourceThumbnailUrl: string; exitFileId: string } };
 
 // Navigation reducer
 const navigationReducer = (state: NavigationContextState, action: NavigationAction): NavigationContextState => {
@@ -77,6 +81,23 @@ const navigationReducer = (state: NavigationContextState, action: NavigationActi
           sourceThumbnailUrl: action.payload.sourceThumbnailUrl,
           transitionType: action.payload.transitionType,
           editorScreenshotUrl: action.payload.editorScreenshotUrl || null,
+          isZooming: false,
+          transitionDirection: 'enter',
+          exitTargetRect: null
+        }
+      };
+
+    case 'START_EXIT_TRANSITION':
+      return {
+        ...state,
+        viewerTransition: {
+          ...state.viewerTransition,
+          isAnimating: true,
+          transitionDirection: 'exit',
+          exitTargetRect: action.payload.exitTargetRect,
+          sourceThumbnailUrl: action.payload.sourceThumbnailUrl,
+          exitFileId: action.payload.exitFileId,
+          sourceRect: null, // Will be calculated after fileEditor renders
           isZooming: false
         }
       };
@@ -90,7 +111,10 @@ const navigationReducer = (state: NavigationContextState, action: NavigationActi
           sourceThumbnailUrl: null,
           transitionType: null,
           editorScreenshotUrl: null,
-          isZooming: false
+          isZooming: false,
+          transitionDirection: null,
+          exitTargetRect: null,
+          exitFileId: null
         }
       };
 
@@ -121,7 +145,10 @@ const initialState: NavigationContextState = {
     sourceThumbnailUrl: null,
     transitionType: null,
     editorScreenshotUrl: null,
-    isZooming: false
+    isZooming: false,
+    transitionDirection: null,
+    exitTargetRect: null,
+    exitFileId: null
   }
 };
 
@@ -142,6 +169,7 @@ export interface NavigationContextActions {
   startViewerTransition: (sourceRect: DOMRect, sourceThumbnailUrl: string, transitionType: 'fileEditor' | 'pageEditor', editorScreenshotUrl?: string) => void;
   endViewerTransition: () => void;
   startZoom: () => void;
+  startExitTransition: (exitTargetRect: DOMRect, sourceThumbnailUrl: string, exitFileId: string) => void;
 }
 
 // Context state values
@@ -338,6 +366,10 @@ export const NavigationProvider: React.FC<{
       dispatch({ type: 'START_ZOOM' });
     }, []);
 
+    const startExitTransition = useCallback((exitTargetRect: DOMRect, sourceThumbnailUrl: string, exitFileId: string) => {
+      dispatch({ type: 'START_EXIT_TRANSITION', payload: { exitTargetRect, sourceThumbnailUrl, exitFileId } });
+    }, []);
+
   // Memoize the actions object to prevent unnecessary context updates
   // This is critical to avoid infinite loops when effects depend on actions
   const actions: NavigationContextActions = useMemo(() => ({
@@ -356,6 +388,7 @@ export const NavigationProvider: React.FC<{
     startViewerTransition,
     endViewerTransition,
     startZoom,
+    startExitTransition,
   }), [
     setWorkbench,
     setSelectedTool,
@@ -372,6 +405,7 @@ export const NavigationProvider: React.FC<{
     startViewerTransition,
     endViewerTransition,
     startZoom,
+    startExitTransition,
   ]);
 
   const stateValue: NavigationContextStateValue = {

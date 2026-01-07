@@ -164,8 +164,27 @@ export default function Workbench() {
       }
     }
 
+    // If switching from viewer to fileEditor or pageEditor, add exit transition
+    if ((view === 'fileEditor' || view === 'pageEditor') && currentView === 'viewer') {
+      const activeFile = activeFiles[activeFileIndex];
+      const activeStub = activeFile ? selectors.getStirlingFileStub(activeFile.fileId) : null;
+      const thumbnailUrl = activeStub?.thumbnailUrl || '';
+
+      if (activeFile && thumbnailUrl) {
+        // Find current PDF page position (still in DOM)
+        const pdfPageElement = document.querySelector('[data-page-index="0"]');
+
+        if (pdfPageElement) {
+          const exitTargetRect = pdfPageElement.getBoundingClientRect();
+
+          // Start exit transition - file card position will be found after fileEditor renders
+          navActions.startExitTransition(exitTargetRect, thumbnailUrl, activeFile.fileId);
+        }
+      }
+    }
+
     navActions.setWorkbench(view);
-  }, [currentView, navActions, captureMainContentScreenshot, activeFiles, activeFileIndex, selectors]);
+  }, [currentView, navActions, captureMainContentScreenshot, activeFiles, activeFileIndex, selectors, viewerTransition]);
 
   const renderMainContent = () => {
     // During viewer transition with screenshot, show screenshot overlay
