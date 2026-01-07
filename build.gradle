@@ -29,9 +29,6 @@ ext {
     junitPlatformVersion = "1.12.2"
 }
 
-ext.localMavenRepo = file("${rootDir}/maven-repo")
-apply from: "${rootDir}/gradle/vendorAllDeps.gradle"
-
 ext.isSecurityDisabled = { ->
     System.getenv('DOCKER_ENABLE_SECURITY') == 'false' ||
     System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true' ||
