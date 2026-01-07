@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.general.BookletImpositionRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -68,33 +69,33 @@ public class BookletImpositionController {
                     "Booklet printing uses 2 pages per side (landscape). For 4-up, use the N-up feature.");
         }
 
-        PDDocument sourceDocument = pdfDocumentFactory.load(file);
-        int totalPages = sourceDocument.getNumberOfPages();
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
+            int totalPages = sourceDocument.getNumberOfPages();
 
-        // Create proper booklet with signature-based page ordering
-        PDDocument newDocument =
-                createSaddleBooklet(
-                        sourceDocument,
-                        totalPages,
-                        addBorder,
-                        spineLocation,
-                        addGutter,
-                        gutterSize,
-                        doubleSided,
-                        duplexPass,
-                        flipOnShortEdge);
+            // Create proper booklet with signature-based page ordering
+            try (PDDocument newDocument =
+                    createSaddleBooklet(
+                            sourceDocument,
+                            totalPages,
+                            addBorder,
+                            spineLocation,
+                            addGutter,
+                            gutterSize,
+                            doubleSided,
+                            duplexPass,
+                            flipOnShortEdge)) {
 
-        sourceDocument.close();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                newDocument.save(baos);
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        newDocument.save(baos);
-        newDocument.close();
-
-        byte[] result = baos.toByteArray();
-        return WebResponseUtils.bytesToWebResponse(
-                result,
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_booklet.pdf");
+                byte[] result = baos.toByteArray();
+                return WebResponseUtils.bytesToWebResponse(
+                        result,
+                        GeneralUtils.generateFilename(
+                                Filenames.toSimpleFileName(file.getOriginalFilename()),
+                                "_booklet.pdf"));
+            }
+        }
     }
 
     private static int padToMultipleOf4(int n) {

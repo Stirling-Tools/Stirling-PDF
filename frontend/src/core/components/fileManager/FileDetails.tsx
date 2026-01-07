@@ -73,9 +73,9 @@ const FileDetails: React.FC<FileDetailsProps> = ({
   }
 
   return (
-    <Stack gap="lg" h={`calc(${modalHeight} - 2rem)`}>
+    <Stack gap="lg" h={`calc(${modalHeight} - 2rem)`} justify="flex-start">
       {/* Section 1: Thumbnail Preview */}
-      <Box style={{ width: '100%', height: `calc(${modalHeight} * 0.5 - 2rem)`, textAlign: 'center', padding: 'xs' }}>
+      <Box style={{ width: '100%', height: 'min(35vh, 280px)', textAlign: 'center', flexShrink: 0 }}>
         <FilePreview
           file={currentFile}
           thumbnail={getCurrentThumbnail()}
@@ -96,12 +96,10 @@ const FileDetails: React.FC<FileDetailsProps> = ({
 
       <Button
         size="md"
-        mb="xl"
         onClick={onOpenFiles}
         disabled={!hasSelection}
         fullWidth
         style={{
-          flexShrink: 0,
           backgroundColor: hasSelection ? 'var(--btn-open-file)' : 'var(--mantine-color-gray-4)',
           color: 'white'
         }}

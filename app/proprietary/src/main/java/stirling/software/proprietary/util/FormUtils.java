@@ -292,6 +292,7 @@ public class FormUtils {
         }
 
         PDFRenderer renderer = new PDFRenderer(document);
+        renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
         ApplicationProperties properties =
                 ApplicationContextProvider.getBean(ApplicationProperties.class);
 
