@@ -37,6 +37,11 @@ ext.isSecurityDisabled = { ->
 }
 
 var mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
+if (mavenUrl.isEmpty()) {
+    println "No custom MAVEN_PUBLIC_URL set, defaulting to Maven Central"
+} else {
+    println "MAVEN_PUBLIC_URL set"
+}
 
 jar {
     enabled = false
