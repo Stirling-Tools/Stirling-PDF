@@ -39,6 +39,8 @@ ext.isSecurityDisabled = { ->
      System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')
 }
 
+var mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
+
 jar {
     enabled = false
     manifest {
@@ -57,7 +59,16 @@ springBoot {
 }
 
 repositories {
-    maven { url localMavenRepo.toURI() }
+    if (!mavenUrl.isEmpty()) {
+        maven {
+            url mavenUrl
+            allowInsecureProtocol true
+            credentials {
+                username System.getenv('MAVEN_USER') ?: ''
+                password System.getenv('MAVEN_PASSWORD') ?: ''
+            }
+        }
+    }
     mavenCentral()
     maven { url = 'https://build.shibboleth.net/maven/releases' }
 }
@@ -144,7 +155,16 @@ subprojects {
      }
 
     repositories {
-        maven { url localMavenRepo.toURI() }
+        if (!mavenUrl.isEmpty()) {
+            maven {
+                url mavenUrl
+                allowInsecureProtocol true
+                credentials {
+                    username System.getenv('MAVEN_USER') ?: ''
+                    password System.getenv('MAVEN_PASSWORD') ?: ''
+                }
+            }
+        }
         mavenCentral()
     }
 

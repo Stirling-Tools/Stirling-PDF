@@ -1,3 +1,19 @@
+pluginManagement {
+    repositories {
+        var gradlePluginPortalUrl = System.getenv("GRADLE_PLUGIN_PORTAL_URL") ?: ""
+        if (!gradlePluginPortalUrl.isEmpty()){
+            maven {
+                url gradlePluginPortalUrl
+                allowInsecureProtocol true
+                credentials {
+                    username System.getenv("MAVEN_USER") ?: ""
+                    password System.getenv("MAVEN_USER_PASSWORD") ?: ""
+                }
+            }
+        }
+        gradlePluginPortal()
+    }
+}
 plugins {
     // Apply the foojay-resolver plugin to allow automatic download of JDKs
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
