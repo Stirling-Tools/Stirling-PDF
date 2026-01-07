@@ -33,6 +33,11 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @UtilityClass
 public class GeneralUtils {
 
+    /**
+     * Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe.
+     */
+    private static final int MAX_DNS_ADDRESSES = 20;
+
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
@@ -86,34 +91,16 @@ public class GeneralUtils {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
             }
+        } catch (IOException e) {
+            if (tempFile.exists()) {
+                try {
+                    Files.delete(tempFile.toPath());
+                } catch (IOException ignored) {
+                }
+            }
+            throw e;
         }
         return tempFile;
-    }
-
-    /*
-     * Gets the configured temporary directory, creating it if necessary.
-     *
-     * @return Path to the temporary directory
-     * @throws IOException if directory creation fails
-     */
-    private Path getTempDirectory() throws IOException {
-        String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
-        if (customTempDir == null || customTempDir.isEmpty()) {
-            customTempDir = System.getProperty("stirling.tempfiles.directory");
-        }
-
-        Path tempDir;
-        if (customTempDir != null && !customTempDir.isEmpty()) {
-            tempDir = Path.of(customTempDir);
-        } else {
-            tempDir = Path.of(System.getProperty("java.io.tmpdir"), "stirling-pdf");
-        }
-
-        if (!Files.exists(tempDir)) {
-            Files.createDirectories(tempDir);
-        }
-
-        return tempDir;
     }
 
     /*
@@ -154,7 +141,7 @@ public class GeneralUtils {
         return matcher.find() ? matcher.replaceFirst("") : filename;
     }
 
-    /*
+    /**
      * Append suffix to base name with null safety.
      *
      * @param baseName the base filename, null becomes "default"
@@ -165,7 +152,7 @@ public class GeneralUtils {
         return (baseName == null ? "default" : baseName) + (suffix != null ? suffix : "");
     }
 
-    /*
+    /**
      * Generate a PDF filename by removing extension from first file and adding suffix.
      *
      * <p>High-level utility method for common PDF naming scenarios. Handles null safety and uses
@@ -180,7 +167,7 @@ public class GeneralUtils {
         return appendSuffix(baseName, suffix);
     }
 
-    /*
+    /**
      * Process a list of filenames by removing extensions and adding suffix.
      *
      * <p>Efficiently processes multiple filenames using streaming operations and bulk operations
@@ -201,7 +188,7 @@ public class GeneralUtils {
                 .forEach(processor);
     }
 
-    /*
+    /**
      * Extract title from filename by removing extension, with fallback handling.
      *
      * <p>Returns "Untitled" for null or empty filenames, otherwise removes the extension using the
@@ -269,6 +256,12 @@ public class GeneralUtils {
                 .getResources(pattern);
     }
 
+    /**
+     * Validates URL syntax and disallows common-infrastructure targets to reduce SSRF risk.
+     *
+     * @param urlStr a URL string to validate
+     * @return {@code true} if the URL is syntactically valid and allowed; {@code false} otherwise
+     */
     public boolean isValidURL(String urlStr) {
         try {
             Urls.create(
@@ -279,7 +272,7 @@ public class GeneralUtils {
         }
     }
 
-    /*
+    /**
      * Checks if a URL is reachable with proper timeout configuration and error handling.
      *
      * @param urlStr the URL string to check
@@ -289,15 +282,17 @@ public class GeneralUtils {
         return isURLReachable(urlStr, 5000, 5000);
     }
 
-    /*
-     * Checks if a URL is reachable with configurable timeouts.
+    /**
+     * Checks whether a URL is reachable using configurable timeouts. Only {@code http} and {@code
+     * https} protocols are permitted, and local/private/multicast ranges are blocked.
      *
-     * @param urlStr the URL string to check
+     * @param urlStr the URL to probe
      * @param connectTimeout connection timeout in milliseconds
      * @param readTimeout read timeout in milliseconds
-     * @return true if URL is reachable, false otherwise
+     * @return {@code true} if a HEAD request returns a 2xx or 3xx status; {@code false} otherwise
      */
     public boolean isURLReachable(String urlStr, int connectTimeout, int readTimeout) {
+        HttpURLConnection connection = null;
         try {
             // Parse the URL
             URL url = URI.create(urlStr).toURL();
@@ -308,14 +303,17 @@ public class GeneralUtils {
                 return false; // Disallow other protocols
             }
 
-            // Check if the host is a local address
             String host = url.getHost();
-            if (isLocalAddress(host)) {
-                return false; // Exclude local addresses
+            if (host == null || host.isBlank()) {
+                return false;
+            }
+
+            if (isDisallowedNetworkLocation(host)) {
+                return false; // Exclude local, private or otherwise sensitive addresses
             }
 
             // Check if the URL is reachable
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
             connection.setConnectTimeout(connectTimeout);
             connection.setReadTimeout(readTimeout);
@@ -326,27 +324,171 @@ public class GeneralUtils {
         } catch (Exception e) {
             log.debug("URL {} is not reachable: {}", urlStr, e.getMessage());
             return false; // Return false in case of any exception
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
     }
 
-    private boolean isLocalAddress(String host) {
+    /**
+     * Determines whether the specified host resolves to a disallowed network location, such as
+     * local, private, multicast, or reserved ranges. Excessive DNS results are also blocked.
+     *
+     * @param host the hostname to resolve
+     * @return {@code true} if the host should be considered unsafe
+     */
+    private boolean isDisallowedNetworkLocation(String host) {
+        // Resolution is delegated to the JVM/OS resolver which already applies system
+        // configured query limits and timeouts. We only need the resolved addresses here so
+        // that we can enforce the MAX_DNS_ADDRESSES limit and perform the sensitive range
+        // checks below.
         try {
-            // Resolve DNS to IP address
-            InetAddress address = InetAddress.getByName(host);
-
-            // Check for local addresses
-            return address.isAnyLocalAddress()
-                    || // Matches 0.0.0.0 or similar
-                    address.isLoopbackAddress()
-                    || // Matches 127.0.0.1 or ::1
-                    address.isSiteLocalAddress()
-                    || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to
-                    // 172.31.x.x
-                    address.getHostAddress()
-                            .startsWith("fe80:"); // Matches link-local IPv6 addresses
+            InetAddress[] addresses = InetAddress.getAllByName(host);
+            if (addresses.length > MAX_DNS_ADDRESSES) {
+                log.debug(
+                        "Blocking URL to host {} due to excessive DNS records (>{})",
+                        host,
+                        MAX_DNS_ADDRESSES);
+                return true;
+            }
+            for (InetAddress address : addresses) {
+                if (address == null || isSensitiveAddress(address)) {
+                    log.debug("Blocking URL to host {} resolved to {}", host, address);
+                    return true;
+                }
+            }
+            return false;
         } catch (Exception e) {
-            return false; // Return false for invalid or unresolved addresses
+            log.debug("Unable to resolve host {}: {}", host, e.getMessage());
+            return true; // Treat resolution issues as unsafe to avoid SSRF
         }
+    }
+
+    /**
+     * Returns whether the given IP address lies within ranges that should not be contacted by the
+     * server (loopback, link-local, private, multicast, etc.). IPv6 ULA and IPv4-mapped addresses
+     * are handled.
+     *
+     * @param address the resolved address
+     * @return {@code true} if the address is considered sensitive
+     */
+    private boolean isSensitiveAddress(InetAddress address) {
+        if (address.isAnyLocalAddress()
+                || address.isLoopbackAddress()
+                || address.isLinkLocalAddress()
+                || address.isSiteLocalAddress()
+                || address.isMulticastAddress()) {
+            return true;
+        }
+
+        byte[] rawAddress = address.getAddress();
+        if (address instanceof Inet4Address) {
+            return isPrivateOrReservedIPv4(rawAddress);
+        }
+
+        if (address instanceof Inet6Address inet6Address) {
+            if (isUniqueLocalIPv6(rawAddress)) {
+                return true;
+            }
+            if (isIPv4MappedAddress(rawAddress) || inet6Address.isIPv4CompatibleAddress()) {
+                byte[] ipv4 =
+                        Arrays.copyOfRange(rawAddress, rawAddress.length - 4, rawAddress.length);
+                return isPrivateOrReservedIPv4(ipv4);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks whether an IPv4 address is private or reserved. Any malformed input defaults to {@code
+     * true} (conservative) to avoid misuse.
+     *
+     * @param address 4-byte IPv4 address
+     * @return {@code true} if private/reserved
+     */
+    private boolean isPrivateOrReservedIPv4(byte[] address) {
+        // IPv4 addresses must be exactly 4 bytes. Treat null or unexpected lengths as
+        // sensitive to avoid processing malformed input.
+        if (address == null || address.length != 4) {
+            return true;
+        }
+
+        int first = Byte.toUnsignedInt(address[0]);
+        int second = Byte.toUnsignedInt(address[1]);
+
+        if (first == 0 || first == 127) {
+            return true; // 0.0.0.0/8 and 127.0.0.0/8
+        }
+        if (first == 100 && second >= 64 && second <= 127) {
+            return true; // 100.64.0.0/10 Carrier-grade NAT
+        }
+        if (first == 169 && second == 254) {
+            return true; // 169.254.0.0/16 Link-local
+        }
+        if (first == 172 && second >= 16 && second <= 31) {
+            return true; // 172.16.0.0/12 Private
+        }
+        if (first == 192 && second == 0 && Byte.toUnsignedInt(address[2]) == 0) {
+            return true; // 192.0.0.0/24 IETF Protocol Assignments
+        }
+        if (first == 192 && second == 0 && Byte.toUnsignedInt(address[2]) == 2) {
+            return true; // 192.0.2.0/24 TEST-NET-1
+        }
+        if (first == 192 && second == 168) {
+            return true; // 192.168.0.0/16 Private
+        }
+        if (first == 198 && (second == 18 || second == 19)) {
+            return true; // 198.18.0.0/15 Benchmark tests
+        }
+        if (first == 198 && second == 51 && Byte.toUnsignedInt(address[2]) == 100) {
+            return true; // 198.51.100.0/24 TEST-NET-2
+        }
+        if (first == 203 && second == 0 && Byte.toUnsignedInt(address[2]) == 113) {
+            return true; // 203.0.113.0/24 TEST-NET-3
+        }
+        if (first == 10) {
+            return true; // 10.0.0.0/8 Private
+        }
+        if (first >= 224) {
+            return true; // 224.0.0.0/4 Multicast and 240.0.0.0/4 Reserved for future use
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether an IPv6 address is a Unique Local Address (ULA, fc00::/7). Any malformed input
+     * defaults to {@code true} (conservative) to avoid misuse.
+     *
+     * @param address 16-byte IPv6 address
+     * @return {@code true} if ULA
+     */
+    private boolean isUniqueLocalIPv6(byte[] address) {
+        if (address == null || address.length != 16) {
+            return true;
+        }
+        int first = Byte.toUnsignedInt(address[0]);
+        return (first & 0xFE) == 0xFC; // fc00::/7 Unique local addresses
+    }
+
+    /**
+     * Checks whether an IPv6 address is an IPv4-mapped address (::ffff:0:0/96). Any malformed input
+     * defaults to {@code false} (conservative) to avoid misuse.
+     *
+     * @param address 16-byte IPv6 address
+     * @return {@code true} if IPv4-mapped
+     */
+    private boolean isIPv4MappedAddress(byte[] address) {
+        if (address == null || address.length != 16) {
+            return false;
+        }
+        for (int i = 0; i < 10; i++) {
+            if (address[i] != 0) {
+                return false;
+            }
+        }
+        return address[10] == (byte) 0xFF && address[11] == (byte) 0xFF;
     }
 
     /*
@@ -365,6 +507,12 @@ public class GeneralUtils {
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
             }
+        } catch (IOException e) {
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (IOException ignored) {
+            }
+            throw e;
         }
         return tempFile.toFile();
     }
@@ -386,7 +534,7 @@ public class GeneralUtils {
             throw new IllegalArgumentException("Invalid default unit: " + defaultUnit);
         }
 
-        sizeStr = sizeStr.trim().toUpperCase();
+        sizeStr = sizeStr.trim().toUpperCase(Locale.ROOT);
         sizeStr = sizeStr.replace(",", ".").replace(" ", "");
 
         try {
@@ -415,7 +563,7 @@ public class GeneralUtils {
                 return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
             } else {
                 // Use provided default unit or fall back to MB
-                String unit = defaultUnit != null ? defaultUnit.toUpperCase() : "MB";
+                String unit = defaultUnit != null ? defaultUnit.toUpperCase(Locale.ROOT) : "MB";
                 double value = Double.parseDouble(sizeStr);
                 return switch (unit) {
                     case "TB" -> (long) (value * 1024L * 1024L * 1024L * 1024L);
@@ -457,13 +605,14 @@ public class GeneralUtils {
         if (bytes < 1024) {
             return bytes + " B";
         } else if (bytes < 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f KB", bytes / 1024.0);
+            return String.format(Locale.ROOT, "%.2f KB", bytes / 1024.0);
         } else if (bytes < 1024L * 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f MB", bytes / (1024.0 * 1024.0));
+            return String.format(Locale.ROOT, "%.2f MB", bytes / (1024.0 * 1024.0));
         } else if (bytes < 1024L * 1024L * 1024L * 1024L) {
-            return String.format(Locale.US, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+            return String.format(Locale.ROOT, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
         } else {
-            return String.format(Locale.US, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
+            return String.format(
+                    Locale.ROOT, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
         }
     }
 
@@ -723,7 +872,7 @@ public class GeneralUtils {
                         byte[] mac = net.getHardwareAddress();
                         if (mac != null && mac.length > 0) {
                             for (byte b : mac) {
-                                sb.append(String.format("%02X", b));
+                                sb.append(String.format(Locale.ROOT, "%02X", b));
                             }
                             break; // Use the first valid network interface
                         }
@@ -733,7 +882,7 @@ public class GeneralUtils {
                 byte[] mac = network.getHardwareAddress();
                 if (mac != null) {
                     for (byte b : mac) {
-                        sb.append(String.format("%02X", b));
+                        sb.append(String.format(Locale.ROOT, "%02X", b));
                     }
                 }
             }
@@ -940,17 +1089,29 @@ public class GeneralUtils {
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                             .runCommandWithOutputHandling(command);
 
+            ExceptionUtils.GhostscriptException detectedError =
+                    ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
+            if (detectedError != null) {
+                log.warn(
+                        "Ghostscript ebook optimization reported a critical error: {}",
+                        detectedError.getMessage());
+                throw detectedError;
+            }
+
             if (result.getRc() != 0) {
                 log.warn(
                         "Ghostscript ebook optimization failed with return code: {}",
                         result.getRc());
-                throw ExceptionUtils.createGhostscriptCompressionException();
+                throw ExceptionUtils.createGhostscriptCompressionException(result.getMessages());
             }
 
             return Files.readAllBytes(tempOutput);
 
         } catch (Exception e) {
             log.warn("Ghostscript ebook optimization failed", e);
+            if (e instanceof ExceptionUtils.GhostscriptException ghostscriptException) {
+                throw ghostscriptException;
+            }
             throw ExceptionUtils.createGhostscriptCompressionException(e);
         } finally {
             if (tempInput != null) {

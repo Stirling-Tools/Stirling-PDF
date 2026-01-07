@@ -318,7 +318,7 @@ public class PdfAttachmentHandler {
 
     private static String normalizeFilename(String filename) {
         if (filename == null) return "";
-        String normalized = filename.toLowerCase().trim();
+        String normalized = filename.toLowerCase(Locale.ROOT).trim();
         normalized =
                 RegexPatternUtils.getInstance()
                         .getWhitespacePattern()
@@ -560,7 +560,7 @@ public class PdfAttachmentHandler {
         @Override
         protected void writeString(String string, List<TextPosition> textPositions)
                 throws IOException {
-            String lowerString = string.toLowerCase();
+            String lowerString = string.toLowerCase(Locale.ROOT);
 
             if (ATTACHMENT_SECTION_PATTERN.matcher(lowerString).find()) {
                 isInAttachmentSection = true;

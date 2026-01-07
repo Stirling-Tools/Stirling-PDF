@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
 import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
-import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
+import type { SignatureAPI, HistoryAPI, AnnotationAPI } from '@app/components/viewer/viewerTypes';
 
 // Signature state interface
 interface SignatureState {
@@ -34,6 +34,7 @@ interface SignatureActions {
 // Combined context interface
 interface SignatureContextValue extends SignatureState, SignatureActions {
   signatureApiRef: React.RefObject<SignatureAPI | null>;
+  annotationApiRef: React.RefObject<AnnotationAPI | null>;
   historyApiRef: React.RefObject<HistoryAPI | null>;
 }
 
@@ -52,6 +53,7 @@ const initialState: SignatureState = {
 export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<SignatureState>(initialState);
   const signatureApiRef = useRef<SignatureAPI>(null);
+  const annotationApiRef = useRef<AnnotationAPI>(null);
   const historyApiRef = useRef<HistoryAPI>(null);
   const imageDataStore = useRef<Map<string, string>>(new Map());
 
@@ -157,6 +159,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
   const contextValue: SignatureContextValue = {
     ...state,
     signatureApiRef,
+    annotationApiRef,
     historyApiRef,
     setSignatureConfig,
     setPlacementMode,

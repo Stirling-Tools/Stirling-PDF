@@ -12,20 +12,20 @@ import stirling.software.common.model.api.PDFFile;
 public class SplitPdfByChaptersRequest extends PDFFile {
     @Schema(
             description = "Whether to include Metadata or not",
-            defaultValue = "true",
+            defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean includeMetadata;
 
     @Schema(
             description = "Whether to allow duplicates or not",
-            defaultValue = "true",
+            defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean allowDuplicates;
 
     @Schema(
             description = "Maximum bookmark level required",
             minimum = "0",
-            defaultValue = "2",
+            defaultValue = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer bookmarkLevel;
 }

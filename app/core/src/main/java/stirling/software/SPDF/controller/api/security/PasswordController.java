@@ -41,16 +41,18 @@ public class PasswordController {
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
-        PDDocument document = pdfDocumentFactory.load(fileInput, password);
 
-        try {
+        try (PDDocument document = pdfDocumentFactory.load(fileInput, password)) {
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
                             fileInput.getOriginalFilename(), "_password_removed.pdf"));
         } catch (IOException e) {
-            document.close();
+            // Handle password errors specifically
+            if (ExceptionUtils.isPasswordError(e)) {
+                throw ExceptionUtils.createPdfPasswordException(e);
+            }
             ExceptionUtils.logException("password removal", e);
             throw ExceptionUtils.handlePdfException(e);
         }
@@ -81,31 +83,36 @@ public class PasswordController {
         boolean preventPrinting = Boolean.TRUE.equals(request.getPreventPrinting());
         boolean preventPrintingFaithful = Boolean.TRUE.equals(request.getPreventPrintingFaithful());
 
-        PDDocument document = pdfDocumentFactory.load(fileInput);
-        AccessPermission ap = new AccessPermission();
-        ap.setCanAssembleDocument(!preventAssembly);
-        ap.setCanExtractContent(!preventExtractContent);
-        ap.setCanExtractForAccessibility(!preventExtractForAccessibility);
-        ap.setCanFillInForm(!preventFillInForm);
-        ap.setCanModify(!preventModify);
-        ap.setCanModifyAnnotations(!preventModifyAnnotations);
-        ap.setCanPrint(!preventPrinting);
-        ap.setCanPrintFaithful(!preventPrintingFaithful);
-        StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
+        try (PDDocument document = pdfDocumentFactory.load(fileInput)) {
+            AccessPermission ap = new AccessPermission();
+            ap.setCanAssembleDocument(!preventAssembly);
+            ap.setCanExtractContent(!preventExtractContent);
+            ap.setCanExtractForAccessibility(!preventExtractForAccessibility);
+            ap.setCanFillInForm(!preventFillInForm);
+            ap.setCanModify(!preventModify);
+            ap.setCanModifyAnnotations(!preventModifyAnnotations);
+            ap.setCanPrint(!preventPrinting);
+            ap.setCanPrintFaithful(!preventPrintingFaithful);
+            StandardProtectionPolicy spp =
+                    new StandardProtectionPolicy(ownerPassword, password, ap);
 
-        if (!"".equals(ownerPassword) || !"".equals(password)) {
-            spp.setEncryptionKeyLength(keyLength);
-        }
-        spp.setPermissions(ap);
-        document.protect(spp);
+            if ((ownerPassword != null && ownerPassword.length() > 0)
+                    || (password != null && password.length() > 0)) {
+                spp.setEncryptionKeyLength(keyLength);
+            }
+            spp.setPermissions(ap);
+            document.protect(spp);
 
-        if ("".equals(ownerPassword) && "".equals(password))
+            if ((ownerPassword == null || ownerPassword.length() == 0)
+                    && (password == null || password.length() == 0))
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document,
+                        GeneralUtils.generateFilename(
+                                fileInput.getOriginalFilename(), "_permissions.pdf"));
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            fileInput.getOriginalFilename(), "_permissions.pdf"));
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_passworded.pdf"));
+                            fileInput.getOriginalFilename(), "_passworded.pdf"));
+        }
     }
 }

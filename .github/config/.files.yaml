@@ -2,26 +2,28 @@ build: &build
   - build.gradle
   - app/(common|core|proprietary)/build.gradle
 
-app: &app
-  - app/(common|core|proprietary)/src/main/java/**
-
 openapi: &openapi
-  - build.gradle
-  - app/(common|core|proprietary)/build.gradle
+  - *build
   - app/(common|core|proprietary)/src/main/java/**
 
-project: &project
-  - app/(common|core|proprietary)/src/(main|test)/java/**
-  - app/(common|core|proprietary)/build.gradle
-  - 'app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*'
-  - exampleYmlFiles/**
-  - gradle/**
-  - libs/**
-  - testing/**
-  - build.gradle
+docker: &docker
   - Dockerfile
   - Dockerfile.fat
   - Dockerfile.ultra-lite
+  - ".github/workflows/build.yml"
+  - scripts/init.sh
+  - scripts/init-without-ocr.sh
+  - exampleYmlFiles/**
+
+project: &project
+  - app/(common|core|proprietary)/src/(main|test)/java/**
+  - *build
+  - "app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
+  - exampleYmlFiles/**
+  - gradle/**
+  - libs/**
+  - "testing/**/!(requirements*.txt|requirements*.in)*"
+  - *docker
   - gradle.properties
   - gradlew
   - gradlew.bat
@@ -29,10 +31,30 @@ project: &project
   - settings.gradle
   - frontend/**
   - docker/**
-  - testing/**
+  - scripts/RestartHelper.java
 
 frontend: &frontend
   - frontend/**
   - .github/workflows/testdriver.yml
   - testing/**
   - docker/**
+  - scripts/translations/*.py
+  - scripts/build-tauri-jlink.bat
+  - scripts/build-tauri-jlink.sh
+  - scripts/convert_cff_to_ttf.py
+  - scripts/harvest_type3_fonts.py
+  - scripts/ignore_translation.toml
+  - scripts/index_type3_catalogue.py
+  - scripts/summarize_type3_signatures.py
+  - scripts/type3_to_cff.py
+  - scripts/update_type3_library.py
+
+licenses-frontend: &licenses-frontend
+  - ".github/workflows/frontend-backend-licenses-update.yml"
+  - "frontend/package.json"
+  - "frontend/package-lock.json"
+  - "frontend/scripts/generate-licenses.js"
+
+licenses-backend: &licenses-backend
+  - ".github/workflows/frontend-backend-licenses-update.yml"
+  - *build
