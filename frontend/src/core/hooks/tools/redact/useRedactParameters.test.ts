@@ -84,14 +84,14 @@ describe('useRedactParameters', () => {
       expect(result.current.getEndpointName()).toBe('/api/v1/security/auto-redact');
     });
 
-    test('should throw error for manual mode (not implemented)', () => {
+    test('should return empty endpoint for manual mode (handled client-side)', () => {
       const { result } = renderHook(() => useRedactParameters());
 
       act(() => {
         result.current.updateParameter('mode', 'manual');
       });
 
-      expect(() => result.current.getEndpointName()).toThrow('Manual redaction not yet implemented');
+      expect(result.current.getEndpointName()).toBe('');
     });
   });
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -264,27 +265,19 @@ public class SplitPdfBySectionsController {
                 break;
 
             case SPLIT_ALL:
-                for (int i = 0; i < totalPages; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(0, totalPages).boxed().toList());
                 break;
 
             case SPLIT_ALL_EXCEPT_FIRST:
-                for (int i = 1; i < totalPages; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(1, totalPages).boxed().toList());
                 break;
 
             case SPLIT_ALL_EXCEPT_LAST:
-                for (int i = 0; i < totalPages - 1; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(0, totalPages - 1).boxed().toList());
                 break;
 
             case SPLIT_ALL_EXCEPT_FIRST_AND_LAST:
-                for (int i = 1; i < totalPages - 1; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(1, totalPages - 1).boxed().toList());
                 break;
 
             default:
