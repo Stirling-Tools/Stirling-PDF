@@ -188,15 +188,15 @@ public class ConvertImgPDFController {
                     bodyBytes = Files.readAllBytes(webpFilePath);
                 } else {
                     // Create a ZIP file containing all WebP images
-                    ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
-                    try (ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
+                    try (ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
+                            ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
                         for (Path webpFile : webpFiles) {
                             zos.putNextEntry(new ZipEntry(webpFile.getFileName().toString()));
                             Files.copy(webpFile, zos);
                             zos.closeEntry();
                         }
+                        bodyBytes = zipOutputStream.toByteArray();
                     }
-                    bodyBytes = zipOutputStream.toByteArray();
                 }
                 // Clean up the temporary files
                 Files.deleteIfExists(tempFile);

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack } from '@mantine/core';
+import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack, Loader } from '@mantine/core';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { alert } from '@app/components/toast';
 import { useTranslation } from 'react-i18next';
@@ -389,7 +389,7 @@ const FileEditorThumbnail = ({
         style={isSupported || hasError ? undefined : { filter: 'grayscale(80%)', opacity: 0.6 }}
       >
         <div className={styles.previewPaper}>
-          {file.thumbnailUrl && (
+          {file.thumbnailUrl ? (
             <PrivateContent>
               <img
                 src={file.thumbnailUrl}
@@ -416,7 +416,12 @@ const FileEditorThumbnail = ({
               }}
             />
             </PrivateContent>
-          )}
+          ) : file.type?.startsWith('application/pdf') ? (
+            <Stack align="center" justify="center" gap="xs" style={{ height: '100%' }}>
+              <Loader size="sm" />
+              <Text size="xs" c="dimmed">Loading thumbnail...</Text>
+            </Stack>
+          ) : null}
         </div>
 
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}

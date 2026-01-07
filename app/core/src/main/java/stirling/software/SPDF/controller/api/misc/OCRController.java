@@ -15,6 +15,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -326,6 +327,8 @@ public class OCRController {
 
             try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(
+                        true); // Enable subsampling to reduce memory usage
                 int pageCount = document.getNumberOfPages();
 
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
@@ -415,7 +418,7 @@ public class OCRController {
             }
 
             // Merge all pages into final PDF
-            merger.mergeDocuments(null);
+            merger.mergeDocuments(IOUtils.createTempFileOnlyStreamCache());
 
             // Copy final output to the expected location
             Files.copy(
