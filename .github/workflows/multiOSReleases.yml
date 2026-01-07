@@ -63,6 +63,10 @@ jobs:
           VERSION=$(./gradlew printVersion --quiet | tail -1)
           echo "Extracted version: $VERSION"
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: Determine build matrix
         id: set-matrix
@@ -135,6 +139,9 @@ jobs:
       - name: Build JAR
         run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube --build-cache
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.variant.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
@@ -271,6 +278,9 @@ jobs:
           RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
           echo "📊 Custom JRE size: $RUNTIME_SIZE"
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Install frontend dependencies

@@ -175,6 +175,9 @@ jobs:
           RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
           echo "📊 Custom JRE size: $RUNTIME_SIZE"
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Install frontend dependencies

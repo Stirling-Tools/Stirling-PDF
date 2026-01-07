@@ -346,6 +346,9 @@ jobs:
         run: |
           ./gradlew checkLicense generateLicenseReport --build-cache || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: true
 

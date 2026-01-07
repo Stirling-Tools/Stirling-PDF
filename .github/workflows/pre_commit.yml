@@ -64,6 +64,10 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build --build-cache
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: git add
         run: |
