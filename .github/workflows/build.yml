@@ -287,6 +287,10 @@ jobs:
           chmod +x ./testing/test.sh
           chmod +x ./testing/test_disabledEndpoints.sh
           ./testing/test.sh
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
