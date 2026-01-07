@@ -135,7 +135,6 @@ app/core/src/main/resources/static/vendor/
 
 # Package Files #
 *.jar
-!maven-repo/
 *.war
 *.nar
 *.ear
