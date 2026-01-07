@@ -4,7 +4,7 @@ services:
       context: ../..
       dockerfile: docker/backend/Dockerfile
     container_name: Stirling-PDF-Security-with-login
-    restart: on-failure:5
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -43,7 +43,7 @@ services:
       context: ../..
       dockerfile: docker/frontend/Dockerfile
     container_name: stirling-pdf-frontend-security-login
-    restart: on-failure:5
+    restart: unless-stopped
     ports:
       - "3000:80"
     environment:

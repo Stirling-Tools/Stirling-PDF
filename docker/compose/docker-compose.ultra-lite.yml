@@ -4,7 +4,7 @@ services:
       context: ../..
       dockerfile: docker/backend/Dockerfile.ultra-lite
     container_name: stirling-pdf-backend-ultra-lite
-    restart: on-failure:5
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -39,7 +39,7 @@ services:
       context: ../..
       dockerfile: docker/frontend/Dockerfile
     container_name: stirling-pdf-frontend-ultra-lite
-    restart: on-failure:5
+    restart: unless-stopped
     ports:
       - "3000:80"
     environment:

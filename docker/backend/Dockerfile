@@ -128,7 +128,8 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring
 # ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
     DISABLE_ADDITIONAL_FEATURES=true \
-    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps \
+    -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
     -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
     -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
     -Djava.awt.headless=true" \
@@ -166,7 +167,7 @@ ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 # ==============================================================================
 RUN set -eux; \
     chmod +x /scripts/*; \
-    mkdir -p /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
+    mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
     /home/stirlingpdfuser /configs /logs /customFiles /pipeline /tmp/stirling-pdf \
     /app.jar /restart-helper.jar /usr/share/fonts/truetype /scripts; \
