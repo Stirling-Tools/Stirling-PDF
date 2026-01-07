@@ -1100,8 +1100,9 @@ public class CompressController {
                             inputFile.getOriginalFilename(), "_Optimized.pdf");
 
             try {
-                return WebResponseUtils.pdfDocToWebResponse(
-                        pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
+                try (PDDocument document = pdfDocumentFactory.load(currentFile.toFile())) {
+                    return WebResponseUtils.pdfDocToWebResponse(document, outputFilename);
+                }
             } catch (IOException e) {
                 throw ExceptionUtils.handlePdfException(e, "PDF optimization");
             }

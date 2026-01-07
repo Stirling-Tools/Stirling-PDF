@@ -155,6 +155,7 @@ public class CropController {
             try (PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                 PDFRenderer renderer = new PDFRenderer(sourceDocument);
+                renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
                 LayerUtility layerUtility = new LayerUtility(newDocument);
 
                 for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
