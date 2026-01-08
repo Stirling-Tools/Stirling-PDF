@@ -3,7 +3,7 @@ pluginManagement {
         var gradlePluginPortalUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
         if (!gradlePluginPortalUrl.isEmpty()){
             maven {
-                url gradlePluginPortalUrl + "gradle"
+                url gradlePluginPortalUrl + "/gradle"
                 credentials(PasswordCredentials) {
                     username System.getenv('MAVEN_USER') ?: ""
                     password System.getenv('MAVEN_USER_PASSWORD') ?: ""

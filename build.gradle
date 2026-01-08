@@ -147,7 +147,7 @@ subprojects {
     repositories {
         if (!rootProject.ext.mavenUrl.isEmpty()) {
             maven {
-                url rootProject.ext.mavenUrl + 'releases'
+                url rootProject.ext.mavenUrl + '/releases'
                 credentials(PasswordCredentials) {
                     username rootProject.ext.username
                     password rootProject.ext.password
