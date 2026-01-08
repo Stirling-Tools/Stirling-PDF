@@ -137,7 +137,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs --build-cache
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
