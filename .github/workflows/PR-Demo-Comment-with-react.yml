@@ -169,7 +169,7 @@ jobs:
           else
             export DISABLE_ADDITIONAL_FEATURES=false
           fi
-          ./gradlew build --build-cache
+          ./gradlew build
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

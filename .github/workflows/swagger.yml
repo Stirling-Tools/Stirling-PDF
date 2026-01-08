@@ -45,10 +45,10 @@ jobs:
           gradle-version: 8.14
 
       - name: Generate Swagger documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs --build-cache
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs
 
       - name: Upload Swagger Documentation to SwaggerHub
-        run: ./gradlew swaggerhubUpload --build-cache
+        run: ./gradlew swaggerhubUpload
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

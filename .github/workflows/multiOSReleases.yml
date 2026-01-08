@@ -137,7 +137,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Build JAR
-        run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube --build-cache
+        run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -214,7 +214,7 @@ jobs:
         run: |
           chmod +x ./gradlew
           echo "🔧 Building Stirling-PDF JAR..."
-          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube --build-cache
+          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
           # Find the built JAR
           STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)

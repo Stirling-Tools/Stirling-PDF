@@ -63,7 +63,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Build with Gradle
-        run: ./gradlew build --build-cache
+        run: ./gradlew build
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

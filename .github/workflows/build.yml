@@ -74,7 +74,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew build -PnoSpotless --build-cache
+        run: ./gradlew build -PnoSpotless
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -137,7 +137,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs -x spotlessJava
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -209,7 +209,7 @@ jobs:
           gradle-version: 8.14
 
       - name: check the licenses for compatibility
-        run: ./gradlew checkLicense --build-cache
+        run: ./gradlew checkLicense
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -334,7 +334,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Build application
-        run: ./gradlew build --build-cache
+        run: ./gradlew build
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

@@ -111,7 +111,7 @@ jobs:
           chmod +x ./gradlew
           echo "🔧 Building Stirling-PDF JAR..."
           # STIRLING_PDF_DESKTOP_UI=false ./gradlew bootJar --no-daemon
-          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube --build-cache
+          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
           # Find the built JAR
           STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
