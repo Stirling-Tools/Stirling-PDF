@@ -3,12 +3,15 @@ pluginManagement {
         var gradlePluginPortalUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
         if (!gradlePluginPortalUrl.isEmpty()){
             maven {
-                url gradlePluginPortalUrl + '/gradle-plugin-portal/'
-                allowInsecureProtocol true
-                credentials {
-                    username System.getenv("MAVEN_USER") ?: ""
-                    password System.getenv("MAVEN_USER_PASSWORD") ?: ""
+                url gradlePluginPortalUrl + "gradle"
+                credentials(PasswordCredentials) {
+                    username System.getenv('MAVEN_USER') ?: ""
+                    password System.getenv('MAVEN_USER_PASSWORD') ?: ""
                 }
+                authentication {
+                    basic(BasicAuthentication)
+                }
+                allowInsecureProtocol true
             }
         }
         gradlePluginPortal()

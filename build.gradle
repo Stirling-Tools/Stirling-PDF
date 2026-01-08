@@ -36,8 +36,11 @@ ext.isSecurityDisabled = { ->
      System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')
 }
 
-var mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
-if (mavenUrl.isEmpty()) {
+ext.mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
+ext.username = System.getenv('MAVEN_USER') ?: ""
+ext.password = System.getenv('MAVEN_USER_PASSWORD') ?: ""
+
+if (rootProject.ext.mavenUrl.isEmpty()) {
     println "No custom MAVEN_PUBLIC_URL set, defaulting to Maven Central"
 } else {
     println "MAVEN_PUBLIC_URL set"
@@ -58,21 +61,6 @@ bootJar {
 // Configure main class for the root project
 springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
-}
-
-repositories {
-    if (!mavenUrl.isEmpty()) {
-        maven {
-            url mavenUrl + '/maven-public/'
-            allowInsecureProtocol true
-            credentials {
-                username System.getenv('MAVEN_USER') ?: ''
-                password System.getenv('MAVEN_PASSWORD') ?: ''
-            }
-        }
-    }
-    mavenCentral()
-    maven { url = 'https://build.shibboleth.net/maven/releases' }
 }
 
 allprojects {
@@ -150,23 +138,27 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_17
     }
 
-     if (project.name != "stirling-pdf") {
+    if (project.name != "stirling-pdf") {
         bootJar {
             enabled = false
         }
-     }
+    }
 
     repositories {
-        if (!mavenUrl.isEmpty()) {
+        if (!rootProject.ext.mavenUrl.isEmpty()) {
             maven {
-                url mavenUrl + '/maven-public/'
-                allowInsecureProtocol true
-                credentials {
-                    username System.getenv('MAVEN_USER') ?: ''
-                    password System.getenv('MAVEN_PASSWORD') ?: ''
+                url rootProject.ext.mavenUrl + 'releases'
+                credentials(PasswordCredentials) {
+                    username rootProject.ext.username
+                    password rootProject.ext.password
                 }
+                authentication {
+                    basic(BasicAuthentication)
+                }
+                allowInsecureProtocol true
             }
         }
+        maven { url "https://build.shibboleth.net/maven/releases" }
         mavenCentral()
     }
 
