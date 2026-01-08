@@ -20,11 +20,33 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Normalize URL: trim and remove trailing slashes
-    const url = customUrl.trim().replace(/\/+$/, '');
+    // Normalize and validate URL
+    let url = customUrl.trim().replace(/\/+$/, '');
 
     if (!url) {
       setTestError(t('setup.server.error.emptyUrl', 'Please enter a server URL'));
+      return;
+    }
+
+    // Auto-add https:// if no protocol specified
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      console.log('[ServerSelection] No protocol specified, adding https://');
+      url = `https://${url}`;
+      setCustomUrl(url); // Update the input field
+    }
+
+    // Validate URL format
+    try {
+      const urlObj = new URL(url);
+      console.log('[ServerSelection] Valid URL:', {
+        protocol: urlObj.protocol,
+        hostname: urlObj.hostname,
+        port: urlObj.port,
+        pathname: urlObj.pathname,
+      });
+    } catch (err) {
+      console.error('[ServerSelection] Invalid URL format:', err);
+      setTestError(t('setup.server.error.invalidUrl', 'Invalid URL format. Please enter a valid URL like https://your-server.com'));
       return;
     }
 
@@ -33,23 +55,32 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
     setTestError(null);
     setSecurityDisabled(false);
 
-    try {
-      const isReachable = await connectionModeService.testConnection(url);
+    console.log(`[ServerSelection] Testing connection to: ${url}`);
 
-      if (!isReachable) {
-        setTestError(t('setup.server.error.unreachable', 'Could not connect to server'));
+    try {
+      const testResult = await connectionModeService.testConnection(url);
+
+      if (!testResult.success) {
+        console.error('[ServerSelection] Connection test failed:', testResult);
+        setTestError(testResult.error || t('setup.server.error.unreachable', 'Could not connect to server'));
         setTesting(false);
         return;
       }
 
+      console.log('[ServerSelection] ✅ Connection test successful');
+
       // Fetch OAuth providers and check if login is enabled
       let enabledProviders: string[] = [];
       try {
+        console.log('[ServerSelection] Fetching login configuration...');
         const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`);
 
         // Check if security is disabled (status 403 or error response)
         if (!response.ok) {
+          console.warn(`[ServerSelection] Login config request failed with status ${response.status}`);
+
           if (response.status === 403 || response.status === 401) {
+            console.log('[ServerSelection] Security is disabled on this server');
             setSecurityDisabled(true);
             setTesting(false);
             return;
@@ -65,10 +96,11 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         }
 
         const data = await response.json();
-        console.log('Login UI data:', data);
+        console.log('[ServerSelection] Login UI data:', data);
 
         // Check if the response indicates security is disabled
         if (data.enableLogin === false || data.securityEnabled === false) {
+          console.log('[ServerSelection] Security is explicitly disabled in config');
           setSecurityDisabled(true);
           setTesting(false);
           return;
@@ -80,32 +112,39 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
           .map(key => key.split('/').pop())
           .filter((id): id is string => id !== undefined);
 
-        console.log('[ServerSelection] Detected OAuth providers:', enabledProviders);
+        console.log('[ServerSelection] ✅ Detected OAuth providers:', enabledProviders);
       } catch (err) {
-        console.error('[ServerSelection] Failed to fetch login configuration', err);
+        console.error('[ServerSelection] ❌ Failed to fetch login configuration:', err);
 
         // Check if it's a security disabled error
         if (err instanceof Error && (err.message.includes('403') || err.message.includes('401'))) {
+          console.log('[ServerSelection] Security is disabled (error-based detection)');
           setSecurityDisabled(true);
           setTesting(false);
           return;
         }
 
         // For any other error (network, CORS, invalid JSON, etc.), show error and don't proceed
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        console.error('[ServerSelection] Configuration fetch error details:', errorMessage);
+
         setTestError(
-          t('setup.server.error.configFetch', 'Failed to fetch server configuration. Please check the URL and try again.')
+          t('setup.server.error.configFetch', 'Failed to fetch server configuration: {{error}}', {
+            error: errorMessage
+          })
         );
         setTesting(false);
         return;
       }
 
       // Connection successful - pass URL and OAuth providers
+      console.log('[ServerSelection] ✅ Server selection complete, proceeding to login');
       onSelect({
         url,
         enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
       });
     } catch (error) {
-      console.error('Connection test failed:', error);
+      console.error('[ServerSelection] ❌ Unexpected error during connection test:', error);
       setTestError(
         error instanceof Error
           ? error.message

@@ -99,22 +99,95 @@ export class ConnectionModeService {
     console.log('Switched to self-hosted mode successfully');
   }
 
-  async testConnection(url: string): Promise<boolean> {
+  /**
+   * Test connection to a server URL and return detailed error information
+   * @returns Object with success status and optional error message
+   */
+  async testConnection(url: string): Promise<{ success: boolean; error?: string; errorCode?: string }> {
     console.log(`[ConnectionModeService] Testing connection to: ${url}`);
+
     try {
       // Test connection by hitting the health/status endpoint
       const healthUrl = `${url.replace(/\/$/, '')}/api/v1/info/status`;
+      console.log(`[ConnectionModeService] Health check URL: ${healthUrl}`);
+
       const response = await fetch(healthUrl, {
         method: 'GET',
         connectTimeout: 10000,
       });
 
-      const isOk = response.ok;
-      console.log(`[ConnectionModeService] Server connection test result: ${isOk}`);
-      return isOk;
+      if (response.ok) {
+        console.log(`[ConnectionModeService] ✅ Server connection test successful`);
+        return { success: true };
+      } else {
+        const errorMsg = `Server returned status ${response.status}`;
+        console.error(`[ConnectionModeService] ❌ ${errorMsg}`);
+        return {
+          success: false,
+          error: errorMsg,
+          errorCode: `HTTP_${response.status}`,
+        };
+      }
     } catch (error) {
-      console.warn('[ConnectionModeService] Server connection test failed:', error);
-      return false;
+      console.error('[ConnectionModeService] ❌ Server connection test failed:', error);
+
+      // Extract detailed error information
+      if (error instanceof Error) {
+        const errMsg = error.message.toLowerCase();
+
+        // Connection refused
+        if (errMsg.includes('connection refused') || errMsg.includes('econnrefused')) {
+          return {
+            success: false,
+            error: 'Connection refused. Server may not be running or the port is incorrect.',
+            errorCode: 'CONNECTION_REFUSED',
+          };
+        }
+        // Timeout
+        else if (errMsg.includes('timeout') || errMsg.includes('timed out')) {
+          return {
+            success: false,
+            error: 'Connection timed out. Server is not responding within 10 seconds.',
+            errorCode: 'TIMEOUT',
+          };
+        }
+        // DNS failure
+        else if (errMsg.includes('getaddrinfo') || errMsg.includes('dns') || errMsg.includes('not found') || errMsg.includes('enotfound')) {
+          return {
+            success: false,
+            error: 'Cannot resolve server address. Please check the URL is correct.',
+            errorCode: 'DNS_FAILURE',
+          };
+        }
+        // SSL/TLS errors
+        else if (errMsg.includes('ssl') || errMsg.includes('tls') || errMsg.includes('certificate') || errMsg.includes('cert')) {
+          return {
+            success: false,
+            error: 'SSL/TLS certificate error. Server may have an invalid or self-signed certificate.',
+            errorCode: 'SSL_ERROR',
+          };
+        }
+        // Protocol errors
+        else if (errMsg.includes('protocol')) {
+          return {
+            success: false,
+            error: 'Protocol error. Try using https:// instead of http:// or vice versa.',
+            errorCode: 'PROTOCOL_ERROR',
+          };
+        }
+        // Generic error
+        return {
+          success: false,
+          error: error.message,
+          errorCode: 'NETWORK_ERROR',
+        };
+      }
+
+      return {
+        success: false,
+        error: 'Unknown error occurred while testing connection',
+        errorCode: 'UNKNOWN',
+      };
     }
   }
 

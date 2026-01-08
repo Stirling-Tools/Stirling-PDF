@@ -101,7 +101,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   const handleSelfHostedLogin = async (username: string, password: string) => {
+    console.log('[SetupWizard] 🔐 Starting self-hosted login');
+    console.log(`[SetupWizard] Server: ${serverConfig?.url}`);
+    console.log(`[SetupWizard] Username: ${username}`);
+
     if (!serverConfig) {
+      console.error('[SetupWizard] ❌ No server configured');
       setError('No server configured');
       return;
     }
@@ -110,19 +115,35 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
+      console.log('[SetupWizard] Step 1: Authenticating with server...');
       await authService.login(serverConfig.url, username, password);
+      console.log('[SetupWizard] ✅ Authentication successful');
+
+      console.log('[SetupWizard] Step 2: Switching to self-hosted mode...');
       await connectionModeService.switchToSelfHosted(serverConfig);
+      console.log('[SetupWizard] ✅ Switched to self-hosted mode');
+
+      console.log('[SetupWizard] Step 3: Initializing external backend...');
       await tauriBackendService.initializeExternalBackend();
+      console.log('[SetupWizard] ✅ External backend initialized');
+
+      console.log('[SetupWizard] ✅ Setup complete, calling onComplete()');
       onComplete();
     } catch (err) {
-      console.error('Self-hosted login failed:', err);
-      setError(err instanceof Error ? err.message : 'Self-hosted login failed');
+      console.error('[SetupWizard] ❌ Self-hosted login failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Self-hosted login failed';
+      console.error('[SetupWizard] Error message:', errorMessage);
+      setError(errorMessage);
       setLoading(false);
     }
   };
 
   const handleSelfHostedOAuthSuccess = async (_userInfo: UserInfo) => {
+    console.log('[SetupWizard] 🔐 OAuth login successful, completing setup');
+    console.log(`[SetupWizard] Server: ${serverConfig?.url}`);
+
     if (!serverConfig) {
+      console.error('[SetupWizard] ❌ No server configured');
       setError('No server configured');
       return;
     }
@@ -131,13 +152,22 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
-      // OAuth already completed by authService.loginWithOAuth
+      console.log('[SetupWizard] Step 1: OAuth already completed');
+      console.log('[SetupWizard] Step 2: Switching to self-hosted mode...');
       await connectionModeService.switchToSelfHosted(serverConfig);
+      console.log('[SetupWizard] ✅ Switched to self-hosted mode');
+
+      console.log('[SetupWizard] Step 3: Initializing external backend...');
       await tauriBackendService.initializeExternalBackend();
+      console.log('[SetupWizard] ✅ External backend initialized');
+
+      console.log('[SetupWizard] ✅ Setup complete, calling onComplete()');
       onComplete();
     } catch (err) {
-      console.error('Self-hosted OAuth login completion failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to complete login');
+      console.error('[SetupWizard] ❌ Self-hosted OAuth login completion failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to complete login';
+      console.error('[SetupWizard] Error message:', errorMessage);
+      setError(errorMessage);
       setLoading(false);
     }
   };
