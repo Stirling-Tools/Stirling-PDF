@@ -2,17 +2,14 @@
 * @Frooodle @Ludy87 @jbrunton96 @ConnorYoh
 
 # Backend
-/app/** @DarioGii @Frooodle @Ludy87 @jbrunton96 @ConnorYoh
-
-#V1 frontend
-/app/core/src/main/resources/static/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
-/app/core/src/main/resources/templates/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
+/app/** @DarioGii @Frooodle @Ludy87 @jbrunton96 @ConnorYoh @balazs-szucs
 
 #V2 frontend
-/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle
+/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @balazs-szucs
+/app/core/src/main/resources/static/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87 @balazs-szucs
 
 #V2 docker
-/docker/backend/** @Frooodle @Ludy87 @DarioGii @Ludy87
+/docker/backend/** @Frooodle @Ludy87 @DarioGii
 /docker/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
 /docker/compose/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle @Ludy87
 
