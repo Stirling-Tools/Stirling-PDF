@@ -157,6 +157,13 @@ describe('Login', () => {
       refreshSession: vi.fn(),
     });
 
+    // Mock window.location.replace
+    const mockLocationReplace = vi.fn();
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { replace: mockLocationReplace }
+    });
+
     render(
       <TestWrapper>
         <BrowserRouter>
@@ -166,7 +173,7 @@ describe('Login', () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+      expect(mockLocationReplace).toHaveBeenCalledWith('/');
     });
   });
 
