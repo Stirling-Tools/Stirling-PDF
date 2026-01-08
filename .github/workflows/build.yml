@@ -137,7 +137,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs -x spotlessJava
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
