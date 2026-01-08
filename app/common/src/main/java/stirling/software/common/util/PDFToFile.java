@@ -360,8 +360,6 @@ public class PDFToFile {
             Path inputFile, Path outputFile, String outputFormat, String libreOfficeFilter) {
         List<String> command = new ArrayList<>();
         command.add(runtimePathConfig.getUnoConvertPath());
-        command.add("--port");
-        command.add("2003");
         command.add("--convert-to");
         command.add(outputFormat);
         if (libreOfficeFilter != null && !libreOfficeFilter.isBlank()) {
