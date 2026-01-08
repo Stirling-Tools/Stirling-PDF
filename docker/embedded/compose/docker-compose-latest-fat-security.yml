@@ -2,6 +2,9 @@ services:
   stirling-pdf:
     container_name: Stirling-PDF-Security-Fat
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+    build:
+      context: ../../../
+      dockerfile: docker/embedded/Dockerfile.fat
     deploy:
       resources:
         limits:
@@ -19,7 +22,7 @@ services:
       - ../../../stirling/latest/logs:/logs:rw
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
-      SECURITY_ENABLELOGIN: "false"
+      SECURITY_ENABLELOGIN: "true"
       PUID: 1002
       PGID: 1002
       UMASK: "022"
@@ -31,4 +34,5 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
+      STORAGE_LOCAL_BASEPATH: /configs/storage
     restart: on-failure:5

@@ -28,9 +28,14 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
         basePackages = {
             "stirling.software.proprietary.security.database.repository",
             "stirling.software.proprietary.security.repository",
-            "stirling.software.proprietary.repository"
+            "stirling.software.proprietary.repository",
+            "stirling.software.proprietary.storage.repository"
         })
-@EntityScan({"stirling.software.proprietary.security.model", "stirling.software.proprietary.model"})
+@EntityScan({
+    "stirling.software.proprietary.security.model",
+    "stirling.software.proprietary.model",
+    "stirling.software.proprietary.storage.model"
+})
 public class DatabaseConfig {
 
     public final String DATASOURCE_DEFAULT_URL;

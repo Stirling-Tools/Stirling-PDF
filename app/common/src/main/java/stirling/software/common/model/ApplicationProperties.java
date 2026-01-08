@@ -55,6 +55,7 @@ public class ApplicationProperties {
     private Legal legal = new Legal();
     private Security security = new Security();
     private System system = new System();
+    private Storage storage = new Storage();
     private Ui ui = new Ui();
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
@@ -433,6 +434,25 @@ public class ApplicationProperties {
             // Treat null as enabled when analytics is enabled
             return this.isAnalyticsEnabled()
                     && (this.getEnableScarf() == null || this.getEnableScarf());
+        }
+    }
+
+    @Data
+    public static class Storage {
+        private boolean enabled = true;
+        private String provider = "local";
+        private Local local = new Local();
+        private ShareLinks shareLinks = new ShareLinks();
+
+        @Data
+        public static class Local {
+            private String basePath = InstallationPathConfig.getPath() + "storage";
+        }
+
+        @Data
+        public static class ShareLinks {
+            private boolean allowPublic = true;
+            private String accessMode = "authenticated";
         }
     }
 

@@ -1,0 +1,26 @@
+package stirling.software.proprietary.storage.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import stirling.software.proprietary.storage.model.FileShare;
+import stirling.software.proprietary.storage.model.FileShareAccess;
+import stirling.software.proprietary.security.model.User;
+
+public interface FileShareAccessRepository extends JpaRepository<FileShareAccess, Long> {
+    List<FileShareAccess> findByFileShareOrderByAccessedAtDesc(FileShare fileShare);
+
+    void deleteByFileShare(FileShare fileShare);
+
+    @Query(
+            "SELECT a FROM FileShareAccess a "
+                    + "JOIN FETCH a.fileShare s "
+                    + "JOIN FETCH s.file f "
+                    + "LEFT JOIN FETCH f.owner "
+                    + "WHERE a.user = :user "
+                    + "ORDER BY a.accessedAt DESC")
+    List<FileShareAccess> findByUserWithShareAndFile(@Param("user") User user);
+}

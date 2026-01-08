@@ -59,7 +59,6 @@ export default function App() {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/invite/:token" element={<InviteAccept />} />
-
                   {/* Main app routes - Landing handles auth logic */}
                   <Route path="/*" element={<Landing />} />
                 </Routes>

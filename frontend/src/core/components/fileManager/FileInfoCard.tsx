@@ -1,10 +1,12 @@
-import React from 'react';
-import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea } from '@mantine/core';
+import React, { useMemo, useState } from 'react';
+import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { detectFileExtension, getFileSize } from '@app/utils/fileUtils';
 import { StirlingFileStub } from '@app/types/fileContext';
 import ToolChain from '@app/components/shared/ToolChain';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { useFileManagerContext } from '@app/contexts/FileManagerContext';
+import ShareManagementModal from '@app/components/shared/ShareManagementModal';
 
 interface FileInfoCardProps {
   currentFile: StirlingFileStub | null;
@@ -16,6 +18,31 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
   modalHeight
 }) => {
   const { t } = useTranslation();
+  const { onMakeCopy } = useFileManagerContext();
+  const [showShareManageModal, setShowShareManageModal] = useState(false);
+  const isSharedWithYou = useMemo(() => {
+    if (!currentFile) return false;
+    return currentFile.remoteOwnedByCurrentUser === false || currentFile.remoteSharedViaLink;
+  }, [currentFile]);
+  const isOwnedRemote = useMemo(() => {
+    if (!currentFile) return false;
+    return Boolean(currentFile.remoteStorageId) && currentFile.remoteOwnedByCurrentUser !== false;
+  }, [currentFile]);
+  const isSharedByYou = useMemo(() => {
+    if (!currentFile) return false;
+    return isOwnedRemote && Boolean(currentFile.remoteHasShareLinks);
+  }, [currentFile, isOwnedRemote]);
+  const ownerLabel = useMemo(() => {
+    if (!currentFile) return '';
+    if (currentFile.remoteOwnerUsername) {
+      return currentFile.remoteOwnerUsername;
+    }
+    return t('fileManager.ownerUnknown', 'Unknown');
+  }, [currentFile, t]);
+  const lastSyncedLabel = useMemo(() => {
+    if (!currentFile?.remoteStorageUpdatedAt) return '';
+    return new Date(currentFile.remoteStorageUpdatedAt).toLocaleString();
+  }, [currentFile?.remoteStorageUpdatedAt]);
 
   return (
     <Card withBorder p={0} mah={`calc(${modalHeight} * 0.45)`} style={{ overflow: 'hidden', flexShrink: 1, display: 'flex', flexDirection: 'column' }}>
@@ -57,7 +84,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
           <Divider />
 
           <Group justify="space-between" py="xs">
-            <Text size="sm" c="dimmed">{t('fileManager.lastModified', 'Last Modified')}</Text>
+            <Text size="sm" c="dimmed">{t('fileManager.lastModified', 'Last modified')}</Text>
             <Text size="sm" fw={500}>
               {currentFile ? new Date(currentFile.lastModified).toLocaleDateString() : ''}
             </Text>
@@ -72,6 +99,20 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               </Badge>}
 
           </Group>
+          {isSharedWithYou && (
+            <>
+              <Divider />
+              <Group justify="space-between" py="xs">
+                <Text size="sm" c="dimmed">{t('fileManager.owner', 'Owner')}</Text>
+                <Group gap="xs">
+                  <Text size="sm" fw={500}>{ownerLabel}</Text>
+                  <Badge size="xs" variant="light" color="grape">
+                    {t('fileManager.sharedWithYou', 'Shared with you')}
+                  </Badge>
+                </Group>
+              </Group>
+            </>
+          )}
 
           {/* Tool Chain Display */}
           {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
@@ -87,8 +128,66 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               </Box>
             </>
           )}
+
+          {currentFile && isSharedWithYou && (
+            <>
+              <Divider />
+              <Button
+                size="sm"
+                variant="light"
+                onClick={() => onMakeCopy(currentFile)}
+                fullWidth
+              >
+                {t('fileManager.makeCopy', 'Make a copy')}
+              </Button>
+            </>
+          )}
+
+          {currentFile && isOwnedRemote && (
+            <>
+              <Divider />
+              <Group justify="space-between" py="xs">
+                <Text size="sm" c="dimmed">{t('fileManager.cloudFile', 'Cloud file')}</Text>
+                <Badge size="xs" variant="light" color="teal">
+                  {t('fileManager.synced', 'Synced')}
+                </Badge>
+              </Group>
+              {lastSyncedLabel && (
+                <Group justify="space-between" py="xs">
+                  <Text size="sm" c="dimmed">{t('fileManager.lastSynced', 'Last synced')}</Text>
+                  <Text size="sm" fw={500}>{lastSyncedLabel}</Text>
+                </Group>
+              )}
+              {isSharedByYou && (
+                <>
+                  <Divider />
+                  <Group justify="space-between" py="xs">
+                    <Text size="sm" c="dimmed">{t('fileManager.sharing', 'Sharing')}</Text>
+                    <Badge size="xs" variant="light" color="blue">
+                      {t('fileManager.sharedByYou', 'Shared by you')}
+                    </Badge>
+                  </Group>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    onClick={() => setShowShareManageModal(true)}
+                    fullWidth
+                  >
+                    {t('storageShare.manage', 'Manage sharing')}
+                  </Button>
+                </>
+              )}
+            </>
+          )}
         </Stack>
       </ScrollArea>
+      {currentFile && isOwnedRemote && isSharedByYou && (
+        <ShareManagementModal
+          opened={showShareManageModal}
+          onClose={() => setShowShareManageModal(false)}
+          file={currentFile}
+        />
+      )}
     </Card>
   );
 };

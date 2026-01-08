@@ -3,10 +3,72 @@ import { useIndexedDB } from '@app/contexts/IndexedDBContext';
 import { fileStorage } from '@app/services/fileStorage';
 import { StirlingFileStub, StirlingFile } from '@app/types/fileContext';
 import { FileId } from '@app/types/fileContext';
+import apiClient from '@app/services/apiClient';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+
+interface StoredFileResponse {
+  id: number;
+  fileName: string;
+  contentType?: string | null;
+  sizeBytes: number;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  owner?: string | null;
+  ownedByCurrentUser?: boolean;
+  shareLinks?: Array<{ token?: string | null }>;
+}
+
+interface AccessedShareLinkResponse {
+  shareToken?: string | null;
+  fileId?: number | null;
+  fileName?: string | null;
+  owner?: string | null;
+  ownedByCurrentUser?: boolean;
+  publicLink?: boolean;
+  createdAt?: string | null;
+  lastAccessedAt?: string | null;
+}
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
   const indexedDB = useIndexedDB();
+  const { config } = useAppConfig();
+
+  const normalizeServerFileName = useCallback((fileName: string | undefined | null): string => {
+    const fallback = fileName?.trim() || 'server-file';
+    const lowerName = fallback.toLowerCase();
+    const historySuffix = '-history.zip';
+    if (lowerName.endsWith(historySuffix)) {
+      return fallback.slice(0, fallback.length - historySuffix.length) || fallback;
+    }
+    if (lowerName.endsWith('.zip')) {
+      const knownInnerExt = [
+        'pdf',
+        'doc',
+        'docx',
+        'ppt',
+        'pptx',
+        'xls',
+        'xlsx',
+        'png',
+        'jpg',
+        'jpeg',
+        'tif',
+        'tiff',
+        'txt',
+        'csv',
+        'rtf',
+        'html',
+        'epub',
+      ];
+      for (const ext of knownInnerExt) {
+        if (lowerName.endsWith(`.${ext}.zip`)) {
+          return fallback.slice(0, fallback.length - 4) || fallback;
+        }
+      }
+    }
+    return fallback;
+  }, []);
 
   const convertToFile = useCallback(async (fileStub: StirlingFileStub): Promise<File> => {
     if (!indexedDB) {
@@ -32,9 +94,216 @@ export const useFileManager = () => {
 
       // Load only leaf files metadata (processed files that haven't been used as input for other tools)
       const stirlingFileStubs = await fileStorage.getLeafStirlingFileStubs();
+      const remoteIdSet = new Set(
+        stirlingFileStubs
+          .map((stub) => stub.remoteStorageId)
+          .filter((id): id is number => typeof id === 'number')
+      );
+      let combinedStubs = stirlingFileStubs;
+
+      const shouldFetchServerFiles =
+        (config?.enableLogin !== false) && (config?.storageEnabled !== false);
+
+      if (shouldFetchServerFiles) {
+        try {
+          const response = await apiClient.get<StoredFileResponse[]>(
+            '/api/v1/storage/files',
+            { suppressErrorToast: true, skipAuthRedirect: true } as any
+          );
+          const serverFiles = Array.isArray(response.data) ? response.data : [];
+          const serverStubs: StirlingFileStub[] = [];
+          const serverMap = new Map<number, StoredFileResponse>();
+          serverFiles.forEach((file) => {
+            if (file && typeof file.id === 'number') {
+              serverMap.set(file.id, file);
+            }
+          });
+
+          const updatedLocalStubs = stirlingFileStubs.map((stub) => {
+            if (!stub.remoteStorageId) {
+              return stub;
+            }
+            const serverFile = serverMap.get(stub.remoteStorageId);
+            if (!serverFile) {
+              if (stub.remoteSharedViaLink) {
+                return {
+                  ...stub,
+                  remoteOwnedByCurrentUser: false,
+                };
+              }
+              return {
+                ...stub,
+                remoteStorageId: undefined,
+                remoteStorageUpdatedAt: undefined,
+                remoteOwnerUsername: undefined,
+                remoteOwnedByCurrentUser: undefined,
+                remoteSharedViaLink: false,
+                remoteHasShareLinks: undefined,
+              };
+            }
+            const updatedAtMs = serverFile.updatedAt
+              ? new Date(serverFile.updatedAt).getTime()
+              : serverFile.createdAt
+              ? new Date(serverFile.createdAt).getTime()
+              : undefined;
+            return {
+              ...stub,
+              remoteOwnerUsername: serverFile.owner ?? stub.remoteOwnerUsername,
+              remoteOwnedByCurrentUser:
+                typeof serverFile.ownedByCurrentUser === 'boolean'
+                  ? serverFile.ownedByCurrentUser
+                  : stub.remoteOwnedByCurrentUser,
+              remoteSharedViaLink: stub.remoteSharedViaLink,
+              remoteHasShareLinks: Boolean(serverFile.shareLinks?.length),
+              remoteStorageUpdatedAt:
+                typeof updatedAtMs === 'number' && Number.isFinite(updatedAtMs)
+                  ? updatedAtMs
+                  : stub.remoteStorageUpdatedAt,
+            };
+          });
+
+          for (const file of serverFiles) {
+            if (!file || typeof file.id !== 'number') {
+              continue;
+            }
+            if (remoteIdSet.has(file.id)) {
+              continue;
+            }
+            const updatedAtMs = file.updatedAt
+              ? new Date(file.updatedAt).getTime()
+              : file.createdAt
+              ? new Date(file.createdAt).getTime()
+              : Date.now();
+            const name = normalizeServerFileName(file.fileName);
+            const lastModified = Number.isFinite(updatedAtMs) ? updatedAtMs : Date.now();
+            const id = `server-${file.id}` as FileId;
+            serverStubs.push({
+              id,
+              name,
+              type: file.contentType || 'application/octet-stream',
+              size: file.sizeBytes ?? 0,
+              lastModified,
+              createdAt: lastModified,
+              isLeaf: true,
+              originalFileId: id,
+              versionNumber: 1,
+              toolHistory: [],
+              quickKey: `${name}|${file.sizeBytes ?? 0}|${lastModified}`,
+              remoteStorageId: file.id,
+              remoteStorageUpdatedAt: lastModified,
+              remoteOwnerUsername: file.owner ?? undefined,
+              remoteOwnedByCurrentUser:
+                typeof file.ownedByCurrentUser === 'boolean'
+                  ? file.ownedByCurrentUser
+                  : undefined,
+              remoteSharedViaLink: false,
+              remoteHasShareLinks: Boolean(file.shareLinks?.length),
+            });
+          }
+
+          combinedStubs = [...updatedLocalStubs, ...serverStubs];
+        } catch (error) {
+          console.warn('Failed to load server files:', error);
+        }
+
+        try {
+          const sharedResponse = await apiClient.get<AccessedShareLinkResponse[]>(
+            '/api/v1/storage/share-links/accessed',
+            { suppressErrorToast: true, skipAuthRedirect: true } as any
+          );
+          const sharedLinks = Array.isArray(sharedResponse.data) ? sharedResponse.data : [];
+          const allowedShareTokens = new Set(
+            sharedLinks
+              .map((link) => link.shareToken)
+              .filter((token): token is string => Boolean(token))
+          );
+          const shareClearUpdates: Array<Promise<void>> = [];
+          combinedStubs = combinedStubs.map((stub) => {
+            if (
+              stub.remoteSharedViaLink &&
+              stub.remoteShareToken &&
+              !allowedShareTokens.has(stub.remoteShareToken)
+            ) {
+              const cleared = {
+                ...stub,
+                remoteStorageId: undefined,
+                remoteStorageUpdatedAt: undefined,
+                remoteOwnerUsername: undefined,
+                remoteOwnedByCurrentUser: undefined,
+                remoteSharedViaLink: false,
+                remoteHasShareLinks: undefined,
+                remoteShareToken: undefined,
+              };
+              shareClearUpdates.push(
+                fileStorage.updateFileMetadata(stub.id, {
+                  remoteStorageId: undefined,
+                  remoteStorageUpdatedAt: undefined,
+                  remoteOwnerUsername: undefined,
+                  remoteOwnedByCurrentUser: undefined,
+                  remoteSharedViaLink: false,
+                  remoteHasShareLinks: undefined,
+                  remoteShareToken: undefined,
+                })
+              );
+              return cleared;
+            }
+            return stub;
+          });
+          if (shareClearUpdates.length > 0) {
+            await Promise.all(shareClearUpdates);
+          }
+          const existingShareTokens = new Set(
+            combinedStubs
+              .map((stub) => stub.remoteShareToken)
+              .filter((token): token is string => Boolean(token))
+          );
+          const sharedStubs: StirlingFileStub[] = [];
+
+          for (const link of sharedLinks) {
+            if (!link || !link.shareToken) {
+              continue;
+            }
+            if (existingShareTokens.has(link.shareToken)) {
+              continue;
+            }
+            const createdAtMs = link.lastAccessedAt
+              ? new Date(link.lastAccessedAt).getTime()
+              : link.createdAt
+              ? new Date(link.createdAt).getTime()
+              : Date.now();
+            const lastModified = Number.isFinite(createdAtMs) ? createdAtMs : Date.now();
+            const name = normalizeServerFileName(link.fileName || 'shared-file');
+            const id = `shared-${link.shareToken}` as FileId;
+            sharedStubs.push({
+              id,
+              name,
+              type: 'application/octet-stream',
+              size: 0,
+              lastModified,
+              createdAt: lastModified,
+              isLeaf: true,
+              originalFileId: id,
+              versionNumber: 1,
+              toolHistory: [],
+              quickKey: `${name}|0|${lastModified}`,
+              remoteStorageId: link.fileId ?? undefined,
+              remoteStorageUpdatedAt: lastModified,
+              remoteOwnerUsername: link.owner ?? undefined,
+              remoteOwnedByCurrentUser: false,
+              remoteSharedViaLink: true,
+              remoteHasShareLinks: false,
+              remoteShareToken: link.shareToken,
+            });
+          }
+
+          combinedStubs = [...combinedStubs, ...sharedStubs];
+        } catch (error) {
+          console.warn('Failed to load shared links:', error);
+        }
+      }
 
       // For now, only regular files - drafts will be handled separately in the future
-      const sortedFiles = stirlingFileStubs.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+      const sortedFiles = combinedStubs.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
 
       return sortedFiles;
     } catch (error) {
@@ -43,7 +312,7 @@ export const useFileManager = () => {
     } finally {
       setLoading(false);
     }
-  }, [indexedDB]);
+  }, [indexedDB, config?.enableLogin, config?.storageEnabled, normalizeServerFileName]);
 
   const handleRemoveFile = useCallback(async (index: number, files: StirlingFileStub[], setFiles: (files: StirlingFileStub[]) => void) => {
     const file = files[index];

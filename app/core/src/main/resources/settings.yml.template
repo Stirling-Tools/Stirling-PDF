@@ -194,6 +194,15 @@ system:
   databaseBackup:
     cron: '0 0 0 * * ?' # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
+storage:
+  enabled: true # set to 'true' to allow users to store files on the server (requires security.enableLogin)
+  provider: local # storage provider: 'local' for filesystem storage (future support for S3)
+  local:
+    basePath: './storage' # base directory for stored files
+  shareLinks:
+    allowPublic: true # set to 'false' to require login for all shareable links
+    accessMode: authenticated # Options: authenticated (any login), shared-users (only shared users)
+
 ui:
   appNameNavbar: '' # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)

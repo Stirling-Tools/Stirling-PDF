@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
@@ -24,6 +24,7 @@ import LoggedInState from '@app/routes/login/LoggedInState';
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { session, loading } = useAuth();
   const { refetch } = useAppConfig();
   const { t } = useTranslation();
@@ -64,10 +65,11 @@ export default function Login() {
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
     if (!loading && session) {
-      console.debug('[Login] User already authenticated, redirecting to home');
-      navigate('/', { replace: true });
+      const returnPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      console.debug('[Login] User already authenticated, redirecting to home', { returnPath });
+      navigate(returnPath || '/', { replace: true });
     }
-  }, [session, loading, navigate]);
+  }, [session, loading, navigate, location.state]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {

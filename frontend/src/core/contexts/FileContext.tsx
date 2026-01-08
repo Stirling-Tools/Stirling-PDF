@@ -212,6 +212,40 @@ function FileContextInner({
     return stirlingFiles;
   }, [enablePersistence, requestConfirmation]);
 
+  const addFilesWithOptions = useCallback(
+    async (
+      files: File[],
+      options?: {
+        insertAfterPageId?: string;
+        selectFiles?: boolean;
+        autoUnzip?: boolean;
+        autoUnzipFileLimit?: number;
+        skipAutoUnzip?: boolean;
+        confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>;
+        allowDuplicates?: boolean;
+      }
+    ): Promise<StirlingFile[]> => {
+      const stirlingFiles = await addFiles(
+        {
+          files,
+          ...options,
+        },
+        stateRef,
+        filesRef,
+        dispatch,
+        lifecycleManager,
+        enablePersistence
+      );
+
+      if (options?.selectFiles && stirlingFiles.length > 0) {
+        selectFiles(stirlingFiles);
+      }
+
+      return stirlingFiles;
+    },
+    [enablePersistence]
+  );
+
   const addStirlingFileStubsAction = useCallback(async (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }): Promise<StirlingFile[]> => {
     // StirlingFileStubs preserve all metadata - perfect for FileManager use case!
     const result = await addStirlingFileStubs(stirlingFileStubs, options, stateRef, filesRef, dispatch, lifecycleManager);
@@ -324,6 +358,7 @@ function FileContextInner({
   const actions = useMemo<FileContextActions>(() => ({
     ...baseActions,
     addFiles: addRawFiles,
+    addFilesWithOptions,
     addStirlingFileStubs: addStirlingFileStubsAction,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
       // Remove from memory and cleanup resources

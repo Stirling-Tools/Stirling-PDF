@@ -8,6 +8,8 @@ import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import LinkIcon from '@mui/icons-material/Link';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
@@ -24,6 +26,9 @@ import { formatFileSize } from '@app/utils/fileUtils';
 import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import UploadToServerModal from '@app/components/shared/UploadToServerModal';
+import ShareFileModal from '@app/components/shared/ShareFileModal';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 
 
@@ -58,6 +63,7 @@ const FileEditorThumbnail = ({
   isSupported = true,
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const DownloadOutlinedIcon = icons.download;
@@ -78,6 +84,8 @@ const FileEditorThumbnail = ({
   const [showHoverMenu, setShowHoverMenu] = useState(false);
   const isMobile = useIsMobile();
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
@@ -113,6 +121,14 @@ const FileEditorThumbnail = ({
 
   const isCBZ = extLower === 'cbz';
   const isCBR = extLower === 'cbr';
+  const uploadEnabled = (config?.enableLogin !== false) && (config?.storageEnabled !== false);
+  const isOwnedOrLocal = file.remoteOwnedByCurrentUser !== false;
+  const localUpdatedAt = file.createdAt ?? file.lastModified ?? 0;
+  const remoteUpdatedAt = file.remoteStorageUpdatedAt ?? 0;
+  const isUploaded = Boolean(file.remoteStorageId);
+  const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
+  const canUpload = uploadEnabled && isOwnedOrLocal && file.isLeaf && (!isUploaded || !isUpToDate);
+  const canShare = uploadEnabled && isOwnedOrLocal && file.isLeaf;
 
   const pageLabel = useMemo(
     () =>
@@ -216,6 +232,30 @@ const FileEditorThumbnail = ({
         alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
       },
     },
+    ...(canUpload || canShare
+      ? [
+        ...(canUpload ? [{
+          id: 'upload',
+          icon: <CloudUploadIcon style={{ fontSize: 20 }} />,
+          label: isUploaded
+            ? t('fileManager.updateOnServer', 'Update on Server')
+            : t('fileManager.uploadToServer', 'Upload to Server'),
+          onClick: (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setShowUploadModal(true);
+          },
+        }] : []),
+        ...(canShare ? [{
+          id: 'share',
+          icon: <LinkIcon style={{ fontSize: 20 }} />,
+          label: t('fileManager.share', 'Share'),
+          onClick: (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setShowShareModal(true);
+          },
+        }] : []),
+      ]
+      : []),
     {
       id: 'unzip',
       icon: <UnarchiveIcon style={{ fontSize: 20 }} />,
@@ -239,7 +279,22 @@ const FileEditorThumbnail = ({
       },
       color: 'red',
     }
-  ], [t, file.id, file.name, isZipFile, isCBR, onViewFile, onDownloadFile, onUnzipFile, handleCloseWithConfirmation]);
+  ], [
+    t,
+    file.id,
+    file.name,
+    isZipFile,
+    isCBZ,
+    isCBR,
+    terminology,
+    onViewFile,
+    onDownloadFile,
+    onUnzipFile,
+    handleCloseWithConfirmation,
+    canUpload,
+    canShare,
+    isUploaded
+  ]);
 
   // ---- Card interactions ----
   const handleCardClick = () => {
@@ -483,6 +538,21 @@ const FileEditorThumbnail = ({
           </Group>
         </Stack>
       </Modal>
+
+      {canUpload && (
+        <UploadToServerModal
+          opened={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          file={file}
+        />
+      )}
+      {canShare && (
+        <ShareFileModal
+          opened={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          file={file}
+        />
+      )}
     </div>
   );
 };

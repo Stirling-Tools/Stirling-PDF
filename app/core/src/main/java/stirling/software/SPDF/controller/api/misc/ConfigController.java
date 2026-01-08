@@ -102,6 +102,9 @@ public class ConfigController {
             boolean invitesEnabled = applicationProperties.getMail().isEnableInvites();
             configData.put("enableEmailInvites", smtpEnabled && invitesEnabled);
 
+            // Storage settings
+            configData.put("storageEnabled", applicationProperties.getStorage().isEnabled());
+
             // Check if user is admin using UserServiceInterface
             boolean isAdmin = false;
             if (userService != null) {

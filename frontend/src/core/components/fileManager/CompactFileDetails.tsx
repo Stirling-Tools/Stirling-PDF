@@ -34,6 +34,13 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
   const { t } = useTranslation();
   const hasSelection = selectedFiles.length > 0;
   const hasMultipleFiles = numberOfFiles > 1;
+  const showOwner = Boolean(
+    currentFile &&
+      (currentFile.remoteOwnedByCurrentUser === false || currentFile.remoteSharedViaLink)
+  );
+  const ownerLabel = currentFile
+    ? currentFile.remoteOwnerUsername || t('fileManager.ownerUnknown', 'Unknown')
+    : '';
 
   return (
     <Stack gap="xs" style={{ height: '100%' }}>
@@ -86,6 +93,11 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
             <Text size="xs" c="dimmed">
               {currentFile.toolHistory.map((tool) => t(`home.${tool.toolId}.title`, tool.toolId)).join(' → ')}
+            </Text>
+          )}
+          {currentFile && showOwner && (
+            <Text size="xs" c="dimmed">
+              {t('fileManager.owner', 'Owner')}: {ownerLabel}
             </Text>
           )}
         </Box>
