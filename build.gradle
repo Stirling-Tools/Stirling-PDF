@@ -159,7 +159,7 @@ subprojects {
             }
         }
         maven { url "https://build.shibboleth.net/maven/releases" }
-        mavenCentral()
+        // mavenCentral()
     }
 
     configurations.configureEach {
