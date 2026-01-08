@@ -6,7 +6,7 @@ pluginManagement {
                 url gradlePluginPortalUrl + "/gradle"
                 credentials(PasswordCredentials) {
                     username System.getenv('MAVEN_USER') ?: ""
-                    password System.getenv('MAVEN_USER_PASSWORD') ?: ""
+                    password System.getenv('MAVEN_PASSWORD') ?: ""
                 }
                 authentication {
                     basic(BasicAuthentication)

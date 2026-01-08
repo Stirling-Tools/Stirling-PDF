@@ -38,7 +38,7 @@ ext.isSecurityDisabled = { ->
 
 ext.mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
 ext.username = System.getenv('MAVEN_USER') ?: ""
-ext.password = System.getenv('MAVEN_USER_PASSWORD') ?: ""
+ext.password = System.getenv('MAVEN_PASSWORD') ?: ""
 
 if (rootProject.ext.mavenUrl.isEmpty()) {
     println "No custom MAVEN_PUBLIC_URL set, defaulting to Maven Central"
