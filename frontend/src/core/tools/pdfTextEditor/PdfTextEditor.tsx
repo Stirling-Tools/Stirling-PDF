@@ -1688,17 +1688,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       icon: <DescriptionIcon fontSize="small" />,
       component: PdfTextEditorView,
     });
+    setLeftPanelView('toolContent');
     setCustomWorkbenchViewData(WORKBENCH_VIEW_ID, latestViewDataRef.current);
-
-    return () => {
-      // Clear backend cache if we were using lazy loading
-      clearCachedJob(cachedJobIdRef.current);
-      clearCustomWorkbenchViewData(WORKBENCH_VIEW_ID);
-      unregisterCustomWorkbenchView(WORKBENCH_VIEW_ID);
-    };
   }, [
     registerCustomWorkbenchView,
     setCustomWorkbenchViewData,
+    setLeftPanelView,
     viewLabel,
   ]);
 
