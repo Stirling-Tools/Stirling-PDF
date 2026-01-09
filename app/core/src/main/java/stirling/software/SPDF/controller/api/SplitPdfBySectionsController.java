@@ -39,6 +39,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
+@Slf4j
 @RequiredArgsConstructor
 public class SplitPdfBySectionsController {
 
