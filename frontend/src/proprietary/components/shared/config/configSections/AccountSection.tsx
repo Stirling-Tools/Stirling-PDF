@@ -430,6 +430,12 @@ const AccountSection: React.FC = () => {
                 <Text size="sm" c="dimmed">
                   {t('account.mfa.manualKey', 'Manual setup key')}: <strong>{mfaSetupData.secret}</strong>
                 </Text>
+                <Text size="xs" c="orange">
+                  {t(
+                    'account.mfa.secretWarning',
+                    'Keep this key private. Anyone with access can generate valid authentication codes.'
+                  )}
+                </Text>
               </Stack>
             )}
             <TextInput

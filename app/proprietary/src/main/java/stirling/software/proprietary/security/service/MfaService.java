@@ -12,6 +12,12 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 
+/**
+ * Service for managing multi-factor authentication (MFA) settings for users.
+ *
+ * <p>This service reads and writes MFA-related settings such as secrets, enablement flags, and
+ * last-used TOTP steps.
+ */
 @Service
 @RequiredArgsConstructor
 public class MfaService {
@@ -23,15 +29,35 @@ public class MfaService {
     private final UserRepository userRepository;
     private final DatabaseServiceInterface databaseService;
 
+    /**
+     * Determines whether MFA is enabled for the given user.
+     *
+     * @param user target user
+     * @return {@code true} if MFA is enabled
+     */
     public boolean isMfaEnabled(User user) {
         String value = getSetting(user, MFA_ENABLED_KEY);
         return Boolean.parseBoolean(value);
     }
 
+    /**
+     * Retrieves the MFA secret for the given user.
+     *
+     * @param user target user
+     * @return Base32-encoded secret, or {@code null} if not set
+     */
     public String getSecret(User user) {
         return getSetting(user, MFA_SECRET_KEY);
     }
 
+    /**
+     * Stores a new MFA secret and marks MFA as pending (disabled) for the user.
+     *
+     * @param user target user
+     * @param secret Base32-encoded secret to store
+     * @throws SQLException when database persistence fails
+     * @throws UnsupportedProviderException when the database provider is unsupported
+     */
     public void setSecret(User user, String secret)
             throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
@@ -42,6 +68,13 @@ public class MfaService {
         persist(managedUser);
     }
 
+    /**
+     * Enables MFA for the given user.
+     *
+     * @param user target user
+     * @throws SQLException when database persistence fails
+     * @throws UnsupportedProviderException when the database provider is unsupported
+     */
     public void enableMfa(User user) throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
@@ -49,6 +82,13 @@ public class MfaService {
         persist(managedUser);
     }
 
+    /**
+     * Clears any pending MFA setup data for the user.
+     *
+     * @param user target user
+     * @throws SQLException when database persistence fails
+     * @throws UnsupportedProviderException when the database provider is unsupported
+     */
     public void clearPendingSecret(User user) throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
@@ -58,6 +98,13 @@ public class MfaService {
         persist(managedUser);
     }
 
+    /**
+     * Disables MFA and clears stored secrets for the user.
+     *
+     * @param user target user
+     * @throws SQLException when database persistence fails
+     * @throws UnsupportedProviderException when the database provider is unsupported
+     */
     public void disableMfa(User user) throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
@@ -67,6 +114,13 @@ public class MfaService {
         persist(managedUser);
     }
 
+    /**
+     * Checks whether a TOTP time step has not been used before.
+     *
+     * @param user target user
+     * @param timeStep candidate TOTP time step
+     * @return {@code true} if the time step is usable
+     */
     public boolean isTotpStepUsable(User user, long timeStep) {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = managedUser.getSettings();
@@ -85,6 +139,15 @@ public class MfaService {
         }
     }
 
+    /**
+     * Marks a TOTP time step as used, preventing replay.
+     *
+     * @param user target user
+     * @param timeStep time step to mark as used
+     * @return {@code true} if the time step was marked, {@code false} if it was already used
+     * @throws SQLException when database persistence fails
+     * @throws UnsupportedProviderException when the database provider is unsupported
+     */
     public boolean markTotpStepUsed(User user, long timeStep)
             throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);

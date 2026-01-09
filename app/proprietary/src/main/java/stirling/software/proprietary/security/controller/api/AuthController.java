@@ -126,6 +126,7 @@ public class AuthController {
                 Long timeStep = totpService.getValidTimeStep(secret, code);
                 if (timeStep == null) {
                     log.warn("Invalid MFA code for user: {} from IP: {}", username, ip);
+                    loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(
                                     Map.of(
@@ -134,6 +135,7 @@ public class AuthController {
                 }
                 if (!mfaService.markTotpStepUsed(user, timeStep)) {
                     log.warn("Replay MFA code detected for user: {} from IP: {}", username, ip);
+                    loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(
                                     Map.of(
@@ -283,6 +285,10 @@ public class AuthController {
                 userService
                         .findByUsernameIgnoreCaseWithSettings(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+        if (authTypeResponse != null) {
+            return authTypeResponse;
+        }
 
         if (mfaService.isMfaEnabled(user)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -316,6 +322,10 @@ public class AuthController {
                 userService
                         .findByUsernameIgnoreCaseWithSettings(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+        if (authTypeResponse != null) {
+            return authTypeResponse;
+        }
 
         String secret = mfaService.getSecret(user);
         if (secret == null || secret.isBlank()) {
@@ -363,6 +373,10 @@ public class AuthController {
                 userService
                         .findByUsernameIgnoreCaseWithSettings(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+        if (authTypeResponse != null) {
+            return authTypeResponse;
+        }
 
         if (!mfaService.isMfaEnabled(user)) {
             return ResponseEntity.ok(Map.of("enabled", false));
@@ -452,5 +466,13 @@ public class AuthController {
         userMap.put("app_metadata", appMetadata);
 
         return userMap;
+    }
+
+    private ResponseEntity<?> ensureWebAuth(User user) {
+        if (user.getAuthenticationType() != AuthenticationType.WEB) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "MFA settings are only available for web accounts"));
+        }
+        return null;
     }
 }

@@ -564,6 +564,7 @@ codeLabel = "Authentifizierungscode"
 confirmDisable = "Deaktivieren"
 ssoDescription = "Die Zwei-Faktor-Authentifizierung wird durch Ihren Identitätsanbieter für Single-Sign-On-Konten verwaltet."
 ssoManaged = "Konfigurieren Sie MFA über Ihren Identitätsanbieter."
+secretWarning = "Keep this key private. Anyone with access can generate valid authentication codes."
 
 [adminUserSettings]
 title = "Benutzerkontrolle"

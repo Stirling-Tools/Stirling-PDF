@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.service;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
 
@@ -16,6 +17,12 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.util.Base32Codec;
 
+/**
+ * Service for generating and validating TOTP secrets and codes for MFA authentication.
+ *
+ * <p>This service handles secret generation, code validation across time steps, and building
+ * otpauth:// URIs to provision authenticator apps.
+ */
 @Service
 @RequiredArgsConstructor
 public class TotpService {
@@ -29,16 +36,35 @@ public class TotpService {
 
     private final ApplicationProperties applicationProperties;
 
+    /**
+     * Generates a new random TOTP secret encoded in Base32.
+     *
+     * @return Base32-encoded secret suitable for provisioning an authenticator app
+     */
     public String generateSecret() {
         byte[] secret = new byte[SECRET_LENGTH_BYTES];
         SECURE_RANDOM.nextBytes(secret);
         return Base32Codec.encode(secret);
     }
 
+    /**
+     * Checks whether a submitted TOTP code is valid for the current time window.
+     *
+     * @param secret Base32-encoded shared secret
+     * @param code six-digit code supplied by the user
+     * @return {@code true} if the code is valid for the current time window
+     */
     public boolean isValidCode(String secret, String code) {
         return getValidTimeStep(secret, code) != null;
     }
 
+    /**
+     * Validates a TOTP code and returns the time step it matches.
+     *
+     * @param secret Base32-encoded shared secret
+     * @param code six-digit code supplied by the user
+     * @return matching time step, or {@code null} if the code is invalid
+     */
     public Long getValidTimeStep(String secret, String code) {
         if (secret == null || secret.isBlank() || code == null) {
             return null;
@@ -51,10 +77,13 @@ public class TotpService {
 
         byte[] secretKey = Base32Codec.decode(secret);
         long timeStep = Instant.now().getEpochSecond() / PERIOD_SECONDS;
+        byte[] normalizedCodeBytes = normalizedCode.getBytes(StandardCharsets.UTF_8);
 
         for (int offset = -1; offset <= 1; offset++) {
             long candidate = timeStep + offset;
-            if (generateCode(secretKey, candidate).equals(normalizedCode)) {
+            String generatedCode = generateCode(secretKey, candidate);
+            if (MessageDigest.isEqual(
+                    generatedCode.getBytes(StandardCharsets.UTF_8), normalizedCodeBytes)) {
                 return candidate;
             }
         }
@@ -62,6 +91,13 @@ public class TotpService {
         return null;
     }
 
+    /**
+     * Builds an otpauth:// URI for configuring TOTP in authenticator apps.
+     *
+     * @param username account identifier to embed in the label
+     * @param secret Base32-encoded secret to embed in the URI
+     * @return otpauth URI that can be encoded as a QR code
+     */
     public String buildOtpAuthUri(String username, String secret) {
         String issuer = resolveIssuer();
         String label = encodeForOtpAuth(issuer + ":" + username);
