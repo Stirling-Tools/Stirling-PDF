@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { springAuth } from '@app/auth/springAuthClient';
+import { startOAuthNavigation } from '@app/extensions/oauthNavigation';
 import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 
 // Mock apiClient
 vi.mock('@app/services/apiClient');
+vi.mock('@app/extensions/oauthNavigation', () => ({
+  startOAuthNavigation: vi.fn().mockResolvedValue(false),
+}));
 
 describe('SpringAuthClient', () => {
   beforeEach(() => {
@@ -342,12 +346,34 @@ describe('SpringAuthClient', () => {
         writable: true,
       });
 
+      vi.mocked(startOAuthNavigation).mockResolvedValueOnce(false);
+
       const result = await springAuth.signInWithOAuth({
         provider: '/oauth2/authorization/github',
         options: { redirectTo: '/auth/callback' },
       });
 
+      expect(startOAuthNavigation).toHaveBeenCalledWith('/oauth2/authorization/github');
       expect(mockAssign).toHaveBeenCalledWith('/oauth2/authorization/github');
+      expect(result.error).toBeNull();
+    });
+
+    it('should skip redirect when handled by extension', async () => {
+      const mockAssign = vi.fn();
+      Object.defineProperty(window, 'location', {
+        value: { assign: mockAssign },
+        writable: true,
+      });
+
+      vi.mocked(startOAuthNavigation).mockResolvedValueOnce(true);
+
+      const result = await springAuth.signInWithOAuth({
+        provider: '/oauth2/authorization/github',
+        options: { redirectTo: '/auth/callback' },
+      });
+
+      expect(startOAuthNavigation).toHaveBeenCalledWith('/oauth2/authorization/github');
+      expect(mockAssign).not.toHaveBeenCalled();
       expect(result.error).toBeNull();
     });
   });
