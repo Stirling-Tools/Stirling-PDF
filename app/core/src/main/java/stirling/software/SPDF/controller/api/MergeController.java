@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -27,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -277,7 +277,7 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<StreamingResponseBody> mergePdfs(
+    public ResponseEntity<byte[]> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
@@ -303,8 +303,6 @@ public class MergeController {
                     getSortComparator(
                             request.getSortType())); // Sort files based on requested sort type
         }
-
-        ResponseEntity<StreamingResponseBody> response;
 
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
@@ -399,7 +397,7 @@ public class MergeController {
         String mergedFileName =
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
-        response = WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
-        return response;
+        byte[] pdfBytes = Files.readAllBytes(outputTempFile.getPath());
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, mergedFileName);
     }
 }
