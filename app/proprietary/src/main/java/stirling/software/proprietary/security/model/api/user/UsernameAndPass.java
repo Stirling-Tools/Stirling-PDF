@@ -11,4 +11,7 @@ public class UsernameAndPass extends Username {
 
     @Schema(description = "password of user", format = "password")
     private String password;
+
+    @Schema(description = "6-digit authentication code from authenticator app", example = "123456")
+    private String mfaCode;
 }

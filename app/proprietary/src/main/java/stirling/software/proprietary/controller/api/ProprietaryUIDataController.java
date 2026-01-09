@@ -49,6 +49,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.DatabaseService;
+import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -68,6 +69,7 @@ public class ProprietaryUIDataController {
     private final ObjectMapper objectMapper;
     private final UserLicenseSettingsService licenseSettingsService;
     private final PersistentAuditEventRepository auditRepository;
+    private final MfaService mfaService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -80,7 +82,8 @@ public class ProprietaryUIDataController {
             ObjectMapper objectMapper,
             @Qualifier("runningEE") boolean runningEE,
             UserLicenseSettingsService licenseSettingsService,
-            PersistentAuditEventRepository auditRepository) {
+            PersistentAuditEventRepository auditRepository,
+            MfaService mfaService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -92,6 +95,7 @@ public class ProprietaryUIDataController {
         this.runningEE = runningEE;
         this.licenseSettingsService = licenseSettingsService;
         this.auditRepository = auditRepository;
+        this.mfaService = mfaService;
     }
 
     /**
@@ -403,6 +407,7 @@ public class ProprietaryUIDataController {
         data.setChangeCredsFlag(user.get().isFirstLogin() || user.get().isForcePasswordChange());
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
+        data.setMfaEnabled(mfaService.isMfaEnabled(user.get()));
 
         return ResponseEntity.ok(data);
     }
@@ -547,6 +552,7 @@ public class ProprietaryUIDataController {
         private boolean changeCredsFlag;
         private boolean oAuth2Login;
         private boolean saml2Login;
+        private boolean mfaEnabled;
     }
 
     @Data

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Text, Stack, Alert } from '@mantine/core';
+import { Text, Stack, Alert, Modal, TextInput, Button } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -33,6 +33,8 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [requiresMfa, setRequiresMfa] = useState(false);
   const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
@@ -264,6 +266,11 @@ export default function Login() {
       return;
     }
 
+    if (requiresMfa && !mfaCode.trim()) {
+      setError(t('login.mfaRequired', 'Two-factor code required'));
+      return;
+    }
+
     try {
       setIsSigningIn(true);
       setError(null);
@@ -272,14 +279,20 @@ export default function Login() {
 
       const { user, session, error } = await springAuth.signInWithPassword({
         email: email.trim(),
-        password: password
+        password: password,
+        mfaCode: requiresMfa ? mfaCode.trim() : undefined,
       });
 
       if (error) {
         console.error('[Login] Email sign in error:', error);
         setError(error.message);
+        if (error.mfaRequired || error.code === 'invalid_mfa_code') {
+          setRequiresMfa(true);
+        }
       } else if (user && session) {
         console.log('[Login] Email sign in successful');
+        setRequiresMfa(false);
+        setMfaCode('');
         // Auth state will update automatically and Landing will redirect to home
         // No need to navigate manually here
       }
@@ -289,6 +302,17 @@ export default function Login() {
     } finally {
       setIsSigningIn(false);
     }
+  };
+
+  const handleMfaModalClose = () => {
+    setRequiresMfa(false);
+    setMfaCode('');
+    setError(null);
+    setShowEmailForm(true);
+  };
+
+  const handleMfaSubmit = () => {
+    void signInWithEmail();
   };
 
   // Forgot password handler (currently unused, reserved for future implementation)
@@ -317,6 +341,50 @@ export default function Login() {
       )}
 
       <ErrorMessage error={error} />
+
+      <Modal
+        opened={requiresMfa}
+        onClose={handleMfaModalClose}
+        title={t('login.mfaPromptTitle', 'Two-factor authentication')}
+        centered
+      >
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleMfaSubmit();
+          }}
+        >
+          <Stack gap="md">
+            <Text size="sm">
+              {t('login.mfaPromptBody', 'Enter the authentication code from your authenticator app to continue.')}
+            </Text>
+            <TextInput
+              id="mfaCode"
+              label={t('login.mfaCode', 'Authentication code')}
+              type="text"
+              name="mfaCode"
+              autoComplete="one-time-code"
+              placeholder={t('login.enterMfaCode', 'Enter 6-digit code')}
+              value={mfaCode}
+              inputMode="numeric"
+              onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              pattern="[0-9]*"
+              maxLength={6}
+              autoFocus
+            />
+            <Button
+              type="submit"
+              loading={isSigningIn}
+              disabled={!mfaCode.trim()}
+              fullWidth
+            >
+              {isSigningIn
+                ? (t('login.verifyingMfa', 'Verifying...'))
+                : (t('login.verifyMfa', 'Verify code'))}
+            </Button>
+          </Stack>
+        </form>
+      </Modal>
 
       {/* OAuth first */}
       <OAuthButtons
