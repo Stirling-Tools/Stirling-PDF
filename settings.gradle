@@ -1,7 +1,28 @@
+pluginManagement {
+    repositories {
+        var gradlePluginPortalUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
+        if (!gradlePluginPortalUrl.isEmpty()){
+            maven {
+                url gradlePluginPortalUrl + "/gradle"
+                credentials(PasswordCredentials) {
+                    username System.getenv('MAVEN_USER') ?: ""
+                    password System.getenv('MAVEN_PASSWORD') ?: ""
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
+                allowInsecureProtocol true
+            }
+        }
+        gradlePluginPortal()
+    }
+}
+
 plugins {
     // Apply the foojay-resolver plugin to allow automatic download of JDKs
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
+
 rootProject.name = 'Stirling PDF'
 
 include 'stirling-pdf', 'common', 'proprietary'
