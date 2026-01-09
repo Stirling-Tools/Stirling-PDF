@@ -69,6 +69,13 @@ class TotpServiceTest {
         assertFalse(service.isValidCode(null, "123456"));
     }
 
+    @Test
+    void isValidCodeRejectsInvalidSecrets() {
+        TotpService service = buildService("Test App");
+
+        assertFalse(service.isValidCode("INVALID*", "123456"));
+    }
+
     private String generateCode(TotpService service, byte[] secretBytes, long timeStep)
             throws Exception {
         Method generateCode =

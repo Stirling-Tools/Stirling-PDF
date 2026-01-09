@@ -366,8 +366,10 @@ export default function Login() {
               autoComplete="one-time-code"
               placeholder={t('login.enterMfaCode', 'Enter 6-digit code')}
               value={mfaCode}
-              onChange={(e) => setMfaCode(e.target.value)}
               inputMode="numeric"
+              onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              pattern="[0-9]*"
+              maxLength={6}
               autoFocus
             />
             <Button

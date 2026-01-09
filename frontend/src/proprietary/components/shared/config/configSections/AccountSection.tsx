@@ -32,6 +32,7 @@ const AccountSection: React.FC = () => {
   const [mfaDisableCode, setMfaDisableCode] = useState('');
   const [mfaError, setMfaError] = useState('');
   const [mfaLoading, setMfaLoading] = useState(false);
+  const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, '').slice(0, 6), []);
 
   const authTypeFromMetadata = useMemo(() => {
     const metadata = user?.app_metadata as { authType?: string; authenticationType?: string } | undefined;
@@ -442,7 +443,11 @@ const AccountSection: React.FC = () => {
               label={t('account.mfa.codeLabel', 'Authentication code')}
               placeholder={t('account.mfa.codePlaceholder', 'Enter 6-digit code')}
               value={mfaSetupCode}
-              onChange={(event) => setMfaSetupCode(event.currentTarget.value)}
+              onChange={(event) => setMfaSetupCode(normalizeMfaCode(event.currentTarget.value))}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              autoComplete="one-time-code"
               required
             />
             <Group justify="flex-end" gap="sm">
@@ -473,7 +478,11 @@ const AccountSection: React.FC = () => {
               label={t('account.mfa.codeLabel', 'Authentication code')}
               placeholder={t('account.mfa.codePlaceholder', 'Enter 6-digit code')}
               value={mfaDisableCode}
-              onChange={(event) => setMfaDisableCode(event.currentTarget.value)}
+              onChange={(event) => setMfaDisableCode(normalizeMfaCode(event.currentTarget.value))}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              autoComplete="one-time-code"
               required
             />
             <Group justify="flex-end" gap="sm">

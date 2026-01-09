@@ -111,6 +111,11 @@ public class AuthController {
             if (mfaService.isMfaEnabled(user)) {
                 String code = request.getMfaCode();
                 if (code == null || code.isBlank()) {
+                    log.warn(
+                            "MFA required but no code provided for user: {} from IP: {}",
+                            username,
+                            ip);
+                    loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(
                                     Map.of(

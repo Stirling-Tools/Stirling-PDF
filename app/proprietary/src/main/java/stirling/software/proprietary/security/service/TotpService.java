@@ -75,7 +75,12 @@ public class TotpService {
             return null;
         }
 
-        byte[] secretKey = Base32Codec.decode(secret);
+        byte[] secretKey;
+        try {
+            secretKey = Base32Codec.decode(secret);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
         long timeStep = Instant.now().getEpochSecond() / PERIOD_SECONDS;
         byte[] normalizedCodeBytes = normalizedCode.getBytes(StandardCharsets.UTF_8);
 
