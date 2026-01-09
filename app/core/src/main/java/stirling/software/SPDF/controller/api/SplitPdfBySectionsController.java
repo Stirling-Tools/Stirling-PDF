@@ -44,7 +44,9 @@ public class SplitPdfBySectionsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/split-pdf-by-sections")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/split-pdf-by-sections")
     @MultiFileResponse
     @Operation(
             summary = "Split PDF pages into smaller sections",
