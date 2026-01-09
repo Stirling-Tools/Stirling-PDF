@@ -2,6 +2,21 @@ import { useTranslation } from 'react-i18next';
 import '@app/routes/authShared/auth.css';
 import { TextInput, PasswordInput, Button } from '@mantine/core';
 
+// Force light mode styles for auth inputs
+const authInputStyles = {
+  input: {
+    backgroundColor: 'var(--auth-input-bg-light-only)',
+    color: 'var(--auth-input-text-light-only)',
+    borderColor: 'var(--auth-input-border-light-only)',
+    '&:focus': {
+      borderColor: 'var(--auth-border-focus-light-only)',
+    },
+  },
+  label: {
+    color: 'var(--auth-label-text-light-only)',
+  },
+};
+
 interface EmailPasswordFormProps {
   email: string
   password: string
@@ -50,6 +65,7 @@ export default function EmailPasswordForm({
             onChange={(e) => setEmail(e.target.value)}
             error={fieldErrors.email}
             classNames={{ label: 'auth-label' }}
+            styles={authInputStyles}
           />
         </div>
 
@@ -65,6 +81,7 @@ export default function EmailPasswordForm({
               onChange={(e) => setPassword(e.target.value)}
               error={fieldErrors.password}
               classNames={{ label: 'auth-label' }}
+              styles={authInputStyles}
             />
           </div>
         )}
