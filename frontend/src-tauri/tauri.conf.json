@@ -1,95 +1,95 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Stirling-PDF",
-  "version": "2.2.0",
-  "identifier": "stirling.pdf.dev",
-  "build": {
-    "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "npm run dev -- --mode desktop",
-    "beforeBuildCommand": "npm run build -- --mode desktop"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "Stirling-PDF",
-        "width": 1280,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ]
-  },
-  "bundle": {
-    "active": true,
-    "targets": [
-      "deb",
-      "rpm",
-      "appimage",
-      "dmg",
-      "msi"
-    ],
-    "icon": [
-      "icons/icon.png",
-      "icons/icon.icns",
-      "icons/icon.ico",
-      "icons/16x16.png",
-      "icons/32x32.png",
-      "icons/64x64.png",
-      "icons/128x128.png",
-      "icons/192x192.png"
-    ],
-    "resources": [
-      "libs/*.jar",
-      "runtime/jre/**/*"
-    ],
-    "fileAssociations": [
-      {
-        "ext": [
-          "pdf"
-        ],
-        "name": "PDF Document",
-        "description": "Open PDF files with Stirling-PDF",
-        "role": "Editor",
-        "mimeType": "application/pdf"
-      }
-    ],
-    "linux": {
-      "deb": {
-        "desktopTemplate": "stirling-pdf.desktop"
-      },
-      "rpm": {
-        "desktopTemplate": "stirling-pdf.desktop"
-      },
-      "appimage": {
-        "bundleMediaFramework": false
-      }
+    "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+    "productName": "Stirling-PDF",
+    "version": "2.2.0",
+    "identifier": "stirling.pdf.dev",
+    "build": {
+        "frontendDist": "../dist",
+        "devUrl": "http://localhost:5173",
+        "beforeDevCommand": "npm run dev -- --mode desktop",
+        "beforeBuildCommand": "npm run build -- --mode desktop"
     },
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": "http://timestamp.digicert.com"
-    },
-    "macOS": {
-      "minimumSystemVersion": "10.15",
-      "signingIdentity": null,
-      "entitlements": null,
-      "providerShortName": null
-    }
-  },
-  "plugins": {
-    "shell": {
-      "open": true
-    },
-    "fs": {
-      "requireLiteralLeadingDot": false
-    },
-    "deep-link": {
-      "desktop": {
-        "schemes": [
-          "stirlingpdf"
+    "app": {
+        "windows": [
+            {
+                "title": "Stirling-PDF",
+                "width": 1280,
+                "height": 800,
+                "resizable": true,
+                "fullscreen": false
+            }
         ]
-      }
+    },
+    "bundle": {
+        "active": true,
+        "targets": [
+            "deb",
+            "rpm",
+            "appimage",
+            "dmg",
+            "msi"
+        ],
+        "icon": [
+            "icons/icon.png",
+            "icons/icon.icns",
+            "icons/icon.ico",
+            "icons/16x16.png",
+            "icons/32x32.png",
+            "icons/64x64.png",
+            "icons/128x128.png",
+            "icons/192x192.png"
+        ],
+        "resources": [
+            "libs/*.jar",
+            "runtime/jre/**/*"
+        ],
+        "fileAssociations": [
+            {
+                "ext": [
+                    "pdf"
+                ],
+                "name": "PDF Document",
+                "description": "Open PDF files with Stirling-PDF",
+                "role": "Editor",
+                "mimeType": "application/pdf"
+            }
+        ],
+        "linux": {
+            "deb": {
+                "desktopTemplate": "stirling-pdf.desktop"
+            },
+            "rpm": {
+                "desktopTemplate": "stirling-pdf.desktop"
+            },
+            "appimage": {
+                "bundleMediaFramework": false
+            }
+        },
+        "windows": {
+            "certificateThumbprint": null,
+            "digestAlgorithm": "sha256",
+            "timestampUrl": "http://timestamp.digicert.com"
+        },
+        "macOS": {
+            "minimumSystemVersion": "10.15",
+            "signingIdentity": null,
+            "entitlements": null,
+            "providerShortName": null
+        }
+    },
+    "plugins": {
+        "shell": {
+            "open": true
+        },
+        "fs": {
+            "requireLiteralLeadingDot": false
+        },
+        "deep-link": {
+            "desktop": {
+                "schemes": [
+                    "stirlingpdf"
+                ]
+            }
+        }
     }
-  }
 }
