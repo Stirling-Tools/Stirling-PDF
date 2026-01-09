@@ -15,9 +15,9 @@ class ApplicationPropertiesSaml2ResourceTest {
     @Test
     void idpMetadataUri_classpath_is_resolved() throws Exception {
         var s = new ApplicationProperties.Security.SAML2();
-        s.setIdpMetadataUri("classpath:saml/dummy.txt");
+        s.setMetadataUri("classpath:saml/dummy.txt");
 
-        try (InputStream in = s.getIdpMetadataUri()) {
+        try (InputStream in = s.getMetadataUriAsStream()) {
             assertNotNull(in, "Classpath InputStream should not be null");
             String txt = new String(in.readAllBytes(), StandardCharsets.UTF_8);
             assertTrue(txt.contains("ok"));
@@ -28,27 +28,26 @@ class ApplicationPropertiesSaml2ResourceTest {
     void spCert_idpCert_privateKey_null_classpath_and_filesystem() throws Exception {
         var s = new ApplicationProperties.Security.SAML2();
 
-        s.setSpCert(null);
-        s.setIdpCert(null);
-        s.setPrivateKey(null);
-        assertNull(s.getSpCert());
-        assertNull(s.getIdpCert());
-        assertNull(s.getPrivateKey());
+        // Test null values via the nested structure
+        assertNull(s.getSp().getCertResource());
+        assertNull(s.getProvider().getCertResource());
+        assertNull(s.getSp().getPrivateKeyResource());
 
-        s.setSpCert("classpath:saml/dummy.txt");
-        s.setIdpCert("classpath:saml/dummy.txt");
-        s.setPrivateKey("classpath:saml/dummy.txt");
-        Resource sp = s.getSpCert();
-        Resource idp = s.getIdpCert();
-        Resource pk = s.getPrivateKey();
+        // Set classpath resources via the nested structure
+        s.getSp().setCert("classpath:saml/dummy.txt");
+        s.getProvider().setCert("classpath:saml/dummy.txt");
+        s.getSp().setPrivateKey("classpath:saml/dummy.txt");
+        Resource sp = s.getSp().getCertResource();
+        Resource idp = s.getProvider().getCertResource();
+        Resource pk = s.getSp().getPrivateKeyResource();
         assertTrue(sp.exists());
         assertTrue(idp.exists());
         assertTrue(pk.exists());
 
         Path tmp = Files.createTempFile("spdf-key-", ".pem");
         Files.writeString(tmp, "KEY");
-        s.setPrivateKey(tmp.toString());
-        Resource pkFs = s.getPrivateKey();
+        s.getSp().setPrivateKey(tmp.toString());
+        Resource pkFs = s.getSp().getPrivateKeyResource();
         assertNotNull(pkFs);
         assertTrue(pkFs.exists());
     }
