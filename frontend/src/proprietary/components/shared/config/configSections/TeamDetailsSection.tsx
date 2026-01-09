@@ -362,8 +362,13 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                     <Table.Td w={100}>
                       <Badge
                         size="sm"
-                        color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
+                        color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'violet'}
                         variant="light"
+                        styles={{
+                          label: {
+                            color: 'light-dark(var(--mantine-color-gray-7), white)',
+                          }
+                        }}
                       >
                         {(user.rolesAsString || '').includes('ROLE_ADMIN')
                           ? t('workspace.people.admin')

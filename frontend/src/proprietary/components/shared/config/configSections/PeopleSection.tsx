@@ -353,12 +353,12 @@ export default function PeopleSection() {
 
       {/* License Information - Compact */}
       {licenseInfo && (
-        <Group gap="md" c="dimmed" style={{ fontSize: '0.875rem' }}>
-          <Text size="sm" span>
+        <Group gap="md" style={{ fontSize: '0.875rem' }}>
+          <Text size="sm" span c="dimmed">
             <Text component="span" fw={600} c="inherit">{licenseInfo.totalUsers}</Text>
             <Text component="span" c="dimmed"> / </Text>
             <Text component="span" fw={600} c="inherit">{licenseInfo.maxAllowedUsers}</Text>
-            <Text component="span" c="dimmed" ml={4}>{t('workspace.people.license.users', 'users')}</Text>
+            <Text component="span" c="dimmed"> {t('workspace.people.license.users', 'users')}</Text>
           </Text>
 
           {licenseInfo.availableSlots === 0 && (
@@ -518,7 +518,12 @@ export default function PeopleSection() {
                   <Badge
                     size="sm"
                     variant="light"
-                    color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
+                    color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'violet'}
+                    styles={{
+                      label: {
+                        color: 'light-dark(var(--mantine-color-gray-7), white)',
+                      }
+                    }}
                   >
                     {(user.rolesAsString || '').includes('ROLE_ADMIN')
                       ? t('workspace.people.admin', 'Admin')
