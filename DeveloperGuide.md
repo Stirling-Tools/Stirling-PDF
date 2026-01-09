@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. **Stirling 2.0** represents a complete frontend rewrite, replacing the legacy Thymeleaf-based UI with a modern React SPA (Single Page Application).
+Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. **Stirling 2.0** represents a complete frontend rewrite with a modern React SPA (Single Page Application).
 
 This guide focuses on developing for Stirling 2.0, including both the React frontend and Spring Boot backend development workflows.
 
@@ -37,9 +37,6 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - Rust backend for system integration
 - PDF file association support
 - Self-contained JRE bundling with JLink
-
-**Legacy (reference only during development):**
-- Thymeleaf templates (being completely replaced in 2.0)
 
 ## 3. Development Environment Setup
 
@@ -100,9 +97,6 @@ Stirling 2.0 uses client-side file storage:
 - **PDF.js**: Handles client-side PDF rendering and processing
 - **URL Parameters**: Support for deep linking and tool state persistence
 
-### Legacy Code Reference
-The existing Thymeleaf templates remain in the codebase during development as reference material but will be completely removed for the 2.0 release.
-
 ### Tauri Desktop App Development
 Stirling-PDF can be packaged as a cross-platform desktop application using Tauri with PDF file association support and bundled JRE.
 See [the frontend README](frontend/README.md#tauri) for build instructions.
@@ -154,7 +148,6 @@ Stirling-PDF/
 │   │       │   ├── css/
 │   │       │   ├── js/
 │   │       │   └── pdfjs/
-│   │       └── templates/         # Legacy Thymeleaf templates (reference only)
 │   └── test/
 ├── testing/               # Cucumber and integration tests
 │   └── cucumber/          # Cucumber test files
@@ -309,7 +302,6 @@ For quick iterations and development of Java backend, JavaScript, and UI compone
 - RESTful API endpoints
 - JavaScript functionality
 - User interface components and styling
-- Thymeleaf templates
 
 To run Stirling-PDF locally:
 
@@ -401,7 +393,7 @@ Remember to test your changes thoroughly to ensure they don't break any existing
 
 ### React Component Development (Stirling 2.0)
 
-For Stirling 2.0, new features are built as React components instead of Thymeleaf templates:
+For Stirling 2.0, new features are built as React components:
 
 #### Creating a New Tool Component
 
@@ -448,61 +440,6 @@ For Stirling 2.0, new features are built as React components instead of Thymelea
 3. **Register in Tool Picker:**
    Update the tool picker component to include the new tool with proper routing and URL parameter support.
 
-### Legacy Reference: Overview of Thymeleaf
-
-Thymeleaf is a server-side Java HTML template engine. It is used in Stirling-PDF to render dynamic web pages. Thymeleaf integrates heavily with Spring Boot.
-
-### Thymeleaf overview
-
-In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `stirling-pdf/src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
-
-Some examples of this are:
-
-```html
-<th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-```
-or
-```html
-<th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-```
-
-Where it uses the `th:block`, `th:` indicating it's a special Thymeleaf element to be used server-side in generating the HTML, and block being the actual element type.
-In this case, we are inserting the `navbar` entry within the `fragments/navbar.html` fragment into the `th:block` element.
-
-They can be more complex, such as:
-
-```html
-<th:block th:insert="~{fragments/common :: head(title=#{pageExtracter.title}, header=#{pageExtracter.header})}"></th:block>
-```
-
-Which is the same as above but passes the parameters title and header into the fragment `common.html` to be used in its HTML generation.
-
-Thymeleaf can also be used to loop through objects or pass things from the Java side into the HTML side.
-
-```java
- @GetMapping
-       public String newFeaturePage(Model model) {
-           model.addAttribute("exampleData", exampleData);
-           return "new-feature";
-       }
-```
-
-In the above example, if exampleData is a list of plain java objects of class Person and within it, you had id, name, age, etc. You can reference it like so
-
-```html
-<tbody>
-   <!-- Use th:each to iterate over the list -->
-   <tr th:each="person : ${exampleData}">
-       <td th:text="${person.id}"></td>
-       <td th:text="${person.name}"></td>
-       <td th:text="${person.age}"></td>
-       <td th:text="${person.email}"></td>
-   </tr>
-</tbody>
-```
-
-This would generate n entries of tr for each person in exampleData
-
 ### Adding a New Feature to the Backend (API)
 
 1. **Create a New Controller:**
@@ -527,7 +464,7 @@ This would generate n entries of tr for each person in exampleData
        @GetMapping
        @Operation(summary = "New Feature", description = "This is a new feature endpoint.")
        public String newFeature() {
-           return "NewFeatureResponse"; // This refers to the NewFeatureResponse.html template presenting the user with the generated html from that file when they navigate to /api/v1/new-feature
+           return "NewFeatureResponse";
        }
    }
    ```
@@ -582,91 +519,6 @@ This would generate n entries of tr for each person in exampleData
   }
   ```
 
-### Adding a New Feature to the Frontend (UI)
-
-1. **Create a New Thymeleaf Template:**
-   - Create a new HTML file in the `stirling-pdf/src/main/resources/templates` directory.
-   - Use Thymeleaf attributes to dynamically generate content.
-   - Use `extract-page.html` as a base example for the HTML template, which is useful to ensure importing of the general layout, navbar, and footer.
-
-   ```html
-   <!DOCTYPE html>
-   <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
-     <head>
-     <th:block th:insert="~{fragments/common :: head(title=#{newFeature.title}, header=#{newFeature.header})}"></th:block>
-     </head>
-
-     <body>
-       <div id="page-container">
-         <div id="content-wrap">
-           <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-           <br><br>
-           <div class="container">
-             <div class="row justify-content-center">
-               <div class="col-md-6 bg-card">
-                 <div class="tool-header">
-                   <span class="material-symbols-rounded tool-header-icon organize">upload</span>
-                   <span class="tool-header-text" th:text="#{newFeature.header}"></span>
-                 </div>
-                 <form th:action="@{'/api/v1/new-feature'}" method="post" enctype="multipart/form-data">
-                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                   <input type="hidden" id="customMode" name="customMode" value="">
-                   <div class="mb-3">
-                     <label for="featureInput" th:text="#{newFeature.prompt}"></label>
-                     <input type="text" class="form-control" id="featureInput" name="featureInput" th:placeholder="#{newFeature.placeholder}" required>
-                   </div>
-
-                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{newFeature.submit}"></button>
-                 </form>
-               </div>
-             </div>
-           </div>
-         </div>
-         <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-       </div>
-     </body>
-   </html>
-   ```
-
-2. **Create a New Controller for the UI:**
-   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/ui` directory.
-   - Annotate the class with `@Controller` and `@RequestMapping` to define the UI endpoint.
-
-   ```java
-   package stirling.software.SPDF.controller.ui;
-
-   import org.springframework.beans.factory.annotation.Autowired;
-   import org.springframework.stereotype.Controller;
-   import org.springframework.ui.Model;
-   import org.springframework.web.bind.annotation.GetMapping;
-   import org.springframework.web.bind.annotation.RequestMapping;
-   import stirling.software.SPDF.service.NewFeatureService;
-
-   @Controller
-   @RequestMapping("/new-feature")
-   public class NewFeatureUIController {
-
-       @Autowired
-       private NewFeatureService newFeatureService;
-
-       @GetMapping
-       public String newFeaturePage(Model model) {
-           model.addAttribute("newFeatureData", newFeatureService.getNewFeatureData());
-           return "new-feature";
-       }
-   }
-   ```
-
-3. **Update the Navigation Bar:**
-   - Add a link to the new feature page in the navigation bar.
-   - Update the `stirling-pdf/src/main/resources/templates/fragments/navbar.html` file.
-
-   ```html
-   <li class="nav-item">
-       <a class="nav-link" th:href="@{'/new-feature'}">New Feature</a>
-   </li>
-   ```
-
 ## Adding New Translations to Existing Language Files in Stirling-PDF
 
 When adding a new feature or modifying existing ones in Stirling-PDF, you'll need to add new translation entries to the existing language files. Here's a step-by-step guide:
@@ -695,16 +547,5 @@ pdfSplitter.input.pages=Enter page numbers to split
 ```
 
 Add these entries to the default GB language file and any others you wish, translating the values as appropriate for each language.
-
-### 3. Use Translations in Thymeleaf Templates
-
-In your Thymeleaf templates, use the `#{key}` syntax to reference the new translations:
-
-```html
-<h1 th:text="#{pdfSplitter.title}">PDF Splitter</h1>
-<p th:text="#{pdfSplitter.description}">Split your PDF into multiple documents</p>
-<input type="text" th:placeholder="#{pdfSplitter.input.pages}">
-<button th:text="#{pdfSplitter.button.split}">Split PDF</button>
-```
 
 Remember, never hard-code text in your templates or Java code. Always use translation keys to ensure proper localization.
