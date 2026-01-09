@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -73,6 +74,8 @@ public final class Base32Codec {
             }
 
             return output.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Error during Base32 decoding", e);
         }
     }
 }
