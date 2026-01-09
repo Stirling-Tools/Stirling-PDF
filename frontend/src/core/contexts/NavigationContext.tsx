@@ -83,7 +83,8 @@ const navigationReducer = (state: NavigationContextState, action: NavigationActi
           editorScreenshotUrl: action.payload.editorScreenshotUrl || null,
           isZooming: false,
           transitionDirection: 'enter',
-          exitTargetRect: null
+          exitTargetRect: null,
+          exitFileId: null
         }
       };
 

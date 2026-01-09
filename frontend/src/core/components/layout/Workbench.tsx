@@ -1,6 +1,5 @@
 import { useCallback, useRef } from 'react';
 import { Box } from '@mantine/core';
-import html2canvas from 'html2canvas';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
@@ -9,6 +8,10 @@ import { useNavigationState, useNavigationActions, useNavigationGuard } from '@a
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import type { FileId } from '@app/types/fileContext';
+import { VIEWER_TRANSITION } from '@app/constants/animations';
+import { captureElementScreenshot } from '@app/utils/screenshot';
+import { useViewerTransition } from '@app/hooks/useViewerTransition';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -93,98 +96,30 @@ export default function Workbench() {
   // Capture screenshot helper for TopControls transitions
   const captureMainContentScreenshot = useCallback(async (): Promise<string | null> => {
     if (!mainContentRef.current) return null;
-
-    try {
-      const canvas = await html2canvas(mainContentRef.current, {
-        backgroundColor: null,
-        scale: 1,
-        logging: false,
-        useCORS: true,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-        x: 0,
-        y: 0,
-      });
-
-      return canvas.toDataURL('image/png');
-    } catch (error) {
-      console.warn('Failed to capture screenshot:', error);
-      return null;
-    }
+    return captureElementScreenshot(mainContentRef.current);
   }, []);
 
-  // Wrapper for setCurrentView that adds transition when switching to viewer
-  const setCurrentView = useCallback(async (view: typeof currentView) => {
-    // If switching to viewer from fileEditor or pageEditor, add transition
+  // Get transition handlers
+  const { handleEntryTransition, handleExitTransition } = useViewerTransition({
+    activeFileIndex,
+    currentView,
+    captureScreenshot: captureMainContentScreenshot,
+  });
+
+  // Wrapper for setCurrentView that adds transition when switching to/from viewer
+  const setCurrentView = useCallback(async (view: typeof currentView, fileId?: FileId, sourceRect?: DOMRect) => {
+    // Handle entry transition (fileEditor/pageEditor → viewer)
     if (view === 'viewer' && (currentView === 'fileEditor' || currentView === 'pageEditor')) {
-      const screenshot = await captureMainContentScreenshot();
-
-      // Get the active file's thumbnail for the zoom animation
-      const activeFile = activeFiles[activeFileIndex];
-      const activeStub = activeFile ? selectors.getStirlingFileStub(activeFile.fileId) : null;
-      const thumbnailUrl = activeStub?.thumbnailUrl || '';
-
-      if (screenshot && thumbnailUrl && activeFile) {
-        // Find the actual file card element in the DOM
-        const fileCard = document.querySelector(`[data-file-id="${activeFile.fileId}"]`) as HTMLElement;
-
-        let sourceRect: DOMRect;
-
-        if (fileCard) {
-          // Find the thumbnail image inside the card
-          const thumbnailImg = fileCard.querySelector('img') as HTMLImageElement;
-          if (thumbnailImg) {
-            sourceRect = thumbnailImg.getBoundingClientRect();
-          } else {
-            // Fallback to card position if no image found
-            sourceRect = fileCard.getBoundingClientRect();
-          }
-        } else {
-          // Fallback to center if card not found (might be scrolled out of view)
-          const centerX = window.innerWidth / 2;
-          const centerY = window.innerHeight / 2;
-          const thumbnailSize = 200;
-
-          sourceRect = new DOMRect(
-            centerX - thumbnailSize / 2,
-            centerY - thumbnailSize / 2,
-            thumbnailSize,
-            thumbnailSize
-          );
-        }
-
-        navActions.startViewerTransition(
-          sourceRect,
-          thumbnailUrl,
-          currentView,
-          screenshot
-        );
-      }
+      await handleEntryTransition(fileId, sourceRect);
     }
 
-    // If switching from viewer to fileEditor or pageEditor, add exit transition
+    // Handle exit transition (viewer → fileEditor/pageEditor)
     if ((view === 'fileEditor' || view === 'pageEditor') && currentView === 'viewer') {
-      const activeFile = activeFiles[activeFileIndex];
-      const activeStub = activeFile ? selectors.getStirlingFileStub(activeFile.fileId) : null;
-      const thumbnailUrl = activeStub?.thumbnailUrl || '';
-
-      if (activeFile && thumbnailUrl) {
-        // Find current PDF page position (still in DOM)
-        const pdfPageElement = document.querySelector('[data-page-index="0"]');
-
-        if (pdfPageElement) {
-          const exitTargetRect = pdfPageElement.getBoundingClientRect();
-
-          // Start exit transition - file card position will be found after fileEditor renders
-          navActions.startExitTransition(exitTargetRect, thumbnailUrl, activeFile.fileId);
-        }
-      }
+      handleExitTransition();
     }
 
     navActions.setWorkbench(view);
-  }, [currentView, navActions, captureMainContentScreenshot, activeFiles, activeFileIndex, selectors, viewerTransition]);
+  }, [currentView, navActions, handleEntryTransition, handleExitTransition]);
 
   const renderMainContent = () => {
     // During viewer transition with screenshot, show screenshot overlay
@@ -200,7 +135,7 @@ export default function Workbench() {
         />
       );
 
-      // Screenshot fades out in 200ms when zoom starts
+      // Screenshot fades out when zoom starts
       const screenshotOverlay = (
         <div
           style={{
@@ -210,7 +145,9 @@ export default function Workbench() {
             width: window.innerWidth,
             height: window.innerHeight,
             opacity: viewerTransition.isZooming ? 0 : 1,
-            transition: viewerTransition.isZooming ? 'opacity 0.2s ease-out' : 'none',
+            transition: viewerTransition.isZooming
+              ? `opacity ${VIEWER_TRANSITION.SCREENSHOT_FADE_DURATION}ms ease-out`
+              : 'none',
             pointerEvents: 'none',
           }}
         >
@@ -263,15 +200,9 @@ export default function Workbench() {
           <FileEditor
             toolMode={!!selectedToolId}
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
-            {...(!selectedToolId && {
-              onOpenPageEditor: () => {
-                setCurrentView("pageEditor");
-              },
-              onMergeFiles: (filesToMerge) => {
-                addFiles(filesToMerge);
-                setCurrentView("viewer");
-              }
-            })}
+            onOpenViewer={(fileId, sourceRect) => {
+              setCurrentView("viewer", fileId, sourceRect);
+            }}
           />
         );
 

@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import html2canvas from 'html2canvas';
 import {
   Text, Center, Box, LoadingOverlay, Stack
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '@app/contexts/FileContext';
-import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
+import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 import { zipFileService } from '@app/services/zipFileService';
 import { detectFileExtension } from '@app/utils/fileUtils';
 import FileEditorThumbnail from '@app/components/fileEditor/FileEditorThumbnail';
@@ -16,19 +16,18 @@ import { alert } from '@app/components/toast';
 import { downloadBlob } from '@app/utils/downloadUtils';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import styles from './FileEditor.module.css';
 
 
 interface FileEditorProps {
-  onOpenPageEditor?: () => void;
-  onMergeFiles?: (files: StirlingFile[]) => void;
+  onOpenViewer?: (fileId: FileId, sourceRect?: DOMRect) => void;
   toolMode?: boolean;
   supportedExtensions?: string[];
 }
 
 const FileEditor = ({
   toolMode = false,
-  supportedExtensions = ["pdf"]
+  supportedExtensions = ["pdf"],
+  onOpenViewer
 }: FileEditorProps) => {
 
   // Utility function to check if a file extension is supported
@@ -50,12 +49,14 @@ const FileEditor = ({
   const totalItems = state.files.ids.length;
   const selectedCount = selectedFileIds.length;
 
-  // Get navigation actions and state
+  // Get navigation actions
   const { actions: navActions } = useNavigationActions();
-  const { viewerTransition } = useNavigationState();
 
   // Get file selection context
   const { setSelectedFiles } = useFileSelection();
+
+  // Get viewer context for active file index
+  const { setActiveFileIndex } = useViewer();
 
   const [_status, _setStatus] = useState<string | null>(null);
   const [_error, _setError] = useState<string | null>(null);
@@ -69,8 +70,6 @@ const FileEditor = ({
   }, []);
   const [selectionMode, setSelectionMode] = useState(toolMode);
 
-  // Ref for capturing screenshot during transition
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Current tool (for enforcing maxFiles limits)
   const { selectedTool } = useToolWorkflow();
@@ -334,50 +333,28 @@ const FileEditor = ({
     }
   }, [activeStirlingFileStubs, selectors, fileActions, removeFiles]);
 
-  const captureScreenshot = useCallback(async (): Promise<string | null> => {
-    if (!containerRef.current) return null;
-
-    try {
-      const canvas = await html2canvas(containerRef.current, {
-        backgroundColor: null,
-        scale: 1,
-        logging: false,
-        useCORS: true,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-        x: 0,
-        y: 0,
-      });
-
-      return canvas.toDataURL('image/png');
-    } catch (error) {
-      console.warn('Failed to capture screenshot:', error);
-      return null;
-    }
-  }, []);
-
   const handleViewFile = useCallback(async (fileId: FileId, sourceElement?: HTMLElement) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     if (record) {
-      // Set the file as selected in context
+      // Find the index of the clicked file
+      const fileIndex = activeStirlingFileStubs.findIndex(r => r.id === fileId);
+
+      // Set the file as selected and active
       setSelectedFiles([fileId]);
-
-      // If we have a source element and thumbnail, start the zoom animation
-      if (sourceElement && record.thumbnailUrl) {
-        const sourceRect = sourceElement.getBoundingClientRect();
-
-        // Capture screenshot for smooth transition
-        const screenshot = await captureScreenshot();
-
-        navActions.startViewerTransition(sourceRect, record.thumbnailUrl, 'fileEditor', screenshot || undefined);
+      if (fileIndex !== -1) {
+        setActiveFileIndex(fileIndex);
       }
 
-      // Switch to viewer immediately - screenshot will show during search
-      navActions.setWorkbench('viewer');
+      const sourceRect = sourceElement?.getBoundingClientRect();
+
+      // Switch to viewer - pass fileId and sourceRect (parent handles fallbacks)
+      if (onOpenViewer) {
+        onOpenViewer(fileId, sourceRect);
+      } else {
+        navActions.setWorkbench('viewer');
+      }
     }
-  }, [activeStirlingFileStubs, setSelectedFiles, navActions, captureScreenshot]);
+  }, [activeStirlingFileStubs, setSelectedFiles, setActiveFileIndex, navActions, onOpenViewer]);
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
@@ -407,7 +384,6 @@ const FileEditor = ({
       activateOnDrag={true}
     >
       <Box
-        ref={containerRef}
         pos="relative"
         style={{
           overflow: 'auto',

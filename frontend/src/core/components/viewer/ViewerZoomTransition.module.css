@@ -1,9 +1,9 @@
 /* ViewerZoomTransition.module.css - Smooth zoom animation for viewer transitions */
 
-/* Animation timing - matches component duration */
+/* Animation timing - synced with constants/animations.ts */
 :root {
-  --viewer-zoom-duration: 400ms;
-  --viewer-zoom-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* easeOutQuad */
+  --viewer-zoom-duration: 400ms; /* VIEWER_TRANSITION.ZOOM_DURATION */
+  --viewer-zoom-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* VIEWER_TRANSITION.EASING */
 }
 
 /* Backdrop that fades in during transition */
@@ -28,8 +28,12 @@
 /* Thumbnail that zooms from source position to PDF page */
 .thumbnail {
   position: fixed;
-  transition: all var(--viewer-zoom-duration) var(--viewer-zoom-easing);
-  will-change: transform, width, height, top, left, border-radius;
+  transition:
+    transform var(--viewer-zoom-duration) var(--viewer-zoom-easing),
+    border-radius var(--viewer-zoom-duration) var(--viewer-zoom-easing),
+    box-shadow var(--viewer-zoom-duration) var(--viewer-zoom-easing);
+  will-change: transform;
+  transform-origin: top left;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 

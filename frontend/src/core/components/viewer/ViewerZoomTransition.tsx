@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
-import styles from './ViewerZoomTransition.module.css';
+import { VIEWER_TRANSITION } from '@app/constants/animations';
+import { getCenteredFallbackRect } from '@app/utils/dom';
+import styles from '@app/components/viewer/ViewerZoomTransition.module.css';
 
 /**
  * ViewerZoomTransition - Animated overlay for smooth transitions to viewer mode
@@ -15,8 +17,8 @@ export const ViewerZoomTransition: React.FC = () => {
   const { actions } = useNavigationActions();
   const [animationPhase, setAnimationPhase] = useState<'idle' | 'searching' | 'zooming'>('idle');
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-
   const isExitTransition = viewerTransition.transitionDirection === 'exit';
+  const getFallbackRect = () => getCenteredFallbackRect();
 
   useEffect(() => {
     let transitionTimer: number | null = null;
@@ -33,165 +35,133 @@ export const ViewerZoomTransition: React.FC = () => {
       };
     }
 
-    if (isExitTransition) {
-      // EXIT TRANSITION: Search for file card in fileEditor, then zoom
-      setAnimationPhase('searching');
+    setAnimationPhase('searching');
 
-      const waitForFileCard = async (): Promise<DOMRect | null> => {
+    if (isExitTransition) {
+      // EXIT: start at PDF page rect (already captured), zoom to file card
+      const waitForFileCard = async (): Promise<DOMRect> => {
         const maxAttempts = 20;
         const delayMs = 50;
         const fileId = viewerTransition.exitFileId;
+        if (!fileId) return getFallbackRect();
 
-        if (!fileId) {
-          console.warn('ViewerZoomTransition: No exitFileId for exit transition');
-          return null;
-        }
-
-        // Step 1: Find the file card element
-        let fileCard: Element | null = null;
+        let card: Element | null = null;
         for (let i = 0; i < maxAttempts; i++) {
-          fileCard = document.querySelector(`[data-file-id="${fileId}"]`);
-          if (fileCard) break;
+          card = document.querySelector(`[data-file-id="${fileId}"]`);
+          if (card) break;
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
 
-        if (!fileCard) {
-          console.warn('ViewerZoomTransition: File card not found for exit transition');
-          // Fallback to center position
-          const centerX = window.innerWidth / 2;
-          const centerY = window.innerHeight / 2;
-          const thumbnailSize = 200;
-          return new DOMRect(
-            centerX - thumbnailSize / 2,
-            centerY - thumbnailSize / 2,
-            thumbnailSize,
-            thumbnailSize
-          );
+        if (!card) {
+          console.warn('ViewerZoomTransition: file card not found, using fallback rect');
+          return getFallbackRect();
         }
 
-        // Step 2: Find thumbnail image inside card
-        const thumbnailImg = fileCard.querySelector('img') as HTMLImageElement;
-        if (thumbnailImg) {
-          return thumbnailImg.getBoundingClientRect();
-        } else {
-          // Fallback to card position if no image found
-          return fileCard.getBoundingClientRect();
-        }
+        const img = card.querySelector('img') as HTMLImageElement | null;
+        return img ? img.getBoundingClientRect() : card.getBoundingClientRect();
       };
 
-      waitForFileCard().then(fileCardRect => {
-        if (!fileCardRect || !isMounted) {
-          actions.endViewerTransition();
-          return;
-        }
+      waitForFileCard().then(cardRect => {
+        if (!isMounted) return;
 
-        // Found file card - start animation
         actions.startZoom();
-        setTargetRect(fileCardRect);
+        setTargetRect(cardRect);
         setAnimationPhase('zooming');
-
-        const zoomDuration = 400;
 
         transitionTimer = window.setTimeout(() => {
           if (!isMounted) return;
           actions.endViewerTransition();
-        }, zoomDuration);
+        }, VIEWER_TRANSITION.ZOOM_DURATION);
       });
     } else {
-      // ENTRY TRANSITION: Search for PDF page, then zoom
-      setAnimationPhase('searching');
+      const waitForPdfPage = async (): Promise<DOMRect> => {
+        const maxAttempts = 20;
+        const delayMs = 50;
 
-    const waitForPdfPage = async (): Promise<DOMRect | null> => {
-      const maxAttempts = 20;
-      const delayMs = 50;
-
-      // Step 1: Find the element
-      let pageElement: Element | null = null;
-      for (let i = 0; i < maxAttempts; i++) {
-        pageElement = document.querySelector('[data-page-index="0"]');
-        if (pageElement) break;
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
-
-      if (!pageElement) {
-        console.warn('ViewerZoomTransition: PDF page not found');
-        return null;
-      }
-
-      // Step 2: Wait for size to stabilize
-      let stableRect: DOMRect | null = null;
-      let previousSize = { width: 0, height: 0 };
-      const stabilityChecks = 5; // Check 5 times to ensure stability
-      let stableCount = 0;
-
-      for (let i = 0; i < 10; i++) { // Max 500ms to stabilize
-        const currentRect = pageElement.getBoundingClientRect();
-        const currentSize = {
-          width: currentRect.width,
-          height: currentRect.height
-        };
-
-        // Check if size has changed from previous measurement
-        const sizeChanged = Math.abs(currentSize.width - previousSize.width) > 1 ||
-                           Math.abs(currentSize.height - previousSize.height) > 1;
-
-        if (sizeChanged) {
-          // Size changed, reset stability counter
-          stableCount = 0;
-        } else {
-          // Size unchanged, increment stability counter
-          stableCount++;
-          if (stableCount >= stabilityChecks) {
-            // Size has been stable for multiple checks - use this
-            stableRect = currentRect;
-            break;
-          }
+        // Step 1: Find the element
+        let pageElement: Element | null = null;
+        for (let i = 0; i < maxAttempts; i++) {
+          pageElement = document.querySelector('[data-page-index="0"]');
+          if (pageElement) break;
+          await new Promise(resolve => setTimeout(resolve, delayMs));
         }
 
-        previousSize = currentSize;
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
+        if (!pageElement) {
+          console.warn('ViewerZoomTransition: PDF page not found, using fallback rect');
+          return viewerTransition.sourceRect || getFallbackRect();
+        }
 
-      // Use stable rect if found, otherwise use latest measurement
-      return stableRect || pageElement.getBoundingClientRect();
-    };
+        // Step 2: Wait for size to stabilize
+        let stableRect: DOMRect | null = null;
+        let previousSize = { width: 0, height: 0 };
+        const stabilityChecks = 5; // Check 5 times to ensure stability
+        let stableCount = 0;
 
-    waitForPdfPage().then(pdfPageRect => {
-      if (!pdfPageRect || !isMounted) {
-        actions.endViewerTransition();
-        return;
-      }
+        for (let i = 0; i < 10; i++) { // Max 500ms to stabilize
+          const currentRect = pageElement.getBoundingClientRect();
+          const currentSize = {
+            width: currentRect.width,
+            height: currentRect.height
+          };
 
-      // Found PDF page - trigger screenshot fade and start animation
-      actions.startZoom(); // Triggers 200ms fade of screenshot
-      setTargetRect(pdfPageRect);
-      setAnimationPhase('zooming');
+          // Check if size has changed from previous measurement
+          const sizeChanged = Math.abs(currentSize.width - previousSize.width) > 1 ||
+                             Math.abs(currentSize.height - previousSize.height) > 1;
 
-      const zoomDuration = 400;
-
-      // After zoom completes, wait for PDF to be fully rendered before removing thumbnail
-      transitionTimer = window.setTimeout(async () => {
-        if (!isMounted) return;
-
-        // Wait for PDF to be ready (check for rendered canvas or content)
-        let pdfReady = false;
-        for (let i = 0; i < 10; i++) {
-          const pageElement = document.querySelector('[data-page-index="0"]');
-          if (pageElement) {
-            // Check if page has actual content rendered (canvas or img)
-            const hasContent = pageElement.querySelector('canvas, img');
-            if (hasContent) {
-              pdfReady = true;
+          if (sizeChanged) {
+            // Size changed, reset stability counter
+            stableCount = 0;
+          } else {
+            // Size unchanged, increment stability counter
+            stableCount++;
+            if (stableCount >= stabilityChecks) {
+              // Size has been stable for multiple checks - use this
+              stableRect = currentRect;
               break;
             }
           }
+
+          previousSize = currentSize;
           await new Promise(resolve => setTimeout(resolve, 50));
         }
 
+        // Use stable rect if found, otherwise use latest measurement
+        return stableRect || pageElement.getBoundingClientRect();
+      };
+
+      waitForPdfPage().then(pdfPageRect => {
+        if (!isMounted) {
+          return;
+        }
+
+        // Found PDF page - trigger screenshot fade and start animation
+        actions.startZoom(); // Triggers 200ms fade of screenshot
+        setTargetRect(pdfPageRect);
+        setAnimationPhase('zooming');
+
+        const zoomDuration = VIEWER_TRANSITION.ZOOM_DURATION;
+
+        // After zoom completes, wait for PDF to be fully rendered before removing thumbnail
+        transitionTimer = window.setTimeout(async () => {
+          if (!isMounted) return;
+
+          // Wait for PDF to be ready (check for rendered canvas or content)
+          for (let i = 0; i < 10; i++) {
+            const pageElement = document.querySelector('[data-page-index="0"]');
+            if (pageElement) {
+              // Check if page has actual content rendered (canvas or img)
+              const hasContent = pageElement.querySelector('canvas, img');
+              if (hasContent) {
+                break;
+              }
+            }
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+
           // Remove thumbnail now that PDF is ready (or timeout reached)
-        actions.endViewerTransition();
-      }, zoomDuration);
-    });
+          actions.endViewerTransition();
+        }, zoomDuration);
+      });
     }
 
     return () => {
@@ -200,71 +170,46 @@ export const ViewerZoomTransition: React.FC = () => {
         clearTimeout(transitionTimer);
       }
     };
-  }, [viewerTransition.isAnimating, actions, isExitTransition]);
+  }, [viewerTransition.isAnimating, viewerTransition.exitFileId, viewerTransition.sourceRect, isExitTransition, actions]);
 
-  // Don't render if not animating
-  if (!viewerTransition.isAnimating) {
+  // Don't render if not animating or missing thumbnail
+  if (!viewerTransition.isAnimating || !viewerTransition.sourceThumbnailUrl) {
     return null;
   }
 
-  // Must have thumbnail URL
-  if (!viewerTransition.sourceThumbnailUrl) {
-    return null;
-  }
+  const { sourceThumbnailUrl } = viewerTransition;
+  const initialRect = isExitTransition
+    ? (viewerTransition.exitTargetRect || viewerTransition.sourceRect || getFallbackRect())
+    : (viewerTransition.sourceRect || getFallbackRect());
 
-  const { sourceThumbnailUrl, exitTargetRect, sourceRect } = viewerTransition;
+  const initialRadius = isExitTransition ? '0' : '8px';
+  const targetRadius = isExitTransition ? '8px' : '0';
+  const initialWidth = Math.max(initialRect.width, 1);
+  const initialHeight = Math.max(initialRect.height, 1);
 
-  // Calculate styles based on direction
-  let initialStyle: React.CSSProperties;
-  let finalStyle: React.CSSProperties | undefined;
+  // Calculate initial styles based on source element position
+  const initialStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: `${initialRect.top}px`,
+    left: `${initialRect.left}px`,
+    width: `${initialWidth}px`,
+    height: `${initialHeight}px`,
+    borderRadius: initialRadius,
+    overflow: 'hidden',
+    zIndex: VIEWER_TRANSITION.OVERLAY_Z_INDEX,
+    transform: 'translate3d(0px, 0px, 0) scale(1)',
+    transformOrigin: 'top left',
+  };
 
-  if (isExitTransition && exitTargetRect) {
-    // EXIT: Start at PDF page (exitTargetRect), end at file card (targetRect)
-    initialStyle = {
-      position: 'fixed',
-      top: `${exitTargetRect.top}px`,
-      left: `${exitTargetRect.left}px`,
-      width: `${exitTargetRect.width}px`,
-      height: `${exitTargetRect.height}px`,
-      borderRadius: '0',
-      overflow: 'hidden',
-      zIndex: 10000,
-    };
-
-    finalStyle = targetRect ? {
-      top: `${targetRect.top}px`,
-      left: `${targetRect.left}px`,
-      width: `${targetRect.width}px`,
-      height: `${targetRect.height}px`,
-      borderRadius: '8px',
-    } : undefined;
-  } else if (sourceRect) {
-    // ENTRY: Start at source thumbnail, end at PDF page (existing logic)
-    initialStyle = {
-      position: 'fixed',
-      top: `${sourceRect.top}px`,
-      left: `${sourceRect.left}px`,
-      width: `${sourceRect.width}px`,
-      height: `${sourceRect.height}px`,
-      borderRadius: '8px',
-      overflow: 'hidden',
-      zIndex: 10000,
-    };
-
-    finalStyle = targetRect ? {
-      top: `${targetRect.top}px`,
-      left: `${targetRect.left}px`,
-      width: `${targetRect.width}px`,
-      height: `${targetRect.height}px`,
-      borderRadius: '0',
-    } : undefined;
-  } else {
-    // No position info available
-    return null;
-  }
+  const targetTransform = targetRect
+    ? `translate3d(${targetRect.left - initialRect.left}px, ${targetRect.top - initialRect.top}px, 0) scale(${targetRect.width / initialWidth}, ${targetRect.height / initialHeight})`
+    : null;
 
   // Determine if we should apply zoom animation
-  const shouldZoom = animationPhase === 'zooming' && finalStyle;
+  const shouldZoom = animationPhase === 'zooming' && targetTransform !== null;
+  const zoomStyle: React.CSSProperties = shouldZoom && targetTransform
+    ? { transform: targetTransform, borderRadius: targetRadius }
+    : {};
 
   // Build class names for thumbnail
   const thumbnailClasses = [
@@ -279,7 +224,7 @@ export const ViewerZoomTransition: React.FC = () => {
         className={thumbnailClasses}
         style={{
           ...initialStyle,
-          ...(shouldZoom ? finalStyle : {}),
+          ...zoomStyle,
         }}
         aria-hidden="true"
       >
