@@ -542,6 +542,8 @@ property = "Eigenschaft"
 webBrowserSettings = "Webbrowser-Einstellung"
 syncToBrowser = "Synchronisiere Konto -> Browser"
 syncToAccount = "Synchronisiere Konto <- Browser"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 
 [adminUserSettings]
 title = "Benutzerkontrolle"
@@ -6261,6 +6263,7 @@ instructions = "So aktivieren Sie die Anmeldung auf Ihrem Stirling PDF-Server:"
 instructionsEnvVar = "Setzen Sie die Umgebungsvariable:"
 instructionsOrYml = "Oder in der settings.yml:"
 instructionsRestart = "Starten Sie anschließend Ihren Server neu, damit die Änderungen wirksam werden."
+sso = "Single Sign-On"
 
 [setup.login.username]
 label = "Benutzername"
