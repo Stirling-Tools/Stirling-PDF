@@ -6215,6 +6215,7 @@ description = "Enter the full URL of your self-hosted Stirling PDF server"
 
 [setup.server.error]
 emptyUrl = "Please enter a server URL"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "Could not connect to server"
 testFailed = "Connection test failed"
 configFetch = "Failed to fetch server configuration. Please check the URL and try again."
