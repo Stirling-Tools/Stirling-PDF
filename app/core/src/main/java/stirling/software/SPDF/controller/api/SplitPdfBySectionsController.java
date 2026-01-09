@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.SplitTypes;
@@ -130,6 +131,13 @@ public class SplitPdfBySectionsController {
                                                         + sectionNum
                                                         + ".pdf";
                                         saveDocToZip(subDoc, zipOut, entryName);
+                                    } catch (IOException e) {
+                                        log.error(
+                                                "Error creating section {} for page {}",
+                                                (i * verti + j + 1),
+                                                pageNum,
+                                                e);
+                                        throw e;
                                     }
                                 }
                             }
@@ -139,14 +147,23 @@ public class SplitPdfBySectionsController {
                                 addPageToTarget(sourceDocument, pageIndex, subDoc, subLayerUtility);
                                 String entryName = filename + "_" + pageNum + "_1.pdf";
                                 saveDocToZip(subDoc, zipOut, entryName);
+                            } catch (IOException e) {
+                                log.error("Error processing unsplit page {}", pageNum, e);
+                                throw e;
                             }
                         }
                     }
+                } catch (IOException e) {
+                    log.error("Error creating ZIP file with split PDF sections", e);
+                    throw e;
                 }
                 byte[] zipBytes = Files.readAllBytes(zipTempFile.getPath());
                 return WebResponseUtils.bytesToWebResponse(
                         zipBytes, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
             }
+        } catch (Exception e) {
+            log.error("Error splitting PDF file: {}", file.getOriginalFilename(), e);
+            throw e;
         }
     }
 
@@ -161,6 +178,9 @@ public class SplitPdfBySectionsController {
         try (PDPageContentStream contentStream =
                 new PDPageContentStream(targetDoc, newPage, AppendMode.APPEND, true, true)) {
             contentStream.drawForm(form);
+        } catch (IOException e) {
+            log.error("Error adding page {} to target document", pageIndex, e);
+            throw e;
         }
     }
 
@@ -198,6 +218,10 @@ public class SplitPdfBySectionsController {
                     contentStream.transform(new Matrix(1, 0, 0, 1, translateX, translateY));
                     contentStream.drawForm(form);
                     contentStream.restoreGraphicsState();
+                } catch (IOException e) {
+                    log.error(
+                            "Error adding split section ({}, {}) for page {}", i, j, pageIndex, e);
+                    throw e;
                 }
             }
         }
@@ -234,6 +258,14 @@ public class SplitPdfBySectionsController {
             contentStream.transform(new Matrix(1, 0, 0, 1, translateX, translateY));
             contentStream.drawForm(form);
             contentStream.restoreGraphicsState();
+        } catch (IOException e) {
+            log.error(
+                    "Error adding single section ({}, {}) for page {} to target",
+                    horizIndex,
+                    vertIndex,
+                    pageIndex,
+                    e);
+            throw e;
         }
     }
 
