@@ -34,30 +34,34 @@ public class MfaService {
 
     public void setSecret(User user, String secret)
             throws SQLException, UnsupportedProviderException {
-        Map<String, String> settings = ensureSettings(user);
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_SECRET_KEY, secret);
         settings.put(MFA_ENABLED_KEY, "false");
         settings.remove(MFA_LAST_USED_STEP_KEY);
-        persist(user);
+        persist(managedUser);
     }
 
     public void enableMfa(User user) throws SQLException, UnsupportedProviderException {
-        Map<String, String> settings = ensureSettings(user);
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "true");
-        persist(user);
+        persist(managedUser);
     }
 
     public void disableMfa(User user) throws SQLException, UnsupportedProviderException {
-        Map<String, String> settings = ensureSettings(user);
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "false");
         settings.remove(MFA_SECRET_KEY);
         settings.remove(MFA_LAST_USED_STEP_KEY);
-        persist(user);
+        persist(managedUser);
     }
 
     public boolean markTotpStepUsed(User user, long timeStep)
             throws SQLException, UnsupportedProviderException {
-        Map<String, String> settings = ensureSettings(user);
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = ensureSettings(managedUser);
         String lastUsed = settings.get(MFA_LAST_USED_STEP_KEY);
         if (lastUsed != null) {
             try {
@@ -70,16 +74,24 @@ public class MfaService {
             }
         }
         settings.put(MFA_LAST_USED_STEP_KEY, Long.toString(timeStep));
-        persist(user);
+        persist(managedUser);
         return true;
     }
 
     private String getSetting(User user, String key) {
-        Map<String, String> settings = user.getSettings();
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = managedUser.getSettings();
         if (settings == null) {
             return null;
         }
         return settings.get(key);
+    }
+
+    private User getUserWithSettings(User user) {
+        if (user == null || user.getId() == null) {
+            return user;
+        }
+        return userRepository.findByIdWithSettings(user.getId()).orElse(user);
     }
 
     private Map<String, String> ensureSettings(User user) {

@@ -64,8 +64,8 @@ public class TotpService {
 
     public String buildOtpAuthUri(String username, String secret) {
         String issuer = resolveIssuer();
-        String label = URLEncoder.encode(issuer + ":" + username, StandardCharsets.UTF_8);
-        String encodedIssuer = URLEncoder.encode(issuer, StandardCharsets.UTF_8);
+        String label = encodeForOtpAuth(issuer + ":" + username);
+        String encodedIssuer = encodeForOtpAuth(issuer);
 
         return "otpauth://totp/"
                 + label
@@ -77,6 +77,10 @@ public class TotpService {
                 + CODE_DIGITS
                 + "&period="
                 + PERIOD_SECONDS;
+    }
+
+    private String encodeForOtpAuth(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private String resolveIssuer() {
