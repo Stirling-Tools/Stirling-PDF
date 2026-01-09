@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, Stack, Text, Group, Badge, Button, Box, Image, ThemeIcon, ActionIcon, Tooltip } from "@mantine/core";
+import { Card, Stack, Text, Group, Badge, Button, Box, Image, ThemeIcon, ActionIcon, Tooltip, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import StorageIcon from "@mui/icons-material/Storage";
@@ -28,6 +28,10 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
   const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileStub);
   const thumb = fileStub?.thumbnailUrl || indexedDBThumb;
   const [isHovered, setIsHovered] = useState(false);
+
+  // Show loading state during hydration: PDF file without thumbnail yet
+  const isPdf = file.type === 'application/pdf';
+  const isHydrating = isPdf && !thumb && !isGenerating;
 
   return (
     <Card
@@ -125,24 +129,11 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
               fit="contain"
               radius="sm"
             />
-          ) : isGenerating ? (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <div style={{
-                width: 20,
-                height: 20,
-                border: '2px solid #ddd',
-                borderTop: '2px solid #666',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                marginBottom: 8
-              }} />
-              <Text size="xs" c="dimmed">Generating...</Text>
-            </div>
+          ) : (isGenerating || isHydrating) ? (
+            <Stack align="center" justify="center" gap="xs">
+              <Loader size="sm" />
+              <Text size="xs" c="dimmed">Loading...</Text>
+            </Stack>
           ) : (
             <div style={{
               display: 'flex',

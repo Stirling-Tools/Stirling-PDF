@@ -1,14 +1,18 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
-import { useRedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import { useRedactParameters, RedactMode } from "@app/hooks/tools/redact/useRedactParameters";
 import { useRedactOperation } from "@app/hooks/tools/redact/useRedactOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips } from "@app/components/tooltips/useRedactTips";
+import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips, useRedactManualTips } from "@app/components/tooltips/useRedactTips";
 import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
 import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
+import ManualRedactionControls from "@app/components/tools/redact/ManualRedactionControls";
+import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
+import { useRedaction } from "@app/contexts/RedactionContext";
+import { useFileState } from "@app/contexts/file/fileHooks";
 
 const Redact = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -18,6 +22,12 @@ const Redact = (props: BaseToolProps) => {
   const [wordsCollapsed, setWordsCollapsed] = useState(false);
   const [advancedCollapsed, setAdvancedCollapsed] = useState(true);
 
+  // Navigation and redaction context
+  const { actions: navActions } = useNavigationActions();
+  const { setRedactionConfig, setRedactionMode, redactionConfig } = useRedaction();
+  const { workbench } = useNavigationState();
+  const hasOpenedViewer = useRef(false);
+
   const base = useBaseTool(
     'redact',
     useRedactParameters,
@@ -25,14 +35,61 @@ const Redact = (props: BaseToolProps) => {
     props
   );
 
+  // Get total file count from context (any files in workbench, not just selected)
+  const { state: fileState } = useFileState();
+  const hasAnyFiles = fileState.files.ids.length > 0;
+
   // Tooltips for each step
   const modeTips = useRedactModeTips();
   const wordsTips = useRedactWordsTips();
   const advancedTips = useRedactAdvancedTips();
+  const manualTips = useRedactManualTips();
+
+  // Auto-set manual mode if we're in the viewer and redaction config is set to manual
+  // This ensures when opening redact from viewer, it automatically selects manual mode
+  useEffect(() => {
+    if (workbench === 'viewer' && redactionConfig?.mode === 'manual' && base.params.parameters.mode !== 'manual') {
+      // Set immediately when conditions are met
+      base.params.updateParameter('mode', 'manual');
+    }
+  }, [workbench, redactionConfig, base.params.parameters.mode, base.params.updateParameter]);
+
+  // Handle mode change - navigate to viewer when manual mode is selected
+  // Manual mode works with any files in workbench (not just selected files)
+  const handleModeChange = (mode: RedactMode) => {
+    base.params.updateParameter('mode', mode);
+    
+    if (mode === 'manual' && hasAnyFiles) {
+      // Set redaction config and navigate to viewer
+      setRedactionConfig(base.params.parameters);
+      setRedactionMode(true);
+      navActions.setWorkbench('viewer');
+      hasOpenedViewer.current = true;
+    }
+  };
+
+  // When files are added and in manual mode, navigate to viewer
+  // Uses hasAnyFiles since manual mode works with any files in workbench
+  useEffect(() => {
+    if (base.params.parameters.mode === 'manual' && hasAnyFiles && !hasOpenedViewer.current) {
+      setRedactionConfig(base.params.parameters);
+      setRedactionMode(true);
+      navActions.setWorkbench('viewer');
+      hasOpenedViewer.current = true;
+    }
+  }, [hasAnyFiles, base.params.parameters, navActions, setRedactionConfig, setRedactionMode]);
+
+  // Reset viewer flag when mode changes back to automatic
+  useEffect(() => {
+    if (base.params.parameters.mode === 'automatic') {
+      hasOpenedViewer.current = false;
+      setRedactionMode(false);
+    }
+  }, [base.params.parameters.mode, setRedactionMode]);
 
   const isExecuteDisabled = () => {
     if (base.params.parameters.mode === 'manual') {
-      return true; // Manual mode not implemented yet
+      return true; // Manual mode uses viewer, not execute button
     }
     return !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled;
   };
@@ -44,18 +101,24 @@ const Redact = (props: BaseToolProps) => {
 
   // Build conditional steps based on redaction mode
   const buildSteps = () => {
+    // Method step is always expandable (even without files selected)
+    // Only collapse on results or user preference
+    const methodStepCollapsed = base.hasResults ? true : methodCollapsed;
+    
     const steps = [
-      // Method selection step (always present)
+      // Method selection step (always present and always expandable)
       {
         title: t("redact.modeSelector.title", "Redaction Method"),
-        isCollapsed: getActualCollapsedState(methodCollapsed),
+        isCollapsed: methodStepCollapsed,
         onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setMethodCollapsed(!methodCollapsed),
         tooltip: modeTips,
         content: (
           <RedactModeSelector
             mode={base.params.parameters.mode}
-            onModeChange={(mode) => base.params.updateParameter('mode', mode)}
+            onModeChange={handleModeChange}
             disabled={base.endpointLoading}
+            hasFilesSelected={base.hasFiles}
+            hasAnyFiles={hasAnyFiles}
           />
         ),
       }
@@ -88,11 +151,22 @@ const Redact = (props: BaseToolProps) => {
         },
       );
     } else if (base.params.parameters.mode === 'manual') {
-      // Manual mode steps would go here when implemented
+      // Manual mode - show redaction controls
+      // Uses hasAnyFiles since manual mode works with any files in workbench (viewer-powered)
+      steps.push({
+        title: t("redact.manual.controlsTitle", "Manual Redaction Controls"),
+        isCollapsed: false,
+        onCollapsedClick: () => {},
+        tooltip: manualTips,
+        content: <ManualRedactionControls disabled={!hasAnyFiles} />,
+      });
     }
 
     return steps;
   };
+
+  // Hide execute button in manual mode (redactions applied via controls)
+  const isManualMode = base.params.parameters.mode === 'manual';
 
   return createToolFlow({
     files: {
@@ -102,7 +176,7 @@ const Redact = (props: BaseToolProps) => {
     steps: buildSteps(),
     executeButton: {
       text: t("redact.submit", "Redact"),
-      isVisible: !base.hasResults,
+      isVisible: !base.hasResults && !isManualMode,
       loadingText: t("loading"),
       onClick: base.handleExecute,
       disabled: isExecuteDisabled(),
