@@ -547,6 +547,7 @@ syncToBrowser = "Sync Account -> Browser"
 syncToAccount = "Sync Account <- Browser"
 
 [account.mfa]
+title = "Two-factor authentication"
 setupFailed = "Unable to start two-factor setup. Please try again."
 codeRequired = "Enter the authentication code to continue."
 enabled = "Two-factor authentication enabled."
@@ -3721,6 +3722,8 @@ mfaCode = "Authentication Code"
 enterMfaCode = "Enter 6-digit code"
 mfaPromptTitle = "Two-factor authentication"
 mfaPromptBody = "Enter the authentication code from your authenticator app to continue."
+verifyingMfa = "Verifying..."
+verifyMfa = "Verify code"
 
 
 [login.slides.overview]
