@@ -126,7 +126,6 @@ public class AuthController {
                 Long timeStep = totpService.getValidTimeStep(secret, code);
                 if (timeStep == null) {
                     log.warn("Invalid MFA code for user: {} from IP: {}", username, ip);
-                    loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(
                                     Map.of(
@@ -135,7 +134,6 @@ public class AuthController {
                 }
                 if (!mfaService.markTotpStepUsed(user, timeStep)) {
                     log.warn("Replay MFA code detected for user: {} from IP: {}", username, ip);
-                    loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(
                                     Map.of(
@@ -337,11 +335,12 @@ public class AuthController {
         }
 
         try {
-            if (!mfaService.markTotpStepUsed(user, timeStep)) {
+            if (!mfaService.isTotpStepUsable(user, timeStep)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Invalid two-factor code"));
             }
             mfaService.enableMfa(user);
+            mfaService.markTotpStepUsed(user, timeStep);
             return ResponseEntity.ok(Map.of("enabled", true));
         } catch (Exception e) {
             log.error("Failed to enable MFA for user: {}", username, e);
@@ -387,16 +386,46 @@ public class AuthController {
         }
 
         try {
-            if (!mfaService.markTotpStepUsed(user, timeStep)) {
+            if (!mfaService.isTotpStepUsable(user, timeStep)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Invalid two-factor code"));
             }
             mfaService.disableMfa(user);
+            mfaService.markTotpStepUsed(user, timeStep);
             return ResponseEntity.ok(Map.of("enabled", false));
         } catch (Exception e) {
             log.error("Failed to disable MFA for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to disable MFA"));
+        }
+    }
+
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PostMapping("/mfa/setup/cancel")
+    public ResponseEntity<?> cancelMfaSetup(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+
+        String username = authentication.getName();
+        User user =
+                userService
+                        .findByUsernameIgnoreCaseWithSettings(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (mfaService.isMfaEnabled(user)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "MFA already enabled"));
+        }
+
+        try {
+            mfaService.clearPendingSecret(user);
+            return ResponseEntity.ok(Map.of("cleared", true));
+        } catch (Exception e) {
+            log.error("Failed to clear MFA setup for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to clear MFA setup"));
         }
     }
 

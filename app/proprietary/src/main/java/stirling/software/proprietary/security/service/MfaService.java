@@ -49,6 +49,15 @@ public class MfaService {
         persist(managedUser);
     }
 
+    public void clearPendingSecret(User user) throws SQLException, UnsupportedProviderException {
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = ensureSettings(managedUser);
+        settings.put(MFA_ENABLED_KEY, "false");
+        settings.remove(MFA_SECRET_KEY);
+        settings.remove(MFA_LAST_USED_STEP_KEY);
+        persist(managedUser);
+    }
+
     public void disableMfa(User user) throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
@@ -56,6 +65,24 @@ public class MfaService {
         settings.remove(MFA_SECRET_KEY);
         settings.remove(MFA_LAST_USED_STEP_KEY);
         persist(managedUser);
+    }
+
+    public boolean isTotpStepUsable(User user, long timeStep) {
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = managedUser.getSettings();
+        if (settings == null) {
+            return true;
+        }
+        String lastUsed = settings.get(MFA_LAST_USED_STEP_KEY);
+        if (lastUsed == null) {
+            return true;
+        }
+        try {
+            long lastUsedStep = Long.parseLong(lastUsed);
+            return timeStep > lastUsedStep;
+        } catch (NumberFormatException ignored) {
+            return true;
+        }
     }
 
     public boolean markTotpStepUsed(User user, long timeStep)

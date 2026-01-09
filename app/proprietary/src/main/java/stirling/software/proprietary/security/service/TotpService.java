@@ -25,13 +25,13 @@ public class TotpService {
     private static final int PERIOD_SECONDS = 30;
     private static final String HMAC_ALGORITHM = "HmacSHA1";
     private static final String DEFAULT_ISSUER = "Stirling PDF";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final ApplicationProperties applicationProperties;
-    private final SecureRandom secureRandom = new SecureRandom();
 
     public String generateSecret() {
         byte[] secret = new byte[SECRET_LENGTH_BYTES];
-        secureRandom.nextBytes(secret);
+        SECURE_RANDOM.nextBytes(secret);
         return Base32Codec.encode(secret);
     }
 

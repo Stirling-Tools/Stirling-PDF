@@ -198,11 +198,16 @@ const AccountSection: React.FC = () => {
     [mfaDisableCode, t]
   );
 
-  const handleCloseMfaSetupModal = useCallback(() => {
+  const handleCloseMfaSetupModal = useCallback(async () => {
     setMfaSetupModalOpen(false);
     setMfaSetupData(null);
     setMfaSetupCode('');
     setMfaError('');
+    try {
+      await accountService.cancelMfaSetup();
+    } catch {
+      console.warn('Failed to clear pending MFA setup');
+    }
   }, []);
 
   const handleCloseMfaDisableModal = useCallback(() => {

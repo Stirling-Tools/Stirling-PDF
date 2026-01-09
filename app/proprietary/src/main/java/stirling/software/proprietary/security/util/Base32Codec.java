@@ -54,24 +54,25 @@ public final class Base32Codec {
         }
 
         String normalized = value.replace("=", "").replace(" ", "").toUpperCase(Locale.ROOT);
-        ByteArrayOutputStream output = new ByteArrayOutputStream(normalized.length());
-        int buffer = 0;
-        int bitsLeft = 0;
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream(normalized.length())) {
+            int buffer = 0;
+            int bitsLeft = 0;
 
-        for (char character : normalized.toCharArray()) {
-            if (character >= LOOKUP_TABLE.length || LOOKUP_TABLE[character] == -1) {
-                throw new IllegalArgumentException("Invalid Base32 character: " + character);
+            for (char character : normalized.toCharArray()) {
+                if (character >= LOOKUP_TABLE.length || LOOKUP_TABLE[character] == -1) {
+                    throw new IllegalArgumentException("Invalid Base32 character: " + character);
+                }
+
+                buffer = (buffer << 5) | LOOKUP_TABLE[character];
+                bitsLeft += 5;
+
+                if (bitsLeft >= 8) {
+                    output.write((buffer >> (bitsLeft - 8)) & 0xFF);
+                    bitsLeft -= 8;
+                }
             }
 
-            buffer = (buffer << 5) | LOOKUP_TABLE[character];
-            bitsLeft += 5;
-
-            if (bitsLeft >= 8) {
-                output.write((buffer >> (bitsLeft - 8)) & 0xFF);
-                bitsLeft -= 8;
-            }
+            return output.toByteArray();
         }
-
-        return output.toByteArray();
     }
 }

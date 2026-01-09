@@ -308,6 +308,9 @@ export default function Login() {
     setRequiresMfa(false);
     setMfaCode('');
     setError(null);
+    setPassword('');
+    setEmail('');
+    setShowEmailForm(true);
   };
 
   const handleMfaSubmit = () => {

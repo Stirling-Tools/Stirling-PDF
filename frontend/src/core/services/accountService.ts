@@ -85,4 +85,8 @@ export const accountService = {
   async disableMfa(code: string): Promise<void> {
     await apiClient.post('/api/v1/auth/mfa/disable', { code });
   },
+
+  async cancelMfaSetup(): Promise<void> {
+    await apiClient.post('/api/v1/auth/mfa/setup/cancel');
+  },
 };
