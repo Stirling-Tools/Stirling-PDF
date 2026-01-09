@@ -224,11 +224,7 @@ public class SplitPdfBySectionsController {
                     contentStream.restoreGraphicsState();
                 } catch (IOException e) {
                     log.error(
-                            "Error adding split section ({}, {}) for page {}",
-                            i,
-                            j,
-                            pageIndex,
-                            e);
+                            "Error adding split section ({}, {}) for page {}", i, j, pageIndex, e);
                     throw e;
                 }
             }
