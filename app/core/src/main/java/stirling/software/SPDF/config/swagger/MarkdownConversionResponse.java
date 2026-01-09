@@ -5,6 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.http.MediaType;
+
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,12 +25,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                     description = "PDF converted successfully to Markdown format",
                     content =
                             @Content(
-                                    mediaType = "text/markdown",
+                                    mediaType = MediaType.TEXT_MARKDOWN_VALUE,
                                     schema =
                                             @Schema(
                                                     type = "string",
                                                     format = "binary",
                                                     description =
-                                                            "Markdown file converted from PDF")))
+                                                            "Markdown file converted from PDF"))),
         })
 public @interface MarkdownConversionResponse {}

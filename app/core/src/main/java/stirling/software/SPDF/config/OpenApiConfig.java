@@ -1,8 +1,5 @@
 package stirling.software.SPDF.config;
 
-import java.util.List;
-
-import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,10 +8,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-import io.swagger.v3.oas.models.media.ComposedSchema;
-import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
@@ -108,47 +102,5 @@ public class OpenApiConfig {
             return openAPI.components(components)
                     .addSecurityItem(new SecurityRequirement().addList("apiKey"));
         }
-    }
-
-    @Bean
-    OpenApiCustomizer pdfFileOneOfCustomizer() {
-        return openApi -> {
-            var components = openApi.getComponents();
-            var schemas = components.getSchemas();
-
-            // Define the two shapes
-            var upload =
-                    new ObjectSchema()
-                            .name("PDFFileUpload")
-                            .description("Upload a PDF file")
-                            .addProperty("fileInput", new StringSchema().format("binary"))
-                            .addRequiredItem("fileInput");
-
-            var ref =
-                    new ObjectSchema()
-                            .name("PDFFileRef")
-                            .description("Reference a server-side file")
-                            .addProperty(
-                                    "fileId",
-                                    new StringSchema()
-                                            .example("a1b2c3d4-5678-90ab-cdef-ghijklmnopqr"))
-                            .addRequiredItem("fileId");
-
-            schemas.put("PDFFileUpload", upload);
-            schemas.put("PDFFileRef", ref);
-
-            // Create the oneOf schema
-            var pdfFileOneOf =
-                    new ComposedSchema()
-                            .oneOf(
-                                    List.of(
-                                            new Schema<>()
-                                                    .$ref("#/components/schemas/PDFFileUpload"),
-                                            new Schema<>().$ref("#/components/schemas/PDFFileRef")))
-                            .description("Either upload a file or provide a server-side file ID");
-
-            // Replace PDFFile schema
-            schemas.put("PDFFile", pdfFileOneOf);
-        };
     }
 }

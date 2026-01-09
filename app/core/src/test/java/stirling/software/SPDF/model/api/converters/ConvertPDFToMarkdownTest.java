@@ -21,12 +21,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.util.PDFToFile;
+import stirling.software.common.util.TempFileManager;
 
 class ConvertPDFToMarkdownTest {
 
-    private MockMvc mockMvc() {
-        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(null))
+    private MockMvc mockMvc(TempFileManager tempFileManager, FileStorage fileStorage) {
+        return MockMvcBuilders.standaloneSetup(
+                        new ConvertPDFToMarkdown(tempFileManager, fileStorage))
                 .setControllerAdvice(new GlobalErrorHandler())
                 .build();
     }
@@ -57,7 +60,7 @@ class ConvertPDFToMarkdownTest {
                                                             .body(md));
                         })) {
 
-            MockMvc mvc = mockMvc();
+            MockMvc mvc = mockMvc(mock(TempFileManager.class), mock(FileStorage.class));
 
             MockMultipartFile file =
                     new MockMultipartFile(
@@ -96,7 +99,7 @@ class ConvertPDFToMarkdownTest {
                                     .thenThrow(new RuntimeException("boom"));
                         })) {
 
-            MockMvc mvc = mockMvc();
+            MockMvc mvc = mockMvc(mock(TempFileManager.class), mock(FileStorage.class));
 
             MockMultipartFile file =
                     new MockMultipartFile(

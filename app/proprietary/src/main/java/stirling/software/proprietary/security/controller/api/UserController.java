@@ -19,6 +19,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -155,6 +158,8 @@ public class UserController {
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {@ApiResponse(responseCode = "401", description = "User not authenticated")})
     @PostMapping("/change-username")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changeUsername(
@@ -215,6 +220,8 @@ public class UserController {
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {@ApiResponse(responseCode = "401", description = "User not authenticated")})
     @PostMapping("/change-password-on-login")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePasswordOnLogin(
@@ -253,6 +260,8 @@ public class UserController {
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {@ApiResponse(responseCode = "401", description = "User not authenticated")})
     @PostMapping("/change-password")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePassword(
@@ -427,7 +436,8 @@ public class UserController {
                     .body(
                             Map.of(
                                     "error",
-                                    "Email service is not configured. Please configure SMTP settings."));
+                                    "Email service is not configured. Please configure SMTP"
+                                            + " settings."));
         }
 
         // Parse comma-separated email addresses
@@ -645,7 +655,8 @@ public class UserController {
                         .body(
                                 Map.of(
                                         "error",
-                                        "User's email is not a valid email address. Notifications are disabled."));
+                                        "User's email is not a valid email address. Notifications"
+                                                + " are disabled."));
             }
 
             String loginUrl = buildLoginUrl(request);
@@ -740,6 +751,8 @@ public class UserController {
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {@ApiResponse(responseCode = "403", description = "User not authenticated")})
     @PostMapping("/get-api-key")
     public ResponseEntity<String> getApiKey(Principal principal) {
         if (principal == null) {
@@ -754,6 +767,8 @@ public class UserController {
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {@ApiResponse(responseCode = "403", description = "User not authenticated")})
     @PostMapping("/update-api-key")
     public ResponseEntity<String> updateApiKey(Principal principal) {
         if (principal == null) {
@@ -868,6 +883,11 @@ public class UserController {
     }
 
     @PostMapping("/complete-initial-setup")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "404", description = "User not found"),
+                @ApiResponse(responseCode = "500", description = "Failed to complete initial setup")
+            })
     public ResponseEntity<?> completeInitialSetup() {
         try {
             String username = userService.getCurrentUsername();

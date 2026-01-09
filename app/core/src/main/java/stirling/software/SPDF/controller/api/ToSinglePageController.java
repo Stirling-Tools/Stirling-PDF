@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.geom.AffineTransform;
+import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -11,9 +12,14 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +28,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -30,6 +38,24 @@ import stirling.software.common.util.WebResponseUtils;
 public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final FileStorage fileStorage;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -42,11 +68,18 @@ public class ToSinglePageController {
                             + " document. The width of the single page will be same as the input's"
                             + " width, but the height will be the sum of all the pages' heights."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToSinglePage(@ModelAttribute PDFFile request)
+    public ResponseEntity<byte[]> pdfToSinglePage(@Valid @ModelAttribute PDFFile request)
             throws IOException {
+        // Validate input
+        MultipartFile inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
 
         // Load the source document
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(inputFile)) {
             // Calculate total height and max width
             float totalHeight = 0;
             float maxWidth = 0;
@@ -92,7 +125,7 @@ public class ToSinglePageController {
                 return WebResponseUtils.bytesToWebResponse(
                         result,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
+                                inputFile.getOriginalFilename(), "_singlePage.pdf"));
             }
         }
     }

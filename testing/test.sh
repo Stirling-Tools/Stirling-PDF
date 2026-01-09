@@ -516,6 +516,15 @@ main() {
             failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
             echo "Version verification failed for Stirling-PDF-Security-Fat"
         fi
+
+        echo "Running Swagger endpoint tests..."
+        if python3 ./testing/swagger_endpoint_test.py --base-url http://localhost:8080; then
+            passed_tests+=("Swagger-Endpoint-Tests")
+            echo "Swagger endpoint tests passed"
+        else
+            failed_tests+=("Swagger-Endpoint-Tests")
+            echo "Swagger endpoint tests failed"
+        fi
     fi
 
     docker-compose -f "./docker/embedded/compose/docker-compose-latest-fat-security.yml" down -v

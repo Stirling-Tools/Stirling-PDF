@@ -13,6 +13,8 @@ public class DeleteAttachmentRequest extends PDFFile {
 
     @Schema(
             description = "The name of the attachment to delete",
+            example = "stirling-pdf.txt",
+            format = "string",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String attachmentName;
 }
