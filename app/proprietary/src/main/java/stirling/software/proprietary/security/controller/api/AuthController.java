@@ -469,7 +469,7 @@ public class AuthController {
     }
 
     private ResponseEntity<?> ensureWebAuth(User user) {
-        if (user.getAuthenticationType() != AuthenticationType.WEB) {
+        if (!AuthenticationType.WEB.name().equalsIgnoreCase(user.getAuthenticationType())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "MFA settings are only available for web accounts"));
         }

@@ -7,8 +7,8 @@ import java.util.Locale;
 /**
  * RFC 4648 Base32 encoder/decoder for handling TOTP secrets.
  *
- * <p>This implementation is used to encode binary secrets into Base32 strings and decode them
- * back into byte arrays for TOTP processing.
+ * <p>This implementation is used to encode binary secrets into Base32 strings and decode them back
+ * into byte arrays for TOTP processing.
  */
 public final class Base32Codec {
 
