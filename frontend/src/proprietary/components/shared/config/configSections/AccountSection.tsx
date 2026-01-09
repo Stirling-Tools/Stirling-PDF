@@ -427,7 +427,7 @@ const AccountSection: React.FC = () => {
             </Text>
             {mfaSetupData && (
               <Stack gap="sm" align="center">
-                <QRCodeSVG value={mfaSetupData.otpauthUri} size={180} includeMargin level="H" />
+                <QRCodeSVG value={mfaSetupData.otpauthUri} size={180} />
                 <Text size="sm" c="dimmed">
                   {t('account.mfa.manualKey', 'Manual setup key')}: <strong>{mfaSetupData.secret}</strong>
                 </Text>
