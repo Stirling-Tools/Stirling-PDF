@@ -39,7 +39,6 @@ const UpgradeBanner: React.FC = () => {
     scenarioKey,
   } = useServerExperience();
   const onboardingComplete = isOnboardingCompleted();
-  console.log('onboardingComplete', onboardingComplete);
   const [friendlyVisible, setFriendlyVisible] = useState(() => {
     if (typeof window === 'undefined') return false;
     const lastShownRaw = window.localStorage.getItem(FRIENDLY_LAST_SEEN_KEY);
@@ -142,7 +141,7 @@ const UpgradeBanner: React.FC = () => {
           effectiveTotalUsersLoaded &&
           onboardingComplete,
       );
-  // Urgent banner should always show when over-limit 
+  // Urgent banner should always show when over-limit
   const shouldEvaluateUrgent = scenario
     ? Boolean(scenario && !scenarioIsFriendly)
     : Boolean(

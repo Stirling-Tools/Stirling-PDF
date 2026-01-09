@@ -23,11 +23,9 @@ export function useFooterInfo() {
     const fetchFooterInfo = async () => {
       try {
         setLoading(true);
-        console.log('[useFooterInfo] Fetching footer info from /api/v1/ui-data/footer-info...');
         const response = await apiClient.get<FooterInfo>('/api/v1/ui-data/footer-info', {
           suppressErrorToast: true,
         } as any);
-        console.log('[useFooterInfo] Footer info received:', response.data);
         setFooterInfo(response.data);
         setError(null);
       } catch (err) {

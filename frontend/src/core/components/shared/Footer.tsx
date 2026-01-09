@@ -25,9 +25,6 @@ export default function Footer({
   const { t } = useTranslation();
   const { footerInfo } = useFooterInfo();
 
-  console.log('[Footer] Props analyticsEnabled:', analyticsEnabled);
-  console.log('[Footer] Fetched footerInfo:', footerInfo);
-
   // Use props if provided, otherwise fall back to fetched footer info
   const finalAnalyticsEnabled = analyticsEnabled ?? footerInfo?.analyticsEnabled ?? false;
   const finalPrivacyPolicy = privacyPolicy ?? footerInfo?.privacyPolicy;
@@ -35,8 +32,6 @@ export default function Footer({
   const finalAccessibilityStatement = accessibilityStatement ?? footerInfo?.accessibilityStatement;
   const finalCookiePolicy = cookiePolicy ?? footerInfo?.cookiePolicy;
   const finalImpressum = impressum ?? footerInfo?.impressum;
-
-  console.log('[Footer] Final analyticsEnabled:', finalAnalyticsEnabled);
 
   const { showCookiePreferences } = useCookieConsent({ analyticsEnabled: finalAnalyticsEnabled, forceLightMode });
 
