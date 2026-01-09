@@ -280,7 +280,6 @@ export default function TeamsSection() {
                         <Text
                           size="sm"
                           fw={500}
-                          c="dark"
                           maw={200}
                           style={{
                             overflow: 'hidden',
