@@ -566,6 +566,8 @@ disableTitle = "Disable two-factor authentication"
 disableDescription = "Enter a valid authentication code to disable two-factor authentication."
 codeLabel = "Authentication code"
 confirmDisable = "Disable"
+ssoDescription = "Two-factor authentication is managed by your identity provider for single sign-on accounts."
+ssoManaged = "Configure MFA through your identity provider."
 
 [adminUserSettings]
 title = "User Control Settings"

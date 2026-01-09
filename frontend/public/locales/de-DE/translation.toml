@@ -562,6 +562,8 @@ disableTitle = "Zwei-Faktor-Authentifizierung deaktivieren"
 disableDescription = "Geben Sie einen gültigen Authentifizierungscode ein, um die Zwei-Faktor-Authentifizierung zu deaktivieren."
 codeLabel = "Authentifizierungscode"
 confirmDisable = "Deaktivieren"
+ssoDescription = "Die Zwei-Faktor-Authentifizierung wird durch Ihren Identitätsanbieter für Single-Sign-On-Konten verwaltet."
+ssoManaged = "Konfigurieren Sie MFA über Ihren Identitätsanbieter."
 
 [adminUserSettings]
 title = "Benutzerkontrolle"
