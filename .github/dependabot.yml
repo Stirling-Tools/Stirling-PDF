@@ -6,7 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "gradle" # See documentation for possible values
-    directories: 
+    directories:
       - "/" # Location of package manifests
       - "/app/common"
       - "/app/core"
