@@ -518,12 +518,7 @@ export default function PeopleSection() {
                   <Badge
                     size="sm"
                     variant="light"
-                    color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'violet'}
-                    styles={{
-                      label: {
-                        color: 'light-dark(var(--mantine-color-gray-7), white)',
-                      }
-                    }}
+                    color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'cyan'}
                   >
                     {(user.rolesAsString || '').includes('ROLE_ADMIN')
                       ? t('workspace.people.admin', 'Admin')
