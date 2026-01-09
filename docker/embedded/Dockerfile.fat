@@ -54,7 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
     tesseract-ocr-por tesseract-ocr-chi-sim \
     libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
-    gosu unpaper \
+    gosu unpaper qpdf \
     # Extra fonts for fat/air-gapped version
     fonts-dejavu fonts-liberation fonts-noto fonts-noto-cjk fonts-noto-color-emoji \
     fonts-freefont-ttf fonts-terminus fonts-linuxlibertine \
