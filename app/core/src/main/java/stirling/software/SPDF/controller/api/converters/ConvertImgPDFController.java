@@ -188,15 +188,15 @@ public class ConvertImgPDFController {
                     bodyBytes = Files.readAllBytes(webpFilePath);
                 } else {
                     // Create a ZIP file containing all WebP images
-                    ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
-                    try (ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
+                    try (ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
+                            ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
                         for (Path webpFile : webpFiles) {
                             zos.putNextEntry(new ZipEntry(webpFile.getFileName().toString()));
                             Files.copy(webpFile, zos);
                             zos.closeEntry();
                         }
+                        bodyBytes = zipOutputStream.toByteArray();
                     }
-                    bodyBytes = zipOutputStream.toByteArray();
                 }
                 // Clean up the temporary files
                 Files.deleteIfExists(tempFile);
@@ -380,7 +380,7 @@ public class ConvertImgPDFController {
     /**
      * Rearranges the pages of the given PDF document based on the specified page order.
      *
-     * @param pdfBytes The byte array of the original PDF file.
+     * @param pdfFile The MultipartFile of the original PDF file.
      * @param pageOrderArr An array of page numbers indicating the new order.
      * @return A byte array of the rearranged PDF.
      * @throws IOException If an error occurs while processing the PDF.
@@ -388,35 +388,31 @@ public class ConvertImgPDFController {
     private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr)
             throws IOException {
         // Load the input PDF
-        PDDocument document = pdfDocumentFactory.load(pdfFile);
-        int totalPages = document.getNumberOfPages();
-        List<Integer> newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            int totalPages = document.getNumberOfPages();
+            List<Integer> newPageOrder =
+                    GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
 
-        // Create a new list to hold the pages in the new order
-        List<PDPage> newPages = new ArrayList<>();
-        for (int pageIndex : newPageOrder) {
-            newPages.add(document.getPage(pageIndex));
-        }
+            // Create a new list to hold the pages in the new order
+            List<PDPage> newPages = new ArrayList<>();
+            for (int pageIndex : newPageOrder) {
+                newPages.add(document.getPage(pageIndex));
+            }
 
-        // Remove all the pages from the original document
-        for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
-            document.removePage(i);
-        }
+            // Remove all the pages from the original document
+            for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
+                document.removePage(i);
+            }
 
-        // Add the pages in the new order
-        for (PDPage page : newPages) {
-            document.addPage(page);
-        }
+            // Add the pages in the new order
+            for (PDPage page : newPages) {
+                document.addPage(page);
+            }
 
-        // Convert PDDocument to byte array
-        byte[] newPdfBytes;
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // Convert PDDocument to byte array
             document.save(baos);
-            newPdfBytes = baos.toByteArray();
-        } finally {
-            document.close();
+            return baos.toByteArray();
         }
-
-        return newPdfBytes;
     }
 }

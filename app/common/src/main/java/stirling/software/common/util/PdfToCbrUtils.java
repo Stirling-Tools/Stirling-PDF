@@ -60,6 +60,7 @@ public class PdfToCbrUtils {
 
     private static byte[] createCbrFromPdf(PDDocument document, int dpi) throws IOException {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
+        pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
 
         Path tempDir = Files.createTempDirectory("stirling-pdf-cbr-");
         List<Path> generatedImages = new ArrayList<>();

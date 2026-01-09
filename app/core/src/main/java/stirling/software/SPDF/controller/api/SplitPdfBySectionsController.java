@@ -1,10 +1,10 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -60,8 +60,6 @@ public class SplitPdfBySectionsController {
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
     public ResponseEntity<StreamingResponseBody> splitPdf(
             @ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
-        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
         SplitTypes splitMode =
@@ -69,55 +67,182 @@ public class SplitPdfBySectionsController {
                         .map(SplitTypes::valueOf)
                         .orElse(SplitTypes.SPLIT_ALL);
 
-        PDDocument sourceDocument = pdfDocumentFactory.load(file);
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
+            Set<Integer> pagesToSplit =
+                    getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
 
-        Set<Integer> pagesToSplit =
-                getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
+            // Process the PDF based on split parameters
+            int horiz = request.getHorizontalDivisions() + 1;
+            int verti = request.getVerticalDivisions() + 1;
+            boolean merge = Boolean.TRUE.equals(request.getMerge());
+            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split");
 
-        // Process the PDF based on split parameters
-        int horiz = request.getHorizontalDivisions() + 1;
-        int verti = request.getVerticalDivisions() + 1;
-        boolean merge = Boolean.TRUE.equals(request.getMerge());
-        List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, verti, horiz, pagesToSplit);
-
-        String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.pdf");
-        if (merge) {
-            TempFile tempFile = new TempFile(tempFileManager, ".pdf");
-            try (PDDocument merged = pdfService.mergeDocuments(splitDocuments);
-                    OutputStream out = Files.newOutputStream(tempFile.getPath())) {
-                merged.save(out);
-                for (PDDocument d : splitDocuments) d.close();
-                sourceDocument.close();
+            if (merge) {
+                TempFile tempFile = new TempFile(tempFileManager, ".pdf");
+                try (PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
+                        OutputStream out = Files.newOutputStream(tempFile.getPath())) {
+                    LayerUtility layerUtility = new LayerUtility(mergedDoc);
+                    for (int pageIndex = 0;
+                            pageIndex < sourceDocument.getNumberOfPages();
+                            pageIndex++) {
+                        if (pagesToSplit.contains(pageIndex)) {
+                            addSplitPageToTarget(
+                                    sourceDocument,
+                                    pageIndex,
+                                    mergedDoc,
+                                    layerUtility,
+                                    horiz,
+                                    verti);
+                        } else {
+                            addPageToTarget(sourceDocument, pageIndex, mergedDoc, layerUtility);
+                        }
+                    }
+                    mergedDoc.save(out);
+                }
+                return WebResponseUtils.pdfFileToWebResponse(tempFile, filename + ".pdf");
+            } else {
+                TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
+                try (ZipOutputStream zipOut =
+                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                    for (int pageIndex = 0;
+                            pageIndex < sourceDocument.getNumberOfPages();
+                            pageIndex++) {
+                        int pageNum = pageIndex + 1;
+                        if (pagesToSplit.contains(pageIndex)) {
+                            for (int i = 0; i < horiz; i++) {
+                                for (int j = 0; j < verti; j++) {
+                                    try (PDDocument subDoc =
+                                            pdfDocumentFactory.createNewDocument()) {
+                                        LayerUtility subLayerUtility = new LayerUtility(subDoc);
+                                        addSingleSectionToTarget(
+                                                sourceDocument,
+                                                pageIndex,
+                                                subDoc,
+                                                subLayerUtility,
+                                                i,
+                                                j,
+                                                horiz,
+                                                verti);
+                                        int sectionNum = i * verti + j + 1;
+                                        String entryName =
+                                                filename
+                                                        + "_"
+                                                        + pageNum
+                                                        + "_"
+                                                        + sectionNum
+                                                        + ".pdf";
+                                        saveDocToZip(subDoc, zipOut, entryName);
+                                    }
+                                }
+                            }
+                        } else {
+                            try (PDDocument subDoc = pdfDocumentFactory.createNewDocument()) {
+                                LayerUtility subLayerUtility = new LayerUtility(subDoc);
+                                addPageToTarget(sourceDocument, pageIndex, subDoc, subLayerUtility);
+                                String entryName = filename + "_" + pageNum + "_1.pdf";
+                                saveDocToZip(subDoc, zipOut, entryName);
+                            }
+                        }
+                    }
+                }
+                return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
             }
-            return WebResponseUtils.pdfFileToWebResponse(tempFile, filename + "_split.pdf");
         }
-        for (PDDocument doc : splitDocuments) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            doc.save(baos);
-            doc.close();
-            splitDocumentsBoas.add(baos);
+    }
+
+    private void addPageToTarget(
+            PDDocument sourceDoc, int pageIndex, PDDocument targetDoc, LayerUtility layerUtility)
+            throws IOException {
+        PDPage sourcePage = sourceDoc.getPage(pageIndex);
+        PDPage newPage = new PDPage(sourcePage.getMediaBox());
+        targetDoc.addPage(newPage);
+
+        PDFormXObject form = layerUtility.importPageAsForm(sourceDoc, pageIndex);
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(targetDoc, newPage, AppendMode.APPEND, true, true)) {
+            contentStream.drawForm(form);
         }
+    }
 
-        sourceDocument.close();
+    private void addSplitPageToTarget(
+            PDDocument sourceDoc,
+            int pageIndex,
+            PDDocument targetDoc,
+            LayerUtility layerUtility,
+            int totalHoriz,
+            int totalVert)
+            throws IOException {
+        PDPage sourcePage = sourceDoc.getPage(pageIndex);
+        PDRectangle mediaBox = sourcePage.getMediaBox();
+        float width = mediaBox.getWidth();
+        float height = mediaBox.getHeight();
+        float subPageWidth = width / totalHoriz;
+        float subPageHeight = height / totalVert;
 
-        TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
-        try (ZipOutputStream zipOut =
-                new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-            int pageNum = 1;
-            for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
-                int sectionNum = (i % (horiz * verti)) + 1;
-                String fileName = filename + "_" + pageNum + "_" + sectionNum + ".pdf";
-                byte[] pdf = baos.toByteArray();
-                ZipEntry pdfEntry = new ZipEntry(fileName);
-                zipOut.putNextEntry(pdfEntry);
-                zipOut.write(pdf);
-                zipOut.closeEntry();
+        PDFormXObject form = layerUtility.importPageAsForm(sourceDoc, pageIndex);
 
-                if (sectionNum == horiz * verti) pageNum++;
+        for (int i = 0; i < totalHoriz; i++) {
+            for (int j = 0; j < totalVert; j++) {
+                PDPage subPage = new PDPage(new PDRectangle(subPageWidth, subPageHeight));
+                targetDoc.addPage(subPage);
+
+                try (PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                targetDoc, subPage, AppendMode.APPEND, true, true)) {
+                    float translateX = -subPageWidth * i;
+                    float translateY = -subPageHeight * (totalVert - 1 - j);
+
+                    contentStream.saveGraphicsState();
+                    contentStream.addRect(0, 0, subPageWidth, subPageHeight);
+                    contentStream.clip();
+                    contentStream.transform(new Matrix(1, 0, 0, 1, translateX, translateY));
+                    contentStream.drawForm(form);
+                    contentStream.restoreGraphicsState();
+                }
             }
         }
-        return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + "_split.zip");
+    }
+
+    private void addSingleSectionToTarget(
+            PDDocument sourceDoc,
+            int pageIndex,
+            PDDocument targetDoc,
+            LayerUtility layerUtility,
+            int horizIndex,
+            int vertIndex,
+            int totalHoriz,
+            int totalVert)
+            throws IOException {
+        PDPage sourcePage = sourceDoc.getPage(pageIndex);
+        PDRectangle mediaBox = sourcePage.getMediaBox();
+        float subPageWidth = mediaBox.getWidth() / totalHoriz;
+        float subPageHeight = mediaBox.getHeight() / totalVert;
+
+        PDPage subPage = new PDPage(new PDRectangle(subPageWidth, subPageHeight));
+        targetDoc.addPage(subPage);
+
+        PDFormXObject form = layerUtility.importPageAsForm(sourceDoc, pageIndex);
+
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(targetDoc, subPage, AppendMode.APPEND, true, true)) {
+            float translateX = -subPageWidth * horizIndex;
+            float translateY = -subPageHeight * (totalVert - 1 - vertIndex);
+
+            contentStream.saveGraphicsState();
+            contentStream.addRect(0, 0, subPageWidth, subPageHeight);
+            contentStream.clip();
+            contentStream.transform(new Matrix(1, 0, 0, 1, translateX, translateY));
+            contentStream.drawForm(form);
+            contentStream.restoreGraphicsState();
+        }
+    }
+
+    private void saveDocToZip(PDDocument doc, ZipOutputStream zipOut, String entryName)
+            throws IOException {
+        ZipEntry entry = new ZipEntry(entryName);
+        zipOut.putNextEntry(entry);
+        doc.save(zipOut);
+        zipOut.closeEntry();
     }
 
     // Based on the mode, get the pages that need to be split and return the pages set
@@ -140,27 +265,19 @@ public class SplitPdfBySectionsController {
                 break;
 
             case SPLIT_ALL:
-                for (int i = 0; i < totalPages; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(0, totalPages).boxed().toList());
                 break;
 
             case SPLIT_ALL_EXCEPT_FIRST:
-                for (int i = 1; i < totalPages; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(1, totalPages).boxed().toList());
                 break;
 
             case SPLIT_ALL_EXCEPT_LAST:
-                for (int i = 0; i < totalPages - 1; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(0, totalPages - 1).boxed().toList());
                 break;
 
             case SPLIT_ALL_EXCEPT_FIRST_AND_LAST:
-                for (int i = 1; i < totalPages - 1; i++) {
-                    pagesToSplit.add(i);
-                }
+                pagesToSplit.addAll(IntStream.range(1, totalPages - 1).boxed().toList());
                 break;
 
             default:
@@ -169,69 +286,5 @@ public class SplitPdfBySectionsController {
         }
 
         return pagesToSplit;
-    }
-
-    public List<PDDocument> splitPdfPages(
-            PDDocument document,
-            int horizontalDivisions,
-            int verticalDivisions,
-            Set<Integer> pagesToSplit)
-            throws IOException {
-        List<PDDocument> splitDocuments = new ArrayList<>();
-
-        int pageIndex = 0;
-        for (PDPage originalPage : document.getPages()) {
-            // If current page is not to split, add it to the splitDocuments directly.
-            if (!pagesToSplit.contains(pageIndex)) {
-                PDDocument newDoc = pdfDocumentFactory.createNewDocument();
-                newDoc.addPage(originalPage);
-                splitDocuments.add(newDoc);
-            } else {
-                // Otherwise, split current page.
-                PDRectangle originalMediaBox = originalPage.getMediaBox();
-                float width = originalMediaBox.getWidth();
-                float height = originalMediaBox.getHeight();
-                float subPageWidth = width / horizontalDivisions;
-                float subPageHeight = height / verticalDivisions;
-
-                LayerUtility layerUtility = new LayerUtility(document);
-
-                for (int i = 0; i < horizontalDivisions; i++) {
-                    for (int j = 0; j < verticalDivisions; j++) {
-                        PDDocument subDoc = new PDDocument();
-                        PDPage subPage = new PDPage(new PDRectangle(subPageWidth, subPageHeight));
-                        subDoc.addPage(subPage);
-
-                        PDFormXObject form =
-                                layerUtility.importPageAsForm(
-                                        document, document.getPages().indexOf(originalPage));
-
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        subDoc, subPage, AppendMode.APPEND, true, true)) {
-                            // Set clipping area and position
-                            float translateX = -subPageWidth * i;
-
-                            // float translateY = height - subPageHeight * (verticalDivisions - j);
-                            float translateY = -subPageHeight * (verticalDivisions - 1 - j);
-
-                            contentStream.saveGraphicsState();
-                            contentStream.addRect(0, 0, subPageWidth, subPageHeight);
-                            contentStream.clip();
-                            contentStream.transform(new Matrix(1, 0, 0, 1, translateX, translateY));
-
-                            // Draw the form
-                            contentStream.drawForm(form);
-                            contentStream.restoreGraphicsState();
-                        }
-
-                        splitDocuments.add(subDoc);
-                    }
-                }
-            }
-            pageIndex++;
-        }
-
-        return splitDocuments;
     }
 }

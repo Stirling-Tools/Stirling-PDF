@@ -1,8 +1,11 @@
 unsavedChanges = "You have unsaved changes to your PDF."
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "Are you sure you want to leave?"
 unsavedChangesTitle = "Unsaved Changes"
 keepWorking = "Keep Working"
 discardChanges = "Discard & Leave"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "Save & Leave"
 exportAndContinue = "Export & Continue"
 cancel = "Cancel"
@@ -964,6 +967,7 @@ desc = "Add custom text anywhere in your PDF"
 addFiles = "Add Files"
 uploadFromComputer = "Upload from computer"
 openFromComputer = "Open from computer"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
@@ -3219,6 +3223,7 @@ title = "Redaction Method"
 mode = "Mode"
 automatic = "Automatic"
 automaticDesc = "Redact text based on search terms"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "Manual"
 manualDesc = "Click and drag to redact specific areas"
 manualComingSoon = "Manual redaction coming soon"
@@ -3289,8 +3294,35 @@ text = "Only match complete words, not partial matches. 'John' won't match 'John
 title = "Convert to PDF-Image"
 text = "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable."
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "Manual Redaction"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "Text-based Redaction"
 pageBasedRedaction = "Page-based Redaction"
 convertPDFToImageLabel = "Convert PDF to PDF-Image (Used to remove text behind the box)"
@@ -4078,11 +4110,16 @@ language = "Language"
 toggleAnnotations = "Toggle Annotations Visibility"
 search = "Search PDF"
 panMode = "Pan Mode"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 toggleSidebar = "Toggle Sidebar"
 toggleBookmarks = "Toggle Bookmarks"
 print = "Print PDF"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
 downloadAll = "Download All"
 saveAll = "Save All"
 
@@ -4156,6 +4193,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "Search PDF"
@@ -4360,6 +4398,13 @@ description = "Path to WeasyPrint executable for HTML to PDF conversion (leave e
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert Executable"
 description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "Security"
@@ -4649,6 +4694,13 @@ errorProcessing.description = "Send processing error messages to users."
 errorMessage.label = "Show error messages (User)"
 errorMessage.description = "Show detailed error messages for users."
 
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+
 [admin.settings.database]
 title = "Database"
 description = "Configure custom database connection settings for enterprise deployments."
@@ -4829,6 +4881,10 @@ description = "Allow admins to invite users via email with auto-generated passwo
 [admin.settings.mail.frontendUrl]
 label = "Frontend URL"
 description = "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Legal Documents"
@@ -5015,6 +5071,8 @@ googleDriveShort = "Drive"
 myFiles = "My Files"
 noRecentFiles = "No recent files found"
 googleDriveNotAvailable = "Google Drive integration not available"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
 downloadSelected = "Download Selected"
 saveSelected = "Save Selected"
 openFiles = "Open Files"
@@ -6484,3 +6542,56 @@ title = "Add Text Results"
 
 [addText.error]
 failed = "An error occurred while adding text to the PDF."
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan this QR code with your mobile device to upload photos directly to this page."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Open the camera app on your phone and scan this code. Files will be transferred directly between devices."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"
