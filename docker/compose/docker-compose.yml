@@ -4,7 +4,7 @@ services:
       context: ../..
       dockerfile: docker/backend/Dockerfile
     container_name: stirling-pdf-backend
-    restart: on-failure:5
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
       interval: 5s
@@ -37,7 +37,7 @@ services:
       context: ../..
       dockerfile: docker/frontend/Dockerfile
     container_name: stirling-pdf-frontend
-    restart: on-failure:5
+    restart: unless-stopped
     ports:
       - "3000:80"
     environment:
