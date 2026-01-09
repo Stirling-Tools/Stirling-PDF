@@ -18,6 +18,7 @@ public class MfaService {
 
     public static final String MFA_ENABLED_KEY = "mfaEnabled";
     public static final String MFA_SECRET_KEY = "mfaSecret";
+    public static final String MFA_LAST_USED_STEP_KEY = "mfaLastUsedStep";
 
     private final UserRepository userRepository;
     private final DatabaseServiceInterface databaseService;
@@ -36,6 +37,7 @@ public class MfaService {
         Map<String, String> settings = ensureSettings(user);
         settings.put(MFA_SECRET_KEY, secret);
         settings.put(MFA_ENABLED_KEY, "false");
+        settings.remove(MFA_LAST_USED_STEP_KEY);
         persist(user);
     }
 
@@ -49,7 +51,27 @@ public class MfaService {
         Map<String, String> settings = ensureSettings(user);
         settings.put(MFA_ENABLED_KEY, "false");
         settings.remove(MFA_SECRET_KEY);
+        settings.remove(MFA_LAST_USED_STEP_KEY);
         persist(user);
+    }
+
+    public boolean markTotpStepUsed(User user, long timeStep)
+            throws SQLException, UnsupportedProviderException {
+        Map<String, String> settings = ensureSettings(user);
+        String lastUsed = settings.get(MFA_LAST_USED_STEP_KEY);
+        if (lastUsed != null) {
+            try {
+                long lastUsedStep = Long.parseLong(lastUsed);
+                if (timeStep <= lastUsedStep) {
+                    return false;
+                }
+            } catch (NumberFormatException ignored) {
+                // treat malformed value as unused
+            }
+        }
+        settings.put(MFA_LAST_USED_STEP_KEY, Long.toString(timeStep));
+        persist(user);
+        return true;
     }
 
     private String getSetting(User user, String key) {

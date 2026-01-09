@@ -198,6 +198,19 @@ const AccountSection: React.FC = () => {
     [mfaDisableCode, t]
   );
 
+  const handleCloseMfaSetupModal = useCallback(() => {
+    setMfaSetupModalOpen(false);
+    setMfaSetupData(null);
+    setMfaSetupCode('');
+    setMfaError('');
+  }, []);
+
+  const handleCloseMfaDisableModal = useCallback(() => {
+    setMfaDisableModalOpen(false);
+    setMfaDisableCode('');
+    setMfaError('');
+  }, []);
+
   const handleUsernameSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -300,30 +313,39 @@ const AccountSection: React.FC = () => {
               {mfaError}
             </Alert>
           )}
-          <Group gap="sm" wrap="wrap">
-            {!mfaEnabled ? (
-              <Button
-                leftSection={<LocalIcon icon="shield-check-rounded" />}
-                onClick={handleStartMfaSetup}
-                loading={mfaLoading}
-              >
-                {t('account.mfa.enableButton', 'Enable two-factor authentication')}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                color="red"
-                leftSection={<LocalIcon icon="shield-cross-rounded" />}
-                onClick={() => {
-                  setMfaError('');
-                  setMfaDisableCode('');
-                  setMfaDisableModalOpen(true);
-                }}
-              >
-                {t('account.mfa.disableButton', 'Disable two-factor authentication')}
-              </Button>
-            )}
-          </Group>
+          {isSsoUser ? (
+            <Alert icon={<LocalIcon icon="info" width="1rem" height="1rem" />} color="blue" variant="light">
+              {t(
+                'account.mfa.ssoManaged',
+                'Two-factor authentication for this account is managed by your identity provider.'
+              )}
+            </Alert>
+          ) : (
+            <Group gap="sm" wrap="wrap">
+              {!mfaEnabled ? (
+                <Button
+                  leftSection={<LocalIcon icon="shield-check-rounded" />}
+                  onClick={handleStartMfaSetup}
+                  loading={mfaLoading}
+                >
+                  {t('account.mfa.enableButton', 'Enable two-factor authentication')}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  color="red"
+                  leftSection={<LocalIcon icon="shield-cross-rounded" />}
+                  onClick={() => {
+                    setMfaError('');
+                    setMfaDisableCode('');
+                    setMfaDisableModalOpen(true);
+                  }}
+                >
+                  {t('account.mfa.disableButton', 'Disable two-factor authentication')}
+                </Button>
+              )}
+            </Group>
+          )}
         </Stack>
       </Paper>
 
@@ -384,7 +406,7 @@ const AccountSection: React.FC = () => {
 
       <Modal
         opened={mfaSetupModalOpen}
-        onClose={() => setMfaSetupModalOpen(false)}
+        onClose={handleCloseMfaSetupModal}
         title={t('account.mfa.setupTitle', 'Set up two-factor authentication')}
         withinPortal
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
@@ -413,7 +435,7 @@ const AccountSection: React.FC = () => {
               required
             />
             <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={() => setMfaSetupModalOpen(false)}>
+              <Button variant="default" onClick={handleCloseMfaSetupModal}>
                 {t('common.cancel', 'Cancel')}
               </Button>
               <Button type="submit" loading={mfaLoading}>
@@ -426,7 +448,7 @@ const AccountSection: React.FC = () => {
 
       <Modal
         opened={mfaDisableModalOpen}
-        onClose={() => setMfaDisableModalOpen(false)}
+        onClose={handleCloseMfaDisableModal}
         title={t('account.mfa.disableTitle', 'Disable two-factor authentication')}
         withinPortal
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
@@ -444,7 +466,7 @@ const AccountSection: React.FC = () => {
               required
             />
             <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={() => setMfaDisableModalOpen(false)}>
+              <Button variant="default" onClick={handleCloseMfaDisableModal}>
                 {t('common.cancel', 'Cancel')}
               </Button>
               <Button type="submit" color="red" loading={mfaLoading}>

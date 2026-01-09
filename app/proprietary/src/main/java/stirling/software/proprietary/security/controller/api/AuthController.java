@@ -108,8 +108,7 @@ public class AuthController {
                         .body(Map.of("error", "User account is disabled"));
             }
 
-            User mfaUser = userService.findByUsernameIgnoreCaseWithSettings(username).orElse(user);
-            if (mfaService.isMfaEnabled(mfaUser)) {
+            if (mfaService.isMfaEnabled(user)) {
                 String code = request.getMfaCode();
                 if (code == null || code.isBlank()) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -118,14 +117,24 @@ public class AuthController {
                                             "error", "mfa_required",
                                             "message", "Two-factor code required"));
                 }
-                String secret = mfaService.getSecret(mfaUser);
+                String secret = mfaService.getSecret(user);
                 if (secret == null || secret.isBlank()) {
                     log.error("MFA enabled but no secret stored for user: {}", username);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(Map.of("error", "MFA configuration error"));
                 }
-                if (!totpService.isValidCode(secret, code)) {
+                Long timeStep = totpService.getValidTimeStep(secret, code);
+                if (timeStep == null) {
                     log.warn("Invalid MFA code for user: {} from IP: {}", username, ip);
+                    loginAttemptService.loginFailed(username);
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(
+                                    Map.of(
+                                            "error", "invalid_mfa_code",
+                                            "message", "Invalid two-factor code"));
+                }
+                if (!mfaService.markTotpStepUsed(user, timeStep)) {
+                    log.warn("Replay MFA code detected for user: {} from IP: {}", username, ip);
                     loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(
@@ -321,12 +330,17 @@ public class AuthController {
                     .body(Map.of("error", "MFA code is required"));
         }
 
-        if (!totpService.isValidCode(secret, request.getCode())) {
+        Long timeStep = totpService.getValidTimeStep(secret, request.getCode());
+        if (timeStep == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid two-factor code"));
         }
 
         try {
+            if (!mfaService.markTotpStepUsed(user, timeStep)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Invalid two-factor code"));
+            }
             mfaService.enableMfa(user);
             return ResponseEntity.ok(Map.of("enabled", true));
         } catch (Exception e) {
@@ -366,12 +380,17 @@ public class AuthController {
                     .body(Map.of("error", "MFA code is required"));
         }
 
-        if (!totpService.isValidCode(secret, request.getCode())) {
+        Long timeStep = totpService.getValidTimeStep(secret, request.getCode());
+        if (timeStep == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid two-factor code"));
         }
 
         try {
+            if (!mfaService.markTotpStepUsed(user, timeStep)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Invalid two-factor code"));
+            }
             mfaService.disableMfa(user);
             return ResponseEntity.ok(Map.of("enabled", false));
         } catch (Exception e) {

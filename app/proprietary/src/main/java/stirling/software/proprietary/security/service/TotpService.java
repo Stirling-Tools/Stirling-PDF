@@ -36,25 +36,30 @@ public class TotpService {
     }
 
     public boolean isValidCode(String secret, String code) {
+        return getValidTimeStep(secret, code) != null;
+    }
+
+    public Long getValidTimeStep(String secret, String code) {
         if (secret == null || secret.isBlank() || code == null) {
-            return false;
+            return null;
         }
 
         String normalizedCode = code.replace(" ", "");
         if (!normalizedCode.matches("\\d{6}")) {
-            return false;
+            return null;
         }
 
         byte[] secretKey = Base32Codec.decode(secret);
         long timeStep = Instant.now().getEpochSecond() / PERIOD_SECONDS;
 
         for (int offset = -1; offset <= 1; offset++) {
-            if (generateCode(secretKey, timeStep + offset).equals(normalizedCode)) {
-                return true;
+            long candidate = timeStep + offset;
+            if (generateCode(secretKey, candidate).equals(normalizedCode)) {
+                return candidate;
             }
         }
 
-        return false;
+        return null;
     }
 
     public String buildOtpAuthUri(String username, String secret) {
