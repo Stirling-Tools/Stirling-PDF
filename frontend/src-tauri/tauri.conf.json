@@ -27,7 +27,6 @@
       "rpm",
       "appimage",
       "dmg",
-      "app",
       "msi"
     ],
     "icon": [
