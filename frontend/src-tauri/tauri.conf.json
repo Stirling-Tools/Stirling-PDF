@@ -26,7 +26,6 @@
             "deb",
             "rpm",
             "dmg",
-            "app",
             "msi"
         ],
         "icon": [

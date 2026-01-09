@@ -507,7 +507,6 @@ jobs:
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
-            find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
@@ -595,8 +594,8 @@ jobs:
             fi
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             echo "Checking for macOS artifacts..."
-            find . -name "*.dmg" -o -name "*.app" | head -5
-            if [ $(find . -name "*.dmg" -o -name "*.app" | wc -l) -eq 0 ]; then
+            find . -name "*.dmg" | head -5
+            if [ $(find . -name "*.dmg" | wc -l) -eq 0 ]; then
               echo "❌ No macOS artifacts found"
               exit 1
             fi
