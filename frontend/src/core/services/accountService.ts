@@ -7,12 +7,18 @@ export interface AccountData {
   changeCredsFlag: boolean;
   oAuth2Login: boolean;
   saml2Login: boolean;
+  mfaEnabled?: boolean;
 }
 
 export interface LoginPageData {
   showDefaultCredentials: boolean;
   firstTimeSetup: boolean;
   enableLogin: boolean;
+}
+
+export interface MfaSetupResponse {
+  secret: string;
+  otpauthUri: string;
 }
 
 /**
@@ -65,5 +71,18 @@ export const accountService = {
     formData.append('currentPasswordChangeUsername', currentPassword);
     formData.append('newUsername', newUsername);
     await apiClient.post('/api/v1/user/change-username', formData);
+  },
+
+  async requestMfaSetup(): Promise<MfaSetupResponse> {
+    const response = await apiClient.get<MfaSetupResponse>('/api/v1/auth/mfa/setup');
+    return response.data;
+  },
+
+  async enableMfa(code: string): Promise<void> {
+    await apiClient.post('/api/v1/auth/mfa/enable', { code });
+  },
+
+  async disableMfa(code: string): Promise<void> {
+    await apiClient.post('/api/v1/auth/mfa/disable', { code });
   },
 };

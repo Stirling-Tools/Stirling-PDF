@@ -5,27 +5,34 @@ import { TextInput, PasswordInput, Button } from '@mantine/core';
 interface EmailPasswordFormProps {
   email: string
   password: string
+  mfaCode?: string
   setEmail: (email: string) => void
   setPassword: (password: string) => void
+  setMfaCode?: (code: string) => void
   onSubmit: () => void
   isSubmitting: boolean
   submitButtonText: string
   showPasswordField?: boolean
+  showMfaField?: boolean
   fieldErrors?: {
     email?: string
     password?: string
+    mfaCode?: string
   }
 }
 
 export default function EmailPasswordForm({
   email,
   password,
+  mfaCode = '',
   setEmail,
   setPassword,
+  setMfaCode,
   onSubmit,
   isSubmitting,
   submitButtonText,
   showPasswordField = true,
+  showMfaField = false,
   fieldErrors = {}
 }: EmailPasswordFormProps) {
   const { t } = useTranslation();
@@ -64,6 +71,23 @@ export default function EmailPasswordForm({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={fieldErrors.password}
+              classNames={{ label: 'auth-label' }}
+            />
+          </div>
+        )}
+
+        {showMfaField && (
+          <div className="auth-field">
+            <TextInput
+              id="mfaCode"
+              label={t('login.mfaCode', 'Authentication code')}
+              type="text"
+              name="mfaCode"
+              autoComplete="one-time-code"
+              placeholder={t('login.enterMfaCode', 'Enter 6-digit code')}
+              value={mfaCode}
+              onChange={(e) => setMfaCode?.(e.target.value)}
+              error={fieldErrors.mfaCode}
               classNames={{ label: 'auth-label' }}
             />
           </div>

@@ -26,10 +26,13 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.MfaService;
+import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 
 /** REST API Controller for authentication operations. */
@@ -44,6 +47,8 @@ public class AuthController {
     private final JwtServiceInterface jwtService;
     private final CustomUserDetailsService userDetailsService;
     private final LoginAttemptService loginAttemptService;
+    private final MfaService mfaService;
+    private final TotpService totpService;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -101,6 +106,33 @@ public class AuthController {
                 log.warn("Disabled user attempted login: {} from IP: {}", username, ip);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "User account is disabled"));
+            }
+
+            User mfaUser = userService.findByUsernameIgnoreCaseWithSettings(username).orElse(user);
+            if (mfaService.isMfaEnabled(mfaUser)) {
+                String code = request.getMfaCode();
+                if (code == null || code.isBlank()) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(
+                                    Map.of(
+                                            "error", "mfa_required",
+                                            "message", "Two-factor code required"));
+                }
+                String secret = mfaService.getSecret(mfaUser);
+                if (secret == null || secret.isBlank()) {
+                    log.error("MFA enabled but no secret stored for user: {}", username);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(Map.of("error", "MFA configuration error"));
+                }
+                if (!totpService.isValidCode(secret, code)) {
+                    log.warn("Invalid MFA code for user: {} from IP: {}", username, ip);
+                    loginAttemptService.loginFailed(username);
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(
+                                    Map.of(
+                                            "error", "invalid_mfa_code",
+                                            "message", "Invalid two-factor code"));
+                }
             }
 
             Map<String, Object> claims = new HashMap<>();
@@ -228,6 +260,124 @@ public class AuthController {
             log.error("Token refresh error", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Token refresh failed"));
+        }
+    }
+
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @GetMapping("/mfa/setup")
+    public ResponseEntity<?> setupMfa(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+
+        String username = authentication.getName();
+        User user =
+                userService
+                        .findByUsernameIgnoreCaseWithSettings(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (mfaService.isMfaEnabled(user)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "MFA already enabled"));
+        }
+
+        try {
+            String secret = totpService.generateSecret();
+            mfaService.setSecret(user, secret);
+            String otpAuthUri = totpService.buildOtpAuthUri(username, secret);
+
+            return ResponseEntity.ok(Map.of("secret", secret, "otpauthUri", otpAuthUri));
+        } catch (Exception e) {
+            log.error("Failed to setup MFA for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to setup MFA"));
+        }
+    }
+
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PostMapping("/mfa/enable")
+    public ResponseEntity<?> enableMfa(
+            @RequestBody MfaCodeRequest request, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+
+        String username = authentication.getName();
+        User user =
+                userService
+                        .findByUsernameIgnoreCaseWithSettings(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String secret = mfaService.getSecret(user);
+        if (secret == null || secret.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "MFA setup required"));
+        }
+
+        if (request == null || request.getCode() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "MFA code is required"));
+        }
+
+        if (!totpService.isValidCode(secret, request.getCode())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid two-factor code"));
+        }
+
+        try {
+            mfaService.enableMfa(user);
+            return ResponseEntity.ok(Map.of("enabled", true));
+        } catch (Exception e) {
+            log.error("Failed to enable MFA for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to enable MFA"));
+        }
+    }
+
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PostMapping("/mfa/disable")
+    public ResponseEntity<?> disableMfa(
+            @RequestBody MfaCodeRequest request, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+
+        String username = authentication.getName();
+        User user =
+                userService
+                        .findByUsernameIgnoreCaseWithSettings(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!mfaService.isMfaEnabled(user)) {
+            return ResponseEntity.ok(Map.of("enabled", false));
+        }
+
+        String secret = mfaService.getSecret(user);
+        if (secret == null || secret.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "MFA configuration missing"));
+        }
+
+        if (request == null || request.getCode() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "MFA code is required"));
+        }
+
+        if (!totpService.isValidCode(secret, request.getCode())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid two-factor code"));
+        }
+
+        try {
+            mfaService.disableMfa(user);
+            return ResponseEntity.ok(Map.of("enabled", false));
+        } catch (Exception e) {
+            log.error("Failed to disable MFA for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to disable MFA"));
         }
     }
 

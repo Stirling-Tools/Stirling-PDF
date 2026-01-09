@@ -74,6 +74,8 @@ export interface Session {
 export interface AuthError {
   message: string;
   status?: number;
+  code?: string;
+  mfaRequired?: boolean;
 }
 
 export interface AuthResponse {
@@ -178,11 +180,13 @@ class SpringAuthClient {
   async signInWithPassword(credentials: {
     email: string;
     password: string;
+    mfaCode?: string;
   }): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/api/v1/auth/login', {
         username: credentials.email,
-        password: credentials.password
+        password: credentials.password,
+        mfaCode: credentials.mfaCode,
       }, {
         withCredentials: true, // Include cookies for CSRF
       });
@@ -210,6 +214,24 @@ class SpringAuthClient {
       return { user: data.user, session, error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] signInWithPassword error:', error);
+      if (error instanceof AxiosError) {
+        const errorCode = error.response?.data?.error as string | undefined;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          'Login failed';
+        return {
+          user: null,
+          session: null,
+          error: {
+            message: errorMessage,
+            status: error.response?.status,
+            code: errorCode,
+            mfaRequired: errorCode === 'mfa_required',
+          },
+        };
+      }
       return {
         user: null,
         session: null,
