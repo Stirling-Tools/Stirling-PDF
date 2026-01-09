@@ -46,6 +46,7 @@
     "@tauri-apps/api": "^2.5.0",
     "@tauri-apps/plugin-fs": "^2.4.0",
     "@tauri-apps/plugin-http": "^2.5.4",
+    "@tauri-apps/plugin-shell": "^2.3.3",
     "autoprefixer": "^10.4.21",
     "axios": "^1.12.2",
     "globals": "^16.4.0",

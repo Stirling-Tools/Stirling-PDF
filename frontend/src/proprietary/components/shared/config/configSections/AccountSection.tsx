@@ -6,10 +6,12 @@ import { alert as showToast } from '@app/components/toast';
 import { useAuth } from '@app/auth/UseSession';
 import { accountService } from '@app/services/accountService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { useAccountLogout } from '@app/extensions/accountLogout';
 
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
+  const accountLogout = useAccountLogout();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [usernameModalOpen, setUsernameModalOpen] = useState(false);
 
@@ -42,12 +44,8 @@ const AccountSection: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    try {
-      await signOut();
-    } finally {
-      redirectToLogin();
-    }
-  }, [redirectToLogin, signOut]);
+    await accountLogout({ signOut, redirectToLogin });
+  }, [accountLogout, redirectToLogin, signOut]);
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

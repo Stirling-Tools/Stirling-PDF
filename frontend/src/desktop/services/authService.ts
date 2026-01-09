@@ -1,4 +1,8 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { open as shellOpen } from '@tauri-apps/plugin-shell';
+import { connectionModeService } from '@app/services/connectionModeService';
+import { tauriBackendService } from '@app/services/tauriBackendService';
 import axios from 'axios';
 import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
@@ -108,8 +112,34 @@ export class AuthService {
     this.cachedToken = null;
     console.log('[Desktop AuthService] Cache invalidated');
 
-    await invoke('clear_auth_token');
-    localStorage.removeItem('stirling_jwt');
+    // Best effort: clear Tauri keyring
+    try {
+      await invoke('clear_auth_token');
+      console.log('[Desktop AuthService] Cleared Tauri keyring token');
+    } catch (error) {
+      console.warn('[Desktop AuthService] Failed to clear Tauri keyring token', error);
+    }
+
+    // Best effort: clear web storage
+    try {
+      localStorage.removeItem('stirling_jwt');
+      console.log('[Desktop AuthService] Cleared localStorage token');
+    } catch (error) {
+      console.warn('[Desktop AuthService] Failed to clear localStorage token', error);
+    }
+  }
+
+  /**
+   * Local clear only (no backend calls) to reset auth state in desktop contexts
+   */
+  async localClearAuth(): Promise<void> {
+    await this.clearTokenEverywhere().catch(() => {});
+    try {
+      await invoke('clear_user_info');
+    } catch (err) {
+      console.warn('[Desktop AuthService] Failed to clear user info', err);
+    }
+    this.setAuthStatus('unauthenticated', null);
   }
 
   subscribeToAuth(listener: (status: AuthStatus, userInfo: UserInfo | null) => void): () => void {
@@ -253,6 +283,41 @@ export class AuthService {
     try {
       console.log('Logging out');
 
+      // Best-effort backend logout so any server-side session/cookies are cleared
+      try {
+        const currentConfig = await connectionModeService.getCurrentConfig().catch(() => null);
+        const serverUrl = currentConfig?.server_config?.url;
+        const token = await this.getAuthToken();
+
+        if (serverUrl && token) {
+          const base = serverUrl.replace(/\/+$/, '');
+          const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+
+          // Treat 401/403 as benign (session already expired)
+          const safePost = async (url: string) => {
+            try {
+              const resp = await axios.post(url, null, {
+                headers,
+                withCredentials: true,
+                validateStatus: () => true, // handle status manually
+              });
+              if (resp.status >= 400 && ![401, 403].includes(resp.status)) {
+                console.warn(`[Desktop AuthService] Logout call to ${url} failed: ${resp.status}`);
+              }
+            } catch (err) {
+              console.warn(`[Desktop AuthService] Backend logout failed via ${url}`, err);
+            }
+          };
+
+          await safePost(`${base}/api/v1/auth/logout`);
+
+          // Also attempt framework logout endpoint to clear cookies/sessions
+          await safePost(`${base}/logout`);
+        }
+      } catch (err) {
+        console.warn('[Desktop AuthService] Failed to call backend logout endpoint', err);
+      }
+
       // Clear token from all storage locations
       await this.clearTokenEverywhere();
 
@@ -367,6 +432,21 @@ export class AuthService {
 
   async initializeAuthState(): Promise<void> {
     console.log('[Desktop AuthService] Initializing auth state...');
+    // If we are on the login/setup screen, don't auto-restore a previous session; clear instead
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (path.startsWith('/login') || path.startsWith('/setup')) {
+      console.log('[Desktop AuthService] On login/setup path, clearing any cached auth');
+      // Local clear only; avoid backend logout to prevent noisy errors when already unauthenticated
+      await this.clearTokenEverywhere().catch(() => {});
+      try {
+        await invoke('clear_user_info');
+      } catch (err) {
+        console.warn('[Desktop AuthService] Failed to clear user info on login/setup init', err);
+      }
+      this.setAuthStatus('unauthenticated', null);
+      return;
+    }
+
     const token = await this.getAuthToken();
     const userInfo = await this.getUserInfo();
 
@@ -382,6 +462,9 @@ export class AuthService {
       console.log('[Desktop AuthService] No token or user info found');
       this.setAuthStatus('unauthenticated', null);
       console.log('[Desktop AuthService] Auth state initialized as unauthenticated');
+
+      // Defensive: ensure any partial tokens are purged to prevent auto-login loops
+      await this.clearTokenEverywhere().catch(() => {});
     }
   }
 
@@ -432,6 +515,180 @@ export class AuthService {
     } catch (error) {
       console.error('Failed to complete OAuth login:', error);
       this.setAuthStatus('unauthenticated', null);
+      throw error;
+    }
+  }
+
+  /**
+   * Self-hosted SSO/OAuth2 flow for the desktop app.
+1   * Opens the system browser and waits for a deep link callback with the JWT.
+   */
+  async loginWithSelfHostedOAuth(providerPath: string, serverUrl: string): Promise<UserInfo> {
+    // Generate and store nonce for CSRF protection
+    const nonce = crypto.randomUUID();
+    sessionStorage.setItem('oauth_nonce', nonce);
+    console.log('[Desktop AuthService] Generated OAuth nonce for CSRF protection');
+
+    const trimmedServer = serverUrl.replace(/\/+$/, '');
+    const fullUrl = providerPath.startsWith('http')
+      ? providerPath
+      : `${trimmedServer}${providerPath.startsWith('/') ? providerPath : `/${providerPath}`}`;
+    let authUrl = fullUrl;
+    try {
+      const parsed = new URL(fullUrl);
+      parsed.searchParams.set('tauri', '1');
+      parsed.searchParams.set('nonce', nonce);
+      authUrl = parsed.toString();
+    } catch {
+      // ignore URL parsing failures
+    }
+
+    // Open in system browser and wait for deep link callback
+    if (await this.openInSystemBrowser(authUrl)) {
+      return this.waitForDeepLinkCompletion(trimmedServer);
+    }
+
+    throw new Error('Unable to open system browser for SSO. Please check your system settings.');
+  }
+
+  /**
+   * Wait for a deep-link event to complete self-hosted SSO after system browser OAuth
+   */
+  private async waitForDeepLinkCompletion(serverUrl: string): Promise<UserInfo> {
+    if (!isTauri()) {
+      throw new Error('Deep link authentication is only supported in Tauri desktop app.');
+    }
+
+    return new Promise<UserInfo>((resolve, reject) => {
+      let completed = false;
+      let unlisten: (() => void) | null = null;
+
+      const timeoutId = window.setTimeout(() => {
+        if (!completed) {
+          completed = true;
+          if (unlisten) unlisten();
+          sessionStorage.removeItem('oauth_nonce');
+          reject(new Error('SSO login timed out. Please try again.'));
+        }
+      }, 120_000);
+
+      listen<string>('deep-link', async (event) => {
+        const url = event.payload;
+        if (!url || completed) return;
+        try {
+          const parsed = new URL(url);
+          const hash = parsed.hash.replace(/^#/, '');
+          const params = new URLSearchParams(hash);
+          const type = params.get('type') || parsed.searchParams.get('type');
+          const error = params.get('error') || parsed.searchParams.get('error');
+          if (type === 'sso-error' || error) {
+            completed = true;
+            if (unlisten) unlisten();
+            clearTimeout(timeoutId);
+            sessionStorage.removeItem('oauth_nonce');
+            reject(new Error(error || 'Authentication was not successful.'));
+            return;
+          }
+          if (type !== 'sso' && type !== 'sso-selfhosted') {
+            return;
+          }
+          const token = params.get('access_token') || parsed.searchParams.get('access_token');
+          if (!token) {
+            return;
+          }
+
+          // CSRF Protection: Validate nonce before accepting token
+          const nonceFromUrl = params.get('nonce') || parsed.searchParams.get('nonce');
+          const storedNonce = sessionStorage.getItem('oauth_nonce');
+
+          if (!nonceFromUrl || !storedNonce || nonceFromUrl !== storedNonce) {
+            completed = true;
+            if (unlisten) unlisten();
+            clearTimeout(timeoutId);
+            sessionStorage.removeItem('oauth_nonce');
+            console.error('[Desktop AuthService] Nonce validation failed - potential CSRF attack');
+            reject(new Error('Invalid authentication state. Nonce validation failed.'));
+            return;
+          }
+
+          completed = true;
+          if (unlisten) unlisten();
+          clearTimeout(timeoutId);
+          sessionStorage.removeItem('oauth_nonce');
+          console.log('[Desktop AuthService] Nonce validated successfully');
+
+          const userInfo = await this.completeSelfHostedSession(serverUrl, token);
+          // Ensure connection mode is set and backend is ready (in case caller doesn't)
+          try {
+            await connectionModeService.switchToSelfHosted({ url: serverUrl });
+            await tauriBackendService.initializeExternalBackend();
+          } catch (e) {
+            console.warn('[Desktop AuthService] Failed to initialize backend after deep link:', e);
+          }
+          resolve(userInfo);
+        } catch (err) {
+          completed = true;
+          if (unlisten) unlisten();
+          clearTimeout(timeoutId);
+          sessionStorage.removeItem('oauth_nonce');
+          reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
+        }
+      }).then((fn) => {
+        unlisten = fn;
+      });
+    });
+  }
+
+  private async openInSystemBrowser(url: string): Promise<boolean> {
+    if (!isTauri()) {
+      return false;
+    }
+    try {
+      // Prefer plugin-shell (2.x) if available
+      await shellOpen(url);
+      return true;
+    } catch (err) {
+      console.error('Failed to open system browser for SSO:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Save JWT + user info for self-hosted SSO logins
+   */
+  async completeSelfHostedSession(serverUrl: string, token: string): Promise<UserInfo> {
+    const userInfo = await this.fetchSelfHostedUserInfo(serverUrl, token);
+
+    await this.saveTokenEverywhere(token);
+    await invoke('save_user_info', {
+      username: userInfo.username,
+      email: userInfo.email || null,
+    });
+
+    this.setAuthStatus('authenticated', userInfo);
+    return userInfo;
+  }
+
+  private async fetchSelfHostedUserInfo(serverUrl: string, token: string): Promise<UserInfo> {
+    try {
+      const response = await axios.get(
+        `${serverUrl.replace(/\/+$/, '')}/api/v1/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response.data;
+      const user = data.user || data;
+
+      return {
+        username: user.username || user.email || 'User',
+        email: user.email || undefined,
+      };
+    } catch (error) {
+      console.error('[Desktop AuthService] Failed to fetch user info after SSO:', error);
       throw error;
     }
   }
