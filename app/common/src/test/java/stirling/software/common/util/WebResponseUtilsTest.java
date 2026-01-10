@@ -92,8 +92,7 @@ public class WebResponseUtilsTest {
 
     @Test
     public void testPdfDocToWebResponse() {
-        try {
-            PDDocument document = new PDDocument();
+        try (PDDocument document = new PDDocument()) {
             document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
             String docName = "sample.pdf";
 
