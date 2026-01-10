@@ -5,8 +5,11 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
-import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
 import { ToolId } from "@app/types/toolId";
+import { parseSubToolId, SubToolId } from "@app/types/subtool";
+import { filterToolRegistryWithSubTools } from "@app/utils/toolSearch";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface ToolSearchProps {
   value: string;
@@ -19,6 +22,8 @@ interface ToolSearchProps {
   hideIcon?: boolean;
   onFocus?: () => void;
   autoFocus?: boolean;
+  conversionEndpointStatus?: Record<string, boolean>;
+  conversionEndpointsLoading?: boolean;
 }
 
 const ToolSearch = ({
@@ -32,29 +37,64 @@ const ToolSearch = ({
   hideIcon = false,
   onFocus,
   autoFocus = false,
+  conversionEndpointStatus,
+  conversionEndpointsLoading,
 }: ToolSearchProps) => {
   const { t } = useTranslation();
+  const {
+    conversionEndpointStatus: workflowConversionStatus,
+    conversionEndpointsLoading: workflowConversionLoading
+  } = useToolWorkflow();
+  const effectiveEndpointStatus = conversionEndpointStatus ?? workflowConversionStatus;
+  const effectiveEndpointsLoading = conversionEndpointsLoading ?? workflowConversionLoading;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
-    const entries = Object.entries(toolRegistry).filter(([id]) => !(mode === "dropdown" && id === selectedToolKey));
-    const ranked = rankByFuzzy(entries, value, [
-      ([key]) => idToWords(key),
-      ([, v]) => v.name,
-      ([, v]) => v.description,
-      ([, v]) => v.synonyms?.join(' ') || '',
-    ]).slice(0, 6);
-    return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
-  }, [value, toolRegistry, mode, selectedToolKey]);
+
+    // Filter out selected tool if in dropdown mode
+    const filteredRegistry = mode === "dropdown"
+      ? Object.fromEntries(Object.entries(toolRegistry).filter(([id]) => id !== selectedToolKey))
+      : toolRegistry;
+
+    // Use enhanced search with sub-tools
+    const ranked = filterToolRegistryWithSubTools(
+      filteredRegistry,
+      value,
+      t,
+      effectiveEndpointStatus,
+      effectiveEndpointsLoading
+    );
+
+    // Limit total results to avoid overwhelming UI
+    return ranked.slice(0, 12);
+  }, [value, toolRegistry, mode, selectedToolKey, t, effectiveEndpointStatus, effectiveEndpointsLoading]);
 
   const handleSearchChange = (searchValue: string) => {
     onChange(searchValue);
     if (mode === "dropdown") {
       setDropdownOpen(searchValue.trim().length > 0 && filteredTools.length > 0);
     }
+  };
+
+  const handleSubToolSelect = (subToolId: string) => {
+    const { parentId, params } = parseSubToolId(subToolId as SubToolId);
+    const [from, to] = params.split('-to-');
+
+    // Navigate to parent tool
+    onToolSelect?.(parentId);
+
+    // Set URL params for pre-selection
+    const searchParams = new URLSearchParams({ from, to });
+    window.history.replaceState(
+      {},
+      '',
+      `${window.location.pathname}?${searchParams.toString()}`
+    );
+
+    setDropdownOpen(false);
   };
 
   useEffect(() => {
@@ -124,31 +164,81 @@ const ToolSearch = ({
           }}
         >
           <Stack gap="xs" style={{ padding: "8px" }}>
-            {filteredTools.map(({ id, tool }) => (
-              <Button
-                key={id}
-                variant="subtle"
-                onClick={() => {
-                  onToolSelect?.(id as ToolId);
-                  setDropdownOpen(false);
-                }}
-                leftSection={<div style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}
-                fullWidth
-                justify="flex-start"
-                style={{
-                  borderRadius: "6px",
-                  color: "var(--tools-text-and-icon-color)",
-                  padding: "8px 12px",
-                }}
-              >
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontWeight: 500 }}>{tool.name}</div>
-                  <Text size="xs" c="dimmed" style={{ marginTop: "2px" }}>
-                    {tool.description}
-                  </Text>
-                </div>
-              </Button>
-            ))}
+            {filteredTools.map(({ type, item: [id, entry] }) => {
+              const isSubTool = type === 'subtool';
+              const displayEntry = entry as any;
+              const available = displayEntry?.available !== false;
+              const disabledMessage = t('toolPanel.fullscreen.unavailable', 'Disabled by server administrator:');
+              const disabledTooltipContent = (
+                <span>
+                  <strong>{disabledMessage}</strong>{' '}
+                  {displayEntry?.description || ''}
+                </span>
+              );
+
+              const button = (
+                <Button
+                  key={id}
+                  variant="subtle"
+                  aria-disabled={!available}
+                  onClick={() => {
+                    if (!available) return;
+                    if (isSubTool) {
+                      handleSubToolSelect(id as string);
+                    } else {
+                      onToolSelect?.(id as ToolId);
+                      setDropdownOpen(false);
+                    }
+                  }}
+                  leftSection={
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        paddingLeft: isSubTool ? '8px' : '0',
+                        color: "var(--tools-text-and-icon-color)"
+                      }}
+                    >
+                      {isSubTool && (
+                        <LocalIcon
+                          icon="subdirectory-arrow-right"
+                          width="1rem"
+                          height="1rem"
+                          style={{ marginRight: '4px', opacity: 0.6 }}
+                        />
+                      )}
+                      {displayEntry.icon}
+                    </div>
+                  }
+                  fullWidth
+                  justify="flex-start"
+                  style={{
+                    borderRadius: "6px",
+                    color: "var(--tools-text-and-icon-color)",
+                    padding: "8px 12px",
+                    paddingLeft: isSubTool ? '4px' : '12px',
+                    cursor: available ? undefined : 'not-allowed',
+                  }}
+                >
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontWeight: isSubTool ? 400 : 500, opacity: available ? 1 : 0.4 }}>
+                      {displayEntry.name}
+                    </div>
+                    {!isSubTool && displayEntry.description && (
+                      <Text size="xs" c="dimmed" style={{ marginTop: "2px", opacity: available ? 1 : 0.4 }}>
+                        {displayEntry.description}
+                      </Text>
+                    )}
+                  </div>
+                </Button>
+              );
+
+              return available ? button : (
+                <Tooltip content={disabledTooltipContent}>
+                  <div style={{ opacity: 1 }}>{button}</div>
+                </Tooltip>
+              );
+            })}
           </Stack>
         </div>
       )}
