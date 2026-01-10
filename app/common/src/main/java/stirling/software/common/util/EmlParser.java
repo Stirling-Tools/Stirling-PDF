@@ -40,7 +40,7 @@ public class EmlParser {
     private final String ATTACHMENT_PREFIX = "attachment-";
 
     public EmailContent extractEmailContent(
-        byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
+            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException {
 
         EmlProcessingUtils.validateEmlInput(emlBytes);
@@ -80,7 +80,7 @@ public class EmlParser {
     }
 
     private EmailContent buildEmailContent(
-        Email email, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
+            Email email, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException {
 
         EmailContent content = new EmailContent();
@@ -122,7 +122,7 @@ public class EmlParser {
     }
 
     private List<EmailAttachment> mapResources(
-        List<AttachmentResource> resources, EmlToPdfRequest request, boolean embedded)
+            List<AttachmentResource> resources, EmlToPdfRequest request, boolean embedded)
             throws IOException {
 
         if (resources == null || resources.isEmpty()) {
@@ -167,7 +167,7 @@ public class EmlParser {
     }
 
     private EmailAttachment toEmailAttachment(
-        AttachmentResource resource, EmlToPdfRequest request, boolean embedded, int counter)
+            AttachmentResource resource, EmlToPdfRequest request, boolean embedded, int counter)
             throws IOException {
 
         if (resource == null) {
@@ -213,7 +213,7 @@ public class EmlParser {
     }
 
     private boolean shouldIncludeAttachmentData(
-        boolean embedded, EmlToPdfRequest request, ReadResult readResult) {
+            boolean embedded, EmlToPdfRequest request, ReadResult readResult) {
         // Always include embedded images for proper rendering
         if (embedded) {
             return readResult != null && readResult.data() != null;
@@ -266,8 +266,8 @@ public class EmlParser {
         };
     }
 
-    private ReadResult readData(
-        DataSource dataSource, boolean embedded, EmlToPdfRequest request) throws IOException {
+    private ReadResult readData(DataSource dataSource, boolean embedded, EmlToPdfRequest request)
+            throws IOException {
         if (dataSource == null) {
             return null;
         }
@@ -312,8 +312,7 @@ public class EmlParser {
         }
     }
 
-    private long countRemainingBytes(InputStream input, long alreadyRead)
-            throws IOException {
+    private long countRemainingBytes(InputStream input, long alreadyRead) throws IOException {
         long count = alreadyRead;
 
         long skipped;

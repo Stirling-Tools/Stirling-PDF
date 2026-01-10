@@ -131,9 +131,9 @@ public class EmlProcessingUtils {
     }
 
     public String generateEnhancedEmailHtml(
-        EmlParser.EmailContent content,
-        EmlToPdfRequest request,
-        CustomHtmlSanitizer customHtmlSanitizer) {
+            EmlParser.EmailContent content,
+            EmlToPdfRequest request,
+            CustomHtmlSanitizer customHtmlSanitizer) {
         StringBuilder html = new StringBuilder();
 
         html.append(
@@ -227,9 +227,9 @@ public class EmlProcessingUtils {
     }
 
     public String processEmailHtmlBody(
-        String htmlBody,
-        EmlParser.EmailContent emailContent,
-        CustomHtmlSanitizer customHtmlSanitizer) {
+            String htmlBody,
+            EmlParser.EmailContent emailContent,
+            CustomHtmlSanitizer customHtmlSanitizer) {
         if (htmlBody == null) return "";
 
         String processed =
@@ -253,8 +253,7 @@ public class EmlProcessingUtils {
         return processed;
     }
 
-    public String convertTextToHtml(
-        String textBody, CustomHtmlSanitizer customHtmlSanitizer) {
+    public String convertTextToHtml(String textBody, CustomHtmlSanitizer customHtmlSanitizer) {
         if (textBody == null) return "";
 
         String html =
@@ -283,7 +282,6 @@ public class EmlProcessingUtils {
 
         return html;
     }
-
 
     private void appendEnhancedStyles(StringBuilder html) {
         html.append(
@@ -367,15 +365,15 @@ public class EmlProcessingUtils {
     }
 
     private void appendAttachmentsSection(
-        StringBuilder html,
-        EmlParser.EmailContent content,
-        EmlToPdfRequest request) {
+            StringBuilder html, EmlParser.EmailContent content, EmlToPdfRequest request) {
         html.append(String.format(Locale.ROOT, "<div class=\"attachment-section\">%n"));
         int displayedAttachmentCount =
                 content.getAttachmentCount() > 0
                         ? content.getAttachmentCount()
                         : content.getAttachments().size();
-        html.append(String.format(Locale.ROOT, "<h3>Attachments (%d)</h3>%n", displayedAttachmentCount));
+        html.append(
+                String.format(
+                        Locale.ROOT, "<h3>Attachments (%d)</h3>%n", displayedAttachmentCount));
 
         if (!content.getAttachments().isEmpty()) {
             for (int i = 0; i < content.getAttachments().size(); i++) {
