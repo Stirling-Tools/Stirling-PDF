@@ -460,6 +460,7 @@ public class ApplicationProperties {
             private String calibre;
             private String ocrmypdf;
             private String soffice;
+            private String embedpdfFrontend;
         }
     }
 
@@ -727,6 +728,7 @@ public class ApplicationProperties {
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
+            private int pdfiumRedactorSessionLimit;
             private int ffmpegSessionLimit;
 
             public int getQpdfSessionLimit() {
@@ -773,6 +775,10 @@ public class ApplicationProperties {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
 
+            public int getPdfiumRedactorSessionLimit() {
+                return pdfiumRedactorSessionLimit > 0 ? pdfiumRedactorSessionLimit : 1;
+            }
+
             public int getFfmpegSessionLimit() {
                 return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
             }
@@ -804,7 +810,9 @@ public class ApplicationProperties {
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
+            private long pdfiumRedactorTimeoutMinutes;
             private long ffmpegTimeoutMinutes;
+            private PdfEditor pdfEditor = new PdfEditor();
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -848,6 +856,10 @@ public class ApplicationProperties {
 
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
+            }
+
+            public long getPdfiumRedactorTimeoutMinutes() {
+                return pdfiumRedactorTimeoutMinutes > 0 ? pdfiumRedactorTimeoutMinutes : 30;
             }
 
             public long getFfmpegTimeoutMinutes() {
