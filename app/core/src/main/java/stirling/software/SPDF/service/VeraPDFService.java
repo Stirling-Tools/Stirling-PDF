@@ -204,11 +204,65 @@ public class VeraPDFService {
             detectedFlavours = detectionParser.getFlavours();
         }
 
+        // For PDF/A flavours, we need to validate first to check if PDF/A identification exists in
+        // XMP
+        // If declaredFlavour is PDF/A, do a quick validation to check for PDF/A identification
+        // schema
+        boolean hasValidPdfaMetadata = false;
+        if (isPdfaFlavour(declaredFlavour)) {
+            try (PDFAParser quickParser =
+                    Foundries.defaultInstance()
+                            .createParser(new ByteArrayInputStream(pdfBytes), declaredFlavour)) {
+                PDFAValidator quickValidator =
+                        Foundries.defaultInstance().createValidator(declaredFlavour, false);
+                ValidationResult quickResult = quickValidator.validate(quickParser);
+
+                // Check if the document has the PDF/A Identification extension schema (clause
+                // 6.7.11, test 1)
+                // OR if it lacks XMP metadata entirely (clause 6.7.2, test 1)
+                // If either of these errors is present, the document is NOT a declared PDF/A
+                hasValidPdfaMetadata = true;
+                for (TestAssertion assertion : quickResult.getTestAssertions()) {
+                    if (assertion.getStatus() == TestAssertion.Status.FAILED
+                            && assertion.getRuleId() != null) {
+                        String clause = assertion.getRuleId().getClause();
+                        int testNumber = assertion.getRuleId().getTestNumber();
+
+                        // Missing XMP metadata entirely (clause 6.7.2, test 1)
+                        if ("6.7.2".equals(clause) && testNumber == 1) {
+                            hasValidPdfaMetadata = false;
+                            log.debug(
+                                    "Document lacks XMP metadata (6.7.2): {}",
+                                    assertion.getMessage());
+                            break;
+                        }
+
+                        // Missing PDF/A identification schema in XMP (clause 6.7.11, test 1)
+                        if ("6.7.11".equals(clause) && testNumber == 1) {
+                            hasValidPdfaMetadata = false;
+                            log.debug(
+                                    "Document lacks PDF/A identification in XMP (6.7.11): {}",
+                                    assertion.getMessage());
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("Error checking for PDF/A identification: {}", e.getMessage());
+                hasValidPdfaMetadata = false;
+            }
+        }
+
         List<PDFAFlavour> flavoursToValidate = new ArrayList<>();
-        boolean hasPdfaDeclaration = isPdfaFlavour(declaredFlavour);
+        boolean hasPdfaDeclaration = isPdfaFlavour(declaredFlavour) && hasValidPdfaMetadata;
 
         if (declaredFlavour != null) {
-            flavoursToValidate.add(declaredFlavour);
+            boolean isDeclaredPdfa = isPdfaFlavour(declaredFlavour);
+            if (isDeclaredPdfa && hasPdfaDeclaration) {
+                flavoursToValidate.add(declaredFlavour);
+            } else if (!isDeclaredPdfa) {
+                flavoursToValidate.add(declaredFlavour);
+            }
         }
 
         for (PDFAFlavour flavour : detectedFlavours) {
