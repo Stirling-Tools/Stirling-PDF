@@ -7,6 +7,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOs } from '@app/hooks/useOs';
 import { DOWNLOAD_URLS } from '@app/constants/downloads';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 
 interface OsInfo {
   label: string;
@@ -64,7 +65,7 @@ export function useOnboardingDownload(): UseOnboardingDownloadResult {
   const handleDownloadSelected = useCallback(() => {
     const downloadUrl = selectedDownloadUrl || osInfo.url;
     if (downloadUrl) {
-      window.open(downloadUrl, '_blank', 'noopener');
+      void openExternalUrl(downloadUrl, { features: 'noopener' });
     }
   }, [selectedDownloadUrl, osInfo.url]);
 
@@ -76,4 +77,3 @@ export function useOnboardingDownload(): UseOnboardingDownloadResult {
     handleDownloadSelected,
   };
 }
-

@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import { BaseToolProps } from "@app/types/tool";
 import { withBasePath } from "@app/constants/app";
+import { openExternalUrl } from "@app/utils/openExternalUrl";
 
 const SwaggerUI: React.FC<BaseToolProps> = () => {
   useEffect(() => {
     // Redirect to Swagger UI
-    window.open(withBasePath("/swagger-ui/5.21.0/index.html"), "_blank");
+    void openExternalUrl(withBasePath("/swagger-ui/5.21.0/index.html"));
   }, []);
 
   return (

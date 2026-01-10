@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 
 enum PDFActionType {
   GoTo = 0,
@@ -202,7 +203,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
       } else if (isExternalLink(link)) {
         const uri = link.target?.uri ?? link.target?.action?.uri;
         if (uri) {
-          window.open(uri, '_blank', 'noopener,noreferrer');
+          await openExternalUrl(uri);
         }
       } else {
         throw new Error(`Unsupported link type: ${link.target?.type}`);

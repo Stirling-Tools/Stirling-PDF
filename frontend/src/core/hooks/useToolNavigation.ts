@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { ToolRegistryEntry, getToolUrlPath } from '@app/data/toolsTaxonomy';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 import { ToolId } from '@app/types/toolId';
 
 export interface ToolNavigationProps {
@@ -30,7 +31,7 @@ export function useToolNavigation(): {
       handleUnlessSpecialClick(e, () => {
         // Handle external links normally
         if (tool.link) {
-          window.open(tool.link, '_blank', 'noopener,noreferrer');
+          void openExternalUrl(tool.link);
           return;
         }
 

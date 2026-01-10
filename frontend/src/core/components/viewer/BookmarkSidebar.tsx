@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Box, ScrollArea, Text, ActionIcon, Loader, Stack, TextInput, Button } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 import { PdfBookmarkObject, PdfActionType } from '@embedpdf/models';
 import BookmarksIcon from '@mui/icons-material/BookmarksRounded';
 import '@app/components/viewer/BookmarkSidebar.css';
@@ -288,12 +289,12 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
       const action = target.action;
       if (action.type === PdfActionType.URI && action.uri) {
         event.preventDefault();
-        window.open(action.uri, '_blank', 'noopener');
+        void openExternalUrl(action.uri, { features: 'noopener' });
         return;
       }
       if (action.type === PdfActionType.LaunchAppOrOpenFile && action.path) {
         event.preventDefault();
-        window.open(action.path, '_blank', 'noopener');
+        void openExternalUrl(action.path, { features: 'noopener' });
         return;
       }
     }

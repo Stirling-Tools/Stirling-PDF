@@ -15,6 +15,7 @@ import { getPreferredCurrency, setCachedCurrency } from '@app/utils/currencyDete
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@core/components/shared/config/LoginRequiredBanner';
 import { isSupabaseConfigured } from '@app/services/supabaseClient';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 
 const AdminPlanSection: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -71,7 +72,7 @@ const AdminPlanSection: React.FC = () => {
       );
 
       // Open billing portal in new tab
-      window.open(response.url, '_blank');
+      await openExternalUrl(response.url);
     } catch (error: any) {
       console.error('Failed to open billing portal:', error);
       alert({

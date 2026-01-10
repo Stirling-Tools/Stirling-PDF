@@ -3,6 +3,7 @@ import { Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import licenseService from '@app/services/licenseService';
 import { alert } from '@app/components/toast';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 
 interface ManageBillingButtonProps {
   returnUrl?: string;
@@ -32,7 +33,7 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
       );
 
       // Open billing portal in new tab
-      window.open(response.url, '_blank');
+      await openExternalUrl(response.url);
       setLoading(false);
     } catch (error: any) {
       console.error('Failed to open billing portal:', error);

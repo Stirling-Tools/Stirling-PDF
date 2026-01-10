@@ -14,6 +14,7 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { openExternalUrl } from "@app/utils/openExternalUrl";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -42,7 +43,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     if (isUnavailable) return;
     if (tool.link) {
       // Open external link in new tab
-      window.open(tool.link, '_blank', 'noopener,noreferrer');
+      void openExternalUrl(tool.link);
       return;
     }
     // Normal tool selection

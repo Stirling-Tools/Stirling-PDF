@@ -11,6 +11,7 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import licenseService from '@app/services/licenseService';
 import { useLicense } from '@app/contexts/LicenseContext';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 
 interface StaticCheckoutModalProps {
   opened: boolean;
@@ -57,7 +58,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
     const urlWithEmail = buildStripeUrlWithEmail(baseUrl, email);
 
     // Open Stripe checkout in new tab
-    window.open(urlWithEmail, '_blank');
+    void openExternalUrl(urlWithEmail);
 
     // Transition to license activation stage
     setStageHistory([...stageHistory, 'period-selection']);

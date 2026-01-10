@@ -5,6 +5,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import i18n from '@app/i18n';
 import { SlideConfig } from '@app/types/types';
 import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
 
 interface AnalyticsChoiceSlideProps {
@@ -33,7 +34,7 @@ export default function AnalyticsChoiceSlide({ analyticsError }: AnalyticsChoice
           <Button
             variant="default"
             size="sm"
-            onClick={() => window.open('https://docs.stirlingpdf.com/analytics-telemetry/', '_blank')}
+            onClick={() => void openExternalUrl('https://docs.stirlingpdf.com/analytics-telemetry/')}
             rightSection={<OpenInNewIcon style={{ fontSize: 16 }} />}
           >
             {i18n.t('analytics.learnMore', 'Learn more about our analytics')}
@@ -52,4 +53,3 @@ export default function AnalyticsChoiceSlide({ analyticsError }: AnalyticsChoice
     },
   };
 }
-

@@ -9,6 +9,7 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import ThumbUpRoundedIcon from '@mui/icons-material/ThumbUpRounded';
 import Badge from '@app/components/shared/Badge';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 import '@app/components/tools/ToolPanel.css';
 import DetailedToolItem from '@app/components/tools/fullscreen/DetailedToolItem';
 import CompactToolItem from '@app/components/tools/fullscreen/CompactToolItem';
@@ -82,7 +83,7 @@ const FullscreenToolList = ({
     const handleClick = () => {
       if (!tool.component && !tool.link && id !== 'read' && id !== 'multiTool') return;
       if (tool.link) {
-        window.open(tool.link, '_blank', 'noopener,noreferrer');
+        void openExternalUrl(tool.link);
         return;
       }
       onSelect(id as ToolId);
@@ -249,5 +250,4 @@ const FullscreenToolList = ({
 };
 
 export default FullscreenToolList;
-
 

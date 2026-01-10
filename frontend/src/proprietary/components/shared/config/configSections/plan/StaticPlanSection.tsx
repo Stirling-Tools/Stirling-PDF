@@ -11,6 +11,7 @@ import { STATIC_STRIPE_LINKS } from '@app/constants/staticStripeLinks';
 import { PricingBadge } from '@app/components/shared/stripeCheckout/components/PricingBadge';
 import { getBaseCardStyle } from '@app/components/shared/stripeCheckout/utils/cardStyles';
 import { isCurrentTier as checkIsCurrentTier, isDowngrade as checkIsDowngrade, isEnterpriseBlockedForFree } from '@app/utils/planTierUtils';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 
 interface StaticPlanSectionProps {
   currentLicenseInfo?: LicenseInfo;
@@ -56,7 +57,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
       ),
     });
 
-    window.open(STATIC_STRIPE_LINKS.billingPortal, '_blank');
+    void openExternalUrl(STATIC_STRIPE_LINKS.billingPortal);
   };
 
   const staticPlans = [

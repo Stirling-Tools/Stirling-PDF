@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getAutoOcrLanguage, getBrowserLanguagesForOcr, getOcrDisplayName } from '@app/utils/languageMapping';
 import apiClient from '@app/services/apiClient';
 import DropdownListWithFooter, { DropdownItem } from '@app/components/shared/DropdownListWithFooter';
+import { openExternalUrl } from '@app/utils/openExternalUrl';
 
 export interface LanguageOption {
   value: string;
@@ -134,7 +135,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
           textDecoration: 'underline',
           textAlign: 'center'
         }}
-        onClick={() => window.open('https://docs.stirlingpdf.com/Configuration/OCR', '_blank')}
+        onClick={() => void openExternalUrl('https://docs.stirlingpdf.com/Configuration/OCR')}
       >
         {t('ocr.languagePicker.viewSetupGuide', 'View setup guide →')}
       </Text>
