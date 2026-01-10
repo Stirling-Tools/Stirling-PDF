@@ -76,8 +76,9 @@ describe('convertUtils', () => {
       expect(getEndpointName('txt', 'pdf')).toBe('file-to-pdf');
       expect(getEndpointName('rtf', 'pdf')).toBe('file-to-pdf');
       
-      // Email to PDF
+      // Email to PDF (EML and MSG)
       expect(getEndpointName('eml', 'pdf')).toBe('eml-to-pdf');
+      expect(getEndpointName('msg', 'pdf')).toBe('eml-to-pdf');
     });
 
     test('should return empty string for unsupported conversions', () => {
@@ -158,8 +159,9 @@ describe('convertUtils', () => {
       expect(getEndpointUrl('txt', 'pdf')).toBe('/api/v1/convert/file/pdf');
       expect(getEndpointUrl('rtf', 'pdf')).toBe('/api/v1/convert/file/pdf');
       
-      // Email to PDF
+      // Email to PDF (EML and MSG)
       expect(getEndpointUrl('eml', 'pdf')).toBe('/api/v1/convert/eml/pdf');
+      expect(getEndpointUrl('msg', 'pdf')).toBe('/api/v1/convert/eml/pdf');
     });
 
     test('should return empty string for unsupported conversions', () => {
@@ -240,8 +242,9 @@ describe('convertUtils', () => {
       expect(isConversionSupported('txt', 'pdf')).toBe(true);
       expect(isConversionSupported('rtf', 'pdf')).toBe(true);
       
-      // Email to PDF
+      // Email to PDF (EML and MSG)
       expect(isConversionSupported('eml', 'pdf')).toBe(true);
+      expect(isConversionSupported('msg', 'pdf')).toBe(true);
     });
 
     test('should return false for unsupported conversions', () => {

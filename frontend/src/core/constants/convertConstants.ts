@@ -96,6 +96,7 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
   { value: 'eml', label: 'EML', group: 'Email' },
+  { value: 'msg', label: 'MSG (Outlook)', group: 'Email' },
   { value: 'epub', label: 'EPUB', group: 'eBook' },
   { value: 'mobi', label: 'MOBI', group: 'eBook' },
   { value: 'azw3', label: 'AZW3', group: 'eBook' },
@@ -140,6 +141,7 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
   'md': ['pdf'],
   'txt': ['pdf'], 'rtf': ['pdf'],
   'eml': ['pdf'],
+  'msg': ['pdf'],
   'cbr': ['pdf'],
   'epub': ['pdf'], 'mobi': ['pdf'], 'azw3': ['pdf'], 'fb2': ['pdf']
 };
@@ -171,6 +173,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   'txt': { 'pdf': 'file-to-pdf' }, 'rtf': { 'pdf': 'file-to-pdf' },
   'cbr': { 'pdf': 'cbr-to-pdf' },
   'eml': { 'pdf': 'eml-to-pdf' },
+  'msg': { 'pdf': 'eml-to-pdf' }, // MSG uses same endpoint as EML
   'epub': { 'pdf': 'ebook-to-pdf' }, 'mobi': { 'pdf': 'ebook-to-pdf' }, 'azw3': { 'pdf': 'ebook-to-pdf' }, 'fb2': { 'pdf': 'ebook-to-pdf' }
 };
 
