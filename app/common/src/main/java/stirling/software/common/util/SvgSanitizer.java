@@ -3,9 +3,10 @@ package stirling.software.common.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.XMLConstants;
@@ -189,15 +190,42 @@ public class SvgSanitizer {
             return false;
         }
 
-        String trimmed = url.trim();
+        String normalized = normalizeUrl(url);
 
-        Matcher jsMatcher = JAVASCRIPT_URL_PATTERN.matcher(trimmed);
-        if (jsMatcher.find()) {
+        if (JAVASCRIPT_URL_PATTERN.matcher(normalized).find()) {
             return true;
         }
 
-        Matcher dataMatcher = DATA_SCRIPT_PATTERN.matcher(trimmed);
-        return dataMatcher.find();
+        if (DATA_SCRIPT_PATTERN.matcher(normalized).find()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private String normalizeUrl(String url) {
+        if (url == null) {
+            return "";
+        }
+
+        String result = url.trim();
+
+        result = result.replaceAll("\u0000", "");
+
+        for (int i = 0; i < 3; i++) {
+            try {
+                String decoded = URLDecoder.decode(result, StandardCharsets.UTF_8);
+                if (decoded.equals(result)) {
+                    break; // No more decoding needed
+                }
+                result = decoded;
+            } catch (Exception e) {
+                log.debug("Failed to decode URL, continuing with current value", e);
+                break;
+            }
+        }
+
+        return result.toLowerCase();
     }
 
     private boolean isExternalUrl(String url) {
@@ -205,20 +233,20 @@ public class SvgSanitizer {
             return false;
         }
 
-        String trimmed = url.trim().toLowerCase();
+        String normalized = normalizeUrl(url);
 
-        if (trimmed.startsWith("#")) {
+        if (normalized.startsWith("#")) {
             return false;
         }
 
-        if (trimmed.startsWith("data:")) {
+        if (normalized.startsWith("data:")) {
             return false;
         }
 
-        return trimmed.startsWith("http://")
-                || trimmed.startsWith("https://")
-                || trimmed.startsWith("//")
-                || trimmed.startsWith("file:");
+        return normalized.startsWith("http://")
+                || normalized.startsWith("https://")
+                || normalized.startsWith("//")
+                || normalized.startsWith("file:");
     }
 
     private boolean isUrlAllowed(String url) {
