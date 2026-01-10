@@ -340,6 +340,10 @@ advance = "Casta"
 edit = "Féach ar & Cuir in Eagar"
 popular = "Coitianta"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Sainroghanna"
 
@@ -435,6 +439,25 @@ latestVersion = "Leagan is Déanaí"
 checkForUpdates = "Seiceáil le haghaidh Nuashonruithe"
 viewDetails = "Féach Sonraí"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Aicearraí Méarchláir"
 description = "Saincheap aicearraí méarchláir chun rochtain thapa ar uirlisí. Cliceáil \"Athraigh aicearra\" agus brúigh teaglaim eochracha nua. Brúigh Esc chun cealú."
@@ -488,11 +511,16 @@ low = "Íseal"
 title = "Athraigh Dintiúir"
 header = "Nuashonraigh Sonraí do Chuntais"
 changePassword = "Tá dintiúir réamhshocraithe logáil isteach á úsáid agat. Cuir isteach pasfhocal nua le do thoil"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "Ainm Úsáideora Nua"
 oldPassword = "Pasfhocal reatha"
 newPassword = "Focal Faire Nua"
 confirmNewPassword = "Deimhnigh Pasfhocal Nua"
 submit = "Cuir Athruithe isteach"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Socruithe cuntas"
@@ -707,6 +735,11 @@ desc = "Braith agus roinn grianghraif scanta ina leathanaigh ar leith"
 tags = "síniú,uathshíniú"
 title = "Comhartha"
 desc = "Cuireann síniú le PDF trí líníocht, téacs nó íomhá"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "simpligh,bain,idirghníomhach"
@@ -1245,6 +1278,21 @@ cbzOptions = "Roghanna CBZ go PDF"
 optimizeForEbook = "Optamaigh PDF do léitheoirí ríomhleabhar (úsáideann Ghostscript)"
 cbzOutputOptions = "Roghanna PDF go CBZ"
 cbzDpi = "DPI do rindreáil íomhá"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "comhshó, img, jpg, pictiúr, grianghraf"
@@ -1361,6 +1409,11 @@ header = "Add attachments"
 add = "Cuir Iatán Leis"
 remove = "Bain Iatán"
 embed = "Leabaigh Iatán"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add attachments"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "Sábháilte"
 label = "Uaslódáil íomhá sínithe"
 placeholder = "Roghnaigh comhad íomhá"
 hint = "Uaslódáil íomhá PNG nó JPG de do shíniú"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "Conas síniú a chur leis"
@@ -2350,6 +2407,11 @@ note = "Baineann maolú eilimintí idirghníomhacha ón PDF, rud a fhágann nach
 [flatten.options.flattenOnlyForms]
 label = "Flatten foirmeacha amháin"
 desc = "Maolaigh réimsí foirme amháin, fág eilimintí idirghníomhacha eile slán"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Torthaí Maolaithe"
@@ -2925,6 +2987,7 @@ header = "PDF a ghearradh"
 submit = "Cuir isteach"
 noFileSelected = "Roghnaigh comhad PDF chun tosú ar bhearradh"
 reset = "Athshocraigh go PDF iomlán"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Roghnú Limistéir Bhearrtha"
@@ -3342,6 +3405,19 @@ placeholder = "Cuir isteach líon na rannán cothrománach"
 label = "Rannáin Ingearach"
 placeholder = "Cuir isteach líon na rannáin ingearacha"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Stampa, Cuir íomhá, íomhá lár, Uisce, PDF, Leabú, Saincheap"
 header = "Stampa PDF"
@@ -3703,6 +3779,19 @@ filesize = "Méid an Chomhaid"
 [compress.grayscale]
 label = "Cuir Scála Liath i bhFeidhm le Comhbhrú"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Forbhreathnú ar Shocruithe Comhbhrúite"
 
@@ -3720,6 +3809,10 @@ bullet2 = "Laghdaíonn luachanna níos airde an méid comhaid"
 title = "Liathscála"
 text = "Roghnaigh an rogha seo chun gach íomhá a thiontú go dubh agus bán, rud a d'fhéadfadh méid an chomhaid a laghdú go mór, go háirithe do PDFanna scanta nó do dhoiciméid lán d’íomhánna."
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "Tharla earráid agus an PDF á chomhbhrú."
 
@@ -3731,6 +3824,11 @@ failed = "Tharla earráid agus an PDF á chomhbhrú."
 [compress.selectText.1]
 _value = "Socruithe Comhbhrúite"
 1 = "1-3 comhbhrú PDF,</br> 4-6 comhbhrú éadrom íomhá,</br> 7-9 comhbhrú dian íomhá Laghdóidh sé cáilíocht na n-íomhánna go mór"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Tá an comhad seo cosanta ag pasfhocal. Cuir isteach an pasfhocal le do thoil:"
@@ -3971,23 +4069,92 @@ deleteSelected = "Scrios na Leathanaigh Roghnaithe"
 closePdf = "Dún an PDF"
 exportAll = "Easpórtáil an PDF"
 downloadSelected = "Íoslódáil na Comhaid Roghnaithe"
-downloadAll = "Íoslódáil Uile"
-saveAll = "Sábháil Uile"
+annotations = "Annotations"
+exportSelected = "Easpórtáil na Leathanaigh Roghnaithe"
+saveChanges = "Sábháil Athruithe"
 toggleTheme = "Athraigh an Téama"
-toggleBookmarks = "Scoránaigh Leabharmharcanna"
 language = "Teanga"
+toggleAnnotations = "Athraigh Infheictheacht Anótálacha"
 search = "Cuardaigh an PDF"
 panMode = "Mód Pánála"
 rotateLeft = "Rothlaigh ar Chlé"
 rotateRight = "Rothlaigh ar Dheis"
 toggleSidebar = "Athraigh an Barra Taoibh"
-exportSelected = "Easpórtáil na Leathanaigh Roghnaithe"
-toggleAnnotations = "Athraigh Infheictheacht Anótálacha"
-annotationMode = "Athraigh Mód Anótála"
+toggleBookmarks = "Scoránaigh Leabharmharcanna"
 print = "Priontáil PDF"
-draw = "Tarraing"
-save = "Sábháil"
-saveChanges = "Sábháil Athruithe"
+downloadAll = "Íoslódáil Uile"
+saveAll = "Sábháil Uile"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Cuardaigh PDF"
@@ -4038,12 +4205,20 @@ settings = "Socruí"
 adminSettings = "Socruí riar."
 allTools = "All Tools"
 reader = "Léamh"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Turas na nUirlisí"
 toolsTourDesc = "Faigh amach cad is féidir leis na huirlisí a dhéanamh"
 adminTour = "Turas an Riarthóra"
 adminTourDesc = "Déan iniúchadh ar shocruithe agus gnéithe an riarthóra"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Earráid"
@@ -5069,6 +5244,7 @@ loading = "Á lódáil..."
 back = "Siar"
 continue = "Lean ar aghaidh"
 error = "Earráid"
+save = "Save"
 
 [config.overview]
 title = "Cumraíocht an Fheidhmchláir"
@@ -5235,6 +5411,16 @@ finish = "Críochnaigh"
 startTour = "Tosaigh an Turas"
 startTourDescription = "Téigh ar thuras treoraithe de phríomhghnéithe Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Fáilte go Stirling PDF!"
 description = "Ar mhaith leat turas gasta 1 nóiméad a dhéanamh chun na príomhghnéithe agus conas tosú a fhoghlaim?"
@@ -5254,6 +5440,10 @@ skipForNow = "Scipeáil faoi láthair"
 download = "Íoslódáil →"
 showMeAround = "Taispeáin timpeall dom"
 skipTheTour = "Scipeáil an turas"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Scipeáil faoi láthair"
@@ -5568,6 +5758,28 @@ contactSales = "Déan Teagmháil le Díolacháin"
 contactToUpgrade = "Déan teagmháil linn chun do phlean a uasghrádú nó a shaincheapadh"
 maxUsers = "Uaslíon Úsáideoirí"
 upTo = "Suas le"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "mí"
@@ -5771,6 +5983,8 @@ notAvailable = "Níl an córas iniúchta ar fáil"
 notAvailableMessage = "Níl an córas iniúchta cumraithe nó níl sé ar fáil."
 disabled = "Tá logáil iniúchta díchumasaithe"
 disabledMessage = "Cumasaigh logáil iniúchta i gcumraíocht d’fheidhmchláir chun imeachtaí an chórais a rianú."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Earráid agus an córas iniúchta á lódáil"
@@ -6025,6 +6239,8 @@ reset = "Athshocraigh Athruithe"
 downloadJson = "Íoslódáil JSON"
 generatePdf = "Gin PDF"
 saveChanges = "Sábháil Athruithe"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Scálaigh téacs go huathoibríoch chun boscaí a fheistiú"
@@ -6042,6 +6258,24 @@ descriptionInline = "Leid: Coinnigh Ctrl (Cmd) nó Shift chun boscaí téacs a r
 [pdfTextEditor.options.forceSingleElement]
 title = "Glasáil téacs curtha in eagar le heilimint PDF aonair"
 description = "Nuair atá cumasaithe, easpórtálann an t-eagarthóir gach bosca téacs curtha in eagar mar eilimint téacs PDF amháin chun glifaí forluiteacha nó clónna measctha a sheachaint."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Cumaisc na boscaí roghnaithe"

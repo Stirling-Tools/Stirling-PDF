@@ -340,6 +340,10 @@ advance = "アドバンスド"
 edit = "閲覧と編集"
 popular = "人気"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "環境設定"
 
@@ -435,6 +439,25 @@ latestVersion = "最新バージョン"
 checkForUpdates = "更新を確認"
 viewDetails = "詳細を表示"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "キーボードショートカット"
 description = "ツールにすばやくアクセスできるようキーボードショートカットをカスタマイズします。「Change shortcut」をクリックし、新しいキーの組み合わせを押してください。Escでキャンセルします。"
@@ -488,11 +511,16 @@ low = "低"
 title = "資格情報の変更"
 header = "アカウントの詳細を更新する"
 changePassword = "デフォルトのログイン認証情報を使用しています。新しいパスワードを入力してください"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "新しいユーザー名"
 oldPassword = "現在のパスワード"
 newPassword = "新しいパスワード"
 confirmNewPassword = "新しいパスワードの確認"
 submit = "変更を送信"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "アカウント設定"
@@ -707,6 +735,11 @@ desc = "スキャンした写真を検出して別々のページに分割"
 tags = "署名,サイン"
 title = "署名"
 desc = "手書き、テキストまたは画像によってPDFに署名を追加します。"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "平坦化,削除,インタラクティブ除去"
@@ -1245,6 +1278,21 @@ cbzOptions = "CBZ から PDF へのオプション"
 optimizeForEbook = "PDF を eBook リーダー向けに最適化（Ghostscript 使用）"
 cbzOutputOptions = "PDF から CBZ へのオプション"
 cbzDpi = "画像レンダリングの DPI"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo,psd,photoshop"
@@ -1361,6 +1409,11 @@ header = "添付ファイルの追加"
 add = "添付を追加"
 remove = "添付を削除"
 embed = "添付を埋め込む"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "添付ファイルの追加"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "保存済み"
 label = "署名画像をアップロード"
 placeholder = "画像ファイルを選択"
 hint = "署名の PNG または JPG 画像をアップロードしてください"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "署名の追加方法"
@@ -2350,6 +2407,11 @@ note = "フラット化すると PDF からインタラクティブ要素が削�
 [flatten.options.flattenOnlyForms]
 label = "フォームのみフラット化"
 desc = "フォームフィールドのみをフラット化し、その他のインタラクティブ要素は維持します"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "フラット化の結果"
@@ -2925,6 +2987,7 @@ header = "PDFのトリミング"
 submit = "送信"
 noFileSelected = "トリミングを開始する PDF ファイルを選択してください"
 reset = "PDF 全体にリセット"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "切り抜き範囲の選択"
@@ -3342,6 +3405,19 @@ placeholder = "水平方向の分割数を選択"
 label = "垂直方向"
 placeholder = "垂直方向の分割数を選択"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "スタンプ, 画像を追加, 画像を中央に配置, 透かし, PDF, 埋め込み, カスタマイズ"
 header = "PDFにスタンプを押す"
@@ -3703,6 +3779,19 @@ filesize = "ファイルサイズ"
 [compress.grayscale]
 label = "圧縮にグレースケールを適用する"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "圧縮設定の概要"
 
@@ -3720,6 +3809,10 @@ bullet2 = "値が大きいほどファイルサイズを削減"
 title = "グレースケール"
 text = "このオプションを選ぶと、すべての画像を白黒に変換します。特にスキャン PDF や画像の多い文書で大幅なサイズ削減が見込めます。"
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "PDF の圧縮中にエラーが発生しました。"
 
@@ -3731,6 +3824,11 @@ failed = "PDF の圧縮中にエラーが発生しました。"
 [compress.selectText.1]
 _value = "圧縮設定"
 1 = "1-3 PDF圧縮、</br> 4-6 弱い画像圧縮、</br> 7-9 強い画像圧縮により画質が大幅に低下します"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "このファイルはパスワードで保護されています。パスワードを入力してください:"
@@ -3971,23 +4069,92 @@ deleteSelected = "選択したページを削除"
 closePdf = "PDF を閉じる"
 exportAll = "PDF を書き出し"
 downloadSelected = "選択したファイルをダウンロード"
-downloadAll = "すべてをダウンロード"
-saveAll = "すべて保存"
+annotations = "Annotations"
+exportSelected = "選択したページを書き出し"
+saveChanges = "変更を保存"
 toggleTheme = "テーマを切り替え"
-toggleBookmarks = "ブックマークを切り替え"
 language = "言語"
+toggleAnnotations = "注釈の表示を切り替え"
 search = "PDF を検索"
 panMode = "パンモード"
 rotateLeft = "左に回転"
 rotateRight = "右に回転"
 toggleSidebar = "サイドバーを切り替え"
-exportSelected = "選択したページを書き出し"
-toggleAnnotations = "注釈の表示を切り替え"
-annotationMode = "注釈モードを切り替え"
+toggleBookmarks = "ブックマークを切り替え"
 print = "PDFを印刷"
-draw = "描画"
-save = "保存"
-saveChanges = "変更を保存"
+downloadAll = "すべてをダウンロード"
+saveAll = "すべて保存"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "PDF を検索"
@@ -4038,12 +4205,20 @@ settings = "設定"
 adminSettings = "管理者設定"
 allTools = "All Tools"
 reader = "リーダー"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "ツールツアー"
 toolsTourDesc = "ツールでできることを学ぶ"
 adminTour = "管理ツアー"
 adminTourDesc = "管理設定と機能を探索"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "エラー"
@@ -5069,6 +5244,7 @@ loading = "読み込み中..."
 back = "戻る"
 continue = "続行"
 error = "エラー"
+save = "Save"
 
 [config.overview]
 title = "アプリケーション構成"
@@ -5235,6 +5411,16 @@ finish = "完了"
 startTour = "ツアーを開始"
 startTourDescription = "Stirling PDF の主な機能をガイド付きで紹介します"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Stirling PDF へようこそ！"
 description = "主な機能と始め方を 1 分のクイックツアーで確認しますか？"
@@ -5254,6 +5440,10 @@ skipForNow = "今はスキップ"
 download = "ダウンロード →"
 showMeAround = "ツアーを見る"
 skipTheTour = "ツアーをスキップ"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "今はスキップ"
@@ -5568,6 +5758,28 @@ contactSales = "営業に問い合わせ"
 contactToUpgrade = "プランのアップグレードやカスタマイズはお問い合わせください"
 maxUsers = "最大ユーザー数"
 upTo = "最大"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "月"
@@ -5771,6 +5983,8 @@ notAvailable = "監査システムは利用できません"
 notAvailableMessage = "監査システムが未設定または利用できません。"
 disabled = "監査ログは無効です"
 disabledMessage = "アプリケーション設定で監査ログを有効にして、システムイベントを記録してください。"
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "監査システムの読み込みエラー"
@@ -6025,6 +6239,8 @@ reset = "変更をリセット"
 downloadJson = "JSON をダウンロード"
 generatePdf = "PDF を生成"
 saveChanges = "変更を保存"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ボックスに収まるようテキストを自動スケール"
@@ -6042,6 +6258,24 @@ descriptionInline = "ヒント: Ctrl（Cmd）または Shift を押しながら�
 [pdfTextEditor.options.forceSingleElement]
 title = "編集したテキストを1つのPDF要素に固定"
 description = "有効にすると、編集した各テキストボックスを1つのPDFテキスト要素としてエクスポートし、グリフの重なりやフォント混在を避けます。"
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "選択ボックスを結合"

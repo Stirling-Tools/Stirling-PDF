@@ -340,6 +340,10 @@ advance = "വിപുലമായത്"
 edit = "കാണുക & തിരുത്തുക"
 popular = "ജനപ്രിയം"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "അഭിരുചികൾ"
 
@@ -435,6 +439,25 @@ latestVersion = "പുതിയ പതിപ്പ്"
 checkForUpdates = "അപ്‌ഡേറ്റുകൾ പരിശോധിക്കുക"
 viewDetails = "വിശദാംശങ്ങൾ കാണുക"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "കീബോർഡ് ഷോർട്ട്‌കട്ടുകൾ"
 description = "ടൂൾസ് വേഗത്തിൽ ആക്‌സസ് ചെയ്യാൻ കീബോർഡ് ഷോർട്ട്‌കട്ടുകൾ ഇഷ്ടാനുസൃതമാക്കുക. \"Change shortcut\" ക്ലിക്ക് ചെയ്ത് ഒരു പുതിയ കീ കോംബിനേഷൻ അമർത്തുക. റദ്ദാക്കാൻ Esc അമർത്തുക."
@@ -488,11 +511,16 @@ low = "താഴ്ന്നത്"
 title = "വിവരങ്ങൾ മാറ്റുക"
 header = "നിങ്ങളുടെ അക്കൗണ്ട് വിവരങ്ങൾ അപ്‌ഡേറ്റ് ചെയ്യുക"
 changePassword = "നിങ്ങൾ സ്ഥിര ലോഗിൻ വിവരങ്ങളാണ് ഉപയോഗിക്കുന്നത്. ദയവായി ഒരു പുതിയ പാസ്‌വേഡ് നൽകുക"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "പുതിയ ഉപയോക്തൃനാമം"
 oldPassword = "നിലവിലെ പാസ്‌വേഡ്"
 newPassword = "പുതിയ പാസ്‌വേഡ്"
 confirmNewPassword = "പുതിയ പാസ്‌വേഡ് സ്ഥിരീകരിക്കുക"
 submit = "മാറ്റങ്ങൾ സമർപ്പിക്കുക"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "അക്കൗണ്ട് ക്രമീകരണങ്ങൾ"
@@ -707,6 +735,11 @@ desc = "സ്കാൻ ചെയ്ത ഫോട്ടോകൾ കണ്ടെ
 tags = "ഒപ്പ്,ഓട്ടോഗ്രാഫ്"
 title = "ഒപ്പിടുക"
 desc = "വരച്ചോ, ടെക്സ്റ്റ് ഉപയോഗിച്ചോ, ചിത്രം ഉപയോഗിച്ചോ PDF-ൽ ഒപ്പ് ചേർക്കുന്നു"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "ലളിതമാക്കുക,നീക്കം ചെയ്യുക,ഇന്ററാക്ടീവ്"
@@ -1245,6 +1278,21 @@ cbzOptions = "CBZ ടു PDF ഓപ്ഷനുകൾ"
 optimizeForEbook = "ഇബുക്ക് റീഡറുകൾക്കായി PDF ഓപ്റ്റിമൈസ് ചെയ്യുക (Ghostscript ഉപയോഗിക്കുന്നു)"
 cbzOutputOptions = "PDF ടു CBZ ഓപ്ഷനുകൾ"
 cbzDpi = "ഇമേജ് റെൻഡറിംഗിനുള്ള DPI"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "പരിവർത്തനം,img,jpg,ചിത്രം,ഫോട്ടോ"
@@ -1361,6 +1409,11 @@ header = "അറ്റാച്ച്മെന്റുകൾ ചേർക്ക
 add = "അറ്റാച്ച്മെന്റ് ചേർക്കുക"
 remove = "അറ്റാച്ച്മെന്റ് നീക്കം ചെയ്യുക"
 embed = "അറ്റാച്ച്മെന്റ് എംബെഡ് ചെയ്യുക"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "അറ്റാച്ച്മെന്റുകൾ ചേർക്കുക"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "സേവ് ചെയ്തത്"
 label = "ഒപ്പിന്റെ ചിത്രം അപ്‌ലോഡ് ചെയ്യുക"
 placeholder = "ഇമേജ് ഫയൽ തിരഞ്ഞെടുക്കുക"
 hint = "നിങ്ങളുടെ ഒപ്പിന്റെ PNG അല്ലെങ്കിൽ JPG ചിത്രം അപ്‌ലോഡ് ചെയ്യുക"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "ഒപ്പ് എങ്ങനെ ചേർക്കാം"
@@ -2350,6 +2407,11 @@ note = "ഫ്ലാറ്റൻ ചെയ്യുന്നത് PDF-ിൽ �
 [flatten.options.flattenOnlyForms]
 label = "ഫോമുകൾ മാത്രം ഫ്ലാറ്റൻ ചെയ്യുക"
 desc = "ഫോം ഫീൽഡുകൾ മാത്രം ഫ്ലാറ്റൻ ചെയ്ത്, മറ്റു ഇന്ററാക്ടീവ് ഘടകങ്ങൾ അവികൃതമായി വിടുക"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "ഫ്ലാറ്റൻ ഫലങ്ങൾ"
@@ -2925,6 +2987,7 @@ header = "PDF ക്രോപ്പ് ചെയ്യുക"
 submit = "സമർപ്പിക്കുക"
 noFileSelected = "ക്രോപ്പ് ആരംഭിക്കാൻ ഒരു PDF ഫയൽ തിരഞ്ഞെടുക്കുക"
 reset = "പൂർണ്ണ PDF ലേക്ക് റീസെറ്റ് ചെയ്യുക"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "ക്രോപ്പ് ഏരിയ തിരഞ്ഞെടുപ്പ്"
@@ -3342,6 +3405,19 @@ placeholder = "തിരശ്ചീന വിഭജനങ്ങളുടെ എ
 label = "ലംബ വിഭജനങ്ങൾ"
 placeholder = "ലംബ വിഭജനങ്ങളുടെ എണ്ണം നൽകുക"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "സ്റ്റാമ്പ്, ചിത്രം ചേർക്കുക, ചിത്രം മധ്യത്തിലാക്കുക, വാട്ടർമാർക്ക്, PDF, ഉൾപ്പെടുത്തുക, ഇഷ്ടാനുസൃതമാക്കുക"
 header = "PDF സ്റ്റാമ്പ് ചെയ്യുക"
@@ -3703,6 +3779,19 @@ filesize = "ഫയൽ വലിപ്പം"
 [compress.grayscale]
 label = "കംപ്രഷനായി ഗ്രേസ്‌കെയിൽ പ്രയോഗിക്കുക"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "കംപ്രസ് സെറ്റിങ്ങുകളുടെ അവലോകനം"
 
@@ -3720,6 +3809,10 @@ bullet2 = "ഉയർന്ന മൂല്യങ്ങൾ ഫയൽ വലിപ
 title = "ഗ്രേസ്കെയിൽ"
 text = "എല്ലാ ഇമേജുകളും ബ്ലാക്ക്-ആൻഡ്-വൈറ്റാക്കി മാറ്റാൻ ഈ ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക; പ്രത്യേകിച്ച് സ്കാൻ ചെയ്ത PDFകൾക്കും ഇമേജ് കൂടുതലുള്ള ഡോക്യുമെന്റുകൾക്കും ഫയൽ വലിപ്പം ഗണ്യമായി കുറയ്ക്കാം."
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "PDF കംപ്രസ് ചെയ്യുന്നതിനിടെ പിശക് സംഭവിച്ചു."
 
@@ -3731,6 +3824,11 @@ failed = "PDF കംപ്രസ് ചെയ്യുന്നതിനിട�
 [compress.selectText.1]
 _value = "കംപ്രഷൻ ക്രമീകരണങ്ങൾ"
 1 = "1-3 PDF കംപ്രഷൻ,</br> 4-6 ലൈറ്റ് ഇമേജ് കംപ്രഷൻ,</br> 7-9 തീവ്രമായ ഇമേജ് കംപ്രഷൻ ചിത്രത്തിന്റെ ഗുണനിലവാരം ഗണ്യമായി കുറയ്ക്കും"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "ഈ ഫയൽ പാസ്‌വേഡ് ഉപയോഗിച്ച് സംരക്ഷിച്ചിരിക്കുന്നു. ദയവായി പാസ്‌വേഡ് നൽകുക:"
@@ -3971,23 +4069,92 @@ deleteSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ ഇല
 closePdf = "PDF അടയ്ക്കുക"
 exportAll = "PDF എക്സ്പോർട്ട് ചെയ്യുക"
 downloadSelected = "തിരഞ്ഞെടുത്ത ഫയലുകൾ ഡൗൺലോഡ് ചെയ്യുക"
-downloadAll = "എല്ലാം ഡൗൺലോഡ് ചെയ്യുക"
-saveAll = "എല്ലാം സേവ് ചെയ്യുക"
+annotations = "Annotations"
+exportSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ എക്സ്പോർട്ട് ചെയ്യുക"
+saveChanges = "മാറ്റങ്ങൾ സംരക്ഷിക്കുക"
 toggleTheme = "തീം മാറ്റുക"
-toggleBookmarks = "ബുക്ക്‌മാർക്കുകൾ ടോഗിൾ ചെയ്യുക"
 language = "ഭാഷ"
+toggleAnnotations = "അനോട്ടേഷൻ ദൃശ്യമാനം മാറ്റുക"
 search = "PDF തിരയുക"
 panMode = "പാൻ മോഡ്"
 rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
 rotateRight = "വലത്തേക്ക് തിരിക്കുക"
 toggleSidebar = "സൈഡ്ബാർ മാറ്റുക"
-exportSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ എക്സ്പോർട്ട് ചെയ്യുക"
-toggleAnnotations = "അനോട്ടേഷൻ ദൃശ്യമാനം മാറ്റുക"
-annotationMode = "അനോട്ടേഷൻ മോഡ് മാറ്റുക"
+toggleBookmarks = "ബുക്ക്‌മാർക്കുകൾ ടോഗിൾ ചെയ്യുക"
 print = "PDF അച്ചടിക്കുക"
-draw = "വരയ്ക്കുക"
-save = "സംരക്ഷിക്കുക"
-saveChanges = "മാറ്റങ്ങൾ സംരക്ഷിക്കുക"
+downloadAll = "എല്ലാം ഡൗൺലോഡ് ചെയ്യുക"
+saveAll = "എല്ലാം സേവ് ചെയ്യുക"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "PDF തിരയുക"
@@ -4038,12 +4205,20 @@ settings = "സെറ്റിങ്ങുകൾ"
 adminSettings = "അഡ്മിൻ സെറ്റിങ്ങുകൾ"
 allTools = "All Tools"
 reader = "റീഡർ"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "ടൂളുകളുടെ പരിചയം"
 toolsTourDesc = "ഉപകരണങ്ങൾ എന്ത് ചെയ്യുമെന്നു പഠിക്കുക"
 adminTour = "അഡ്മിൻ പരിചയം"
 adminTourDesc = "അഡ്മിൻ സജ്ജീകരണങ്ങളും സവിശേഷതകളും അന്വേഷിക്കുക"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "പിശക്"
@@ -5069,6 +5244,7 @@ loading = "ലോഡുചെയ്യുന്നു..."
 back = "തിരികെ"
 continue = "തുടരുക"
 error = "പിശക്"
+save = "Save"
 
 [config.overview]
 title = "ആപ്ലിക്കേഷൻ ക്രമീകരണം"
@@ -5235,6 +5411,16 @@ finish = "പൂർത്തിയാക്കുക"
 startTour = "ടൂർ ആരംഭിക്കുക"
 startTourDescription = "Stirling PDF 的 പ്രധാന സവിശേഷതകളുടെ മാർഗ്ഗനിർദ്ദേശ ടൂർ"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Stirling PDFലേക്ക് സ്വാഗതം!"
 description = "പ്രധാന സവിശേഷതകളും തുടങ്ങുന്നത് എങ്ങനെയെന്നതും അറിയാൻ 1 മിനിട്ടിലെ ഒരു ദ്രുത ടൂർ വേണമോ?"
@@ -5254,6 +5440,10 @@ skipForNow = "ഇപ്പോൾ ഒഴിവാക്കുക"
 download = "ഡൗൺലോഡ് →"
 showMeAround = "ടൂർ കാണിക്കുക"
 skipTheTour = "ടൂർ ഒഴിവാക്കുക"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "ഇപ്പോൾ ഒഴിവാക്കുക"
@@ -5568,6 +5758,28 @@ contactSales = "വിൽപ്പന ടീമിനെ ബന്ധപ്പ�
 contactToUpgrade = "നിങ്ങളുടെ പ്ലാൻ അപ്‌ഗ്രേഡ് ചെയ്യുകയോ ഇഷ്ടാനുസൃതമാക്കുകയോ ചെയ്യാൻ ഞങ്ങളെ ബന്ധപ്പെടുക"
 maxUsers = "പരമാവധി ഉപയോക്താക്കൾ"
 upTo = "വരെ"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "മാസം"
@@ -5771,6 +5983,8 @@ notAvailable = "ഓഡിറ്റ് സിസ്റ്റം ലഭ്യമ�
 notAvailableMessage = "ഓഡിറ്റ് സിസ്റ്റം കോൺഫിഗർ ചെയ്തിട്ടില്ല അല്ലെങ്കിൽ ലഭ്യമല്ല."
 disabled = "ഓഡിറ്റ് ലോഗിംഗ് പ്രവർത്തനരഹിതമാണ്"
 disabledMessage = "സിസ്റ്റം ഇവന്റുകൾ ട്രാക്ക് ചെയ്യാൻ നിങ്ങളുടെ ആപ്ലിക്കേഷൻ ക്രമീകരണത്തിൽ ഓഡിറ്റ് ലോഗിംഗ് പ്രവർത്തനക്ഷമമാക്കുക."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "ഓഡിറ്റ് സിസ്റ്റം ലോഡ് ചെയ്യുന്നതിൽ പിശക്"
@@ -6025,6 +6239,8 @@ reset = "മാറ്റങ്ങൾ റീസെറ്റ് ചെയ്യു
 downloadJson = "JSON ഡൗൺലോഡ് ചെയ്യുക"
 generatePdf = "PDF സൃഷ്ടിക്കുക"
 saveChanges = "മാറ്റങ്ങൾ സംരക്ഷിക്കുക"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ബോക്‌സിൽ ഒതുങ്ങാൻ ടെക്സ്റ്റ് സ്വയം സ്കെയിൽ ചെയ്യുക"
@@ -6042,6 +6258,24 @@ descriptionInline = "ടിപ്പ്: ടെക്സ്റ്റ് ബോ�
 [pdfTextEditor.options.forceSingleElement]
 title = "തിരുത്തിയ ടെക്സ്റ്റ് ഒരു സിംഗിൾ PDF ഘടകത്തിൽ ലോക്ക് ചെയ്യുക"
 description = "ഇത് ഓണാക്കിയാൽ, ഓവർലാപ്പിംഗ് ഗ്ലിഫ്‌സ് അല്ലെങ്കിൽ മിശ്ര ഫോണ്ടുകൾ ഒഴിവാക്കാൻ തിരുത്തിയ ഓരോ ടെക്സ്റ്റ് ബോക്‌സും ഒറ്റ PDF ടെക്സ്റ്റ് ഘടകമായി എക്സ്പോർട്ട് ചെയ്യും."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "തിരഞ്ഞെടുത്ത ബോക്‌സുകൾ ലയിപ്പിക്കുക"

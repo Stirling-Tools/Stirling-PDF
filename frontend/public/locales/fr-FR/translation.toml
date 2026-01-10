@@ -340,6 +340,10 @@ advance = "Mode avancé"
 edit = "Voir et modifier"
 popular = "Populaire"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Préférences"
 
@@ -435,6 +439,25 @@ latestVersion = "Dernière version"
 checkForUpdates = "Rechercher des mises à jour"
 viewDetails = "Voir les détails"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Raccourcis clavier"
 description = "Personnalisez les raccourcis clavier pour un accès rapide aux outils. Cliquez sur \"Modifier le raccourci\" et pressez une nouvelle combinaison de touches. Appuyez sur Échap pour annuler."
@@ -488,11 +511,16 @@ low = "Faible"
 title = "Modifiez vos identifiants"
 header = "Mettez à jour vos identifiants de connexion"
 changePassword = "Vous utilisez les identifiants de connexion par défaut. Veuillez saisir un nouveau mot de passe"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "Nouveau nom d'utilisateur"
 oldPassword = "Mot de passe actuel"
 newPassword = "Nouveau mot de passe"
 confirmNewPassword = "Confirmer le nouveau mot de passe"
 submit = "Soumettre les modifications"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Paramètres du compte"
@@ -707,6 +735,11 @@ desc = "Détecter et scinder des photos scannées en pages séparées"
 tags = "signature,autographe"
 title = "Signer"
 desc = "Ajoutez une signature au PDF avec un dessin, du texte ou une image."
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "simplifier,retirer,interactif"
@@ -1245,6 +1278,21 @@ cbzOptions = "Options CBZ vers PDF"
 optimizeForEbook = "Optimiser le PDF pour les liseuses (utilise Ghostscript)"
 cbzOutputOptions = "Options PDF vers CBZ"
 cbzDpi = "DPI pour le rendu des images"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "pdf,conversion,img,jpg,image,photo"
@@ -1361,6 +1409,11 @@ header = "Ajouter des pièces jointes"
 add = "Ajouter une pièce jointe"
 remove = "Supprimer la pièce jointe"
 embed = "Intégrer la pièce jointe"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Ajouter des pièces jointes"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "Enregistrées"
 label = "Téléverser une image de signature"
 placeholder = "Sélectionner un fichier image"
 hint = "Téléversez une image PNG ou JPG de votre signature"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "Comment ajouter une signature"
@@ -2350,6 +2407,11 @@ note = "L’aplatissement supprime les éléments interactifs du PDF, les rendan
 [flatten.options.flattenOnlyForms]
 label = "Aplatir uniquement les formulaires"
 desc = "Aplatir uniquement les champs de formulaire, en laissant les autres éléments interactifs intacts"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Résultats de l’aplatissement"
@@ -2925,6 +2987,7 @@ header = "Redimensionner"
 submit = "Envoyer"
 noFileSelected = "Sélectionnez un fichier PDF pour commencer le recadrage"
 reset = "Réinitialiser au PDF complet"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Sélection de la zone de recadrage"
@@ -3342,6 +3405,19 @@ placeholder = "Saisir le nombre de divisions horizontales"
 label = "Divisions verticales"
 placeholder = "Entrer le nombre de divisions verticales"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Tampon,Ajouter,Stamp,Add image,center image,Watermark,PDF,Embed,Customize"
 header = "Tampon PDF"
@@ -3703,6 +3779,19 @@ filesize = "Taille du Fichier"
 [compress.grayscale]
 label = "Appliquer l'échelle de gris pour la compression"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Aperçu des paramètres de compression"
 
@@ -3720,6 +3809,10 @@ bullet2 = "Des valeurs élevées réduisent la taille du fichier"
 title = "Niveaux de gris"
 text = "Sélectionnez cette option pour convertir toutes les images en noir et blanc, ce qui peut réduire significativement la taille, en particulier pour les PDF scannés ou riches en images."
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "Une erreur est survenue lors de la compression du PDF."
 
@@ -3731,6 +3824,11 @@ failed = "Une erreur est survenue lors de la compression du PDF."
 [compress.selectText.1]
 _value = "Paramètres de compression"
 1 = "1-3 compression PDF,</br> 4-6 compression d'image légère,</br> 7-9 compression d'image intense qui réduira considérablement la qualité de l'image"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Ce fichier est protégé par un mot de passe. Veuillez saisir le mot de passe :"
@@ -3971,23 +4069,92 @@ deleteSelected = "Supprimer les pages sélectionnées"
 closePdf = "Fermer le PDF"
 exportAll = "Exporter le PDF"
 downloadSelected = "Télécharger les fichiers sélectionnés"
-downloadAll = "Tout télécharger"
-saveAll = "Tout enregistrer"
+annotations = "Annotations"
+exportSelected = "Exporter les pages sélectionnées"
+saveChanges = "Enregistrer les modifications"
 toggleTheme = "Changer de thème"
-toggleBookmarks = "Afficher/Masquer les signets"
 language = "Langue"
+toggleAnnotations = "Afficher/masquer les annotations"
 search = "Rechercher dans le PDF"
 panMode = "Mode panoramique"
 rotateLeft = "Pivoter à gauche"
 rotateRight = "Pivoter à droite"
 toggleSidebar = "Afficher/masquer la barre latérale"
-exportSelected = "Exporter les pages sélectionnées"
-toggleAnnotations = "Afficher/masquer les annotations"
-annotationMode = "Basculer en mode annotation"
+toggleBookmarks = "Afficher/Masquer les signets"
 print = "Imprimer le PDF"
-draw = "Dessiner"
-save = "Enregistrer"
-saveChanges = "Enregistrer les modifications"
+downloadAll = "Tout télécharger"
+saveAll = "Tout enregistrer"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Rechercher dans le PDF"
@@ -4038,12 +4205,20 @@ settings = "Réglages"
 adminSettings = "Réglages admin"
 allTools = "Outils"
 reader = "Lecteur"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Visite des outils"
 toolsTourDesc = "Découvrez ce que les outils peuvent faire"
 adminTour = "Visite administrateur"
 adminTourDesc = "Découvrez les paramètres et fonctionnalités d’administration"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Erreur"
@@ -5069,6 +5244,7 @@ loading = "Chargement…"
 back = "Retour"
 continue = "Continuer"
 error = "Erreur"
+save = "Save"
 
 [config.overview]
 title = "Configuration de l’application"
@@ -5235,6 +5411,16 @@ finish = "Terminer"
 startTour = "Commencer la visite"
 startTourDescription = "Suivez une visite guidée des fonctionnalités clés de Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Bienvenue dans Stirling PDF !"
 description = "Souhaitez-vous suivre une visite guidée d’une minute pour découvrir les fonctionnalités clés et comment démarrer ?"
@@ -5254,6 +5440,10 @@ skipForNow = "Passer pour l’instant"
 download = "Télécharger →"
 showMeAround = "Faites-moi faire le tour"
 skipTheTour = "Passer la visite"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Passer pour l’instant"
@@ -5568,6 +5758,28 @@ contactSales = "Contacter l’équipe commerciale"
 contactToUpgrade = "Contactez-nous pour mettre à niveau ou personnaliser votre forfait"
 maxUsers = "Nombre maximal d’utilisateurs"
 upTo = "Jusqu’à"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "mois"
@@ -5771,6 +5983,8 @@ notAvailable = "Système d’audit non disponible"
 notAvailableMessage = "Le système d’audit n’est pas configuré ou n’est pas disponible."
 disabled = "La journalisation d’audit est désactivée"
 disabledMessage = "Activez la journalisation d’audit dans la configuration de votre application pour suivre les événements du système."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Erreur lors du chargement du système d’audit"
@@ -6025,6 +6239,8 @@ reset = "Réinitialiser les modifications"
 downloadJson = "Télécharger le JSON"
 generatePdf = "Générer le PDF"
 saveChanges = "Enregistrer les modifications"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Ajuster automatiquement le texte aux cadres"
@@ -6042,6 +6258,24 @@ descriptionInline = "Astuce : Maintenez Ctrl (Cmd) ou Shift pour sélectionner p
 [pdfTextEditor.options.forceSingleElement]
 title = "Verrouiller le texte modifié à un seul élément PDF"
 description = "Lorsqu'il est activé, l'éditeur exporte chaque boîte de texte modifiée comme un seul élément de texte PDF afin d'éviter le chevauchement de glyphes ou les polices mixtes."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Fusionner les boîtes sélectionnées"

@@ -736,6 +736,11 @@ tags = "handtekening,ondertekenen"
 title = "Ondertekenen"
 desc = "Voegt handtekening toe aan PDF via tekenen, tekst of afbeelding"
 
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
+
 [home.flatten]
 tags = "vereenvoudigen,verwijderen,interactief"
 title = "Afvlakken"
@@ -1273,6 +1278,21 @@ cbzOptions = "CBZ-naar-PDF-opties"
 optimizeForEbook = "PDF optimaliseren voor e-readers (gebruikt Ghostscript)"
 cbzOutputOptions = "PDF-naar-CBZ-opties"
 cbzDpi = "DPI voor weergave van afbeeldingen"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversie,img,jpg,foto"
@@ -1389,6 +1409,11 @@ header = "Add attachments"
 add = "Bijlage toevoegen"
 remove = "Bijlage verwijderen"
 embed = "Bijlage insluiten"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add attachments"
 
 [watermark]
@@ -2334,6 +2359,10 @@ saved = "Opgeslagen"
 label = "Handtekeningafbeelding uploaden"
 placeholder = "Afbeeldingsbestand selecteren"
 hint = "Upload een PNG- of JPG-afbeelding van uw handtekening"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "Hoe een handtekening toevoegen"
@@ -2378,6 +2407,11 @@ note = "Afvlakken verwijdert interactieve elementen uit de PDF, waardoor deze ni
 [flatten.options.flattenOnlyForms]
 label = "Alleen formulieren afvlakken"
 desc = "Alleen formuliervelden afvlakken; andere interactieve elementen blijven intact"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Resultaten afvlakken"
@@ -2953,6 +2987,7 @@ header = "PDF bijsnijden"
 submit = "Indienen"
 noFileSelected = "Selecteer een PDF-bestand om te beginnen met bijsnijden"
 reset = "Resetten naar volledige PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Selectie bijsnijgebied"
@@ -3370,6 +3405,19 @@ placeholder = "Voer het aantal horizontale secties in"
 label = "Verticale secties"
 placeholder = "Voer het aantal verticale secties in"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Stempel, Afbeelding toevoegen, afbeelding centreren, watermerk, PDF, Insluiten, Aanpassen"
 header = "Stempel PDF"
@@ -3731,6 +3779,9 @@ filesize = "Bestandsgrootte"
 [compress.grayscale]
 label = "Grijstinten toepassen voor compressie"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
 [compress.lineArt]
 label = "Afbeeldingen omzetten in lijntekening"
 description = "Gebruikt ImageMagick om pagina's te reduceren tot hoogcontrast zwart-wit voor maximale verkleining van de bestandsgrootte."
@@ -3773,6 +3824,11 @@ failed = "Er is een fout opgetreden bij het comprimeren van de PDF."
 [compress.selectText.1]
 _value = "Compressie-instellingen"
 1 = "1-3 PDF-compressie,</br> 4-6 lichte afbeeldingscompressie,</br> 7-9 intense afbeeldingscompressie Zal de beeldkwaliteit sterk verminderen"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Dit bestand is met een wachtwoord beveiligd. Voer het wachtwoord in:"
@@ -4013,23 +4069,92 @@ deleteSelected = "Geselecteerde pagina's verwijderen"
 closePdf = "PDF sluiten"
 exportAll = "PDF exporteren"
 downloadSelected = "Geselecteerde bestanden downloaden"
-downloadAll = "Alles downloaden"
-saveAll = "Alles opslaan"
+annotations = "Annotations"
+exportSelected = "Geselecteerde pagina's exporteren"
+saveChanges = "Wijzigingen opslaan"
 toggleTheme = "Thema wisselen"
-toggleBookmarks = "Bladwijzers tonen/verbergen"
 language = "Taal"
+toggleAnnotations = "Annotaties tonen/verbergen"
 search = "PDF doorzoeken"
 panMode = "Pan-modus"
 rotateLeft = "Linksom draaien"
 rotateRight = "Rechtsom draaien"
 toggleSidebar = "Zijbalk tonen/verbergen"
-exportSelected = "Geselecteerde pagina's exporteren"
-toggleAnnotations = "Annotaties tonen/verbergen"
-annotationMode = "Annotatiemodus schakelen"
+toggleBookmarks = "Bladwijzers tonen/verbergen"
 print = "PDF afdrukken"
-draw = "Tekenen"
-save = "Opslaan"
-saveChanges = "Wijzigingen opslaan"
+downloadAll = "Alles downloaden"
+saveAll = "Alles opslaan"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "PDF doorzoeken"
@@ -4686,7 +4811,6 @@ title = "Actieve licentie"
 file = "Bron: licentiebestand ({{path}})"
 key = "Bron: licentiesleutel"
 type = "Type: {{type}}"
-
 noInput = "Geef een licentiesleutel op of upload een certificaatbestand"
 success = "Succes"
 
@@ -6115,6 +6239,8 @@ reset = "Wijzigingen resetten"
 downloadJson = "JSON downloaden"
 generatePdf = "PDF genereren"
 saveChanges = "Wijzigingen opslaan"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tekst automatisch schalen zodat deze in vakken past"
@@ -6132,6 +6258,24 @@ descriptionInline = "Tip: Houd Ctrl (Cmd) of Shift ingedrukt om meerdere tekstva
 [pdfTextEditor.options.forceSingleElement]
 title = "Bewerkte tekst vastzetten op één PDF‑element"
 description = "Wanneer ingeschakeld, exporteert de editor elk bewerkt tekstvak als één PDF-tekstelement om overlappende glyphen of gemengde lettertypen te voorkomen."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Geselecteerde vakken samenvoegen"

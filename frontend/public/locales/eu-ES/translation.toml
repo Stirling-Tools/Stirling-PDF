@@ -340,6 +340,10 @@ advance = "Aurreratua"
 edit = "Ikusi eta editatu"
 popular = "Ezagunak"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Hobespenak"
 
@@ -435,6 +439,25 @@ latestVersion = "Azken bertsioa"
 checkForUpdates = "Egiaztatu eguneratzeak"
 viewDetails = "Xehetasunak ikusi"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Laster-teklak"
 description = "Pertsonalizatu laster-teklak tresnetara azkar sartzeko. Egin klik \"Laster-tekla aldatu\" eta sakatu tekla-konbinazio berria. Sakatu Esc ezeztatzeko."
@@ -488,11 +511,16 @@ low = "Baxua"
 title = "Aldatu kredentzialak"
 header = "Eguneratu zure kontuaren xehetasunak"
 changePassword = "Saioa hasteko kredentzial lehenetsiak erabiltzen ari zara. Mesedez, sartu pasahitz berria"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "Erabiltzaile izen berria"
 oldPassword = "Uneko pasahitza"
 newPassword = "Pasahitz berria"
 confirmNewPassword = "Konfirmatu pasahitz berria"
 submit = "Bidali aldaketak"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Kontuaren ezarpenak"
@@ -707,6 +735,11 @@ desc = "Detektatu eta banatu eskaneatutako argazkiak orri bereizietan"
 tags = "sinadura,autografoa"
 title = "Sinatu"
 desc = "Gehitu sinadura PDFari marrazki, testu edo irudi bidez"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "sinplifikatu,kendu,interaktiboa"
@@ -1245,6 +1278,21 @@ cbzOptions = "CBZtik PDFra aukerak"
 optimizeForEbook = "Optimizatu PDF e-book irakurgailuetarako (Ghostscript erabiltzen du)"
 cbzOutputOptions = "PDFtik CBZra aukerak"
 cbzDpi = "Irudien errendatzeko DPI"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo,psd,photoshop"
@@ -1361,6 +1409,11 @@ header = "Add attachments"
 add = "Gehitu eranskina"
 remove = "Kendu eranskina"
 embed = "Txertatu eranskina"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add attachments"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "Gordeta"
 label = "Igo sinaduraren irudia"
 placeholder = "Hautatu irudi-fitxategia"
 hint = "Igo zure sinaduraren PNG edo JPG irudia"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "Nola gehitu sinadura"
@@ -2350,6 +2407,11 @@ note = "Lautzeak PDFko elementu interaktiboak kentzen ditu, eta ezin editagarri 
 [flatten.options.flattenOnlyForms]
 label = "Lautu bakarrik inprimakiak"
 desc = "Lautu soilik inprimaki-eremuak, beste elementu interaktiboak ukitu gabe utzita"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Lautze-emaitzak"
@@ -2925,6 +2987,7 @@ header = "Moztu PDF"
 submit = "Bidali"
 noFileSelected = "Hautatu PDF fitxategi bat mozten hasteko"
 reset = "Berrezarri PDF osoa"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Mozketa-arearen hautapena"
@@ -3342,6 +3405,19 @@ placeholder = "Sartu zatiketa horizontal kopurua"
 label = "Zatiketa bertikalak"
 placeholder = "Sartu zatiketa bertikal kopurua"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
 header = "Zigilatu PDFa"
@@ -3703,6 +3779,19 @@ filesize = "Fitxategiaren tamaina"
 [compress.grayscale]
 label = "Aplikatu grisezko eskala konpresiorako"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Konpresio ezarpenen ikuspegi orokorra"
 
@@ -3720,6 +3809,10 @@ bullet2 = "Balio altuek fitxategi-tamaina murrizten dute"
 title = "Gris-eskala"
 text = "Aukeratu aukera hau irudi guztiak zuri-beltzera bihurtzeko; asko murriztu dezake fitxategiaren tamaina, bereziki eskaneatutako PDFetan edo irudi askoko dokumentuetan."
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "Errore bat gertatu da PDFa konprimatzean."
 
@@ -3731,6 +3824,11 @@ failed = "Errore bat gertatu da PDFa konprimatzean."
 [compress.selectText.1]
 _value = "Konpresio ezarpenak"
 1 = "1-3 PDF konpresioa,</br> 4-6 irudi-konpresio arina,</br> 7-9 irudi-konpresio bizia Irudien kalitatea nabarmen murriztuko du"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Fitxategi hau pasahitzarekin babestuta dago. Idatzi pasahitza:"
@@ -3971,23 +4069,92 @@ deleteSelected = "Ezabatu hautatutako orriak"
 closePdf = "Itxi PDFa"
 exportAll = "Esportatu PDFa"
 downloadSelected = "Deskargatu hautatutako fitxategiak"
-downloadAll = "Deskargatu dena"
-saveAll = "Gorde dena"
+annotations = "Annotations"
+exportSelected = "Esportatu hautatutako orriak"
+saveChanges = "Aldaketak gorde"
 toggleTheme = "Gaia txandakatu"
-toggleBookmarks = "Laster-markak txandakatu"
 language = "Hizkuntza"
+toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
 search = "Bilatu PDF"
 panMode = "Pan modua"
 rotateLeft = "Biratu ezkerrera"
 rotateRight = "Biratu eskuinera"
 toggleSidebar = "Alboko barra txandakatu"
-exportSelected = "Esportatu hautatutako orriak"
-toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
-annotationMode = "Oharpen modua txandakatu"
+toggleBookmarks = "Laster-markak txandakatu"
 print = "Inprimatu PDFa"
-draw = "Marraztu"
-save = "Gorde"
-saveChanges = "Aldaketak gorde"
+downloadAll = "Deskargatu dena"
+saveAll = "Gorde dena"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Bilatu PDF"
@@ -4038,12 +4205,20 @@ settings = "Aukerak"
 adminSettings = "Admin aukerak"
 allTools = "All Tools"
 reader = "Irakurri"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Tresnen ibilaldia"
 toolsTourDesc = "Ikasi tresnek zer egin dezaketen"
 adminTour = "Administrazio ibilaldia"
 adminTourDesc = "Arakatu admin ezarpenak eta ezaugarriak"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Errorea"
@@ -5069,6 +5244,7 @@ loading = "Kargatzen..."
 back = "Atzera"
 continue = "Jarraitu"
 error = "Errorea"
+save = "Save"
 
 [config.overview]
 title = "Aplikazioaren konfigurazioa"
@@ -5235,6 +5411,16 @@ finish = "Amaitu"
 startTour = "Hasi bira"
 startTourDescription = "Stirling PDFren ezaugarri nagusien gida-bira"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Ongi etorri Stirling PDFra!"
 description = "1 minutuko bisita azkar bat egin nahi duzu funtsezko ezaugarriak eta nola hasi ikasteko?"
@@ -5254,6 +5440,10 @@ skipForNow = "Utzi oraingoz"
 download = "Deskargatu →"
 showMeAround = "Erakutsi ingurunea"
 skipTheTour = "Utzi bisita gidatua"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Utzi oraingoz"
@@ -5568,6 +5758,28 @@ contactSales = "Jarri salmentekin harremanetan"
 contactToUpgrade = "Jarri gurekin harremanetan zure plana bertsio-berritzeko edo pertsonalizatzeko"
 maxUsers = "Erabiltzaile kopuru maximoa"
 upTo = "Gehienez"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "hilabete"
@@ -5771,6 +5983,8 @@ notAvailable = "Auditoretza-sistema ez dago eskuragarri"
 notAvailableMessage = "Auditoretza-sistema ez dago konfiguratuta edo ez dago eskuragarri."
 disabled = "Auditoretza-erregistroa desgaituta dago"
 disabledMessage = "Gaitu auditoretza-erregistroa zure aplikazioaren konfigurazioan sistemaren gertaerak jarraitzeko."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Errorea auditoretza-sistema kargatzean"
@@ -6025,6 +6239,8 @@ reset = "Aldaketak berrezarri"
 downloadJson = "JSON deskargatu"
 generatePdf = "PDF sortu"
 saveChanges = "Gorde aldaketak"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Testua automatikoki eskalatu kutxetara egokitzeko"
@@ -6042,6 +6258,24 @@ descriptionInline = "Aholkua: Eutsi sakatuta Ctrl (Cmd) edo Shift testu-kutxa an
 [pdfTextEditor.options.forceSingleElement]
 title = "Editatutako testua PDF elementu bakarrera lotu"
 description = "Gaituta dagoenean, editoreak editatutako testu-kutxa bakoitza PDFko testu-elementu bakar gisa esportatzen du, glifoen gainjartzeak edo letra-tipo nahasiak saihesteko."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Hautatutako kutxak batu"
