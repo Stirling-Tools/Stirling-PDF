@@ -380,15 +380,15 @@ export default function AdminConnectionsSection() {
       if (response.status === 200) {
         alert({
           alertType: 'success',
-          message: t('admin.settings.success', 'Settings saved successfully')
+          title: t('admin.settings.success', 'Settings saved successfully')
         });
-        refetch();
+        fetchSettings();
       }
     } catch (error) {
       console.error('Failed to save mobile scanner setting:', error);
       alert({
         alertType: 'error',
-        message: t('admin.settings.error', 'Failed to save settings')
+        title: t('admin.settings.error', 'Failed to save settings')
       });
     }
   };
