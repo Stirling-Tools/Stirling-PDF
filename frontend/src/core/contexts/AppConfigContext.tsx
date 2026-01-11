@@ -45,6 +45,10 @@ export interface AppConfig {
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
   enableMobileScanner?: boolean;
+  mobileScannerConvertToPdf?: boolean;
+  mobileScannerImageResolution?: string;
+  mobileScannerPageFormat?: string;
+  mobileScannerStretchToFit?: boolean;
   appVersion?: string;
   machineType?: string;
   activeSecurity?: boolean;

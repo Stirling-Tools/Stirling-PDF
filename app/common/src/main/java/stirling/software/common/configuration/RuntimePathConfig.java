@@ -94,16 +94,19 @@ public class RuntimePathConfig {
                         defaultSOfficePath, operations != null ? operations.getSoffice() : null);
 
         // Initialize Tesseract data path
-        String defaultTessDataPath =
-                isDocker ? "/usr/share/tesseract-ocr/5/tessdata" : "/usr/share/tessdata";
-
+        // Priority: config setting > TESSDATA_PREFIX env var > default path
         String tessPath = system.getTessdataDir();
-        String tessdataDir = java.lang.System.getenv("TESSDATA_PREFIX");
+        String tessdataPrefix = java.lang.System.getenv("TESSDATA_PREFIX");
+        String defaultPath = "/usr/share/tesseract-ocr/5/tessdata";
 
-        this.tessDataPath =
-                resolvePath(
-                        defaultTessDataPath,
-                        (tessPath != null && !tessPath.isEmpty()) ? tessPath : tessdataDir);
+        if (tessPath != null && !tessPath.isEmpty()) {
+            this.tessDataPath = tessPath;
+        } else if (tessdataPrefix != null && !tessdataPrefix.isEmpty()) {
+            this.tessDataPath = tessdataPrefix;
+        } else {
+            this.tessDataPath = defaultPath;
+        }
+
         log.info("Using Tesseract data path: {}", this.tessDataPath);
     }
 

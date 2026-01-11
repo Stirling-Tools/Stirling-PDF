@@ -191,7 +191,7 @@ public class UIDataController {
     }
 
     private List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = applicationProperties.getSystem().getTessdataDir();
+        String tessdataDir = runtimePathConfig.getTessDataPath();
         java.io.File[] files = new java.io.File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
