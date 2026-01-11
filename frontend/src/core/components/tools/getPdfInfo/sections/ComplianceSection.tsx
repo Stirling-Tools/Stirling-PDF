@@ -23,7 +23,6 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
       'IsPDF/ACompliant',
       'IsPDF/UACompliant',
       'IsPDF/BCompliant',
-      'IsPDF/ECompliant',
       'IsPDF/SECCompliant'
     ];
 
