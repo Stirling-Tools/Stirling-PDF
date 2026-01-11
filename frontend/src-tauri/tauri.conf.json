@@ -25,6 +25,7 @@
         "targets": [
             "deb",
             "rpm",
+            "appimage",
             "dmg",
             "msi"
         ],
@@ -56,6 +57,12 @@
         "linux": {
             "deb": {
                 "desktopTemplate": "stirling-pdf.desktop"
+            },
+            "rpm": {
+                "desktopTemplate": "stirling-pdf.desktop"
+            },
+            "appimage": {
+                "bundleMediaFramework": false
             }
         },
         "windows": {

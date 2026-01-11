@@ -40,8 +40,33 @@ fn dispatch_deep_link(app: &AppHandle, url: &str) {
   }
 }
 
+#[cfg(target_os = "linux")]
+fn configure_linux_webview() {
+  let mut applied_settings = Vec::new();
+
+  if std::env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_none() {
+    std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+    applied_settings.push("WEBKIT_DISABLE_COMPOSITING_MODE=1 (software rendering)");
+  }
+
+  if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    applied_settings.push("WEBKIT_DISABLE_DMABUF_RENDERER=1 (fallback EGL renderer)");
+  }
+
+  if !applied_settings.is_empty() {
+    add_log(format!(
+      "🛠️ Applied Linux WebKit fallbacks to avoid EGL issues: {}",
+      applied_settings.join(", ")
+    ));
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  #[cfg(target_os = "linux")]
+  configure_linux_webview();
+
   tauri::Builder::default()
     .plugin(
       tauri_plugin_log::Builder::new()

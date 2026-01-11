@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Stirling-PDF Desktop Application"
 authors = ["Stirling-PDF Contributors"]
 license = ""
-repository = ""
+repository = "https://github.com/Stirling-Tools/Stirling-PDF"
+homepage = "https://www.stirlingpdf.com"
+documentation = "https://docs.stirlingpdf.com"
 edition = "2021"
 rust-version = "1.77.2"
 
@@ -18,37 +20,37 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.2.0", features = [] }
+tauri-build = { version = "2.5.3", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.9.0", features = [ "devtools"] }
-tauri-plugin-log = "2.0.0-rc"
-tauri-plugin-shell = "2.1.0"
+tauri = { version = "2.9.4", features = [ "devtools"] }
+tauri-plugin-log = "2.7.1"
+tauri-plugin-shell = "2.3.3"
 tauri-plugin-fs = "2.4.4"
-tauri-plugin-http = "2.4.4"
+tauri-plugin-http = "2.5.4"
 tauri-plugin-single-instance = { version = "2.3.6", features = ["deep-link"] }
-tauri-plugin-store = "2.1.0"
-tauri-plugin-opener = "2.0.0"
+tauri-plugin-store = "2.4.1"
+tauri-plugin-opener = "2.5.2"
+keyring = { version = "3.6.3", features = ["apple-native", "windows-native"] }
+tokio = { version = "1.48", features = ["time", "sync"] }
+reqwest = { version = "0.12", features = ["json"] }
 tauri-plugin-deep-link = "2.4.5"
-keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
-tokio = { version = "1.0", features = ["time", "sync"] }
-reqwest = { version = "0.11", features = ["json"] }
 tiny_http = "0.12"
 url = "2.5"
 urlencoding = "2.1"
 sha2 = "0.10"
 base64 = "0.22"
-rand = "0.8"
+rand = "0.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"
 core-services = "1.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.58", features = [
+windows = { version = "0.61", features = [
     "Win32_Foundation",
     "Win32_System_Com",
     "Win32_UI_Shell",

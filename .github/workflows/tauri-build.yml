@@ -23,6 +23,18 @@ on:
   push:
     branches: [main]
 
+# cancel in-progress jobs if a new job is triggered
+# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
+# or a pull request is updated.
+# It helps to save resources and time by ensuring that only the latest commit is built and tested
+# This is particularly useful for long-running jobs that may take a while to complete.
+# The `group` is set to a combination of the workflow name, event name, and branch name.
+# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
+# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -33,6 +45,11 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
       - name: Determine build matrix
         id: set-matrix
         run: |
@@ -45,15 +62,15 @@ jobs:
                 echo 'matrix={"include":[{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "linux")
-                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For PR/push events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b appimage","name":"linux-x86_64-appimage"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b deb","name":"linux-x86_64-deb"},{"platform":"ubuntu-22.04","args":"--target x86_64-unknown-linux-gnu -b rpm","name":"linux-x86_64-rpm"}]}' >> $GITHUB_OUTPUT
           fi
 
   build:
@@ -74,11 +91,61 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name != 'linux-x86_64-appimage'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
+          # Dependencies explanation:
+          # - libwebkit2gtk-4.1-dev: WebKit engine for Tauri v2 (4.0 was for v1)
+          # - libappindicator3-dev: System tray support
+          # - librsvg2-dev: SVG rendering
+          # - patchelf: Required for AppImage packaging
+          # - libxdo-dev: Keyboard/mouse automation
+          # - libasound2-dev: Audio support
+          # - libopenblas-dev: GPU acceleration support
+          # - libx11-dev: X11 development files for window system interaction
+          # - libxtst-dev: X11 testing extensions for input simulation
+          # - libxrandr-dev: X11 RandR extension for display configuration
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev libasound2-dev libopenblas-dev libx11-dev libxtst-dev libxrandr-dev
+
+      - name: Install macOS DMG tooling
+        if: startsWith(matrix.platform, 'macos')
+        run: |
+          brew list create-dmg >/dev/null 2>&1 || brew install create-dmg
+
+      - name: Install dependencies (appimage only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libgtk-3-dev \
+            libxdo-dev \
+            libssl-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            openjdk-17-jre-headless \
+            patchelf
+            
+          mkdir -p /tmp/ubuntu-packages
+          cd /tmp/ubuntu-packages
+          wget https://launchpadlibrarian.net/723972773/libwebkit2gtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libwebkit2gtk-4.1-0"; exit 1; }
+          wget https://launchpadlibrarian.net/723972761/libwebkit2gtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libwebkit2gtk-4.1-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/723972770/libjavascriptcoregtk-4.1-0_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libjavascriptcoregtk-4.1-0"; exit 1; }
+          wget https://launchpadlibrarian.net/723972746/libjavascriptcoregtk-4.1-dev_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download libjavascriptcoregtk-4.1-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/723972735/gir1.2-javascriptcoregtk-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download gir1.2-javascriptcoregtk-4.1"; exit 1; }
+          wget https://launchpadlibrarian.net/723972739/gir1.2-webkit2-4.1_2.44.0-0ubuntu0.22.04.1_amd64.deb || { echo "Failed to download gir1.2-webkit2-4.1"; exit 1; }
+          wget https://launchpadlibrarian.net/606433947/libicu70_70.1-2ubuntu1_amd64.deb || { echo "Failed to download libicu70"; exit 1; }
+          wget https://launchpadlibrarian.net/606433941/libicu-dev_70.1-2ubuntu1_amd64.deb || { echo "Failed to download libicu-dev"; exit 1; }
+          wget https://launchpadlibrarian.net/606433945/icu-devtools_70.1-2ubuntu1_amd64.deb || { echo "Failed to download icu-devtools"; exit 1; }
+          wget https://launchpadlibrarian.net/595623693/libjpeg8_8c-2ubuntu10_amd64.deb || { echo "Failed to download libjpeg8"; exit 1; }
+          wget https://launchpadlibrarian.net/587202140/libjpeg-turbo8_2.1.2-0ubuntu1_amd64.deb || { echo "Failed to download libjpeg-turbo8"; exit 1; }
+          wget https://launchpadlibrarian.net/592959859/xdg-desktop-portal-gtk_1.14.0-1build1_amd64.deb || { echo "Failed to download xdg-desktop-portal-gtk"; exit 1; }
+          sudo apt-get install -y /tmp/ubuntu-packages/*.deb
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -98,6 +165,18 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+
+      - name: Make libjvm discoverable (appimage only)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          JAVA_LIBJVM="$JAVA_HOME/lib/server/libjvm.so"
+          if [ -f "$JAVA_LIBJVM" ]; then
+            sudo ln -sf "$JAVA_LIBJVM" /usr/lib/libjvm.so
+            echo "Linked libjvm from $JAVA_LIBJVM"
+          else
+            echo "libjvm not found at $JAVA_LIBJVM"
+            exit 1
+          fi
 
       - name: Build Java backend with JLink
         working-directory: ./
@@ -174,7 +253,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -298,6 +377,24 @@ jobs:
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
+      - name: Generate temporary GPG key for AppImage
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          cat >keyparams <<EOF
+          %no-protection
+          Key-Type: RSA
+          Key-Length: 2048
+          Name-Real: CI AppImage Signer
+          Name-Email: ci-appimage@example.invalid
+          Expire-Date: 0
+          %commit
+          EOF
+          gpg --batch --generate-key keyparams
+          export GPG_FINGERPRINT=$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr:/ {print $10; exit}')
+          echo "GPG_FINGERPRINT=$GPG_FINGERPRINT" >> $GITHUB_ENV
+          echo "Generated temporary GPG key:"
+          gpg --list-secret-keys --keyid-format=long
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -308,18 +405,32 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
+          # APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
-          # Only enable Windows signing in Tauri when on main
-          SIGN: ${{ github.ref == 'refs/heads/main' && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          # Enable Windows signing only when ALL of the following are true:
+          #   - The build is running on the Windows platform (matrix.platform == 'windows-latest')
+          #   - The build is triggered from the main branch (github.ref == 'refs/heads/main')
+          #   - The DigiCert KeyLocker HSM is NOT being used (env.SM_API_KEY == '')
+          #   - A Windows certificate is available (env.WINDOWS_CERTIFICATE != '')
+          # If all conditions are met, SIGN=1 (enable signing); otherwise, SIGN=0 (disable signing).
+          SIGN: ${{ (matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main' && env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
+
+      - name: Cleanup temporary GPG key
+        if: matrix.platform == 'ubuntu-22.04' && matrix.name == 'linux-x86_64-appimage'
+        run: |
+          if [ -n "${GPG_FINGERPRINT:-}" ]; then
+            gpg --batch --yes --delete-secret-keys "$GPG_FINGERPRINT" || true
+            gpg --batch --yes --delete-keys "$GPG_FINGERPRINT" || true
+          fi
+          rm -f keyparams
 
       # Sign with DigiCert KeyLocker (post-build)
       - name: Sign Windows binaries with DigiCert KeyLocker
@@ -507,9 +618,13 @@ jobs:
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
-          else
+            # find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
+          elif [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+          else
+            echo "Unknown platform: ${{ matrix.platform }}"
           fi
 
       - name: Verify Windows Code Signature
@@ -599,13 +714,16 @@ jobs:
               echo "❌ No macOS artifacts found"
               exit 1
             fi
-          else
+          elif [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
             echo "Checking for Linux artifacts..."
-            find . -name "*.deb" -o -name "*.AppImage" | head -5
-            if [ $(find . -name "*.deb" -o -name "*.AppImage" | wc -l) -eq 0 ]; then
+            find . -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" | head -5
+            if [ $(find . -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" | wc -l) -eq 0 ]; then
               echo "❌ No Linux artifacts found"
               exit 1
             fi
+          else
+            echo "Unknown platform: ${{ matrix.platform }}"
+            exit 1
           fi
 
           echo "✅ Build artifacts found for ${{ matrix.name }}"
@@ -615,7 +733,7 @@ jobs:
         run: |
           cd ./frontend/src-tauri/target
           echo "Artifact sizes for ${{ matrix.name }}:"
-          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
+          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage"  -o -name "*.rpm" -o -name "*.msi" | while read file; do
             if [ -f "$file" ]; then
               size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "unknown")
               echo "$file: $size bytes"
