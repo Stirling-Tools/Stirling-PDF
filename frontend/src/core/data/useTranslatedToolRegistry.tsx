@@ -892,6 +892,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "pdf-to-markdown",
           "pdf-to-pdfa",
           "eml-to-pdf",
+          "pdf-to-epub",
         ],
 
         operationConfig: convertOperationConfig,

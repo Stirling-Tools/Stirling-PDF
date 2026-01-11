@@ -23,6 +23,8 @@ export const shouldProcessFilesSeparately = (
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
   // PDF to CBR conversions (each PDF should generate its own archive)
   (parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr') ||
+    // PDF to EPUB/AZW3 conversions (each PDF should generate its own ebook)
+    (parameters.fromExtension === 'pdf' && ['epub', 'azw3'].includes(parameters.toExtension)) ||
     // PDF to office format conversions (each PDF should generate its own office file)
     (parameters.fromExtension === 'pdf' && isOfficeFormat(parameters.toExtension)) ||
     // Office files to PDF conversions (each file should be processed separately via LibreOffice)
@@ -42,7 +44,7 @@ export const shouldProcessFilesSeparately = (
 // Static function that can be used by both the hook and automation executor
 export const buildConvertFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions } = parameters;
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions, epubOptions } = parameters;
 
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
@@ -88,6 +90,10 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("includeTableOfContents", (ebookOptions?.includeTableOfContents ?? false).toString());
     formData.append("includePageNumbers", (ebookOptions?.includePageNumbers ?? false).toString());
     formData.append("optimizeForEbook", (ebookOptions?.optimizeForEbook ?? false).toString());
+  } else if (fromExtension === 'pdf' && ['epub', 'azw3'].includes(toExtension)) {
+    formData.append("detectChapters", (epubOptions?.detectChapters ?? true).toString());
+    formData.append("targetDevice", epubOptions?.targetDevice ?? 'TABLET_PHONE_IMAGES');
+    formData.append("outputFormat", epubOptions?.outputFormat ?? (toExtension === 'azw3' ? 'AZW3' : 'EPUB'));
   }
 
   return formData;
