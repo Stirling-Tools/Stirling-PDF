@@ -43,7 +43,7 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
                          if (key === 'IsPDF/BCompliant') label = 'PDF/A Level B';
 
                          const Icon = val ? CheckIcon : CloseIcon;
-                         const color = val ? 'green' : 'gray';
+                         const color = val ? 'teal' : 'orange';
 
                          return (
                              <Group key={key} justify="space-between" p="xs" style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
@@ -57,7 +57,7 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
                      {legacyCompliance['PDF/AConformanceLevel'] && (
                          <Group justify="space-between" p="xs">
                              <Text size="sm" fw={500}>PDF/A Level</Text>
-                             <Badge color="blue" variant="filled">{legacyCompliance['PDF/AConformanceLevel'] as string}</Badge>
+                             <Badge color="cyan" variant="light">{legacyCompliance['PDF/AConformanceLevel'] as string}</Badge>
                          </Group>
                      )}
                  </Stack>
@@ -72,7 +72,7 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
                                      <Text size="sm">{item.Standard.toUpperCase()}</Text>
                                      <Text size="xs" c="dimmed">{item.Summary}</Text>
                                  </Stack>
-                                 <Badge color={item.Compliant ? 'green' : (item.Standard === 'not-pdfa' ? 'gray' : 'red')} variant="dot">
+                                 <Badge color={item.Compliant ? 'teal' : (item.Standard === 'not-pdfa' ? 'gray' : 'orange')} variant="light">
                                      {item.Compliant ? 'Compliant' : 'Non-Compliant'}
                                  </Badge>
                              </Group>
@@ -92,7 +92,7 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
             // Or if text is "Not PDF/A", handling that visually.
             const isNotPdfA = item.Standard === 'not-pdfa';
 
-            let color = isCompliant ? 'green' : 'red';
+            let color = isCompliant ? 'teal' : 'orange';
             let Icon = isCompliant ? CheckIcon : CloseIcon;
             if (isNotPdfA) {
                color = 'gray';
