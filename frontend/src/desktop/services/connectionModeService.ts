@@ -197,38 +197,17 @@ export class ConnectionModeService {
       if (stage1Result.success) {
         console.log(`[ConnectionModeService] ✅ Connection successful with HTTP`);
 
-        // STAGE 2: Test if HTTPS is also available (optional upgrade suggestion)
-        console.log(`[ConnectionModeService] Stage 2: Checking if HTTPS is available`);
-        const httpsUrl = healthUrl.replace('http://', 'https://');
-        const stage2Result = await this.testHTTPS(httpsUrl, 'Stage 2: Checking HTTPS availability', false);
-        diagnostics.push(stage2Result);
-
         // Log success summary
         console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SUMMARY ====================`);
         console.log(`[ConnectionModeService] ✅ CONNECTION SUCCESSFUL`);
-        console.log(`[ConnectionModeService] Total tests run: ${diagnostics.length}`);
-        console.log(`[ConnectionModeService] ---------------------------------------------------------------`);
-        diagnostics.forEach((diag) => {
-          const icon = diag.success ? '✅' : '❌';
-          console.log(`[ConnectionModeService] ${icon} ${diag.stage}: ${diag.message} (${diag.duration}ms)`);
-        });
-        console.log(`[ConnectionModeService] ================================================================`);
+        console.log(`[ConnectionModeService] Protocol: HTTP (as requested by user)`);
+        console.log(`[ConnectionModeService] Duration: ${stage1Result.duration}ms`);
+        console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SESSION END ====================`);
 
-        if (stage2Result.success) {
-          console.log(`[ConnectionModeService] Note: HTTPS is also available - recommend upgrading to https://`);
-          console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SESSION END ====================`);
-          return {
-            success: true,
-            diagnostics,
-          };
-        } else {
-          console.log(`[ConnectionModeService] Note: HTTPS not available - HTTP only`);
-          console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SESSION END ====================`);
-          return {
-            success: true,
-            diagnostics,
-          };
-        }
+        return {
+          success: true,
+          diagnostics,
+        };
       }
 
       // HTTP failed, try HTTPS as fallback
@@ -300,7 +279,7 @@ export class ConnectionModeService {
 
     // STAGE 4: Test with longer timeout (diagnose slow connections)
     console.log(`[ConnectionModeService] Stage 4: Testing with extended timeout (30s)`);
-    const stage4Result = await this.testWithLongTimeout(healthUrl, isHttpsUrl || !isHttpUrl);
+    const stage4Result = await this.testWithLongTimeout(healthUrl);
     diagnostics.push(stage4Result);
 
     if (stage4Result.success) {
@@ -359,7 +338,7 @@ export class ConnectionModeService {
 
     // STAGE 7: Try different HTTP method (HEAD instead of GET)
     console.log(`[ConnectionModeService] Stage 7: Testing with HEAD method`);
-    const stage7Result = await this.testWithHEADMethod(healthUrl, isHttpsUrl || !isHttpUrl);
+    const stage7Result = await this.testWithHEADMethod(healthUrl);
     diagnostics.push(stage7Result);
 
     if (stage7Result.success) {
@@ -374,7 +353,7 @@ export class ConnectionModeService {
 
     // STAGE 8: Try with modified User-Agent
     console.log(`[ConnectionModeService] Stage 8: Testing with browser User-Agent`);
-    const stage8Result = await this.testWithBrowserUserAgent(healthUrl, isHttpsUrl || !isHttpUrl);
+    const stage8Result = await this.testWithBrowserUserAgent(healthUrl);
     diagnostics.push(stage8Result);
 
     if (stage8Result.success) {
@@ -403,7 +382,7 @@ export class ConnectionModeService {
     console.log(`[ConnectionModeService] Failed: ${diagnostics.filter(d => !d.success).length}`);
     console.log(`[ConnectionModeService] Average failure time: ${avgDuration.toFixed(0)}ms`);
     console.log(`[ConnectionModeService] ---------------------------------------------------------------`);
-    diagnostics.forEach((diag, idx) => {
+    diagnostics.forEach((diag) => {
       const icon = diag.success ? '✅' : '❌';
       console.log(`[ConnectionModeService] ${icon} ${diag.stage}: ${diag.message} (${diag.duration}ms)`);
     });
@@ -595,7 +574,7 @@ export class ConnectionModeService {
     }
   }
 
-  private async testWithLongTimeout(url: string, useHttps: boolean): Promise<DiagnosticResult> {
+  private async testWithLongTimeout(url: string): Promise<DiagnosticResult> {
     const startTime = Date.now();
     try {
       const response = await fetch(url, {
@@ -770,7 +749,7 @@ export class ConnectionModeService {
       // Try to resolve DNS by making a HEAD request to the base domain
       // If DNS fails, we'll get an immediate error
       const testUrl = `https://${hostname}`;
-      const response = await fetch(testUrl, {
+      await fetch(testUrl, {
         method: 'HEAD',
         connectTimeout: 3000,
       });
@@ -812,7 +791,7 @@ export class ConnectionModeService {
     }
   }
 
-  private async testWithHEADMethod(url: string, useHttps: boolean): Promise<DiagnosticResult> {
+  private async testWithHEADMethod(url: string): Promise<DiagnosticResult> {
     const startTime = Date.now();
     try {
       console.log(`[ConnectionModeService] 🔗 Stage 7: Testing with HEAD method`);
@@ -854,7 +833,7 @@ export class ConnectionModeService {
     }
   }
 
-  private async testWithBrowserUserAgent(url: string, useHttps: boolean): Promise<DiagnosticResult> {
+  private async testWithBrowserUserAgent(url: string): Promise<DiagnosticResult> {
     const startTime = Date.now();
     try {
       console.log(`[ConnectionModeService] 🔗 Stage 8: Testing with browser User-Agent`);
