@@ -72,7 +72,7 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
                                      <Text size="xs" c="dimmed">{item.Summary}</Text>
                                  </Stack>
                                  <Badge color={item.Compliant ? 'teal' : (item.Standard === 'not-pdfa' ? 'gray' : 'orange')} variant="light">
-                                     {item.Compliant ? 'Compliant' : 'Non-Compliant'}
+                                     {item.Compliant ? t('getPdfInfo.compliance.compliant', 'Compliant') : t('getPdfInfo.compliance.nonCompliant', 'Non-Compliant')}
                                  </Badge>
                              </Group>
                          ))}

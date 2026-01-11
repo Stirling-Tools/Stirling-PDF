@@ -29,8 +29,7 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.action.*;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
@@ -381,6 +380,7 @@ public class GetInfoOnPDF {
 
         if (verificationResults != null) {
             for (PDFVerificationResult result : verificationResults) {
+                if (result == null) continue;
                 if (result.isCompliant()) {
                     String std = result.getStandard().toLowerCase();
                     if (std.contains("pdf_a") || std.contains("pdfa")) {
@@ -405,7 +405,6 @@ public class GetInfoOnPDF {
 
         compliancy.put("IsPDF/ACompliant", isPdfA);
         compliancy.put("IsPDF/UACompliant", isPdfUA);
-        compliancy.put("IsPDF/XCompliant", true); // Not implemented
         compliancy.put("IsPDF/ECompliant", isPdfE);
         compliancy.put("IsPDF/VTCompliant", false); // Not currently implemented
         compliancy.put("IsPDF/BCompliant", isPdfB);
@@ -418,6 +417,7 @@ public class GetInfoOnPDF {
         if (verificationResults != null && !verificationResults.isEmpty()) {
             // Keep original simple structure as backup or extra info
             for (PDFVerificationResult result : verificationResults) {
+                if (result == null) continue;
                 String standard = result.getStandard();
                 boolean isCompliant = result.isCompliant();
 
@@ -455,13 +455,21 @@ public class GetInfoOnPDF {
             for (PDPage page : doc.getPages()) {
                 for (PDAnnotation annotation : page.getAnnotations()) {
                     if (annotation instanceof PDAnnotationLink) {
-                        return false;
+                        PDAnnotationLink link = (PDAnnotationLink) annotation;
+                        PDAction action = link.getAction();
+                        if (action instanceof PDActionURI
+                                || action instanceof PDActionLaunch
+                                || action instanceof PDActionRemoteGoTo
+                                || action instanceof PDActionSubmitForm) {
+                            return false;
+                        }
                     }
                 }
             }
 
             return true;
         } catch (Exception e) {
+            log.error("Error checking SEC compliance: {}", e.getMessage());
             return false;
         }
     }
