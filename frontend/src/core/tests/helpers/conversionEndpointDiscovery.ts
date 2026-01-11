@@ -120,6 +120,13 @@ const ALL_CONVERSION_ENDPOINTS: ConversionEndpoint[] = [
     toFormat: 'pdf',
     description: 'Convert email (EML) to PDF',
     apiPath: '/api/v1/convert/eml/pdf'
+  },
+  {
+    endpoint: 'pdf-to-epub',
+    fromFormat: 'pdf',
+    toFormat: 'epub',
+    description: 'Convert PDF to EPUB/AZW3',
+    apiPath: '/api/v1/convert/pdf/epub'
   }
 ];
 
