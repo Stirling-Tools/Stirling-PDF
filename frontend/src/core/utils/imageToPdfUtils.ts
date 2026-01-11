@@ -131,7 +131,7 @@ export async function convertImageToPdf(
     const pdfFilename = imageFile.name.replace(/\.[^.]+$/, '.pdf');
 
     // Create a File object from the PDF bytes
-    const pdfFile = new File([pdfBytes], pdfFilename, {
+    const pdfFile = new File([new Uint8Array(pdfBytes)], pdfFilename, {
       type: 'application/pdf',
     });
 
