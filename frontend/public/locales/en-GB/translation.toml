@@ -3132,6 +3132,8 @@ tableOfContents = "Table of Contents"
 notDetected = "Not Detected"
 passed = "Passed"
 failed = "Failed"
+compliant = "Compliant"
+nonCompliant = "Non-Compliant"
 none = "No standards detected"
 
 [getPdfInfo.other]
