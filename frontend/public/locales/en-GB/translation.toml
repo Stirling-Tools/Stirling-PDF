@@ -3128,6 +3128,12 @@ other = "Other"
 perPageInfo = "Per Page Info"
 tableOfContents = "Table of Contents"
 
+[getPdfInfo.compliance]
+notDetected = "Not Detected"
+passed = "Passed"
+failed = "Failed"
+none = "No standards detected"
+
 [getPdfInfo.other]
 attachments = "Attachments"
 embeddedFiles = "Embedded Files"

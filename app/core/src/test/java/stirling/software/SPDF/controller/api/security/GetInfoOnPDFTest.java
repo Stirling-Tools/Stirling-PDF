@@ -35,6 +35,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import stirling.software.SPDF.model.api.security.PDFVerificationResult;
+import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -43,6 +45,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 class GetInfoOnPDFTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private VeraPDFService veraPDFService;
 
     @InjectMocks private GetInfoOnPDF getInfoOnPDF;
 
@@ -661,41 +664,6 @@ class GetInfoOnPDFTest {
         void testGetPageSize(float width, float height, String expected) {
             Assertions.assertEquals(expected, GetInfoOnPDF.getPageSize(width, height));
         }
-
-        @Test
-        @DisplayName("Should check for PDF/A standard")
-        void testCheckForStandard_PdfA() throws IOException {
-            // This would require a real PDF/A document or mocking
-            PDDocument document = createSimplePdfWithText("Test");
-            boolean result = GetInfoOnPDF.checkForStandard(document, "PDF/A");
-            Assertions.assertFalse(result); // Simple PDF is not PDF/A compliant
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should handle null document in checkForStandard")
-        void testCheckForStandard_NullDocument() {
-            boolean result = GetInfoOnPDF.checkForStandard(null, "PDF/A");
-            Assertions.assertFalse(result);
-        }
-
-        @Test
-        @DisplayName("Should get PDF/A conformance level")
-        void testGetPdfAConformanceLevel() throws IOException {
-            PDDocument document = createSimplePdfWithText("Test");
-            String level = GetInfoOnPDF.getPdfAConformanceLevel(document);
-            Assertions.assertNull(level);
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should handle encrypted document in getPdfAConformanceLevel")
-        void testGetPdfAConformanceLevel_EncryptedDocument() throws IOException {
-            PDDocument document = createEncryptedPdf();
-            String level = GetInfoOnPDF.getPdfAConformanceLevel(document);
-            Assertions.assertNull(level); // Encrypted documents return null
-            document.close();
-        }
     }
 
     @Nested
@@ -776,8 +744,8 @@ class GetInfoOnPDFTest {
     class ComplianceTests {
 
         @Test
-        @DisplayName("Should check PDF/A compliance")
-        void testCompliance_PdfA() throws IOException {
+        @DisplayName("Should extract compliance info using VeraPDF")
+        void testCompliance_PdfA() throws Exception {
             PDDocument document = createSimplePdfWithText("Test PDF/A");
             MockMultipartFile mockFile = documentToMultipartFile(document, "pdfa.pdf");
 
@@ -791,16 +759,22 @@ class GetInfoOnPDFTest {
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
+            // Mock VeraPDFService
+            PDFVerificationResult result = new PDFVerificationResult();
+            result.setStandard("pdfa-1b");
+            result.setCompliant(true);
+            result.setComplianceSummary("PDF/A-1b compliant");
+            Mockito.when(veraPDFService.validatePDF(ArgumentMatchers.any(InputStream.class)))
+                    .thenReturn(List.of(result));
+
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
             String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode compliancy = jsonNode.get("Compliancy");
 
-            Assertions.assertTrue(compliancy.has("IsPDF/ACompliant"));
-            Assertions.assertTrue(compliancy.has("IsPDF/XCompliant"));
-            Assertions.assertTrue(compliancy.has("IsPDF/ECompliant"));
-            Assertions.assertTrue(compliancy.has("IsPDF/UACompliant"));
+            Assertions.assertTrue(compliancy.has("pdfa-1b"));
+            Assertions.assertTrue(compliancy.get("pdfa-1b").asBoolean());
 
             loadedDoc.close();
         }

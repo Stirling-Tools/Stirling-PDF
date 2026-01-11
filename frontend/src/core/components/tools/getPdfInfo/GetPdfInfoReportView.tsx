@@ -13,6 +13,7 @@ import KeyValueSection from '@app/components/tools/getPdfInfo/sections/KeyValueS
 import TableOfContentsSection from '@app/components/tools/getPdfInfo/sections/TableOfContentsSection';
 import OtherSection from '@app/components/tools/getPdfInfo/sections/OtherSection';
 import PerPageSection from '@app/components/tools/getPdfInfo/sections/PerPageSection';
+import ComplianceSection from '@app/components/tools/getPdfInfo/sections/ComplianceSection';
 
 
 /** Valid section anchor IDs for navigation */
@@ -105,7 +106,11 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
 
             <KeyValueSection title={t('getPdfInfo.sections.documentInfo', 'Document Info')} anchorId="documentInfo" obj={sections.documentInfo} />
 
-            <KeyValueSection title={t('getPdfInfo.sections.compliance', 'Compliance')} anchorId="compliance" obj={sections.compliance} />
+            <ComplianceSection 
+              anchorId="compliance" 
+              complianceSummary={sections.summaryData?.Compliance} 
+              legacyCompliance={sections.compliance} 
+            />
 
             <KeyValueSection title={t('getPdfInfo.sections.encryption', 'Encryption')} anchorId="encryption" obj={sections.encryption} />
 
