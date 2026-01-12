@@ -14,17 +14,20 @@ echo "==================================="
 setup_ocr() {
     echo "Setting up OCR languages..."
 
-    # Copy tessdata
-    mkdir -p /usr/share/tessdata
-    cp -rn /usr/share/tessdata-original/* /usr/share/tessdata 2>/dev/null || true
+    # In Alpine, tesseract uses /usr/share/tessdata
+    TESSDATA_DIR="/usr/share/tessdata"
 
-    if [ -d /usr/share/tesseract-ocr/4.00/tessdata ]; then
-        cp -r /usr/share/tesseract-ocr/4.00/tessdata/* /usr/share/tessdata 2>/dev/null || true
+    # Create tessdata directory
+    mkdir -p "$TESSDATA_DIR"
+
+    # Restore system languages from backup (Dockerfile moved them to tessdata-original)
+    if [ -d /usr/share/tessdata-original ]; then
+        echo "Restoring system tessdata from backup..."
+        cp -rn /usr/share/tessdata-original/* "$TESSDATA_DIR"/ 2>/dev/null || true
     fi
 
-    if [ -d /usr/share/tesseract-ocr/5/tessdata ]; then
-        cp -r /usr/share/tesseract-ocr/5/tessdata/* /usr/share/tessdata 2>/dev/null || true
-    fi
+    # Note: If user mounted custom languages to /usr/share/tessdata, they'll be overlaid here.
+    # The cp -rn above won't overwrite user files, just adds missing system files.
 
     # Install additional languages if specified
     if [ -n "$TESSERACT_LANGS" ]; then
@@ -37,6 +40,10 @@ setup_ocr() {
             esac
         done
     fi
+
+    # Point to the consolidated location
+    export TESSDATA_PREFIX="$TESSDATA_DIR"
+    echo "Using TESSDATA_PREFIX=$TESSDATA_PREFIX"
 }
 
 # Function to setup user permissions (from init-without-ocr.sh)
