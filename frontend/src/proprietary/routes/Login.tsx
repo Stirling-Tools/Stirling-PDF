@@ -36,6 +36,7 @@ export default function Login() {
   const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
+  const [loginMethod, setLoginMethod] = useState<string>('all');
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
@@ -115,6 +116,7 @@ export default function Login() {
         const providerPaths = Object.keys(data.providerList || {});
 
         setEnabledProviders(providerPaths);
+        setLoginMethod(data.loginMethod || 'all');
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
@@ -125,18 +127,25 @@ export default function Login() {
     }
   }, [navigate, backendProbe.status, backendProbe.loginDisabled]);
 
-  // Update hasSSOProviders and showEmailForm when enabledProviders changes
+  // Update hasSSOProviders and showEmailForm when enabledProviders or loginMethod changes
   useEffect(() => {
     // In debug mode, check if any providers exist in the config
     const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
       ? Object.keys(oauthProviderConfig).length > 0
       : enabledProviders.length > 0;
     setHasSSOProviders(hasProviders);
-    // If no SSO providers, show email form by default
-    if (!hasProviders) {
+
+    // Check if username/password authentication is allowed
+    const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
+
+    // Show email form if no SSO providers exist AND username/password is allowed
+    if (!hasProviders && isUserPassAllowed) {
       setShowEmailForm(true);
+    } else if (!isUserPassAllowed) {
+      // Hide email form if username/password auth is not allowed
+      setShowEmailForm(false);
     }
-  }, [enabledProviders]);
+  }, [enabledProviders, loginMethod]);
 
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
@@ -259,6 +268,12 @@ export default function Login() {
   };
 
   const signInWithEmail = async () => {
+    // Check if username/password authentication is allowed
+    if (loginMethod !== 'all' && loginMethod !== 'normal') {
+      setError(t('login.authMethodNotAllowed', 'Username/password authentication is not enabled. Please use the configured authentication method.') || 'Username/password authentication is not enabled. Please use the configured authentication method.');
+      return;
+    }
+
     if (!email || !password) {
       setError(t('login.pleaseEnterBoth') || 'Please enter both email and password');
       return;
@@ -326,13 +341,13 @@ export default function Login() {
         enabledProviders={enabledProviders}
       />
 
-      {/* Divider between OAuth and Email - only show if SSO is available */}
-      {hasSSOProviders && (
+      {/* Divider between OAuth and Email - only show if SSO is available and username/password is allowed */}
+      {hasSSOProviders && (loginMethod === 'all' || loginMethod === 'normal') && (
         <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
       )}
 
-      {/* Sign in with email button - only show if SSO providers exist */}
-      {hasSSOProviders && !showEmailForm && (
+      {/* Sign in with email button - only show if SSO providers exist and username/password is allowed */}
+      {hasSSOProviders && !showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
         <div className="auth-section">
           <button
             type="button"
@@ -345,8 +360,8 @@ export default function Login() {
         </div>
       )}
 
-      {/* Email form - show by default if no SSO, or when button clicked */}
-      {showEmailForm && (
+      {/* Email form - show by default if no SSO, or when button clicked, but ONLY if username/password is allowed */}
+      {showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
         <div style={{ marginTop: hasSSOProviders ? '1rem' : '0' }}>
           <EmailPasswordForm
             email={email}
@@ -360,8 +375,8 @@ export default function Login() {
         </div>
       )}
 
-      {/* Help section - only show on first-time setup with default credentials */}
-      {isFirstTimeSetup && showDefaultCredentials && (
+      {/* Help section - only show on first-time setup with default credentials and username/password auth allowed */}
+      {isFirstTimeSetup && showDefaultCredentials && (loginMethod === 'all' || loginMethod === 'normal') && (
         <Alert
           color="blue"
           variant="light"
