@@ -8,6 +8,8 @@ import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import { useGoogleDrivePicker } from '@app/hooks/useGoogleDrivePicker';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useIsMobile } from '@app/hooks/useIsMobile';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
 
 interface FileSourceButtonsProps {
@@ -24,6 +26,9 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const icons = useFileActionIcons();
   const UploadIcon = icons.upload;
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
+  const { config } = useAppConfig();
+  const isMobile = useIsMobile();
+  const isMobileUploadEnabled = config?.enableMobileScanner && !isMobile;
 
   const handleGoogleDriveClick = async () => {
     try {
@@ -127,15 +132,17 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
         onClick={handleMobileUploadClick}
         fullWidth={!horizontal}
         size={horizontal ? "xs" : "sm"}
+        disabled={!isMobileUploadEnabled}
         styles={{
           root: {
             backgroundColor: 'transparent',
             border: 'none',
             '&:hover': {
-              backgroundColor: 'var(--mantine-color-gray-0)'
+              backgroundColor: isMobileUploadEnabled ? 'var(--mantine-color-gray-0)' : 'transparent'
             }
           }
         }}
+        title={!isMobileUploadEnabled ? t('fileManager.mobileUploadNotAvailable', 'Mobile upload not available') : undefined}
       >
         {horizontal ? t('fileManager.mobileShort', 'Mobile') : t('fileManager.mobileUpload', 'Mobile Upload')}
       </Button>
