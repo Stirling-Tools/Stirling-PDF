@@ -268,12 +268,6 @@ export default function Login() {
   };
 
   const signInWithEmail = async () => {
-    // Check if username/password authentication is allowed
-    if (loginMethod !== 'all' && loginMethod !== 'normal') {
-      setError(t('login.authMethodNotAllowed', 'Username/password authentication is not enabled. Please use the configured authentication method.') || 'Username/password authentication is not enabled. Please use the configured authentication method.');
-      return;
-    }
-
     if (!email || !password) {
       setError(t('login.pleaseEnterBoth') || 'Please enter both email and password');
       return;
