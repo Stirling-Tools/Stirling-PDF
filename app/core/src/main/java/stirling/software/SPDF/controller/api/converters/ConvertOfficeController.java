@@ -194,11 +194,12 @@ public class ConvertOfficeController {
         try {
             file = convertToPdf(inputFile);
 
-            PDDocument doc = pdfDocumentFactory.load(file);
-            return WebResponseUtils.pdfDocToWebResponse(
-                    doc,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+            try (PDDocument doc = pdfDocumentFactory.load(file)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        doc,
+                        GeneralUtils.generateFilename(
+                                inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+            }
         } finally {
             if (file != null && file.getParent() != null) {
                 FileUtils.deleteDirectory(file.getParentFile());

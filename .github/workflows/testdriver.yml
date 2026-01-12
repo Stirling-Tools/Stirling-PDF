@@ -76,7 +76,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
       - name: Deploy to VPS
@@ -107,9 +107,9 @@ jobs:
               restart: on-failure:5
           EOF
 
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << EOF
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << EOF
             mkdir -p /stirling/test-${{ github.sha }}/{data,config,logs}
             mv /tmp/docker-compose.yml /stirling/test-${{ github.sha }}/docker-compose.yml
             cd /stirling/test-${{ github.sha }}
@@ -161,7 +161,7 @@ jobs:
             npm install
             npm run build
             npm install dashcam-chrome --save
-            Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "http://${{ secrets.VPS_HOST }}:1337"
+            Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "http://${{ secrets.NEW_VPS_HOST }}:1337"
             Start-Sleep -Seconds 20
           prompt: |
             1. /run testing/testdriver/test.yml
@@ -183,13 +183,13 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
       - name: Cleanup deployment
         if: always()
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << EOF
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << EOF
             cd /stirling/test-${{ github.sha }}
             docker-compose down
             cd /stirling
