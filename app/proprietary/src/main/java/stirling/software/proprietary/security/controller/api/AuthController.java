@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -44,6 +45,7 @@ public class AuthController {
     private final JwtServiceInterface jwtService;
     private final CustomUserDetailsService userDetailsService;
     private final LoginAttemptService loginAttemptService;
+    private final ApplicationProperties.Security securityProperties;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -60,6 +62,17 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
         try {
+            // Check if username/password authentication is allowed
+            if (!securityProperties.isUserPass()) {
+                log.warn(
+                        "Username/password login attempted but not allowed by current login method configuration");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "Username/password authentication is not enabled. Please use the configured authentication method."));
+            }
+
             // Validate input parameters
             if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
                 log.warn("Login attempt with null or empty username");
