@@ -97,12 +97,24 @@ jobs:
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
+            app/**/build/reports/jacoco/test
             app/**/build/reports/tests/
             app/**/build/test-results/
             app/**/build/reports/problems/
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
+
+      - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
+        id: jacoco
+        uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
+        with:
+          paths: |
+            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 10
+          min-coverage-changed-files: 0
+          comment-type: summary
 
   check-generateOpenApiDocs:
     if: needs.files-changed.outputs.openapi == 'true'
