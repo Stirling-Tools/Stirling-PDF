@@ -473,7 +473,7 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required"),
                 @ApiResponse(responseCode = "500", description = "Failed to initiate restart")
             })
-    public ResponseEntity<String> restartApplication() {
+    public ResponseEntity<Map<String, Object>> restartApplication() {
         try {
             log.warn("Admin initiated application restart");
 
@@ -485,13 +485,18 @@ public class AdminSettingsController {
                 log.error("Cannot restart: not running from JAR (likely development mode)");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                         .body(
-                                "Restart not available in development mode. Please restart the application manually.");
+                                Map.of(
+                                        "error",
+                                        "Restart not available in development mode. Please restart the application manually."));
             }
 
             if (helperJar == null || !Files.isRegularFile(helperJar)) {
                 log.error("Cannot restart: restart-helper.jar not found at expected location");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body("Restart helper not found. Please restart the application manually.");
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "Restart helper not found. Cannot perform application restart."));
             }
 
             // Get current application arguments
@@ -546,12 +551,17 @@ public class AdminSettingsController {
                     .start();
 
             return ResponseEntity.ok(
-                    "Application restart initiated. The server will be back online shortly.");
+                    Map.of(
+                            "message",
+                            "Application restart initiated. The server will be back online shortly."));
 
         } catch (Exception e) {
             log.error("Failed to initiate restart: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to initiate application restart: " + e.getMessage());
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Failed to initiate application restart: " + e.getMessage()));
         }
     }
 
