@@ -296,16 +296,19 @@ public class AdminSettingsController {
             @PathVariable String sectionName, @Valid @RequestBody Map<String, Object> sectionData) {
         try {
             if (sectionData == null || sectionData.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "No section data provided to update"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No section data provided to update"));
             }
 
             if (!isValidSectionName(sectionName)) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error",
-                                "Invalid section name: "
-                                        + HtmlUtils.htmlEscape(sectionName)
-                                        + ". Valid sections: "
-                                        + String.join(", ", VALID_SECTION_NAMES)));
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "Invalid section name: "
+                                                + HtmlUtils.htmlEscape(sectionName)
+                                                + ". Valid sections: "
+                                                + String.join(", ", VALID_SECTION_NAMES)));
             }
 
             // Auto-enable premium features if license key is provided
@@ -326,7 +329,11 @@ public class AdminSettingsController {
 
                 if (!isValidSettingKey(fullKey)) {
                     return ResponseEntity.badRequest()
-                            .body(Map.of("error", "Invalid setting key format: " + HtmlUtils.htmlEscape(fullKey)));
+                            .body(
+                                    Map.of(
+                                            "error",
+                                            "Invalid setting key format: "
+                                                    + HtmlUtils.htmlEscape(fullKey)));
                 }
 
                 log.info("Admin updating section setting: {} = {}", fullKey, value);
@@ -339,18 +346,22 @@ public class AdminSettingsController {
             }
 
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
-            return ResponseEntity.ok(Map.of(
-                    String.format(
-                            "Successfully updated %d setting(s) in section '%s'. Changes will take"
-                                    + " effect on application restart.",
-                            updatedCount, escapedSectionName)));
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            String.format(
+                                    "Successfully updated %d setting(s) in section '%s'. Changes will take"
+                                            + " effect on application restart.",
+                                    updatedCount, escapedSectionName)));
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", GENERIC_FILE_ERROR));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", GENERIC_FILE_ERROR));
         } catch (IllegalArgumentException e) {
             log.error("Invalid section data: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", GENERIC_INVALID_SECTION));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", GENERIC_INVALID_SECTION));
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
