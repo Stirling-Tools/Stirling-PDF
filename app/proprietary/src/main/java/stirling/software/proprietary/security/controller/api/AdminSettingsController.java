@@ -163,12 +163,13 @@ public class AdminSettingsController {
                         responseCode = "500",
                         description = "Failed to save settings to configuration file")
             })
-    public ResponseEntity<String> updateSettings(
+    public ResponseEntity<Map<String, Object>> updateSettings(
             @Valid @RequestBody UpdateSettingsRequest request) {
         try {
             Map<String, Object> settings = request.getSettings();
             if (settings == null || settings.isEmpty()) {
-                return ResponseEntity.badRequest().body("No settings provided to update");
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No settings provided to update"));
             }
 
             int updatedCount = 0;
@@ -178,7 +179,11 @@ public class AdminSettingsController {
 
                 if (!isValidSettingKey(key)) {
                     return ResponseEntity.badRequest()
-                            .body("Invalid setting key format: " + HtmlUtils.htmlEscape(key));
+                            .body(
+                                    Map.of(
+                                            "error",
+                                            "Invalid setting key format: "
+                                                    + HtmlUtils.htmlEscape(key)));
                 }
 
                 log.info("Admin updating setting: {} = {}", key, value);
@@ -191,22 +196,26 @@ public class AdminSettingsController {
             }
 
             return ResponseEntity.ok(
-                    String.format(
-                            "Successfully updated %d setting(s). Changes will take effect on"
-                                    + " application restart.",
-                            updatedCount));
+                    Map.of(
+                            "message",
+                            String.format(
+                                    "Successfully updated %d setting(s). Changes will take effect on"
+                                            + " application restart.",
+                                    updatedCount)));
 
         } catch (IOException e) {
             log.error("Failed to save settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", GENERIC_FILE_ERROR));
 
         } catch (IllegalArgumentException e) {
             log.error("Invalid setting key or value: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SETTING);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", GENERIC_INVALID_SETTING));
         } catch (Exception e) {
             log.error("Unexpected error while updating settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(GENERIC_SERVER_ERROR);
+                    .body(Map.of("error", GENERIC_SERVER_ERROR));
         }
     }
 
@@ -283,20 +292,20 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required"),
                 @ApiResponse(responseCode = "500", description = "Failed to save settings")
             })
-    public ResponseEntity<String> updateSettingsSection(
+    public ResponseEntity<Map<String, Object>> updateSettingsSection(
             @PathVariable String sectionName, @Valid @RequestBody Map<String, Object> sectionData) {
         try {
             if (sectionData == null || sectionData.isEmpty()) {
-                return ResponseEntity.badRequest().body("No section data provided to update");
+                return ResponseEntity.badRequest().body(Map.of("error", "No section data provided to update"));
             }
 
             if (!isValidSectionName(sectionName)) {
                 return ResponseEntity.badRequest()
-                        .body(
+                        .body(Map.of("error",
                                 "Invalid section name: "
                                         + HtmlUtils.htmlEscape(sectionName)
                                         + ". Valid sections: "
-                                        + String.join(", ", VALID_SECTION_NAMES));
+                                        + String.join(", ", VALID_SECTION_NAMES)));
             }
 
             // Auto-enable premium features if license key is provided
@@ -317,7 +326,7 @@ public class AdminSettingsController {
 
                 if (!isValidSettingKey(fullKey)) {
                     return ResponseEntity.badRequest()
-                            .body("Invalid setting key format: " + HtmlUtils.htmlEscape(fullKey));
+                            .body(Map.of("error", "Invalid setting key format: " + HtmlUtils.htmlEscape(fullKey)));
                 }
 
                 log.info("Admin updating section setting: {} = {}", fullKey, value);
@@ -330,22 +339,22 @@ public class AdminSettingsController {
             }
 
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
-            return ResponseEntity.ok(
+            return ResponseEntity.ok(Map.of(
                     String.format(
                             "Successfully updated %d setting(s) in section '%s'. Changes will take"
                                     + " effect on application restart.",
-                            updatedCount, escapedSectionName));
+                            updatedCount, escapedSectionName)));
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", GENERIC_FILE_ERROR));
         } catch (IllegalArgumentException e) {
             log.error("Invalid section data: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SECTION);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", GENERIC_INVALID_SECTION));
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(GENERIC_SERVER_ERROR);
+                    .body(Map.of("error", GENERIC_SERVER_ERROR));
         }
     }
 
