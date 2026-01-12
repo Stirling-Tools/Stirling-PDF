@@ -251,11 +251,15 @@ export class ConnectionModeService {
       diagnostics.push(stage2Result);
 
       if (stage2Result.success) {
-        console.log(`[ConnectionModeService] ⚠️ Certificate issue detected - works without validation`);
+        console.log(`[ConnectionModeService] ⚠️ Certificate issue detected - but connection works with bypass enabled`);
+        console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SUMMARY ====================`);
+        console.log(`[ConnectionModeService] ✅ CONNECTION SUCCESSFUL (with certificate bypass)`);
+        console.log(`[ConnectionModeService] Protocol: HTTPS with certificate validation disabled`);
+        console.log(`[ConnectionModeService] Duration: ${stage2Result.duration}ms`);
+        console.log(`[ConnectionModeService] Note: Server has missing intermediate certificate or invalid cert`);
+        console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SESSION END ====================`);
         return {
-          success: false,
-          error: 'SSL certificate validation failed. The server has an invalid, self-signed, or untrusted certificate.',
-          errorCode: 'SSL_CERTIFICATE_INVALID',
+          success: true,
           diagnostics,
         };
       }

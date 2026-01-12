@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BASE_PATH } from '@app/constants/app';
 
+// Dynamically import desktop fetch if in Tauri environment
+const isTauri = typeof window !== 'undefined' &&
+  ((window as any).__TAURI_INTERNALS__ !== undefined ||
+   (window as any).__TAURI__ !== undefined);
+
+let desktopFetch: ((url: string, options?: RequestInit) => Promise<Response>) | null = null;
+if (isTauri) {
+  import('@desktop/utils/desktopFetch').then((module) => {
+    desktopFetch = module.desktopFetch;
+  }).catch(() => {
+    console.warn('Failed to load desktop fetch utility');
+  });
+}
+
 type BackendStatus = 'up' | 'starting' | 'down';
 
 interface BackendProbeState {
@@ -31,7 +45,8 @@ export function useBackendProbe() {
     };
 
     try {
-      const res = await fetch(statusUrl, { method: 'GET', cache: 'no-store' });
+      const fetchFn = (isTauri && desktopFetch) ? desktopFetch : fetch;
+      const res = await fetchFn(statusUrl, { method: 'GET', cache: 'no-store' });
       if (res.ok) {
         const data = await res.json().catch(() => null);
         if (data && data.status === 'UP') {
@@ -51,7 +66,8 @@ export function useBackendProbe() {
 
     // Fallback: proprietary login endpoint to detect disabled login and backend availability
     try {
-      const res = await fetch(loginUrl, { method: 'GET', cache: 'no-store' });
+      const fetchFn = (isTauri && desktopFetch) ? desktopFetch : fetch;
+      const res = await fetchFn(loginUrl, { method: 'GET', cache: 'no-store' });
       if (res.ok) {
         next.status = 'up';
         const data = await res.json().catch(() => null);
