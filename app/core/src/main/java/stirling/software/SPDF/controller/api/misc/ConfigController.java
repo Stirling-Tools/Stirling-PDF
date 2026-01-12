@@ -75,10 +75,25 @@ public class ConfigController {
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
             configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
 
-            // Add mobile scanner setting
+            // Add mobile scanner settings
             configData.put(
                     "enableMobileScanner",
                     applicationProperties.getSystem().isEnableMobileScanner());
+            configData.put(
+                    "mobileScannerConvertToPdf",
+                    applicationProperties.getSystem().getMobileScannerSettings().isConvertToPdf());
+            configData.put(
+                    "mobileScannerImageResolution",
+                    applicationProperties
+                            .getSystem()
+                            .getMobileScannerSettings()
+                            .getImageResolution());
+            configData.put(
+                    "mobileScannerPageFormat",
+                    applicationProperties.getSystem().getMobileScannerSettings().getPageFormat());
+            configData.put(
+                    "mobileScannerStretchToFit",
+                    applicationProperties.getSystem().getMobileScannerSettings().isStretchToFit());
 
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
