@@ -115,7 +115,7 @@ export default function Workbench() {
 
     // Handle exit transition (viewer → fileEditor/pageEditor)
     if ((view === 'fileEditor' || view === 'pageEditor') && currentView === 'viewer') {
-      handleExitTransition();
+      handleExitTransition(view);
     }
 
     navActions.setWorkbench(view);

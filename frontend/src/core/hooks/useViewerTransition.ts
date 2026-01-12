@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { useFileState } from '@app/contexts/FileContext';
-import { getThumbnailRect, getCenteredFallbackRect } from '@app/utils/dom';
+import { getThumbnailRect, getCenteredFallbackRect, getContainedImageRect } from '@app/utils/dom';
 import type { WorkbenchType } from '@app/types/workbench';
 import type { FileId } from '@app/types/fileContext';
 
@@ -39,11 +39,15 @@ export function useViewerTransition({
         return;
       }
 
+      // Only capture screenshot for fileEditor transitions
+      // pageEditor doesn't need it since we're animating the thumbnail directly
       let screenshot: string | null = null;
-      try {
-        screenshot = await captureScreenshot();
-      } catch {
-        screenshot = null;
+      if (currentView === 'fileEditor') {
+        try {
+          screenshot = await captureScreenshot();
+        } catch {
+          screenshot = null;
+        }
       }
 
       // Use passed fileId to find the file directly
@@ -69,8 +73,21 @@ export function useViewerTransition({
       // Use passed sourceRect if available, otherwise search DOM
       let rect = sourceRect;
       if (!rect) {
-        const fileCard = document.querySelector(`[data-file-id="${targetFileId}"]`) as HTMLElement | null;
-        rect = fileCard ? getThumbnailRect(fileCard) : getCenteredFallbackRect();
+        if (currentView === 'pageEditor') {
+          // In page editor, find the first page thumbnail image
+          const firstPageThumbnail = document.querySelector('[data-page-number="1"]') as HTMLElement | null;
+          if (firstPageThumbnail) {
+            const img = firstPageThumbnail.querySelector('img') as HTMLImageElement | null;
+            // Calculate the actual rendered image size (accounting for objectFit: contain)
+            rect = img ? getContainedImageRect(img) : firstPageThumbnail.getBoundingClientRect();
+          } else {
+            rect = getCenteredFallbackRect();
+          }
+        } else {
+          // In file editor, find the file card
+          const fileCard = document.querySelector(`[data-file-id="${targetFileId}"]`) as HTMLElement | null;
+          rect = fileCard ? getThumbnailRect(fileCard) : getCenteredFallbackRect();
+        }
       }
 
       navActions.startViewerTransition(
@@ -88,8 +105,13 @@ export function useViewerTransition({
    * Finds PDF page position, finds target thumbnail, starts reverse zoom animation
    */
   const handleExitTransition = useCallback(
-    () => {
+    (targetView: 'fileEditor' | 'pageEditor') => {
       if (currentView !== 'viewer') {
+        return;
+      }
+
+      // Don't animate when returning to pageEditor
+      if (targetView === 'pageEditor') {
         return;
       }
 
