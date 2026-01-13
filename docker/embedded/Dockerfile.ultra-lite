@@ -32,7 +32,6 @@ COPY . .
 
 # Build ultra-lite JAR with embedded frontend (minimal features)
 RUN DISABLE_ADDITIONAL_FEATURES=true \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Stage 2: Runtime image

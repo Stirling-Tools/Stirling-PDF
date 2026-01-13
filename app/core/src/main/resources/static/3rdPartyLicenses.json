@@ -830,20 +830,6 @@
             "moduleLicenseUrl": "http://www.spdx.org/licenses/BSD-4-Clause"
         },
         {
-            "moduleName": "me.friwi:jcef-api",
-            "moduleUrl": "https://bitbucket.org/chromiumembedded/java-cef/",
-            "moduleVersion": "jcef-1770317+cef-132.3.1+g144febe+chromium-132.0.6834.83",
-            "moduleLicense": "BSD License",
-            "moduleLicenseUrl": "https://bitbucket.org/chromiumembedded/java-cef/src/master/LICENSE.txt"
-        },
-        {
-            "moduleName": "me.friwi:jcefmaven",
-            "moduleUrl": "https://github.com/jcefmaven/jcefmaven/",
-            "moduleVersion": "132.3.1",
-            "moduleLicense": "Apache-2.0 License",
-            "moduleLicenseUrl": "https://github.com/jcefmaven/jcefmaven/blob/master/LICENSE"
-        },
-        {
             "moduleName": "me.friwi:jogl-all",
             "moduleUrl": "http://jogamp.org/jogl/www/",
             "moduleVersion": "v2.4.0-rc-20210111",
@@ -1400,30 +1386,6 @@
             "moduleVersion": "1.18.1",
             "moduleLicense": "Eclipse Public License, Version 2.0",
             "moduleLicenseUrl": "https://github.com/locationtech/jts/blob/master/LICENSE_EPLv2.txt"
-        },
-        {
-            "moduleName": "org.openjfx:javafx-base",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
-        },
-        {
-            "moduleName": "org.openjfx:javafx-controls",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
-        },
-        {
-            "moduleName": "org.openjfx:javafx-graphics",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
-        },
-        {
-            "moduleName": "org.openjfx:javafx-swing",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
         },
         {
             "moduleName": "org.opensaml:opensaml-core",

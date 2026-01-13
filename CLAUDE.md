@@ -201,7 +201,6 @@ return useToolOperation({
 
 - **Java Version**: Minimum JDK 17, supports and recommends JDK 21
 - **Lombok**: Used extensively - ensure IDE plugin is installed
-- **Desktop Mode**: Set `STIRLING_PDF_DESKTOP_UI=true` for desktop application mode
 - **File Persistence**:
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
   - **Frontend**: Uses IndexedDB for client-side file storage and caching (with thumbnails)

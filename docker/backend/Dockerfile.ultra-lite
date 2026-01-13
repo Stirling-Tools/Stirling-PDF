@@ -21,7 +21,6 @@ COPY . .
 
 # Build the application with DISABLE_ADDITIONAL_FEATURES=true
 RUN DISABLE_ADDITIONAL_FEATURES=true \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # ========================================
