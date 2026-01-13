@@ -37,6 +37,7 @@ export const CONVERSION_ENDPOINTS = {
   'cbr-pdf': '/api/v1/convert/cbr/pdf',
   'pdf-cbr': '/api/v1/convert/pdf/cbr',
   'ebook-pdf': '/api/v1/convert/ebook/pdf',
+  'pdf-epub': '/api/v1/convert/pdf/epub',
   'pdf-text-editor': '/api/v1/convert/pdf/text-editor',
   'text-editor-pdf': '/api/v1/convert/text-editor/pdf'
 } as const;
@@ -61,6 +62,7 @@ export const ENDPOINT_NAMES = {
   'ebook-pdf': 'ebook-to-pdf',
   'cbr-pdf': 'cbr-to-pdf',
   'pdf-cbr': 'pdf-to-cbr',
+  'pdf-epub': 'pdf-to-epub',
   'pdf-text-editor': 'pdf-to-text-editor',
   'text-editor-pdf': 'text-editor-to-pdf'
 } as const;
@@ -124,13 +126,15 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'webp', label: 'WEBP', group: 'Image' },
   { value: 'html', label: 'HTML', group: 'Web' },
   { value: 'xml', label: 'XML', group: 'Web' },
+  { value: 'epub', label: 'EPUB', group: 'eBook' },
+  { value: 'azw3', label: 'AZW3', group: 'eBook' },
 ];
 
 // Conversion matrix - what each source format can convert to
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz', 'cbr'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz', 'cbr', 'epub', 'azw3'],
   'cbz': ['pdf'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
@@ -159,7 +163,8 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',
     'cbr': 'pdf-to-cbr',
-    'cbz': 'pdf-to-cbz'
+    'cbz': 'pdf-to-cbz',
+    'epub': 'pdf-to-epub', 'azw3': 'pdf-to-epub'
   },
   'cbz': { 'pdf': 'cbz-to-pdf' },
   'docx': { 'pdf': 'file-to-pdf' }, 'doc': { 'pdf': 'file-to-pdf' }, 'odt': { 'pdf': 'file-to-pdf' },
