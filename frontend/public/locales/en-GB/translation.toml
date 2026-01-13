@@ -1387,7 +1387,7 @@ applySignatures = "Apply Images"
 name = "Image"
 placeholder = "Upload an image"
 label = "Image file"
-hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files."
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configure Image"

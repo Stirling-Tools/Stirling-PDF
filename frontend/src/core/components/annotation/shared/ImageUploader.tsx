@@ -77,15 +77,26 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         setCurrentFile(file);
         onImageChange(file);
 
-        const originalDataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
+        let dataUrlToProcess: string;
+        
+        // Check if file is SVG
+        const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+        
+        if (isSvg) {
+          // For SVG, convert to PNG so it can be embedded in PDF
+          dataUrlToProcess = await convertSvgToPng(file);
+        } else {
+          // For other images, read as data URL directly
+          dataUrlToProcess = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+          });
+        }
 
-        setOriginalImageData(originalDataUrl);
-        await processImage(file, removeBackground);
+        setOriginalImageData(dataUrlToProcess);
+        await processImage(dataUrlToProcess, removeBackground);
       } catch (error) {
         console.error('Error processing image file:', error);
       }
@@ -96,6 +107,56 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       onImageChange(null);
       onProcessedImageData?.(null);
     }
+  };
+
+  // Helper function to convert SVG to PNG
+  const convertSvgToPng = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const svgText = e.target?.result as string;
+          
+          // Create an image element to render SVG
+          const img = new Image();
+          const blob = new Blob([svgText], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+          
+          img.onload = () => {
+            // Create canvas to convert to PNG
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width || 800;  // Default to 800px if width not specified
+            canvas.height = img.height || 600; // Default to 600px if height not specified
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              URL.revokeObjectURL(url);
+              reject(new Error('Failed to get canvas context'));
+              return;
+            }
+            
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            
+            // Convert canvas to PNG data URL
+            const pngDataUrl = canvas.toDataURL('image/png');
+            resolve(pngDataUrl);
+          };
+          
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load SVG image'));
+          };
+          
+          img.src = url;
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file);
+    });
   };
 
   const handleBackgroundRemovalChange = async (checked: boolean) => {

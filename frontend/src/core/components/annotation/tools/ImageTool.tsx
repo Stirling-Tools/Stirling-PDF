@@ -59,7 +59,7 @@ export const ImageTool: React.FC<ImageToolProps> = ({
           disabled={disabled}
           label="Upload Image"
           placeholder="Select image file"
-          hint="Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files maintain vector quality."
+          hint="Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
         />
       </Stack>
     </BaseAnnotationTool>
