@@ -3868,11 +3868,6 @@ unavailable = "ImageMagick is not installed or enabled on this server"
 [compress.linearize]
 label = "Linearize PDF for fast web viewing"
 
-[compress.compressionLevel]
-range1to3 = "Lower values preserve quality but result in larger files"
-range4to6 = "Medium compression with moderate quality reduction"
-range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
-
 [decrypt]
 passwordPrompt = "Diese Datei ist passwortgeschützt. Bitte geben Sie das Passwort ein:"
 cancelled = "Vorgang für PDF abgebrochen: {0}"
