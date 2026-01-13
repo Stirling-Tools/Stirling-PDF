@@ -3,6 +3,7 @@ package stirling.software.SPDF.utils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -151,5 +152,142 @@ public class SvgToPdf {
 
             return result;
         }
+    }
+
+    public byte[] combineIntoPdf(List<byte[]> svgBytesList, String fitOption, boolean autoRotate)
+            throws IOException {
+        if (svgBytesList == null || svgBytesList.isEmpty()) {
+            throw new IOException("SVG list is empty or null");
+        }
+
+        log.debug(
+                "Combining {} SVG files into single PDF with fitOption={}, autoRotate={}",
+                svgBytesList.size(),
+                fitOption,
+                autoRotate);
+
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            for (int i = 0; i < svgBytesList.size(); i++) {
+                byte[] svgBytes = svgBytesList.get(i);
+                if (svgBytes == null || svgBytes.length == 0) {
+                    log.warn("Skipping empty SVG at index {}", i);
+                    continue;
+                }
+
+                try {
+                    addSvgAsPage(document, svgBytes, fitOption, autoRotate);
+                    log.debug("Added SVG {} of {} to combined PDF", i + 1, svgBytesList.size());
+                } catch (Exception e) {
+                    log.error("Failed to add SVG {} to combined PDF: {}", i, e.getMessage());
+                    // Continue with other SVGs
+                }
+            }
+
+            if (document.getNumberOfPages() == 0) {
+                throw new IOException("No SVG files were successfully added to the PDF");
+            }
+
+            document.save(outputStream);
+            byte[] result = outputStream.toByteArray();
+            log.debug(
+                    "Combined SVG to PDF conversion complete, output size: {} bytes",
+                    result.length);
+            return result;
+        }
+    }
+
+    private void addSvgAsPage(
+            PDDocument document, byte[] svgBytes, String fitOption, boolean autoRotate)
+            throws IOException {
+        String parser = XMLResourceDescriptor.getXMLParserClassName();
+        SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(parser);
+
+        SVGDocument svgDoc;
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(svgBytes)) {
+            svgDoc = factory.createSVGDocument("file:///input.svg", inputStream);
+        }
+
+        UserAgent userAgent = new UserAgentAdapter();
+        DocumentLoader loader = new DocumentLoader(userAgent);
+        BridgeContext ctx = new BridgeContext(userAgent, loader);
+        ctx.setDynamicState(BridgeContext.DYNAMIC);
+
+        GraphicsNode rootNode = buildGvtWithTimeout(ctx, svgDoc);
+
+        float svgWidth = (float) ctx.getDocumentSize().getWidth();
+        float svgHeight = (float) ctx.getDocumentSize().getHeight();
+
+        if (svgWidth <= 0) svgWidth = DEFAULT_PAGE_WIDTH;
+        if (svgHeight <= 0) svgHeight = DEFAULT_PAGE_HEIGHT;
+
+        PDRectangle pageSize = calculatePageSize(svgWidth, svgHeight, fitOption, autoRotate);
+
+        PDPage page = new PDPage(pageSize);
+        document.addPage(page);
+
+        float pageWidth = pageSize.getWidth();
+        float pageHeight = pageSize.getHeight();
+        float scaleX = pageWidth / svgWidth;
+        float scaleY = pageHeight / svgHeight;
+        float scale;
+
+        switch (fitOption != null ? fitOption : "maintainAspectRatio") {
+            case "fillPage":
+                scale = 1.0f; // We'll use different scales for X and Y
+                break;
+            case "fitDocumentToImage":
+                scale = 1.0f;
+                break;
+            case "maintainAspectRatio":
+            default:
+                scale = Math.min(scaleX, scaleY);
+                break;
+        }
+
+        PdfBoxGraphics2D pdfGraphics = new PdfBoxGraphics2D(document, pageWidth, pageHeight);
+        try {
+            if ("fillPage".equals(fitOption)) {
+                pdfGraphics.scale(scaleX, scaleY);
+            } else if (!"fitDocumentToImage".equals(fitOption)) {
+                pdfGraphics.scale(scale, scale);
+                float offsetX = (pageWidth - svgWidth * scale) / 2;
+                float offsetY = (pageHeight - svgHeight * scale) / 2;
+                pdfGraphics.translate(offsetX / scale, offsetY / scale);
+            }
+
+            rootNode.paint(pdfGraphics);
+        } finally {
+            pdfGraphics.dispose();
+        }
+
+        PDFormXObject xform = pdfGraphics.getXFormObject();
+        try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+            contentStream.drawForm(xform);
+        }
+    }
+
+    private PDRectangle calculatePageSize(
+            float svgWidth, float svgHeight, String fitOption, boolean autoRotate) {
+        if ("fitDocumentToImage".equals(fitOption)) {
+            if (autoRotate && svgWidth > svgHeight) {
+                return new PDRectangle(svgWidth, svgHeight);
+            }
+            return new PDRectangle(svgWidth, svgHeight);
+        }
+
+        // Use A4 default page size
+        float pageWidth = DEFAULT_PAGE_WIDTH;
+        float pageHeight = DEFAULT_PAGE_HEIGHT;
+
+        if (autoRotate) {
+            boolean svgIsLandscape = svgWidth > svgHeight;
+            if (svgIsLandscape) {
+                return new PDRectangle(pageHeight, pageWidth);
+            }
+        }
+
+        return new PDRectangle(pageWidth, pageHeight);
     }
 }

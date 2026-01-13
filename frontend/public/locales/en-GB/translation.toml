@@ -1376,6 +1376,7 @@ applySignatures = "Apply Images"
 name = "Image"
 placeholder = "Upload an image"
 label = "Image file"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files."
 
 [addImage.steps]
 configure = "Configure Image"

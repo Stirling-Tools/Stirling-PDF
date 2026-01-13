@@ -20,6 +20,7 @@ import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSe
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
 import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
+import ConvertFromSvgSettings from "@app/components/tools/convert/ConvertFromSvgSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -324,6 +325,18 @@ const ConvertSettings = ({
           />
         </>
       ) : null}
+
+      {/* SVG to PDF options */}
+      {parameters.fromExtension === 'svg' && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromSvgSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
 
       {/* Web to PDF options */}
       {((isWebFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
