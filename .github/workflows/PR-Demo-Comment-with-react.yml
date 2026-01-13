@@ -25,7 +25,7 @@ jobs:
         github.event.comment.user.login == 'frooodle' ||
         github.event.comment.user.login == 'sf298' ||
         github.event.comment.user.login == 'Ludy87' ||
-        github.event.comment.user.login == 'balazs_szucs' ||
+        github.event.comment.user.login == 'balazs-szucs' ||
         github.event.comment.user.login == 'reecebrowne' ||
         github.event.comment.user.login == 'DarioGii' ||
         github.event.comment.user.login == 'EthanHealy01' ||
