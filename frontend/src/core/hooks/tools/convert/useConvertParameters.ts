@@ -54,6 +54,11 @@ export interface ConvertParameters extends BaseParameters {
     includePageNumbers: boolean;
     optimizeForEbook: boolean;
   };
+  epubOptions?: {
+    detectChapters: boolean;
+    targetDevice: string;
+    outputFormat: string;
+  };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
 }
@@ -104,6 +109,11 @@ export const defaultParameters: ConvertParameters = {
     includeTableOfContents: false,
     includePageNumbers: false,
     optimizeForEbook: false,
+  },
+  epubOptions: {
+    detectChapters: true,
+    targetDevice: 'TABLET_PHONE_IMAGES',
+    outputFormat: 'EPUB',
   },
   isSmartDetection: false,
   smartDetectionType: 'none',
