@@ -120,6 +120,13 @@ const ALL_CONVERSION_ENDPOINTS: ConversionEndpoint[] = [
     toFormat: 'pdf',
     description: 'Convert email (EML) to PDF',
     apiPath: '/api/v1/convert/eml/pdf'
+  },
+  {
+    endpoint: 'eml-to-pdf', // MSG uses same endpoint as EML
+    fromFormat: 'msg',
+    toFormat: 'pdf',
+    description: 'Convert Outlook email (MSG) to PDF',
+    apiPath: '/api/v1/convert/eml/pdf'
   }
 ];
 
