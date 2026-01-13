@@ -154,17 +154,12 @@ public class SvgToPdf {
         }
     }
 
-    public byte[] combineIntoPdf(List<byte[]> svgBytesList, String fitOption, boolean autoRotate)
-            throws IOException {
+    public byte[] combineIntoPdf(List<byte[]> svgBytesList) throws IOException {
         if (svgBytesList == null || svgBytesList.isEmpty()) {
             throw new IOException("SVG list is empty or null");
         }
 
-        log.debug(
-                "Combining {} SVG files into single PDF with fitOption={}, autoRotate={}",
-                svgBytesList.size(),
-                fitOption,
-                autoRotate);
+        log.debug("Combining {} SVG files into single PDF", svgBytesList.size());
 
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -177,7 +172,7 @@ public class SvgToPdf {
                 }
 
                 try {
-                    addSvgAsPage(document, svgBytes, fitOption, autoRotate);
+                    addSvgAsPage(document, svgBytes);
                     log.debug("Added SVG {} of {} to combined PDF", i + 1, svgBytesList.size());
                 } catch (Exception e) {
                     log.error("Failed to add SVG {} to combined PDF: {}", i, e.getMessage());
@@ -198,9 +193,7 @@ public class SvgToPdf {
         }
     }
 
-    private void addSvgAsPage(
-            PDDocument document, byte[] svgBytes, String fitOption, boolean autoRotate)
-            throws IOException {
+    private void addSvgAsPage(PDDocument document, byte[] svgBytes) throws IOException {
         String parser = XMLResourceDescriptor.getXMLParserClassName();
         SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(parser);
 
@@ -222,41 +215,12 @@ public class SvgToPdf {
         if (svgWidth <= 0) svgWidth = DEFAULT_PAGE_WIDTH;
         if (svgHeight <= 0) svgHeight = DEFAULT_PAGE_HEIGHT;
 
-        PDRectangle pageSize = calculatePageSize(svgWidth, svgHeight, fitOption, autoRotate);
-
-        PDPage page = new PDPage(pageSize);
+        // Use SVG dimensions directly for the PDF page
+        PDPage page = new PDPage(new PDRectangle(svgWidth, svgHeight));
         document.addPage(page);
 
-        float pageWidth = pageSize.getWidth();
-        float pageHeight = pageSize.getHeight();
-        float scaleX = pageWidth / svgWidth;
-        float scaleY = pageHeight / svgHeight;
-        float scale;
-
-        switch (fitOption != null ? fitOption : "maintainAspectRatio") {
-            case "fillPage":
-                scale = 1.0f; // We'll use different scales for X and Y
-                break;
-            case "fitDocumentToImage":
-                scale = 1.0f;
-                break;
-            case "maintainAspectRatio":
-            default:
-                scale = Math.min(scaleX, scaleY);
-                break;
-        }
-
-        PdfBoxGraphics2D pdfGraphics = new PdfBoxGraphics2D(document, pageWidth, pageHeight);
+        PdfBoxGraphics2D pdfGraphics = new PdfBoxGraphics2D(document, svgWidth, svgHeight);
         try {
-            if ("fillPage".equals(fitOption)) {
-                pdfGraphics.scale(scaleX, scaleY);
-            } else if (!"fitDocumentToImage".equals(fitOption)) {
-                pdfGraphics.scale(scale, scale);
-                float offsetX = (pageWidth - svgWidth * scale) / 2;
-                float offsetY = (pageHeight - svgHeight * scale) / 2;
-                pdfGraphics.translate(offsetX / scale, offsetY / scale);
-            }
-
             rootNode.paint(pdfGraphics);
         } finally {
             pdfGraphics.dispose();
@@ -266,28 +230,5 @@ public class SvgToPdf {
         try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
             contentStream.drawForm(xform);
         }
-    }
-
-    private PDRectangle calculatePageSize(
-            float svgWidth, float svgHeight, String fitOption, boolean autoRotate) {
-        if ("fitDocumentToImage".equals(fitOption)) {
-            if (autoRotate && svgWidth > svgHeight) {
-                return new PDRectangle(svgWidth, svgHeight);
-            }
-            return new PDRectangle(svgWidth, svgHeight);
-        }
-
-        // Use A4 default page size
-        float pageWidth = DEFAULT_PAGE_WIDTH;
-        float pageHeight = DEFAULT_PAGE_HEIGHT;
-
-        if (autoRotate) {
-            boolean svgIsLandscape = svgWidth > svgHeight;
-            if (svgIsLandscape) {
-                return new PDRectangle(pageHeight, pageWidth);
-            }
-        }
-
-        return new PDRectangle(pageWidth, pageHeight);
     }
 }

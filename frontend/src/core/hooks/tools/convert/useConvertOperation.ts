@@ -68,8 +68,6 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("autoRotate", imageOptions.autoRotate.toString());
   } else if (fromExtension === 'svg' && toExtension === 'pdf') {
     formData.append("combineIntoSinglePdf", imageOptions.combineImages.toString());
-    formData.append("fitOption", imageOptions.fitOption);
-    formData.append("autoRotate", imageOptions.autoRotate.toString());
   } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
     formData.append("zoom", htmlOptions.zoomLevel.toString());
   } else if ((fromExtension === 'eml' || fromExtension === 'msg') && toExtension === 'pdf') {

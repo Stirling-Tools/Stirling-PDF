@@ -57,13 +57,6 @@ public class ConvertSvgToPDF {
 
         MultipartFile[] inputFiles = request.getFileInput();
         boolean combineIntoSinglePdf = Boolean.TRUE.equals(request.getCombineIntoSinglePdf());
-        String fitOption = request.getFitOption();
-        boolean autoRotate = Boolean.TRUE.equals(request.getAutoRotate());
-
-        // Set defaults for combine options
-        if (fitOption == null || fitOption.isEmpty()) {
-            fitOption = "maintainAspectRatio";
-        }
 
         // Validate input
         if (inputFiles == null || inputFiles.length == 0) {
@@ -115,7 +108,7 @@ public class ConvertSvgToPDF {
             }
 
             if (combineIntoSinglePdf) {
-                return handleCombinedConversion(sanitizedSvgs, filenames, fitOption, autoRotate);
+                return handleCombinedConversion(sanitizedSvgs, filenames);
             } else {
                 return handleSeparateConversion(sanitizedSvgs, filenames);
             }
@@ -130,14 +123,11 @@ public class ConvertSvgToPDF {
     }
 
     private ResponseEntity<byte[]> handleCombinedConversion(
-            List<byte[]> sanitizedSvgs,
-            List<String> filenames,
-            String fitOption,
-            boolean autoRotate) {
+            List<byte[]> sanitizedSvgs, List<String> filenames) {
         try {
             log.info("Combining {} SVG files into single PDF", sanitizedSvgs.size());
 
-            byte[] pdfBytes = SvgToPdf.combineIntoPdf(sanitizedSvgs, fitOption, autoRotate);
+            byte[] pdfBytes = SvgToPdf.combineIntoPdf(sanitizedSvgs);
 
             if (pdfBytes == null || pdfBytes.length == 0) {
                 log.error("PDF conversion failed - empty output");

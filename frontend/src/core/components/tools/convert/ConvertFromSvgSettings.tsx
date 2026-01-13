@@ -1,6 +1,5 @@
-import { Stack, Text, Select, Switch } from "@mantine/core";
+import { Stack, Text, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { FIT_OPTIONS } from "@app/constants/convertConstants";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 
 interface ConvertFromSvgSettingsProps {
@@ -32,41 +31,8 @@ const ConvertFromSvgSettings = ({
         disabled={disabled}
       />
 
-      {parameters.imageOptions.combineImages && (
-        <>
-          <Select
-            data-testid="svg-fit-option-select"
-            label={t("convert.fitOption", "Fit Option")}
-            description={t("convert.svgFitOptionDescription", "How to fit SVGs onto PDF pages")}
-            value={parameters.imageOptions.fitOption}
-            onChange={(val) => val && onParameterChange('imageOptions', {
-              ...parameters.imageOptions,
-              fitOption: val as typeof FIT_OPTIONS[keyof typeof FIT_OPTIONS]
-            })}
-            data={[
-              { value: FIT_OPTIONS.MAINTAIN_ASPECT, label: t("convert.maintainAspectRatio", "Maintain Aspect Ratio") },
-              { value: FIT_OPTIONS.FIT_PAGE, label: t("convert.fitDocumentToImage", "Fit Document to Image") },
-              { value: FIT_OPTIONS.FILL_PAGE, label: t("convert.fillPage", "Fill Page") },
-            ]}
-            disabled={disabled}
-          />
-
-          <Switch
-            data-testid="svg-auto-rotate-switch"
-            label={t("convert.autoRotate", "Auto Rotate")}
-            description={t("convert.autoRotateDescription", "Automatically rotate SVGs to better fit the PDF page")}
-            checked={parameters.imageOptions.autoRotate}
-            onChange={(event) => onParameterChange('imageOptions', {
-              ...parameters.imageOptions,
-              autoRotate: event.currentTarget.checked
-            })}
-            disabled={disabled}
-          />
-        </>
-      )}
-
       <Text size="xs" c="dimmed" mt="xs">
-        {t("convert.svgVectorNote", "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size (defaults to A4 if not specified).")}
+        {t("convert.svgVectorNote", "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size.")}
       </Text>
     </Stack>
   );

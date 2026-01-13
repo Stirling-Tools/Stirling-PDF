@@ -26,19 +26,4 @@ public class SvgToPdfRequest {
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
     private Boolean combineIntoSinglePdf;
-
-    @Schema(
-            description =
-                    "Option to determine how the SVG will fit onto the page when combining. "
-                            + "Only used when combineIntoSinglePdf is true.",
-            defaultValue = "maintainAspectRatio",
-            allowableValues = {"fillPage", "fitDocumentToImage", "maintainAspectRatio"})
-    private String fitOption;
-
-    @Schema(
-            description =
-                    "Whether to automatically rotate the SVGs to better fit the PDF page when combining. "
-                            + "Only used when combineIntoSinglePdf is true.",
-            defaultValue = "false")
-    private Boolean autoRotate;
 }
