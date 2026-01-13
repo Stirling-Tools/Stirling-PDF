@@ -437,6 +437,13 @@ currentVersion = "Aktuelle Version"
 latestVersion = "Neueste Version"
 checkForUpdates = "Nach Updates suchen"
 viewDetails = "Details anzeigen"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
+title = "Version Information"
 
 [settings.hotkeys]
 title = "Tastenkürzel"
@@ -541,6 +548,8 @@ property = "Eigenschaft"
 webBrowserSettings = "Webbrowser-Einstellung"
 syncToBrowser = "Synchronisiere Konto -> Browser"
 syncToAccount = "Synchronisiere Konto <- Browser"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 
 [account.mfa]
 title = "Zwei-Faktor-Authentifizierung"
@@ -4237,6 +4246,8 @@ loginRequired = "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu
 restarting = "Server wird neu gestartet"
 restartingMessage = "Der Server wird neu gestartet. Bitte einen Moment warten..."
 restartError = "Server konnte nicht neu gestartet werden. Bitte manuell neu starten."
+error = "Failed to save settings"
+success = "Settings saved successfully"
 
 [admin.settings.unsavedChanges]
 title = "Ungespeicherte Änderungen"
@@ -4493,6 +4504,19 @@ connect = "Verbinden"
 disconnect = "Trennen"
 disconnected = "Anbieter erfolgreich getrennt"
 disconnectError = "Anbieter konnte nicht getrennt werden"
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO-Autoanmeldung"
@@ -4567,6 +4591,19 @@ enable = "Enable QR Code Upload"
 label = "Mobile Phone Upload"
 link = "Configure in System Settings"
 note = "Note: Requires Frontend URL to be configured. "
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.database]
 title = "Datenbank"
@@ -4972,6 +5009,7 @@ sortByName = "Nach Name sortieren"
 sortBySize = "Nach Größe sortieren"
 mobileShort = "Mobile"
 mobileUpload = "Mobile Upload"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 
 [storage]
 temporaryNotice = "Dateien werden temporär in Ihrem Browser gespeichert und können automatisch gelöscht werden"
@@ -6172,6 +6210,7 @@ emptyUrl = "Bitte eine Server-URL eingeben"
 unreachable = "Verbindung zum Server konnte nicht hergestellt werden"
 testFailed = "Verbindungstest fehlgeschlagen"
 configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 
 [setup.server.error.securityDisabled]
 title = "Anmeldung nicht aktiviert"
@@ -6195,6 +6234,7 @@ instructions = "So aktivieren Sie die Anmeldung auf Ihrem Stirling PDF-Server:"
 instructionsEnvVar = "Setzen Sie die Umgebungsvariable:"
 instructionsOrYml = "Oder in der settings.yml:"
 instructionsRestart = "Starten Sie anschließend Ihren Server neu, damit die Änderungen wirksam werden."
+sso = "Single Sign-On"
 
 [setup.login.username]
 label = "Benutzername"
@@ -6535,6 +6575,8 @@ pollingError = "Error checking for files"
 sessionCreateError = "Failed to create session"
 sessionId = "Session ID"
 title = "Upload from Mobile"
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+instructionsNoConvert = "Scan with your phone camera to upload files."
 
 [textAlign]
 center = "Center"
