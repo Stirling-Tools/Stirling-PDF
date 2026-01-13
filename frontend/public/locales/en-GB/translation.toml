@@ -5416,6 +5416,15 @@ impact = "Any applications or services currently using these keys will stop work
 confirmPrompt = "Are you sure you want to continue?"
 confirmCta = "Refresh Keys"
 
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
+
 [AddAttachmentsRequest]
 attachments = "Select Attachments"
 info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
