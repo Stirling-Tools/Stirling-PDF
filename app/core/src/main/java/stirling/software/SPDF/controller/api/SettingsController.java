@@ -32,16 +32,19 @@ public class SettingsController {
 
     @AutoJobPostMapping("/update-enable-analytics")
     @Hidden
-    public ResponseEntity<String> updateApiKey(@RequestParam Boolean enabled) throws IOException {
+    public ResponseEntity<Map<String, Object>> updateApiKey(@RequestParam Boolean enabled)
+            throws IOException {
         if (applicationProperties.getSystem().getEnableAnalytics() != null) {
             return ResponseEntity.status(HttpStatus.ALREADY_REPORTED)
                     .body(
-                            "Setting has already been set, To adjust please edit "
-                                    + InstallationPathConfig.getSettingsPath());
+                            Map.of(
+                                    "message",
+                                    "Setting has already been set, To adjust please edit "
+                                            + InstallationPathConfig.getSettingsPath()));
         }
         GeneralUtils.saveKeyToSettings("system.enableAnalytics", enabled);
         applicationProperties.getSystem().setEnableAnalytics(enabled);
-        return ResponseEntity.ok("Updated");
+        return ResponseEntity.ok(Map.of("message", "Updated"));
     }
 
     @GetMapping("/get-endpoints-status")

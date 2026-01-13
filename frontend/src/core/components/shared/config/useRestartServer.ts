@@ -16,9 +16,12 @@ export function useRestartServer() {
   };
 
   const restartServer = async () => {
-    try {
-      setRestartModalOpened(false);
+    setRestartModalOpened(false);
 
+    await apiClient.post('/api/v1/admin/settings/restart', undefined, {
+      suppressErrorToast: true,
+    })
+    .then(() => {
       alert({
         alertType: 'neutral',
         title: t('admin.settings.restarting', 'Restarting Server'),
@@ -27,14 +30,12 @@ export function useRestartServer() {
           'The server is restarting. Please wait a moment...'
         ),
       });
-
-      await apiClient.post('/api/v1/admin/settings/restart');
-
       // Wait a moment then reload the page
       setTimeout(() => {
         window.location.reload();
       }, 3000);
-    } catch (_error) {
+    })
+    .catch(async (_error) => {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
@@ -43,7 +44,7 @@ export function useRestartServer() {
           'Failed to restart server. Please restart manually.'
         ),
       });
-    }
+    })
   };
 
   return {
