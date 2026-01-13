@@ -54,7 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
     tesseract-ocr-por tesseract-ocr-chi-sim \
     libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
-    gosu unpaper \
+    gosu unpaper qpdf \
     # AWT headless support (required for some Java graphics operations)
     libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
     libxinerama1 libxkbcommon0 libxkbfile1 libsm6 libice6 \
@@ -133,7 +133,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, API, Spring Boot, Re
 # Runtime environment variables
 # ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -Djava.awt.headless=true" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
@@ -168,7 +168,7 @@ ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 # ==============================================================================
 RUN set -eux; \
     chmod +x /scripts/*; \
-    mkdir -p /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
+    mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
     /home/stirlingpdfuser /configs /logs /customFiles /pipeline /tmp/stirling-pdf \
     /app.jar /restart-helper.jar /usr/share/fonts/truetype /scripts; \

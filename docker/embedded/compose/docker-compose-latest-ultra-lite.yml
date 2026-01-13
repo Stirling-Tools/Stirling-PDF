@@ -26,4 +26,4 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
-    restart: on-failure:5
+    restart: unless-stopped
