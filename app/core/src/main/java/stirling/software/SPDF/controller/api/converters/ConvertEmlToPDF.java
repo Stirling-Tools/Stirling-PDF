@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -152,20 +153,24 @@ public class ConvertEmlToPDF {
     }
 
     private static @NotNull String buildErrorMessage(Exception e, String originalFilename) {
+        String safeFilename = HtmlUtils.htmlEscape(originalFilename);
+        String exceptionMessage = e.getMessage();
+        String safeExceptionMessage =
+                exceptionMessage == null ? "Unknown error" : HtmlUtils.htmlEscape(exceptionMessage);
         String errorMessage;
-        if (e.getMessage() != null && e.getMessage().contains("Invalid EML")) {
+        if (exceptionMessage != null && exceptionMessage.contains("Invalid EML")) {
             errorMessage =
                     "Invalid EML file format. Please ensure you've uploaded a valid email"
                             + " file ("
-                            + originalFilename
+                            + safeFilename
                             + ").";
-        } else if (e.getMessage() != null && e.getMessage().contains("WeasyPrint")) {
+        } else if (exceptionMessage != null && exceptionMessage.contains("WeasyPrint")) {
             errorMessage =
                     "PDF generation failed for "
-                            + originalFilename
+                            + safeFilename
                             + ". This may be due to complex email formatting.";
         } else {
-            errorMessage = "Conversion failed for " + originalFilename + ": " + e.getMessage();
+            errorMessage = "Conversion failed for " + safeFilename + ": " + safeExceptionMessage;
         }
         return errorMessage;
     }
