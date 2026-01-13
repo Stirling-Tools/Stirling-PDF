@@ -39,27 +39,6 @@ public class ConvertEmlToPDF {
     private final TempFileManager tempFileManager;
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    private static @NotNull String buildErrorMessage(Exception e, String originalFilename) {
-        String errorMessage;
-        if (e.getMessage() != null
-                && (e.getMessage().contains("Invalid EML")
-                        || e.getMessage().contains("Failed to parse email"))) {
-            errorMessage =
-                    "Invalid email file format. Please ensure you've uploaded a valid EML or MSG"
-                            + " file ("
-                            + originalFilename
-                            + ").";
-        } else if (e.getMessage() != null && e.getMessage().contains("WeasyPrint")) {
-            errorMessage =
-                    "PDF generation failed for "
-                            + originalFilename
-                            + ". This may be due to complex email formatting.";
-        } else {
-            errorMessage = "Conversion failed for " + originalFilename + ": " + e.getMessage();
-        }
-        return errorMessage;
-    }
-
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/eml/pdf")
     @StandardPdfResponse
     @Operation(
@@ -171,6 +150,7 @@ public class ConvertEmlToPDF {
                     .body("File processing error".getBytes(StandardCharsets.UTF_8));
         }
     }
+
     private static @NotNull String buildErrorMessage(Exception e, String originalFilename) {
         String safeFilename = HtmlUtils.htmlEscape(originalFilename);
         String exceptionMessage = e.getMessage();
