@@ -271,7 +271,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
       - name: Deploy V2 to VPS
@@ -316,16 +316,16 @@ jobs:
               ports:
                 - "${V2_PORT}:80"          # Frontend port (same as regular PRs)
               environment:
-                VITE_API_BASE_URL: "http://${{ secrets.VPS_HOST }}:${BACKEND_PORT}"
+                VITE_API_BASE_URL: "http://${{ secrets.NEW_VPS_HOST }}:${BACKEND_PORT}"
               depends_on:
                 - stirling-pdf-v2-backend
               restart: on-failure:5
           EOF
 
           # Deploy to VPS
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose-v2.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose-v2.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             # Create V2 PR-specific directories
             mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs}
 
@@ -375,7 +375,7 @@ jobs:
               }
             }
 
-            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
+            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${v2Port}`;
             const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
 
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
@@ -450,12 +450,12 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
       - name: Cleanup V2 deployment
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << 'ENDSSH'
             if [ -d "/stirling/V2-PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found V2 PR directory, proceeding with cleanup..."
 

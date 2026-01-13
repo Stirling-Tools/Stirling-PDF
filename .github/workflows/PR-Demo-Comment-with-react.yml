@@ -190,7 +190,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
       - name: Deploy to VPS
@@ -252,9 +252,9 @@ jobs:
           EOF
 
           # Then copy the file and execute commands
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
 
@@ -336,7 +336,7 @@ jobs:
             const prNumber = ${{ needs.check-comment.outputs.pr_number }};
             const securityStatus = process.env.security_status || "Security Disabled";
 
-            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${prNumber}`;
+            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${prNumber}`;
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
                               `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n` +
