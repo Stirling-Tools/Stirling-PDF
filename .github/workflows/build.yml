@@ -326,8 +326,8 @@ jobs:
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.artifact-suffix }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.artifact-suffix }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
