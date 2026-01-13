@@ -363,6 +363,7 @@ advanced = "Erweitert"
 title = "Sicherheit & Authentifizierung"
 security = "Sicherheit"
 connections = "Verbindungen"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Lizenzierung & Analytics"
@@ -1326,6 +1327,18 @@ includeTableOfContents = "Include table of contents"
 includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+kindleEink = "Kindle e-Ink (text optimized)"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
 
 [imageToPdf]
 tags = "konvertierung,img,jpg,bild,foto"
@@ -4908,6 +4921,102 @@ description = "Zu deaktivierende Endpunktgruppen auswählen"
 [admin.settings.badge]
 clickToUpgrade = "Click to view plan details"
 
+[admin.settings.telegram]
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+title = "Telegram Bot"
+
+[admin.settings.telegram.accessControl]
+description = "Restrict which users or channels can interact with the bot."
+title = "Access Control"
+
+[admin.settings.telegram.allowChannelIDs]
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+label = "Allowed Channel IDs"
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.allowUserIDs]
+description = "Enter Telegram user IDs allowed to interact with the bot."
+label = "Allowed User IDs"
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.botToken]
+description = "API token provided by BotFather for your Telegram bot."
+label = "Bot Token"
+
+[admin.settings.telegram.botUsername]
+description = "The public username of your Telegram bot."
+label = "Bot Username"
+
+[admin.settings.telegram.customFolderSuffix]
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+label = "Use Custom Folder Suffix"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+description = "When enabled, only listed channel IDs can use the bot."
+label = "Allow Specific Channel IDs"
+
+[admin.settings.telegram.enableAllowUserIDs]
+description = "When enabled, only listed user IDs can use the bot."
+label = "Allow Specific User IDs"
+
+[admin.settings.telegram.enabled]
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+label = "Enable Telegram Bot"
+
+[admin.settings.telegram.feedback]
+description = "Choose when the bot should send feedback to users and channels."
+title = "Feedback Messages"
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+description = "Show detailed error messages for channels."
+label = "Show error messages (Channel)"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+description = "Send processing error messages to channels."
+label = "Show processing errors (Channel)"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+description = "Suppress the no valid document response for channel uploads."
+label = "Show \"No valid document\" (Channel)"
+
+[admin.settings.telegram.feedback.general.enabled]
+description = "Control whether the bot sends feedback messages at all."
+label = "Enable Feedback"
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+description = "Show detailed error messages for users."
+label = "Show error messages (User)"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+description = "Send processing error messages to users."
+label = "Show processing errors (User)"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+description = "Suppress the no valid document response for user uploads."
+label = "Show \"No valid document\" (User)"
+
+[admin.settings.telegram.pipelineInboxFolder]
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+label = "Inbox Folder"
+
+[admin.settings.telegram.pollingIntervalMillis]
+description = "Interval between checks for new Telegram updates."
+label = "Polling Interval (ms)"
+
+[admin.settings.telegram.processing]
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+title = "Processing"
+
+[admin.settings.telegram.processingTimeoutSeconds]
+description = "Maximum time to wait for a processing job before reporting an error."
+label = "Processing Timeout (seconds)"
+
 [fileUpload]
 selectFile = "Datei auswählen"
 selectFiles = "Dateien auswählen"
@@ -5357,6 +5466,15 @@ warning = "⚠️ Warnung: Diese Aktion wird neue API-Schlüssel generieren und 
 impact = "Alle Anwendungen oder Dienste, die derzeit diese Schlüssel verwenden, funktionieren nicht mehr, bis Sie sie mit den neuen Schlüsseln aktualisieren."
 confirmPrompt = "Sind Sie sicher, dass Sie fortfahren möchten?"
 confirmCta = "Schlüssel aktualisieren"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToCreateApiKey = "Failed to create API key."
+failedToFetchApiKey = "Failed to fetch API key."
+failedToRefreshApiKey = "Failed to refresh API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
 
 [AddAttachmentsRequest]
 attachments = "Anhänge auswählen"
