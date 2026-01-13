@@ -75,12 +75,12 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         console.log('[ServerSelection] Fetching login configuration...');
         const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`);
 
-        // Check if security is disabled (status 403 or error response)
+        // Check if security is disabled (status 403, 401, or 404 - endpoint doesn't exist)
         if (!response.ok) {
           console.warn(`[ServerSelection] Login config request failed with status ${response.status}`);
 
-          if (response.status === 403 || response.status === 401) {
-            console.log('[ServerSelection] Security is disabled on this server');
+          if (response.status === 403 || response.status === 401 || response.status === 404) {
+            console.log('[ServerSelection] Security/SSO not configured on this server (or endpoint does not exist)');
             setSecurityDisabled(true);
             setTesting(false);
             return;

@@ -9,6 +9,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { withBasePath } from '@app/constants/app';
+import { convertImageToPdf, isImageFile } from '@app/utils/imageToPdfUtils';
 
 interface MobileUploadModalProps {
   opened: boolean;
@@ -132,9 +133,24 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
 
             if (downloadResponse.ok) {
               const blob = await downloadResponse.blob();
-              const file = new File([blob], fileMetadata.filename, {
+              let file = new File([blob], fileMetadata.filename, {
                 type: fileMetadata.contentType || 'image/jpeg'
               });
+
+              // Convert images to PDF if enabled
+              if (isImageFile(file) && config?.mobileScannerConvertToPdf !== false) {
+                try {
+                  file = await convertImageToPdf(file, {
+                    imageResolution: config?.mobileScannerImageResolution as 'full' | 'reduced' | undefined,
+                    pageFormat: config?.mobileScannerPageFormat as 'keep' | 'A4' | 'letter' | undefined,
+                    stretchToFit: config?.mobileScannerStretchToFit,
+                  });
+                  console.log('Converted image to PDF:', file.name);
+                } catch (convertError) {
+                  console.warn('Failed to convert image to PDF, using original file:', convertError);
+                  // Continue with original image file if conversion fails
+                }
+              }
 
               processedFiles.current.add(fileMetadata.filename);
               setFilesReceived((prev) => prev + 1);
@@ -256,10 +272,15 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
           variant="light"
         >
           <Text size="sm">
-            {t(
-              'mobileUpload.description',
-              'Scan this QR code with your mobile device to upload photos directly to this page.'
-            )}
+            {config?.mobileScannerConvertToPdf !== false
+              ? t(
+                  'mobileUpload.description',
+                  'Scan this QR code with your mobile device to upload photos. Images will be automatically converted to PDF.'
+                )
+              : t(
+                  'mobileUpload.descriptionNoConvert',
+                  'Scan this QR code with your mobile device to upload photos.'
+                )}
           </Text>
         </Alert>
 
@@ -308,10 +329,15 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
           )}
 
           <Text size="xs" c="dimmed" ta="center" style={{ maxWidth: '300px' }}>
-            {t(
-              'mobileUpload.instructions',
-              'Open the camera app on your phone and scan this code. Files will be uploaded through the server.'
-            )}
+            {config?.mobileScannerConvertToPdf !== false
+              ? t(
+                  'mobileUpload.instructions',
+                  'Open the camera app on your phone and scan this code. Images will be automatically converted to PDF.'
+                )
+              : t(
+                  'mobileUpload.instructionsNoConvert',
+                  'Open the camera app on your phone and scan this code. Files will be uploaded through the server.'
+                )}
           </Text>
 
           <Text
