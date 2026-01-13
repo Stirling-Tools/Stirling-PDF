@@ -351,8 +351,8 @@ const ConvertSettings = ({
         </>
       ) : null}
 
-      {/* Email to PDF options */}
-      {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (
+      {/* Email to PDF options (EML and MSG formats) */}
+      {(parameters.fromExtension === 'eml' || parameters.fromExtension === 'msg') && parameters.toExtension === 'pdf' && (
         <>
           <Divider />
           <ConvertFromEmailSettings

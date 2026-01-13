@@ -72,7 +72,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("autoRotate", imageOptions.autoRotate.toString());
   } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
     formData.append("zoom", htmlOptions.zoomLevel.toString());
-  } else if (fromExtension === 'eml' && toExtension === 'pdf') {
+  } else if ((fromExtension === 'eml' || fromExtension === 'msg') && toExtension === 'pdf') {
     formData.append("includeAttachments", emailOptions.includeAttachments.toString());
     formData.append("maxAttachmentSizeMB", emailOptions.maxAttachmentSizeMB.toString());
     formData.append("downloadHtml", emailOptions.downloadHtml.toString());
