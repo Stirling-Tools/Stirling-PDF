@@ -82,7 +82,7 @@ incorrectPasswordMessage = "Das Passwort ist falsch."
 usernameExistsMessage = "Neuer Benutzername existiert bereits."
 invalidUsernameMessage = "Ungültiger Benutzername. Der Benutzername darf nur Buchstaben, Zahlen und die folgenden Sonderzeichen @._+- enthalten oder muss eine gültige E-Mail-Adresse sein."
 invalidPasswordMessage = "Das Passwort darf nicht leer sein und kein Leerzeichen am Anfang und Ende haben."
-confirmPasswordErrorMessage = "„Neues Passwort“ und „Neues Passwort bestätigen“ müssen übereinstimmen."
+confirmPasswordErrorMessage = "\"Neues Passwort\" und \"Neues Passwort bestätigen\" müssen übereinstimmen."
 deleteCurrentUserMessage = "Der aktuell angemeldete Benutzer kann nicht gelöscht werden."
 deleteUsernameExistsMessage = "Der Benutzername existiert nicht und kann nicht gelöscht werden."
 downgradeCurrentUserMessage = "Die Rolle des aktuellen Benutzers kann nicht herabgestuft werden"
@@ -363,6 +363,7 @@ advanced = "Erweitert"
 title = "Sicherheit & Authentifizierung"
 security = "Sicherheit"
 connections = "Verbindungen"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Lizenzierung & Analytics"
@@ -2316,7 +2317,7 @@ colorLabel = "Textfarbe"
 heading = "Gespeicherte Unterschriften"
 description = "Gespeicherte Unterschriften jederzeit wiederverwenden."
 emptyTitle = "Noch keine gespeicherten Unterschriften"
-emptyDescription = "Zeichnen, laden oder tippen Sie oben eine Unterschrift und wählen Sie dann „In Bibliothek speichern“, um bis zu {{max}} Favoriten bereitzuhalten."
+emptyDescription = "Zeichnen, laden oder tippen Sie oben eine Unterschrift und wählen Sie dann \"In Bibliothek speichern\", um bis zu {{max}} Favoriten bereitzuhalten."
 limitTitle = "Limit erreicht"
 limitDescription = "Entfernen Sie eine gespeicherte Unterschrift, bevor Sie neue hinzufügen (max. {{max}})."
 carouselPosition = "{{current}} von {{total}}"
@@ -2526,7 +2527,7 @@ title = "Über Anmerkungen entfernen"
 description = "Dieses Werkzeug entfernt alle Anmerkungen (Kommentare, Hervorhebungen, Notizen usw.) aus Ihren PDF-Dokumenten."
 
 [removeAnnotations.tooltip.header]
-title = "Über „Anmerkungen entfernen“"
+title = "Über \"Anmerkungen entfernen\""
 
 [removeAnnotations.tooltip.description]
 title = "Funktion"
@@ -3849,11 +3850,6 @@ failed = "Ein Fehler ist beim Komprimieren der PDF aufgetreten."
 _value = "Kompressionseinstellungen"
 1 = "1-3 PDF-Komprimierung, </br> 4-6 Leichte Bildkomprimierung, </br> 7-9 Intensive Bildkomprimierung verringert die Bildqualität dramatisch"
 
-[compress.compressionLevel]
-range1to3 = "Lower values preserve quality but result in larger files"
-range4to6 = "Medium compression with moderate quality reduction"
-range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
-
 [compress.lineArt]
 description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
 detailLevel = "Detail level"
@@ -3866,6 +3862,11 @@ unavailable = "ImageMagick is not installed or enabled on this server"
 
 [compress.linearize]
 label = "Linearize PDF for fast web viewing"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Diese Datei ist passwortgeschützt. Bitte geben Sie das Passwort ein:"
@@ -4020,7 +4021,7 @@ showPreferencesBtn = "Einstellungen verwalten"
 
 [cookieBanner.popUp.description]
 1 = "Wir verwenden Cookies und andere Technologien, damit Stirling PDF für Sie besser funktioniert. Dies hilft uns dabei, unsere Tools zu verbessern und weiterhin Funktionen zu entwickeln, die Ihnen gefallen werden."
-2 = "Wenn Sie dies nicht möchten, klicken Sie auf „Nein, Danke“. Dadurch werden nur die unbedingt erforderlichen Cookies aktiviert, die für einen reibungslosen Ablauf erforderlich sind."
+2 = "Wenn Sie dies nicht möchten, klicken Sie auf \"Nein, Danke\". Dadurch werden nur die unbedingt erforderlichen Cookies aktiviert, die für einen reibungslosen Ablauf erforderlich sind."
 
 [cookieBanner.preferencesModal]
 title = "Einwilligungszentrum"
@@ -4119,13 +4120,13 @@ toggleSidebar = "Seitenleiste umschalten"
 exportSelected = "Ausgewählte Seiten exportieren"
 toggleAnnotations = "Anmerkungen ein-/ausblenden"
 print = "PDF drucken"
-draw = "Zeichnen"
-save = "Speichern"
 saveChanges = "Änderungen speichern"
 annotations = "Annotations"
 applyRedactionsFirst = "Apply redactions first"
+draw = "Draw"
 exitRedaction = "Exit Redaction Mode"
 redact = "Redact"
+save = "Save"
 
 [search]
 title = "PDF durchsuchen"
@@ -4574,6 +4575,102 @@ pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
 pageFormatLetter = "Letter (8.5×11in)"
 
+[admin.settings.telegram]
+title = "Telegram-Bot"
+description = "Telegram-Bot-Anbindung, Zugriffskontrollen und Feedback-Verhalten konfigurieren."
+
+[admin.settings.telegram.enabled]
+label = "Telegram-Bot aktivieren"
+description = "Erlaubt Benutzern die Interaktion mit Stirling PDF über den konfigurierten Telegram-Bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot-Benutzername"
+description = "Der öffentliche Benutzername Ihres Telegram-Bots."
+
+[admin.settings.telegram.botToken]
+label = "Bot-Token"
+description = "API-Token, das von BotFather für Ihren Telegram-Bot bereitgestellt wird."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Posteingangsordner"
+description = "Ordner innerhalb des Pipeline-Verzeichnisses, in dem eingehende Telegram-Dateien gespeichert werden."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Benutzerdefinierten Ordner-Suffix verwenden"
+description = "Hängt die Chat-ID an eingehende Dateiordner an, um Uploads pro Chat zu isolieren."
+
+[admin.settings.telegram.accessControl]
+title = "Zugriffskontrolle"
+description = "Einschränken, welche Benutzer oder Kanäle mit dem Bot interagieren dürfen."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Bestimmte Benutzer-IDs erlauben"
+description = "Wenn aktiviert, dürfen nur aufgeführte Benutzer-IDs den Bot verwenden."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Erlaubte Benutzer-IDs"
+description = "Telegram-Benutzer-IDs, die mit dem Bot interagieren dürfen."
+placeholder = "Benutzer-ID hinzufügen und Enter drücken"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Bestimmte Kanal-IDs erlauben"
+description = "Wenn aktiviert, dürfen nur aufgeführte Kanal-IDs den Bot verwenden."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Erlaubte Kanal-IDs"
+description = "Telegram-Kanal-IDs, die mit dem Bot interagieren dürfen."
+placeholder = "Kanal-ID hinzufügen und Enter drücken"
+
+[admin.settings.telegram.processing]
+title = "Verarbeitung"
+description = "Polling-Intervalle und Verarbeitungs-Timeouts für Telegram-Uploads steuern."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Verarbeitungs-Timeout (Sekunden)"
+description = "Maximale Wartezeit für einen Verarbeitungsjob, bevor ein Fehler gemeldet wird."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling-Intervall (ms)"
+description = "Intervall zwischen Prüfungen auf neue Telegram-Updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback-Nachrichten"
+description = "Festlegen, wann der Bot Feedback an Benutzer und Kanäle senden soll."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Feedback aktivieren"
+description = "Legt fest, ob der Bot überhaupt Feedback-Nachrichten sendet."
+
+[admin.settings.telegram.feedback.channel]
+title = "Kanal-Feedback-Regeln"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "\"Kein gültiges Dokument\" einblenden (Kanal)"
+description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Kanal-Uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Verarbeitungsfehler einblenden (Kanal)"
+description = "Sendet Verarbeitungsfehlermeldungen an Kanäle senden."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Fehlermeldungen einblenden (Kanal)"
+description = "Detaillierte Fehlermeldungen für Kanäle einblenden."
+
+[admin.settings.telegram.feedback.user]
+title = "Benutzer-Feedback-Regeln"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "\"Kein gültiges Dokument\" einblenden (Benutzer)"
+description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Benutzer-Uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Verarbeitungsfehler einblenden (Benutzer)"
+description = "Sendet Verarbeitungsfehlermeldungen an Benutzer."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Fehlermeldungen einblenden (Benutzer)"
+description = "Detaillierte Fehlermeldungen für Benutzer einblenden."
+
 [admin.settings.database]
 title = "Datenbank"
 description = "Benutzerdefinierte Datenbankverbindungseinstellungen für Enterprise-Bereitstellungen konfigurieren."
@@ -4842,11 +4939,11 @@ description = "Optionale Funktionen und Features konfigurieren."
 
 [admin.settings.features.serverCertificate]
 label = "Serverzertifikat"
-description = "Serverseitige Zertifikatserstellung für die Funktion „Mit Stirling-PDF signieren“ konfigurieren"
+description = "Serverseitige Zertifikatserstellung für die Funktion \"Mit Stirling-PDF signieren\" konfigurieren"
 
 [admin.settings.features.serverCertificate.enabled]
 label = "Serverzertifikat aktivieren"
-description = "Serverseitiges Zertifikat für die Option „Mit Stirling-PDF signieren“ aktivieren"
+description = "Serverseitiges Zertifikat für die Option \"Mit Stirling-PDF signieren\" aktivieren"
 
 [admin.settings.features.serverCertificate.organizationName]
 label = "Name der Organisation"
@@ -5328,13 +5425,13 @@ confirmPrompt = "Sind Sie sicher, dass Sie fortfahren möchten?"
 confirmCta = "Schlüssel aktualisieren"
 
 [config.apiKeys.alert]
-apiKeyErrorTitle = "API-Schlüssel-Fehler"
-failedToCreateApiKey = "API-Schlüssel konnte nicht erstellt werden."
-failedToRetrieveApiKey = "API-Schlüssel konnte nicht aus der Antwort abgerufen werden."
-failedToFetchApiKey = "API-Schlüssel konnte nicht abgerufen werden."
-apiKeyRefreshed = "API-Schlüssel aktualisiert"
-apiKeyRefreshedBody = "Ihr API-Schlüssel wurde erfolgreich aktualisiert."
-failedToRefreshApiKey = "API-Schlüssel konnte nicht aktualisiert werden."
+apiKeyErrorTitle = "API Key Error"
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToCreateApiKey = "Failed to create API key."
+failedToFetchApiKey = "Failed to fetch API key."
+failedToRefreshApiKey = "Failed to refresh API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
 
 [AddAttachmentsRequest]
 attachments = "Anhänge auswählen"
@@ -5346,7 +5443,7 @@ selectedFiles = "Ausgewählte Dateien"
 submit = "Anhänge hinzufügen"
 
 [AddAttachmentsRequest.tooltip.header]
-title = "Über „Anhänge hinzufügen“"
+title = "Über \"Anhänge hinzufügen\""
 
 [AddAttachmentsRequest.tooltip.description]
 title = "Funktion"
@@ -5355,7 +5452,7 @@ title = "Funktion"
 title = "Anhangs-Ergebnisse"
 
 [AddAttachmentsRequest.error]
-failed = "Operation „Anhänge hinzufügen“ fehlgeschlagen"
+failed = "Operation \"Anhänge hinzufügen\" fehlgeschlagen"
 
 [addAttachments.error]
 failed = "Beim Hinzufügen von Anhängen zur PDF ist ein Fehler aufgetreten."
@@ -6473,7 +6570,6 @@ pen = "Pen"
 polygon = "Polygon"
 rectangle = "Rectangle"
 redo = "Redo"
-saveChanges = "Save Changes"
 saveFailed = "Unable to save copy"
 saveReady = "Download ready"
 savingCopy = "Preparing download..."
@@ -6496,10 +6592,16 @@ title = "Annotate"
 underline = "Underline"
 undo = "Undo"
 unsupportedType = "This annotation type is not fully supported for editing."
+saveChanges = "Save Changes"
 
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"
 
 [mobileScanner]
 addToBatch = "Add to Batch"
@@ -6555,8 +6657,3 @@ pollingError = "Error checking for files"
 sessionCreateError = "Failed to create session"
 sessionId = "Session ID"
 title = "Upload from Mobile"
-
-[textAlign]
-center = "Center"
-left = "Left"
-right = "Right"

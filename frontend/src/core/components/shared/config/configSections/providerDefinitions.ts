@@ -1,8 +1,10 @@
-export type ProviderType = 'oauth2' | 'saml2';
+import { useTranslation } from 'react-i18next';
+
+export type ProviderType = 'oauth2' | 'saml2' | 'telegram';
 
 export interface ProviderField {
   key: string;
-  type: 'text' | 'password' | 'switch' | 'textarea';
+  type: 'text' | 'password' | 'switch' | 'textarea' | 'number' | 'tags';
   label: string;
   description: string;
   placeholder?: string;
@@ -231,7 +233,7 @@ export const SMTP_PROVIDER: Provider = {
     },
     {
       key: 'port',
-      type: 'text',
+      type: 'number',
       label: 'SMTP Port',
       description: 'The port number for SMTP connection (typically 25, 465, or 587)',
       placeholder: '587',
@@ -257,6 +259,216 @@ export const SMTP_PROVIDER: Provider = {
       placeholder: 'noreply@example.com',
     },
   ],
+};
+const useTelegramProvider = (): Provider => {
+  const { t } = useTranslation();
+
+  return {
+    id: 'telegram',
+    name: t('admin.settings.telegram.title', 'Telegram Bot'),
+    icon: 'send-rounded',
+    type: 'telegram',
+    scope: t(
+      'admin.settings.telegram.description',
+      'Configure Telegram bot connectivity, access controls, and feedback behavior.'
+    ),
+    fields: [
+      {
+        key: 'enabled',
+        type: 'switch',
+        label: t('admin.settings.telegram.enabled.label', 'Enable Telegram Bot'),
+        description: t(
+          'admin.settings.telegram.enabled.description',
+          'Allow users to interact with Stirling PDF through your configured Telegram bot.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'botUsername',
+        type: 'text',
+        label: t('admin.settings.telegram.botUsername.label', 'Bot Username'),
+        description: t(
+          'admin.settings.telegram.botUsername.description',
+          'The public username of your Telegram bot.'
+        ),
+        placeholder: 'my_pdf_bot',
+      },
+      {
+        key: 'botToken',
+        type: 'password',
+        label: t('admin.settings.telegram.botToken.label', 'Bot Token'),
+        description: t(
+          'admin.settings.telegram.botToken.description',
+          'API token provided by BotFather for your Telegram bot.'
+        ),
+        placeholder: '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11',
+      },
+      {
+        key: 'pipelineInboxFolder',
+        type: 'text',
+        label: t('admin.settings.telegram.pipelineInboxFolder.label', 'Inbox Folder'),
+        description: t(
+          'admin.settings.telegram.pipelineInboxFolder.description',
+          'Folder under the pipeline directory where incoming Telegram files are stored.'
+        ),
+        placeholder: 'telegram',
+      },
+      {
+        key: 'customFolderSuffix',
+        type: 'switch',
+        label: t('admin.settings.telegram.customFolderSuffix.label', 'Use Custom Folder Suffix'),
+        description: t(
+          'admin.settings.telegram.customFolderSuffix.description',
+          'Append the chat ID to incoming file folders to isolate uploads per chat.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'enableAllowUserIDs',
+        type: 'switch',
+        label: t('admin.settings.telegram.enableAllowUserIDs.label', 'Allow Specific User IDs'),
+        description: t(
+          'admin.settings.telegram.enableAllowUserIDs.description',
+          'When enabled, only listed user IDs can use the bot.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'allowUserIDs',
+        type: 'tags',
+        label: t('admin.settings.telegram.allowUserIDs.label', 'Allowed User IDs'),
+        description: t(
+          'admin.settings.telegram.allowUserIDs.description',
+          'Enter Telegram user IDs allowed to interact with the bot.'
+        ),
+        placeholder: t('admin.settings.telegram.allowUserIDs.placeholder', 'Add user ID and press enter'),
+        defaultValue: [],
+      },
+      {
+        key: 'enableAllowChannelIDs',
+        type: 'switch',
+        label: t('admin.settings.telegram.enableAllowChannelIDs.label', 'Allow Specific Channel IDs'),
+        description: t(
+          'admin.settings.telegram.enableAllowChannelIDs.description',
+          'When enabled, only listed channel IDs can use the bot.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'allowChannelIDs',
+        type: 'tags',
+        label: t('admin.settings.telegram.allowChannelIDs.label', 'Allowed Channel IDs'),
+        description: t(
+          'admin.settings.telegram.allowChannelIDs.description',
+          'Enter Telegram channel IDs allowed to interact with the bot.'
+        ),
+        placeholder: t('admin.settings.telegram.allowChannelIDs.placeholder', 'Add channel ID and press enter'),
+        defaultValue: [],
+      },
+      {
+        key: 'processingTimeoutSeconds',
+        type: 'number',
+        label: t(
+          'admin.settings.telegram.processingTimeoutSeconds.label',
+          'Processing Timeout (seconds)'
+        ),
+        description: t(
+          'admin.settings.telegram.processingTimeoutSeconds.description',
+          'Maximum time to wait for a processing job before reporting an error.'
+        ),
+        defaultValue: 180,
+      },
+      {
+        key: 'pollingIntervalMillis',
+        type: 'number',
+        label: t('admin.settings.telegram.pollingIntervalMillis.label', 'Polling Interval (ms)'),
+        description: t(
+          'admin.settings.telegram.pollingIntervalMillis.description',
+          'Interval between checks for new Telegram updates.'
+        ),
+        defaultValue: 2000,
+      },
+      {
+        key: 'feedback.general.enabled',
+        type: 'switch',
+        label: t('admin.settings.telegram.feedback.general.enabled.label', 'Enable Feedback'),
+        description: t(
+          'admin.settings.telegram.feedback.general.enabled.description',
+          'Control whether the bot sends feedback messages at all.'
+        ),
+        defaultValue: true,
+      },
+      {
+        key: 'feedback.channel.noValidDocument',
+        type: 'switch',
+        label: t(
+          'admin.settings.telegram.feedback.channel.noValidDocument.label',
+          'Show "No valid document" (Channel)'
+        ),
+        description: t(
+          'admin.settings.telegram.feedback.channel.noValidDocument.description',
+          'Suppress the no valid document response for channel uploads.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'feedback.channel.errorProcessing',
+        type: 'switch',
+        label: t(
+          'admin.settings.telegram.feedback.channel.errorProcessing.label',
+          'Show processing errors (Channel)'
+        ),
+        description: t(
+          'admin.settings.telegram.feedback.channel.errorProcessing.description',
+          'Send processing error messages to channels.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'feedback.channel.errorMessage',
+        type: 'switch',
+        label: t(
+          'admin.settings.telegram.feedback.channel.errorMessage.label',
+          'Show error messages (Channel)'
+        ),
+        description: t(
+          'admin.settings.telegram.feedback.channel.errorMessage.description',
+          'Show detailed error messages for channels.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'feedback.user.noValidDocument',
+        type: 'switch',
+        label: t('admin.settings.telegram.feedback.user.noValidDocument.label', 'Show "No valid document" (User)'),
+        description: t(
+          'admin.settings.telegram.feedback.user.noValidDocument.description',
+          'Suppress the no valid document response for user uploads.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'feedback.user.errorProcessing',
+        type: 'switch',
+        label: t('admin.settings.telegram.feedback.user.errorProcessing.label', 'Show processing errors (User)'),
+        description: t(
+          'admin.settings.telegram.feedback.user.errorProcessing.description',
+          'Send processing error messages to users.'
+        ),
+        defaultValue: false,
+      },
+      {
+        key: 'feedback.user.errorMessage',
+        type: 'switch',
+        label: t('admin.settings.telegram.feedback.user.errorMessage.label', 'Show error messages (User)'),
+        description: t(
+          'admin.settings.telegram.feedback.user.errorMessage.description',
+          'Show detailed error messages for users.'
+        ),
+        defaultValue: false,
+      },
+    ],
+  };
 };
 
 export const SAML2_PROVIDER: Provider = {
@@ -352,4 +564,14 @@ export const SAML2_PROVIDER: Provider = {
   ],
 };
 
-export const ALL_PROVIDERS = [...OAUTH2_PROVIDERS, GENERIC_OAUTH2_PROVIDER, SAML2_PROVIDER, SMTP_PROVIDER];
+export const useAllProviders = (): Provider[] => {
+  const telegramProvider = useTelegramProvider();
+
+  return [
+    ...OAUTH2_PROVIDERS,
+    GENERIC_OAUTH2_PROVIDER,
+    SAML2_PROVIDER,
+    SMTP_PROVIDER,
+    telegramProvider,
+  ];
+};
