@@ -79,4 +79,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "SELECT COUNT(u) FROM User u WHERE u.ssoProvider IS NOT NULL "
                     + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
     long countSsoUsers();
+
+    @Query(
+            "SELECT COUNT(u) FROM User u JOIN u.settings settings "
+                    + "WHERE KEY(settings) = :key AND settings = :value")
+    long countUsersBySetting(@Param("key") String key, @Param("value") String value);
 }

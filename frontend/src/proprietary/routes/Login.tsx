@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Text, Stack, Alert, Modal, TextInput, Button } from '@mantine/core';
+import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -313,17 +313,6 @@ export default function Login() {
     }
   };
 
-  const handleMfaModalClose = () => {
-    setRequiresMfa(false);
-    setMfaCode('');
-    setError(null);
-    setShowEmailForm(true);
-  };
-
-  const handleMfaSubmit = () => {
-    void signInWithEmail();
-  };
-
   // Forgot password handler (currently unused, reserved for future implementation)
   // const handleForgotPassword = () => {
   //   navigate('/auth/reset');
@@ -350,50 +339,6 @@ export default function Login() {
       )}
 
       <ErrorMessage error={error} />
-
-      <Modal
-        opened={requiresMfa}
-        onClose={handleMfaModalClose}
-        title={t('login.mfaPromptTitle', 'Two-factor authentication')}
-        centered
-      >
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            handleMfaSubmit();
-          }}
-        >
-          <Stack gap="md">
-            <Text size="sm">
-              {t('login.mfaPromptBody', 'Enter the authentication code from your authenticator app to continue.')}
-            </Text>
-            <TextInput
-              id="mfaCode"
-              label={t('login.mfaCode', 'Authentication code')}
-              type="text"
-              name="mfaCode"
-              autoComplete="one-time-code"
-              placeholder={t('login.enterMfaCode', 'Enter 6-digit code')}
-              value={mfaCode}
-              inputMode="numeric"
-              onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              pattern="[0-9]*"
-              maxLength={6}
-              autoFocus
-            />
-            <Button
-              type="submit"
-              loading={isSigningIn}
-              disabled={!mfaCode.trim()}
-              fullWidth
-            >
-              {isSigningIn
-                ? (t('login.verifyingMfa', 'Verifying...'))
-                : (t('login.verifyMfa', 'Verify code'))}
-            </Button>
-          </Stack>
-        </form>
-      </Modal>
 
       {/* OAuth first */}
       <OAuthButtons
@@ -430,6 +375,10 @@ export default function Login() {
             password={password}
             setEmail={setEmail}
             setPassword={setPassword}
+            mfaCode={mfaCode}
+            setMfaCode={setMfaCode}
+            showMfaField={requiresMfa || Boolean(mfaCode)}
+            requiresMfa={requiresMfa}
             onSubmit={signInWithEmail}
             isSubmitting={isSigningIn}
             submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}

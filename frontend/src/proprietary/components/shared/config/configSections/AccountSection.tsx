@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Group, Modal, Paper, PasswordInput, Stack, Text, TextInput } from '@mantine/core';
+import { Alert, Button, Box, Group, Modal, Paper, PasswordInput, Stack, Text, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert as showToast } from '@app/components/toast';
@@ -425,7 +425,16 @@ const AccountSection: React.FC = () => {
             </Text>
             {mfaSetupData && (
               <Stack gap="sm" align="center">
-                <QRCodeSVG value={mfaSetupData.otpauthUri} size={180} />
+                <Box
+                  style={{
+                    padding: '1.5rem',
+                    background: 'white',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  <QRCodeSVG value={mfaSetupData.otpauthUri} size={180} />
+                </Box>
                 <Text size="sm" c="dimmed">
                   {t('account.mfa.manualKey', 'Manual setup key')}: <strong>{mfaSetupData.secret}</strong>
                 </Text>
@@ -441,12 +450,14 @@ const AccountSection: React.FC = () => {
               label={t('account.mfa.codeLabel', 'Authentication code')}
               placeholder={t('account.mfa.codePlaceholder', 'Enter 6-digit code')}
               value={mfaSetupCode}
-              onChange={(event) => setMfaSetupCode(normalizeMfaCode(event.currentTarget.value))}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMfaSetupCode(normalizeMfaCode(event.currentTarget.value))}
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={6}
+              minLength={6}
               autoComplete="one-time-code"
               required
+              autoFocus
             />
             <Group justify="flex-end" gap="sm">
               <Button variant="default" onClick={handleCloseMfaSetupModal}>
@@ -476,12 +487,14 @@ const AccountSection: React.FC = () => {
               label={t('account.mfa.codeLabel', 'Authentication code')}
               placeholder={t('account.mfa.codePlaceholder', 'Enter 6-digit code')}
               value={mfaDisableCode}
-              onChange={(event) => setMfaDisableCode(normalizeMfaCode(event.currentTarget.value))}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMfaDisableCode(normalizeMfaCode(event.currentTarget.value))}
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={6}
+              minLength={6}
               autoComplete="one-time-code"
               required
+              autoFocus
             />
             <Group justify="flex-end" gap="sm">
               <Button variant="default" onClick={handleCloseMfaDisableModal}>
@@ -518,7 +531,7 @@ const AccountSection: React.FC = () => {
               label={t('changeCreds.newUsername', 'New Username')}
               placeholder={t('changeCreds.newUsername', 'New Username')}
               value={newUsername}
-              onChange={(event) => setNewUsername(event.currentTarget.value)}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setNewUsername(event.currentTarget.value)}
               required
             />
 
@@ -526,7 +539,7 @@ const AccountSection: React.FC = () => {
               label={t('changeCreds.oldPassword', 'Current Password')}
               placeholder={t('changeCreds.oldPassword', 'Current Password')}
               value={currentPasswordForUsername}
-              onChange={(event) => setCurrentPasswordForUsername(event.currentTarget.value)}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCurrentPasswordForUsername(event.currentTarget.value)}
               required
             />
 
