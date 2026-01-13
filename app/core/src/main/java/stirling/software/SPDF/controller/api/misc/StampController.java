@@ -277,7 +277,7 @@ public class StampController {
 
         // Split the stampText into multiple lines
         String[] lines =
-                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
+                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(processedStampText);
 
         // Calculate dynamic line height based on font ascent and descent
         float ascent = font.getFontDescriptor().getAscent();
