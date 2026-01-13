@@ -363,6 +363,7 @@ advanced = "Erweitert"
 title = "Sicherheit & Authentifizierung"
 security = "Sicherheit"
 connections = "Verbindungen"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Lizenzierung & Analytics"
@@ -4557,11 +4558,10 @@ description = "Neue Benutzerregistrierung über SAML2 verhindern"
 [admin.settings.connections.mobileScanner]
 description = "Allow users to upload files from mobile devices by scanning a QR code"
 enable = "Enable QR Code Upload"
-label = "Mobile Phone Upload"
-link = "Configure in System Settings"
-note = "Note: Requires Frontend URL to be configured. "
 imageResolutionFull = "Full (Original Size)"
 imageResolutionReduced = "Reduced (Max 1200px)"
+label = "Mobile Phone Upload"
+link = "Configure in System Settings"
 mobileScannerConvertToPdf = "Convert Images to PDF"
 mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
 mobileScannerImageResolution = "Image Resolution"
@@ -4570,9 +4570,106 @@ mobileScannerPageFormat = "Page Format"
 mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
 mobileScannerStretchToFit = "Stretch to Fit"
 mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+note = "Note: Requires Frontend URL to be configured. "
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
 pageFormatLetter = "Letter (8.5×11in)"
+
+[admin.settings.telegram]
+title = "Telegram-Bot"
+description = "Telegram-Bot-Anbindung, Zugriffskontrollen und Feedback-Verhalten konfigurieren."
+
+[admin.settings.telegram.enabled]
+label = "Telegram-Bot aktivieren"
+description = "Erlaubt Benutzern die Interaktion mit Stirling PDF über den konfigurierten Telegram-Bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot-Benutzername"
+description = "Der öffentliche Benutzername Ihres Telegram-Bots."
+
+[admin.settings.telegram.botToken]
+label = "Bot-Token"
+description = "API-Token, das von BotFather für Ihren Telegram-Bot bereitgestellt wird."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Posteingangsordner"
+description = "Ordner innerhalb des Pipeline-Verzeichnisses, in dem eingehende Telegram-Dateien gespeichert werden."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Benutzerdefinierten Ordner-Suffix verwenden"
+description = "Hängt die Chat-ID an eingehende Dateiordner an, um Uploads pro Chat zu isolieren."
+
+[admin.settings.telegram.accessControl]
+title = "Zugriffskontrolle"
+description = "Einschränken, welche Benutzer oder Kanäle mit dem Bot interagieren dürfen."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Bestimmte Benutzer-IDs erlauben"
+description = "Wenn aktiviert, dürfen nur aufgeführte Benutzer-IDs den Bot verwenden."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Erlaubte Benutzer-IDs"
+description = "Telegram-Benutzer-IDs, die mit dem Bot interagieren dürfen."
+placeholder = "Benutzer-ID hinzufügen und Enter drücken"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Bestimmte Kanal-IDs erlauben"
+description = "Wenn aktiviert, dürfen nur aufgeführte Kanal-IDs den Bot verwenden."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Erlaubte Kanal-IDs"
+description = "Telegram-Kanal-IDs, die mit dem Bot interagieren dürfen."
+placeholder = "Kanal-ID hinzufügen und Enter drücken"
+
+[admin.settings.telegram.processing]
+title = "Verarbeitung"
+description = "Polling-Intervalle und Verarbeitungs-Timeouts für Telegram-Uploads steuern."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Verarbeitungs-Timeout (Sekunden)"
+description = "Maximale Wartezeit für einen Verarbeitungsjob, bevor ein Fehler gemeldet wird."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling-Intervall (ms)"
+description = "Intervall zwischen Prüfungen auf neue Telegram-Updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback-Nachrichten"
+description = "Festlegen, wann der Bot Feedback an Benutzer und Kanäle senden soll."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Feedback aktivieren"
+description = "Legt fest, ob der Bot überhaupt Feedback-Nachrichten sendet."
+
+[admin.settings.telegram.feedback.channel]
+title = "Kanal-Feedback-Regeln"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "\"Kein gültiges Dokument\" einblenden (Kanal)"
+description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Kanal-Uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Verarbeitungsfehler einblenden (Kanal)"
+description = "Sendet Verarbeitungsfehlermeldungen an Kanäle senden."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Fehlermeldungen einblenden (Kanal)"
+description = "Detaillierte Fehlermeldungen für Kanäle einblenden."
+
+[admin.settings.telegram.feedback.user]
+title = "Benutzer-Feedback-Regeln"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "\"Kein gültiges Dokument\" einblenden (Benutzer)"
+description = "Sendet die Meldung \"Kein gültiges Dokument\" bei Benutzer-Uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Verarbeitungsfehler einblenden (Benutzer)"
+description = "Sendet Verarbeitungsfehlermeldungen an Benutzer."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Fehlermeldungen einblenden (Benutzer)"
+description = "Detaillierte Fehlermeldungen für Benutzer einblenden."
 
 [admin.settings.database]
 title = "Datenbank"
@@ -6548,15 +6645,15 @@ validating = "Validating session..."
 
 [mobileUpload]
 connected = "Mobile device connected"
-description = "Scan this QR code with your mobile device to upload photos directly to this page."
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
 error = "Connection Error"
 expiryWarning = "Session Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
 filesReceived = "{{count}} file(s) received"
-instructions = "Open the camera app on your phone and scan this code. Files will be transferred directly between devices."
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
 pollingError = "Error checking for files"
 sessionCreateError = "Failed to create session"
 sessionId = "Session ID"
 title = "Upload from Mobile"
-descriptionNoConvert = "Scan to upload photos from your mobile device."
-instructionsNoConvert = "Scan with your phone camera to upload files."
