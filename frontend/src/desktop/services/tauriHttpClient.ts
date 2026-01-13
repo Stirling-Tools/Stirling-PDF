@@ -87,7 +87,7 @@ class TauriHttpClient {
     }
   }
 
-  private createError(message: string, config?: TauriHttpRequestConfig, code?: string, response?: TauriHttpResponse): TauriHttpError {
+  private createError(message: string, config?: TauriHttpRequestConfig, code?: string, response?: TauriHttpResponse, originalError?: unknown): TauriHttpError {
     const error = new Error(message) as TauriHttpError;
     error.config = config;
     error.code = code;
@@ -99,6 +99,21 @@ class TauriHttpClient {
       config: error.config,
       code: error.code,
     });
+
+    // Log detailed error information for debugging
+    console.error('[TauriHttpClient] Error details:', {
+      message,
+      code,
+      url: config?.url,
+      method: config?.method,
+      status: response?.status,
+      originalError: originalError instanceof Error ? {
+        name: originalError.name,
+        message: originalError.message,
+        stack: originalError.stack,
+      } : originalError,
+    });
+
     return error;
   }
 
@@ -224,10 +239,38 @@ class TauriHttpClient {
 
       // Check for HTTP errors
       if (!response.ok) {
+        // Create more descriptive error messages based on status code
+        let errorMessage = `Request failed with status code ${response.status}`;
+        let errorCode = 'ERR_BAD_REQUEST';
+
+        if (response.status === 401) {
+          errorMessage = 'Authentication failed - Invalid credentials';
+          errorCode = 'ERR_UNAUTHORIZED';
+        } else if (response.status === 403) {
+          errorMessage = 'Access denied - Insufficient permissions';
+          errorCode = 'ERR_FORBIDDEN';
+        } else if (response.status === 404) {
+          errorMessage = 'Endpoint not found - Server may not support this operation';
+          errorCode = 'ERR_NOT_FOUND';
+        } else if (response.status === 500) {
+          errorMessage = 'Internal server error - Please check server logs';
+          errorCode = 'ERR_SERVER_ERROR';
+        } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+          errorMessage = 'Server unavailable or timeout - Please try again';
+          errorCode = 'ERR_SERVICE_UNAVAILABLE';
+        }
+
+        console.error(`[TauriHttpClient] HTTP Error ${response.status}:`, {
+          url,
+          method,
+          status: response.status,
+          statusText: response.statusText,
+        });
+
         const error = this.createError(
-          `Request failed with status code ${response.status}`,
+          errorMessage,
           finalConfig,
-          'ERR_BAD_REQUEST',
+          errorCode,
           httpResponse
         );
 
@@ -258,12 +301,66 @@ class TauriHttpClient {
         throw error;
       }
 
-      // Create new error for network/other failures
-      const errorMessage = error instanceof Error ? error.message : 'Network Error';
+      // Create detailed error messages for network/other failures
+      let errorMessage = 'Network Error';
+      let errorCode = 'ERR_NETWORK';
+
+      if (error instanceof Error) {
+        const errMsg = error.message.toLowerCase();
+
+        // Connection refused - server not running or wrong port
+        if (errMsg.includes('connection refused') || errMsg.includes('econnrefused')) {
+          errorMessage = `Unable to connect to server at ${url}. Server may not be running or port is incorrect.`;
+          errorCode = 'ERR_CONNECTION_REFUSED';
+        }
+        // Timeout - server too slow or unreachable
+        else if (errMsg.includes('timeout') || errMsg.includes('timed out')) {
+          errorMessage = `Connection timed out to ${url}. Server is not responding or is too slow.`;
+          errorCode = 'ERR_TIMEOUT';
+        }
+        // DNS failure - invalid domain or network issue
+        else if (errMsg.includes('getaddrinfo') || errMsg.includes('dns') || errMsg.includes('not found') || errMsg.includes('enotfound')) {
+          errorMessage = `Cannot resolve server address: ${url}. Please check the URL is correct.`;
+          errorCode = 'ERR_DNS_FAILURE';
+        }
+        // SSL/TLS errors - certificate issues
+        else if (errMsg.includes('ssl') || errMsg.includes('tls') || errMsg.includes('certificate') || errMsg.includes('cert')) {
+          errorMessage = `SSL/TLS certificate error for ${url}. Server may have invalid or self-signed certificate.`;
+          errorCode = 'ERR_SSL_ERROR';
+        }
+        // Protocol errors - wrong protocol (http vs https)
+        else if (errMsg.includes('protocol') || errMsg.includes('https') || errMsg.includes('http')) {
+          errorMessage = `Protocol error connecting to ${url}. Try using https:// instead of http:// or vice versa.`;
+          errorCode = 'ERR_PROTOCOL';
+        }
+        // CORS errors
+        else if (errMsg.includes('cors')) {
+          errorMessage = `CORS error connecting to ${url}. Server may not allow requests from this application.`;
+          errorCode = 'ERR_CORS';
+        }
+        // Generic error with original message
+        else {
+          errorMessage = `Network error: ${error.message}`;
+          errorCode = 'ERR_NETWORK';
+        }
+
+        console.error('[TauriHttpClient] Network error:', {
+          url,
+          method,
+          errorType: errorCode,
+          originalMessage: error.message,
+          stack: error.stack,
+        });
+      } else {
+        console.error('[TauriHttpClient] Unknown error type:', error);
+      }
+
       const httpError = this.createError(
         errorMessage,
         finalConfig,
-        'ERR_NETWORK'
+        errorCode,
+        undefined,
+        error
       );
 
       // Run error interceptors

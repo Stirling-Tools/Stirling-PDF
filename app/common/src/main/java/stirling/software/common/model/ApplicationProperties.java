@@ -419,6 +419,15 @@ public class ApplicationProperties {
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
         private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
+        private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
+
+        @Data
+        public static class MobileScannerSettings {
+            private boolean convertToPdf = true; // Whether to automatically convert images to PDF
+            private String imageResolution = "full"; // Options: "full", "reduced"
+            private String pageFormat = "A4"; // Options: "keep", "A4", "letter"
+            private boolean stretchToFit = false; // Whether to stretch image to fill page
+        }
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();

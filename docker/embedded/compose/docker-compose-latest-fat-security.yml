@@ -35,4 +35,4 @@ services:
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
       STORAGE_LOCAL_BASEPATH: /configs/storage
-    restart: on-failure:5
+    restart: unless-stopped
