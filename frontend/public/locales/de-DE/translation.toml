@@ -438,6 +438,13 @@ currentVersion = "Aktuelle Version"
 latestVersion = "Neueste Version"
 checkForUpdates = "Nach Updates suchen"
 viewDetails = "Details anzeigen"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
+title = "Version Information"
 
 [settings.hotkeys]
 title = "Tastenkürzel"
@@ -3843,6 +3850,11 @@ failed = "Ein Fehler ist beim Komprimieren der PDF aufgetreten."
 _value = "Kompressionseinstellungen"
 1 = "1-3 PDF-Komprimierung, </br> 4-6 Leichte Bildkomprimierung, </br> 7-9 Intensive Bildkomprimierung verringert die Bildqualität dramatisch"
 
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+
 [compress.lineArt]
 description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
 detailLevel = "Detail level"
@@ -4209,6 +4221,8 @@ loginRequired = "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu
 restarting = "Server wird neu gestartet"
 restartingMessage = "Der Server wird neu gestartet. Bitte einen Moment warten..."
 restartError = "Server konnte nicht neu gestartet werden. Bitte manuell neu starten."
+error = "Failed to save settings"
+success = "Settings saved successfully"
 
 [admin.settings.unsavedChanges]
 title = "Ungespeicherte Änderungen"
@@ -4465,6 +4479,19 @@ connect = "Verbinden"
 disconnect = "Trennen"
 disconnected = "Anbieter erfolgreich getrennt"
 disconnectError = "Anbieter konnte nicht getrennt werden"
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO-Autoanmeldung"
@@ -4536,9 +4563,22 @@ description = "Neue Benutzerregistrierung über SAML2 verhindern"
 [admin.settings.connections.mobileScanner]
 description = "Allow users to upload files from mobile devices by scanning a QR code"
 enable = "Enable QR Code Upload"
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
 label = "Mobile Phone Upload"
 link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 note = "Note: Requires Frontend URL to be configured. "
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.telegram]
 title = "Telegram-Bot"
@@ -5040,6 +5080,7 @@ sortByName = "Nach Name sortieren"
 sortBySize = "Nach Größe sortieren"
 mobileShort = "Mobile"
 mobileUpload = "Mobile Upload"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 
 [storage]
 temporaryNotice = "Dateien werden temporär in Ihrem Browser gespeichert und können automatisch gelöscht werden"
@@ -5387,6 +5428,15 @@ warning = "⚠️ Warnung: Diese Aktion wird neue API-Schlüssel generieren und 
 impact = "Alle Anwendungen oder Dienste, die derzeit diese Schlüssel verwenden, funktionieren nicht mehr, bis Sie sie mit den neuen Schlüsseln aktualisieren."
 confirmPrompt = "Sind Sie sicher, dass Sie fortfahren möchten?"
 confirmCta = "Schlüssel aktualisieren"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API-Schlüssel-Fehler"
+failedToCreateApiKey = "API-Schlüssel konnte nicht erstellt werden."
+failedToRetrieveApiKey = "API-Schlüssel konnte nicht aus der Antwort abgerufen werden."
+failedToFetchApiKey = "API-Schlüssel konnte nicht abgerufen werden."
+apiKeyRefreshed = "API-Schlüssel aktualisiert"
+apiKeyRefreshedBody = "Ihr API-Schlüssel wurde erfolgreich aktualisiert."
+failedToRefreshApiKey = "API-Schlüssel konnte nicht aktualisiert werden."
 
 [AddAttachmentsRequest]
 attachments = "Anhänge auswählen"
@@ -6240,6 +6290,7 @@ emptyUrl = "Bitte eine Server-URL eingeben"
 unreachable = "Verbindung zum Server konnte nicht hergestellt werden"
 testFailed = "Verbindungstest fehlgeschlagen"
 configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 
 [setup.server.error.securityDisabled]
 title = "Anmeldung nicht aktiviert"
@@ -6524,6 +6575,7 @@ pen = "Pen"
 polygon = "Polygon"
 rectangle = "Rectangle"
 redo = "Redo"
+saveChanges = "Save Changes"
 saveFailed = "Unable to save copy"
 saveReady = "Download ready"
 savingCopy = "Preparing download..."
@@ -6599,13 +6651,20 @@ validating = "Validating session..."
 
 [mobileUpload]
 connected = "Mobile device connected"
-description = "Scan this QR code with your mobile device to upload photos directly to this page."
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
 error = "Connection Error"
 expiryWarning = "Session Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
 filesReceived = "{{count}} file(s) received"
-instructions = "Open the camera app on your phone and scan this code. Files will be transferred directly between devices."
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
 pollingError = "Error checking for files"
 sessionCreateError = "Failed to create session"
 sessionId = "Session ID"
 title = "Upload from Mobile"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"

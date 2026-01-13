@@ -223,18 +223,23 @@ export class AuthService {
   }
 
   async login(serverUrl: string, username: string, password: string): Promise<UserInfo> {
-    try {
-      console.log('Logging in to:', serverUrl);
+    console.log(`[Desktop AuthService] 🔐 Starting login to: ${serverUrl}`);
+    console.log(`[Desktop AuthService] Username: ${username}`);
 
+    try {
       // Validate SaaS configuration if connecting to SaaS
       if (serverUrl === STIRLING_SAAS_URL) {
         if (!STIRLING_SAAS_URL) {
+          console.error('[Desktop AuthService] ❌ VITE_SAAS_SERVER_URL is not configured');
           throw new Error('VITE_SAAS_SERVER_URL is not configured');
         }
         if (!SUPABASE_KEY) {
+          console.error('[Desktop AuthService] ❌ VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
           throw new Error('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured');
         }
       }
+
+      console.log('[Desktop AuthService] Invoking Rust login command...');
 
       // Call Rust login command (bypasses CORS)
       const response = await invoke<LoginResponse>('login', {
@@ -247,21 +252,26 @@ export class AuthService {
 
       const { token, username: returnedUsername, email } = response;
 
-      console.log('[Desktop AuthService] Login successful, saving token...');
+      console.log('[Desktop AuthService] ✅ Login response received');
+      console.log(`[Desktop AuthService] Username from response: ${returnedUsername || username}`);
 
       // Save token to all storage locations
       try {
+        console.log('[Desktop AuthService] Saving token to storage...');
         await this.saveTokenEverywhere(token);
+        console.log('[Desktop AuthService] ✅ Token saved successfully');
       } catch (error) {
-        console.error('[Desktop AuthService] Failed to save token:', error);
+        console.error('[Desktop AuthService] ❌ Failed to save token:', error);
         throw new Error('Failed to save authentication token');
       }
 
       // Save user info to store
+      console.log('[Desktop AuthService] Saving user info...');
       await invoke('save_user_info', {
         username: returnedUsername || username,
         email,
       });
+      console.log('[Desktop AuthService] ✅ User info saved');
 
       const userInfo: UserInfo = {
         username: returnedUsername || username,
@@ -270,10 +280,60 @@ export class AuthService {
 
       this.setAuthStatus('authenticated', userInfo);
 
-      console.log('Login successful');
+      console.log('[Desktop AuthService] ✅ Login completed successfully');
       return userInfo;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('[Desktop AuthService] ❌ Login failed:', error);
+
+      // Provide more detailed error messages based on the error type
+      if (error instanceof Error) {
+        const errMsg = error.message.toLowerCase();
+
+        // Authentication errors
+        if (errMsg.includes('401') || errMsg.includes('unauthorized') || errMsg.includes('invalid credentials')) {
+          console.error('[Desktop AuthService] Authentication failed - invalid credentials');
+          this.setAuthStatus('unauthenticated', null);
+          throw new Error('Invalid username or password. Please check your credentials and try again.');
+        }
+        // Server not found or unreachable
+        else if (errMsg.includes('connection refused') || errMsg.includes('econnrefused')) {
+          console.error('[Desktop AuthService] Server connection refused');
+          this.setAuthStatus('unauthenticated', null);
+          throw new Error('Cannot connect to server. Please check the server URL and ensure the server is running.');
+        }
+        // Timeout
+        else if (errMsg.includes('timeout') || errMsg.includes('timed out')) {
+          console.error('[Desktop AuthService] Login request timed out');
+          this.setAuthStatus('unauthenticated', null);
+          throw new Error('Login request timed out. Please check your network connection and try again.');
+        }
+        // DNS failure
+        else if (errMsg.includes('getaddrinfo') || errMsg.includes('dns') || errMsg.includes('not found') || errMsg.includes('enotfound')) {
+          console.error('[Desktop AuthService] DNS resolution failed');
+          this.setAuthStatus('unauthenticated', null);
+          throw new Error('Cannot resolve server address. Please check the server URL is correct.');
+        }
+        // SSL/TLS errors
+        else if (errMsg.includes('ssl') || errMsg.includes('tls') || errMsg.includes('certificate') || errMsg.includes('cert')) {
+          console.error('[Desktop AuthService] SSL/TLS error');
+          this.setAuthStatus('unauthenticated', null);
+          throw new Error('SSL/TLS certificate error. Server may have an invalid or self-signed certificate.');
+        }
+        // 404 - endpoint not found
+        else if (errMsg.includes('404') || errMsg.includes('not found')) {
+          console.error('[Desktop AuthService] Login endpoint not found');
+          this.setAuthStatus('unauthenticated', null);
+          throw new Error('Login endpoint not found. Please ensure you are connecting to a valid Stirling PDF server.');
+        }
+        // 403 - security disabled
+        else if (errMsg.includes('403') || errMsg.includes('forbidden')) {
+          console.error('[Desktop AuthService] Login disabled on server');
+          this.setAuthStatus('unauthenticated', null);
+          throw new Error('Login is not enabled on this server. Please enable security mode (DOCKER_ENABLE_SECURITY=true).');
+        }
+      }
+
+      // Generic error fallback
       this.setAuthStatus('unauthenticated', null);
       throw error;
     }

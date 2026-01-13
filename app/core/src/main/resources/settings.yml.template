@@ -170,6 +170,11 @@ system:
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
   frontendUrl: "" # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
   enableMobileScanner: false # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
+  mobileScannerSettings:
+    convertToPdf: true # Automatically convert uploaded images to PDF format. If false, images are kept as-is.
+    imageResolution: full # Image resolution for mobile uploads: 'full' (original size) or 'reduced' (max 1200px on longest side). Only applies when convertToPdf is true.
+    pageFormat: A4 # Page format for converted PDFs: 'keep' (original image dimensions), 'A4' (A4 page size), or 'letter' (US Letter page size). Only applies when convertToPdf is true.
+    stretchToFit: false # Whether to stretch images to fill the entire page (may distort aspect ratio). If false, images are centered with preserved aspect ratio. Only applies when convertToPdf is true.
   serverCertificate:
     enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
     organizationName: Stirling-PDF # Organization name for generated certificates

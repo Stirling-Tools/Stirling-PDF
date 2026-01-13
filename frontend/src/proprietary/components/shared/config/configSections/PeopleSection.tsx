@@ -31,11 +31,13 @@ import { useNavigate } from 'react-router-dom';
 import UpdateSeatsButton from '@app/components/shared/UpdateSeatsButton';
 import { useLicense } from '@app/contexts/LicenseContext';
 import ChangeUserPasswordModal from '@app/components/shared/ChangeUserPasswordModal';
+import { useAuth } from '@app/auth/UseSession';
 
 export default function PeopleSection() {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { loginEnabled } = useLoginRequired();
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const { licenseInfo: globalLicenseInfo } = useLicense();
   const [users, setUsers] = useState<User[]>([]);
@@ -77,6 +79,7 @@ export default function PeopleSection() {
       ? t('workspace.people.license.noSlotsAvailable', 'No user slots available')
       : null;
 
+  const isCurrentUser = (user: User) => currentUser?.username === user.username;
 
   // Form state for edit user modal
   const [editForm, setEditForm] = useState({
@@ -463,7 +466,10 @@ export default function PeopleSection() {
             </Table.Tr>
           ) : (
             filteredUsers.map((user) => (
-              <Table.Tr key={user.id}>
+              <Table.Tr
+                key={user.id}
+                style={isCurrentUser(user) ? { backgroundColor: 'rgba(34, 139, 230, 0.08)' } : undefined}
+              >
                 <Table.Td>
                   <Group gap="xs" wrap="nowrap">
                     <Tooltip
@@ -577,13 +583,15 @@ export default function PeopleSection() {
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}>
-                          <Menu.Item
-                            leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />}
-                            onClick={() => openEditModal(user)}
-                            disabled={!loginEnabled}
-                          >
-                            {t('workspace.people.editRole')}
-                          </Menu.Item>
+                          {!isCurrentUser(user) && (
+                            <Menu.Item
+                              leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />}
+                              onClick={() => openEditModal(user)}
+                              disabled={!loginEnabled}
+                            >
+                              {t('workspace.people.editRole')}
+                            </Menu.Item>
+                          )}
                           <Menu.Item
                             leftSection={<LocalIcon icon="lock" width="1rem" height="1rem" />}
                             onClick={() => openChangePasswordModal(user)}
@@ -591,17 +599,23 @@ export default function PeopleSection() {
                           >
                             {t('workspace.people.changePassword.action', 'Change password')}
                           </Menu.Item>
-                          <Menu.Item
-                            leftSection={user.enabled ? <LocalIcon icon="person-off" width="1rem" height="1rem" /> : <LocalIcon icon="person-check" width="1rem" height="1rem" />}
-                            onClick={() => handleToggleEnabled(user)}
-                            disabled={!loginEnabled}
-                          >
-                            {user.enabled ? t('workspace.people.disable') : t('workspace.people.enable')}
-                          </Menu.Item>
-                          <Menu.Divider />
-                          <Menu.Item color="red" leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />} onClick={() => handleDeleteUser(user)} disabled={!loginEnabled}>
-                            {t('workspace.people.deleteUser')}
-                          </Menu.Item>
+                          {!isCurrentUser(user) && (
+                            <Menu.Item
+                              leftSection={user.enabled ? <LocalIcon icon="person-off" width="1rem" height="1rem" /> : <LocalIcon icon="person-check" width="1rem" height="1rem" />}
+                              onClick={() => handleToggleEnabled(user)}
+                              disabled={!loginEnabled}
+                            >
+                              {user.enabled ? t('workspace.people.disable') : t('workspace.people.enable')}
+                            </Menu.Item>
+                          )}
+                          {!isCurrentUser(user) && (
+                            <>
+                              <Menu.Divider />
+                              <Menu.Item color="red" leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />} onClick={() => handleDeleteUser(user)} disabled={!loginEnabled}>
+                                {t('workspace.people.deleteUser')}
+                              </Menu.Item>
+                            </>
+                          )}
                         </Menu.Dropdown>
                       </Menu>
                     </Group>
