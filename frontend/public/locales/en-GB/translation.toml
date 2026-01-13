@@ -4678,8 +4678,6 @@ description = "Automatically create user accounts on first SAML2 login"
 label = "Block Registration"
 description = "Prevent new user registration via SAML2"
 
-
-
 [admin.settings.telegram]
 title = "Telegram Bot"
 description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
