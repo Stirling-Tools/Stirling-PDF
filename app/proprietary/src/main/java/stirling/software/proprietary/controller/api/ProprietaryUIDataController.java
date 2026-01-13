@@ -173,7 +173,10 @@ public class ProprietaryUIDataController {
 
         OAUTH2 oauth = securityProps.getOauth2();
 
-        if (oauth != null && oauth.getEnabled()) {
+        // Only add OAuth2 providers if loginMethod allows it
+        if (oauth != null
+                && oauth.getEnabled()
+                && securityProps.isOauth2Active()) { // This checks loginMethod
             if (oauth.isSettingsValid()) {
                 String firstChar = String.valueOf(oauth.getProvider().charAt(0));
                 String clientName =
@@ -205,6 +208,7 @@ public class ProprietaryUIDataController {
         }
 
         SAML2 saml2 = securityProps.getSaml2();
+        // Only add SAML2 providers if loginMethod allows it
         if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
