@@ -37,7 +37,6 @@ import stirling.software.proprietary.service.SignatureService;
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class SignatureController {
 
     private final SignatureService signatureService;
