@@ -469,8 +469,6 @@ confirm = "Xác nhận mật khẩu mới"
 confirmPlaceholder = "Nhập lại mật khẩu mới"
 update = "Cập nhật mật khẩu"
 
-
-
 [settings.hotkeys]
 title = "Phím tắt"
 description = "Tùy chỉnh phím tắt để truy cập công cụ nhanh. Nhấp \"Change shortcut\" và nhấn một tổ hợp phím mới. Nhấn Esc để hủy."

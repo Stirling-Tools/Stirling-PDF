@@ -469,8 +469,6 @@ confirm = "Confirmez le nouveau mot de passe"
 confirmPlaceholder = "Saisissez de nouveau votre nouveau mot de passe"
 update = "Mettre à jour le mot de passe"
 
-
-
 [settings.hotkeys]
 title = "Raccourcis clavier"
 description = "Personnalisez les raccourcis clavier pour un accès rapide aux outils. Cliquez sur \"Modifier le raccourci\" et pressez une nouvelle combinaison de touches. Appuyez sur Échap pour annuler."

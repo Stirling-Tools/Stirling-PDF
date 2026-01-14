@@ -469,8 +469,6 @@ confirm = "确认新密码"
 confirmPlaceholder = "再次输入新密码"
 update = "更新密码"
 
-
-
 [settings.hotkeys]
 title = "键盘快捷键"
 description = "自定义键盘快捷键以快速访问工具。点击“更改快捷键”，然后按下新的组合键。按 Esc 取消。"
