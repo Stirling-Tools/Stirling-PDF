@@ -38,7 +38,7 @@ export function useAutomateOperation() {
     console.log(`✅ Automation completed, returning ${finalResults.length} files`);
     return {
       files: finalResults,
-      consumedAllInputs: false,
+      consumedAllInputs: true,
     };
   }, [toolRegistry]);
 
