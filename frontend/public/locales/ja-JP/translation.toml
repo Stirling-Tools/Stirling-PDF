@@ -469,8 +469,6 @@ confirm = "新しいパスワードの確認"
 confirmPlaceholder = "新しいパスワードを再入力"
 update = "パスワードを更新"
 
-
-
 [settings.hotkeys]
 title = "キーボードショートカット"
 description = "ツールにすばやくアクセスできるようキーボードショートカットをカスタマイズします。「Change shortcut」をクリックし、新しいキーの組み合わせを押してください。Escでキャンセルします。"

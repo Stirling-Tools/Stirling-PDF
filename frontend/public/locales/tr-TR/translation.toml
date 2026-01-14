@@ -469,8 +469,6 @@ confirm = "Yeni şifreyi onaylayın"
 confirmPlaceholder = "Yeni şifrenizi tekrar girin"
 update = "Şifreyi güncelle"
 
-
-
 [settings.hotkeys]
 title = "Klavye Kısayolları"
 description = "Araçlara hızlı erişim için klavye kısayollarını özelleştirin. \"Kısayolu değiştir\"e tıklayın ve yeni bir tuş kombinasyonuna basın. İptal etmek için Esc'ye basın."

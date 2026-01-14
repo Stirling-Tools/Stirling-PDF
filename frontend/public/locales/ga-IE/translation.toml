@@ -1,8 +1,11 @@
 unsavedChanges = "Tá athruithe gan sábháil agat ar do PDF."
+pendingRedactionsTitle = "Eagarthóireacht Neamhfheidhmithe"
+pendingRedactions = "Tá eagarthóireachtaí neamhfheidhmithe agat a chaillfear."
 areYouSure = "An bhfuil tú cinnte gur mian leat imeacht?"
 unsavedChangesTitle = "Athruithe Gan Sábháil"
 keepWorking = "Lean ort ag obair"
 discardChanges = "Caith uait & Fág"
+discardRedactions = "Scrios & Fág"
 applyAndContinue = "Sábháil & Fág"
 exportAndContinue = "Easpórtáil & Lean ar aghaidh"
 cancel = "Cealaigh"
@@ -128,9 +131,6 @@ undoQuotaError = "Ní féidir é a chealú: easpa spáis stórála"
 undoStorageError = "Cealú críochnaithe ach níorbh fhéidir roinnt comhad a shábháil chuig an stóras"
 undoSuccess = "Oibríocht cealaithe go rathúil"
 unsupported = "Gan tacaíocht"
-discardRedactions = "Scrios & Fág"
-pendingRedactions = "Tá eagarthóireachtaí neamhfheidhmithe agat a chaillfear."
-pendingRedactionsTitle = "Eagarthóireacht Neamhfheidhmithe"
 
 [toolPanel]
 placeholder = "Roghnaigh uirlis chun tosú"
@@ -1309,17 +1309,16 @@ optimizeForEbookPdf = "Optamaigh do léitheoirí ríomhleabhar"
 optimizeForEbookPdfDesc = "An PDF a bharrfheabhsú le haghaidh léamh ríomhleabhar (méid comhaid níos lú, rindreáil níos fearr ar ghléasanna eInk)"
 
 [convert.epubOptions]
-detectChapters = "Detect chapters"
-detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
 epubOptions = "PDF to eBook Options"
 epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
-kindleEink = "Kindle e-Ink (text optimized)"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
 outputFormat = "Output format"
 outputFormatDesc = "Choose the output format for the ebook"
 tabletPhone = "Tablet/Phone (with images)"
-targetDevice = "Target device"
-targetDeviceDesc = "Choose an output profile optimized for the reader device"
-
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "comhshó, img, jpg, pictiúr, grianghraf"
@@ -3316,26 +3315,35 @@ text = "Ní mheaitseálfar ach focail iomlána, ní meaitseálacha páirteacha. 
 title = "Tiontaigh go PDF-Image"
 text = "Athraíonn sé an PDF go PDF bunaithe ar íomhá tar éis eagarthóireachta. Cinntíonn sé seo go mbaintear téacs taobh thiar de bhoscaí eagarthóireachta go hiomlán agus nach féidir é a aisghabháil."
 
-[redact.tooltip.manual.apply]
-bullet1 = "Marcáil an oiread limistéar agus is gá sula gcuirtear i bhfeidhm é"
-bullet2 = "Cuirtear gach eagarthóireacht atá ar feitheamh i bhfeidhm ag an am céanna"
-bullet3 = "Ní féidir eagarthóireachtaí a chealú tar éis iad a chur i bhfeidhm"
-text = "Tar éis duit ábhar a mharcáil, cliceáil 'Cuir i bhFeidhm' chun na réimsí marcáilte go léir a cheilt go buan. Taispeánann an comhaireamh atá ar feitheamh cé mhéad cheilt atá réidh le cur i bhfeidhm."
-title = "Cuir Eagarthóireacht i bhFeidhm"
-
 [redact.tooltip.manual.header]
 title = "Rialuithe Eagarthóireachta Láimhe"
 
-[redact.tooltip.manual.markArea]
-text = "Tarraing limistéir dhronuilleogacha ar an PDF chun réigiúin a mharcáil le haghaidh eagarthóireachta. Úsáideach chun íomhánna, sínithe, nó cruthanna neamhrialta a cheilt."
-title = "Uirlis Limistéir Mharcáilte"
-
 [redact.tooltip.manual.markText]
-text = "Roghnaigh téacs go díreach ar an PDF chun é a mharcáil le haghaidh eagarthóireachta. Cliceáil agus tarraing chun téacs ar leith ar mhaith leat a chealú a aibhsiú."
 title = "Uirlis Téacs Marcála"
+text = "Roghnaigh téacs go díreach ar an PDF chun é a mharcáil le haghaidh eagarthóireachta. Cliceáil agus tarraing chun téacs ar leith ar mhaith leat a chealú a aibhsiú."
+
+[redact.tooltip.manual.markArea]
+title = "Uirlis Limistéir Mharcáilte"
+text = "Tarraing limistéir dhronuilleogacha ar an PDF chun réigiúin a mharcáil le haghaidh eagarthóireachta. Úsáideach chun íomhánna, sínithe, nó cruthanna neamhrialta a cheilt."
+
+[redact.tooltip.manual.apply]
+title = "Cuir Eagarthóireacht i bhFeidhm"
+text = "Tar éis duit ábhar a mharcáil, cliceáil 'Cuir i bhFeidhm' chun na réimsí marcáilte go léir a cheilt go buan. Taispeánann an comhaireamh atá ar feitheamh cé mhéad cheilt atá réidh le cur i bhfeidhm."
+bullet1 = "Marcáil an oiread limistéar agus is gá sula gcuirtear i bhfeidhm é"
+bullet2 = "Cuirtear gach eagarthóireacht atá ar feitheamh i bhfeidhm ag an am céanna"
+bullet3 = "Ní féidir eagarthóireachtaí a chealú tar éis iad a chur i bhfeidhm"
 
 [redact.manual]
+title = "Uirlisí Eagarthóireachta"
+instructions = "Roghnaigh téacs nó tarraing limistéir ar an PDF chun ábhar a mharcáil le haghaidh eagarthóireachta."
+markText = "Marcáil Téacs"
+markArea = "Marcáil Limistéar"
+pendingLabel = "Ar feitheamh:"
+applyWarning = "⚠️ Feidhmchlár buan, ní féidir é a chealú agus scriosfar na sonraí faoi."
+apply = "Cuir isteach"
+noMarks = "Gan aon mharcanna eagarthóireachta. Bain úsáid as na huirlisí thuas chun ábhar a mharcáil le haghaidh eagarthóireachta."
 header = "Eagarthóireacht Láimhe"
+controlsTitle = "Rialuithe Eagarthóireachta Láimhe"
 textBasedRedaction = "Eagarthóireacht Téacsbhunaithe"
 pageBasedRedaction = "Eagarthóireacht Leathanachbhunaithe"
 convertPDFToImageLabel = "Tiontaigh PDF go PDF-Íomhá (Úsáidtear é chun téacs taobh thiar den bhosca a bhaint)"
@@ -3355,15 +3363,6 @@ showLayers = "Taispeáin Sraitheanna (déchliceáil chun gach sraith a athshocr�
 colourPicker = "Roghnóir Datha"
 findCurrentOutlineItem = "Aimsigh mír reatha na himlíne"
 applyChanges = "Cuir Athruithe i bhFeidhm"
-apply = "Cuir isteach"
-applyWarning = "⚠️ Feidhmchlár buan, ní féidir é a chealú agus scriosfar na sonraí faoi."
-controlsTitle = "Rialuithe Eagarthóireachta Láimhe"
-instructions = "Roghnaigh téacs nó tarraing limistéir ar an PDF chun ábhar a mharcáil le haghaidh eagarthóireachta."
-markArea = "Marcáil Limistéar"
-markText = "Marcáil Téacs"
-noMarks = "Gan aon mharcanna eagarthóireachta. Bain úsáid as na huirlisí thuas chun ábhar a mharcáil le haghaidh eagarthóireachta."
-pendingLabel = "Ar feitheamh:"
-title = "Uirlisí Eagarthóireachta"
 
 [redact.manual.pageRedactionNumbers]
 title = "Leathanaigh"
@@ -4132,18 +4131,18 @@ language = "Teanga"
 toggleAnnotations = "Infheictheacht Anótálacha a Athrú"
 search = "Cuardaigh PDF"
 panMode = "Mód Pan"
+applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
 rotateLeft = "Rothlaigh ar Chlé"
 rotateRight = "Rothlaigh ar Dheis"
 toggleSidebar = "Barra Taobh a Athraigh"
 toggleBookmarks = "Leabharmharcanna a Athsholáthar"
 print = "Priontáil PDF"
+draw = "Tarraing"
+redact = "Leasaigh"
+exitRedaction = "Scoir Mód Eagarthóireachta"
+save = "Sábháil"
 downloadAll = "Íoslódáil Gach Rud"
 saveAll = "Sábháil Uile"
-applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
-draw = "Tarraing"
-exitRedaction = "Scoir Mód Eagarthóireachta"
-redact = "Leasaigh"
-save = "Sábháil"
 
 [textAlign]
 left = "Ar chlé"
@@ -4424,8 +4423,11 @@ label = "Inrite Unoconvert"
 description = "Conair chuig LibreOffice unoconvert le haghaidh tiontaithe doiciméad (fág folamh don réamhshocrú: /opt/venv/bin/unoconvert)"
 
 [admin.settings.general.frontendUrl]
-description = "URL bunúsach don tosaigh (m.sh., https://pdf.example.com). Úsáidtear é le haghaidh naisc cuireadh ríomhphoist agus uaslódálacha cóid QR soghluaiste. Fág folamh chun URL cúil a úsáid."
 label = "URL tosaigh"
+description = "URL bunúsach don tosaigh (m.sh., https://pdf.example.com). Úsáidtear é le haghaidh naisc cuireadh ríomhphoist agus uaslódálacha cóid QR soghluaiste. Fág folamh chun URL cúil a úsáid."
+
+[admin.settings.badge]
+clickToUpgrade = "Cliceáil chun sonraí an phlean a fheiceáil"
 
 [admin.settings.security]
 title = "Slándáil"
@@ -5059,33 +5061,6 @@ description = "Roghnaigh críochphointí aonair le díchumasú"
 [admin.settings.endpoints.groupsToRemove]
 label = "Grúpaí Deireadhphointe Díchumasaithe"
 description = "Roghnaigh grúpaí críochphointe le díchumasú"
-
-[admin.settings.badge]
-clickToUpgrade = "Cliceáil chun sonraí an phlean a fheiceáil"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 [fileUpload]
 selectFile = "Roghnaigh comhad"
@@ -6694,4 +6669,3 @@ upload = "Uaslódáil"
 batchImages = "Baisc"
 clearBatch = "Glan"
 uploadAll = "Uaslódáil Gach Rud"
-

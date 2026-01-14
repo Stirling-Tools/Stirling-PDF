@@ -469,8 +469,6 @@ confirm = "Confirmar nova palavra-passe"
 confirmPlaceholder = "Volte a introduzir a sua nova palavra-passe"
 update = "Atualizar palavra-passe"
 
-
-
 [settings.hotkeys]
 title = "Atalhos de teclado"
 description = "Personalize os atalhos de teclado para acesso rápido às ferramentas. Clique \"Alterar atalho\" e prima uma nova combinação de teclas. Prima Esc para cancelar."

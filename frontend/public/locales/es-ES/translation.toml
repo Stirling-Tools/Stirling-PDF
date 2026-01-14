@@ -469,8 +469,6 @@ confirm = "Confirmar nueva contraseña"
 confirmPlaceholder = "Vuelve a introducir tu nueva contraseña"
 update = "Actualizar contraseña"
 
-
-
 [settings.hotkeys]
 title = "Atajos de teclado"
 description = "Personaliza los atajos de teclado para acceder rápido a las herramientas. Haz clic en \"Cambiar atajo\" y pulsa una nueva combinación de teclas. Pulsa Esc para cancelar."

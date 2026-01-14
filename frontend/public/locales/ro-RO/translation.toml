@@ -469,8 +469,6 @@ confirm = "Confirmați parola nouă"
 confirmPlaceholder = "Reintroduceți parola nouă"
 update = "Actualizați parola"
 
-
-
 [settings.hotkeys]
 title = "Scurtături de tastatură"
 description = "Personalizați scurtăturile de tastatură pentru acces rapid la instrumente. Faceți clic pe \"Schimbă scurtătura\" și apăsați o nouă combinație de taste. Apăsați Esc pentru a anula."
