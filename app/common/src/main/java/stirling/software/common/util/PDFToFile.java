@@ -193,10 +193,7 @@ public class PDFToFile {
             List<String> command =
                     new ArrayList<>(
                             Arrays.asList(
-                                    "pdftohtml",
-                                    "-c",
-                                    tempInputFile.toString(),
-                                    outputBasename));
+                                    "pdftohtml", "-c", tempInputFile.toString(), outputBasename));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
