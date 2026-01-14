@@ -1,5 +1,17 @@
 package stirling.software.proprietary.controller.api;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
+import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
+import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.service.SignatureService;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,26 +19,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import stirling.software.common.configuration.InstallationPathConfig;
-import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
-import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
-import stirling.software.proprietary.security.service.UserService;
-import stirling.software.proprietary.service.SignatureService;
 
 /**
  * Controller for managing user signatures in proprietary/authenticated mode only. Requires user
@@ -37,7 +29,6 @@ import stirling.software.proprietary.service.SignatureService;
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class SignatureController {
 
     private final SignatureService signatureService;
