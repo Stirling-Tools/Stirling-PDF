@@ -340,6 +340,10 @@ advance = "Pokročilé"
 edit = "Zobraziť a upraviť"
 popular = "Populárne"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Predvoľby"
 
@@ -435,6 +439,25 @@ latestVersion = "Najnovšia verzia"
 checkForUpdates = "Skontrolovať aktualizácie"
 viewDetails = "Zobraziť podrobnosti"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "Klávesové skratky"
 description = "Prispôsobte klávesové skratky pre rýchly prístup k nástrojom. Kliknite na \"Zmeniť skratku\" a stlačte novú kombináciu klávesov. Stlačením Esc zrušíte."
@@ -488,11 +511,16 @@ low = "Nízka"
 title = "Zmeniť údaje"
 header = "Aktualizujte údaje svojho účtu"
 changePassword = "Používate predvolené prihlasovacie údaje. Prosím, zadajte nové heslo"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "Nové používateľské meno"
 oldPassword = "Aktuálne heslo"
 newPassword = "Nové heslo"
 confirmNewPassword = "Potvrďte nové heslo"
 submit = "Odoslať zmeny"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Nastavenia účtu"
@@ -707,6 +735,11 @@ desc = "Detegovať a rozdeliť skenované fotky na samostatné strany"
 tags = "podpis,podpísať"
 title = "Podpísať"
 desc = "Pridáva podpis do PDF kreslením, textom alebo obrázkom"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "zjednodušiť,odstrániť,interaktívne"
@@ -1245,6 +1278,21 @@ cbzOptions = "Možnosti CBZ na PDF"
 optimizeForEbook = "Optimalizovať PDF pre čítačky e‑kníh (používa Ghostscript)"
 cbzOutputOptions = "Možnosti PDF na CBZ"
 cbzDpi = "DPI pre vykresľovanie obrázkov"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "konverzia,img,jpg,obrázok,fotografia"
@@ -1361,6 +1409,11 @@ header = "Add attachments"
 add = "Pridať prílohu"
 remove = "Odstrániť prílohu"
 embed = "Vložiť prílohu"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add attachments"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "Uložené"
 label = "Nahrať obrázok podpisu"
 placeholder = "Vyberte súbor obrázka"
 hint = "Nahrajte obrázok vášho podpisu vo formáte PNG alebo JPG"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "Ako pridať podpis"
@@ -2350,6 +2407,11 @@ note = "Sploštenie odstráni interaktívne prvky z PDF, čím ich spraví needi
 [flatten.options.flattenOnlyForms]
 label = "Zploštiť iba formuláre"
 desc = "Sploštiť len polia formulára, ostatné interaktívne prvky ponechať"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Výsledky sploštenia"
@@ -2925,6 +2987,7 @@ header = "Orezať PDF"
 submit = "Odoslať"
 noFileSelected = "Vyberte súbor PDF a začnite orezávať"
 reset = "Obnoviť na celé PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Výber oblasti orezania"
@@ -3342,6 +3405,19 @@ placeholder = "Zadajte počet horizontálnych delení"
 label = "Vertikálne delenia"
 placeholder = "Zadajte počet vertikálnych delení"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "pečiatka, pridať obrázok, stred obrázka, vodotlač, PDF, vložiť, prispôsobiť"
 header = "Pečiatka PDF"
@@ -3703,6 +3779,19 @@ filesize = "Veľkosť súboru"
 [compress.grayscale]
 label = "Použiť odtiene šedej na kompresiu"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "Prehľad nastavení kompresie"
 
@@ -3720,6 +3809,10 @@ bullet2 = "Vyššie hodnoty znižujú veľkosť súboru"
 title = "Odtiene sivej"
 text = "Vyberte túto možnosť na prevod všetkých obrázkov na čiernobiele, čo môže výrazne zmenšiť veľkosť súboru, najmä pri skenovaných PDF alebo dokumentoch s množstvom obrázkov."
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "Pri komprimovaní PDF došlo k chybe."
 
@@ -3731,6 +3824,11 @@ failed = "Pri komprimovaní PDF došlo k chybe."
 [compress.selectText.1]
 _value = "Nastavenia kompresie"
 1 = "1–3 kompresia PDF,</br> 4–6 mierna kompresia obrázkov,</br> 7–9 silná kompresia obrázkov výrazne zníži kvalitu obrázkov"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Tento súbor je chránený heslom. Zadajte heslo:"
@@ -3971,23 +4069,92 @@ deleteSelected = "Odstrániť vybrané strany"
 closePdf = "Zavrieť PDF"
 exportAll = "Exportovať PDF"
 downloadSelected = "Stiahnuť vybrané súbory"
-downloadAll = "Stiahnuť všetko"
-saveAll = "Uložiť všetko"
+annotations = "Annotations"
+exportSelected = "Exportovať vybrané strany"
+saveChanges = "Uložiť zmeny"
 toggleTheme = "Prepnúť tému"
-toggleBookmarks = "Prepnúť záložky"
 language = "Jazyk"
+toggleAnnotations = "Prepnúť zobrazenie anotácií"
 search = "Hľadať v PDF"
 panMode = "Režim posunu"
 rotateLeft = "Otočiť doľava"
 rotateRight = "Otočiť doprava"
 toggleSidebar = "Prepnúť bočný panel"
-exportSelected = "Exportovať vybrané strany"
-toggleAnnotations = "Prepnúť zobrazenie anotácií"
-annotationMode = "Prepnúť režim anotácií"
+toggleBookmarks = "Prepnúť záložky"
 print = "Vytlačiť PDF"
-draw = "Kresliť"
-save = "Uložiť"
-saveChanges = "Uložiť zmeny"
+downloadAll = "Stiahnuť všetko"
+saveAll = "Uložiť všetko"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "Hľadať v PDF"
@@ -4038,12 +4205,20 @@ settings = "Nast."
 adminSettings = "Admin nast."
 allTools = "All Tools"
 reader = "Čítačka"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Prehliadka nástrojov"
 toolsTourDesc = "Zistite, čo nástroje dokážu"
 adminTour = "Prehliadka administrácie"
 adminTourDesc = "Preskúmajte administrátorské nastavenia a funkcie"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Chyba"
@@ -5069,6 +5244,7 @@ loading = "Načítava sa..."
 back = "Späť"
 continue = "Pokračovať"
 error = "Chyba"
+save = "Save"
 
 [config.overview]
 title = "Konfigurácia aplikácie"
@@ -5235,6 +5411,16 @@ finish = "Dokončiť"
 startTour = "Spustiť prehliadku"
 startTourDescription = "Prejdite si sprievodcu kľúčovými funkciami Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Vitajte v Stirling PDF!"
 description = "Chceli by ste si prejsť rýchlu 1‑minútovú prehliadku kľúčových funkcií a ako začať?"
@@ -5254,6 +5440,10 @@ skipForNow = "Preskočiť zatiaľ"
 download = "Stiahnuť →"
 showMeAround = "Ukážte mi to"
 skipTheTour = "Preskočiť prehliadku"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Preskočiť zatiaľ"
@@ -5568,6 +5758,28 @@ contactSales = "Kontaktovať obchod"
 contactToUpgrade = "Kontaktujte nás na inovovanie alebo prispôsobenie vášho plánu"
 maxUsers = "Max. počet používateľov"
 upTo = "Až do"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "mesiac"
@@ -5771,6 +5983,8 @@ notAvailable = "Auditný systém nie je k dispozícii"
 notAvailableMessage = "Auditný systém nie je nakonfigurovaný alebo nie je k dispozícii."
 disabled = "Auditné protokolovanie je vypnuté"
 disabledMessage = "Povolením auditného protokolovania v konfigurácii aplikácie môžete sledovať udalosti systému."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Chyba pri načítaní auditného systému"
@@ -6025,6 +6239,8 @@ reset = "Resetovať zmeny"
 downloadJson = "Stiahnuť JSON"
 generatePdf = "Vygenerovať PDF"
 saveChanges = "Uložiť zmeny"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automaticky prispôsobiť text do boxov"
@@ -6042,6 +6258,24 @@ descriptionInline = "Tip: Podržte Ctrl (Cmd) alebo Shift na viacnásobný výbe
 [pdfTextEditor.options.forceSingleElement]
 title = "Uzamknúť upravovaný text na jeden PDF prvok"
 description = "Keď je zapnuté, editor exportuje každý upravený textový box ako jeden PDF textový prvok, aby sa predišlo prekrývaniu glyfov alebo miešaniu písiem."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Zlúčiť vybrané boxy"
