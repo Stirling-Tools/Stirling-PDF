@@ -1,8 +1,11 @@
 unsavedChanges = "Έχετε μη αποθηκευμένες αλλαγές στο PDF σας."
+pendingRedactionsTitle = "Μη εφαρμοσμένες αποκρύψεις"
+pendingRedactions = "Έχετε μη εφαρμοσμένες αποκρύψεις που θα χαθούν."
 areYouSure = "Είστε βέβαιοι ότι θέλετε να αποχωρήσετε;"
 unsavedChangesTitle = "Μη αποθηκευμένες αλλαγές"
 keepWorking = "Συνέχεια εργασίας"
 discardChanges = "Απόρριψη & Έξοδος"
+discardRedactions = "Απόρριψη & Έξοδος"
 applyAndContinue = "Αποθήκευση & Έξοδος"
 exportAndContinue = "Εξαγωγή & Συνέχεια"
 cancel = "Άκυρο"
@@ -292,7 +295,7 @@ help = "Βοήθεια Pipeline"
 scanHelp = "Βοήθεια σάρωσης φακέλων"
 deletePrompt = "Είστε βέβαιοι ότι θέλετε να διαγράψετε το pipeline;"
 tags = "αυτοματοποίηση,ακολουθία,προγραμματισμένο,επεξεργασία-παρτίδας"
-title = "Ροή"
+title = "Pipeline"
 
 [pipelineOptions]
 header = "Διαμόρφωση Pipeline"
@@ -301,7 +304,7 @@ saveSettings = "Αποθήκευση ρυθμίσεων λειτουργίας"
 pipelineNamePrompt = "Εισάγετε όνομα pipeline εδώ"
 selectOperation = "Επιλογή λειτουργίας"
 addOperationButton = "Προσθήκη λειτουργίας"
-pipelineHeader = "Ροή:"
+pipelineHeader = "Pipeline:"
 saveButton = "Λήψη"
 validateButton = "Επικύρωση"
 
@@ -340,6 +343,10 @@ advance = "Προχωρημένα"
 edit = "Προβολή & Επεξεργασία"
 popular = "Δημοφιλή"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Προτιμήσεις"
 
@@ -352,7 +359,7 @@ teams = "Ομάδες"
 title = "Διαμόρφωση"
 systemSettings = "Ρυθμίσεις συστήματος"
 features = "Δυνατότητες"
-endpoints = "Σημεία τερματισμού"
+endpoints = "Endpoints"
 database = "Βάση δεδομένων"
 advanced = "Προχωρημένα"
 
@@ -360,6 +367,7 @@ advanced = "Προχωρημένα"
 title = "Ασφάλεια & Αυθεντικοποίηση"
 security = "Ασφάλεια"
 connections = "Συνδέσεις"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Άδειες & Αναλύσεις"
@@ -374,7 +382,7 @@ privacy = "Απόρρητο"
 
 [settings.developer]
 title = "Προγραμματιστής"
-apiKeys = "Κλειδιά API"
+apiKeys = "API Keys"
 
 [settings.tooltips]
 enableLoginFirst = "Ενεργοποιήστε πρώτα τη λειτουργία σύνδεσης"
@@ -388,7 +396,7 @@ logout = "Αποσύνδεση"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Αυτο-φιλοξενούμενο"
+selfhosted = "Self-Hosted"
 
 [settings.general]
 title = "Γενικά"
@@ -434,6 +442,32 @@ currentVersion = "Τρέχουσα έκδοση"
 latestVersion = "Νεότερη έκδοση"
 checkForUpdates = "Έλεγχος για ενημερώσεις"
 viewDetails = "Προβολή λεπτομερειών"
+serverNeedsUpdate = "Ο διακομιστής πρέπει να ενημερωθεί από διαχειριστή"
+
+[settings.general.versionInfo]
+title = "Πληροφορίες έκδοσης"
+description = "Λεπτομέρειες έκδοσης για Desktop και διακομιστή"
+desktop = "Έκδοση Desktop"
+server = "Έκδοση διακομιστή"
+
+[settings.security]
+title = "Ασφάλεια"
+description = "Ενημερώστε τον κωδικό σας για να διατηρήσετε τον λογαριασμό σας ασφαλή."
+
+[settings.security.password]
+subtitle = "Αλλάξτε τον κωδικό σας. Θα αποσυνδεθείτε μετά την ενημέρωση."
+required = "Όλα τα πεδία είναι υποχρεωτικά."
+mismatch = "Οι νέοι κωδικοί δεν ταιριάζουν."
+error = "Αδυναμία ενημέρωσης κωδικού. Επαληθεύστε τον τρέχοντα κωδικό και δοκιμάστε ξανά."
+success = "Ο κωδικός ενημερώθηκε με επιτυχία. Συνδεθείτε ξανά."
+ssoDisabled = "Οι αλλαγές κωδικού διαχειρίζονται από τον πάροχο ταυτότητάς σας."
+current = "Τρέχων κωδικός"
+currentPlaceholder = "Εισαγάγετε τον τρέχοντα κωδικό"
+new = "Νέος κωδικός"
+newPlaceholder = "Εισαγάγετε νέο κωδικό"
+confirm = "Επιβεβαίωση νέου κωδικού"
+confirmPlaceholder = "Εισαγάγετε ξανά τον νέο κωδικό"
+update = "Ενημέρωση κωδικού"
 
 [settings.hotkeys]
 title = "Συντομεύσεις πληκτρολογίου"
@@ -488,11 +522,16 @@ low = "Χαμηλή"
 title = "Αλλαγή διαπιστευτηρίων"
 header = "Ενημέρωση στοιχείων λογαριασμού"
 changePassword = "Χρησιμοποιείτε προεπιλεγμένα διαπιστευτήρια σύνδεσης. Παρακαλώ εισάγετε νέο κωδικό"
+ssoManaged = "Ο λογαριασμός σας διαχειρίζεται από τον πάροχο ταυτότητάς σας."
 newUsername = "Νέο όνομα χρήστη"
 oldPassword = "Τρέχων κωδικός"
 newPassword = "Νέος κωδικός"
 confirmNewPassword = "Επιβεβαίωση νέου κωδικού"
 submit = "Υποβολή αλλαγών"
+credsUpdated = "Ο λογαριασμός ενημερώθηκε"
+description = "Οι αλλαγές αποθηκεύτηκαν. Συνδεθείτε ξανά."
+error = "Αδυναμία ενημέρωσης ονόματος χρήστη. Επαληθεύστε τον κωδικό σας και δοκιμάστε ξανά."
+changeUsername = "Ενημερώστε το όνομα χρήστη σας. Θα αποσυνδεθείτε μετά την ενημέρωση."
 
 [account]
 title = "Ρυθμίσεις λογαριασμού"
@@ -500,6 +539,8 @@ accountSettings = "Ρυθμίσεις λογαριασμού"
 adminSettings = "Ρυθμίσεις διαχειριστή - Προβολή και προσθήκη χρηστών"
 userControlSettings = "Ρυθμίσεις ελέγχου χρηστών"
 changeUsername = "Αλλαγή ονόματος χρήστη"
+changeUsernameDescription = "Ενημερώστε το όνομα χρήστη σας. Θα αποσυνδεθείτε μετά την ενημέρωση."
+newUsernamePlaceholder = "Εισαγάγετε το νέο όνομα χρήστη"
 newUsername = "Νέο όνομα χρήστη"
 password = "Κωδικός επιβεβαίωσης"
 oldPassword = "Παλιός κωδικός"
@@ -707,6 +748,11 @@ desc = "Εντοπίστε και διαχωρίστε σκαναρισμένε�
 tags = "υπογραφή,αυτόγραφο"
 title = "Υπογραφή"
 desc = "Προσθήκη υπογραφής σε PDF με σχεδίαση, κείμενο ή εικόνα"
+
+[home.annotate]
+tags = "σχολιασμός,επισήμανση,σχεδίαση"
+title = "Σχολιασμός"
+desc = "Επισημάνετε, σχεδιάστε, προσθέστε σημειώσεις και σχήματα στον προβολέα"
 
 [home.flatten]
 tags = "απλοποίηση,αφαίρεση,διαδραστικό"
@@ -919,7 +965,7 @@ title = "Επικάλυψη PDF"
 
 [home.pdfTextEditor]
 title = "Επεξεργαστής κειμένου PDF"
-desc = "Επεξεργαστείτε υπάρχον κείμενο και εικόνες μέσα σε αρχεία PDF"
+desc = "Επιθεωρήστε και επεξεργαστείτε εξαγωγές JSON του Stirling PDF με ομαδοποιημένη επεξεργασία κειμένου και αναδημιουργία PDF"
 
 [home.addText]
 tags = "κείμενο,σχολιασμός,ετικέτα"
@@ -930,6 +976,7 @@ desc = "Προσθέστε προσαρμοσμένο κείμενο οπουδ�
 addFiles = "Προσθήκη αρχείων"
 uploadFromComputer = "Μεταφόρτωση από υπολογιστή"
 openFromComputer = "Άνοιγμα από τον υπολογιστή"
+mobileUpload = "Μεταφόρτωση από κινητό"
 
 [viewPdf]
 tags = "προβολή,ανάγνωση,σχολιασμός,κείμενο,εικόνα"
@@ -1181,7 +1228,7 @@ selectFilesPlaceholder = "Επιλέξτε αρχεία στην κύρια πρ
 settings = "Ρυθμίσεις"
 conversionCompleted = "Η μετατροπή ολοκληρώθηκε"
 results = "Αποτελέσματα"
-defaultFilename = "μετατραπμένο_αρχείο"
+defaultFilename = "converted_file"
 conversionResults = "Αποτελέσματα μετατροπής"
 convertFrom = "Μετατροπή από"
 convertTo = "Μετατροπή σε"
@@ -1245,6 +1292,33 @@ cbzOptions = "Επιλογές CBZ σε PDF"
 optimizeForEbook = "Βελτιστοποίηση PDF για συσκευές ανάγνωσης ebook (χρησιμοποιεί Ghostscript)"
 cbzOutputOptions = "Επιλογές PDF σε CBZ"
 cbzDpi = "DPI για απόδοση εικόνας"
+cbrOptions = "Επιλογές CBR"
+cbrOutputOptions = "Επιλογές PDF σε CBR"
+cbrDpi = "DPI για απόδοση εικόνων"
+
+[convert.ebookOptions]
+ebookOptions = "Επιλογές eBook σε PDF"
+ebookOptionsDesc = "Επιλογές μετατροπής eBook σε PDF"
+embedAllFonts = "Ενσωμάτωση όλων των γραμματοσειρών"
+embedAllFontsDesc = "Ενσωματώστε όλες τις γραμματοσειρές του eBook στο παραγόμενο PDF"
+includeTableOfContents = "Συμπερίληψη πίνακα περιεχομένων"
+includeTableOfContentsDesc = "Προσθήκη δημιουργημένου πίνακα περιεχομένων στο τελικό PDF"
+includePageNumbers = "Συμπερίληψη αριθμών σελίδων"
+includePageNumbersDesc = "Προσθέστε αριθμούς σελίδων στο παραγόμενο PDF"
+optimizeForEbookPdf = "Βελτιστοποίηση για συσκευές ανάγνωσης eBook"
+optimizeForEbookPdfDesc = "Βελτιστοποιήστε το PDF για ανάγνωση eBook (μικρότερο μέγεθος, καλύτερη απόδοση σε συσκευές eInk)"
+
+[convert.epubOptions]
+epubOptions = "Επιλογές PDF σε eBook"
+epubOptionsDesc = "Επιλογές μετατροπής PDF σε EPUB/AZW3"
+detectChapters = "Εντοπισμός κεφαλαίων"
+detectChaptersDesc = "Εντοπίστε επικεφαλίδες που μοιάζουν με κεφάλαια και εισαγάγετε αλλαγές σελίδας EPUB"
+targetDevice = "Συσκευή προορισμού"
+targetDeviceDesc = "Επιλέξτε προφίλ εξόδου βελτιστοποιημένο για τη συσκευή ανάγνωσης"
+outputFormat = "Μορφή εξόδου"
+outputFormatDesc = "Επιλέξτε τη μορφή εξόδου για το eBook"
+tabletPhone = "Tablet/Τηλέφωνο (με εικόνες)"
+kindleEink = "Kindle e-Ink (βελτιστοποιημένο για κείμενο)"
 
 [imageToPdf]
 tags = "μετατροπή,εικόνα,jpg,φωτογραφία"
@@ -1361,6 +1435,11 @@ header = "Add attachments"
 add = "Προσθήκη συνημμένου"
 remove = "Αφαίρεση συνημμένου"
 embed = "Ενσωμάτωση συνημμένου"
+convertToPdfA3b = "Μετατροπή σε PDF/A-3b"
+convertToPdfA3bDescription = "Δημιουργεί αρχειακό PDF με ενσωματωμένα συνημμένα"
+convertToPdfA3bTooltip = "Το PDF/A-3b είναι αρχειακή μορφή που εξασφαλίζει μακροχρόνια διατήρηση. Επιτρέπει την ενσωμάτωση οποιωνδήποτε μορφών αρχείων ως συνημμένα. Η μετατροπή απαιτεί το Ghostscript και μπορεί να διαρκέσει περισσότερο για μεγάλα αρχεία."
+convertToPdfA3bTooltipHeader = "Σχετικά με τη μετατροπή σε PDF/A-3b"
+convertToPdfA3bTooltipTitle = "Τι κάνει"
 submit = "Add attachments"
 
 [watermark]
@@ -1368,7 +1447,7 @@ title = "Προσθήκη υδατογραφήματος"
 desc = "Προσθέστε υδατογραφήματα κειμένου ή εικόνας σε αρχεία PDF"
 completed = "Το υδατογράφημα προστέθηκε"
 submit = "Προσθήκη υδατογραφήματος"
-filenamePrefix = "υδατογραφημένο"
+filenamePrefix = "watermarked"
 
 [watermark.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκη υδατογραφήματος στο PDF."
@@ -2306,6 +2385,10 @@ saved = "Αποθηκευμένες"
 label = "Μεταφορτώστε εικόνα υπογραφής"
 placeholder = "Επιλέξτε αρχείο εικόνας"
 hint = "Μεταφορτώστε εικόνα PNG ή JPG της υπογραφής σας"
+removeBackground = "Αφαίρεση λευκού φόντου (διαφάνεια)"
+processing = "Επεξεργασία εικόνας..."
+backgroundRemovalFailedTitle = "Αποτυχία αφαίρεσης φόντου"
+backgroundRemovalFailedMessage = "Αδυναμία αφαίρεσης φόντου από την εικόνα. Χρήση της αρχικής εικόνας."
 
 [sign.instructions]
 title = "Πώς να προσθέσετε υπογραφή"
@@ -2350,6 +2433,11 @@ note = "Η επιπέδωση αφαιρεί διαδραστικά στοιχε
 [flatten.options.flattenOnlyForms]
 label = "Ισοπέδωση μόνο φορμών"
 desc = "Επιπέδωση μόνο πεδίων φόρμας, αφήνοντας τα υπόλοιπα διαδραστικά στοιχεία ανέπαφα"
+
+[flatten.renderDpi]
+label = "DPI απόδοσης (προαιρετικό, προτείνεται 150 DPI)"
+help = "Αφήστε κενό για χρήση της προεπιλογής συστήματος. Υψηλότερο DPI βελτιώνει την ευκρίνεια αλλά αυξάνει τον χρόνο επεξεργασίας και το μέγεθος αρχείου."
+placeholder = "π.χ. 150"
 
 [flatten.results]
 title = "Αποτελέσματα επιπέδωσης"
@@ -2717,7 +2805,7 @@ header = "Αφαίρεση της ψηφιακής υπογραφής από τ�
 selectPDF = "Επιλέξτε ένα αρχείο PDF:"
 submit = "Αφαίρεση υπογραφής"
 description = "Αυτό το εργαλείο θα αφαιρέσει τις υπογραφές ψηφιακού πιστοποιητικού από το PDF σας."
-filenamePrefix = "ανυπόγραφο"
+filenamePrefix = "unsigned"
 
 [removeCertSign.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -2925,6 +3013,7 @@ header = "Περικοπή PDF"
 submit = "Υποβολή"
 noFileSelected = "Επιλέξτε ένα αρχείο PDF για να ξεκινήσετε την περικοπή"
 reset = "Επαναφορά σε πλήρες PDF"
+autoCrop = "Αυτόματη περικοπή κενού"
 
 [crop.preview]
 title = "Επιλογή περιοχής περικοπής"
@@ -3155,6 +3244,7 @@ title = "Μέθοδος απόκρυψης"
 mode = "Λειτουργία"
 automatic = "Αυτόματη"
 automaticDesc = "Απόκρυψη κειμένου βάσει όρων αναζήτησης"
+automaticDisabledTooltip = "Επιλέξτε αρχεία στη διαχείριση αρχείων για απόκρυψη σε πολλά αρχεία ταυτόχρονα"
 manual = "Χειροκίνητη"
 manualDesc = "Κάντε κλικ και σύρετε για να αποκρύψετε συγκεκριμένες περιοχές"
 manualComingSoon = "Η χειροκίνητη απόκρυψη σύντομα διαθέσιμη"
@@ -3225,8 +3315,35 @@ text = "Ταιριάζει μόνο πλήρεις λέξεις, όχι μερι
 title = "Μετατροπή σε PDF-Image"
 text = "Μετατρέπει το PDF σε PDF βασισμένο σε εικόνα μετά την απόκρυψη. Αυτό διασφαλίζει ότι το κείμενο πίσω από τα πλαίσια απόκρυψης αφαιρείται πλήρως και δεν είναι ανακτήσιμο."
 
+[redact.tooltip.manual.header]
+title = "Χειροκίνητα χειριστήρια απόκρυψης"
+
+[redact.tooltip.manual.markText]
+title = "Εργαλείο σήμανσης κειμένου"
+text = "Επιλέξτε κείμενο απευθείας στο PDF για να το σημάνετε προς απόκρυψη. Κάντε κλικ και σύρετε για να επισημάνετε συγκεκριμένο κείμενο που θέλετε να αποκρύψετε."
+
+[redact.tooltip.manual.markArea]
+title = "Εργαλείο σήμανσης περιοχής"
+text = "Σχεδιάστε ορθογώνιες περιοχές στο PDF για να σημάνετε τμήματα προς απόκρυψη. Χρήσιμο για απόκρυψη εικόνων, υπογραφών ή ακανόνιστων σχημάτων."
+
+[redact.tooltip.manual.apply]
+title = "Εφαρμογή αποκρύψεων"
+text = "Αφού σημάνετε περιεχόμενο, κάντε κλικ στην «Εφαρμογή» για μόνιμη απόκρυψη όλων των σημειωμένων περιοχών. Ο μετρητής σε αναμονή δείχνει πόσες αποκρύψεις είναι έτοιμες για εφαρμογή."
+bullet1 = "Σημάνετε όσες περιοχές χρειάζονται πριν την εφαρμογή"
+bullet2 = "Όλες οι εκκρεμείς αποκρύψεις εφαρμόζονται ταυτόχρονα"
+bullet3 = "Οι αποκρύψεις δεν μπορούν να αναιρεθούν μετά την εφαρμογή"
+
 [redact.manual]
+title = "Εργαλεία απόκρυψης"
+instructions = "Επιλέξτε κείμενο ή σχεδιάστε περιοχές στο PDF για να σημάνετε περιεχόμενο προς απόκρυψη."
+markText = "Σήμανση κειμένου"
+markArea = "Σήμανση περιοχής"
+pendingLabel = "Σε αναμονή:"
+applyWarning = "⚠️ Μόνιμη εφαρμογή, δεν μπορεί να αναιρεθεί και τα υποκείμενα δεδομένα θα διαγραφούν"
+apply = "Εφαρμογή"
+noMarks = "Καμία σήμανση απόκρυψης. Χρησιμοποιήστε τα παραπάνω εργαλεία για να σημάνετε περιεχόμενο προς απόκρυψη."
 header = "Χειροκίνητη απόκρυψη"
+controlsTitle = "Χειροκίνητα χειριστήρια απόκρυψης"
 textBasedRedaction = "Απόκρυψη βάσει κειμένου"
 pageBasedRedaction = "Απόκρυψη βάσει σελίδας"
 convertPDFToImageLabel = "Μετατροπή PDF σε PDF-Image (Χρησιμοποιείται για την αφαίρεση κειμένου πίσω από το πλαίσιο)"
@@ -3341,6 +3458,19 @@ placeholder = "Εισάγετε αριθμό οριζόντιων διαιρέσ
 [split-by-sections.vertical]
 label = "Κάθετες διαιρέσεις"
 placeholder = "Εισάγετε αριθμό κάθετων διαιρέσεων"
+
+[split-by-sections.splitMode]
+label = "Λειτουργία διαχωρισμού"
+description = "Επιλέξτε πώς να διαχωρίσετε τις σελίδες"
+splitAll = "Διαχωρισμός όλων των σελίδων"
+splitAllExceptFirst = "Διαχωρισμός όλων εκτός της πρώτης"
+splitAllExceptLast = "Διαχωρισμός όλων εκτός της τελευταίας"
+splitAllExceptFirstAndLast = "Διαχωρισμός όλων εκτός της πρώτης και της τελευταίας"
+custom = "Προσαρμοσμένες σελίδες"
+
+[split-by-sections.customPages]
+label = "Προσαρμοσμένοι αριθμοί σελίδων"
+placeholder = "π.χ. 2,4,6"
 
 [AddStampRequest]
 tags = "σφραγίδα,προσθήκη εικόνας,κεντράρισμα εικόνας,υδατογράφημα,PDF,ενσωμάτωση,προσαρμογή"
@@ -3637,7 +3767,7 @@ title = "PDF σε μία σελίδα"
 header = "PDF σε μία σελίδα"
 submit = "Μετατροπή σε μία σελίδα"
 description = "Αυτό το εργαλείο θα συγχωνεύσει όλες τις σελίδες του PDF σας σε μία μεγάλη ενιαία σελίδα. Το πλάτος θα παραμείνει ίδιο με των αρχικών σελίδων, αλλά το ύψος θα είναι το άθροισμα όλων των υψών."
-filenamePrefix = "μονοσέλιδο"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -3703,6 +3833,19 @@ filesize = "Μέγεθος αρχείου"
 [compress.grayscale]
 label = "Εφαρμογή κλίμακας του γκρι για συμπίεση"
 
+[compress.linearize]
+label = "Γραμμικοποίηση PDF για ταχεία προβολή στον ιστό"
+
+[compress.lineArt]
+label = "Μετατροπή εικόνων σε γραμμικό σχέδιο"
+description = "Χρησιμοποιεί το ImageMagick για να μειώσει τις σελίδες σε ασπρόμαυρο υψηλής αντίθεσης για μέγιστη μείωση μεγέθους."
+unavailable = "Το ImageMagick δεν είναι εγκατεστημένο ή ενεργοποιημένο σε αυτόν τον διακομιστή"
+detailLevel = "Επίπεδο λεπτομέρειας"
+edgeEmphasis = "Έμφαση ακμών"
+edgeLow = "Ήπια"
+edgeMedium = "Ισορροπημένη"
+edgeHigh = "Ισχυρή"
+
 [compress.tooltip.header]
 title = "Επισκόπηση ρυθμίσεων συμπίεσης"
 
@@ -3720,6 +3863,10 @@ bullet2 = "Οι υψηλές τιμές μειώνουν το μέγεθος α�
 title = "Κλίμακα του γκρι"
 text = "Επιλέξτε αυτήν την επιλογή για να μετατρέψετε όλες τις εικόνες σε ασπρόμαυρες, κάτι που μπορεί να μειώσει σημαντικά το μέγεθος αρχείου ειδικά για σαρωμένα PDF ή έγγραφα με πολλές εικόνες."
 
+[compress.tooltip.lineArt]
+title = "Γραμμικό σχέδιο"
+text = "Μετατρέψτε σελίδες σε ασπρόμαυρο υψηλής αντίθεσης με χρήση του ImageMagick. Χρησιμοποιήστε το επίπεδο λεπτομέρειας για να ελέγξετε πόσο περιεχόμενο γίνεται μαύρο και την έμφαση ακμών για να ελέγξετε πόσο επιθετικά εντοπίζονται οι ακμές."
+
 [compress.error]
 failed = "Παρουσιάστηκε σφάλμα κατά τη συμπίεση του PDF."
 
@@ -3731,6 +3878,11 @@ failed = "Παρουσιάστηκε σφάλμα κατά τη συμπίεση
 [compress.selectText.1]
 _value = "Ρυθμίσεις συμπίεσης"
 1 = "1-3 συμπίεση PDF,</br> 4-6 ελαφριά συμπίεση εικόνας,</br> 7-9 έντονη συμπίεση εικόνας Θα μειώσει δραστικά την ποιότητα εικόνας"
+
+[compress.compressionLevel]
+range1to3 = "Χαμηλότερες τιμές διατηρούν την ποιότητα αλλά οδηγούν σε μεγαλύτερα αρχεία"
+range4to6 = "Μεσαία συμπίεση με μέτρια μείωση ποιότητας"
+range7to9 = "Υψηλότερες τιμές μειώνουν σημαντικά το μέγεθος αρχείου αλλά μπορεί να μειώσουν την ευκρίνεια εικόνας"
 
 [decrypt]
 passwordPrompt = "Αυτό το αρχείο προστατεύεται με κωδικό πρόσβασης. Παρακαλώ εισάγετε τον κωδικό:"
@@ -3875,7 +4027,7 @@ version = "Τρέχουσα έκδοση"
 title = "Τεκμηρίωση API"
 header = "Τεκμηρίωση API"
 desc = "Προβάλετε και δοκιμάστε τα endpoints του Stirling PDF API"
-tags = "api,τεκμηρίωση,swagger,τελικά σημεία,ανάπτυξη"
+tags = "api,documentation,swagger,endpoints,development"
 
 [cookieBanner.popUp]
 title = "Πώς χρησιμοποιούμε τα cookies"
@@ -3971,22 +4123,97 @@ deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
 closePdf = "Κλείσιμο PDF"
 exportAll = "Εξαγωγή PDF"
 downloadSelected = "Λήψη επιλεγμένων αρχείων"
-downloadAll = "Λήψη όλων"
-saveAll = "Αποθήκευση όλων"
+annotations = "Σχολιασμοί"
+exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
+saveChanges = "Αποθήκευση αλλαγών"
 toggleTheme = "Εναλλαγή θέματος"
-toggleBookmarks = "Εναλλαγή σελιδοδεικτών"
 language = "Γλώσσα"
+toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
 search = "Αναζήτηση PDF"
 panMode = "Λειτουργία μετακίνησης"
+applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
 rotateLeft = "Περιστροφή αριστερά"
 rotateRight = "Περιστροφή δεξιά"
 toggleSidebar = "Εναλλαγή πλευρικής γραμμής"
-exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
-toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
-annotationMode = "Εναλλαγή λειτουργίας σχολιασμού"
+toggleBookmarks = "Εναλλαγή σελιδοδεικτών"
 print = "Εκτύπωση PDF"
 draw = "Σχεδίαση"
+redact = "Απόκρυψη"
+exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
 save = "Αποθήκευση"
+downloadAll = "Λήψη όλων"
+saveAll = "Αποθήκευση όλων"
+
+[textAlign]
+left = "Αριστερά"
+center = "Κέντρο"
+right = "Δεξιά"
+
+[annotation]
+title = "Σχολιασμός"
+desc = "Χρησιμοποιήστε επισήμανση, πένα, κείμενο και σημειώσεις. Οι αλλαγές παραμένουν ενεργές—δεν απαιτείται επίπεδωση."
+highlight = "Επισήμανση"
+pen = "Πένα"
+text = "Πλαίσιο κειμένου"
+note = "Σημείωση"
+rectangle = "Ορθογώνιο"
+ellipse = "Έλλειψη"
+select = "Επιλογή"
+exit = "Έξοδος από λειτουργία σχολιασμού"
+strokeWidth = "Πλάτος"
+opacity = "Αδιαφάνεια"
+strokeOpacity = "Αδιαφάνεια περιγράμματος"
+fillOpacity = "Αδιαφάνεια γεμίσματος"
+fontSize = "Μέγεθος γραμματοσειράς"
+chooseColor = "Επιλογή χρώματος"
+color = "Χρώμα"
+strokeColor = "Χρώμα περιγράμματος"
+fillColor = "Χρώμα γεμίσματος"
+underline = "Υπογράμμιση"
+strikeout = "Διακριτή διαγραφή"
+squiggly = "Κυματιστό"
+inkHighlighter = "Ελεύθερη επισήμανση"
+freehandHighlighter = "Ελεύθερη επισήμανση"
+square = "Τετράγωνο"
+circle = "Κύκλος"
+polygon = "Πολύγωνο"
+line = "Γραμμή"
+stamp = "Προσθήκη εικόνας"
+textMarkup = "Επισημάνσεις κειμένου"
+drawing = "Σχεδίαση"
+shapes = "Σχήματα"
+notesStamps = "Σημειώσεις & Σφραγίδες"
+settings = "Ρυθμίσεις"
+borderOn = "Περίγραμμα: Ενεργό"
+borderOff = "Περίγραμμα: Ανενεργό"
+editInk = "Επεξεργασία πένας"
+editLine = "Επεξεργασία γραμμής"
+editNote = "Επεξεργασία σημείωσης"
+editText = "Επεξεργασία πλαισίου κειμένου"
+editTextMarkup = "Επεξεργασία επισημάνσεων κειμένου"
+editSelected = "Επεξεργασία σχολιασμού"
+editSquare = "Επεξεργασία τετραγώνου"
+editCircle = "Επεξεργασία κύκλου"
+editPolygon = "Επεξεργασία πολυγώνου"
+unsupportedType = "Αυτός ο τύπος σχολιασμού δεν υποστηρίζεται πλήρως για επεξεργασία."
+textAlignment = "Στοίχιση κειμένου"
+noteIcon = "Εικονίδιο σημείωσης"
+imagePreview = "Προεπισκόπηση"
+contents = "Κείμενο"
+backgroundColor = "Χρώμα φόντου"
+clearBackground = "Αφαίρεση φόντου"
+noBackground = "Χωρίς φόντο"
+stampSettings = "Ρυθμίσεις σφραγίδας"
+savingCopy = "Προετοιμασία λήψης..."
+saveFailed = "Αδυναμία αποθήκευσης αντιγράφου"
+saveReady = "Έτοιμο για λήψη"
+selectAndMove = "Επιλογή και επεξεργασία"
+editSelectDescription = "Κάντε κλικ σε υπάρχον σχολιασμό για να επεξεργαστείτε το χρώμα, την αδιαφάνεια, το κείμενο ή το μέγεθός του."
+editStampHint = "Για να αλλάξετε την εικόνα, διαγράψτε αυτή τη σφραγίδα και προσθέστε μία νέα."
+editSwitchToSelect = "Μεταβείτε σε «Επιλογή & επεξεργασία» για να επεξεργαστείτε αυτόν τον σχολιασμό."
+undo = "Αναίρεση"
+redo = "Επανάληψη"
+applyChanges = "Εφαρμογή αλλαγών"
 saveChanges = "Αποθήκευση αλλαγών"
 
 [search]
@@ -4038,12 +4265,20 @@ settings = "Ρυθμ."
 adminSettings = "Ρυθμ. διαχ."
 allTools = "All Tools"
 reader = "Ανάγνωση"
+tours = "Ξεναγήσεις"
+showMeAround = "Ξενάγηση"
+
+[quickAccess.toursTooltip]
+admin = "Δείτε εδώ παρουσιάσεις: ξενάγηση εργαλείων, ξενάγηση νέας διάταξης V2 και ξενάγηση διαχειριστή."
+user = "Δείτε εδώ παρουσιάσεις: ξενάγηση εργαλείων και ξενάγηση νέας διάταξης V2."
 
 [quickAccess.helpMenu]
 toolsTour = "Ξενάγηση στα εργαλεία"
 toolsTourDesc = "Μάθετε τι μπορούν να κάνουν τα εργαλεία"
 adminTour = "Ξενάγηση διαχειριστή"
 adminTourDesc = "Εξερευνήστε τις ρυθμίσεις και τις δυνατότητες διαχειριστή"
+whatsNewTour = "Δείτε τι νέο υπάρχει στο V2"
+whatsNewTourDesc = "Ξεναγηθείτε στη νέα διάταξη"
 
 [admin]
 error = "Σφάλμα"
@@ -4062,6 +4297,8 @@ fetchError = "Αποτυχία φόρτωσης ρυθμίσεων"
 saveError = "Αποτυχία αποθήκευσης ρυθμίσεων"
 saved = "Οι ρυθμίσεις αποθηκεύτηκαν με επιτυχία"
 saveSuccess = "Οι ρυθμίσεις αποθηκεύτηκαν με επιτυχία"
+success = "Οι ρυθμίσεις αποθηκεύτηκαν με επιτυχία"
+error = "Αποτυχία αποθήκευσης ρυθμίσεων"
 save = "Αποθήκευση αλλαγών"
 discard = "Απόρριψη"
 restartRequired = "Απαιτείται επανεκκίνηση"
@@ -4184,6 +4421,13 @@ description = "Διαδρομή προς το εκτελέσιμο WeasyPrint γ
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Εκτελέσιμο Unoconvert"
 description = "Διαδρομή προς το LibreOffice unoconvert για μετατροπές εγγράφων (αφήστε κενό για προεπιλογή: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Βασικό URL για το frontend (π.χ., https://pdf.example.com). Χρησιμοποιείται για συνδέσμους πρόσκλησης email και μεταφορές μέσω QR από κινητό. Αφήστε κενό για χρήση του backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Κάντε κλικ για προβολή λεπτομερειών πλάνου"
 
 [admin.settings.security]
 title = "Ασφάλεια"
@@ -4321,6 +4565,19 @@ connect = "Σύνδεση"
 disconnect = "Αποσύνδεση"
 disconnected = "Ο πάροχος αποσυνδέθηκε με επιτυχία"
 disconnectError = "Αποτυχία αποσύνδεσης παρόχου"
+mobileScannerConvertToPdf = "Μετατροπή εικόνων σε PDF"
+mobileScannerConvertToPdfDesc = "Αυτόματη μετατροπή των μεταφορτωμένων εικόνων σε μορφή PDF. Αν απενεργοποιηθεί, οι εικόνες θα παραμείνουν ως έχουν."
+mobileScannerImageResolution = "Ανάλυση εικόνας"
+mobileScannerImageResolutionDesc = "Ανάλυση των μεταφορτωμένων εικόνων. Το «Μειωμένη» κλιμακώνει τις εικόνες έως 1200px για μείωση μεγέθους."
+imageResolutionFull = "Πλήρης (Αρχικό μέγεθος)"
+imageResolutionReduced = "Μειωμένη (Μέχρι 1200px)"
+mobileScannerPageFormat = "Μορφή σελίδας"
+mobileScannerPageFormatDesc = "Μέγεθος σελίδας PDF για τις μετατρεπόμενες εικόνες. Το «Διατήρηση» χρησιμοποιεί τις αρχικές διαστάσεις της εικόνας."
+pageFormatKeep = "Διατήρηση (Αρχικές διαστάσεις)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Προσαρμογή με τέντωμα"
+mobileScannerStretchToFitDesc = "Τεντώστε τις εικόνες ώστε να καλύπτουν όλη τη σελίδα. Αν απενεργοποιηθεί, οι εικόνες κεντράρονται με διατήρηση αναλογιών."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Αυτόματη σύνδεση SSO"
@@ -4343,11 +4600,11 @@ label = "URL εκδότη"
 description = "Το URL εκδότη του παρόχου OAuth2"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Αναγνωριστικό πελάτη (Client ID)"
+label = "Client ID"
 description = "Το Client ID OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Μυστικό πελάτη (Client Secret)"
+label = "Client Secret"
 description = "Το Client Secret OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4388,6 +4645,122 @@ description = "Αυτόματη δημιουργία λογαριασμών χρ
 [admin.settings.connections.saml2.blockRegistration]
 label = "Αποκλεισμός εγγραφής"
 description = "Αποτροπή εγγραφής νέων χρηστών μέσω SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Μεταφόρτωση από κινητό"
+enable = "Ενεργοποίηση μεταφόρτωσης μέσω QR code"
+description = "Επιτρέψτε στους χρήστες να μεταφορτώνουν αρχεία από κινητές συσκευές σαρώνοντας έναν κωδικό QR"
+note = "Σημείωση: Απαιτείται ρύθμιση του Frontend URL. "
+link = "Ρύθμιση στις Ρυθμίσεις Συστήματος"
+mobileScannerConvertToPdf = "Μετατροπή εικόνων σε PDF"
+mobileScannerConvertToPdfDesc = "Αυτόματη μετατροπή των μεταφορτωμένων εικόνων σε μορφή PDF. Αν απενεργοποιηθεί, οι εικόνες θα παραμείνουν ως έχουν."
+mobileScannerImageResolution = "Ανάλυση εικόνας"
+mobileScannerImageResolutionDesc = "Ανάλυση των μεταφορτωμένων εικόνων. Το «Μειωμένη» κλιμακώνει τις εικόνες έως 1200px για μείωση μεγέθους."
+imageResolutionFull = "Πλήρης (Αρχικό μέγεθος)"
+imageResolutionReduced = "Μειωμένη (Μέχρι 1200px)"
+mobileScannerPageFormat = "Μορφή σελίδας"
+mobileScannerPageFormatDesc = "Μέγεθος σελίδας PDF για τις μετατρεπόμενες εικόνες. Το «Διατήρηση» χρησιμοποιεί τις αρχικές διαστάσεις της εικόνας."
+pageFormatKeep = "Διατήρηση (Αρχικές διαστάσεις)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Προσαρμογή με τέντωμα"
+mobileScannerStretchToFitDesc = "Τεντώστε τις εικόνες ώστε να καλύπτουν όλη τη σελίδα. Αν απενεργοποιηθεί, οι εικόνες κεντράρονται με διατήρηση αναλογιών."
+
+[admin.settings.telegram]
+title = "Bot του Telegram"
+description = "Ρυθμίστε τη συνδεσιμότητα του bot Telegram, τους ελέγχους πρόσβασης και τα μηνύματα ανατροφοδότησης."
+
+[admin.settings.telegram.enabled]
+label = "Ενεργοποίηση bot Telegram"
+description = "Επιτρέψτε στους χρήστες να αλληλεπιδρούν με το Stirling PDF μέσω του ρυθμισμένου bot Telegram."
+
+[admin.settings.telegram.botUsername]
+label = "Όνομα χρήστη bot"
+description = "Το δημόσιο όνομα χρήστη του bot σας στο Telegram."
+
+[admin.settings.telegram.botToken]
+label = "Διακριτικό bot"
+description = "API token που παρέχεται από το BotFather για το bot σας στο Telegram."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Φάκελος εισερχομένων"
+description = "Φάκελος κάτω από τον κατάλογο pipeline όπου αποθηκεύονται τα εισερχόμενα αρχεία Telegram."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Χρήση προσαρμοσμένου επιθέματος φακέλου"
+description = "Προσθέστε το chat ID στους φακέλους εισερχόμενων για να απομονώνονται οι μεταφορτώσεις ανά συνομιλία."
+
+[admin.settings.telegram.accessControl]
+title = "Έλεγχος πρόσβασης"
+description = "Περιορίστε ποιοι χρήστες ή κανάλια μπορούν να αλληλεπιδρούν με το bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Να επιτρέπονται συγκεκριμένα User ID"
+description = "Όταν είναι ενεργό, μόνο τα αναφερόμενα User ID μπορούν να χρησιμοποιούν το bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Επιτρεπόμενα User ID"
+description = "Εισαγάγετε Telegram user ID που επιτρέπεται να αλληλεπιδρούν με το bot."
+placeholder = "Προσθέστε user ID και πατήστε Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Να επιτρέπονται συγκεκριμένα Channel ID"
+description = "Όταν είναι ενεργό, μόνο τα αναφερόμενα Channel ID μπορούν να χρησιμοποιούν το bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Επιτρεπόμενα Channel ID"
+description = "Εισαγάγετε Telegram channel ID που επιτρέπεται να αλληλεπιδρούν με το bot."
+placeholder = "Προσθέστε channel ID και πατήστε Enter"
+
+[admin.settings.telegram.processing]
+title = "Επεξεργασία"
+description = "Ρυθμίστε τα διαστήματα polling και τα χρονικά όρια επεξεργασίας για μεταφορτώσεις από Telegram."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Χρονικό όριο επεξεργασίας (δευτ.)"
+description = "Μέγιστος χρόνος αναμονής επεξεργασίας πριν αναφερθεί σφάλμα."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Διάστημα polling (ms)"
+description = "Διάστημα μεταξύ ελέγχων για νέες ενημερώσεις του Telegram."
+
+[admin.settings.telegram.feedback]
+title = "Μηνύματα ανατροφοδότησης"
+description = "Επιλέξτε πότε το bot θα στέλνει ανατροφοδότηση σε χρήστες και κανάλια."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Ενεργοποίηση ανατροφοδότησης"
+description = "Ρυθμίστε αν το bot θα στέλνει καθόλου μηνύματα ανατροφοδότησης."
+
+[admin.settings.telegram.feedback.channel]
+title = "Κανόνες ανατροφοδότησης καναλιού"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Εμφάνιση \"No valid document\" (Κανάλι)"
+description = "Καταστολή της απάντησης no valid document για μεταφορτώσεις καναλιού."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Εμφάνιση σφαλμάτων επεξεργασίας (Κανάλι)"
+description = "Αποστολή μηνυμάτων σφαλμάτων επεξεργασίας στα κανάλια."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Εμφάνιση μηνυμάτων σφάλματος (Κανάλι)"
+description = "Εμφάνιση αναλυτικών μηνυμάτων σφάλματος για τα κανάλια."
+
+[admin.settings.telegram.feedback.user]
+title = "Κανόνες ανατροφοδότησης χρήστη"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Εμφάνιση \"No valid document\" (Χρήστης)"
+description = "Καταστολή της απάντησης no valid document για μεταφορτώσεις χρηστών."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Εμφάνιση σφαλμάτων επεξεργασίας (Χρήστης)"
+description = "Αποστολή μηνυμάτων σφαλμάτων επεξεργασίας στους χρήστες."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Εμφάνιση μηνυμάτων σφάλματος (Χρήστης)"
+description = "Εμφάνιση αναλυτικών μηνυμάτων σφάλματος για τους χρήστες."
 
 [admin.settings.database]
 title = "Βάση δεδομένων"
@@ -4567,8 +4940,12 @@ label = "Ενεργοποίηση προσκλήσεων μέσω email"
 description = "Να επιτρέπεται στους διαχειριστές να προσκαλούν χρήστες μέσω email με αυτόματα παραγόμενους κωδικούς"
 
 [admin.settings.mail.frontendUrl]
-label = "URL front-end"
+label = "Frontend URL"
 description = "Βασικό URL για το frontend (π.χ. https://pdf.example.com). Χρησιμοποιείται για τη δημιουργία συνδέσμων πρόσκλησης στα email. Αφήστε κενό για χρήση του backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Σημείωση: Απαιτείται ρύθμιση του Frontend URL. "
+link = "Ρύθμιση στις Ρυθμίσεις Συστήματος"
 
 [admin.settings.legal]
 title = "Νομικά έγγραφα"
@@ -4754,6 +5131,9 @@ googleDriveShort = "Drive"
 myFiles = "Τα αρχεία μου"
 noRecentFiles = "Δεν βρέθηκαν πρόσφατα αρχεία"
 googleDriveNotAvailable = "Η ενσωμάτωση με το Google Drive δεν είναι διαθέσιμη"
+mobileUpload = "Μεταφόρτωση από κινητό"
+mobileShort = "Κινητό"
+mobileUploadNotAvailable = "Η μεταφόρτωση από κινητό δεν είναι ενεργή"
 downloadSelected = "Λήψη επιλεγμένων"
 saveSelected = "Αποθήκευση επιλεγμένων"
 openFiles = "Άνοιγμα αρχείων"
@@ -5069,6 +5449,7 @@ loading = "Φόρτωση..."
 back = "Πίσω"
 continue = "Συνέχεια"
 error = "Σφάλμα"
+save = "Αποθήκευση"
 
 [config.overview]
 title = "Ρυθμίσεις εφαρμογής"
@@ -5130,6 +5511,15 @@ warning = "⚠️ Προειδοποίηση: Αυτή η ενέργεια θα 
 impact = "Οποιαδήποτε εφαρμογή ή υπηρεσία χρησιμοποιεί αυτά τα κλειδιά θα σταματήσει να λειτουργεί μέχρι να τα ενημερώσετε με τα νέα."
 confirmPrompt = "Είστε βέβαιοι ότι θέλετε να συνεχίσετε;"
 confirmCta = "Ανανέωση κλειδιών"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Σφάλμα κλειδιού API"
+failedToCreateApiKey = "Αποτυχία δημιουργίας κλειδιού API."
+failedToRetrieveApiKey = "Αποτυχία ανάκτησης κλειδιού API από την απόκριση."
+failedToFetchApiKey = "Αποτυχία λήψης κλειδιού API."
+apiKeyRefreshed = "Το κλειδί API ανανεώθηκε"
+apiKeyRefreshedBody = "Το κλειδί API ανανεώθηκε με επιτυχία."
+failedToRefreshApiKey = "Αποτυχία ανανέωσης κλειδιού API."
 
 [AddAttachmentsRequest]
 attachments = "Επιλογή συνημμένων"
@@ -5235,6 +5625,16 @@ finish = "Τέλος"
 startTour = "Έναρξη περιήγησης"
 startTourDescription = "Κάντε μια καθοδηγούμενη περιήγηση στα βασικά χαρακτηριστικά του Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Ξεκινήστε από τη γραμμή <strong>Γρήγορης πρόσβασης</strong> για να μεταπηδάτε μεταξύ Reader, Automate, των αρχείων σας και όλων των ξεναγήσεων."
+leftPanel = "Το αριστερό πάνελ <strong>Εργαλεία</strong> περιλαμβάνει όλα όσα μπορείτε να κάνετε. Περιηγηθείτε στις κατηγορίες ή αναζητήστε για να βρείτε γρήγορα ένα εργαλείο."
+fileUpload = "Χρησιμοποιήστε το κουμπί <strong>Αρχεία</strong> για μεταφόρτωση ή επιλογή πρόσφατου PDF. Θα φορτώσουμε ένα δείγμα ώστε να δείτε τον χώρο εργασίας."
+rightRail = "Η <strong>Δεξιά γραμμή</strong> περιέχει γρήγορες ενέργειες για επιλογή αρχείων, αλλαγή θέματος ή γλώσσας και λήψη αποτελεσμάτων."
+topBar = "Η επάνω γραμμή σάς επιτρέπει να εναλλάσσεστε μεταξύ <strong>Viewer</strong>, <strong>Page Editor</strong> και <strong>Active Files</strong>."
+pageEditorView = "Μεταβείτε στο Page Editor για αναδιάταξη, περιστροφή ή διαγραφή σελίδων."
+activeFilesView = "Χρησιμοποιήστε το Active Files για να δείτε ό,τι έχετε ανοίξει και να επιλέξετε με τι θα εργαστείτε."
+wrapUp = "Αυτά είναι τα νέα στο V2. Ανοίξτε το μενού <strong>Ξεναγήσεις</strong> οποιαδήποτε στιγμή για να επαναλάβετε αυτήν, τη ξενάγηση Εργαλείων ή του Διαχειριστή."
+
 [onboarding.welcomeModal]
 title = "Καλώς ήρθατε στο Stirling PDF!"
 description = "Θέλετε να κάνετε μια γρήγορη περιήγηση 1 λεπτού για να μάθετε τα βασικά χαρακτηριστικά και πώς να ξεκινήσετε;"
@@ -5255,6 +5655,10 @@ download = "Λήψη →"
 showMeAround = "Ξεναγήστε με"
 skipTheTour = "Παράλειψη ξενάγησης"
 
+[onboarding.tourOverview]
+title = "Επισκόπηση ξενάγησης"
+body = "Το Stirling PDF V2 περιλαμβάνει δεκάδες εργαλεία και ανανεωμένη διάταξη. Κάντε μια σύντομη ξενάγηση για να δείτε τι άλλαξε και πού θα βρείτε τις λειτουργίες που χρειάζεστε."
+
 [onboarding.serverLicense]
 skip = "Παράλειψη προς το παρόν"
 seePlans = "Δείτε τα πλάνα →"
@@ -5262,7 +5666,7 @@ upgrade = "Αναβάθμιση τώρα →"
 freeTitle = "Άδεια διακομιστή"
 overLimitTitle = "Απαιτείται άδεια διακομιστή"
 overLimitBody = "Η αδειοδότηση μας επιτρέπει έως <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Έχετε <strong>{{overLimitUserCopy}}</strong> χρήστες Stirling. Για να συνεχίσετε χωρίς διακοπές, αναβαθμίστε στο πλάνο Stirling Server - <strong>απεριόριστες θέσεις</strong>, επεξεργασία κειμένου PDF και πλήρης έλεγχος διαχειριστή για $99/server/μήνα."
-freeBody = "Οι άδειες χρήσης <strong>Open-Core</strong> επιτρέπουν έως και <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Για απρόσκοπτη κλιμάκωση, προτείνουμε το πλάνο Stirling Server - <strong>απεριόριστες θέσεις</strong> και <strong>υποστήριξη SSO</strong> με $99/διακομιστή/μήνα."
+freeBody = "Η αδειοδότηση <strong>Open-Core</strong> μας επιτρέπει έως <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Για απρόσκοπτη κλιμάκωση και έγκαιρη πρόσβαση στο νέο <strong>εργαλείο επεξεργασίας κειμένου PDF</strong>, προτείνουμε το πλάνο Stirling Server - πλήρης επεξεργασία και <strong>απεριόριστες θέσεις</strong> για $99/server/μήνα."
 
 [onboarding.desktopInstall]
 title = "Λήψη"
@@ -5568,6 +5972,28 @@ contactSales = "Επικοινωνία με Πωλήσεις"
 contactToUpgrade = "Επικοινωνήστε μαζί μας για αναβάθμιση ή προσαρμογή του πλάνου σας"
 maxUsers = "Μέγιστοι χρήστες"
 upTo = "Έως"
+getLicense = "Αποκτήστε άδεια διακομιστή"
+upgradeToEnterprise = "Αναβάθμιση σε Enterprise"
+selectPeriod = "Επιλέξτε περίοδο χρέωσης"
+monthlyBilling = "Μηνιαία χρέωση"
+yearlyBilling = "Ετήσια χρέωση"
+checkoutOpened = "Άνοιξε το Checkout"
+checkoutInstructions = "Ολοκληρώστε την αγορά σας στην καρτέλα του Stripe. Μετά την πληρωμή, επιστρέψτε εδώ και ανανεώστε τη σελίδα για να ενεργοποιήσετε την άδειά σας. Θα λάβετε επίσης email με το κλειδί άδειας."
+activateLicense = "Ενεργοποιήστε την άδειά σας"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Το Checkout άνοιξε σε νέα καρτέλα"
+instructions = "Ολοκληρώστε την αγορά σας στην καρτέλα του Stripe. Μόλις ολοκληρωθεί η πληρωμή, θα λάβετε email με το κλειδί άδειας."
+enterKey = "Εισαγάγετε παρακάτω το κλειδί άδειας για να ενεργοποιήσετε το πλάνο σας:"
+keyDescription = "Επικολλήστε το κλειδί άδειας από το email σας"
+activate = "Ενεργοποίηση άδειας"
+doLater = "Θα το κάνω αργότερα"
+success = "Η άδεια ενεργοποιήθηκε!"
+successMessage = "Η άδειά σας ενεργοποιήθηκε με επιτυχία. Μπορείτε τώρα να κλείσετε αυτό το παράθυρο."
+
+[plan.static.billingPortal]
+title = "Απαιτείται επαλήθευση email"
+message = "Θα χρειαστεί να επαληθεύσετε τη διεύθυνση email σας στο portal χρέωσης του Stripe. Ελέγξτε το email σας για σύνδεσμο σύνδεσης."
 
 [plan.period]
 month = "μήνα"
@@ -5771,6 +6197,8 @@ notAvailable = "Το σύστημα ελέγχου δεν είναι διαθέ�
 notAvailableMessage = "Το σύστημα ελέγχου δεν έχει ρυθμιστεί ή δεν είναι διαθέσιμο."
 disabled = "Η καταγραφή ελέγχου είναι απενεργοποιημένη"
 disabledMessage = "Ενεργοποιήστε την καταγραφή ελέγχου στις ρυθμίσεις της εφαρμογής για παρακολούθηση συμβάντων συστήματος."
+enterpriseRequired = "Απαιτείται άδεια Enterprise"
+enterpriseRequiredMessage = "Το σύστημα καταγραφής ελέγχου είναι λειτουργία enterprise. Αναβαθμίστε σε άδεια Enterprise για πρόσβαση σε αρχεία καταγραφής ελέγχου και αναλυτικά στοιχεία."
 
 [audit.error]
 title = "Σφάλμα φόρτωσης συστήματος ελέγχου"
@@ -5864,7 +6292,7 @@ title = "Διάγραμμα χρήσης Endpoints"
 
 [usage.table]
 title = "Αναλυτικά στατιστικά"
-endpoint = "Σημείο τερματισμού"
+endpoint = "Endpoint"
 visits = "Επισκέψεις"
 percentage = "Ποσοστό"
 noData = "Δεν υπάρχουν διαθέσιμα δεδομένα"
@@ -5942,6 +6370,7 @@ description = "Εισαγάγετε το πλήρες URL του self-hosted δ�
 
 [setup.server.error]
 emptyUrl = "Εισαγάγετε URL διακομιστή"
+invalidUrl = "Μη έγκυρη μορφή URL. Εισαγάγετε έγκυρο URL όπως https://your-server.com"
 unreachable = "Αδυναμία σύνδεσης με τον διακομιστή"
 testFailed = "Αποτυχία ελέγχου σύνδεσης"
 configFetch = "Αποτυχία ανάκτησης της διαμόρφωσης του διακομιστή. Ελέγξτε το URL και δοκιμάστε ξανά."
@@ -5960,6 +6389,7 @@ connectingTo = "Σύνδεση με:"
 submit = "Σύνδεση"
 signInWith = "Σύνδεση με"
 oauthPending = "Άνοιγμα προγράμματος περιήγησης για έλεγχο ταυτότητας..."
+sso = "Ενιαία σύνδεση"
 orContinueWith = "Ή συνεχίστε με email"
 serverRequirement = "Σημείωση: Ο διακομιστής πρέπει να έχει ενεργοποιημένη τη σύνδεση."
 showInstructions = "Πώς ενεργοποιείται;"
@@ -6025,6 +6455,8 @@ reset = "Επαναφορά αλλαγών"
 downloadJson = "Λήψη JSON"
 generatePdf = "Δημιουργία PDF"
 saveChanges = "Αποθήκευση αλλαγών"
+applyChanges = "Εφαρμογή αλλαγών"
+downloadCopy = "Λήψη αντιγράφου"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Αυτόματη προσαρμογή κειμένου στα πλαίσια"
@@ -6042,6 +6474,24 @@ descriptionInline = "Συμβουλή: Κρατήστε πατημένο το Ct
 [pdfTextEditor.options.forceSingleElement]
 title = "Κλείδωμα επεξεργασμένου κειμένου σε ένα μόνο στοιχείο PDF"
 description = "Όταν είναι ενεργό, ο επεξεργαστής εξάγει κάθε επεξεργασμένο πλαίσιο κειμένου ως ένα στοιχείο κειμένου PDF για να αποφύγει επικαλυπτόμενους γλύφους ή ανάμεικτες γραμματοσειρές."
+
+[pdfTextEditor.options.advanced]
+title = "Σύνθετες ρυθμίσεις"
+
+[pdfTextEditor.tooltip.header]
+title = "Περιορισμοί προεπισκόπησης"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Εστίαση σε κείμενο και εικόνα"
+text = "Ο χώρος εργασίας εστιάζει στην επεξεργασία κειμένου και την ανατοποθέτηση ενσωματωμένων εικόνων. Πολύπλοκα γραφικά σελίδας, στοιχεία φορμών και πολυεπίπεδα γραφικά διατηρούνται για εξαγωγή αλλά δεν είναι πλήρως επεξεργάσιμα εδώ."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Διαφορές προεπισκόπησης"
+text = "Ορισμένα οπτικά (όπως περιγράμματα πινάκων, σχήματα ή εμφανίσεις σχολιασμών) μπορεί να μην εμφανίζονται ακριβώς στην προεπισκόπηση. Το εξαγόμενο PDF διατηρεί τις αρχικές εντολές σχεδίασης όπου είναι δυνατόν."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Προβολέας Alpha"
+text = "Αυτός ο προβολέας alpha βρίσκεται υπό εξέλιξη—ορισμένες γραμματοσειρές, χρώματα, εφέ διαφάνειας και λεπτομέρειες διάταξης μπορεί να διαφοροποιηθούν ελαφρώς. Ελέγξτε προσεκτικά το παραγόμενο PDF πριν το κοινοποιήσετε."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Συγχώνευση επιλεγμένων πλαισίων"
@@ -6164,3 +6614,58 @@ title = "Αποτελέσματα προσθήκης κειμένου"
 
 [addText.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκη κειμένου στο PDF."
+
+[mobileUpload]
+title = "Μεταφόρτωση από κινητό"
+description = "Σαρώστε για μεταφόρτωση φωτογραφιών. Οι εικόνες μετατρέπονται αυτόματα σε PDF."
+descriptionNoConvert = "Σαρώστε για μεταφόρτωση φωτογραφιών από την κινητή συσκευή σας."
+error = "Σφάλμα σύνδεσης"
+pollingError = "Σφάλμα κατά τον έλεγχο για αρχεία"
+sessionId = "Session ID"
+sessionCreateError = "Αποτυχία δημιουργίας συνεδρίας"
+expiryWarning = "Η συνεδρία λήγει σύντομα"
+expiryWarningMessage = "Αυτός ο κωδικός QR θα λήξει σε {{seconds}} δευτερόλεπτα. Ένας νέος κωδικός θα δημιουργηθεί αυτόματα."
+filesReceived = "Παραλήφθηκαν {{count}} αρχείο(α)"
+connected = "Συνδέθηκε κινητή συσκευή"
+instructions = "Σαρώστε με την κάμερα του τηλεφώνου σας. Οι εικόνες μετατρέπονται αυτόματα σε PDF."
+instructionsNoConvert = "Σαρώστε με την κάμερα του τηλεφώνου σας για να μεταφορτώσετε αρχεία."
+
+[mobileScanner]
+title = "Σαρωτής κινητού"
+noSession = "Μη έγκυρη συνεδρία"
+noSessionMessage = "Σαρώστε έγκυρο κωδικό QR για πρόσβαση σε αυτή τη σελίδα."
+validating = "Γίνεται επικύρωση συνεδρίας..."
+sessionInvalid = "Σφάλμα συνεδρίας"
+sessionExpired = "Αυτή η συνεδρία έχει λήξει. Ανανεώστε και δοκιμάστε ξανά."
+sessionNotFound = "Η συνεδρία δεν βρέθηκε. Ανανεώστε και δοκιμάστε ξανά."
+sessionValidationError = "Αδυναμία επαλήθευσης συνεδρίας. Δοκιμάστε ξανά."
+uploadSuccess = "Η μεταφόρτωση ολοκληρώθηκε!"
+uploadSuccessMessage = "Οι εικόνες σας μεταφέρθηκαν."
+httpsRequired = "Η πρόσβαση στην κάμερα απαιτεί HTTPS ή localhost. Παρακαλούμε χρησιμοποιήστε HTTPS ή αποκτήστε πρόσβαση μέσω localhost."
+uploadFailed = "Η μεταφόρτωση απέτυχε. Δοκιμάστε ξανά."
+uploading = "Γίνεται μεταφόρτωση..."
+connected = "Συνδεδεμένο"
+connecting = "Γίνεται σύνδεση..."
+chooseMethod = "Επιλέξτε μέθοδο μεταφόρτωσης"
+chooseMethodDescription = "Επιλέξτε πώς θέλετε να σαρώσετε και να μεταφορτώσετε έγγραφα"
+camera = "Κάμερα"
+cameraDescription = "Σαρώστε έγγραφα με την κάμερα της συσκευής σας με αυτόματο εντοπισμό ακμών"
+fileUpload = "Μεταφόρτωση αρχείων"
+fileDescription = "Μεταφορτώστε υπάρχουσες φωτογραφίες ή έγγραφα από τη συσκευή σας"
+cameraAccessDenied = "Δεν επιτρέπεται πρόσβαση στην κάμερα. Ενεργοποιήστε την πρόσβαση."
+back = "Πίσω"
+settings = "Ρυθμίσεις"
+edgeDetection = "Εντοπισμός ακμών"
+flashlight = "Φακός"
+flash = "Φλας"
+processing = "Γίνεται επεξεργασία..."
+capture = "Λήψη φωτογραφίας"
+selectFilesPrompt = "Επιλέξτε αρχεία για μεταφόρτωση"
+selectImage = "Επιλογή εικόνας"
+preview = "Προεπισκόπηση"
+retake = "Επανάληψη λήψης"
+addToBatch = "Προσθήκη στη δέσμη"
+upload = "Μεταφόρτωση"
+batchImages = "Δέσμη"
+clearBatch = "Καθαρισμός"
+uploadAll = "Μεταφόρτωση όλων"
