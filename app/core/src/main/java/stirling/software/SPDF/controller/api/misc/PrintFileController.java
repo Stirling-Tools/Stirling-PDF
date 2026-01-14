@@ -7,8 +7,12 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 import javax.print.PrintService;
@@ -21,19 +25,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
-import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.util.ExceptionUtils;
 
-@MiscApi
+@RestController
+@RequestMapping("/api/v1/misc")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 @Slf4j
 public class PrintFileController {
 
     // TODO
-    // @AutoJobPostMapping(value = "/print-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // @PostMapping(value = "/print-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =
@@ -45,18 +55,22 @@ public class PrintFileController {
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null
                 && (originalFilename.contains("..") || Paths.get(originalFilename).isAbsolute())) {
-            throw new IOException("Invalid file path detected: " + originalFilename);
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalid.filepath", "Invalid file path detected: " + originalFilename);
         }
         String printerName = request.getPrinterName();
         String contentType = file.getContentType();
         try {
             // Find matching printer
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+            String normalizedPrinterName = printerName.toLowerCase(Locale.ROOT);
             PrintService selectedService =
                     Arrays.stream(services)
                             .filter(
                                     service ->
-                                            service.getName().toLowerCase().contains(printerName))
+                                            service.getName()
+                                                    .toLowerCase(Locale.ROOT)
+                                                    .contains(normalizedPrinterName))
                             .findFirst()
                             .orElseThrow(
                                     () ->
@@ -66,38 +80,48 @@ public class PrintFileController {
             log.info("Selected Printer: {}", selectedService.getName());
 
             if (MediaType.APPLICATION_PDF_VALUE.equals(contentType)) {
-                PDDocument document = Loader.loadPDF(file.getBytes());
-                PrinterJob job = PrinterJob.getPrinterJob();
-                job.setPrintService(selectedService);
-                job.setPageable(new PDFPageable(document));
-                job.print();
-                document.close();
+                // Use Stream-to-File pattern: write to temp file first, then load from file
+                Path tempFile = Files.createTempFile("print-", ".pdf");
+                try {
+                    Files.copy(
+                            file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+                    try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {
+                        PrinterJob job = PrinterJob.getPrinterJob();
+                        job.setPrintService(selectedService);
+                        job.setPageable(new PDFPageable(document));
+                        job.print();
+                    }
+                } finally {
+                    Files.deleteIfExists(tempFile);
+                }
             } else if (contentType.startsWith("image/")) {
-                BufferedImage image = ImageIO.read(file.getInputStream());
-                PrinterJob job = PrinterJob.getPrinterJob();
-                job.setPrintService(selectedService);
-                job.setPrintable(
-                        new Printable() {
-                            public int print(
-                                    Graphics graphics, PageFormat pageFormat, int pageIndex)
-                                    throws PrinterException {
-                                if (pageIndex != 0) {
-                                    return NO_SUCH_PAGE;
+                try (var inputStream = file.getInputStream()) {
+                    BufferedImage image = ImageIO.read(inputStream);
+                    PrinterJob job = PrinterJob.getPrinterJob();
+                    job.setPrintService(selectedService);
+                    job.setPrintable(
+                            new Printable() {
+                                public int print(
+                                        Graphics graphics, PageFormat pageFormat, int pageIndex)
+                                        throws PrinterException {
+                                    if (pageIndex != 0) {
+                                        return NO_SUCH_PAGE;
+                                    }
+                                    Graphics2D g2d = (Graphics2D) graphics;
+                                    g2d.translate(
+                                            pageFormat.getImageableX(), pageFormat.getImageableY());
+                                    g2d.drawImage(
+                                            image,
+                                            0,
+                                            0,
+                                            (int) pageFormat.getImageableWidth(),
+                                            (int) pageFormat.getImageableHeight(),
+                                            null);
+                                    return PAGE_EXISTS;
                                 }
-                                Graphics2D g2d = (Graphics2D) graphics;
-                                g2d.translate(
-                                        pageFormat.getImageableX(), pageFormat.getImageableY());
-                                g2d.drawImage(
-                                        image,
-                                        0,
-                                        0,
-                                        (int) pageFormat.getImageableWidth(),
-                                        (int) pageFormat.getImageableHeight(),
-                                        null);
-                                return PAGE_EXISTS;
-                            }
-                        });
-                job.print();
+                            });
+                    job.print();
+                }
             }
             return new ResponseEntity<>(
                     "File printed successfully to " + selectedService.getName(), HttpStatus.OK);

@@ -13,7 +13,7 @@ import {
   UPGRADE_BANNER_ALERT_EVENT,
 } from '@core/constants/events';
 import { useServerExperience } from '@app/hooks/useServerExperience';
-import { hasSeenStep } from '@core/components/onboarding/orchestrator/onboardingStorage';
+import { isOnboardingCompleted } from '@core/components/onboarding/orchestrator/onboardingStorage';
 
 const FRIENDLY_LAST_SEEN_KEY = 'upgradeBannerFriendlyLastShownAt';
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -26,6 +26,7 @@ const UpgradeBanner: React.FC = () => {
   const onAuthRoute = isAuthRoute(location.pathname);
   const { openCheckout } = useCheckout();
   const {
+    loginEnabled,
     totalUsers,
     userCountResolved,
     userCountLoading,
@@ -34,9 +35,10 @@ const UpgradeBanner: React.FC = () => {
     licenseLoading,
     freeTierLimit,
     overFreeTierLimit,
+    weeklyActiveUsers,
     scenarioKey,
   } = useServerExperience();
-  const onboardingComplete = hasSeenStep('welcome');
+  const onboardingComplete = isOnboardingCompleted();
   const [friendlyVisible, setFriendlyVisible] = useState(() => {
     if (typeof window === 'undefined') return false;
     const lastShownRaw = window.localStorage.getItem(FRIENDLY_LAST_SEEN_KEY);
@@ -139,7 +141,7 @@ const UpgradeBanner: React.FC = () => {
           effectiveTotalUsersLoaded &&
           onboardingComplete,
       );
-  // Urgent banner should always show when over-limit 
+  // Urgent banner should always show when over-limit
   const shouldEvaluateUrgent = scenario
     ? Boolean(scenario && !scenarioIsFriendly)
     : Boolean(
@@ -296,8 +298,18 @@ const UpgradeBanner: React.FC = () => {
     );
   };
 
+  const suppressForNoLogin =
+    !loginEnabled ||
+    (!loginEnabled && (weeklyActiveUsers ?? Number.POSITIVE_INFINITY) > 5);
+
   // Don't show on auth routes or if neither banner type should show
-  if (onAuthRoute || (!friendlyVisible && !shouldEvaluateUrgent)) {
+  // Also suppress entirely for no-login servers (treat them as regular users only)
+  // and, per request, never surface upgrade messaging there when WAU > 5.
+  if (
+    onAuthRoute ||
+    suppressForNoLogin ||
+    (!friendlyVisible && !shouldEvaluateUrgent)
+  ) {
     return null;
   }
 

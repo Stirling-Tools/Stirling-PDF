@@ -20,6 +20,10 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
       formData.append("horizontalDivisions", parameters.hDiv);
       formData.append("verticalDivisions", parameters.vDiv);
       formData.append("merge", (parameters.merge ?? false).toString());
+      formData.append("splitMode", parameters.splitMode || 'SPLIT_ALL');
+      if (parameters.splitMode === 'CUSTOM' && parameters.customPages) {
+        formData.append("pageNumbers", parameters.customPages);
+      }
       break;
     case SPLIT_METHODS.BY_SIZE:
       formData.append("splitType", "0");

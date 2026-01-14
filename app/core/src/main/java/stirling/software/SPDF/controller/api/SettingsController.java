@@ -32,16 +32,19 @@ public class SettingsController {
 
     @AutoJobPostMapping("/update-enable-analytics")
     @Hidden
-    public ResponseEntity<String> updateApiKey(@RequestParam Boolean enabled) throws IOException {
+    public ResponseEntity<Map<String, Object>> updateApiKey(@RequestParam Boolean enabled)
+            throws IOException {
         if (applicationProperties.getSystem().getEnableAnalytics() != null) {
             return ResponseEntity.status(HttpStatus.ALREADY_REPORTED)
                     .body(
-                            "Setting has already been set, To adjust please edit "
-                                    + InstallationPathConfig.getSettingsPath());
+                            Map.of(
+                                    "message",
+                                    "Setting has already been set, To adjust please edit "
+                                            + InstallationPathConfig.getSettingsPath()));
         }
         GeneralUtils.saveKeyToSettings("system.enableAnalytics", enabled);
         applicationProperties.getSystem().setEnableAnalytics(enabled);
-        return ResponseEntity.ok("Updated");
+        return ResponseEntity.ok(Map.of("message", "Updated"));
     }
 
     @GetMapping("/get-endpoints-status")
@@ -63,7 +66,7 @@ public class SettingsController {
                         "defaultLocale", applicationProperties.getSystem().getDefaultLocale(),
                         "showUpdate", applicationProperties.getSystem().isShowUpdate(),
                         "showUpdateOnlyAdmin",
-                                applicationProperties.getSystem().getShowUpdateOnlyAdmin(),
+                                applicationProperties.getSystem().isShowUpdateOnlyAdmin(),
                         "customHTMLFiles", applicationProperties.getSystem().isCustomHTMLFiles(),
                         "fileUploadLimit", applicationProperties.getSystem().getFileUploadLimit()));
         return ResponseEntity.ok(settings);
@@ -123,7 +126,7 @@ public class SettingsController {
         Map<String, Object> settings = new HashMap<>();
         ApplicationProperties.Security security = applicationProperties.getSecurity();
 
-        settings.put("enableLogin", security.getEnableLogin());
+        settings.put("enableLogin", security.isEnableLogin());
         settings.put("loginMethod", security.getLoginMethod());
         settings.put("loginAttemptCount", security.getLoginAttemptCount());
         settings.put("loginResetTimeMinutes", security.getLoginResetTimeMinutes());
@@ -351,8 +354,8 @@ public class SettingsController {
         Map<String, Object> settings = new HashMap<>();
 
         settings.put("enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
-        settings.put("googleVisibility", applicationProperties.getSystem().getGooglevisibility());
-        settings.put("metricsEnabled", applicationProperties.getMetrics().getEnabled());
+        settings.put("googleVisibility", applicationProperties.getSystem().isGooglevisibility());
+        settings.put("metricsEnabled", applicationProperties.getMetrics().isEnabled());
 
         return ResponseEntity.ok(settings);
     }
@@ -394,9 +397,9 @@ public class SettingsController {
         settings.put("endpoints", applicationProperties.getEndpoints());
         settings.put(
                 "enableAlphaFunctionality",
-                applicationProperties.getSystem().getEnableAlphaFunctionality());
+                applicationProperties.getSystem().isEnableAlphaFunctionality());
         settings.put("maxDPI", applicationProperties.getSystem().getMaxDPI());
-        settings.put("enableUrlToPDF", applicationProperties.getSystem().getEnableUrlToPDF());
+        settings.put("enableUrlToPDF", applicationProperties.getSystem().isEnableUrlToPDF());
         settings.put("customPaths", applicationProperties.getSystem().getCustomPaths());
         settings.put(
                 "tempFileManagement", applicationProperties.getSystem().getTempFileManagement());

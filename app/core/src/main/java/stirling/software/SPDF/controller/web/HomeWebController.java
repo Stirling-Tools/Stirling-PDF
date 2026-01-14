@@ -45,8 +45,7 @@ public class HomeWebController {
     public String licensesForm(Model model) {
         model.addAttribute("currentPage", "licenses");
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
-        try {
-            InputStream is = resource.getInputStream();
+        try (InputStream is = resource.getInputStream()) {
             String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Dependency>> data = mapper.readValue(json, new TypeReference<>() {});
@@ -89,8 +88,8 @@ public class HomeWebController {
     @ResponseBody
     @Hidden
     public String getRobotsTxt() {
-        Boolean allowGoogle = applicationProperties.getSystem().getGooglevisibility();
-        if (Boolean.TRUE.equals(allowGoogle)) {
+        boolean allowGoogle = applicationProperties.getSystem().isGooglevisibility();
+        if (allowGoogle) {
             return "User-agent: Googlebot\nAllow: /\n\nUser-agent: *\nAllow: /";
         } else {
             return "User-agent: Googlebot\nDisallow: /\n\nUser-agent: *\nDisallow: /";

@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,12 +42,12 @@ public class ConvertEmlToPDF {
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/eml/pdf")
     @StandardPdfResponse
     @Operation(
-            summary = "Convert EML to PDF",
+            summary = "Convert EML/MSG to PDF",
             description =
-                    "This endpoint converts EML (email) files to PDF format with extensive"
-                            + " customization options. Features include font settings, image constraints, display modes, attachment handling,"
-                            + " and HTML debug output. Input: EML file, Output: PDF"
-                            + " or HTML file. Type: SISO")
+                    "This endpoint converts EML (email) and MSG (Outlook) files to PDF format"
+                            + " with extensive customization options. Features include font settings,"
+                            + " image constraints, display modes, attachment handling, and HTML debug"
+                            + " output. Input: EML or MSG file, Output: PDF or HTML file. Type: SISO")
     public ResponseEntity<byte[]> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
 
         MultipartFile inputFile = request.getFileInput();
@@ -53,7 +55,7 @@ public class ConvertEmlToPDF {
 
         // Validate input
         if (inputFile.isEmpty()) {
-            log.error("No file provided for EML to PDF conversion.");
+            log.error("No file provided for EML/MSG to PDF conversion.");
             return ResponseEntity.badRequest()
                     .body("No file provided".getBytes(StandardCharsets.UTF_8));
         }
@@ -64,12 +66,12 @@ public class ConvertEmlToPDF {
                     .body("Please provide a valid filename".getBytes(StandardCharsets.UTF_8));
         }
 
-        // Validate file type - support EML
-        String lowerFilename = originalFilename.toLowerCase();
-        if (!lowerFilename.endsWith(".eml")) {
-            log.error("Invalid file type for EML to PDF: {}", originalFilename);
+        // Validate file type - support EML and MSG (Outlook) files
+        String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
+        if (!lowerFilename.endsWith(".eml") && !lowerFilename.endsWith(".msg")) {
+            log.error("Invalid file type for EML/MSG to PDF: {}", originalFilename);
             return ResponseEntity.badRequest()
-                    .body("Please upload a valid EML file".getBytes(StandardCharsets.UTF_8));
+                    .body("Please upload a valid EML or MSG file".getBytes(StandardCharsets.UTF_8));
         }
 
         String baseFilename = Filenames.toSimpleFileName(originalFilename); // Use Filenames utility
@@ -80,7 +82,7 @@ public class ConvertEmlToPDF {
             if (request.isDownloadHtml()) {
                 try {
                     String htmlContent = EmlToPdf.convertEmlToHtml(fileBytes, request);
-                    log.info("Successfully converted EML to HTML: {}", originalFilename);
+                    log.info("Successfully converted email to HTML: {}", originalFilename);
                     return WebResponseUtils.bytesToWebResponse(
                             htmlContent.getBytes(StandardCharsets.UTF_8),
                             baseFilename + ".html",
@@ -94,12 +96,11 @@ public class ConvertEmlToPDF {
                 }
             }
 
-            // Convert EML to PDF with enhanced options
+            // Convert EML/MSG to PDF with enhanced options
             try {
                 byte[] pdfBytes =
                         EmlToPdf.convertEmlToPdf(
-                                runtimePathConfig
-                                        .getWeasyPrintPath(), // Use configured WeasyPrint path
+                                runtimePathConfig.getWeasyPrintPath(),
                                 request,
                                 fileBytes,
                                 originalFilename,
@@ -114,19 +115,19 @@ public class ConvertEmlToPDF {
                                     "PDF conversion failed - empty output"
                                             .getBytes(StandardCharsets.UTF_8));
                 }
-                log.info("Successfully converted EML to PDF: {}", originalFilename);
+                log.info("Successfully converted email to PDF: {}", originalFilename);
                 return WebResponseUtils.bytesToWebResponse(
                         pdfBytes, baseFilename + ".pdf", MediaType.APPLICATION_PDF);
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                log.error("EML to PDF conversion was interrupted for {}", originalFilename, e);
+                log.error("Email to PDF conversion was interrupted for {}", originalFilename, e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Conversion was interrupted".getBytes(StandardCharsets.UTF_8));
             } catch (IllegalArgumentException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(
-                        "EML to PDF conversion failed for {}: {}",
+                        "Email to PDF conversion failed for {}: {}",
                         originalFilename,
                         errorMessage,
                         e);
@@ -135,7 +136,7 @@ public class ConvertEmlToPDF {
             } catch (RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(
-                        "EML to PDF conversion failed for {}: {}",
+                        "Email to PDF conversion failed for {}: {}",
                         originalFilename,
                         errorMessage,
                         e);
@@ -144,27 +145,31 @@ public class ConvertEmlToPDF {
             }
 
         } catch (IOException e) {
-            log.error("File processing error for EML to PDF: {}", originalFilename, e);
+            log.error("File processing error for email to PDF: {}", originalFilename, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("File processing error".getBytes(StandardCharsets.UTF_8));
         }
     }
 
     private static @NotNull String buildErrorMessage(Exception e, String originalFilename) {
+        String safeFilename = HtmlUtils.htmlEscape(originalFilename);
+        String exceptionMessage = e.getMessage();
+        String safeExceptionMessage =
+                exceptionMessage == null ? "Unknown error" : HtmlUtils.htmlEscape(exceptionMessage);
         String errorMessage;
-        if (e.getMessage() != null && e.getMessage().contains("Invalid EML")) {
+        if (exceptionMessage != null && exceptionMessage.contains("Invalid EML")) {
             errorMessage =
                     "Invalid EML file format. Please ensure you've uploaded a valid email"
                             + " file ("
-                            + originalFilename
+                            + safeFilename
                             + ").";
-        } else if (e.getMessage() != null && e.getMessage().contains("WeasyPrint")) {
+        } else if (exceptionMessage != null && exceptionMessage.contains("WeasyPrint")) {
             errorMessage =
                     "PDF generation failed for "
-                            + originalFilename
+                            + safeFilename
                             + ". This may be due to complex email formatting.";
         } else {
-            errorMessage = "Conversion failed for " + originalFilename + ": " + e.getMessage();
+            errorMessage = "Conversion failed for " + safeFilename + ": " + safeExceptionMessage;
         }
         return errorMessage;
     }

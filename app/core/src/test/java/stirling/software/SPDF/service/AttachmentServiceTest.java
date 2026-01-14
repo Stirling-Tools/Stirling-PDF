@@ -7,11 +7,15 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 class AttachmentServiceTest {
@@ -103,6 +107,88 @@ class AttachmentServiceTest {
 
             assertNotNull(result);
             assertNotNull(result.getDocumentCatalog().getNames());
+        }
+    }
+
+    @Test
+    void extractAttachments_SanitizesFilenamesAndExtractsData() throws IOException {
+        attachmentService = new AttachmentService(1024 * 1024, 5 * 1024 * 1024);
+
+        try (var document = new PDDocument()) {
+            var maliciousAttachment =
+                    new MockMultipartFile(
+                            "file",
+                            "..\\evil/../../tricky.txt",
+                            MediaType.TEXT_PLAIN_VALUE,
+                            "danger".getBytes());
+
+            attachmentService.addAttachment(document, List.of(maliciousAttachment));
+
+            Optional<byte[]> extracted = attachmentService.extractAttachments(document);
+            assertTrue(extracted.isPresent());
+
+            try (var zipInputStream =
+                    new ZipInputStream(new ByteArrayInputStream(extracted.get()))) {
+                ZipEntry entry = zipInputStream.getNextEntry();
+                assertNotNull(entry);
+                String sanitizedName = entry.getName();
+
+                assertFalse(sanitizedName.contains(".."));
+                assertFalse(sanitizedName.contains("/"));
+                assertFalse(sanitizedName.contains("\\"));
+
+                byte[] data = zipInputStream.readAllBytes();
+                assertArrayEquals("danger".getBytes(), data);
+                assertNull(zipInputStream.getNextEntry());
+            }
+        }
+    }
+
+    @Test
+    void extractAttachments_SkipsAttachmentsExceedingSizeLimit() throws IOException {
+        attachmentService = new AttachmentService(4, 10);
+
+        try (var document = new PDDocument()) {
+            var oversizedAttachment =
+                    new MockMultipartFile(
+                            "file",
+                            "large.bin",
+                            MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                            "too big".getBytes());
+
+            attachmentService.addAttachment(document, List.of(oversizedAttachment));
+
+            Optional<byte[]> extracted = attachmentService.extractAttachments(document);
+            assertTrue(extracted.isEmpty());
+        }
+    }
+
+    @Test
+    void extractAttachments_EnforcesTotalSizeLimit() throws IOException {
+        attachmentService = new AttachmentService(10, 9);
+
+        try (var document = new PDDocument()) {
+            var first =
+                    new MockMultipartFile(
+                            "file", "first.txt", MediaType.TEXT_PLAIN_VALUE, "12345".getBytes());
+            var second =
+                    new MockMultipartFile(
+                            "file", "second.txt", MediaType.TEXT_PLAIN_VALUE, "67890".getBytes());
+
+            attachmentService.addAttachment(document, List.of(first, second));
+
+            Optional<byte[]> extracted = attachmentService.extractAttachments(document);
+            assertTrue(extracted.isPresent());
+
+            try (var zipInputStream =
+                    new ZipInputStream(new ByteArrayInputStream(extracted.get()))) {
+                ZipEntry firstEntry = zipInputStream.getNextEntry();
+                assertNotNull(firstEntry);
+                assertEquals("first.txt", firstEntry.getName());
+                byte[] firstData = zipInputStream.readNBytes(5);
+                assertArrayEquals("12345".getBytes(), firstData);
+                assertNull(zipInputStream.getNextEntry());
+            }
         }
     }
 }

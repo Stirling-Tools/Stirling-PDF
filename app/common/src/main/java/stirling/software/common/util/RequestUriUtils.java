@@ -26,6 +26,7 @@ public class RequestUriUtils {
                 || normalizedUri.startsWith("/public/")
                 || normalizedUri.startsWith("/pdfjs/")
                 || normalizedUri.startsWith("/pdfjs-legacy/")
+                || normalizedUri.startsWith("/pdfium/")
                 || normalizedUri.startsWith("/assets/")
                 || normalizedUri.startsWith("/locales/")
                 || normalizedUri.startsWith("/Login/")
@@ -51,6 +52,11 @@ public class RequestUriUtils {
             return true;
         }
 
+        // Mobile scanner page for QR code-based file uploads (peer-to-peer, no backend auth needed)
+        if (normalizedUri.startsWith("/mobile-scanner")) {
+            return true;
+        }
+
         // Treat common static file extensions as static resources
         return normalizedUri.endsWith(".svg")
                 || normalizedUri.endsWith(".png")
@@ -61,7 +67,8 @@ public class RequestUriUtils {
                 || normalizedUri.endsWith(".css")
                 || normalizedUri.endsWith(".mjs")
                 || normalizedUri.endsWith(".html")
-                || normalizedUri.endsWith(".toml");
+                || normalizedUri.endsWith(".toml")
+                || normalizedUri.endsWith(".wasm");
     }
 
     public static boolean isFrontendRoute(String contextPath, String requestURI) {
@@ -125,11 +132,13 @@ public class RequestUriUtils {
                 || requestURI.endsWith("popularity.txt")
                 || requestURI.endsWith(".js")
                 || requestURI.endsWith(".toml")
+                || requestURI.endsWith(".wasm")
                 || requestURI.contains("swagger")
                 || requestURI.startsWith("/api/v1/info")
                 || requestURI.startsWith("/site.webmanifest")
                 || requestURI.startsWith("/fonts")
-                || requestURI.startsWith("/pdfjs"));
+                || requestURI.startsWith("/pdfjs")
+                || requestURI.startsWith("/pdfium"));
     }
 
     /**
@@ -164,6 +173,8 @@ public class RequestUriUtils {
                         "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
+                || trimmedUri.startsWith(
+                        "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
                 || trimmedUri.startsWith("/v1/api-docs");
     }
 

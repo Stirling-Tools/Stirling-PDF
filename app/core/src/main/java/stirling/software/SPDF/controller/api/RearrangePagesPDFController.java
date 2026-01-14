@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -49,23 +50,25 @@ public class RearrangePagesPDFController {
         MultipartFile pdfFile = request.getFileInput();
         String pagesToDelete = request.getPageNumbers();
 
-        PDDocument document = pdfDocumentFactory.load(pdfFile);
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-        // Split the page order string into an array of page numbers or range of numbers
-        String[] pageOrderArr = pagesToDelete.split(",");
+            // Split the page order string into an array of page numbers or range of numbers
+            String[] pageOrderArr = pagesToDelete.split(",");
 
-        List<Integer> pagesToRemove =
-                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
+            List<Integer> pagesToRemove =
+                    GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
 
-        Collections.sort(pagesToRemove);
+            Collections.sort(pagesToRemove);
 
-        for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
-            int pageIndex = pagesToRemove.get(i);
-            document.removePage(pageIndex);
+            for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
+                int pageIndex = pagesToRemove.get(i);
+                document.removePage(pageIndex);
+            }
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(
+                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
         }
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
     }
 
     private List<Integer> removeFirst(int totalPages) {
@@ -202,7 +205,7 @@ public class RearrangePagesPDFController {
 
     private List<Integer> processSortTypes(String sortTypes, int totalPages, String pageOrder) {
         try {
-            SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase());
+            SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase(Locale.ROOT));
             return switch (mode) {
                 case REVERSE_ORDER -> reverseOrder(totalPages);
                 case DUPLEX_SORT -> duplexSort(totalPages);
@@ -214,7 +217,12 @@ public class RearrangePagesPDFController {
                 case REMOVE_LAST -> removeLast(totalPages);
                 case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
                 case DUPLICATE -> duplicate(totalPages, pageOrder);
-                default -> throw new IllegalArgumentException("Unsupported custom mode");
+                default ->
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.invalidFormat",
+                                "Invalid {0} format: {1}",
+                                "custom mode",
+                                "unsupported");
             };
         } catch (IllegalArgumentException e) {
             log.error("Unsupported custom mode", e);
@@ -237,42 +245,43 @@ public class RearrangePagesPDFController {
         String pageOrder = request.getPageNumbers();
         String sortType = request.getCustomMode();
         try {
-            // Load the input PDF
-            PDDocument document = pdfDocumentFactory.load(pdfFile);
+            // Load the input PDF with proper resource management
+            try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-            // Split the page order string into an array of page numbers or range of numbers
-            String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
-            int totalPages = document.getNumberOfPages();
-            List<Integer> newPageOrder;
-            if (sortType != null
-                    && !sortType.isEmpty()
-                    && !"custom".equals(sortType.toLowerCase())) {
-                newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
-            } else {
-                newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
-            }
-            log.info("newPageOrder = {}", newPageOrder);
-            log.info("totalPages = {}", totalPages);
-            // Create a new list to hold the pages in the new order
-            List<PDPage> newPages = new ArrayList<>();
-            for (int i = 0; i < newPageOrder.size(); i++) {
-                newPages.add(document.getPage(newPageOrder.get(i)));
-            }
+                // Split the page order string into an array of page numbers or range of numbers
+                String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
+                int totalPages = document.getNumberOfPages();
+                List<Integer> newPageOrder;
+                if (sortType != null
+                        && !sortType.isEmpty()
+                        && !"custom".equals(sortType.toLowerCase(Locale.ROOT))) {
+                    newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
+                } else {
+                    newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+                }
+                log.info("newPageOrder = {}", newPageOrder);
+                log.info("totalPages = {}", totalPages);
+                // Create a new list to hold the pages in the new order
+                List<PDPage> newPages = new ArrayList<>();
+                for (int i = 0; i < newPageOrder.size(); i++) {
+                    newPages.add(document.getPage(newPageOrder.get(i)));
+                }
 
-            // Remove all the pages from the original document
-            for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
-                document.removePage(i);
-            }
+                // Create a new document based on the original one
+                try (PDDocument rearrangedDocument =
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
 
-            // Add the pages in the new order
-            for (PDPage page : newPages) {
-                document.addPage(page);
-            }
+                    // Add the pages in the new order
+                    for (PDPage page : newPages) {
+                        rearrangedDocument.addPage(page);
+                    }
 
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    GeneralUtils.generateFilename(
-                            pdfFile.getOriginalFilename(), "_rearranged.pdf"));
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            rearrangedDocument,
+                            GeneralUtils.generateFilename(
+                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"));
+                }
+            }
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);
             throw e;

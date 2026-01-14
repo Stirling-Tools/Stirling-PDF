@@ -17,6 +17,10 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
+import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
+import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
+import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -142,11 +146,28 @@ const ConvertSettings = ({
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
     });
+    onParameterChange('cbrOptions', {
+      optimizeForEbook: false,
+    });
+    onParameterChange('pdfToCbrOptions', {
+      dpi: 150,
+    });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,
     });
     onParameterChange('cbzOutputOptions', {
       dpi: 150,
+    });
+    onParameterChange('ebookOptions', {
+      embedAllFonts: false,
+      includeTableOfContents: false,
+      includePageNumbers: false,
+      optimizeForEbook: false,
+    });
+    onParameterChange('epubOptions', {
+      detectChapters: true,
+      targetDevice: 'TABLET_PHONE_IMAGES',
+      outputFormat: 'EPUB',
     });
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
@@ -209,6 +230,12 @@ const ConvertSettings = ({
     });
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
+    });
+    onParameterChange('cbrOptions', {
+      optimizeForEbook: false,
+    });
+    onParameterChange('pdfToCbrOptions', {
+      dpi: 150,
     });
     onParameterChange('cbzOptions', {
       optimizeForEbook: false,
@@ -317,8 +344,8 @@ const ConvertSettings = ({
         </>
       ) : null}
 
-      {/* Email to PDF options */}
-      {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (
+      {/* Email to PDF options (EML and MSG formats) */}
+      {(parameters.fromExtension === 'eml' || parameters.fromExtension === 'msg') && parameters.toExtension === 'pdf' && (
         <>
           <Divider />
           <ConvertFromEmailSettings
@@ -361,6 +388,54 @@ const ConvertSettings = ({
             parameters={parameters}
             onParameterChange={onParameterChange}
             selectedFiles={selectedFiles}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* eBook to PDF options */}
+      {['epub', 'mobi', 'azw3', 'fb2'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromEbookSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* CBR to PDF options */}
+      {parameters.fromExtension === 'cbr' && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromCbrSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to CBR options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr' && (
+        <>
+          <Divider />
+          <ConvertToCbrSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to EPUB/AZW3 options */}
+      {parameters.fromExtension === 'pdf' && ['epub', 'azw3'].includes(parameters.toExtension) && (
+        <>
+          <Divider />
+          <ConvertToEpubSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
             disabled={disabled}
           />
         </>

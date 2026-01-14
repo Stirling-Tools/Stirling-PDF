@@ -34,6 +34,10 @@ export const CONVERSION_ENDPOINTS = {
   'html-pdf': '/api/v1/convert/html/pdf',
   'markdown-pdf': '/api/v1/convert/markdown/pdf',
   'eml-pdf': '/api/v1/convert/eml/pdf',
+  'cbr-pdf': '/api/v1/convert/cbr/pdf',
+  'pdf-cbr': '/api/v1/convert/pdf/cbr',
+  'ebook-pdf': '/api/v1/convert/ebook/pdf',
+  'pdf-epub': '/api/v1/convert/pdf/epub',
   'pdf-text-editor': '/api/v1/convert/pdf/text-editor',
   'text-editor-pdf': '/api/v1/convert/text-editor/pdf'
 } as const;
@@ -55,6 +59,10 @@ export const ENDPOINT_NAMES = {
   'html-pdf': 'html-to-pdf',
   'markdown-pdf': 'markdown-to-pdf',
   'eml-pdf': 'eml-to-pdf',
+  'ebook-pdf': 'ebook-to-pdf',
+  'cbr-pdf': 'cbr-to-pdf',
+  'pdf-cbr': 'pdf-to-cbr',
+  'pdf-epub': 'pdf-to-epub',
   'pdf-text-editor': 'pdf-to-text-editor',
   'text-editor-pdf': 'text-editor-to-pdf'
 } as const;
@@ -66,6 +74,7 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'image', label: 'Images', group: 'Multiple Files' },
   { value: 'pdf', label: 'PDF', group: 'Document' },
   { value: 'cbz', label: 'CBZ', group: 'Archive' },
+  { value: 'cbr', label: 'CBR', group: 'Archive' },
   { value: 'docx', label: 'DOCX', group: 'Document' },
   { value: 'doc', label: 'DOC', group: 'Document' },
   { value: 'odt', label: 'ODT', group: 'Document' },
@@ -89,6 +98,11 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
   { value: 'eml', label: 'EML', group: 'Email' },
+  { value: 'msg', label: 'MSG (Outlook)', group: 'Email' },
+  { value: 'epub', label: 'EPUB', group: 'eBook' },
+  { value: 'mobi', label: 'MOBI', group: 'eBook' },
+  { value: 'azw3', label: 'AZW3', group: 'eBook' },
+  { value: 'fb2', label: 'FB2', group: 'eBook' },
 ];
 
 export const TO_FORMAT_OPTIONS = [
@@ -97,6 +111,7 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'docx', label: 'DOCX', group: 'Document' },
   { value: 'odt', label: 'ODT', group: 'Document' },
   { value: 'cbz', label: 'CBZ', group: 'Archive' },
+  { value: 'cbr', label: 'CBR', group: 'Archive' },
   { value: 'csv', label: 'CSV', group: 'Spreadsheet' },
   { value: 'pptx', label: 'PPTX', group: 'Presentation' },
   { value: 'odp', label: 'ODP', group: 'Presentation' },
@@ -111,13 +126,15 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'webp', label: 'WEBP', group: 'Image' },
   { value: 'html', label: 'HTML', group: 'Web' },
   { value: 'xml', label: 'XML', group: 'Web' },
+  { value: 'epub', label: 'EPUB', group: 'eBook' },
+  { value: 'azw3', label: 'AZW3', group: 'eBook' },
 ];
 
 // Conversion matrix - what each source format can convert to
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz', 'cbr', 'epub', 'azw3'],
   'cbz': ['pdf'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
@@ -127,7 +144,10 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
   'zip': ['pdf'],
   'md': ['pdf'],
   'txt': ['pdf'], 'rtf': ['pdf'],
-  'eml': ['pdf']
+  'eml': ['pdf'],
+  'msg': ['pdf'],
+  'cbr': ['pdf'],
+  'epub': ['pdf'], 'mobi': ['pdf'], 'azw3': ['pdf'], 'fb2': ['pdf']
 };
 
 // Map extensions to endpoint keys
@@ -142,7 +162,9 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',
-    'cbz': 'pdf-to-cbz'
+    'cbr': 'pdf-to-cbr',
+    'cbz': 'pdf-to-cbz',
+    'epub': 'pdf-to-epub', 'azw3': 'pdf-to-epub'
   },
   'cbz': { 'pdf': 'cbz-to-pdf' },
   'docx': { 'pdf': 'file-to-pdf' }, 'doc': { 'pdf': 'file-to-pdf' }, 'odt': { 'pdf': 'file-to-pdf' },
@@ -154,7 +176,10 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   'zip': { 'pdf': 'html-to-pdf' },
   'md': { 'pdf': 'markdown-to-pdf' },
   'txt': { 'pdf': 'file-to-pdf' }, 'rtf': { 'pdf': 'file-to-pdf' },
-  'eml': { 'pdf': 'eml-to-pdf' }
+  'cbr': { 'pdf': 'cbr-to-pdf' },
+  'eml': { 'pdf': 'eml-to-pdf' },
+  'msg': { 'pdf': 'eml-to-pdf' }, // MSG uses same endpoint as EML
+  'epub': { 'pdf': 'ebook-to-pdf' }, 'mobi': { 'pdf': 'ebook-to-pdf' }, 'azw3': { 'pdf': 'ebook-to-pdf' }, 'fb2': { 'pdf': 'ebook-to-pdf' }
 };
 
 export type ColorType = typeof COLOR_TYPES[keyof typeof COLOR_TYPES];

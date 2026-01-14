@@ -21,6 +21,10 @@ export const shouldProcessFilesSeparately = (
     (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
     // PDF to text-like formats should be one output per input
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
+  // PDF to CBR conversions (each PDF should generate its own archive)
+  (parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr') ||
+    // PDF to EPUB/AZW3 conversions (each PDF should generate its own ebook)
+    (parameters.fromExtension === 'pdf' && ['epub', 'azw3'].includes(parameters.toExtension)) ||
     // PDF to office format conversions (each PDF should generate its own office file)
     (parameters.fromExtension === 'pdf' && isOfficeFormat(parameters.toExtension)) ||
     // Office files to PDF conversions (each file should be processed separately via LibreOffice)
@@ -28,6 +32,8 @@ export const shouldProcessFilesSeparately = (
     // Web files to PDF conversions (each web file should generate its own PDF)
     ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') &&
      parameters.toExtension === 'pdf') ||
+    // eBook files to PDF conversions (each file should be processed separately via Calibre)
+    (['epub', 'mobi', 'azw3', 'fb2'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
     // Web files smart detection
     (parameters.isSmartDetection && parameters.smartDetectionType === 'web') ||
     // Mixed file types (smart detection)
@@ -38,12 +44,12 @@ export const shouldProcessFilesSeparately = (
 // Static function that can be used by both the hook and automation executor
 export const buildConvertFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions, epubOptions } = parameters;
 
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbzOptions, cbzOutputOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -62,7 +68,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("autoRotate", imageOptions.autoRotate.toString());
   } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
     formData.append("zoom", htmlOptions.zoomLevel.toString());
-  } else if (fromExtension === 'eml' && toExtension === 'pdf') {
+  } else if ((fromExtension === 'eml' || fromExtension === 'msg') && toExtension === 'pdf') {
     formData.append("includeAttachments", emailOptions.includeAttachments.toString());
     formData.append("maxAttachmentSizeMB", emailOptions.maxAttachmentSizeMB.toString());
     formData.append("downloadHtml", emailOptions.downloadHtml.toString());
@@ -71,10 +77,23 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("outputFormat", pdfaOptions.outputFormat);
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
+  } else if (fromExtension === 'cbr' && toExtension === 'pdf') {
+    formData.append("optimizeForEbook", cbrOptions.optimizeForEbook.toString());
+  } else if (fromExtension === 'pdf' && toExtension === 'cbr') {
+    formData.append("dpi", pdfToCbrOptions.dpi.toString());
   } else if (fromExtension === 'cbz' && toExtension === 'pdf') {
     formData.append("optimizeForEbook", (cbzOptions?.optimizeForEbook ?? false).toString());
   } else if (fromExtension === 'pdf' && toExtension === 'cbz') {
     formData.append("dpi", (cbzOutputOptions?.dpi ?? 150).toString());
+  } else if (['epub', 'mobi', 'azw3', 'fb2'].includes(fromExtension) && toExtension === 'pdf') {
+    formData.append("embedAllFonts", (ebookOptions?.embedAllFonts ?? false).toString());
+    formData.append("includeTableOfContents", (ebookOptions?.includeTableOfContents ?? false).toString());
+    formData.append("includePageNumbers", (ebookOptions?.includePageNumbers ?? false).toString());
+    formData.append("optimizeForEbook", (ebookOptions?.optimizeForEbook ?? false).toString());
+  } else if (fromExtension === 'pdf' && ['epub', 'azw3'].includes(toExtension)) {
+    formData.append("detectChapters", (epubOptions?.detectChapters ?? true).toString());
+    formData.append("targetDevice", epubOptions?.targetDevice ?? 'TABLET_PHONE_IMAGES');
+    formData.append("outputFormat", epubOptions?.outputFormat ?? (toExtension === 'azw3' ? 'AZW3' : 'EPUB'));
   }
 
   return formData;

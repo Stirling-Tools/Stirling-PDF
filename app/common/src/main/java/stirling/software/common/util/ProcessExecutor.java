@@ -86,6 +86,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getCalibreSessionLimit();
+                                case IMAGEMAGICK ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getImageMagickSessionLimit();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -97,6 +102,11 @@ public class ProcessExecutor {
                                                 .getSessionLimit()
                                                 .getOcrMyPdfSessionLimit();
                                 case CFF_CONVERTER -> 1;
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getFfmpegSessionLimit();
                             };
 
                     long timeoutMinutes =
@@ -141,6 +151,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getCalibreTimeoutMinutes();
+                                case IMAGEMAGICK ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getImageMagickTimeoutMinutes();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -152,6 +167,11 @@ public class ProcessExecutor {
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
                                 case CFF_CONVERTER -> 5L;
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getFfmpegTimeoutMinutes();
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
@@ -301,11 +321,13 @@ public class ProcessExecutor {
         WEASYPRINT,
         INSTALL_APP,
         CALIBRE,
+        IMAGEMAGICK,
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,
         OCR_MY_PDF,
-        CFF_CONVERTER
+        CFF_CONVERTER,
+        FFMPEG
     }
 
     @Setter

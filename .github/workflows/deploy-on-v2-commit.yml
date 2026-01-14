@@ -18,15 +18,15 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Get commit hashes for frontend and backend
         id: commit-hashes
@@ -36,26 +36,26 @@ jobs:
           if [ -z "$FRONTEND_HASH" ]; then
             FRONTEND_HASH="no-frontend-changes"
           fi
-          
+
           # Get last commit that touched backend code, docker/backend, or docker/compose
           BACKEND_HASH=$(git log -1 --format="%H" -- app/ docker/backend/ docker/compose/ 2>/dev/null || echo "")
           if [ -z "$BACKEND_HASH" ]; then
             BACKEND_HASH="no-backend-changes"
           fi
-          
+
           echo "Frontend hash: $FRONTEND_HASH"
           echo "Backend hash: $BACKEND_HASH"
-          
+
           echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
           echo "backend_hash=$BACKEND_HASH" >> $GITHUB_OUTPUT
-          
+
           # Short hashes for tags
           if [ "$FRONTEND_HASH" = "no-frontend-changes" ]; then
             echo "frontend_short=no-frontend" >> $GITHUB_OUTPUT
           else
             echo "frontend_short=${FRONTEND_HASH:0:8}" >> $GITHUB_OUTPUT
           fi
-          
+
           if [ "$BACKEND_HASH" = "no-backend-changes" ]; then
             echo "backend_short=no-backend" >> $GITHUB_OUTPUT
           else
@@ -84,16 +84,15 @@ jobs:
             echo "Backend image needs to be built"
           fi
 
-
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
       - name: Build and push frontend image
         if: steps.check-frontend.outputs.exists == 'false'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           file: ./docker/frontend/Dockerfile
@@ -103,10 +102,10 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
-      
+
       - name: Build and push backend image
         if: steps.check-backend.outputs.exists == 'false'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           file: ./docker/backend/Dockerfile
@@ -117,18 +116,16 @@ jobs:
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
 
-
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           chmod 600 ../private.key
-
 
       - name: Deploy to VPS on port 3000
         run: |
           export UNIQUE_NAME=docker-compose-v2-$GITHUB_RUN_ID.yml
-      
+
           cat > $UNIQUE_NAME << EOF
           version: '3.3'
           services:
@@ -154,24 +151,24 @@ jobs:
                 SWAGGER_SERVER_URL: "https://demo.stirlingpdf.cloud"
                 baseUrl: "https://demo.stirlingpdf.cloud"
               restart: on-failure:5
-      
+
             frontend:
               container_name: stirling-v2-frontend
               image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
               ports:
                 - "3000:80"
               environment:
-                VITE_API_BASE_URL: "http://${{ secrets.VPS_HOST }}:13000"
+                VITE_API_BASE_URL: "http://${{ secrets.NEW_VPS_HOST }}:13000"
               depends_on:
                 - backend
               restart: on-failure:5
           EOF
-      
+
           # Copy to remote with unique name
-          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/$UNIQUE_NAME
-      
+          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/$UNIQUE_NAME
+
           # SSH and rename/move atomically to avoid interference
-          ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             mkdir -p /stirling/V2/{data,config,logs}
             mv /tmp/$UNIQUE_NAME /stirling/V2/docker-compose.yml
             cd /stirling/V2
@@ -186,4 +183,3 @@ jobs:
         if: always()
         run: |
           rm -f ../private.key
-

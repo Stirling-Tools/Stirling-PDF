@@ -8,7 +8,7 @@ import {
 import { PdfBookmarkObject } from '@embedpdf/models';
 
 export interface ScrollActions {
-  scrollToPage: (page: number) => void;
+  scrollToPage: (page: number, behavior?: 'smooth' | 'instant') => void;
   scrollToFirstPage: () => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
@@ -52,6 +52,7 @@ export interface SearchActions {
   next: () => void;
   previous: () => void;
   clear: () => void;
+  goToResult: (index: number) => void;
 }
 
 export interface ExportActions {
@@ -96,10 +97,10 @@ export function createViewerActions({
   triggerImmediateZoomUpdate,
 }: ViewerActionDependencies): ViewerActionsBundle {
   const scrollActions: ScrollActions = {
-    scrollToPage: (page: number) => {
+    scrollToPage: (page: number, behavior?: 'smooth' | 'instant') => {
       const api = registry.current.scroll?.api;
       if (api?.scrollToPage) {
-        api.scrollToPage({ pageNumber: page });
+        api.scrollToPage({ pageNumber: page, behavior: behavior || 'smooth' });
       }
     },
     scrollToFirstPage: () => {
@@ -285,6 +286,12 @@ export function createViewerActions({
       const api = registry.current.search?.api;
       if (api?.clear) {
         api.clear();
+      }
+    },
+    goToResult: (index: number) => {
+      const api = registry.current.search?.api;
+      if (api?.goToResult) {
+        api.goToResult(index);
       }
     },
   };

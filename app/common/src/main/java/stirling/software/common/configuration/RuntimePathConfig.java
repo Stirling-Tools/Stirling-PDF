@@ -10,8 +10,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.CustomPaths;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline;
+import stirling.software.common.model.ApplicationProperties.System;
 
 @Slf4j
 @Configuration
@@ -19,8 +21,16 @@ import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline
 public class RuntimePathConfig {
     private final ApplicationProperties properties;
     private final String basePath;
+
+    // Operation paths
     private final String weasyPrintPath;
     private final String unoConvertPath;
+    private final String calibrePath;
+    private final String ocrMyPdfPath;
+    private final String sOfficePath;
+
+    // Tesseract data path
+    private final String tessDataPath;
 
     // Pipeline paths
     private final String pipelineWatchedFoldersPath;
@@ -37,7 +47,10 @@ public class RuntimePathConfig {
         String defaultFinishedFolders = Path.of(this.pipelinePath, "finishedFolders").toString();
         String defaultWebUIConfigs = Path.of(this.pipelinePath, "defaultWebUIConfigs").toString();
 
-        Pipeline pipeline = properties.getSystem().getCustomPaths().getPipeline();
+        System system = properties.getSystem();
+        CustomPaths customPaths = system.getCustomPaths();
+
+        Pipeline pipeline = customPaths.getPipeline();
 
         this.pipelineWatchedFoldersPath =
                 resolvePath(
@@ -57,8 +70,11 @@ public class RuntimePathConfig {
         // Initialize Operation paths
         String defaultWeasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
         String defaultUnoConvertPath = isDocker ? "/opt/venv/bin/unoconvert" : "unoconvert";
+        String defaultCalibrePath = isDocker ? "/opt/calibre/ebook-convert" : "ebook-convert";
+        String defaultOcrMyPdfPath = isDocker ? "/usr/bin/ocrmypdf" : "ocrmypdf";
+        String defaultSOfficePath = isDocker ? "/usr/bin/soffice" : "soffice";
 
-        Operations operations = properties.getSystem().getCustomPaths().getOperations();
+        Operations operations = customPaths.getOperations();
         this.weasyPrintPath =
                 resolvePath(
                         defaultWeasyPrintPath,
@@ -67,6 +83,31 @@ public class RuntimePathConfig {
                 resolvePath(
                         defaultUnoConvertPath,
                         operations != null ? operations.getUnoconvert() : null);
+        this.calibrePath =
+                resolvePath(
+                        defaultCalibrePath, operations != null ? operations.getCalibre() : null);
+        this.ocrMyPdfPath =
+                resolvePath(
+                        defaultOcrMyPdfPath, operations != null ? operations.getOcrmypdf() : null);
+        this.sOfficePath =
+                resolvePath(
+                        defaultSOfficePath, operations != null ? operations.getSoffice() : null);
+
+        // Initialize Tesseract data path
+        // Priority: config setting > TESSDATA_PREFIX env var > default path
+        String tessPath = system.getTessdataDir();
+        String tessdataPrefix = java.lang.System.getenv("TESSDATA_PREFIX");
+        String defaultPath = "/usr/share/tesseract-ocr/5/tessdata";
+
+        if (tessPath != null && !tessPath.isEmpty()) {
+            this.tessDataPath = tessPath;
+        } else if (tessdataPrefix != null && !tessdataPrefix.isEmpty()) {
+            this.tessDataPath = tessdataPrefix;
+        } else {
+            this.tessDataPath = defaultPath;
+        }
+
+        log.info("Using Tesseract data path: {}", this.tessDataPath);
     }
 
     private String resolvePath(String defaultPath, String customPath) {

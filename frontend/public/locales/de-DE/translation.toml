@@ -1,5 +1,5 @@
 unsavedChanges = "Sie haben ungespeicherte Änderungen an Ihrer PDF. Was möchten Sie tun?"
-areYouSure = "Möchten Sie wirklich verlassen?"
+areYouSure = "Möchten Sie die Seite wirklich verlassen?"
 unsavedChangesTitle = "Ungespeicherte Änderungen"
 keepWorking = "Weiterarbeiten"
 discardChanges = "Änderungen verwerfen"
@@ -18,8 +18,8 @@ multiPdfDropPrompt = "Wählen Sie alle gewünschten PDFs aus (oder ziehen Sie si
 imgPrompt = "Wählen Sie ein Bild"
 genericSubmit = "Absenden"
 uploadLimit = "Maximale Dateigröße:"
-uploadLimitExceededSingular = "ist zu groß. Die maximal zulässige Größe ist"
-uploadLimitExceededPlural = "sind zu groß. Die maximal zulässige Größe ist"
+uploadLimitExceededSingular = "ist zu groß. Die maximal zulässige Größe beträgt"
+uploadLimitExceededPlural = "sind zu groß. Die maximal zulässige Größe beträgt"
 processTimeWarning = "Achtung: Abhängig von der Dateigröße kann dieser Prozess bis zu einer Minute dauern"
 pageOrderPrompt = "Seitenreihenfolge (Geben Sie eine durch Komma getrennte Liste von Seitenzahlen ein):"
 goToPage = "Gehe zu"
@@ -29,16 +29,16 @@ unknown = "Unbekannt"
 save = "Speichern"
 saveToBrowser = "Im Browser speichern"
 download = "Herunterladen"
-downloadUnavailable = "Download für dieses Element nicht verfügbar"
-saveUnavailable = "Speichern für dieses Element nicht verfügbar"
+downloadUnavailable = "Download für dieses Element ist nicht verfügbar"
+saveUnavailable = "Speichern für dieses Element ist nicht verfügbar"
 pin = "Datei anheften (nach Tool-Ausführung aktiv halten)"
 unpin = "Datei lösen (nach Tool-Ausführung ersetzen)"
-undoOperationTooltip = "Klicken zum Rückgängigmachen der letzten Operation und Wiederherstellen der ursprünglichen Dateien"
+undoOperationTooltip = "Klicken Sie, um die letzte Operation rückgängig zu machen und die ursprünglichen Dateien wiederherzustellen"
 undo = "Rückgängig"
 back = "Zurück"
 nothingToUndo = "Nichts zum Rückgängig machen"
 moreOptions = "Weitere Optionen"
-editYourNewFiles = "Ihre neue(n) Datei(en) bearbeiten"
+editYourNewFiles = "Ihre neuen Dateien bearbeiten"
 close = "Schließen"
 openInViewer = "Im Viewer öffnen"
 confirmClose = "Schließen bestätigen"
@@ -69,9 +69,9 @@ white = "Weiß"
 red = "Rot"
 green = "Grün"
 blue = "Blau"
-custom = "benutzerdefiniert..."
+custom = "Benutzerdefiniert..."
 comingSoon = "Demnächst verfügbar"
-WorkInProgess = "In Arbeit, funktioniert möglicherweise nicht oder ist fehlerhaft. Bitte melden Sie alle Probleme!"
+WorkInProgess = "In Arbeit: funktioniert möglicherweise nicht oder ist fehlerhaft. Bitte melden Sie alle Probleme."
 poweredBy = "Bereitgestellt von"
 yes = "Ja"
 no = "Nein"
@@ -128,6 +128,9 @@ undoQuotaError = "Rückgängig nicht möglich: unzureichender Speicherplatz"
 undoStorageError = "Rückgängig abgeschlossen, aber einige Dateien konnten nicht im Speicher gespeichert werden"
 undoSuccess = "Vorgang erfolgreich rückgängig gemacht"
 unsupported = "Nicht unterstützt"
+discardRedactions = "Discard & Leave"
+pendingRedactions = "You have unapplied redactions that will be lost."
+pendingRedactionsTitle = "Unapplied Redactions"
 
 [toolPanel]
 placeholder = "Wählen Sie ein Tool, um zu starten"
@@ -258,7 +261,7 @@ _value = "Fehler"
 dismissAllErrors = "Alle Fehler ausblenden"
 sorry = "Entschuldigung für das Problem!"
 needHelp = "Brauchen Sie Hilfe / Ein Problem gefunden?"
-contactTip = "Wenn Sie weiterhin Probleme haben, zögern Sie nicht, uns um Hilfe zu bitten. Du kannst ein Ticket auf unserer GitHub-Seite einreichen oder uns über Discord kontaktieren:"
+contactTip = "Wenn Sie weiterhin Probleme haben, zögern Sie nicht, uns um Hilfe zu bitten. Sie können ein Ticket auf unserer GitHub-Seite einreichen oder uns über Discord kontaktieren:"
 github = "Ein Ticket auf GitHub einreichen"
 showStack = "Stack-Trace anzeigen"
 copyStack = "Stack-Trace kopieren"
@@ -280,7 +283,7 @@ terms = "AGB"
 accessibility = "Barrierefreiheit"
 cookie = "Cookie-Richtlinie"
 impressum = "Impressum"
-showCookieBanner = "Cookie Einstellungen"
+showCookieBanner = "Cookie-Einstellungen"
 
 [pipeline]
 header = "Pipeline-Menü (Beta)"
@@ -291,7 +294,7 @@ submitButton = "Ausführen"
 help = "Hilfe für Pipeline"
 scanHelp = "Hilfe zum Ordnerscan"
 deletePrompt = "Möchten Sie die Pipeline wirklich löschen?"
-tags = "automatisieren,sequenzieren,skriptgesteuert,batch prozess"
+tags = "automatisieren,sequenzieren,skriptgesteuert,batch-prozess"
 title = "Pipeline"
 
 [pipelineOptions]
@@ -340,6 +343,10 @@ advance = "Erweiterte Funktionen"
 edit = "Anzeigen und Bearbeiten"
 popular = "Beliebt"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Einstellungen"
 
@@ -360,6 +367,7 @@ advanced = "Erweitert"
 title = "Sicherheit & Authentifizierung"
 security = "Sicherheit"
 connections = "Verbindungen"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Lizenzierung & Analytics"
@@ -434,6 +442,32 @@ currentVersion = "Aktuelle Version"
 latestVersion = "Neueste Version"
 checkForUpdates = "Nach Updates suchen"
 viewDetails = "Details anzeigen"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
+title = "Version Information"
+
+[settings.security]
+title = "Sicherheit"
+description = "Aktualisieren Sie Ihr Passwort, um Ihr Konto zu schützen."
+
+[settings.security.password]
+subtitle = "Ändern Sie Ihr Passwort. Nach dem Update werden Sie abgemeldet."
+required = "Alle Felder sind erforderlich."
+mismatch = "Die neuen Passwörter stimmen nicht überein."
+error = "Passwort konnte nicht aktualisiert werden. Bitte überprüfen Sie Ihr aktuelles Passwort und versuchen Sie es erneut."
+success = "Passwort erfolgreich aktualisiert. Bitte melden Sie sich erneut an."
+ssoDisabled = "Passwortänderungen werden von Ihrem Identity-Provider verwaltet."
+current = "Aktuelles Passwort"
+currentPlaceholder = "Geben Sie Ihr aktuelles Passwort ein"
+new = "Neues Passwort"
+newPlaceholder = "Neues Passwort eingeben"
+confirm = "Neues Passwort bestätigen"
+confirmPlaceholder = "Neues Passwort erneut eingeben"
+update = "Passwort aktualisieren"
 
 [settings.hotkeys]
 title = "Tastenkürzel"
@@ -488,16 +522,21 @@ low = "Niedrig"
 title = "Anmeldeinformationen ändern"
 header = "Aktualisieren Sie Ihre Kontodaten"
 changePassword = "Sie verwenden die Standard-Zugangsdaten. Bitte geben Sie ein neues Passwort ein."
+ssoManaged = "Ihr Konto wird von Ihrem Identity-Provider verwaltet."
 newUsername = "Neuer Benutzername"
 oldPassword = "Aktuelles Passwort"
 newPassword = "Neues Passwort"
 confirmNewPassword = "Neues Passwort bestätigen"
 submit = "Änderung speichern"
+credsUpdated = "Konto aktualisiert"
+description = "Änderungen gespeichert. Bitte melden Sie sich erneut an."
+error = "Benutzername konnte nicht aktualisiert werden. Bitte überprüfen Sie Ihr Passwort und versuchen Sie es erneut."
+changeUsername = "Aktualisieren Sie Ihren Benutzernamen. Nach dem Update werden Sie abgemeldet."
 
 [account]
 title = "Kontoeinstellungen"
 accountSettings = "Kontoeinstellungen"
-adminSettings = "Admin Einstellungen - Benutzer anzeigen und hinzufügen"
+adminSettings = "Admin-Einstellungen – Benutzer anzeigen und hinzufügen"
 userControlSettings = "Benutzerkontrolle"
 changeUsername = "Benutzername ändern"
 newUsername = "Neuer Benutzername"
@@ -507,13 +546,15 @@ newPassword = "Neues Passwort"
 changePassword = "Passwort ändern"
 confirmNewPassword = "Neues Passwort bestätigen"
 signOut = "Abmelden"
-yourApiKey = "Dein API-Schlüssel"
+yourApiKey = "Ihr API-Schlüssel"
 syncTitle = "Browsereinstellungen mit Konto synchronisieren"
 settingsCompare = "Einstellungen vergleichen:"
 property = "Eigenschaft"
 webBrowserSettings = "Webbrowser-Einstellung"
-syncToBrowser = "Synchronisiere Konto -> Browser"
-syncToAccount = "Synchronisiere Konto <- Browser"
+syncToBrowser = "Konto → Browser synchronisieren"
+syncToAccount = "Konto ← Browser synchronisieren"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 
 [adminUserSettings]
 title = "Benutzerkontrolle"
@@ -707,6 +748,11 @@ desc = "Teilt mehrere Fotos aus einem Foto/PDF auf"
 tags = "unterschrift,autogramm"
 title = "Signieren"
 desc = "Fügt PDF-Signaturen durch Zeichnung, Text oder Bild hinzu"
+
+[home.annotate]
+tags = "annotieren,highlight,zeichnen"
+title = "Annotieren"
+desc = "Im Viewer markieren, zeichnen, Notizen und Formen hinzufügen"
 
 [home.flatten]
 tags = "vereinfachen,entfernen,interaktiv"
@@ -930,6 +976,7 @@ desc = "Beliebigen Text überall in Ihrem PDF hinzufügen"
 addFiles = "Dateien hinzufügen"
 uploadFromComputer = "Vom Computer hochladen"
 openFromComputer = "Vom Computer öffnen"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "anzeigen,lesen,kommentieren,text,bild"
@@ -937,7 +984,7 @@ title = "PDF anzeigen/bearbeiten"
 header = "PDF anzeigen"
 
 [multiTool]
-tags = "Multi Tool,Multi operation,UI,click drag,front end,client side"
+tags = "Multi-Tool,Mehrfachoperation,UI,Klicken und Ziehen,Frontend,clientseitig"
 title = "PDF-Multitool"
 header = "PDF-Multitool"
 uploadPrompts = "Dateiname"
@@ -1245,6 +1292,33 @@ cbzOptions = "Optionen: CBZ zu PDF"
 optimizeForEbook = "PDF für E-Book-Reader optimieren (verwendet Ghostscript)"
 cbzOutputOptions = "Optionen: PDF zu CBZ"
 cbzDpi = "DPI für Bildrendering"
+cbrOptions = "CBR-Optionen"
+cbrOutputOptions = "Optionen: PDF zu CBR"
+cbrDpi = "DPI für Bildrendering"
+
+[convert.ebookOptions]
+ebookOptions = "Optionen: E-Book zu PDF"
+ebookOptionsDesc = "Optionen zum Konvertieren von E-Books in PDF"
+embedAllFonts = "Alle Schriftarten einbetten"
+embedAllFontsDesc = "Alle Schriftarten aus dem E-Book in das erzeugte PDF einbetten"
+includeTableOfContents = "Inhaltsverzeichnis einfügen"
+includeTableOfContentsDesc = "Ein erzeugtes Inhaltsverzeichnis zum Ergebnis-PDF hinzufügen"
+includePageNumbers = "Seitenzahlen einfügen"
+includePageNumbersDesc = "Seitenzahlen zum erzeugten PDF hinzufügen"
+optimizeForEbookPdf = "Für E-Book-Reader optimieren"
+optimizeForEbookPdfDesc = "PDF für das Lesen auf E-Book-Readern optimieren (kleinere Dateigröße, bessere Darstellung auf E-Ink-Geräten)"
+
+[convert.epubOptions]
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+kindleEink = "Kindle e-Ink (text optimized)"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
 
 [imageToPdf]
 tags = "konvertierung,img,jpg,bild,foto"
@@ -1361,6 +1435,11 @@ header = "Anhänge hinzufügen"
 add = "Anhang hinzufügen"
 remove = "Anhang entfernen"
 embed = "Anhang einbetten"
+convertToPdfA3b = "In PDF/A-3b konvertieren"
+convertToPdfA3bDescription = "Erstellt ein Archiv-PDF mit eingebetteten Anhängen"
+convertToPdfA3bTooltip = "PDF/A-3b ist ein Archivformat, das die langfristige Aufbewahrung sicherstellt. Es erlaubt das Einbetten beliebiger Dateiformate als Anhänge. Die Konvertierung erfordert Ghostscript und kann bei großen Dateien länger dauern."
+convertToPdfA3bTooltipHeader = "Über die PDF/A-3b-Konvertierung"
+convertToPdfA3bTooltipTitle = "Funktion"
 submit = "Anhänge hinzufügen"
 
 [watermark]
@@ -2306,6 +2385,10 @@ saved = "Gespeichert"
 label = "Unterschriftsbild hochladen"
 placeholder = "Bilddatei auswählen"
 hint = "Laden Sie ein PNG- oder JPG-Bild Ihrer Unterschrift hoch"
+removeBackground = "Weißen Hintergrund entfernen (transparent machen)"
+processing = "Bild wird verarbeitet..."
+backgroundRemovalFailedTitle = "Hintergrund konnte nicht entfernt werden"
+backgroundRemovalFailedMessage = "Der Hintergrund konnte nicht aus dem Bild entfernt werden. Das Originalbild wird stattdessen verwendet."
 
 [sign.instructions]
 title = "So fügen Sie eine Unterschrift hinzu"
@@ -2350,6 +2433,11 @@ note = "Das Abflachen entfernt interaktive Elemente aus der PDF und macht sie ni
 [flatten.options.flattenOnlyForms]
 label = "Nur Formulare vereinfachen"
 desc = "Nur Formularfelder vereinfachen, andere interaktive Elemente unverändert lassen"
+
+[flatten.renderDpi]
+label = "Rendering-DPI (optional, empfohlen 150 DPI)"
+help = "Lassen Sie das Feld leer, um die Systemvorgabe zu verwenden. Höhere DPI schärfen das Ergebnis, erhöhen aber die Verarbeitungszeit und die Dateigröße."
+placeholder = "z. B. 150"
 
 [flatten.results]
 title = "Reduzierungs-Ergebnisse"
@@ -2925,6 +3013,7 @@ header = "PDF zuschneiden"
 submit = "Abschicken"
 noFileSelected = "Wählen Sie eine PDF-Datei aus, um mit dem Zuschneiden zu beginnen"
 reset = "Auf vollständiges PDF zurücksetzen"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Zuschneidebereich-Auswahl"
@@ -2989,7 +3078,7 @@ submit = "Aufteilen"
 tags = "sauber,sicher,sicher,bedrohungen entfernen"
 
 [URLToPDF]
-tags = "web capture,seite speichern,web to doc,archiv"
+tags = "webaufnahme,seite speichern,web-zu-dokument,archiv"
 title = "URL zu PDF"
 header = "URL zu PDF"
 submit = "Konvertieren"
@@ -3158,6 +3247,7 @@ automaticDesc = "Text basierend auf Suchbegriffen schwärzen"
 manual = "Manuell"
 manualDesc = "Klicken und ziehen zum Schwärzen bestimmter Bereiche"
 manualComingSoon = "Manuelle Schwärzung kommt bald"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 
 [redact.auto]
 header = "Auto-Schwärzung"
@@ -3225,6 +3315,24 @@ text = "Nur vollständige Wörter abgleichen, keine Teilübereinstimmungen. 'Joh
 title = "In PDF-Bild konvertieren"
 text = "Konvertiert das PDF nach der Schwärzung in ein bildbasiertes PDF. Dies stellt sicher, dass Text hinter Schwärzungskästen vollständig entfernt und nicht wiederherstellbar ist."
 
+[redact.tooltip.manual.apply]
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+title = "Apply Redactions"
+
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markArea]
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+title = "Mark Area Tool"
+
+[redact.tooltip.manual.markText]
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+title = "Mark Text Tool"
+
 [redact.manual]
 header = "Manuelle Schwärzung"
 textBasedRedaction = "Textbasierte Schwärzung"
@@ -3246,6 +3354,15 @@ showLayers = "Ebenen anzeigen (Doppelklick, um alle Ebenen auf den Standardzusta
 colourPicker = "Farbwähler"
 findCurrentOutlineItem = "Aktuelles Gliederungselement finden"
 applyChanges = "Änderungen anwenden"
+apply = "Apply"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+controlsTitle = "Manual Redaction Controls"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markArea = "Mark Area"
+markText = "Mark Text"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
+pendingLabel = "Pending:"
+title = "Redaction Tools"
 
 [redact.manual.pageRedactionNumbers]
 title = "Seiten"
@@ -3341,6 +3458,19 @@ placeholder = "Anzahl horizontaler Teiler eingeben"
 [split-by-sections.vertical]
 label = "Vertikale Teiler"
 placeholder = "Anzahl vertikaler Teiler eingeben"
+
+[split-by-sections.splitMode]
+label = "Teilmodus"
+description = "Wählen Sie, wie die Seiten geteilt werden sollen"
+splitAll = "Alle Seiten teilen"
+splitAllExceptFirst = "Alle außer der ersten teilen"
+splitAllExceptLast = "Alle außer der letzten teilen"
+splitAllExceptFirstAndLast = "Alle außer der ersten und letzten teilen"
+custom = "Benutzerdefinierte Seiten"
+
+[split-by-sections.customPages]
+label = "Benutzerdefinierte Seitenzahlen"
+placeholder = "z. B. 2,4,6"
 
 [AddStampRequest]
 tags = "stempeln,bild hinzufügen,bild zentrieren,wasserzeichen,pdf,einbetten,anpassen"
@@ -3703,6 +3833,19 @@ filesize = "Dateigröße"
 [compress.grayscale]
 label = "Graustufen für Komprimierung anwenden"
 
+[compress.linearize]
+label = "PDF für schnelles Web-Viewing linearisieren"
+
+[compress.lineArt]
+label = "Bilder in Strichzeichnungen umwandeln"
+description = "Verwendet ImageMagick, um Seiten in kontrastreiches Schwarzweiß umzuwandeln und die Dateigröße maximal zu reduzieren."
+unavailable = "ImageMagick ist auf diesem Server nicht installiert oder aktiviert"
+detailLevel = "Detailgrad"
+edgeEmphasis = "Kantenbetonung"
+edgeLow = "Sanft"
+edgeMedium = "Ausgewogen"
+edgeHigh = "Stark"
+
 [compress.tooltip.header]
 title = "Kompressions-Einstellungen - Übersicht"
 
@@ -3720,6 +3863,10 @@ bullet2 = "Höhere Werte reduzieren die Dateigröße"
 title = "Graustufen"
 text = "Wählen Sie diese Option, um alle Bilder in Schwarz-Weiß zu konvertieren, was die Dateigröße erheblich reduzieren kann, insbesondere bei gescannten PDFs oder bildreichen Dokumenten."
 
+[compress.tooltip.lineArt]
+title = "Strichzeichnung"
+text = "Konvertiert Seiten mit ImageMagick in kontrastreiches Schwarzweiß. Mit der Detailstufe steuern Sie, wie viel Inhalt schwarz wird, und mit der Kantenbetonung, wie aggressiv Kanten erkannt werden."
+
 [compress.error]
 failed = "Ein Fehler ist beim Komprimieren der PDF aufgetreten."
 
@@ -3731,6 +3878,11 @@ failed = "Ein Fehler ist beim Komprimieren der PDF aufgetreten."
 [compress.selectText.1]
 _value = "Kompressionseinstellungen"
 1 = "1-3 PDF-Komprimierung, </br> 4-6 Leichte Bildkomprimierung, </br> 7-9 Intensive Bildkomprimierung verringert die Bildqualität dramatisch"
+
+[compress.compressionLevel]
+range1to3 = "Niedrigere Werte bewahren die Qualität, führen aber zu größeren Dateien"
+range4to6 = "Mittlere Komprimierung mit moderater Qualitätsreduktion"
+range7to9 = "Höhere Werte reduzieren die Dateigröße deutlich, können aber die Bildschärfe verringern"
 
 [decrypt]
 passwordPrompt = "Diese Datei ist passwortgeschützt. Bitte geben Sie das Passwort ein:"
@@ -3971,23 +4123,98 @@ deleteSelected = "Ausgewählte Seiten löschen"
 closePdf = "PDF schließen"
 exportAll = "PDF exportieren"
 downloadSelected = "Ausgewählte Dateien herunterladen"
-downloadAll = "Alle herunterladen"
-saveAll = "Alle speichern"
+annotations = "Annotations"
+exportSelected = "Ausgewählte Seiten exportieren"
+saveChanges = "Änderungen speichern"
 toggleTheme = "Design wechseln"
-toggleBookmarks = "Lesezeichen ein-/ausblenden"
 language = "Sprache"
+toggleAnnotations = "Anmerkungen ein-/ausblenden"
 search = "PDF durchsuchen"
 panMode = "Verschiebemodus"
 rotateLeft = "Nach links drehen"
 rotateRight = "Nach rechts drehen"
 toggleSidebar = "Seitenleiste umschalten"
-exportSelected = "Ausgewählte Seiten exportieren"
-toggleAnnotations = "Anmerkungen ein-/ausblenden"
-annotationMode = "Anmerkungsmodus umschalten"
+toggleBookmarks = "Lesezeichen ein-/ausblenden"
 print = "PDF drucken"
-draw = "Zeichnen"
-save = "Speichern"
-saveChanges = "Änderungen speichern"
+downloadAll = "Alle herunterladen"
+saveAll = "Alle speichern"
+applyRedactionsFirst = "Apply redactions first"
+draw = "Draw"
+exitRedaction = "Exit Redaction Mode"
+redact = "Redact"
+save = "Save"
+
+[textAlign]
+left = "Links"
+center = "Zentriert"
+right = "Rechts"
+
+[annotation]
+title = "Annotieren"
+desc = "Markieren, Stift, Text und Notizen verwenden. Änderungen bleiben live – kein Abflachen erforderlich."
+highlight = "Markieren"
+pen = "Stift"
+text = "Textfeld"
+note = "Notiz"
+rectangle = "Rechteck"
+ellipse = "Ellipse"
+select = "Auswählen"
+exit = "Anmerkungsmodus beenden"
+strokeWidth = "Breite"
+opacity = "Deckkraft"
+strokeOpacity = "Linien-Deckkraft"
+fillOpacity = "Fülldeckkraft"
+fontSize = "Schriftgröße"
+chooseColor = "Farbe wählen"
+color = "Farbe"
+strokeColor = "Linienfarbe"
+fillColor = "Füllfarbe"
+underline = "Unterstreichen"
+strikeout = "Durchstreichen"
+squiggly = "Wellenlinie"
+inkHighlighter = "Freihand-Textmarker"
+freehandHighlighter = "Freihand-Textmarker"
+square = "Quadrat"
+circle = "Kreis"
+polygon = "Polygon"
+line = "Linie"
+stamp = "Bild hinzufügen"
+textMarkup = "Textmarkierung"
+drawing = "Zeichnung"
+shapes = "Formen"
+notesStamps = "Notizen & Stempel"
+settings = "Einstellungen"
+borderOn = "Rahmen: Ein"
+borderOff = "Rahmen: Aus"
+editInk = "Stift bearbeiten"
+editLine = "Linie bearbeiten"
+editNote = "Notiz bearbeiten"
+editText = "Textfeld bearbeiten"
+editTextMarkup = "Textmarkierung bearbeiten"
+editSelected = "Anmerkung bearbeiten"
+editSquare = "Quadrat bearbeiten"
+editCircle = "Kreis bearbeiten"
+editPolygon = "Polygon bearbeiten"
+unsupportedType = "Dieser Anmerkungstyp wird für die Bearbeitung nicht vollständig unterstützt."
+textAlignment = "Textausrichtung"
+noteIcon = "Notizsymbol"
+imagePreview = "Vorschau"
+contents = "Text"
+backgroundColor = "Hintergrundfarbe"
+clearBackground = "Hintergrund entfernen"
+noBackground = "Kein Hintergrund"
+stampSettings = "Stempel-Einstellungen"
+savingCopy = "Download wird vorbereitet..."
+saveFailed = "Kopie konnte nicht gespeichert werden"
+saveReady = "Download bereit"
+selectAndMove = "Auswählen und Bearbeiten"
+editSelectDescription = "Klicken Sie auf eine vorhandene Anmerkung, um Farbe, Deckkraft, Text oder Größe zu bearbeiten."
+editStampHint = "Um das Bild zu ändern, löschen Sie diesen Stempel und fügen Sie einen neuen hinzu."
+editSwitchToSelect = "Wechseln Sie zu „Auswählen und Bearbeiten“, um diese Anmerkung zu bearbeiten."
+undo = "Rückgängig"
+redo = "Wiederholen"
+applyChanges = "Änderungen anwenden"
+saveChanges = "Save Changes"
 
 [search]
 title = "PDF durchsuchen"
@@ -4038,12 +4265,20 @@ settings = "Optionen"
 adminSettings = "Admin Optionen"
 allTools = "Werkzeuge"
 reader = "Reader"
+tours = "Touren"
+showMeAround = "Rundgang starten"
+
+[quickAccess.toursTooltip]
+admin = "Sehen Sie sich hier Touren an: Tools-Tour, V2-Layout-Tour und Admin-Tour."
+user = "Sehen Sie sich hier Touren an: Tools-Tour und V2-Layout-Tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Tool-Tour"
 toolsTourDesc = "Erfahren Sie, was die Tools können"
 adminTour = "Admin-Tour"
 adminTourDesc = "Entdecken Sie Admin-Einstellungen & Funktionen"
+whatsNewTour = "Neu in V2"
+whatsNewTourDesc = "Tour zum aktualisierten Layout"
 
 [admin]
 error = "Fehler"
@@ -4069,6 +4304,8 @@ loginRequired = "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu
 restarting = "Server wird neu gestartet"
 restartingMessage = "Der Server wird neu gestartet. Bitte einen Moment warten..."
 restartError = "Server konnte nicht neu gestartet werden. Bitte manuell neu starten."
+error = "Failed to save settings"
+success = "Settings saved successfully"
 
 [admin.settings.unsavedChanges]
 title = "Ungespeicherte Änderungen"
@@ -4184,6 +4421,10 @@ description = "Pfad zur WeasyPrint-Ausführungsdatei für HTML-zu-PDF-Konvertier
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert-Ausführbare Datei"
 description = "Pfad zu LibreOffice unoconvert für Dokumentkonvertierungen (leer lassen für Standard: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+label = "Frontend URL"
 
 [admin.settings.security]
 title = "Sicherheit"
@@ -4321,6 +4562,19 @@ connect = "Verbinden"
 disconnect = "Trennen"
 disconnected = "Anbieter erfolgreich getrennt"
 disconnectError = "Anbieter konnte nicht getrennt werden"
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO-Autoanmeldung"
@@ -4388,6 +4642,26 @@ description = "Benutzerkonten bei der ersten SAML2-Anmeldung automatisch erstell
 [admin.settings.connections.saml2.blockRegistration]
 label = "Registrierung blockieren"
 description = "Neue Benutzerregistrierung über SAML2 verhindern"
+
+[admin.settings.connections.mobileScanner]
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+enable = "Enable QR Code Upload"
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+label = "Mobile Phone Upload"
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+note = "Note: Requires Frontend URL to be configured. "
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.database]
 title = "Datenbank"
@@ -4570,6 +4844,10 @@ description = "Admins erlauben, Benutzer per E-Mail mit automatisch generierten 
 label = "Frontend-URL"
 description = "Basis-URL für das Frontend (z. B. https://pdf.example.com). Wird zum Erzeugen von Einladungslinks in E-Mails verwendet. Leer lassen, um Backend-URL zu verwenden."
 
+[admin.settings.mail.frontendUrlNote]
+link = "Configure in System Settings"
+note = "Note: Requires Frontend URL to be configured. "
+
 [admin.settings.legal]
 title = "Rechtliche Dokumente"
 description = "Links zu rechtlichen Dokumenten und Richtlinien konfigurieren."
@@ -4685,6 +4963,105 @@ description = "Einzelne zu deaktivierende Endpunkte auswählen"
 label = "Deaktivierte Endpunktgruppen"
 description = "Zu deaktivierende Endpunktgruppen auswählen"
 
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
+
+[admin.settings.telegram]
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+title = "Telegram Bot"
+
+[admin.settings.telegram.accessControl]
+description = "Restrict which users or channels can interact with the bot."
+title = "Access Control"
+
+[admin.settings.telegram.allowChannelIDs]
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+label = "Allowed Channel IDs"
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.allowUserIDs]
+description = "Enter Telegram user IDs allowed to interact with the bot."
+label = "Allowed User IDs"
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.botToken]
+description = "API token provided by BotFather for your Telegram bot."
+label = "Bot Token"
+
+[admin.settings.telegram.botUsername]
+description = "The public username of your Telegram bot."
+label = "Bot Username"
+
+[admin.settings.telegram.customFolderSuffix]
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+label = "Use Custom Folder Suffix"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+description = "When enabled, only listed channel IDs can use the bot."
+label = "Allow Specific Channel IDs"
+
+[admin.settings.telegram.enableAllowUserIDs]
+description = "When enabled, only listed user IDs can use the bot."
+label = "Allow Specific User IDs"
+
+[admin.settings.telegram.enabled]
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+label = "Enable Telegram Bot"
+
+[admin.settings.telegram.feedback]
+description = "Choose when the bot should send feedback to users and channels."
+title = "Feedback Messages"
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+description = "Show detailed error messages for channels."
+label = "Show error messages (Channel)"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+description = "Send processing error messages to channels."
+label = "Show processing errors (Channel)"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+description = "Suppress the no valid document response for channel uploads."
+label = "Show \"No valid document\" (Channel)"
+
+[admin.settings.telegram.feedback.general.enabled]
+description = "Control whether the bot sends feedback messages at all."
+label = "Enable Feedback"
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+description = "Show detailed error messages for users."
+label = "Show error messages (User)"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+description = "Send processing error messages to users."
+label = "Show processing errors (User)"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+description = "Suppress the no valid document response for user uploads."
+label = "Show \"No valid document\" (User)"
+
+[admin.settings.telegram.pipelineInboxFolder]
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+label = "Inbox Folder"
+
+[admin.settings.telegram.pollingIntervalMillis]
+description = "Interval between checks for new Telegram updates."
+label = "Polling Interval (ms)"
+
+[admin.settings.telegram.processing]
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+title = "Processing"
+
+[admin.settings.telegram.processingTimeoutSeconds]
+description = "Maximum time to wait for a processing job before reporting an error."
+label = "Processing Timeout (seconds)"
+
 [fileUpload]
 selectFile = "Datei auswählen"
 selectFiles = "Dateien auswählen"
@@ -4784,6 +5161,9 @@ showAll = "Alle anzeigen"
 sortByDate = "Nach Datum sortieren"
 sortByName = "Nach Name sortieren"
 sortBySize = "Nach Größe sortieren"
+mobileShort = "Mobile"
+mobileUpload = "Mobile Upload"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 
 [storage]
 temporaryNotice = "Dateien werden temporär in Ihrem Browser gespeichert und können automatisch gelöscht werden"
@@ -5038,7 +5418,7 @@ securePdfIngestionDesc = "Umfassender PDF-Verarbeitungsworkflow, der Dokumente b
 emailPreparation = "E-Mail-Vorbereitung"
 emailPreparationDesc = "Optimiert PDFs für E-Mail-Verteilung durch Komprimierung von Dateien, Aufteilen großer Dokumente in 20MB-Blöcke für E-Mail-Kompatibilität und Entfernen von Metadaten für den Datenschutz."
 secureWorkflow = "Sicherheits-Workflow"
-secureWorkflowDesc = "Sichert PDF-Dokumente durch Entfernen potentiell schädlicher Inhalte wie JavaScript und eingebettete Dateien, dann fügt Passwortschutz hinzu, um unbefugten Zugriff zu verhindern. Passwort ist standardmäßig auf 'password' gesetzt."
+secureWorkflowDesc = "Sichert PDF-Dokumente durch Entfernen potenziell schädlicher Inhalte wie JavaScript und eingebetteter Dateien und fügt anschließend Passwortschutz hinzu, um unbefugten Zugriff zu verhindern. Das Passwort ist standardmäßig auf „password“ gesetzt."
 processImages = "Bilder verarbeiten"
 processImagesDesc = "Konvertiert mehrere Bilddateien in ein einzelnes PDF-Dokument und wendet dann OCR-Technologie an, um durchsuchbaren Text aus den Bildern zu extrahieren."
 prePublishSanitization = "Bereinigung vor Veröffentlichung"
@@ -5069,6 +5449,7 @@ loading = "Laden..."
 back = "Zurück"
 continue = "Weiter"
 error = "Fehler"
+save = "Save"
 
 [config.overview]
 title = "Anwendungskonfiguration"
@@ -5130,6 +5511,15 @@ warning = "⚠️ Warnung: Diese Aktion wird neue API-Schlüssel generieren und 
 impact = "Alle Anwendungen oder Dienste, die derzeit diese Schlüssel verwenden, funktionieren nicht mehr, bis Sie sie mit den neuen Schlüsseln aktualisieren."
 confirmPrompt = "Sind Sie sicher, dass Sie fortfahren möchten?"
 confirmCta = "Schlüssel aktualisieren"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToCreateApiKey = "Failed to create API key."
+failedToFetchApiKey = "Failed to fetch API key."
+failedToRefreshApiKey = "Failed to refresh API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
 
 [AddAttachmentsRequest]
 attachments = "Anhänge auswählen"
@@ -5211,34 +5601,44 @@ noSearchResults = "Keine Tools gefunden"
 noTools = "Keine Tools verfügbar"
 
 [onboarding]
-allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
-selectCropTool = "Wählen wir das Tool <strong>Crop</strong> aus, um zu zeigen, wie eines der Tools verwendet wird."
-toolInterface = "Dies ist die Oberfläche des Tools <strong>Crop</strong>. Wie Sie sehen, ist hier noch nicht viel zu sehen, da wir noch keine PDF-Dateien hinzugefügt haben."
+allTools = "Dies ist das Panel <strong>Alle Tools</strong>, in dem Sie alle verfügbaren PDF-Tools durchsuchen und auswählen können."
+selectCropTool = "Wählen wir das Tool <strong>Zuschneiden</strong> aus, um zu zeigen, wie eines der Tools verwendet wird."
+toolInterface = "Dies ist die Oberfläche des Tools <strong>Zuschneiden</strong>. Wie Sie sehen, ist hier noch nicht viel zu sehen, da wir noch keine PDF-Dateien hinzugefügt haben."
 filesButton = "Mit der Schaltfläche <strong>Dateien</strong> in der Schnellzugriffsleiste können Sie PDFs hochladen, um die Tools darauf anzuwenden."
 fileSources = "Sie können hier neue Dateien hochladen oder auf zuletzt verwendete Dateien zugreifen. Für die Tour verwenden wir eine Beispieldatei."
-workbench = "Dies ist die <strong>Workbench</strong> – der Hauptbereich, in dem Sie Ihre PDFs ansehen und bearbeiten."
+workbench = "Dies ist der <strong>Arbeitsbereich</strong> – der Hauptbereich, in dem Sie Ihre PDFs ansehen und bearbeiten."
 viewSwitcher = "Verwenden Sie diese Steuerelemente, um auszuwählen, wie Sie Ihre PDFs ansehen möchten."
 viewer = "Der <strong>Viewer</strong> ermöglicht es, Ihre PDFs zu lesen und zu annotieren."
-pageEditor = "Der <strong>Page Editor</strong> ermöglicht verschiedene Aktionen an den Seiten Ihrer PDFs, wie Neuanordnen, Drehen und Löschen."
-activeFiles = "Die Ansicht <strong>Active Files</strong> zeigt alle PDFs, die Sie im Tool geladen haben, und ermöglicht es Ihnen, auszuwählen, welche verarbeitet werden sollen."
+pageEditor = "Der <strong>Seiteneditor</strong> ermöglicht verschiedene Aktionen an den Seiten Ihrer PDFs, wie Neuanordnen, Drehen und Löschen."
+activeFiles = "Die Ansicht <strong>Aktive Dateien</strong> zeigt alle PDFs, die Sie im Tool geladen haben, und ermöglicht es Ihnen, auszuwählen, welche verarbeitet werden sollen."
 fileCheckbox = "Durch Klicken auf eine der Dateien wählen Sie diese zur Verarbeitung aus. Sie können mehrere Dateien für Batch-Operationen auswählen."
-selectControls = "Die <strong>Rechte Leiste</strong> enthält Schaltflächen, um alle aktiven PDFs schnell zu (de-)selektieren, sowie Schaltflächen zum Ändern des App-Themas oder der Sprache."
-cropSettings = "Nachdem wir die Datei ausgewählt haben, die wir zuschneiden möchten, können wir das Tool Crop konfigurieren, um den Bereich auszuwählen, auf den das PDF zugeschnitten werden soll."
+selectControls = "Die <strong>rechte Leiste</strong> enthält Schaltflächen, um alle aktiven PDFs schnell zu (de-)selektieren, sowie Schaltflächen zum Ändern des App-Themas oder der Sprache."
+cropSettings = "Nachdem wir die Datei ausgewählt haben, die wir zuschneiden möchten, können wir das Tool Zuschneiden konfigurieren, um den Bereich auszuwählen, auf den das PDF zugeschnitten werden soll."
 runButton = "Sobald das Tool konfiguriert ist, können Sie mit dieser Schaltfläche das Tool auf alle ausgewählten PDFs ausführen."
-results = "Nachdem das Tool fertig ist, zeigt der Schritt <strong>Review</strong> in diesem Bereich eine Vorschau der Ergebnisse und ermöglicht es Ihnen, den Vorgang rückgängig zu machen oder die Datei herunterzuladen."
-fileReplacement = "Die geänderte Datei ersetzt automatisch die Originaldatei in der Workbench, sodass Sie sie einfach mit weiteren Tools verarbeiten können."
-pinButton = "Mit der Schaltfläche <strong>Pin</strong> können Sie dafür sorgen, dass Ihre Dateien nach dem Ausführen von Tools aktiv bleiben."
-wrapUp = "Alles fertig! Sie haben die Hauptbereiche der App und deren Verwendung kennengelernt. Klicken Sie jederzeit auf die Schaltfläche <strong>Help</strong>, um diese Tour erneut zu sehen."
+results = "Nachdem das Tool fertig ist, zeigt der Schritt <strong>Überprüfen</strong> in diesem Bereich eine Vorschau der Ergebnisse und ermöglicht es Ihnen, den Vorgang rückgängig zu machen oder die Datei herunterzuladen."
+fileReplacement = "Die geänderte Datei ersetzt automatisch die Originaldatei im Arbeitsbereich, sodass Sie sie einfach mit weiteren Tools verarbeiten können."
+pinButton = "Mit der Schaltfläche <strong>Anheften</strong> können Sie dafür sorgen, dass Ihre Dateien nach dem Ausführen von Tools aktiv bleiben."
+wrapUp = "Alles fertig! Sie haben die Hauptbereiche der App und deren Verwendung kennengelernt. Klicken Sie jederzeit auf die Schaltfläche <strong>Hilfe</strong>, um diese Tour erneut zu sehen."
 previous = "Zurück"
 next = "Weiter"
 finish = "Fertigstellen"
 startTour = "Tour starten"
 startTourDescription = "Geführte Tour zu den wichtigsten Funktionen von Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Starten Sie im Bereich <strong>Schnellzugriff</strong>, um zwischen Reader, Automate, Ihren Dateien und allen Touren zu wechseln."
+leftPanel = "Die linke <strong>Tools</strong>-Leiste zeigt alles, was Sie tun können. Durchsuchen Sie Kategorien oder suchen Sie, um schnell ein Tool zu finden."
+fileUpload = "Verwenden Sie die Schaltfläche <strong>Dateien</strong>, um eine PDF hochzuladen oder eine kürzlich verwendete auszuwählen. Wir laden ein Beispiel, damit Sie den Arbeitsbereich sehen können."
+rightRail = "Die <strong>rechte Leiste</strong> enthält Schnellaktionen zum Auswählen von Dateien, Ändern des Designs oder der Sprache und zum Herunterladen von Ergebnissen."
+topBar = "Die obere Leiste ermöglicht den Wechsel zwischen <strong>Viewer</strong>, <strong>Seiteneditor</strong> und <strong>Aktive Dateien</strong>."
+pageEditorView = "Wechseln Sie zum Seiteneditor, um Seiten neu anzuordnen, zu drehen oder zu löschen."
+activeFilesView = "Verwenden Sie „Aktive Dateien“, um alles Geöffnete zu sehen und auszuwählen, woran Sie arbeiten möchten."
+wrapUp = "Das ist neu in V2. Öffnen Sie jederzeit das Menü <strong>Touren</strong>, um diese, die Tools-Tour oder die Admin-Tour erneut abzuspielen."
+
 [onboarding.welcomeModal]
 title = "Willkommen bei Stirling PDF!"
 description = "Möchten Sie eine kurze 1‑Minuten‑Tour machen, um die wichtigsten Funktionen kennenzulernen und zu erfahren, wie Sie loslegen?"
-helpHint = "Sie können diese Tour jederzeit über die Schaltfläche <strong>Help</strong> unten links aufrufen."
+helpHint = "Sie können diese Tour jederzeit über die Schaltfläche <strong>Hilfe</strong> unten links aufrufen."
 startTour = "Tour starten"
 maybeLater = "Vielleicht später"
 dontShowAgain = "Nicht mehr anzeigen"
@@ -5251,9 +5651,13 @@ body = "Stirling PDF ist jetzt bereit für Teams jeder Größe. Dieses Update br
 next = "Weiter →"
 back = "Zurück"
 skipForNow = "Für jetzt überspringen"
-download = "Download →"
+download = "Herunterladen →"
 showMeAround = "Rundgang starten"
 skipTheTour = "Rundgang überspringen"
+
+[onboarding.tourOverview]
+title = "Tour-Übersicht"
+body = "Stirling PDF V2 wird mit Dutzenden Tools und einem aufgefrischten Layout ausgeliefert. Machen Sie eine kurze Tour, um zu sehen, was sich geändert hat und wo Sie die benötigten Funktionen finden."
 
 [onboarding.serverLicense]
 skip = "Für jetzt überspringen"
@@ -5265,8 +5669,8 @@ overLimitBody = "Unsere Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong>
 freeBody = "Unsere <strong>Open-Core</strong>-Lizenz erlaubt bis zu <strong>{{freeTierLimit}}</strong> Nutzern pro Server kostenlos. Um unterbrechungsfrei zu skalieren, empfehlen wir den Stirling Server-Plan - <strong>unbegrenzte Plätze</strong> und <strong>SSO-Unterstützung</strong> für $99/Server/Monat."
 
 [onboarding.desktopInstall]
-title = "Download"
-titleWithOs = "Download für {{osLabel}}"
+title = "Herunterladen"
+titleWithOs = "Herunterladen für {{osLabel}}"
 body = "Stirling funktioniert am besten als Desktop-App. Sie können es offline nutzen, schneller auf Dokumente zugreifen und lokal auf Ihrem Computer bearbeiten."
 
 [onboarding.planOverview]
@@ -5281,14 +5685,14 @@ message = "Die Anwendung hat kürzlich bedeutende Änderungen erfahren. Möglich
 
 [adminOnboarding]
 welcome = "Willkommen zur <strong>Admin-Tour</strong>! Entdecken wir die leistungsstarken Enterprise-Funktionen und Einstellungen für Systemadministratoren."
-configButton = "Klicken Sie auf die Schaltfläche <strong>Config</strong>, um alle Systemeinstellungen und Administrationskontrollen aufzurufen."
+configButton = "Klicken Sie auf die Schaltfläche <strong>Konfiguration</strong>, um alle Systemeinstellungen und Administrationskontrollen aufzurufen."
 settingsOverview = "Dies ist das <strong>Einstellungsfeld</strong>. Admin-Einstellungen sind zur einfachen Navigation nach Kategorien organisiert."
 teamsAndUsers = "Verwalten Sie hier <strong>Teams</strong> und einzelne Benutzer. Sie können neue Benutzer per E-Mail, teilbaren Links einladen oder selbst benutzerdefinierte Konten erstellen."
-systemCustomization = "Wir bieten umfangreiche Möglichkeiten zur UI-Anpassung: <strong>System Settings</strong> ermöglichen Änderungen am App-Namen und an Sprachen, <strong>Features</strong> ermöglicht die Verwaltung von Serverzertifikaten und <strong>Endpoints</strong> das Aktivieren oder Deaktivieren spezifischer Tools für Ihre Benutzer."
+systemCustomization = "Wir bieten umfangreiche Möglichkeiten zur UI-Anpassung: <strong>Systemeinstellungen</strong> ermöglichen Änderungen am App-Namen und an Sprachen, <strong>Funktionen</strong> ermöglicht die Verwaltung von Serverzertifikaten und <strong>Endpunkte</strong> das Aktivieren oder Deaktivieren spezifischer Tools für Ihre Benutzer."
 databaseSection = "Für erweiterte Produktionsumgebungen gibt es Einstellungen für <strong>externe Datenbankanbindungen</strong>, damit Sie Ihre bestehende Infrastruktur integrieren können."
-connectionsSection = "Der Bereich <strong>Connections</strong> unterstützt verschiedene Anmeldemethoden, einschließlich benutzerdefiniertem SSO und SAML-Anbietern wie Google und GitHub, sowie E-Mail-Integrationen für Benachrichtigungen und Kommunikation."
-adminTools = "Abschließend bieten wir erweiterte Administrationstools wie <strong>Auditing</strong> zur Nachverfolgung der Systemaktivität und <strong>Nutzungsanalysen</strong> zur Überwachung, wie Ihre Benutzer mit der Plattform interagieren."
-wrapUp = "Das war die Admin-Tour! Sie haben die Enterprise-Funktionen gesehen, die Stirling PDF zu einer leistungsstarken, anpassbaren Lösung für Organisationen machen. Sie können diese Tour jederzeit über das <strong>Help</strong>-Menü aufrufen."
+connectionsSection = "Der Bereich <strong>Verbindungen</strong> unterstützt verschiedene Anmeldemethoden, einschließlich benutzerdefiniertem SSO und SAML-Anbietern wie Google und GitHub, sowie E-Mail-Integrationen für Benachrichtigungen und Kommunikation."
+adminTools = "Abschließend bieten wir erweiterte Administrationstools wie <strong>Audit-Protokollierung</strong> zur Nachverfolgung der Systemaktivität und <strong>Nutzungsanalysen</strong> zur Überwachung, wie Ihre Benutzer mit der Plattform interagieren."
+wrapUp = "Das war die Admin-Tour! Sie haben die Enterprise-Funktionen gesehen, die Stirling PDF zu einer leistungsstarken, anpassbaren Lösung für Organisationen machen. Sie können diese Tour jederzeit über das <strong>Hilfe</strong>-Menü aufrufen."
 
 [workspace]
 title = "Arbeitsbereich"
@@ -5568,6 +5972,28 @@ contactSales = "Vertrieb kontaktieren"
 contactToUpgrade = "Kontaktieren Sie uns, um Ihren Plan zu upgraden oder anzupassen"
 maxUsers = "Max. Benutzer"
 upTo = "Bis zu"
+getLicense = "Server-Lizenz erhalten"
+upgradeToEnterprise = "Auf Enterprise upgraden"
+selectPeriod = "Abrechnungszeitraum auswählen"
+monthlyBilling = "Monatliche Abrechnung"
+yearlyBilling = "Jährliche Abrechnung"
+checkoutOpened = "Checkout geöffnet"
+checkoutInstructions = "Schließen Sie Ihren Kauf im Stripe-Tab ab. Kehren Sie danach hierher zurück und aktualisieren Sie die Seite, um Ihre Lizenz zu aktivieren. Sie erhalten außerdem eine E-Mail mit Ihrem Lizenzschlüssel."
+activateLicense = "Lizenz aktivieren"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout in neuem Tab geöffnet"
+instructions = "Schließen Sie den Kauf im Stripe-Tab ab. Nach Abschluss der Zahlung erhalten Sie eine E-Mail mit Ihrem Lizenzschlüssel."
+enterKey = "Geben Sie unten Ihren Lizenzschlüssel ein, um Ihren Plan zu aktivieren:"
+keyDescription = "Fügen Sie den Lizenzschlüssel aus Ihrer E-Mail ein"
+activate = "Lizenz aktivieren"
+doLater = "Ich mache das später"
+success = "Lizenz aktiviert!"
+successMessage = "Ihre Lizenz wurde erfolgreich aktiviert. Sie können dieses Fenster nun schließen."
+
+[plan.static.billingPortal]
+title = "E-Mail-Verifizierung erforderlich"
+message = "Sie müssen Ihre E-Mail-Adresse im Stripe-Abrechnungsportal verifizieren. Prüfen Sie Ihre E-Mails auf einen Login-Link."
 
 [plan.period]
 month = "Monat"
@@ -5696,7 +6122,7 @@ emailInvalid = "Bitte geben Sie eine gültige E-Mail-Adresse ein"
 title = "E-Mail eingeben"
 description = "Wir verwenden diese, um Ihren Lizenzschlüssel und Belege zu senden."
 emailLabel = "E-Mail-Adresse"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "ihre@email.com"
 continue = "Weiter"
 modalTitle = "Loslegen – {{planName}}"
 
@@ -5771,6 +6197,8 @@ notAvailable = "Audit-System nicht verfügbar"
 notAvailableMessage = "Das Audit-System ist nicht konfiguriert oder nicht verfügbar."
 disabled = "Audit-Protokollierung ist deaktiviert"
 disabledMessage = "Aktivieren Sie die Audit-Protokollierung in Ihrer Anwendungskonfiguration, um Systemereignisse nachzuverfolgen."
+enterpriseRequired = "Enterprise-Lizenz erforderlich"
+enterpriseRequiredMessage = "Das Audit-Protokollierungssystem ist eine Enterprise-Funktion. Bitte upgraden Sie auf eine Enterprise-Lizenz, um Audit-Logs und Analysen zu nutzen."
 
 [audit.error]
 title = "Fehler beim Laden des Audit-Systems"
@@ -5945,6 +6373,7 @@ emptyUrl = "Bitte eine Server-URL eingeben"
 unreachable = "Verbindung zum Server konnte nicht hergestellt werden"
 testFailed = "Verbindungstest fehlgeschlagen"
 configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 
 [setup.server.error.securityDisabled]
 title = "Anmeldung nicht aktiviert"
@@ -5968,6 +6397,7 @@ instructions = "So aktivieren Sie die Anmeldung auf Ihrem Stirling PDF-Server:"
 instructionsEnvVar = "Setzen Sie die Umgebungsvariable:"
 instructionsOrYml = "Oder in der settings.yml:"
 instructionsRestart = "Starten Sie anschließend Ihren Server neu, damit die Änderungen wirksam werden."
+sso = "Single Sign-On"
 
 [setup.login.username]
 label = "Benutzername"
@@ -6025,6 +6455,8 @@ reset = "Änderungen zurücksetzen"
 downloadJson = "JSON herunterladen"
 generatePdf = "PDF generieren"
 saveChanges = "Änderungen speichern"
+applyChanges = "Änderungen anwenden"
+downloadCopy = "Kopie herunterladen"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Text automatisch in Rahmen einpassen"
@@ -6042,6 +6474,24 @@ descriptionInline = "Tipp: Halten Sie Strg (Cmd) oder Umschalt, um mehrere Textf
 [pdfTextEditor.options.forceSingleElement]
 title = "Bearbeiteten Text auf ein einzelnes PDF-Element fixieren"
 description = "Wenn aktiviert, exportiert der Editor jedes bearbeitete Textfeld als ein PDF-Textelement, um überlappende Glyphen oder gemischte Schriften zu vermeiden."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Vorschau-Einschränkungen"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Fokus auf Text und Bilder"
+text = "Dieser Arbeitsbereich konzentriert sich auf das Bearbeiten von Text und das Neupositionieren eingebetteter Bilder. Komplexe Seitengrafiken, Formular-Widgets und Ebenengrafiken bleiben für den Export erhalten, sind hier jedoch nicht vollständig bearbeitbar."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Abweichungen in der Vorschau"
+text = "Einige Darstellungen (z. B. Tabellenränder, Formen oder das Erscheinungsbild von Anmerkungen) werden in der Vorschau möglicherweise nicht exakt angezeigt. Die exportierte PDF behält die ursprünglichen Zeichenbefehle nach Möglichkeit bei."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha-Viewer"
+text = "Dieser Alpha-Viewer wird noch weiterentwickelt – bestimmte Schriftarten, Farben, Transparenzeffekte und Layoutdetails können leicht abweichen. Bitte prüfen Sie die erzeugte PDF vor dem Teilen."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Ausgewählte Felder zusammenführen"
@@ -6131,8 +6581,8 @@ tags = "text,anmerkung,beschriftung"
 applySignatures = "Text anwenden"
 
 [addText.text]
-name = "Textinhalt"
-placeholder = "Geben Sie den hinzuzufügenden Text ein"
+name = "Text"
+placeholder = "Text eingeben"
 fontLabel = "Schriftart"
 fontSizeLabel = "Schriftgröße"
 fontSizePlaceholder = "Schriftgröße eingeben oder wählen (8-200)"
@@ -6164,3 +6614,58 @@ title = "Ergebnisse: Text hinzufügen"
 
 [addText.error]
 failed = "Beim Hinzufügen von Text zum PDF ist ein Fehler aufgetreten."
+
+[mobileScanner]
+addToBatch = "Add to Batch"
+back = "Back"
+batchImages = "Batch"
+camera = "Camera"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+capture = "Capture Photo"
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+clearBatch = "Clear"
+connected = "Connected"
+connecting = "Connecting..."
+edgeDetection = "Edge Detection"
+fileDescription = "Upload existing photos or documents from your device"
+fileUpload = "File Upload"
+flash = "Flash"
+flashlight = "Flashlight"
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+preview = "Preview"
+processing = "Processing..."
+retake = "Retake"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionInvalid = "Session Error"
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+settings = "Settings"
+title = "Mobile Scanner"
+upload = "Upload"
+uploadAll = "Upload All"
+uploadFailed = "Upload failed. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+uploading = "Uploading..."
+validating = "Validating session..."
+
+[mobileUpload]
+connected = "Mobile device connected"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+pollingError = "Error checking for files"
+sessionCreateError = "Failed to create session"
+sessionId = "Session ID"
+title = "Upload from Mobile"

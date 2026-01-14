@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl, Select } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
@@ -26,6 +27,7 @@ interface GeneralSettingsData {
     showUpdateOnlyAdmin?: boolean;
     customHTMLFiles?: boolean;
     fileUploadLimit?: string;
+    frontendUrl?: string;
   };
   customPaths?: {
     pipeline?: {
@@ -47,6 +49,8 @@ interface GeneralSettingsData {
 
 export default function AdminGeneralSection() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
   const { preferences, updatePreference } = usePreferences();
@@ -141,6 +145,7 @@ export default function AdminGeneralSection() {
         'system.showUpdateOnlyAdmin': settings.system?.showUpdateOnlyAdmin,
         'system.customHTMLFiles': settings.system?.customHTMLFiles,
         'system.fileUploadLimit': settings.system?.fileUploadLimit,
+        'system.frontendUrl': settings.system?.frontendUrl,
         // Premium custom metadata
         'premium.proFeatures.customMetadata.autoUpdateMetadata': settings.customMetadata?.autoUpdateMetadata,
         'premium.proFeatures.customMetadata.author': settings.customMetadata?.author,
@@ -227,6 +232,19 @@ export default function AdminGeneralSection() {
       setIsDirty(false);
     };
   }, [setIsDirty]);
+
+  // Handle hash navigation for deep linking to specific fields
+  useEffect(() => {
+    if (location.hash && !loading) {
+      const elementId = location.hash.substring(1); // Remove the #
+      const element = document.getElementById(elementId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [location.hash, loading]);
 
   const handleDiscard = useCallback(() => {
     if (originalSettingsSnapshot) {
@@ -441,6 +459,22 @@ export default function AdminGeneralSection() {
             />
           </div>
 
+          <div id="frontendUrl">
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.frontendUrl.label', 'Frontend URL')}</span>
+                  <PendingBadge show={isFieldPending('system.frontendUrl')} />
+                </Group>
+              }
+              description={t('admin.settings.general.frontendUrl.description', 'Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL.')}
+              value={settings.system?.frontendUrl || ''}
+              onChange={(e) => setSettings({ ...settings, system: { ...settings.system, frontendUrl: e.target.value } })}
+              placeholder="https://pdf.example.com"
+              disabled={!loginEnabled}
+            />
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <Text fw={500} size="sm">{t('admin.settings.general.showUpdate.label', 'Show Update Notifications')}</Text>
@@ -499,7 +533,15 @@ export default function AdminGeneralSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.general.customMetadata.label', 'Custom Metadata')}</Text>
-            <Badge color="yellow" size="sm">PRO</Badge>
+            <Badge
+              color="grape"
+              size="sm"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/settings/adminPlan')}
+              title={t('admin.settings.badge.clickToUpgrade', 'Click to view plan details')}
+            >
+              PRO
+            </Badge>
           </Group>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

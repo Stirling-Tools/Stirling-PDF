@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -34,8 +33,8 @@ public class Type3FontLibrary {
 
     private final ObjectMapper objectMapper;
     private final ResourceLoader resourceLoader;
+    private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
-    @Value("${stirling.pdf.json.type3.library.index:classpath:/type3/library/index.json}")
     private String indexLocation;
 
     private final Map<String, Type3FontLibraryEntry> signatureIndex = new ConcurrentHashMap<>();
@@ -44,6 +43,17 @@ public class Type3FontLibrary {
 
     @jakarta.annotation.PostConstruct
     void initialise() {
+        if (applicationProperties.getPdfEditor() != null
+                && applicationProperties.getPdfEditor().getType3() != null
+                && applicationProperties.getPdfEditor().getType3().getLibrary() != null) {
+            this.indexLocation =
+                    applicationProperties.getPdfEditor().getType3().getLibrary().getIndex();
+        } else {
+            log.warn(
+                    "[TYPE3] PdfEditor Type3 library configuration not available; Type3 library disabled");
+            entries = List.of();
+            return;
+        }
         Resource resource = resourceLoader.getResource(indexLocation);
         if (!resource.exists()) {
             log.info("[TYPE3] Library index {} not found; Type3 library disabled", indexLocation);
@@ -210,6 +220,9 @@ public class Type3FontLibrary {
     }
 
     private byte[] loadResourceBytes(String location) throws IOException {
+        if (location == null || location.isBlank()) {
+            throw new IOException("Resource location is null or blank");
+        }
         String resolved = resolveLocation(location);
         Resource resource = resourceLoader.getResource(resolved);
         if (!resource.exists()) {
