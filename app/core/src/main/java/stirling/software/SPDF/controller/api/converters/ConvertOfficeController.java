@@ -71,12 +71,12 @@ public class ConvertOfficeController {
         }
         String extensionLower = extension.toLowerCase(Locale.ROOT);
 
-        // Use try-with-resources for automatic cleanup of work directory
-        try (TempDirectory workDirManager = new TempDirectory(tempFileManager)) {
-            Path workDir = workDirManager.getPath();
-            Path inputPath = Files.createTempFile(workDir, "input_", "." + extensionLower);
-            Path outputPath = Files.createTempFile(workDir, "output_", ".pdf");
+        // Create work directory - caller (processFileToPDF) is responsible for cleanup
+        Path workDir = Files.createTempDirectory("office2pdf_");
+        Path inputPath = Files.createTempFile(workDir, "input_", "." + extensionLower);
+        Path outputPath = Files.createTempFile(workDir, "output_", ".pdf");
 
+        try {
             // Check if the file is HTML and apply sanitization if needed
             if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
                 // Read and sanitize HTML content
@@ -161,6 +161,13 @@ public class ConvertOfficeController {
             }
 
             return outputPath.toFile();
+        } finally {
+            // Clean up the temporary input file (output and workDir cleaned by caller)
+            try {
+                Files.deleteIfExists(inputPath);
+            } catch (IOException e) {
+                log.warn("Failed to delete temp input file: {}", inputPath, e);
+            }
         }
     }
 
