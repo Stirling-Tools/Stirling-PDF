@@ -469,6 +469,8 @@ confirm = "Potrdite novo geslo"
 confirmPlaceholder = "Znova vnesite novo geslo"
 update = "Posodobi geslo"
 
+
+
 [settings.hotkeys]
 title = "Bližnjice na tipkovnici"
 description = "Prilagodite bližnjice na tipkovnici za hiter dostop do orodij. Kliknite \"Spremeni bližnjico\" in pritisnite novo kombinacijo tipk. Pritisnite Esc za preklic."

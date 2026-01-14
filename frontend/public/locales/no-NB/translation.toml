@@ -469,6 +469,8 @@ confirm = "Bekreft nytt passord"
 confirmPlaceholder = "Skriv inn det nye passordet på nytt"
 update = "Oppdater passord"
 
+
+
 [settings.hotkeys]
 title = "Tastatursnarveier"
 description = "Tilpass tastatursnarveier for rask tilgang til verktøy. Klikk \"Endre snarvei\" og trykk en ny tastekombinasjon. Trykk Esc for å avbryte."

@@ -469,6 +469,8 @@ confirm = "Potvrdit nové heslo"
 confirmPlaceholder = "Zadejte nové heslo znovu"
 update = "Aktualizovat heslo"
 
+
+
 [settings.hotkeys]
 title = "Klávesové zkratky"
 description = "Přizpůsobte si klávesové zkratky pro rychlý přístup k nástrojům. Klikněte na „Změnit zkratku“ a stiskněte novou kombinaci kláves. Stisknutím Esc zrušíte."

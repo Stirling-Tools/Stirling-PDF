@@ -469,6 +469,8 @@ confirm = "Confirmar nova senha"
 confirmPlaceholder = "Redigite sua nova senha"
 update = "Atualizar senha"
 
+
+
 [settings.hotkeys]
 title = "Atalhos de teclado"
 description = "Personalize atalhos de teclado para acesso rápido às ferramentas. Clique em \"Alterar atalho\" e pressione uma nova combinação de teclas. Pressione Esc para cancelar."

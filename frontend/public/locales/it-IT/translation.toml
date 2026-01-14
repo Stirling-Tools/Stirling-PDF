@@ -469,6 +469,8 @@ confirm = "Conferma nuova password"
 confirmPlaceholder = "Reinserisci la nuova password"
 update = "Aggiorna password"
 
+
+
 [settings.hotkeys]
 title = "Scorciatoie da tastiera"
 description = "Personalizza le scorciatoie da tastiera per l'accesso rapido agli strumenti. Clicca \"Cambia scorciatoia\" e premi una nuova combinazione di tasti. Premi Esc per annullare."

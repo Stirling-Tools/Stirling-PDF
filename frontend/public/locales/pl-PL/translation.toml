@@ -469,6 +469,8 @@ confirm = "Potwierdź nowe hasło"
 confirmPlaceholder = "Wpisz ponownie nowe hasło"
 update = "Zaktualizuj hasło"
 
+
+
 [settings.hotkeys]
 title = "Skróty klawiaturowe"
 description = "Dostosuj skróty klawiaturowe, aby szybko uzyskiwać dostęp do narzędzi. Kliknij \"Zmień skrót\" i naciśnij nową kombinację klawiszy. Naciśnij Esc, aby anulować."

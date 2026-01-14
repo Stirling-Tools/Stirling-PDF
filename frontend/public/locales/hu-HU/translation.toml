@@ -469,6 +469,8 @@ confirm = "Új jelszó megerősítése"
 confirmPlaceholder = "Írja be újra az új jelszót"
 update = "Jelszó frissítése"
 
+
+
 [settings.hotkeys]
 title = "Billentyűparancsok"
 description = "Testreszabhatja a billentyűparancsokat az eszközök gyors eléréséhez. Kattintson a \"Billentyűparancs módosítása\" gombra, és nyomjon meg egy új billentyűkombinációt. A megszakításhoz nyomja meg az Esc billentyűt."

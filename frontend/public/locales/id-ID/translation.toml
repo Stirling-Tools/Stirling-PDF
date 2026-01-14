@@ -469,6 +469,8 @@ confirm = "Konfirmasi kata sandi baru"
 confirmPlaceholder = "Masukkan ulang kata sandi baru"
 update = "Perbarui kata sandi"
 
+
+
 [settings.hotkeys]
 title = "Pintasan Keyboard"
 description = "Sesuaikan pintasan keyboard untuk akses cepat ke alat. Klik \"Change shortcut\" dan tekan kombinasi tombol baru. Tekan Esc untuk membatalkan."

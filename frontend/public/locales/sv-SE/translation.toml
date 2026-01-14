@@ -1305,6 +1305,7 @@ includeTableOfContents = "Inkludera innehållsförteckning"
 includeTableOfContentsDesc = "Lägg till en genererad innehållsförteckning i den resulterande PDF-filen"
 includePageNumbers = "Inkludera sidnummer"
 includePageNumbersDesc = "Lägg till sidnummer i den genererade PDF-filen"
+optimizeForEbookPdf = "Optimera för e-boksläsare"
 optimizeForEbookPdfDesc = "Optimera PDF:en för e-boksläsning (mindre filstorlek, bättre rendering på eInk-enheter)"
 
 [convert.epubOptions]

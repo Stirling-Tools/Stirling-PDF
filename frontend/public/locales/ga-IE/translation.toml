@@ -1,11 +1,8 @@
 unsavedChanges = "Tá athruithe gan sábháil agat ar do PDF."
-pendingRedactionsTitle = "Eagarthóireacht Neamhfheidhmithe"
-pendingRedactions = "Tá eagarthóireachtaí neamhfheidhmithe agat a chaillfear."
 areYouSure = "An bhfuil tú cinnte gur mian leat imeacht?"
 unsavedChangesTitle = "Athruithe Gan Sábháil"
 keepWorking = "Lean ort ag obair"
 discardChanges = "Caith uait & Fág"
-discardRedactions = "Scrios & Fág"
 applyAndContinue = "Sábháil & Fág"
 exportAndContinue = "Easpórtáil & Lean ar aghaidh"
 cancel = "Cealaigh"
@@ -127,14 +124,17 @@ submit = "Cuir isteach"
 success = "D’éirigh leis"
 undoDataMismatch = "Ní féidir a chealú: tá sonraí na hoibríochta truaillithe"
 undoFailed = "Theip ar chealú na hoibríochta"
-undoQuotaError = "Ní féidir é a chealú: easpa spáis stórála"
-undoStorageError = "Cealú críochnaithe ach níorbh fhéidir roinnt comhad a shábháil chuig an stóras"
-undoSuccess = "Oibríocht cealaithe go rathúil"
-unsupported = "Gan tacaíocht"
+undoQuotaError = "Ní féidir a chealú: níl dóthain spáis stórála ann"
+undoStorageError = "Críochnaíodh an cealú ach níorbh fhéidir roinnt comhad a shábháil sa stóras"
+undoSuccess = "Cealaíodh an oibríocht go rathúil"
+unsupported = "Ní thacaítear leis"
+discardRedactions = "Discard & Leave"
+pendingRedactions = "You have unapplied redactions that will be lost."
+pendingRedactionsTitle = "Unapplied Redactions"
 
 [toolPanel]
 placeholder = "Roghnaigh uirlis chun tosú"
-alpha = "Alfa"
+alpha = "Alpha"
 premiumFeature = "Gné Préimhe:"
 comingSoon = "Ag teacht go luath:"
 
@@ -451,23 +451,23 @@ desktop = "Leagan Deisce"
 server = "Leagan Freastalaí"
 
 [settings.security]
-title = "Slándáil"
-description = "Nuashonraigh do phasfhocal chun do chuntas a choinneáil slán."
+title = "Security"
+description = "Update your password to keep your account secure."
 
 [settings.security.password]
-subtitle = "Athraigh do phasfhocal. Logálfar amach thú tar éis an nuashonraithe."
-required = "Tá gach réimse riachtanach."
-mismatch = "Ní hionann na pasfhocail nua."
-error = "Ní féidir an focal faire a nuashonrú. Fíoraigh do phasfhocal reatha agus déan iarracht arís."
-success = "Nuashonraíodh an focal faire go rathúil. Sínigh isteach arís le do thoil."
-ssoDisabled = "Déanann do sholáthraí aitheantais athruithe ar phasfhocail a bhainistiú."
-current = "Focal faire reatha"
-currentPlaceholder = "Cuir isteach do phasfhocal reatha"
-new = "Pasfhocal nua"
-newPlaceholder = "Cuir isteach focal faire nua"
-confirm = "Deimhnigh an focal faire nua"
-confirmPlaceholder = "Ath-iontráil do phasfhocal nua"
-update = "Nuashonraigh an focal faire"
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
 
 [settings.hotkeys]
 title = "Aicearraí Méarchláir"
@@ -522,16 +522,16 @@ low = "Íseal"
 title = "Athraigh Dintiúir"
 header = "Nuashonraigh Sonraí do Chuntais"
 changePassword = "Tá dintiúir réamhshocraithe logáil isteach á úsáid agat. Cuir isteach pasfhocal nua le do thoil"
-ssoManaged = "Déanann do sholáthraí aitheantais bainistíocht ar do chuntas."
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "Ainm Úsáideora Nua"
 oldPassword = "Pasfhocal reatha"
 newPassword = "Focal Faire Nua"
 confirmNewPassword = "Deimhnigh Pasfhocal Nua"
 submit = "Cuir Athruithe isteach"
-credsUpdated = "Cuntas nuashonraithe"
-description = "Athruithe sábháilte. Logáil isteach arís le do thoil."
-error = "Ní féidir an t-ainm úsáideora a nuashonrú. Fíoraigh do phasfhocal agus déan iarracht arís."
-changeUsername = "Nuashonraigh d'ainm úsáideora. Logálfar amach thú tar éis an nuashonraithe."
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "Socruithe cuntas"
@@ -745,14 +745,14 @@ title = "Braith & Roinn Grianghraif Scanta"
 desc = "Braith agus roinn grianghraif scanta ina leathanaigh ar leith"
 
 [home.sign]
-tags = "síniú, uathghraf"
-title = "Sínigh"
+tags = "síniú,uathshíniú"
+title = "Comhartha"
 desc = "Cuireann síniú le PDF trí líníocht, téacs nó íomhá"
 
 [home.annotate]
-tags = "anótáil, aibhsigh, tarraing"
-title = "Comhartha"
-desc = "Cuireann síniú le PDF trí líníocht, téacs nó íomhá"
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "simpligh,bain,idirghníomhach"
@@ -968,15 +968,15 @@ title = "Eagarthóir Téacs PDF"
 desc = "Cuir téacs agus íomhánna atá ann cheana in eagar laistigh de PDFanna"
 
 [home.addText]
-tags = "annotate,highlight,draw"
-title = "Annotate"
+tags = "téacs,anótáil,lipéad"
+title = "Cuir Téacs Leis"
 desc = "Cuir téacs saincheaptha in áit ar bith i do PDF"
 
 [landing]
 addFiles = "Cuir Comhaid Leis"
 uploadFromComputer = "Uaslódáil ón ríomhaire"
 openFromComputer = "Oscail ón ríomhaire"
-mobileUpload = "Uaslódáil ó Shoghluaiste"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "amharc, léamh, anótáil, téacs, íomhá"
@@ -1151,10 +1151,10 @@ bullet3 = "Scoilfidh an córas ag teorainneacha leathanaigh"
 
 [split.tooltip.byCount]
 title = "Scoilt de réir Líon"
-text = "Cruthaigh il-PDFanna le líon sonrach leathanach nó doiciméad an ceann."
+text = "Cruthaigh il‑PDFanna le líon sonrach leathanach nó cáipéisí an ceann."
 bullet1 = "Líon Leathanach: Líon seasta leathanach in aghaidh an chomhaid"
-bullet2 = "Líon na nDoiciméad: Líon socraithe comhad aschuir"
-bullet3 = "Úsáideach le haghaidh sreafaí oibre próiseála baisce"
+bullet2 = "Líon Cáipéisí: Líon seasta comhad aschuir"
+bullet3 = "Úsáideach do shreafaí oibre baisc‑phróiseála"
 
 [split.tooltip.byChapters]
 title = "Scoilt de réir Caibidlí"
@@ -1291,34 +1291,35 @@ errorConversion = "Tharla earráid agus an comhad á thiontú."
 cbzOptions = "Roghanna CBZ go PDF"
 optimizeForEbook = "Optamaigh PDF do léitheoirí ríomhleabhar (úsáideann Ghostscript)"
 cbzOutputOptions = "Roghanna PDF go CBZ"
-cbzDpi = "DPI le haghaidh rindreáil íomhá"
-cbrOptions = "CRoghanna BR"
-cbrOutputOptions = "Roghanna PDF go CBR"
-cbrDpi = "DPI le haghaidh rindreáil íomhá"
+cbzDpi = "DPI do rindreáil íomhá"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
 
 [convert.ebookOptions]
-ebookOptions = "Roghanna ríomhleabhar go PDF"
-ebookOptionsDesc = "Roghanna chun ríomhleabhair a thiontú go PDF"
-embedAllFonts = "Leabaigh gach cló"
-embedAllFontsDesc = "Cuir na clónna uile ón ríomhleabhar isteach sa PDF a ghintear"
-includeTableOfContents = "Cuir clár ábhair san áireamh"
-includeTableOfContentsDesc = "Cuir clár ábhair ginte leis an PDF a eascraíonn as"
-includePageNumbers = "Cuir uimhreacha leathanach san áireamh"
-includePageNumbersDesc = "Cuir uimhreacha leathanach leis an PDF ginte"
-optimizeForEbookPdf = "Optamaigh do léitheoirí ríomhleabhar"
-optimizeForEbookPdfDesc = "An PDF a bharrfheabhsú le haghaidh léamh ríomhleabhar (méid comhaid níos lú, rindreáil níos fearr ar ghléasanna eInk)"
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [convert.epubOptions]
-epubOptions = "Roghanna PDF go eBook"
-epubOptionsDesc = "Roghanna chun PDF a thiontú go EPUB/AZW3"
-detectChapters = "Braith caibidlí"
-detectChaptersDesc = "Braith ceannteidil a bhfuil cuma caibidil orthu agus cuir briseadh leathanaigh EPUB isteach"
-targetDevice = "Gléas sprice"
-targetDeviceDesc = "Roghnaigh próifíl aschuir a bhfuil optamú déanta di don ghléas léitheoireachta"
-outputFormat = "Formáid aschuir"
-outputFormatDesc = "Roghnaigh an fhormáid aschuir don eBook"
-tabletPhone = "Táibléad/Fón (le híomhánna)"
-kindleEink = "Kindle e-Ink (téacs optamaithe)"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+kindleEink = "Kindle e-Ink (text optimized)"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+
 
 [imageToPdf]
 tags = "comhshó, img, jpg, pictiúr, grianghraf"
@@ -1430,17 +1431,17 @@ defaultImageLabel = "Íomhá uaslódáilte"
 
 [attachments]
 tags = "embed,attach,file,attachment,attachments"
-title = "Cuir Ceangaltáin leis"
-header = "Cuir Ceangaltáin leis"
+title = "Add attachments"
+header = "Add attachments"
 add = "Cuir Iatán Leis"
 remove = "Bain Iatán"
-embed = "Leabaigh an Ceangaltán"
-convertToPdfA3b = "Tiontaigh go PDF/A-3b"
-convertToPdfA3bDescription = "Cruthaíonn sé PDF cartlannaithe le ceangaltáin leabaithe"
-convertToPdfA3bTooltip = "Is formáid chartlainne í PDF/A-3b a chinntíonn caomhnú fadtéarmach. Ceadaíonn sí formáidí comhaid treallacha a leabú mar cheangaltáin. Éilíonn an comhshó Ghostscript agus d’fhéadfadh sé go dtógfadh sé níos faide i gcás comhad mór."
-convertToPdfA3bTooltipHeader = "Maidir le Comhshó PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Cad a dhéanann sé"
-submit = "Cuir Ceangaltáin leis"
+embed = "Leabaigh Iatán"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
+submit = "Add attachments"
 
 [watermark]
 title = "Cuir Uisce leis"
@@ -1575,9 +1576,9 @@ bullet3 = "Coinníonn íomhánna ar ardtaifeach an cháilíocht níos fearr"
 [watermark.tooltip.file.recommendations]
 title = "Cleachtais is Fearr"
 text = "Leideanna le haghaidh torthaí optamacha i gcomharthaí uisce íomhá."
-bullet1 = "Bain úsáid as lógónna nó stampaí le cúlraí trédhearcacha"
+bullet1 = "Úsáid lógónna nó stampaí le cúlraí trédhearcacha"
 bullet2 = "Oibríonn dearaí simplí níos fearr ná íomhánna casta"
-bullet3 = "Smaoinigh ar mhéid deiridh an doiciméid agus tú ag roghnú taifeach"
+bullet3 = "Smaoinigh ar mhéid deiridh an doiciméid agus taifeach á roghnú"
 
 [watermark.tooltip.formatting.header]
 title = "Formáidiú agus Leagan Amach"
@@ -1596,8 +1597,8 @@ bullet3 = "Cruthaíonn teimhneacht níos ísle comharthaí uisce níos míne"
 
 [watermark.tooltip.formatting.spacing]
 title = "Rialú Spásála"
-text = "Coigeartaigh an spásáil idir uiscemharcanna athuair ar fud an leathanaigh."
-bullet1 = "Spásáil chothrománach: An fad idir na huiscemharcanna ó chlé go deas"
+text = "Coigeartaigh an spásáil idir comharthaí uisce athchleachtaithe ar fud an leathanaigh."
+bullet1 = "Spásáil chothrománach: Fad idir comharthaí uisce ó chlé go deas"
 bullet2 = "Spásáil ingearach: Fad idir comharthaí uisce ó bharr go bun"
 bullet3 = "Cruthaíonn luachanna níos airde patrúin níos scaipthe"
 
@@ -1605,9 +1606,9 @@ bullet3 = "Cruthaíonn luachanna níos airde patrúin níos scaipthe"
 title = "Rogha Slándála"
 text = "Tiontaigh an PDF deiridh go formáid bunaithe ar íomhánna ar mhaithe le slándáil fheabhsaithe."
 bullet1 = "Coscann sé roghnú téacs agus cóipeáil"
-bullet2 = "Déanann sé níos deacra uiscemharcanna a bhaint"
-bullet3 = "Torthaí i méideanna comhaid níos mó"
-bullet4 = "Is fearr le haghaidh ábhar íogair nó cóipchirt"
+bullet2 = "Déanann sé comharthaí uisce níos deacra a bhaint"
+bullet3 = "Mar thoradh air sin tá méideanna comhaid níos mó"
+bullet4 = "Is fearr d’ábhar íogair nó faoi chóipcheart"
 
 [watermark.type]
 1 = "Téacs"
@@ -2269,11 +2270,11 @@ useCase2 = "Roinn baisceanna leaba chothrom ina gcomhaid ar leith"
 useCase3 = "Bris colláisí ina ngrianghraif aonair"
 useCase4 = "Tarraing grianghraif ó dhoiciméid"
 quickFixes = "Deisiúcháin thapa"
-problem1 = "Grianghraif gan bhrath → méadaigh an Lamháltas go 30-50"
-problem2 = "An iomarca braite bréagacha → méadaigh an Limistéar Íosta go 15,000-20,000"
-problem3 = "Tá na bearrtha ró-dhlúth → méadaigh Méid na Teorann go 5-10"
-problem4 = "Grianghraif chlaonta gan a bheith díreach → ísligh an Tairseach Uillinne go ~5°"
-problem5 = "Boscaí deannaigh/torainn → méadaigh an Limistéar Comhrian Íosta go 1000-2000"
+problem1 = "Ní braitheadh grianghraif → méadaigh Tolerance go 30-50"
+problem2 = "An iomarca braiteanna bréagacha → méadaigh Minimum Area go 15,000-20,000"
+problem3 = "Tá barróga rómhall → méadaigh Border Size go 5-10"
+problem4 = "Ní dhírítear grianghraif claonta → ísligh Angle Threshold go ~5°"
+problem5 = "Boscaí deannaigh/torainn → méadaigh Minimum Contour Area go 1000-2000"
 setupTips = "Leideanna socraithe"
 tip1 = "Úsáid cúlra éadrom, simplí"
 tip2 = "Fág bearna bheag (≈1 cm) idir grianghraif"
@@ -2435,9 +2436,9 @@ label = "Flatten foirmeacha amháin"
 desc = "Maolaigh réimsí foirme amháin, fág eilimintí idirghníomhacha eile slán"
 
 [flatten.renderDpi]
-label = "DPI rindreála (roghnach, molta 150 DPI)"
-help = "Fág bán chun réamhshocrú an chórais a úsáid. Géaraíonn DPI níos airde an t-aschur ach méadaíonn sé an t-am próiseála agus méid an chomhaid."
-placeholder = "m.sh. 150"
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Torthaí Maolaithe"
@@ -2901,10 +2902,10 @@ bullet3 = "Nuair a fhilltear & a chairnítear: Léamh 1→2→3→4→5→6→7�
 [bookletImposition.tooltip.printing]
 title = "Conas a Chlódófar & a Chruaifear"
 text = "Lean na céimeanna seo le haghaidh leabhrán foirfe:"
-bullet1 = "Priontáil déthaobhach le 'Flip ar an imeall fada'"
+bullet1 = "Clóigh dhá thaobh le 'Flip on long edge'"
 bullet2 = "Carn na bileoga in ord, fill ina leath"
 bullet3 = "Grádaigh nó ceangail feadh an droma fhillte"
-bullet4 = "I gcás printéirí imeall gearr: Cumasaigh an rogha 'Flip ar an imeall gearr'"
+bullet4 = "Do phrintéirí imeall gearr: Cumasaigh an rogha 'Flip on short edge'"
 
 [bookletImposition.tooltip.manualDuplex]
 title = "Dúphléacs Láimhe (Printéirí Aon-taobh)"
@@ -2945,8 +2946,8 @@ label = "Fachtóir Scála"
 [adjustPageScale.pageSize]
 label = "Spriocmhéid Leathanaigh"
 keep = "Coinnigh an méid bunaidh"
-letter = "Litir"
-legal = "Dlíthiúil"
+letter = "Letter"
+legal = "Legal"
 
 [adjustPageScale.error]
 failed = "Tharla earráid agus scála na leathanach á choigeartú."
@@ -3013,7 +3014,7 @@ header = "PDF a ghearradh"
 submit = "Cuir isteach"
 noFileSelected = "Roghnaigh comhad PDF chun tosú ar bhearradh"
 reset = "Athshocraigh go PDF iomlán"
-autoCrop = "Spás bán a bhearradh go huathoibríoch"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Roghnú Limistéir Bhearrtha"
@@ -3313,40 +3314,31 @@ text = "Ní mheaitseálfar ach focail iomlána, ní meaitseálacha páirteacha. 
 
 [redact.tooltip.advanced.convert]
 title = "Tiontaigh go PDF-Image"
-text = "Athraíonn sé an PDF go PDF bunaithe ar íomhá tar éis eagarthóireachta. Cinntíonn sé seo go mbaintear téacs taobh thiar de bhoscaí eagarthóireachta go hiomlán agus nach féidir é a aisghabháil."
-
-[redact.tooltip.manual.header]
-title = "Rialuithe Eagarthóireachta Láimhe"
-
-[redact.tooltip.manual.markText]
-title = "Uirlis Téacs Marcála"
-text = "Roghnaigh téacs go díreach ar an PDF chun é a mharcáil le haghaidh eagarthóireachta. Cliceáil agus tarraing chun téacs ar leith ar mhaith leat a chealú a aibhsiú."
-
-[redact.tooltip.manual.markArea]
-title = "Uirlis Limistéir Mharcáilte"
-text = "Tarraing limistéir dhronuilleogacha ar an PDF chun réigiúin a mharcáil le haghaidh eagarthóireachta. Úsáideach chun íomhánna, sínithe, nó cruthanna neamhrialta a cheilt."
+text = "Tiontaíonn sé an PDF go PDF bunaithe ar íomhá tar éis ceilte. Cinntíonn sé seo go mbaintear téacs taobh thiar de bhoscaí ceilte go hiomlán agus nach féidir é a ghnóthú."
 
 [redact.tooltip.manual.apply]
-title = "Cuir Eagarthóireacht i bhFeidhm"
-text = "Tar éis duit ábhar a mharcáil, cliceáil 'Cuir i bhFeidhm' chun na réimsí marcáilte go léir a cheilt go buan. Taispeánann an comhaireamh atá ar feitheamh cé mhéad cheilt atá réidh le cur i bhfeidhm."
-bullet1 = "Marcáil an oiread limistéar agus is gá sula gcuirtear i bhfeidhm é"
-bullet2 = "Cuirtear gach eagarthóireacht atá ar feitheamh i bhfeidhm ag an am céanna"
-bullet3 = "Ní féidir eagarthóireachtaí a chealú tar éis iad a chur i bhfeidhm"
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+title = "Apply Redactions"
+
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markArea]
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+title = "Mark Area Tool"
+
+[redact.tooltip.manual.markText]
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+title = "Mark Text Tool"
 
 [redact.manual]
-title = "Uirlisí Eagarthóireachta"
-instructions = "Roghnaigh téacs nó tarraing limistéir ar an PDF chun ábhar a mharcáil le haghaidh eagarthóireachta."
-markText = "Marcáil Téacs"
-markArea = "Marcáil Limistéar"
-pendingLabel = "Ar feitheamh:"
-applyWarning = "⚠️ Feidhmchlár buan, ní féidir é a chealú agus scriosfar na sonraí faoi."
-apply = "Cuir isteach"
-noMarks = "Gan aon mharcanna eagarthóireachta. Bain úsáid as na huirlisí thuas chun ábhar a mharcáil le haghaidh eagarthóireachta."
-header = "Eagarthóireacht Láimhe"
-controlsTitle = "Rialuithe Eagarthóireachta Láimhe"
-textBasedRedaction = "Eagarthóireacht Téacsbhunaithe"
-pageBasedRedaction = "Eagarthóireacht Leathanachbhunaithe"
-convertPDFToImageLabel = "Tiontaigh PDF go PDF-Íomhá (Úsáidtear é chun téacs taobh thiar den bhosca a bhaint)"
+header = "Ceilt Láimhe"
+textBasedRedaction = "Ceilt bunaithe ar théacs"
+pageBasedRedaction = "Ceilt bunaithe ar leathanach"
+convertPDFToImageLabel = "Tiontaigh PDF go PDF-Image (Úsáidtear chun téacs taobh thiar den bhosca a bhaint)"
 export = "Easpórtáil"
 upload = "Uaslódáil"
 boxRedaction = "Ceilt trí bhosca a tharraingt"
@@ -3363,6 +3355,15 @@ showLayers = "Taispeáin Sraitheanna (déchliceáil chun gach sraith a athshocr�
 colourPicker = "Roghnóir Datha"
 findCurrentOutlineItem = "Aimsigh mír reatha na himlíne"
 applyChanges = "Cuir Athruithe i bhFeidhm"
+apply = "Apply"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+controlsTitle = "Manual Redaction Controls"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markArea = "Mark Area"
+markText = "Mark Text"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
+pendingLabel = "Pending:"
+title = "Redaction Tools"
 
 [redact.manual.pageRedactionNumbers]
 title = "Leathanaigh"
@@ -3460,17 +3461,17 @@ label = "Rannáin Ingearach"
 placeholder = "Cuir isteach líon na rannáin ingearacha"
 
 [split-by-sections.splitMode]
-label = "Mód Scoilte"
-description = "Roghnaigh conas na leathanaigh a roinnt"
-splitAll = "Scoilt na leathanaigh uile"
-splitAllExceptFirst = "Roinn gach rud seachas an chéad cheann"
-splitAllExceptLast = "Roinn gach rud seachas an ceann deireanach"
-splitAllExceptFirstAndLast = "Roinn gach rud seachas an chéad cheann agus an ceann deireanach"
-custom = "Leathanaigh saincheaptha"
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
 
 [split-by-sections.customPages]
-label = "Uimhreacha Leathanaigh Saincheaptha"
-placeholder = "m.sh. 2,4,6"
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
 
 [AddStampRequest]
 tags = "Stampa, Cuir íomhá, íomhá lár, Uisce, PDF, Leabú, Saincheap"
@@ -3611,7 +3612,7 @@ certHint = "Uaslódáil teastas X.509 iontaofa le bailíochtú i gcoinne foinse 
 title = "Socruithe Bailíochtaithe"
 
 [replaceColor]
-tags = "Athsholáthar Dath, Oibríochtaí Leathanaigh, Cúlchríoch, Taobh an Fhreastalaí"
+tags = "Ionadaigh Dath,Oibríochtaí Leathanaigh,Back end,server side"
 
 [replaceColor.labels]
 settings = "Socruithe"
@@ -3650,7 +3651,7 @@ bullet2 = "Dath cúlra - Socraigh dath cúlra an doiciméid"
 
 [replaceColor.tooltip.cmyk]
 title = "Tiontaigh go CMYK"
-text = "Tiontaigh an PDF ó spás dathanna RGB go spás dathanna CMYK, atá optamaithe le haghaidh priontála gairmiúla. Tiontaíonn an próiseas seo dathanna go dtí an tsamhail Cian, Magenta, Buí, Dubh a úsáideann printéirí."
+text = "Tiontaigh an PDF ó spás datha RGB go spás datha CMYK, optamaithe le haghaidh priontála gairmiúla. Tiontaíonn an próiseas seo dathanna go samhail Cyan, Magenta, Yellow, Black a úsáideann printéirí."
 
 [replaceColor.error]
 failed = "Tharla earráid agus ionadú datha á phróiseáil."
@@ -3669,8 +3670,8 @@ signinTitle = "Sínigh isteach le do thoil"
 ssoSignIn = "Logáil isteach trí Chlárú Aonair"
 oAuth2AutoCreateDisabled = "OAUTH2 Uath-Chruthaigh Úsáideoir faoi Mhíchumas"
 oAuth2AdminBlockedUser = "Tá bac faoi láthair ar chlárú nó logáil isteach úsáideoirí neamhchláraithe. Déan teagmháil leis an riarthóir le do thoil."
-oAuth2RequiresLicense = "Éilíonn logáil isteach OAuth/SSO ceadúnas Freastalaí nó Fiontraíochta. Téigh i dteagmháil leis an riarthóir le do phlean a uasghrádú."
-saml2RequiresLicense = "Éilíonn logáil isteach SAML ceadúnas Fiontraíochta. Téigh i dteagmháil leis an riarthóir le do phlean a uasghrádú."
+oAuth2RequiresLicense = "Teastaíonn ceadúnas íoctha (Server nó Enterprise) chun logáil isteach le OAuth/SSO. Déan teagmháil leis an riarthóir chun do phlean a uasghrádú."
+saml2RequiresLicense = "Teastaíonn ceadúnas íoctha (Server nó Enterprise) chun logáil isteach le SAML. Déan teagmháil leis an riarthóir chun do phlean a uasghrádú."
 maxUsersReached = "Sroicheadh an líon uasta úsáideoirí do do cheadúnas reatha. Déan teagmháil leis an riarthóir chun do phlean a uasghrádú nó suíocháin bhreise a chur leis."
 oauth2RequestNotFound = "Níor aimsíodh iarratas údaraithe"
 oauth2InvalidUserInfoResponse = "Freagra Neamhbhailí Faisnéise Úsáideora"
@@ -3822,7 +3823,7 @@ title = "PDF Coigeartaithe"
 title = "Comhbhrúigh"
 desc = "Comhbhrúigh PDFanna chun a méid comhaid a laghdú."
 header = "Comhbhrúigh PDF"
-credit = "Úsáideann an tseirbhís seo qpdf le haghaidh Comhbhrú/Optamú PDF."
+credit = "Úsáideann an tseirbhís seo qpdf le haghaidh Comhbhrú/Optimization PDF."
 submit = "Comhbhrúigh"
 
 [compress.method]
@@ -3834,17 +3835,17 @@ filesize = "Méid an Chomhaid"
 label = "Cuir Scála Liath i bhFeidhm le Comhbhrú"
 
 [compress.linearize]
-label = "Líneáil PDF le haghaidh féachana gréasáin thapa"
+label = "Linearize PDF for fast web viewing"
 
 [compress.lineArt]
-label = "Íomhánna a thiontú go healaín líne"
-description = "Úsáideann sé ImageMagick chun leathanaigh a laghdú go dubh agus bán ardchodarsnachta chun an laghdú méide is mó is féidir a bhaint amach."
-unavailable = "Níl ImageMagick suiteáilte ná cumasaithe ar an bhfreastalaí seo"
-detailLevel = "Leibhéal mionsonraí"
-edgeEmphasis = "Béim imeall"
-edgeLow = "Séimh"
-edgeMedium = "Cothromaithe"
-edgeHigh = "Láidir"
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
 
 [compress.tooltip.header]
 title = "Forbhreathnú ar Shocruithe Comhbhrúite"
@@ -3880,9 +3881,9 @@ _value = "Socruithe Comhbhrúite"
 1 = "1-3 comhbhrú PDF,</br> 4-6 comhbhrú éadrom íomhá,</br> 7-9 comhbhrú dian íomhá Laghdóidh sé cáilíocht na n-íomhánna go mór"
 
 [compress.compressionLevel]
-range1to3 = "Coinníonn luachanna níos ísle cáilíocht ach bíonn comhaid níos mó mar thoradh orthu"
-range4to6 = "Comhbhrú meánach le laghdú measartha ar cháilíocht"
-range7to9 = "Laghdaíonn luachanna níos airde méid an chomhaid go suntasach ach d’fhéadfadh soiléireacht na híomhá a laghdú"
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "Tá an comhad seo cosanta ag pasfhocal. Cuir isteach an pasfhocal le do thoil:"
@@ -4037,7 +4038,7 @@ showPreferencesBtn = "Bainistigh sainroghanna"
 
 [cookieBanner.popUp.description]
 1 = "Úsáidimid fianáin agus teicneolaíochtaí eile chun Stirling PDF a dhéanamh níos fearr duit—ag cabhrú linn ár n-uirlisí a fheabhsú agus gnéithe a thógáil a thaitneoidh leat."
-2 = "Mura mian leat, ní chuirfear ar chumas ach na fianáin riachtanacha atá riachtanach chun go n-oibreoidh rudaí go réidh má chliceálann tú ar 'Níl Go raibh maith agat'."
+2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
 title = "Lárionad Sainroghanna Toilithe"
@@ -4054,7 +4055,7 @@ subtitle = "Úsáid Fianáin"
 3 = "Tá do phríobháideachas agus do mhuinín i gcroílár ár gcuid oibre."
 
 [cookieBanner.preferencesModal.necessary]
-description = "Tá na fianáin seo riachtanach chun go bhfeidhmeoidh an suíomh Gréasáin i gceart. Cuireann siad gnéithe lárnacha ar chumas amhail do chuid roghanna príobháideachais a shocrú, logáil isteach agus foirmeacha a líonadh—agus is é sin an fáth nach féidir iad a mhúchadh."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Fianáin Riachtanacha go Docht"
@@ -4065,8 +4066,8 @@ title = "Anailísíocht"
 description = "Cuidíonn na fianáin seo linn a thuiscint conas a úsáidtear ár n-uirlisí, ionas gur féidir linn díriú ar na gnéithe is tábhachtaí dár bpobal a thógáil. Bí cinnte—ní féidir le Stirling PDF agus ní dhéanfaidh sé riamh ábhar na ndoiciméad a n-oibríonn tú leo a rianú."
 
 [cookieBanner.services]
-posthog = "Anailísíocht PostHog"
-scarf = "Scairf Picteilín"
+posthog = "PostHog Analytics"
+scarf = "Scarf Pixel"
 
 [removeMetadata]
 submit = "Bain Meiteashonraí"
@@ -4122,99 +4123,99 @@ selectByNumber = "Roghnaigh de réir Uimhreacha Leathanaigh"
 deleteSelected = "Scrios na Leathanaigh Roghnaithe"
 closePdf = "Dún an PDF"
 exportAll = "Easpórtáil an PDF"
-downloadSelected = "Íoslódáil Comhaid Roghnaithe"
-annotations = "Anótálacha"
-exportSelected = "Easpórtáil Leathanaigh Roghnaithe"
+downloadSelected = "Íoslódáil na Comhaid Roghnaithe"
+annotations = "Annotations"
+exportSelected = "Easpórtáil na Leathanaigh Roghnaithe"
 saveChanges = "Sábháil Athruithe"
-toggleTheme = "Téama a Athsholáthar"
+toggleTheme = "Athraigh an Téama"
 language = "Teanga"
-toggleAnnotations = "Infheictheacht Anótálacha a Athrú"
-search = "Cuardaigh PDF"
-panMode = "Mód Pan"
-applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
+toggleAnnotations = "Athraigh Infheictheacht Anótálacha"
+search = "Cuardaigh an PDF"
+panMode = "Mód Pánála"
 rotateLeft = "Rothlaigh ar Chlé"
 rotateRight = "Rothlaigh ar Dheis"
-toggleSidebar = "Barra Taobh a Athraigh"
-toggleBookmarks = "Leabharmharcanna a Athsholáthar"
+toggleSidebar = "Athraigh an Barra Taoibh"
+toggleBookmarks = "Scoránaigh Leabharmharcanna"
 print = "Priontáil PDF"
-draw = "Tarraing"
-redact = "Leasaigh"
-exitRedaction = "Scoir Mód Eagarthóireachta"
-save = "Sábháil"
-downloadAll = "Íoslódáil Gach Rud"
+downloadAll = "Íoslódáil Uile"
 saveAll = "Sábháil Uile"
+applyRedactionsFirst = "Apply redactions first"
+draw = "Draw"
+exitRedaction = "Exit Redaction Mode"
+redact = "Redact"
+save = "Save"
 
 [textAlign]
-left = "Ar chlé"
-center = "Lár"
-right = "Ar dheis"
+left = "Left"
+center = "Center"
+right = "Right"
 
 [annotation]
-title = "Anótáil"
-desc = "Bain úsáid as aird a tharraingt, peann, téacs agus nótaí. Fanann athruithe beo—níl gá le leacú."
-highlight = "Aibhsigh"
-pen = "Peann"
-text = "Bosca téacs"
-note = "Nóta"
-rectangle = "Dronuilleog"
-ellipse = "Éilips"
-select = "Roghnaigh"
-exit = "Scoir mód anótála"
-strokeWidth = "Leithead"
-opacity = "Teimhneacht"
-strokeOpacity = "Teimhneacht Stróc"
-fillOpacity = "Teimhneacht Líonadh"
-fontSize = "Méid an chló"
-chooseColor = "Roghnaigh dath"
-color = "Dath"
-strokeColor = "Dath Stróc"
-fillColor = "Dath Líonta"
-underline = "Folínigh"
-strikeout = "Stailc amach"
-squiggly = "Scriobláil"
-inkHighlighter = "Aibhseoir Saorláimhe"
-freehandHighlighter = "Aibhseoir Saorláimhe"
-square = "Cearnóg"
-circle = "Ciorcal"
-polygon = "Polagán"
-line = "Líne"
-stamp = "Cuir Íomhá leis"
-textMarkup = "Marcáil Téacs"
-drawing = "Líníocht"
-shapes = "Cruthanna"
-notesStamps = "Nótaí & Stampaí"
-settings = "Socruithe"
-borderOn = "Teorainn: Ar"
-borderOff = "Teorainn: As"
-editInk = "Peann a Chur in Eagar"
-editLine = "Líne a Chur in Eagar"
-editNote = "Cuir Nóta in Eagar"
-editText = "Cuir Bosca Téacs in Eagar"
-editTextMarkup = "Cuir Marcáil Téacs in Eagar"
-editSelected = "Cuir an nóta in Eagar"
-editSquare = "Cuir Cearnóg in Eagar"
-editCircle = "Cuir Ciorcal in Eagar"
-editPolygon = "Cuir Polagán in Eagar"
-unsupportedType = "Ní thacaítear go hiomlán leis an gcineál seo anótála le haghaidh eagarthóireachta."
-textAlignment = "Ailíniú Téacs"
-noteIcon = "Deilbhín Nóta"
-imagePreview = "Réamhamharc"
-contents = "Téacs"
-backgroundColor = "Dath an chúlra"
-clearBackground = "Bain an cúlra"
-noBackground = "Gan chúlra"
-stampSettings = "Socruithe Stampa"
-savingCopy = "Ag ullmhú íoslódáil..."
-saveFailed = "Ní féidir cóip a shábháil"
-saveReady = "Íoslódáil réidh"
-selectAndMove = "Roghnaigh agus Cuir in Eagar"
-editSelectDescription = "Cliceáil ar nóta atá ann cheana féin chun a dhath, a theimhneacht, a théacs nó a mhéid a chur in eagar."
-editStampHint = "Chun an íomhá a athrú, scrios an stampa seo agus cuir ceann nua leis."
-editSwitchToSelect = "Athraigh go Roghnaigh agus Cuir in Eagar chun an nóta seo a chur in eagar."
-undo = "Cealaigh"
-redo = "Athdhéan"
-applyChanges = "Cuir Athruithe i bhFeidhm"
-saveChanges = "Sábháil Athruithe"
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "Cuardaigh PDF"
@@ -4265,20 +4266,20 @@ settings = "Socruí"
 adminSettings = "Socruí riar."
 allTools = "All Tools"
 reader = "Léamh"
-tours = "Turais"
-showMeAround = "Taispeáin dom timpeall"
+tours = "Tours"
+showMeAround = "Show me around"
 
 [quickAccess.toursTooltip]
-admin = "Féach ar na treoracha anseo: Turas uirlisí, turas leagan amach nua V2, agus turas an Riarthóra."
-user = "Féach ar na treoracha anseo: Turas uirlisí agus turas leagan amach an V2 nua."
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "Turas na nUirlisí"
 toolsTourDesc = "Faigh amach cad is féidir leis na huirlisí a dhéanamh"
 adminTour = "Turas an Riarthóra"
 adminTourDesc = "Déan iniúchadh ar shocruithe agus gnéithe an riarthóra"
-whatsNewTour = "Féach cad atá nua i V2"
-whatsNewTourDesc = "Tabhair cuairt ar an leagan amach nuashonraithe"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "Earráid"
@@ -4423,11 +4424,8 @@ label = "Inrite Unoconvert"
 description = "Conair chuig LibreOffice unoconvert le haghaidh tiontaithe doiciméad (fág folamh don réamhshocrú: /opt/venv/bin/unoconvert)"
 
 [admin.settings.general.frontendUrl]
-label = "URL tosaigh"
-description = "URL bunúsach don tosaigh (m.sh., https://pdf.example.com). Úsáidtear é le haghaidh naisc cuireadh ríomhphoist agus uaslódálacha cóid QR soghluaiste. Fág folamh chun URL cúil a úsáid."
-
-[admin.settings.badge]
-clickToUpgrade = "Cliceáil chun sonraí an phlean a fheiceáil"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+label = "Frontend URL"
 
 [admin.settings.security]
 title = "Slándáil"
@@ -4436,7 +4434,7 @@ authentication = "Fíordheimhniú"
 
 [admin.settings.security.ssoNotice]
 title = "An bhfuil tú ag lorg socruithe SSO/SAML?"
-message = "Tá soláthraithe fíordheimhnithe OAuth2 agus SAML2 bogtha go dtí an roghchlár Naisc le haghaidh bainistíocht níos éasca."
+message = "Aistríodh soláthraithe fíordheimhnithe OAuth2 agus SAML2 go dtí an roghchlár Connections ar mhaithe le bainistíocht níos éasca."
 
 [admin.settings.security.enableLogin]
 label = "Cumasaigh Logáil Isteach"
@@ -4621,7 +4619,7 @@ description = "Cosc ar chlárú úsáideoirí nua trí OAuth2"
 
 [admin.settings.connections.oauth2.scopes]
 label = "Scóipeanna OAuth2"
-description = "Liosta scartha le camóga de raonta OAuth2 le hiarraidh (m.sh., openid, próifíl, ríomhphost)"
+description = "Liosta scartha le camóga de scóipeanna OAuth2 le hiarraidh (m.sh., openid, profile, email)"
 
 [admin.settings.connections.saml2]
 label = "SAML2"
@@ -4890,10 +4888,10 @@ description = "Cumraigh teorainneacha seisiúin agus teorainneacha ama do gach f
 libreOffice = "LibreOffice"
 pdfToHtml = "PDF go HTML"
 qpdf = "QPDF"
-tesseract = "OCR Tesseract"
+tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
 weasyPrint = "WeasyPrint"
-installApp = "Suiteáil Aop"
+installApp = "Suiteáil App"
 calibre = "Calibre"
 ghostscript = "Ghostscript"
 ocrMyPdf = "OCRmyPDF"
@@ -5030,11 +5028,11 @@ description = "Cumraigh gnéithe roghnacha agus feidhmiúlacht."
 
 [admin.settings.features.serverCertificate]
 label = "Deimhniú Freastalaí"
-description = "Cumraigh giniúint deimhnithe ar thaobh an fhreastalaí don fheidhmiúlacht \"Sínigh le Stirling-PDF\""
+description = "Cumraigh giniúint deimhnithe ar thaobh an fhreastalaí don fheidhmiúlacht \"Sign with Stirling-PDF\""
 
 [admin.settings.features.serverCertificate.enabled]
 label = "Cumasaigh Deimhniú Freastalaí"
-description = "Cumasaigh deimhniú taobh an fhreastalaí don rogha \"Sínigh le Stirling-PDF\""
+description = "Cumasaigh deimhniú taobh an fhreastalaí don rogha \"Sign with Stirling-PDF\""
 
 [admin.settings.features.serverCertificate.organizationName]
 label = "Ainm Eagraíochta"
@@ -5059,8 +5057,35 @@ label = "Críochphointí Díchumasaithe"
 description = "Roghnaigh críochphointí aonair le díchumasú"
 
 [admin.settings.endpoints.groupsToRemove]
-label = "Grúpaí Deireadhphointe Díchumasaithe"
-description = "Roghnaigh grúpaí críochphointe le díchumasú"
+label = "Grúpaí Críochphointí Díchumasaithe"
+description = "Roghnaigh grúpaí críochphointí le díchumasú"
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 [fileUpload]
 selectFile = "Roghnaigh comhad"
@@ -5073,7 +5098,7 @@ loadFromStorage = "Luchtaigh ón Stóráil"
 filesAvailable = "comhaid ar fáil"
 loading = "Á lódáil..."
 or = "nó"
-dropFileHere = "Scaoil comhad anseo nó cliceáil chun é a uaslódáil"
+dropFileHere = "Scaoil an comhad anseo nó cliceáil chun uaslódáil"
 dropFilesHere = "Scaoil comhaid anseo nó cliceáil an cnaipe uaslódála"
 dropFilesHereOpen = "Scaoil comhaid anseo nó cliceáil an cnaipe Oscail"
 pdfFilesOnly = "Comhaid PDF amháin"
@@ -5127,7 +5152,7 @@ searchFiles = "Cuardaigh comhaid..."
 recent = "Le Déanaí"
 localFiles = "Comhaid Logánta"
 googleDrive = "Google Drive"
-googleDriveShort = "Tiomáint"
+googleDriveShort = "Drive"
 myFiles = "Mo Chomhaid"
 noRecentFiles = "Níor aimsíodh comhaid le déanaí"
 googleDriveNotAvailable = "Níl comhtháthú Google Drive ar fáil"
@@ -5449,7 +5474,7 @@ loading = "Á lódáil..."
 back = "Siar"
 continue = "Lean ar aghaidh"
 error = "Earráid"
-save = "Sábháil"
+save = "Save"
 
 [config.overview]
 title = "Cumraíocht an Fheidhmchláir"
@@ -5601,7 +5626,7 @@ noSearchResults = "Níor aimsíodh uirlisí"
 noTools = "Níl aon uirlisí ar fáil"
 
 [onboarding]
-allTools = "Seo é an painéal <strong>Gach Uirlis</strong>, áit ar féidir leat brabhsáil agus roghnú astu na huirlisí PDF uile atá ar fáil."
+allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 selectCropTool = "Roghnaímis an uirlis <strong>Bearradh</strong> chun a léiriú conas ceann de na huirlisí a úsáid."
 toolInterface = "Seo comhéadan na huirlise <strong>Bearradh</strong>. Mar a fheiceann tú, níl mórán ann fós mar nár chuir muid aon chomhaid PDF leis le hoibriú leo go fóill."
 filesButton = "Ligeann an cnaipe <strong>Comhaid</strong> ar an mBarra Rochtana Thapa duit PDFanna a uaslódáil chun na huirlisí a úsáid orthu."
@@ -5626,14 +5651,14 @@ startTour = "Tosaigh an Turas"
 startTourDescription = "Téigh ar thuras treoraithe de phríomhghnéithe Stirling PDF"
 
 [onboarding.whatsNew]
-quickAccess = "Tosaigh ag an ráille <strong>Rochtain Thapa</strong> chun léim idir Léitheoir, Uathoibriú, do chuid comhad, agus na turais go léir."
-leftPanel = "Liostaítear gach rud is féidir leat a dhéanamh sa phainéal <strong>Uirlisí</strong> ar chlé. Brabhsáil catagóirí nó déan cuardach chun uirlis a aimsiú go tapa."
-fileUpload = "Úsáid an cnaipe <strong>Comhaid</strong> chun PDF le déanaí a uaslódáil nó a roghnú. Lódálfaimid sampla ionas gur féidir leat an spás oibre a fheiceáil."
-rightRail = "Tá gníomhartha tapa ar an <strong>Ráille Deas</strong> chun comhaid a roghnú, téama nó teanga a athrú, agus torthaí a íoslódáil."
-topBar = "Ligeann an barra uachtarach duit malartú idir <strong>Amharcóir</strong>, <strong>Eagarthóir Leathanaigh</strong>, agus <strong>Comhaid Ghníomhacha</strong>."
-pageEditorView = "Téigh go dtí an tEagarthóir Leathanach chun leathanaigh a athordú, a rothlú nó a scriosadh."
-activeFilesView = "Bain úsáid as Comhaid Ghníomhacha chun gach rud atá oscailte agat a fheiceáil agus chun a roghnú cad atá le hoibriú air."
-wrapUp = "Sin atá nua i V2. Oscail an roghchlár <strong>Turais</strong> am ar bith chun é seo, an turas Uirlisí, nó an turas Riarthóra a athsheinm."
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [onboarding.welcomeModal]
 title = "Fáilte go Stirling PDF!"
@@ -5656,8 +5681,8 @@ showMeAround = "Taispeáin timpeall dom"
 skipTheTour = "Scipeáil an turas"
 
 [onboarding.tourOverview]
-title = "Forbhreathnú ar an Turas"
-body = "Tagann Stirling PDF V2 le mórán uirlisí agus leagan amach athnuaite. Tabhair cuairt ghearr chun a fheiceáil cad a d'athraigh agus cá háit le fáil na gnéithe atá uait."
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "Scipeáil faoi láthair"
@@ -5681,17 +5706,17 @@ adminBodyLoginDisabled = "Nuair a chumasaíonn tú mód logála isteach, is féi
 userBody = "Tabhair cuireadh do chomhoibrithe, sann róil, agus coinnigh do dhoiciméid eagraithe in aon spás oibre slán amháin. Cumasaigh mód logála isteach aon uair is mian leat dul thar úsáid aonair."
 
 [onboarding.securityCheck]
-message = "Tá athruithe suntasacha déanta ar an bhfeidhmchlár le déanaí. B’fhéidir go mbeidh aird riarthóir do fhreastalaí ag teastáil. Deimhnigh do ról le leanúint ar aghaidh."
+message = "Rinneadh athruithe suntasacha ar an bhfeidhmchlár le déanaí. D’fhéadfadh aird do riarthóra freastalaí a bheith de dhíth. Deimhnigh do ról le do thoil chun leanúint ar aghaidh."
 
 [adminOnboarding]
-welcome = "Fáilte go dtí an <strong>Turas Riaracháin</strong>! Déanaimis iniúchadh ar na gnéithe agus na socruithe cumhachtacha fiontraíochta atá ar fáil do riarthóirí córais."
-configButton = "Cliceáil an cnaipe <strong>Cumraíocht</strong> chun rochtain a fháil ar shocruithe an chórais agus ar rialuithe riaracháin go léir."
+welcome = "Fáilte go dtí an <strong>Admin Tour</strong>! Déanaimis iniúchadh ar na gnéithe agus na socruithe fiontraíochta cumhachtacha atá ar fáil do riarthóirí córais."
+configButton = "Cliceáil an cnaipe <strong>Config</strong> chun rochtain a fháil ar gach socrú córais agus rialú riaracháin."
 settingsOverview = "Seo é an <strong>Painéal Socruithe</strong>. Tá socruithe riaracháin eagraithe de réir catagóire le haghaidh nascleanúna éasca."
 teamsAndUsers = "Bainistigh <strong>Foirne</strong> agus úsáideoirí aonair anseo. Is féidir leat úsáideoirí nua a thabhairt isteach trí r-phost, naisc inroinnte, nó cuntais shaincheaptha a chruthú dóibh tú féin."
-systemCustomization = "Tá bealaí fairsinge againn chun an comhéadan úsáideora a shaincheapadh: Ligeann <strong>Socruithe Córais</strong> duit ainm agus teangacha an aip a athrú, ceadaíonn <strong>Gnéithe</strong> bainistíocht teastais freastalaí, agus ligeann <strong>Deireadhphointí</strong> duit uirlisí sonracha a chumasú nó a dhíchumasú do d'úsáideoirí."
+systemCustomization = "Tá bealaí fairsinge againn chun an UI a shaincheapadh: ligeann <strong>System Settings</strong> duit ainm agus teangacha an aipe a athrú, cuireann <strong>Features</strong> bainistíocht teastais freastalaí ar fáil, agus ligeann <strong>Endpoints</strong> duit uirlisí áirithe a chumasú nó a dhíchumasú do d’úsáideoirí."
 databaseSection = "Le haghaidh timpeallachtaí táirgthe ardleibhéil, tá socruithe againn chun <strong>nascanna le bunachair shonraí sheachtracha</strong> a chumasú ionas gur féidir leat comhtháthú le d’infreastruchtúr atá ann cheana."
 connectionsSection = "Tacaíonn an rannán <strong>Connections</strong> le modhanna logála isteach éagsúla lena n-áirítear SSO saincheaptha agus soláthraithe SAML ar nós Google agus GitHub, móide comhtháthuithe ríomhphoist le haghaidh fógraí agus cumarsáide."
-adminTools = "Ar deireadh, tá uirlisí riaracháin ardleibhéil againn ar nós <strong>Iniúchadh</strong> chun gníomhaíocht chórais a rianú agus <strong>Anailísíocht Úsáide</strong> chun monatóireacht a dhéanamh ar an gcaoi a n-idirghníomhaíonn d'úsáideoirí leis an ardán."
+adminTools = "Ar deireadh, tá uirlisí riaracháin ardleibhéil againn mar <strong>Auditing</strong> chun gníomhaíocht chórais a rianú agus <strong>Usage Analytics</strong> chun monatóireacht a dhéanamh ar conas a idirghníomhaíonn d’úsáideoirí leis an ardán."
 wrapUp = "Sin é an turas riaracháin! Chonaic tú na gnéithe fiontraíochta a dhéanann Stirling PDF ina réiteach cumhachtach, saincheaptha d’eagraíochtaí. Is féidir an turas seo a rochtain am ar bith ón roghchlár <strong>Cabhair</strong>."
 
 [workspace]
@@ -5738,7 +5763,7 @@ user = "Úsáideoir"
 [workspace.people.addMember]
 title = "Cuir Ball Leis"
 username = "Ainm Úsáideora (R-phost)"
-usernamePlaceholder = "úsáideoir@sampla.com"
+usernamePlaceholder = "user@example.com"
 password = "Focal Faire"
 passwordPlaceholder = "Cuir isteach focal faire"
 role = "Ról"
@@ -5800,7 +5825,7 @@ error = "Níor éirigh le focal faire a nuashonrú"
 tab = "Cuireadh Ríomhphoist"
 description = "Clóscríobh nó greamaigh seoltaí ríomhphoist thíos, scartha le camóga. Gheobhaidh úsáideoirí dintiúir logála isteach trí r-phost."
 emails = "Seoltaí Ríomhphoist"
-emailsPlaceholder = "úsáideoir1@sampla.com, úsáideoir2@sampla.com"
+emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Tá ar a laghad seoladh ríomhphoist amháin de dhíth"
 submit = "Seol Cuirí"
 success = "Tugadh cuireadh d’úsáideoir(í) go rathúil"
@@ -5972,28 +5997,28 @@ contactSales = "Déan Teagmháil le Díolacháin"
 contactToUpgrade = "Déan teagmháil linn chun do phlean a uasghrádú nó a shaincheapadh"
 maxUsers = "Uaslíon Úsáideoirí"
 upTo = "Suas le"
-getLicense = "Faigh Ceadúnas Freastalaí"
-upgradeToEnterprise = "Uasghrádú go Fiontar"
-selectPeriod = "Roghnaigh Tréimhse Billeála"
-monthlyBilling = "Billeáil Mhíosúil"
-yearlyBilling = "Billeáil Bhliantúil"
-checkoutOpened = "Seiceáil Oscailte"
-checkoutInstructions = "Críochnaigh do cheannachán sa chluaisín Stripe. Tar éis íocaíochta, fill ar ais anseo agus athnuachan an leathanach chun do cheadúnas a ghníomhachtú. Gheobhaidh tú ríomhphost le d’eochair cheadúnais freisin."
-activateLicense = "Gníomhachtaigh Do Cheadúnas"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
 
 [plan.static.licenseActivation]
-checkoutOpened = "Seiceáil Oscailte i gCluaisín Nua"
-instructions = "Comhlánaigh do cheannachán sa chluaisín Stripe. Nuair a bheidh d’íocaíocht críochnaithe, gheobhaidh tú ríomhphost le d’eochair cheadúnais."
-enterKey = "Cuir isteach d’eochair cheadúnais thíos chun do phlean a ghníomhachtú:"
-keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
-activate = "Gníomhachtaigh an Ceadúnas"
-doLater = "Déanfaidh mé é seo níos déanaí"
-success = "Ceadúnas Gníomhachtaithe!"
-successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
 
 [plan.static.billingPortal]
-title = "Fíorú Ríomhphoist Riachtanach"
-message = "Beidh ort do sheoladh ríomhphoist a fhíorú i dtairseach billeála Stripe. Seiceáil do ríomhphost le haghaidh nasc logála isteach."
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "mí"
@@ -6014,12 +6039,12 @@ highlight2 = "Uirlisí PDF Casta"
 highlight3 = "Gan comharthaí uisce"
 
 [plan.enterprise]
-name = "Fiontar"
+name = "Enterprise"
 highlight1 = "Praghsáil shaincheaptha"
 highlight2 = "Tacaíocht thiomnaithe"
 highlight3 = "Na gnéithe is déanaí"
 requiresServer = "Teastaíonn Freastalaí"
-requiresServerMessage = "Uasghrádaigh go dtí an plean Freastalaí ar dtús sula n-uasghrádaíonn tú go Fiontraíochta."
+requiresServerMessage = "Uasghrádaigh go dtí an plean Freastalaí ar dtús sula n-uasghrádaíonn tú go Enterprise."
 
 [plan.feature]
 title = "Gné"
@@ -6051,7 +6076,7 @@ none = "Gan Síntiús"
 [billing]
 manageBilling = "Bainistigh Billeáil"
 updateSeats = "Nuashonraigh Suíocháin"
-updateEnterpriseSeats = "Nuashonraigh Suíocháin Fiontraíochta"
+updateEnterpriseSeats = "Nuashonraigh Suíocháin Enterprise"
 currentSeats = "Suíocháin Reatha"
 minimumSeats = "Íosmhéid Suíochán"
 basedOnUsers = "(úsáideoirí reatha)"
@@ -6083,7 +6108,7 @@ seeInfo = "Féach eolas"
 
 [payment]
 preparing = "Do sheiceáil amach á ullmhú..."
-redirecting = "Ag atreorú chuig an tseiceáil amach slán..."
+redirecting = "Ag atreorú chuig checkout slán..."
 upgradeTitle = "Uasghrádaigh go {{planName}}"
 success = "D’éirigh leis an Íocaíocht!"
 successMessage = "Gníomhachtaíodh do shíntiús go rathúil. Gheobhaidh tú ríomhphost dearbhaithe go luath."
@@ -6122,7 +6147,7 @@ emailInvalid = "Cuir isteach seoladh ríomhphoist bailí"
 title = "Cuir isteach do Ríomhphost"
 description = "Úsáidfimid é seo chun d’eochair cheadúnais agus admhálacha a sheoladh."
 emailLabel = "Seoladh Ríomhphoist"
-emailPlaceholder = "do@ríomhphost.com"
+emailPlaceholder = "your@email.com"
 continue = "Lean ar aghaidh"
 modalTitle = "Tosaigh - {{planName}}"
 
@@ -6197,8 +6222,8 @@ notAvailable = "Níl an córas iniúchta ar fáil"
 notAvailableMessage = "Níl an córas iniúchta cumraithe nó níl sé ar fáil."
 disabled = "Tá logáil iniúchta díchumasaithe"
 disabledMessage = "Cumasaigh logáil iniúchta i gcumraíocht d’fheidhmchláir chun imeachtaí an chórais a rianú."
-enterpriseRequired = "Ceadúnas Fiontraíochta Riachtanach"
-enterpriseRequiredMessage = "Is gné fiontraíochta é an córas logála iniúchóireachta. Uasghrádaigh go ceadúnas fiontraíochta le rochtain a fháil ar logaí iniúchóireachta agus anailísíocht."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "Earráid agus an córas iniúchta á lódáil"
@@ -6455,8 +6480,8 @@ reset = "Athshocraigh Athruithe"
 downloadJson = "Íoslódáil JSON"
 generatePdf = "Gin PDF"
 saveChanges = "Sábháil Athruithe"
-applyChanges = "Cuir Athruithe i bhFeidhm"
-downloadCopy = "Íoslódáil Cóip"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Scálaigh téacs go huathoibríoch chun boscaí a fheistiú"
@@ -6476,22 +6501,22 @@ title = "Glasáil téacs curtha in eagar le heilimint PDF aonair"
 description = "Nuair atá cumasaithe, easpórtálann an t-eagarthóir gach bosca téacs curtha in eagar mar eilimint téacs PDF amháin chun glifaí forluiteacha nó clónna measctha a sheachaint."
 
 [pdfTextEditor.options.advanced]
-title = "Socruithe Ardleibhéil"
+title = "Advanced Settings"
 
 [pdfTextEditor.tooltip.header]
-title = "Teorainneacha Réamhamhairc"
+title = "Preview Limitations"
 
 [pdfTextEditor.tooltip.textFocus]
-title = "Fócas Téacs agus Íomhá"
-text = "Díríonn an spás oibre seo ar théacs a chur in eagar agus íomhánna leabaithe a athshuíomh. Coinnítear saothar ealaíne leathanaigh casta, giuirléidí foirmeacha, agus grafaicí srathacha le haghaidh onnmhairithe ach ní féidir iad a chur in eagar go hiomlán anseo."
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 
 [pdfTextEditor.tooltip.previewVariance]
-title = "Réamhamharc ar an Éagsúlacht"
-text = "B’fhéidir nach dtaispeánfar roinnt amharcléirithe (amhail teorainneacha tábla, cruthanna, nó cuma anótála) go díreach sa réamhamharc. Coinníonn an PDF easpórtáilte na horduithe líníochta bunaidh aon uair is féidir."
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
 
 [pdfTextEditor.tooltip.alpha]
-title = "Amharcóir Alfa"
-text = "Tá an breathnóir alfa seo fós ag forbairt—d’fhéadfadh clónna, dathanna, éifeachtaí trédhearcachta agus sonraí leagan amach áirithe athrú beagán. Déan seiceáil dhúbailte ar an PDF ginte sula roinneann tú é."
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Cumaisc na boscaí roghnaithe"
@@ -6529,10 +6554,10 @@ notIdealFor2 = "Irisí, bróisiúir, nó doiciméid le dearadh trom"
 notIdealFor3 = "Lámhleabhair treoracha le leagan amach casta"
 limitations = "Teorainneacha Reatha:"
 limitation1 = "Féadfaidh rindreáil cló a bheith beagán difriúil ón PDF bunaidh"
-limitation2 = "Coinnítear grafaicí casta, réimsí foirme agus nótaí ach ní féidir iad a chur in eagar"
-limitation3 = "D’fhéadfadh sé go dtógfadh sé tamall comhaid mhóra a thiontú agus a phróiseáil"
-knownIssues = "Fadhbanna Aitheanta (Á Réiteach):"
-issue1 = "Níl dath an téacs caomhnaithe faoi láthair (cuirfear leis go luath é)"
+limitation2 = "Caomhnaítear grafaicí casta, réimsí foirme agus anótálacha ach ní féidir iad a chur in eagar"
+limitation3 = "D’fhéadfadh go dtógfadh tiontú agus próiseáil comhaid mhóra tamall"
+knownIssues = "Fadhbanna Aitheanta (Á Socrú):"
+issue1 = "Ní chaomhnaítear dath téacs faoi láthair (cuirfear leis go luath)"
 issue2 = "Tá níos mó saincheisteanna ailínithe agus spásála i Mód Míre — moltar Mód Líne Aonair"
 issue3 = "Tá an réamhamharc difriúil ón PDF easpórtáilte — tá PDFanna easpórtáilte níos gaire don bhunleagan"
 issue4 = "D’fhéadfadh go mbeadh coigeartú láimhe de dhíth ar ailíniú téacs rothlaithe"
@@ -6669,3 +6694,4 @@ upload = "Uaslódáil"
 batchImages = "Baisc"
 clearBatch = "Glan"
 uploadAll = "Uaslódáil Gach Rud"
+

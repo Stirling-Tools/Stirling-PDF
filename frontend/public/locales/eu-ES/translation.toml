@@ -469,6 +469,8 @@ confirm = "Berretsi pasahitz berria"
 confirmPlaceholder = "Sartu berriro pasahitz berria"
 update = "Eguneratu pasahitza"
 
+
+
 [settings.hotkeys]
 title = "Laster-teklak"
 description = "Pertsonalizatu laster-teklak tresnetara azkar sartzeko. Egin klik \"Laster-tekla aldatu\" eta sakatu tekla-konbinazio berria. Sakatu Esc ezeztatzeko."
