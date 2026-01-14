@@ -36,6 +36,8 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempDirectory;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -47,6 +49,7 @@ public class ConvertOfficeController {
     private final RuntimePathConfig runtimePathConfig;
     private final CustomHtmlSanitizer customHtmlSanitizer;
     private final EndpointConfiguration endpointConfiguration;
+    private final TempFileManager tempFileManager;
 
     private boolean isUnoconvertAvailable() {
         return endpointConfiguration.isGroupEnabled("Unoconvert")
@@ -68,24 +71,24 @@ public class ConvertOfficeController {
         }
         String extensionLower = extension.toLowerCase(Locale.ROOT);
 
-        // create temporary working directory and temp files with guaranteed unique names
-        Path workDir = Files.createTempDirectory("office2pdf_");
-        Path inputPath = Files.createTempFile(workDir, "input_", "." + extensionLower);
-        Path outputPath = Files.createTempFile(workDir, "output_", ".pdf");
+        // Use try-with-resources for automatic cleanup of work directory
+        try (TempDirectory workDirManager = new TempDirectory(tempFileManager)) {
+            Path workDir = workDirManager.getPath();
+            Path inputPath = Files.createTempFile(workDir, "input_", "." + extensionLower);
+            Path outputPath = Files.createTempFile(workDir, "output_", ".pdf");
 
-        // Check if the file is HTML and apply sanitization if needed
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            // Read and sanitize HTML content
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else {
-            // copy file content
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
-        }
+            // Check if the file is HTML and apply sanitization if needed
+            if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
+                // Read and sanitize HTML content
+                String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+                String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+                Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+            } else {
+                // copy file content
+                Files.copy(
+                        inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
 
-        Path libreOfficeProfile = null;
-        try {
             ProcessExecutorResult result;
             // Run Unoconvert command
             if (isUnoconvertAvailable()) {
@@ -104,21 +107,23 @@ public class ConvertOfficeController {
                                 .runCommandWithOutputHandling(command);
             } // Run soffice command
             else {
-                libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
-                List<String> command = new ArrayList<>();
-                command.add(runtimePathConfig.getSOfficePath());
-                command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
-                command.add("--headless");
-                command.add("--nologo");
-                command.add("--convert-to");
-                command.add("pdf:writer_pdf_Export");
-                command.add("--outdir");
-                command.add(workDir.toString());
-                command.add(inputPath.toString());
+                try (TempDirectory libreOfficeProfileManager = new TempDirectory(tempFileManager)) {
+                    Path libreOfficeProfile = libreOfficeProfileManager.getPath();
+                    List<String> command = new ArrayList<>();
+                    command.add(runtimePathConfig.getSOfficePath());
+                    command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
+                    command.add("--headless");
+                    command.add("--nologo");
+                    command.add("--convert-to");
+                    command.add("pdf:writer_pdf_Export");
+                    command.add("--outdir");
+                    command.add(workDir.toString());
+                    command.add(inputPath.toString());
 
-                result =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                .runCommandWithOutputHandling(command);
+                    result =
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                    .runCommandWithOutputHandling(command);
+                }
             }
 
             // Check the result
@@ -156,16 +161,6 @@ public class ConvertOfficeController {
             }
 
             return outputPath.toFile();
-        } finally {
-            // Clean up the temporary files
-            try {
-                Files.deleteIfExists(inputPath);
-            } catch (IOException e) {
-                log.warn("Failed to delete temp input file: {}", inputPath, e);
-            }
-            if (libreOfficeProfile != null) {
-                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
-            }
         }
     }
 

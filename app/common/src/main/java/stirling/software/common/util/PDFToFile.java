@@ -261,10 +261,6 @@ public class PDFToFile {
 
             Path tempInputFile = inputFileTemp.getPath();
             Path tempOutputDir = outputDirTemp.getPath();
-            // Use Files.createTempFile for guaranteed unique temp file in isolated directory
-            Path unoOutputFile =
-                    Files.createTempFile(
-                            tempOutputDir, "output_", "." + resolvePrimaryExtension(outputFormat));
 
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);
@@ -273,8 +269,15 @@ public class PDFToFile {
             ProcessExecutorResult returnCode = null;
             IOException unoconvertException = null;
 
+            Path unoOutputFile = null;
             if (isUnoConvertEnabled()) {
                 try {
+                    // Create output file only for unoconvert (it needs specific path)
+                    unoOutputFile =
+                            Files.createTempFile(
+                                    tempOutputDir,
+                                    "output_",
+                                    "." + resolvePrimaryExtension(outputFormat));
                     List<String> unoCommand =
                             buildUnoConvertCommand(
                                     tempInputFile, unoOutputFile, outputFormat, libreOfficeFilter);
@@ -283,6 +286,14 @@ public class PDFToFile {
                                     .runCommandWithOutputHandling(unoCommand);
                 } catch (IOException e) {
                     unoconvertException = e;
+                    // Clean up temp file if unoconvert failed, so soffice doesn't see it
+                    if (unoOutputFile != null && Files.exists(unoOutputFile)) {
+                        try {
+                            Files.delete(unoOutputFile);
+                        } catch (IOException deleteException) {
+                            log.debug("Failed to clean up temp file after unoconvert failure");
+                        }
+                    }
                     log.warn(
                             "Unoconvert command failed ({}). Falling back to soffice command.",
                             e.getMessage());
