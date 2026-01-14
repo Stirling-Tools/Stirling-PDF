@@ -469,8 +469,6 @@ confirm = "確認新密碼"
 confirmPlaceholder = "再次輸入您的新密碼"
 update = "更新密碼"
 
-
-
 [settings.hotkeys]
 title = "鍵盤快速鍵"
 description = "自訂鍵盤快速鍵以快速存取工具。按「變更快速鍵」，然後按下新的按鍵組合。按 Esc 取消。"

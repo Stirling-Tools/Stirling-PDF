@@ -469,8 +469,6 @@ confirm = "새 비밀번호 확인"
 confirmPlaceholder = "새 비밀번호 다시 입력"
 update = "비밀번호 업데이트"
 
-
-
 [settings.hotkeys]
 title = "키보드 단축키"
 description = "빠르게 도구에 접근할 수 있도록 키보드 단축키를 사용자 지정하세요. \"단축키 변경\"을 클릭하고 새 키 조합을 누르세요. 취소하려면 Esc를 누르세요."

@@ -469,8 +469,6 @@ confirm = "Potvrdite novu lozinku"
 confirmPlaceholder = "Ponovo unesite novu lozinku"
 update = "Ažuriraj lozinku"
 
-
-
 [settings.hotkeys]
 title = "Prečice na tastaturi"
 description = "Prilagodite prečice na tastaturi za brz pristup alatima. Kliknite \"Promeni prečicu\" i pritisnite novu kombinaciju tastera. Pritisnite Esc za otkazivanje."

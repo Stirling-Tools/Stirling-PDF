@@ -469,8 +469,6 @@ confirm = "Potvrdite novu lozinku"
 confirmPlaceholder = "Ponovno unesite novu lozinku"
 update = "Ažuriraj lozinku"
 
-
-
 [settings.hotkeys]
 title = "Prečaci tipkovnice"
 description = "Prilagodite prečace tipkovnice za brz pristup alatima. Kliknite \"Promijeni prečac\" i pritisnite novu kombinaciju tipki. Pritisnite Esc za odustajanje."

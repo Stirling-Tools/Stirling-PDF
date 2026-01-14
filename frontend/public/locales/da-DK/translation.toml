@@ -469,8 +469,6 @@ confirm = "Bekræft ny adgangskode"
 confirmPlaceholder = "Indtast din nye adgangskode igen"
 update = "Opdater adgangskode"
 
-
-
 [settings.hotkeys]
 title = "Tastaturgenveje"
 description = "Tilpas tastaturgenveje for hurtig adgang til værktøjer. Klik på \"Skift genvej\" og tryk en ny tastekombination. Tryk Esc for at annullere."

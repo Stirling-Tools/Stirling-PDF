@@ -469,8 +469,6 @@ confirm = "Confirma la contrasenya nova"
 confirmPlaceholder = "Torna a introduir la contrasenya nova"
 update = "Actualitza la contrasenya"
 
-
-
 [settings.hotkeys]
 title = "Dreceres de teclat"
 description = "Personalitza les dreceres de teclat per accedir ràpidament a les eines. Fes clic a \"Canvia la drecera\" i prem una nova combinació de tecles. Prem Esc per cancel·lar."

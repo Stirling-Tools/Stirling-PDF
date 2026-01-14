@@ -469,8 +469,6 @@ confirm = "Yeni parolu təsdiqləyin"
 confirmPlaceholder = "Yeni parolunuzu yenidən daxil edin"
 update = "Parolu yenilə"
 
-
-
 [settings.hotkeys]
 title = "Klaviatura qısayolları"
 description = "Alətlərə sürətli giriş üçün klaviatura qısayollarını fərdiləşdirin. \"Qısayolu dəyiş\" düyməsini klikləyin və yeni düymə kombinasiyasını basın. Ləğv etmək üçün Esc basın."

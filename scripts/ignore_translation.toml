@@ -227,7 +227,6 @@ ignore = [
 
 [ga_IE]
 ignore = [
-    'language.direction',
     'admin.settings.advanced.processExecutor.calibre',
     'admin.settings.advanced.processExecutor.ghostscript',
     'admin.settings.advanced.processExecutor.libreOffice',
@@ -245,10 +244,13 @@ ignore = [
     'endpointStatistics.dataTypeApi',
     'endpointStatistics.dataTypeUi',
     'fileManager.googleDrive',
+    'footer.discord',
+    'footer.issues',
     'getPdfInfo.other.javaScript',
     'getPdfInfo.other.xmp',
     'getPdfInfo.summary.tech.javaScript',
     'home.devApi.title',
+    'language.direction',
     'legal.impressum',
     'plan.pro.name',
     'pro',
@@ -262,8 +264,6 @@ ignore = [
     'validateSignature.downloadType.csv',
     'validateSignature.downloadType.json',
     'validateSignature.downloadType.pdf',
-    'footer.discord',
-    'footer.issues',
 ]
 
 [hi_IN]
