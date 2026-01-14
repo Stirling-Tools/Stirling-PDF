@@ -132,9 +132,7 @@ public class ReactRoutingController {
         return new ClassPathResource("static/index.html");
     }
 
-    /**
-     * Helper method to apply X-Frame-Options header based on configuration
-     */
+    /** Helper method to apply X-Frame-Options header based on configuration */
     private ResponseEntity.BodyBuilder applyXFrameOptions(ResponseEntity.BodyBuilder builder) {
         String xFrameOptions = null;
         if (applicationProperties != null
