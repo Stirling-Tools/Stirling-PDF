@@ -34,12 +34,18 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
                  <Stack gap="xs">
                      {specificKeys.map(key => {
                          if (!(key in legacyCompliance)) return null;
-                         const val = legacyCompliance[key] as boolean;
+                         let val = legacyCompliance[key] as boolean;
                          // Specific label mapping
                          let label = key.replace('Is', '').replace('Compliant', '');
                          if (key === 'IsPDF/SECCompliant') label = 'SEC (EDGAR)';
                          if (key === 'IsPDF/UACompliant') label = 'PDF/UA (Accessibility)';
-                         if (key === 'IsPDF/BCompliant') label = 'PDF/A Level B';
+                         if (key === 'IsPDF/BCompliant') {
+                           label = 'PDF/A Level B';
+                           const conformanceLevel = legacyCompliance['PDF/AConformanceLevel'] as string;
+                           if (!val && conformanceLevel && conformanceLevel.toUpperCase().includes('B')) {
+                             val = true;
+                           }
+                         }
 
                          const Icon = val ? CheckIcon : CloseIcon;
                          const color = val ? 'teal' : 'orange';
