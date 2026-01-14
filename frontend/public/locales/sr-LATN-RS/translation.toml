@@ -1,8 +1,11 @@
 unsavedChanges = "Imate nesačuvane promene u svom PDF-u."
+pendingRedactionsTitle = "Neprimenjena zacrnjivanja"
+pendingRedactions = "Imate neprimenjena zacrnjivanja koja će biti izgubljena."
 areYouSure = "Da li ste sigurni da želite da napustite?"
 unsavedChangesTitle = "Nesačuvane promene"
 keepWorking = "Nastavi sa radom"
 discardChanges = "Odbaci i napusti"
+discardRedactions = "Odbaci i izađi"
 applyAndContinue = "Sačuvaj i napusti"
 exportAndContinue = "Izvezi i nastavi"
 cancel = "Otkaži"
@@ -364,6 +367,7 @@ advanced = "Napredno"
 title = "Bezbednost i autentikacija"
 security = "Bezbednost"
 connections = "Konekcije"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licenciranje i analitika"
@@ -438,25 +442,32 @@ currentVersion = "Trenutna verzija"
 latestVersion = "Najnovija verzija"
 checkForUpdates = "Proveri ažuriranja"
 viewDetails = "Prikaži detalje"
+serverNeedsUpdate = "Server mora da bude ažuriran od strane administratora"
+
+[settings.general.versionInfo]
+title = "Informacije o verziji"
+description = "Detalji verzije za desktop i server"
+desktop = "Desktop verzija"
+server = "Serverska verzija"
 
 [settings.security]
-title = "Security"
-description = "Update your password to keep your account secure."
+title = "Bezbednost"
+description = "Ažurirajte lozinku da biste svoj nalog održali bezbednim."
 
 [settings.security.password]
-subtitle = "Change your password. You will be logged out after updating."
-required = "All fields are required."
-mismatch = "New passwords do not match."
-error = "Unable to update password. Please verify your current password and try again."
-success = "Password updated successfully. Please sign in again."
-ssoDisabled = "Password changes are managed by your identity provider."
-current = "Current password"
-currentPlaceholder = "Enter your current password"
-new = "New password"
-newPlaceholder = "Enter a new password"
-confirm = "Confirm new password"
-confirmPlaceholder = "Re-enter your new password"
-update = "Update password"
+subtitle = "Promenite lozinku. Bićete odjavljeni nakon ažuriranja."
+required = "Sva polja su obavezna."
+mismatch = "Nove lozinke se ne podudaraju."
+error = "Lozinka ne može da se ažurira. Proverite trenutnu lozinku i pokušajte ponovo."
+success = "Lozinka je uspešno ažurirana. Prijavite se ponovo."
+ssoDisabled = "Promenom lozinke upravlja vaš provajder identiteta."
+current = "Trenutna lozinka"
+currentPlaceholder = "Unesite trenutnu lozinku"
+new = "Nova lozinka"
+newPlaceholder = "Unesite novu lozinku"
+confirm = "Potvrdite novu lozinku"
+confirmPlaceholder = "Ponovo unesite novu lozinku"
+update = "Ažuriraj lozinku"
 
 [settings.hotkeys]
 title = "Prečice na tastaturi"
@@ -511,16 +522,16 @@ low = "Nizak"
 title = "Promeni pristupne podatke"
 header = "Ažurirajte detalje svog naloga"
 changePassword = "Koristiš podrazumevane pristupne podatke. Molim te unesi novu lozinku"
-ssoManaged = "Your account is managed by your identity provider."
+ssoManaged = "Vašim nalogom upravlja vaš provajder identiteta."
 newUsername = "Novo korisničko ime"
 oldPassword = "Trenutna lozinka"
 newPassword = "Nova lozinka"
 confirmNewPassword = "Potvrdite novu lozinku"
 submit = "Potvrdi promene"
-credsUpdated = "Account updated"
-description = "Changes saved. Please log in again."
-error = "Unable to update username. Please verify your password and try again."
-changeUsername = "Update your username. You will be logged out after updating."
+credsUpdated = "Nalog ažuriran"
+description = "Izmene sačuvane. Prijavite se ponovo."
+error = "Korisničko ime ne može da se ažurira. Proverite lozinku i pokušajte ponovo."
+changeUsername = "Ažurirajte korisničko ime. Bićete odjavljeni nakon ažuriranja."
 
 [account]
 title = "Podešavanja naloga"
@@ -528,6 +539,8 @@ accountSettings = "Podešavanja naloga"
 adminSettings = "Admin podešavanja - Pregled i dodavanje korisnika"
 userControlSettings = "Podešavanja kontrole korisnika"
 changeUsername = "Pormeni korisničko ime"
+changeUsernameDescription = "Ažurirajte korisničko ime. Bićete odjavljeni nakon ažuriranja."
+newUsernamePlaceholder = "Unesite novo korisničko ime"
 newUsername = "Novo korisničko ime"
 password = "Potvrda lozinke"
 oldPassword = "Stara lozinka"
@@ -737,9 +750,9 @@ title = "Potpis"
 desc = "Dodaje potpis u PDF crtežom, tekstom ili slikom"
 
 [home.annotate]
-tags = "annotate,highlight,draw"
-title = "Annotate"
-desc = "Highlight, draw, add notes and shapes in the viewer"
+tags = "anotiraj,istakni,crtaj"
+title = "Anotiraj"
+desc = "Istaknite, crtajte, dodajte beleške i oblike u pregledaču"
 
 [home.flatten]
 tags = "pojednostavi,ukloni,interaktivno"
@@ -952,7 +965,7 @@ title = "Preklapanje PDF-ova"
 
 [home.pdfTextEditor]
 title = "PDF uređivač teksta"
-desc = "Uređujte postojeći tekst i slike unutar PDF-ova"
+desc = "Pregledajte i uređujte Stirling PDF JSON izvoze uz grupisano uređivanje teksta i ponovno generisanje PDF-a"
 
 [home.addText]
 tags = "tekst,anotacija,oznaka"
@@ -963,6 +976,7 @@ desc = "Dodajte prilagođeni tekst bilo gde u PDF"
 addFiles = "Dodaj datoteke"
 uploadFromComputer = "Otpremi sa računara"
 openFromComputer = "Otvori sa računara"
+mobileUpload = "Otpremi sa mobilnog"
 
 [viewPdf]
 tags = "pregled,čitanje,anotiranje,tekst,slika"
@@ -1254,11 +1268,11 @@ pdfaDigitalSignatureWarning = "PDF sadrži digitalni potpis. Biće uklonjen u sl
 fileFormat = "Format datoteke"
 wordDoc = "Word dokument"
 wordDocExt = "Word dokument (.docx)"
-odtExt = "OpenDocument tekst (.odt)"
+odtExt = "OpenDocument Text (.odt)"
 pptExt = "PowerPoint (.pptx)"
-odpExt = "OpenDocument prezentacija (.odp)"
+odpExt = "OpenDocument Presentation (.odp)"
 txtExt = "Običan tekst (.txt)"
-rtfExt = "Format obogaćenog teksta (.rtf)"
+rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Izabrane datoteke"
 noFileSelected = "Nije izabrana nijedna datoteka. Koristite panel datoteka da dodate datoteke."
 convertFiles = "Konvertuj datoteke"
@@ -1278,21 +1292,33 @@ cbzOptions = "CBZ u PDF opcije"
 optimizeForEbook = "Optimizuj PDF za čitače e‑knjiga (koristi Ghostscript)"
 cbzOutputOptions = "PDF u CBZ opcije"
 cbzDpi = "DPI za renderovanje slike"
-cbrOptions = "CBR Options"
-cbrOutputOptions = "PDF to CBR Options"
-cbrDpi = "DPI for image rendering"
+cbrOptions = "CBR opcije"
+cbrOutputOptions = "Opcije za PDF u CBR"
+cbrDpi = "DPI za renderovanje slike"
 
 [convert.ebookOptions]
-ebookOptions = "eBook to PDF Options"
-ebookOptionsDesc = "Options for converting eBooks to PDF"
-embedAllFonts = "Embed all fonts"
-embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
-includeTableOfContents = "Include table of contents"
-includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
-includePageNumbers = "Include page numbers"
-includePageNumbersDesc = "Add page numbers to the generated PDF"
-optimizeForEbookPdf = "Optimize for ebook readers"
-optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+ebookOptions = "Opcije za eBook u PDF"
+ebookOptionsDesc = "Opcije za konvertovanje eBook izdanja u PDF"
+embedAllFonts = "Ugradi sve fontove"
+embedAllFontsDesc = "Ugradi sve fontove iz e-knjige u generisani PDF"
+includeTableOfContents = "Uključi sadržaj"
+includeTableOfContentsDesc = "Dodaj generisani sadržaj u rezultatni PDF"
+includePageNumbers = "Uključi brojeve stranica"
+includePageNumbersDesc = "Dodaj brojeve stranica u generisani PDF"
+optimizeForEbookPdf = "Optimizuj za eBook čitače"
+optimizeForEbookPdfDesc = "Optimizuj PDF za čitanje e-knjiga (manja veličina fajla, bolje renderovanje na eInk uređajima)"
+
+[convert.epubOptions]
+epubOptions = "Opcije za PDF u eBook"
+epubOptionsDesc = "Opcije za konverziju PDF u EPUB/AZW3"
+detectChapters = "Otkrij poglavlja"
+detectChaptersDesc = "Otkriva naslove koji liče na poglavlja i ubacuje EPUB prelome stranica"
+targetDevice = "Ciljni uređaj"
+targetDeviceDesc = "Izaberite izlazni profil optimizovan za uređaj za čitanje"
+outputFormat = "Izlazni format"
+outputFormatDesc = "Izaberite izlazni format za eBook"
+tabletPhone = "Tablet/Telefon (sa slikama)"
+kindleEink = "Kindle e-Ink (optimizovano za tekst)"
 
 [imageToPdf]
 tags = "konverzija,img,jpg,slika,foto"
@@ -1409,11 +1435,11 @@ header = "Dodaj priloge"
 add = "Dodaj prilog"
 remove = "Ukloni prilog"
 embed = "Ugradi prilog"
-convertToPdfA3b = "Convert to PDF/A-3b"
-convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
-convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
-convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
-convertToPdfA3bTooltipTitle = "What it does"
+convertToPdfA3b = "Konvertuj u PDF/A-3b"
+convertToPdfA3bDescription = "Kreira arhivski PDF sa ugrađenim prilozima"
+convertToPdfA3bTooltip = "PDF/A-3b je arhivski format koji obezbeđuje dugoročno čuvanje. Dozvoljava ugrađivanje proizvoljnih formata fajlova kao priloga. Konverzija zahteva Ghostscript i može duže trajati za velike fajlove."
+convertToPdfA3bTooltipHeader = "O konverziji u PDF/A-3b"
+convertToPdfA3bTooltipTitle = "Šta radi"
 submit = "Dodaj priloge"
 
 [watermark]
@@ -2359,10 +2385,10 @@ saved = "Sačuvano"
 label = "Otpremite sliku potpisa"
 placeholder = "Izaberite slikovnu datoteku"
 hint = "Otpremite PNG ili JPG sliku svog potpisa"
-removeBackground = "Remove white background (make transparent)"
-processing = "Processing image..."
-backgroundRemovalFailedTitle = "Background removal failed"
-backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
+removeBackground = "Ukloni belu pozadinu (učini providnom)"
+processing = "Obrada slike..."
+backgroundRemovalFailedTitle = "Uklanjanje pozadine nije uspelo"
+backgroundRemovalFailedMessage = "Nije moguće ukloniti pozadinu sa slike. Umesto toga se koristi originalna slika."
 
 [sign.instructions]
 title = "Kako dodati potpis"
@@ -2391,7 +2417,7 @@ title = "Ravnanje"
 header = "Ravnanje PDF fajlova"
 flattenOnlyForms = "Izravnaj samo forme"
 submit = "Ravnanje"
-filenamePrefix = "spljošteno"
+filenamePrefix = "flattened"
 
 [flatten.files]
 placeholder = "Izaberite PDF datoteku u glavnom prikazu da biste započeli"
@@ -2409,9 +2435,9 @@ label = "Izravnaj samo forme"
 desc = "Ravnaj samo polja formulara, ostavljajući druge interaktivne elemente netaknutim"
 
 [flatten.renderDpi]
-label = "Rendering DPI (optional, recommended 150 DPI)"
-help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
-placeholder = "e.g. 150"
+label = "DPI renderovanja (opciono, preporučeno 150 DPI)"
+help = "Ostavite prazno da biste koristili podrazumevanu vrednost sistema. Veći DPI izoštrava rezultat, ali povećava vreme obrade i veličinu fajla."
+placeholder = "npr. 150"
 
 [flatten.results]
 title = "Rezultati ravnanja"
@@ -2987,7 +3013,7 @@ header = "Skraćivanje PDF-a"
 submit = "Potvrdi"
 noFileSelected = "Izaberite PDF fajl da biste započeli isecanje"
 reset = "Vrati na ceo PDF"
-autoCrop = "Auto-crop whitespace"
+autoCrop = "Automatski iseci beline"
 
 [crop.preview]
 title = "Izbor oblasti za isecanje"
@@ -3218,6 +3244,7 @@ title = "Metod zacrnjivanja"
 mode = "Režim"
 automatic = "Automatski"
 automaticDesc = "Zacrni tekst na osnovu termina pretrage"
+automaticDisabledTooltip = "Izaberite fajlove u menadžeru fajlova da biste zacrnili više fajlova odjednom"
 manual = "Ručno"
 manualDesc = "Kliknite i prevucite da zacrnite određene oblasti"
 manualComingSoon = "Ručno zacrnjivanje uskoro"
@@ -3288,8 +3315,35 @@ text = "Poklapajte samo cele reči, ne delimična poklapanja. 'John' neće poklo
 title = "Konvertuj u PDF-Image"
 text = "Pretvara PDF u PDF zasnovan na slici nakon zacrnjivanja. Ovo obezbeđuje da je tekst iza okvira za zacrnjivanje potpuno uklonjen i ne može se povratiti."
 
+[redact.tooltip.manual.header]
+title = "Kontrole ručnog zacrnjivanja"
+
+[redact.tooltip.manual.markText]
+title = "Alat za označavanje teksta"
+text = "Izaberite tekst direktno na PDF-u da biste ga označili za zacrnjivanje. Kliknite i prevucite da biste istakli određeni tekst koji želite da zacrnite."
+
+[redact.tooltip.manual.markArea]
+title = "Alat za označavanje oblasti"
+text = "Nacrtajte pravougaone oblasti na PDF-u da označite regione za zacrnjivanje. Korisno za zacrnjivanje slika, potpisa ili nepravilnih oblika."
+
+[redact.tooltip.manual.apply]
+title = "Primeni zacrnjivanja"
+text = "Nakon označavanja sadržaja, kliknite „Primeni“ da trajno zacrnite sve označene oblasti. Broj na čekanju pokazuje koliko je zacrnjivanja spremno za primenu."
+bullet1 = "Označite koliko god oblasti treba pre primene"
+bullet2 = "Sva zacrnjivanja na čekanju se primenjuju odjednom"
+bullet3 = "Zacrnjivanja se ne mogu opozvati nakon primene"
+
 [redact.manual]
+title = "Alati za zacrnjivanje"
+instructions = "Izaberite tekst ili nacrtajte oblasti na PDF-u da označite sadržaj za zacrnjivanje."
+markText = "Označi tekst"
+markArea = "Označi oblast"
+pendingLabel = "Na čekanju:"
+applyWarning = "⚠️ Trajna primena, ne može se opozvati i podaci ispod će biti obrisani"
+apply = "Primeni"
+noMarks = "Nema oznaka za zacrnjivanje. Upotrebite gornje alate da označite sadržaj za zacrnjivanje."
 header = "Ručno zacrnjivanje"
+controlsTitle = "Kontrole ručnog zacrnjivanja"
 textBasedRedaction = "Zacrnivanje zasnovano na tekstu"
 pageBasedRedaction = "Zacrnivanje po stranici"
 convertPDFToImageLabel = "Konvertuj PDF u PDF-Image (koristi se za uklanjanje teksta iza okvira)"
@@ -3406,17 +3460,17 @@ label = "Vertikalne podele"
 placeholder = "Unesite broj vertikalnih podele"
 
 [split-by-sections.splitMode]
-label = "Split Mode"
-description = "Choose how to split the pages"
-splitAll = "Split all pages"
-splitAllExceptFirst = "Split all except first"
-splitAllExceptLast = "Split all except last"
-splitAllExceptFirstAndLast = "Split all except first and last"
-custom = "Custom pages"
+label = "Režim deljenja"
+description = "Izaberite kako da podelite stranice"
+splitAll = "Podeli sve stranice"
+splitAllExceptFirst = "Podeli sve osim prve"
+splitAllExceptLast = "Podeli sve osim poslednje"
+splitAllExceptFirstAndLast = "Podeli sve osim prve i poslednje"
+custom = "Prilagođene stranice"
 
 [split-by-sections.customPages]
-label = "Custom Page Numbers"
-placeholder = "e.g. 2,4,6"
+label = "Prilagođeni brojevi stranica"
+placeholder = "npr. 2,4,6"
 
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
@@ -3780,17 +3834,17 @@ filesize = "Veličina datoteke"
 label = "Primeni sivinu za kompresiju"
 
 [compress.linearize]
-label = "Linearize PDF for fast web viewing"
+label = "Linearizuj PDF za brzo pregledanje na vebu"
 
 [compress.lineArt]
-label = "Convert images to line art"
-description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
-unavailable = "ImageMagick is not installed or enabled on this server"
-detailLevel = "Detail level"
-edgeEmphasis = "Edge emphasis"
-edgeLow = "Gentle"
-edgeMedium = "Balanced"
-edgeHigh = "Strong"
+label = "Konvertuj slike u linijski crtež"
+description = "Koristi ImageMagick da smanji stranice na visokokontrastnu crno-belu radi maksimalnog smanjenja veličine."
+unavailable = "ImageMagick nije instaliran ili omogućen na ovom serveru"
+detailLevel = "Nivo detalja"
+edgeEmphasis = "Naglašavanje ivica"
+edgeLow = "Blago"
+edgeMedium = "Uravnoteženo"
+edgeHigh = "Jako"
 
 [compress.tooltip.header]
 title = "Pregled podešavanja kompresije"
@@ -3810,8 +3864,8 @@ title = "Nijanse sive"
 text = "Izaberite ovu opciju da konvertujete sve slike u crno-belo, što može značajno smanjiti veličinu fajla, posebno za skenirane PDF-ove ili dokumente sa mnogo slika."
 
 [compress.tooltip.lineArt]
-title = "Line Art"
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+title = "Linijski crtež"
+text = "Konvertuje stranice u visokokontrastnu crno-belu koristeći ImageMagick. Koristite nivo detalja da biste kontrolisali koliko sadržaja postaje crno, a naglašavanje ivica da biste kontrolisali koliko agresivno se otkrivaju ivice."
 
 [compress.error]
 failed = "Došlo je do greške prilikom kompresovanja PDF-a."
@@ -3826,9 +3880,9 @@ _value = "Podešavanja kompresije"
 1 = "1-3 PDF kompresija,</br> 4-6 blaga kompresija slika,</br> 7-9 intenzivna kompresija slika koja značajno smanjuje kvalitet slika"
 
 [compress.compressionLevel]
-range1to3 = "Lower values preserve quality but result in larger files"
-range4to6 = "Medium compression with moderate quality reduction"
-range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
+range1to3 = "Niže vrednosti čuvaju kvalitet, ali daju veće fajlove"
+range4to6 = "Srednja kompresija uz umereno smanjenje kvaliteta"
+range7to9 = "Veće vrednosti značajno smanjuju veličinu fajla, ali mogu smanjiti jasnoću slika"
 
 [decrypt]
 passwordPrompt = "Ova datoteka je zaštićena lozinkom. Unesi lozinku:"
@@ -3973,7 +4027,7 @@ version = "Aktuelno izdanje"
 title = "API dokumentacija"
 header = "API dokumentacija"
 desc = "Pregledajte i testirajte Stirling PDF API endpoints"
-tags = "api,dokumentacija,swagger,krajnje tačke,razvoj"
+tags = "api,documentation,swagger,endpoints,development"
 
 [cookieBanner.popUp]
 title = "Kako koristimo kolačiće"
@@ -4069,7 +4123,7 @@ deleteSelected = "Obriši izabrane stranice"
 closePdf = "Zatvori PDF"
 exportAll = "Izvezi PDF"
 downloadSelected = "Preuzmi izabrane fajlove"
-annotations = "Annotations"
+annotations = "Anotacije"
 exportSelected = "Izvezi izabrane stranice"
 saveChanges = "Sačuvaj izmene"
 toggleTheme = "Uključi/isključi temu"
@@ -4077,84 +4131,90 @@ language = "Jezik"
 toggleAnnotations = "Uključi/isključi vidljivost anotacija"
 search = "Pretraži PDF"
 panMode = "Režim pomeranja"
+applyRedactionsFirst = "Prvo primenite zacrnjivanja"
 rotateLeft = "Rotiraj ulevo"
 rotateRight = "Rotiraj udesno"
 toggleSidebar = "Uključi/isključi bočnu traku"
 toggleBookmarks = "Prikaži/sakrij obeleživače"
 print = "Štampaj PDF"
+draw = "Crtaj"
+redact = "Zacrni"
+exitRedaction = "Izađi iz režima zacrnjivanja"
+save = "Sačuvaj"
 downloadAll = "Preuzmi sve"
 saveAll = "Sačuvaj sve"
 
 [textAlign]
-left = "Left"
-center = "Center"
-right = "Right"
+left = "Levo"
+center = "Centar"
+right = "Desno"
 
 [annotation]
-title = "Annotate"
-desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
-highlight = "Highlight"
-pen = "Pen"
-text = "Text box"
-note = "Note"
-rectangle = "Rectangle"
-ellipse = "Ellipse"
-select = "Select"
-exit = "Exit annotation mode"
-strokeWidth = "Width"
-opacity = "Opacity"
-strokeOpacity = "Stroke Opacity"
-fillOpacity = "Fill Opacity"
-fontSize = "Font size"
-chooseColor = "Choose colour"
-color = "Colour"
-strokeColor = "Stroke Colour"
-fillColor = "Fill Colour"
-underline = "Underline"
-strikeout = "Strikeout"
-squiggly = "Squiggly"
-inkHighlighter = "Freehand Highlighter"
-freehandHighlighter = "Freehand Highlighter"
-square = "Square"
-circle = "Circle"
-polygon = "Polygon"
-line = "Line"
-stamp = "Add Image"
-textMarkup = "Text Markup"
-drawing = "Drawing"
-shapes = "Shapes"
-notesStamps = "Notes & Stamps"
-settings = "Settings"
-borderOn = "Border: On"
-borderOff = "Border: Off"
-editInk = "Edit Pen"
-editLine = "Edit Line"
-editNote = "Edit Note"
-editText = "Edit Text Box"
-editTextMarkup = "Edit Text Markup"
-editSelected = "Edit Annotation"
-editSquare = "Edit Square"
-editCircle = "Edit Circle"
-editPolygon = "Edit Polygon"
-unsupportedType = "This annotation type is not fully supported for editing."
-textAlignment = "Text Alignment"
-noteIcon = "Note Icon"
-imagePreview = "Preview"
-contents = "Text"
-backgroundColor = "Background colour"
-clearBackground = "Remove background"
-noBackground = "No background"
-stampSettings = "Stamp Settings"
-savingCopy = "Preparing download..."
-saveFailed = "Unable to save copy"
-saveReady = "Download ready"
-selectAndMove = "Select and Edit"
-editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
-editStampHint = "To change the image, delete this stamp and add a new one."
-editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
-undo = "Undo"
-redo = "Redo"
-applyChanges = "Apply Changes"
+title = "Anotiraj"
+desc = "Koristite isticanje, olovku, tekst i beleške. Izmene ostaju aktivne—nije potrebno spajanje slojeva."
+highlight = "Istakni"
+pen = "Olovka"
+text = "Tekstualni okvir"
+note = "Beleška"
+rectangle = "Pravougaonik"
+ellipse = "Elipsa"
+select = "Izaberi"
+exit = "Izađi iz režima anotiranja"
+strokeWidth = "Širina"
+opacity = "Neprozirnost"
+strokeOpacity = "Neprozirnost linije"
+fillOpacity = "Neprozirnost popune"
+fontSize = "Veličina fonta"
+chooseColor = "Izaberite boju"
+color = "Boja"
+strokeColor = "Boja linije"
+fillColor = "Boja popune"
+underline = "Podvuci"
+strikeout = "Precrtaj"
+squiggly = "Talasasto isticanje"
+inkHighlighter = "Ručni marker"
+freehandHighlighter = "Ručni marker"
+square = "Kvadrat"
+circle = "Krug"
+polygon = "Poligon"
+line = "Linija"
+stamp = "Dodaj sliku"
+textMarkup = "Označavanje teksta"
+drawing = "Crtanje"
+shapes = "Oblici"
+notesStamps = "Beleške i pečati"
+settings = "Podešavanja"
+borderOn = "Okvir: uključen"
+borderOff = "Okvir: isključen"
+editInk = "Uredi olovku"
+editLine = "Uredi liniju"
+editNote = "Uredi belešku"
+editText = "Uredi tekstualni okvir"
+editTextMarkup = "Uredi označavanje teksta"
+editSelected = "Uredi anotaciju"
+editSquare = "Uredi kvadrat"
+editCircle = "Uredi krug"
+editPolygon = "Uredi poligon"
+unsupportedType = "Ovaj tip anotacije nije u potpunosti podržan za uređivanje."
+textAlignment = "Poravnanje teksta"
+noteIcon = "Ikona beleške"
+imagePreview = "Pregled"
+contents = "Tekst"
+backgroundColor = "Boja pozadine"
+clearBackground = "Ukloni pozadinu"
+noBackground = "Bez pozadine"
+stampSettings = "Podešavanja pečata"
+savingCopy = "Priprema preuzimanja..."
+saveFailed = "Nije moguće sačuvati kopiju"
+saveReady = "Preuzimanje spremno"
+selectAndMove = "Izaberi i uredi"
+editSelectDescription = "Kliknite postojeću anotaciju da biste uredili njenu boju, neprozirnost, tekst ili veličinu."
+editStampHint = "Da biste promenili sliku, obrišite ovaj pečat i dodajte novi."
+editSwitchToSelect = "Prebacite se na Izaberi i uredi da biste uredili ovu anotaciju."
+undo = "Opozovi"
+redo = "Ponovi"
+applyChanges = "Primeni izmene"
+saveChanges = "Sačuvaj izmene"
 
 [search]
 title = "Pretraži PDF"
@@ -4205,20 +4265,20 @@ settings = "Postavke"
 adminSettings = "Admin postavke"
 allTools = "All Tools"
 reader = "Čitač"
-tours = "Tours"
-showMeAround = "Show me around"
+tours = "Obilasci"
+showMeAround = "Provedi me kroz"
 
 [quickAccess.toursTooltip]
-admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
-user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
+admin = "Pogledajte vodiče ovde: obilazak Alata, obilazak novog V2 rasporeda i Admin obilazak."
+user = "Pogledajte vodiče ovde: obilazak Alata i obilazak novog V2 rasporeda."
 
 [quickAccess.helpMenu]
 toolsTour = "Obilazak alata"
 toolsTourDesc = "Saznajte šta alati mogu da urade"
 adminTour = "Administratorski obilazak"
 adminTourDesc = "Istražite admin podešavanja i funkcije"
-whatsNewTour = "See what's new in V2"
-whatsNewTourDesc = "Tour the updated layout"
+whatsNewTour = "Pogledajte šta je novo u V2"
+whatsNewTourDesc = "Obilazak ažuriranog rasporeda"
 
 [admin]
 error = "Greška"
@@ -4237,6 +4297,8 @@ fetchError = "Nije uspelo učitavanje podešavanja"
 saveError = "Nije uspelo čuvanje podešavanja"
 saved = "Podešavanja uspešno sačuvana"
 saveSuccess = "Podešavanja uspešno sačuvana"
+success = "Podešavanja su uspešno sačuvana"
+error = "Nije uspelo čuvanje podešavanja"
 save = "Sačuvaj izmene"
 discard = "Odbaci"
 restartRequired = "Potreban je restart"
@@ -4359,6 +4421,13 @@ description = "Putanja do WeasyPrint izvršne datoteke za konverziju HTML u PDF 
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert izvršna datoteka"
 description = "Putanja do LibreOffice unoconvert za konverzije dokumenata (ostavite prazno za podrazumevano: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Osnovni URL za frontend (npr., https://pdf.example.com). Koristi se za linkove pozivnica e-poštom i otpremanja putem mobilnog QR koda. Ostavite prazno da biste koristili backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Kliknite da vidite detalje plana"
 
 [admin.settings.security]
 title = "Bezbednost"
@@ -4496,6 +4565,19 @@ connect = "Poveži"
 disconnect = "Prekini vezu"
 disconnected = "Veza sa provajderom je uspešno prekinuta"
 disconnectError = "Prekid veze sa provajderom nije uspeo"
+mobileScannerConvertToPdf = "Konvertuj slike u PDF"
+mobileScannerConvertToPdfDesc = "Automatski konvertuje otpremljene slike u PDF format. Ako je onemogućeno, slike će ostati neizmenjene."
+mobileScannerImageResolution = "Rezolucija slike"
+mobileScannerImageResolutionDesc = "Rezolucija otpremljenih slika. „Smanjena“ skaluje slike do najviše 1200px radi smanjenja veličine fajla."
+imageResolutionFull = "Puna (originalna veličina)"
+imageResolutionReduced = "Smanjena (maks. 1200px)"
+mobileScannerPageFormat = "Format stranice"
+mobileScannerPageFormatDesc = "Veličina PDF stranice za konvertovane slike. „Zadrži“ koristi izvorne dimenzije slike."
+pageFormatKeep = "Zadrži (izvorne dimenzije)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Razvuci da popuni"
+mobileScannerStretchToFitDesc = "Razvuci slike da ispune celu stranicu. Ako je onemogućeno, slike su centrirane uz očuvan odnos stranica."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO automatska prijava"
@@ -4563,6 +4645,122 @@ description = "Automatski kreiraj korisničke naloge pri prvoj SAML2 prijavi"
 [admin.settings.connections.saml2.blockRegistration]
 label = "Blokiraj registraciju"
 description = "Spreči registraciju novih korisnika putem SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Otpremanje sa mobilnog telefona"
+enable = "Omogući otpremanje putem QR koda"
+description = "Dozvoli korisnicima da otpremaju fajlove sa mobilnih uređaja skeniranjem QR koda"
+note = "Napomena: Zahteva da Frontend URL bude podešen. "
+link = "Podesi u sistemskim podešavanjima"
+mobileScannerConvertToPdf = "Konvertuj slike u PDF"
+mobileScannerConvertToPdfDesc = "Automatski konvertuje otpremljene slike u PDF format. Ako je onemogućeno, slike će ostati neizmenjene."
+mobileScannerImageResolution = "Rezolucija slike"
+mobileScannerImageResolutionDesc = "Rezolucija otpremljenih slika. „Smanjena“ skaluje slike do najviše 1200px radi smanjenja veličine fajla."
+imageResolutionFull = "Puna (originalna veličina)"
+imageResolutionReduced = "Smanjena (maks. 1200px)"
+mobileScannerPageFormat = "Format stranice"
+mobileScannerPageFormatDesc = "Veličina PDF stranice za konvertovane slike. „Zadrži“ koristi izvorne dimenzije slike."
+pageFormatKeep = "Zadrži (izvorne dimenzije)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Razvuci da popuni"
+mobileScannerStretchToFitDesc = "Razvuci slike da ispune celu stranicu. Ako je onemogućeno, slike su centrirane uz očuvan odnos stranica."
+
+[admin.settings.telegram]
+title = "Telegram bot"
+description = "Konfigurišite povezivanje Telegram bota, kontrolu pristupa i ponašanje povratnih poruka."
+
+[admin.settings.telegram.enabled]
+label = "Omogući Telegram bot"
+description = "Omogućava korisnicima interakciju sa Stirling PDF putem vašeg podešenog Telegram bota."
+
+[admin.settings.telegram.botUsername]
+label = "Korisničko ime bota"
+description = "Javno korisničko ime vašeg Telegram bota."
+
+[admin.settings.telegram.botToken]
+label = "Token bota"
+description = "API token koji je obezbedio BotFather za vaš Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Folder prijemnog sandučeta"
+description = "Folder u okviru direktorijuma pipeline u kojem se čuvaju dolazni Telegram fajlovi."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Koristi prilagođeni sufiks foldera"
+description = "Dodaj ID razgovora folderima dolaznih fajlova kako bi se otpremanja izolovala po razgovoru."
+
+[admin.settings.telegram.accessControl]
+title = "Kontrola pristupa"
+description = "Ograničite koji korisnici ili kanali mogu da komuniciraju sa botom."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Dozvoli određene ID-jeve korisnika"
+description = "Kada je omogućeno, samo navedeni ID-jevi korisnika mogu koristiti bota."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Dozvoljeni ID-jevi korisnika"
+description = "Unesite Telegram ID-jeve korisnika koji smeju da koriste bota."
+placeholder = "Dodajte ID korisnika i pritisnite enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Dozvoli određene ID-jeve kanala"
+description = "Kada je omogućeno, samo navedeni ID-jevi kanala mogu koristiti bota."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Dozvoljeni ID-jevi kanala"
+description = "Unesite Telegram ID-jeve kanala koji smeju da koriste bota."
+placeholder = "Dodajte ID kanala i pritisnite enter"
+
+[admin.settings.telegram.processing]
+title = "Obrada"
+description = "Kontrolišite intervale provere i vremenska ograničenja obrade za Telegram otpremanja."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Vremensko ograničenje obrade (sekunde)"
+description = "Maksimalno vreme čekanja na zadatak obrade pre prijave greške."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Interval provere (ms)"
+description = "Interval između provera novih Telegram ažuriranja."
+
+[admin.settings.telegram.feedback]
+title = "Povratne poruke"
+description = "Izaberite kada bot treba da šalje povratne informacije korisnicima i kanalima."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Omogući povratne poruke"
+description = "Kontroliše da li bot uopšte šalje povratne poruke."
+
+[admin.settings.telegram.feedback.channel]
+title = "Pravila povratnih poruka za kanale"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Prikaži „Nema važećeg dokumenta“ (kanal)"
+description = "Potisni odgovor „Nema važećeg dokumenta“ za otpremanja u kanale."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Prikaži greške obrade (kanal)"
+description = "Šalje poruke o greškama obrade u kanale."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Prikaži poruke o greškama (kanal)"
+description = "Prikaži detaljne poruke o greškama za kanale."
+
+[admin.settings.telegram.feedback.user]
+title = "Pravila povratnih poruka za korisnike"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Prikaži „Nema važećeg dokumenta“ (korisnik)"
+description = "Potisni odgovor „Nema važećeg dokumenta“ za korisnička otpremanja."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Prikaži greške obrade (korisnik)"
+description = "Šalje poruke o greškama obrade korisnicima."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Prikaži poruke o greškama (korisnik)"
+description = "Prikaži detaljne poruke o greškama za korisnike."
 
 [admin.settings.database]
 title = "Baza podataka"
@@ -4744,6 +4942,10 @@ description = "Dozvoli administratorima da pozovu korisnike putem e-pošte sa au
 [admin.settings.mail.frontendUrl]
 label = "Frontend URL"
 description = "Osnovni URL za frontend (npr. https://pdf.example.com). Koristi se za generisanje pozivnih linkova u emailovima. Ostavite prazno da biste koristili backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Napomena: Zahteva da Frontend URL bude podešen. "
+link = "Podesi u sistemskim podešavanjima"
 
 [admin.settings.legal]
 title = "Pravni dokumenti"
@@ -4929,6 +5131,9 @@ googleDriveShort = "Drive"
 myFiles = "Moje datoteke"
 noRecentFiles = "Nisu pronađene nedavne datoteke"
 googleDriveNotAvailable = "Integracija sa Google Drive nije dostupna"
+mobileUpload = "Otpremanje sa mobilnog"
+mobileShort = "Mobilni"
+mobileUploadNotAvailable = "Otpremanje sa mobilnog nije omogućeno"
 downloadSelected = "Preuzmi izabrano"
 saveSelected = "Sačuvaj izabrano"
 openFiles = "Otvori datoteke"
@@ -5244,7 +5449,7 @@ loading = "Učitavanje..."
 back = "Nazad"
 continue = "Nastavi"
 error = "Greška"
-save = "Save"
+save = "Sačuvaj"
 
 [config.overview]
 title = "Konfiguracija aplikacije"
@@ -5306,6 +5511,15 @@ warning = "⚠️ Upozorenje: Ova radnja će generisati nove API ključeve i pon
 impact = "Sve aplikacije ili servisi koji trenutno koriste ove ključeve prestaće da rade dok ih ne ažurirate novim ključevima."
 confirmPrompt = "Da li ste sigurni da želite da nastavite?"
 confirmCta = "Osveži ključeve"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Greška API ključa"
+failedToCreateApiKey = "Neuspešno kreiranje API ključa."
+failedToRetrieveApiKey = "Neuspešno preuzimanje API ključa iz odgovora."
+failedToFetchApiKey = "Neuspešno dovlačenje API ključa."
+apiKeyRefreshed = "API ključ osvežen"
+apiKeyRefreshedBody = "Vaš API ključ je uspešno osvežen."
+failedToRefreshApiKey = "Neuspešno osvežavanje API ključa."
 
 [AddAttachmentsRequest]
 attachments = "Izaberite priloge"
@@ -5412,14 +5626,14 @@ startTour = "Započni turu"
 startTourDescription = "Krenite u vođenu turu kroz ključne funkcije Stirling PDF-a"
 
 [onboarding.whatsNew]
-quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
-leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
-fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
-rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
-topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
-pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
-activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
-wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+quickAccess = "Počnite na traci za <strong>Brzi pristup</strong> da biste prelazili između Čitača, Automatizacije, svojih fajlova i svih obilazaka."
+leftPanel = "Levi panel <strong>Alati</strong> sadrži sve što možete da uradite. Pregledajte kategorije ili pretražite da brzo nađete alat."
+fileUpload = "Koristite dugme <strong>Fajlovi</strong> da otpremite ili izaberete skorašnji PDF. Učitaćemo primer da biste videli radni prostor."
+rightRail = "<strong>Desna traka</strong> sadrži brze radnje za izbor fajlova, promenu teme ili jezika i preuzimanje rezultata."
+topBar = "Gornja traka vam omogućava da prebacujete između <strong>Pregledača</strong>, <strong>Uređivača stranica</strong> i <strong>Aktivnih fajlova</strong>."
+pageEditorView = "Prebacite se na Uređivač stranica da biste preuredili, rotirali ili obrisali stranice."
+activeFilesView = "Koristite Aktivne fajlove da vidite sve što je otvoreno i izaberete na čemu ćete raditi."
+wrapUp = "To je ono što je novo u V2. Otvorite meni <strong>Obilasci</strong> bilo kada da ponovo pokrenete ovo, obilazak Alata ili Admin obilazak."
 
 [onboarding.welcomeModal]
 title = "Dobrodošli u Stirling PDF!"
@@ -5442,8 +5656,8 @@ showMeAround = "Provedi me kroz aplikaciju"
 skipTheTour = "Preskoči obilazak"
 
 [onboarding.tourOverview]
-title = "Tour Overview"
-body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+title = "Pregled obilaska"
+body = "Stirling PDF V2 dolazi sa desetinama alata i osveženim rasporedom. Pođite na kratki obilazak da vidite šta se promenilo i gde da pronađete funkcije koje su vam potrebne."
 
 [onboarding.serverLicense]
 skip = "Preskoči za sada"
@@ -5452,7 +5666,7 @@ upgrade = "Nadogradite sada →"
 freeTitle = "Serverska licenca"
 overLimitTitle = "Potrebna serverska licenca"
 overLimitBody = "Naše licenciranje dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Imate <strong>{{overLimitUserCopy}}</strong> Stirling korisnika. Da nastavite bez prekida, pređite na Stirling Server plan - <strong>neograničena mesta</strong>, uređivanje PDF teksta i puna admin kontrola za $99/server/mes."
-freeBody = "Naše licenciranje <strong>Open-Core</strong> dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Za neometano skaliranje, preporučujemo plan Stirling Server - <strong>neograničena mesta</strong> i <strong>SSO podrška</strong> za $99/server/mo."
+freeBody = "Naše <strong>Open-Core</strong> licenciranje dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Da se bez prekida skalirate i dobijete rani pristup našem novom <strong>alatu za uređivanje PDF teksta</strong>, preporučujemo Stirling Server plan - puno uređivanje i <strong>neograničena mesta</strong> za $99/server/mes."
 
 [onboarding.desktopInstall]
 title = "Preuzmi"
@@ -5758,28 +5972,28 @@ contactSales = "Kontaktirajte prodaju"
 contactToUpgrade = "Kontaktirajte nas za nadogradnju ili prilagođavanje vašeg paketa"
 maxUsers = "Maks. broj korisnika"
 upTo = "Do"
-getLicense = "Get Server License"
-upgradeToEnterprise = "Upgrade to Enterprise"
-selectPeriod = "Select Billing Period"
-monthlyBilling = "Monthly Billing"
-yearlyBilling = "Yearly Billing"
-checkoutOpened = "Checkout Opened"
-checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
-activateLicense = "Activate Your License"
+getLicense = "Nabavi serversku licencu"
+upgradeToEnterprise = "Nadogradi na Enterprise"
+selectPeriod = "Izaberi obračunski period"
+monthlyBilling = "Mesečno fakturisanje"
+yearlyBilling = "Godišnje fakturisanje"
+checkoutOpened = "Plaćanje otvoreno"
+checkoutInstructions = "Dovršite kupovinu u Stripe kartici. Nakon plaćanja, vratite se ovde i osvežite stranicu da aktivirate licencu. Takođe ćete dobiti e-poštom licencni ključ."
+activateLicense = "Aktivirajte licencu"
 
 [plan.static.licenseActivation]
-checkoutOpened = "Checkout Opened in New Tab"
-instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
-enterKey = "Enter your license key below to activate your plan:"
-keyDescription = "Paste the license key from your email"
-activate = "Activate License"
-doLater = "I'll do this later"
-success = "License Activated!"
-successMessage = "Your license has been successfully activated. You can now close this window."
+checkoutOpened = "Plaćanje otvoreno u novoj kartici"
+instructions = "Dovršite kupovinu u Stripe kartici. Kada uplata bude završena, dobićete e-poštom licencni ključ."
+enterKey = "Unesite svoj licencni ključ ispod da biste aktivirali plan:"
+keyDescription = "Nalepite licencni ključ iz e-pošte"
+activate = "Aktiviraj licencu"
+doLater = "Učiniću to kasnije"
+success = "Licenca aktivirana!"
+successMessage = "Vaša licenca je uspešno aktivirana. Sada možete zatvoriti ovaj prozor."
 
 [plan.static.billingPortal]
-title = "Email Verification Required"
-message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
+title = "Potrebna je verifikacija e-pošte"
+message = "Moraćete da verifikujete svoju e-poštu u Stripe portalu za naplatu. Proverite e-poštu za link za prijavu."
 
 [plan.period]
 month = "mesec"
@@ -5983,8 +6197,8 @@ notAvailable = "Audit sistem nije dostupan"
 notAvailableMessage = "Audit sistem nije podešen ili nije dostupan."
 disabled = "Audit logovanje je onemogućeno"
 disabledMessage = "Omogućite audit logovanje u konfiguraciji aplikacije da biste pratili događaje sistema."
-enterpriseRequired = "Enterprise License Required"
-enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
+enterpriseRequired = "Potrebna je Enterprise licenca"
+enterpriseRequiredMessage = "Sistem evidencije revizije je enterprise funkcija. Nadogradite na enterprise licencu da biste pristupili revizorskim zapisima i analitici."
 
 [audit.error]
 title = "Greška pri učitavanju audit sistema"
@@ -6156,6 +6370,7 @@ description = "Unesite puni URL vašeg samohostovanog Stirling PDF servera"
 
 [setup.server.error]
 emptyUrl = "Unesite URL servera"
+invalidUrl = "Nevažeći format URL-a. Unesite ispravan URL kao https://your-server.com"
 unreachable = "Nije moguće povezati se sa serverom"
 testFailed = "Test veze nije uspeo"
 configFetch = "Nije uspelo preuzimanje konfiguracije servera. Proverite URL i pokušajte ponovo."
@@ -6174,6 +6389,7 @@ connectingTo = "Povezivanje na:"
 submit = "Prijavi se"
 signInWith = "Prijavite se sa"
 oauthPending = "Otvaranje pregledača za autentikaciju..."
+sso = "Jedinstvena prijava"
 orContinueWith = "Ili nastavite uz email"
 serverRequirement = "Napomena: Server mora imati omogućenu prijavu."
 showInstructions = "Kako omogućiti?"
@@ -6239,8 +6455,8 @@ reset = "Poništi izmene"
 downloadJson = "Preuzmi JSON"
 generatePdf = "Generiši PDF"
 saveChanges = "Sačuvajte izmene"
-applyChanges = "Apply Changes"
-downloadCopy = "Download Copy"
+applyChanges = "Primeni izmene"
+downloadCopy = "Preuzmi kopiju"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automatski prilagodi tekst okvirima"
@@ -6260,22 +6476,22 @@ title = "Zaključaj izmenjeni tekst u jedan PDF element"
 description = "Kada je uključeno, editor izvozi svaki izmenjeni tekstualni okvir kao jedan PDF tekstualni element kako bi se izbeglo preklapanje glifova ili mešani fontovi."
 
 [pdfTextEditor.options.advanced]
-title = "Advanced Settings"
+title = "Napredna podešavanja"
 
 [pdfTextEditor.tooltip.header]
-title = "Preview Limitations"
+title = "Ograničenja pregleda"
 
 [pdfTextEditor.tooltip.textFocus]
-title = "Text and Image Focus"
-text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+title = "Fokus na tekst i sliku"
+text = "Ovaj radni prostor je usredsređen na uređivanje teksta i premeštanje ugrađenih slika. Složen crtež stranice, vidžeti formulara i slojevita grafika čuvaju se za izvoz, ali ovde nisu u potpunosti izmenjivi."
 
 [pdfTextEditor.tooltip.previewVariance]
-title = "Preview Variance"
-text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+title = "Razlike u prikazu"
+text = "Neki vizuelni elementi (kao što su ivice tabela, oblici ili izgled anotacija) možda neće biti prikazani identično u pregledu. Izvezeni PDF zadržava originalne komande crtanja kad god je moguće."
 
 [pdfTextEditor.tooltip.alpha]
-title = "Alpha Viewer"
-text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+title = "Alfa pregledač"
+text = "Ovaj alfa pregledač se i dalje razvija—određeni fontovi, boje, efekti providnosti i detalji rasporeda mogu se blago promeniti. Molimo dvaput proverite generisani PDF pre deljenja."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Spoji izabrane okvire"
@@ -6398,3 +6614,58 @@ title = "Rezultati dodavanja teksta"
 
 [addText.error]
 failed = "Došlo je do greške pri dodavanju teksta u PDF."
+
+[mobileUpload]
+title = "Otpremi sa mobilnog"
+description = "Skenirajte da otpremite fotografije. Slike se automatski konvertuju u PDF."
+descriptionNoConvert = "Skenirajte da otpremite fotografije sa mobilnog uređaja."
+error = "Greška pri povezivanju"
+pollingError = "Greška pri proveri fajlova"
+sessionId = "ID sesije"
+sessionCreateError = "Kreiranje sesije nije uspelo"
+expiryWarning = "Sesija uskoro ističe"
+expiryWarningMessage = "Ovaj QR kod će isteći za {{seconds}} sekundi. Novi kod će biti automatski generisan."
+filesReceived = "{{count}} fajl(ova) primljeno"
+connected = "Mobilni uređaj povezan"
+instructions = "Skenirajte kamerom telefona. Slike se automatski konvertuju u PDF."
+instructionsNoConvert = "Skenirajte kamerom telefona da otpremite fajlove."
+
+[mobileScanner]
+title = "Mobilni skener"
+noSession = "Nevažeća sesija"
+noSessionMessage = "Skenirajte važeći QR kod da biste pristupili ovoj stranici."
+validating = "Provera sesije..."
+sessionInvalid = "Greška sesije"
+sessionExpired = "Ova sesija je istekla. Osvežite i pokušajte ponovo."
+sessionNotFound = "Sesija nije pronađena. Osvežite i pokušajte ponovo."
+sessionValidationError = "Nije moguće verifikovati sesiju. Pokušajte ponovo."
+uploadSuccess = "Otpremanje uspešno!"
+uploadSuccessMessage = "Vaše slike su prenete."
+httpsRequired = "Pristup kameri zahteva HTTPS ili localhost. Koristite HTTPS ili pristupite preko localhost-a."
+uploadFailed = "Otpremanje nije uspelo. Pokušajte ponovo."
+uploading = "Otpremanje..."
+connected = "Povezano"
+connecting = "Povezivanje..."
+chooseMethod = "Izaberite metod otpremanja"
+chooseMethodDescription = "Izaberite kako želite da skenirate i otpremite dokumente"
+camera = "Kamera"
+cameraDescription = "Skenirajte dokumente kamerom uređaja uz automatsko prepoznavanje ivica"
+fileUpload = "Otpremanje fajlova"
+fileDescription = "Otpremite postojeće fotografije ili dokumente sa uređaja"
+cameraAccessDenied = "Pristup kameri je odbijen. Omogućite pristup kameri."
+back = "Nazad"
+settings = "Podešavanja"
+edgeDetection = "Detekcija ivica"
+flashlight = "Svetiljka"
+flash = "Blic"
+processing = "Obrada..."
+capture = "Snimi fotografiju"
+selectFilesPrompt = "Izaberite fajlove za otpremanje"
+selectImage = "Izaberi sliku"
+preview = "Pregled"
+retake = "Ponovi snimak"
+addToBatch = "Dodaj u grupu"
+upload = "Otpremi"
+batchImages = "Grupa"
+clearBatch = "Očisti"
+uploadAll = "Otpremi sve"
