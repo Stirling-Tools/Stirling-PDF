@@ -11,6 +11,15 @@ export interface UserInfo {
   email?: string;
 }
 
+export class AuthServiceError extends Error {
+  code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 interface LoginResponse {
   token: string;
   username: string;
@@ -222,7 +231,7 @@ export class AuthService {
     }
   }
 
-  async login(serverUrl: string, username: string, password: string): Promise<UserInfo> {
+  async login(serverUrl: string, username: string, password: string, mfaCode?: string): Promise<UserInfo> {
     console.log(`[Desktop AuthService] 🔐 Starting login to: ${serverUrl}`);
     console.log(`[Desktop AuthService] Username: ${username}`);
 
@@ -246,6 +255,7 @@ export class AuthService {
         serverUrl,
         username,
         password,
+        mfaCode,
         supabaseKey: SUPABASE_KEY,
         saasServerUrl: STIRLING_SAAS_URL,
       });
@@ -286,8 +296,21 @@ export class AuthService {
       console.error('[Desktop AuthService] ❌ Login failed:', error);
 
       // Provide more detailed error messages based on the error type
-      if (error instanceof Error) {
-        const errMsg = error.message.toLowerCase();
+      if (error instanceof Error || typeof error === 'string') {
+        const rawMessage = typeof error === 'string' ? error : error.message;
+        const errMsg = rawMessage.toLowerCase();
+
+        if (errMsg.includes('mfa_required')) {
+          // this.setAuthStatus('unauthenticated', null);
+          console.error('[Desktop AuthService] Two-factor authentication required');
+          throw new AuthServiceError('Two-factor code required.', 'mfa_required');
+        }
+
+        if (errMsg.includes('invalid_mfa_code')) {
+          this.setAuthStatus('unauthenticated', null);
+          console.error('[Desktop AuthService] Invalid two-factor code provided');
+          throw new AuthServiceError('Invalid two-factor code.', 'invalid_mfa_code');
+        }
 
         // Authentication errors
         if (errMsg.includes('401') || errMsg.includes('unauthorized') || errMsg.includes('invalid credentials')) {
@@ -449,7 +472,7 @@ export class AuthService {
 
   async refreshToken(serverUrl: string): Promise<boolean> {
     try {
-      console.log('Refreshing auth token');
+      console.log('[Desktop AuthService] Refreshing auth token');
       this.setAuthStatus('refreshing', this.userInfo);
 
       const currentToken = await this.getAuthToken();
