@@ -14,6 +14,36 @@ interface ComplianceSectionProps {
   legacyCompliance?: PdfCompliance | null;
 }
 
+// Helper to get the display label for a compliance key
+const getComplianceLabel = (key: string): string => {
+  switch (key) {
+    case 'IsPDF/SECCompliant':
+      return 'SEC (EDGAR)';
+    case 'IsPDF/UACompliant':
+      return 'PDF/UA (Accessibility)';
+    case 'IsPDF/BCompliant':
+      return 'PDF/A Level B';
+    default:
+      return key.replace('Is', '').replace('Compliant', '');
+  }
+};
+
+// Helper to determine compliance status, with special logic for PDF/A Level B
+const isCompliant = (key: string, legacyCompliance: PdfCompliance): boolean => {
+  const isBCompliantKey = key === 'IsPDF/BCompliant';
+  const conformanceLevel = legacyCompliance['PDF/AConformanceLevel'] as string | undefined;
+
+  // The backend already sets IsPDF/ACompliant. If that's true, we can trust it.
+  // We only need to add logic for the "Level B" virtual flag.
+  if (isBCompliantKey && !legacyCompliance[key] && conformanceLevel) {
+    // PDF/A-1B, PDF/A-2B, etc., all count as "Level B".
+    return conformanceLevel.toUpperCase().endsWith('B');
+  }
+
+  return legacyCompliance[key] as boolean;
+};
+
+
 const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complianceSummary, legacyCompliance }) => {
   const { t } = useTranslation();
 
@@ -33,28 +63,18 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
              <Stack gap="md">
                  <Stack gap="xs">
                      {specificKeys.map(key => {
-                         if (!(key in legacyCompliance)) return null;
-                         let val = legacyCompliance[key] as boolean;
-                         // Specific label mapping
-                         let label = key.replace('Is', '').replace('Compliant', '');
-                         if (key === 'IsPDF/SECCompliant') label = 'SEC (EDGAR)';
-                         if (key === 'IsPDF/UACompliant') label = 'PDF/UA (Accessibility)';
-                         if (key === 'IsPDF/BCompliant') {
-                           label = 'PDF/A Level B';
-                           const conformanceLevel = legacyCompliance['PDF/AConformanceLevel'] as string;
-                           if (!val && conformanceLevel && conformanceLevel.toUpperCase().includes('B')) {
-                             val = true;
-                           }
-                         }
+                         if (!(key in legacyCompliance!)) return null;
 
-                         const Icon = val ? CheckIcon : CloseIcon;
-                         const color = val ? 'teal' : 'orange';
+                         const label = getComplianceLabel(key);
+                         const compliant = isCompliant(key, legacyCompliance!);
+                         const Icon = compliant ? CheckIcon : CloseIcon;
+                         const color = compliant ? 'teal' : 'orange';
 
                          return (
                              <Group key={key} justify="space-between" p="xs" style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
                                  <Text size="sm" fw={500}>{label}</Text>
                                  <Badge color={color} variant="light" leftSection={<Icon style={{ width: 14, height: 14, display: 'block' }} />}>
-                                     {val ? t('getPdfInfo.compliance.passed', 'Passed') : t('getPdfInfo.compliance.failed', 'Failed')}
+                                     {compliant ? t('getPdfInfo.compliance.passed', 'Passed') : t('getPdfInfo.compliance.failed', 'Failed')}
                                  </Badge>
                              </Group>
                          );
