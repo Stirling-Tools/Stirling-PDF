@@ -30,8 +30,8 @@ import stirling.software.proprietary.service.SignatureService;
 
 /**
  * Controller for managing user signatures in proprietary/authenticated mode only. Requires user
- * authentication and enforces per-user storage limits. All endpoints require authentication
- * and will return 401 for unauthenticated users.
+ * authentication and enforces per-user storage limits. All endpoints require authentication and
+ * will return 401 for unauthenticated users.
  */
 @Slf4j
 @RestController

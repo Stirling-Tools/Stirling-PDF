@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -28,9 +30,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.AuthenticationException;
 
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
@@ -359,20 +358,20 @@ public class GlobalExceptionHandler {
             AuthenticationException ex, HttpServletRequest request) {
         log.debug("Authentication failed for {}: {}", request.getRequestURI(), ex.getMessage());
 
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.UNAUTHORIZED,
-                "Authentication required to access this resource"
-        );
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
         problemDetail.setType(URI.create("/errors/authentication-required"));
         problemDetail.setTitle("Authentication Required");
         problemDetail.setInstance(URI.create(request.getRequestURI()));
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", request.getRequestURI());
-        problemDetail.setProperty("hints", List.of(
-                "Ensure you are logged in before accessing this endpoint.",
-                "Check that your authentication token is valid and not expired.",
-                "For API access, provide a valid API key in the X-API-KEY header."
-        ));
+        problemDetail.setProperty(
+                "hints",
+                List.of(
+                        "Ensure you are logged in before accessing this endpoint.",
+                        "Check that your authentication token is valid and not expired.",
+                        "For API access, provide a valid API key in the X-API-KEY header."));
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
     }
@@ -389,20 +388,21 @@ public class GlobalExceptionHandler {
             AccessDeniedException ex, HttpServletRequest request) {
         log.debug("Access denied for {}: {}", request.getRequestURI(), ex.getMessage());
 
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                HttpStatus.FORBIDDEN,
-                "Access denied: insufficient permissions for this resource"
-        );
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.FORBIDDEN,
+                        "Access denied: insufficient permissions for this resource");
         problemDetail.setType(URI.create("/errors/access-denied"));
         problemDetail.setTitle("Access Denied");
         problemDetail.setInstance(URI.create(request.getRequestURI()));
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", request.getRequestURI());
-        problemDetail.setProperty("hints", List.of(
-                "Ensure you have the required permissions to access this resource.",
-                "Contact your system administrator if you believe you should have access.",
-                "Check that you are accessing the correct endpoint for your user role."
-        ));
+        problemDetail.setProperty(
+                "hints",
+                List.of(
+                        "Ensure you have the required permissions to access this resource.",
+                        "Contact your system administrator if you believe you should have access.",
+                        "Check that you are accessing the correct endpoint for your user role."));
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
     }
