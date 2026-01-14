@@ -68,19 +68,10 @@ public class ConvertOfficeController {
         }
         String extensionLower = extension.toLowerCase(Locale.ROOT);
 
-        String baseName = FilenameUtils.getBaseName(originalFilename);
-        if (baseName == null || baseName.isBlank()) {
-            baseName = "input";
-        }
-
-        // Sanitize baseName to ASCII-safe characters to prevent InvalidPathException
-        // with non-ASCII characters (e.g., Polish, Chinese, etc.) when creating temp file paths
-        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(baseName);
-
-        // create temporary working directory
+        // create temporary working directory and temp files with guaranteed unique names
         Path workDir = Files.createTempDirectory("office2pdf_");
-        Path inputPath = workDir.resolve(sanitizedBaseName + "." + extensionLower);
-        Path outputPath = workDir.resolve(sanitizedBaseName + ".pdf");
+        Path inputPath = Files.createTempFile(workDir, "input_", "." + extensionLower);
+        Path outputPath = Files.createTempFile(workDir, "output_", ".pdf");
 
         // Check if the file is HTML and apply sanitization if needed
         if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {

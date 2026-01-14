@@ -242,42 +242,6 @@ public class GeneralUtils {
         return safeName;
     }
 
-    /**
-     * Sanitizes a filename to ASCII-safe characters for use with external processes. Replaces
-     * non-ASCII characters and special characters with underscores to prevent InvalidPathException
-     * and encoding issues when filenames are passed to external programs like LibreOffice,
-     * Ghostscript, etc.
-     *
-     * <p>This method is specifically designed for temporary filenames used in ProcessExecutor calls
-     * where non-ASCII characters (e.g., Polish "ł", Chinese characters, etc.) can cause path
-     * encoding issues.
-     *
-     * @param filename the filename to sanitize, may be null
-     * @return ASCII-safe filename with only alphanumeric, dot, dash, and underscore characters, or
-     *     "file" if input is null/empty
-     */
-    public String sanitizeFilenameForProcess(String filename) {
-        if (filename == null || filename.isBlank()) {
-            return "file";
-        }
-
-        // Replace non-ASCII and non-alphanumeric characters (except dot, dash, underscore) with
-        // underscore
-        String sanitized = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
-
-        // Handle cases where the entire filename became underscores
-        if (sanitized.isBlank() || sanitized.matches("^[._-]+$")) {
-            return "file";
-        }
-
-        // Limit length to prevent excessively long filenames
-        if (sanitized.length() > 200) {
-            sanitized = sanitized.substring(0, 200);
-        }
-
-        return sanitized;
-    }
-
     // Get resources from a location pattern
     public Resource[] getResourcesFromLocationPattern(
             String locationPattern, ResourceLoader resourceLoader) throws Exception {

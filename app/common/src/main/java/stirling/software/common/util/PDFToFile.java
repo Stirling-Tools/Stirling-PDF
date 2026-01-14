@@ -81,8 +81,6 @@ public class PDFToFile {
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
-        // Sanitize to ASCII-safe characters for external process compatibility
-        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(pdfBaseName);
 
         byte[] fileBytes;
         String fileName;
@@ -90,6 +88,11 @@ public class PDFToFile {
         try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
                 TempDirectory tempOutputDir = new TempDirectory(tempFileManager)) {
             inputFile.transferTo(tempInputFile.getFile());
+
+            // Create unique subdirectory for pdftohtml output (collision-proof even if called
+            // multiple times)
+            Path pdftohtmlDir = Files.createTempDirectory(tempOutputDir.getPath(), "pdftohtml_");
+            String outputBasename = pdftohtmlDir.resolve("output").toString();
 
             List<String> command =
                     new ArrayList<>(
@@ -99,15 +102,13 @@ public class PDFToFile {
                                     "-noframes",
                                     "-c",
                                     tempInputFile.getAbsolutePath(),
-                                    sanitizedBaseName));
+                                    outputBasename));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                            .runCommandWithOutputHandling(
-                                    command, tempOutputDir.getPath().toFile());
+                            .runCommandWithOutputHandling(command, pdftohtmlDir.toFile());
             // Process HTML files to Markdown
-            File[] outputFiles =
-                    Objects.requireNonNull(tempOutputDir.getPath().toFile().listFiles());
+            File[] outputFiles = Objects.requireNonNull(pdftohtmlDir.toFile().listFiles());
             List<File> markdownFiles = new ArrayList<>();
 
             // Convert HTML files to Markdown
@@ -117,7 +118,7 @@ public class PDFToFile {
                     String markdown = htmlToMarkdownConverter.convert(html);
 
                     String mdFileName = outputFile.getName().replace(".html", ".md");
-                    File mdFile = new File(tempOutputDir.getPath().toFile(), mdFileName);
+                    File mdFile = new File(pdftohtmlDir.toFile(), mdFileName);
                     Files.writeString(mdFile.toPath(), markdown);
                     markdownFiles.add(mdFile);
                 }
@@ -171,8 +172,6 @@ public class PDFToFile {
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
-        // Sanitize to ASCII-safe characters for external process compatibility
-        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(pdfBaseName);
 
         byte[] fileBytes;
         String fileName;
@@ -186,21 +185,25 @@ public class PDFToFile {
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);
 
-            // Run the pdftohtml command with complex output
+            // Create unique subdirectory for pdftohtml output (collision-proof even if called
+            // multiple times)
+            Path pdftohtmlDir = Files.createTempDirectory(tempOutputDir, "pdftohtml_");
+            String outputBasename = pdftohtmlDir.resolve("output").toString();
+
             List<String> command =
                     new ArrayList<>(
                             Arrays.asList(
                                     "pdftohtml",
                                     "-c",
                                     tempInputFile.toString(),
-                                    sanitizedBaseName));
+                                    outputBasename));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                            .runCommandWithOutputHandling(command, tempOutputDir.toFile());
+                            .runCommandWithOutputHandling(command, pdftohtmlDir.toFile());
 
             // Get output files
-            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
+            File[] outputFiles = Objects.requireNonNull(pdftohtmlDir.toFile().listFiles());
 
             // Return output files in a ZIP archive
             fileName = pdfBaseName + "ToHtml.zip";
@@ -245,8 +248,6 @@ public class PDFToFile {
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
-        // Sanitize to ASCII-safe characters for external process compatibility
-        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(pdfBaseName);
         // Validate output format
         List<String> allowedFormats =
                 Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "xml", "txt:Text");
@@ -263,9 +264,10 @@ public class PDFToFile {
 
             Path tempInputFile = inputFileTemp.getPath();
             Path tempOutputDir = outputDirTemp.getPath();
+            // Use Files.createTempFile for guaranteed unique temp file in isolated directory
             Path unoOutputFile =
-                    tempOutputDir.resolve(
-                            sanitizedBaseName + "." + resolvePrimaryExtension(outputFormat));
+                    Files.createTempFile(
+                            tempOutputDir, "output_", "." + resolvePrimaryExtension(outputFormat));
 
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);
