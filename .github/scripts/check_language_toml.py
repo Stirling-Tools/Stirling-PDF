@@ -198,7 +198,9 @@ def check_for_differences(reference_file, file_list, branch, actor):
         # Verify that file is within the expected directory
         if not absolute_path.is_relative_to(base_dir):
             has_differences = True
-            report.append(f"\n⚠️ Unsafe file found: `{locale_dir}/{basename_current_file}`\n\n---\n")
+            report.append(
+                f"\n⚠️ Unsafe file found: `{locale_dir}/{basename_current_file}`\n\n---\n"
+            )
             continue
 
         # Verify file size before processing
@@ -212,7 +214,10 @@ def check_for_differences(reference_file, file_list, branch, actor):
         if basename_current_file == basename_reference_file and locale_dir == "en-GB":
             continue
 
-        if file_normpath.suffix != ".toml" or basename_current_file != "translation.toml":
+        if (
+            file_normpath.suffix != ".toml"
+            or basename_current_file != "translation.toml"
+        ):
             continue
 
         only_reference_file = False
