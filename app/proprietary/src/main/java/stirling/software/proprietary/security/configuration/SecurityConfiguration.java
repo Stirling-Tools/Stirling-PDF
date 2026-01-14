@@ -221,7 +221,8 @@ public class SecurityConfiguration {
                                             default:
                                                 // If custom value provided, disable Spring's
                                                 // X-Frame-Options
-                                                // and let a custom filter or header writer handle it
+                                                // and let a custom filter or header writer handle
+                                                // it
                                                 frameOptions.disable();
                                                 log.warn(
                                                         "Custom X-Frame-Options value '{}' provided. You may need to set this via reverse proxy or custom filter.",
