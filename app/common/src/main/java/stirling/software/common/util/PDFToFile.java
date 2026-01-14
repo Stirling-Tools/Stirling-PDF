@@ -81,6 +81,8 @@ public class PDFToFile {
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
+        // Sanitize to ASCII-safe characters for external process compatibility
+        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(pdfBaseName);
 
         byte[] fileBytes;
         String fileName;
@@ -97,7 +99,7 @@ public class PDFToFile {
                                     "-noframes",
                                     "-c",
                                     tempInputFile.getAbsolutePath(),
-                                    pdfBaseName));
+                                    sanitizedBaseName));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -169,6 +171,8 @@ public class PDFToFile {
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
+        // Sanitize to ASCII-safe characters for external process compatibility
+        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(pdfBaseName);
 
         byte[] fileBytes;
         String fileName;
@@ -186,7 +190,7 @@ public class PDFToFile {
             List<String> command =
                     new ArrayList<>(
                             Arrays.asList(
-                                    "pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
+                                    "pdftohtml", "-c", tempInputFile.toString(), sanitizedBaseName));
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -238,6 +242,8 @@ public class PDFToFile {
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
+        // Sanitize to ASCII-safe characters for external process compatibility
+        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(pdfBaseName);
         // Validate output format
         List<String> allowedFormats =
                 Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "xml", "txt:Text");
@@ -256,7 +262,7 @@ public class PDFToFile {
             Path tempOutputDir = outputDirTemp.getPath();
             Path unoOutputFile =
                     tempOutputDir.resolve(
-                            pdfBaseName + "." + resolvePrimaryExtension(outputFormat));
+                            sanitizedBaseName + "." + resolvePrimaryExtension(outputFormat));
 
             // Save the uploaded file to a temporary location
             inputFile.transferTo(tempInputFile);

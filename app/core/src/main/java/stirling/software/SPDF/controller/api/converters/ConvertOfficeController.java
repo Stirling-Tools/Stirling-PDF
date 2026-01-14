@@ -73,10 +73,14 @@ public class ConvertOfficeController {
             baseName = "input";
         }
 
+        // Sanitize baseName to ASCII-safe characters to prevent InvalidPathException
+        // with non-ASCII characters (e.g., Polish, Chinese, etc.) when creating temp file paths
+        String sanitizedBaseName = GeneralUtils.sanitizeFilenameForProcess(baseName);
+
         // create temporary working directory
         Path workDir = Files.createTempDirectory("office2pdf_");
-        Path inputPath = workDir.resolve(baseName + "." + extensionLower);
-        Path outputPath = workDir.resolve(baseName + ".pdf");
+        Path inputPath = workDir.resolve(sanitizedBaseName + "." + extensionLower);
+        Path outputPath = workDir.resolve(sanitizedBaseName + ".pdf");
 
         // Check if the file is HTML and apply sanitization if needed
         if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {

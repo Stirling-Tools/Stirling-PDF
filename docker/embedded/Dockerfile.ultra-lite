@@ -73,7 +73,10 @@ ENV VERSION_TAG=$VERSION_TAG \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf \
-    ENDPOINTS_GROUPS_TO_REMOVE=CLI
+    ENDPOINTS_GROUPS_TO_REMOVE=CLI \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    LANGUAGE=en_US:en
 
 # Install minimal dependencies
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
@@ -88,7 +91,8 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     curl \
     shadow \
     su-exec \
-    openjdk21-jre && \
+    openjdk21-jre \
+    musl-locales musl-locales-lang && \
     mkdir -p $HOME /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
     mkdir -p /usr/share/fonts/opentype/noto && \
     chmod +x /scripts/*.sh && \

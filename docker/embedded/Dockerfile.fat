@@ -69,6 +69,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb x11-utils coreutils \
     # Temporary packages only needed for Calibre installer
     xz-utils gpgv curl xdg-utils \
+    # UTF-8 locale support for handling international filenames
+    locales \
     \
     # Install Calibre from official installer script
     && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
@@ -81,6 +83,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Make ebook-convert available in PATH
 RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
     && /opt/calibre/ebook-convert --version
+
+# Configure UTF-8 locale to support international characters in filenames
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen en_US.UTF-8
+
+# Set UTF-8 locale environment variables
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    LANGUAGE=en_US:en
 
 # ==============================================================================
 # Create non-root user (stirlingpdfuser) with configurable UID/GID
