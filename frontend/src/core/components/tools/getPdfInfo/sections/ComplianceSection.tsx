@@ -1,12 +1,12 @@
 import React from 'react';
-import { Badge, Group, Stack, Text, ThemeIcon } from '@mantine/core';
+import {Badge, Group, Stack, Text, ThemeIcon} from '@mantine/core';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningIcon from '@mui/icons-material/Warning';
 import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
 import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
-import type { PdfCompliance, PdfComplianceSummary } from '@app/types/getPdfInfo';
-import { useTranslation } from 'react-i18next';
+import type {PdfCompliance, PdfComplianceSummary} from '@app/types/getPdfInfo';
+import {useTranslation} from 'react-i18next';
 
 interface ComplianceSectionProps {
   anchorId: string;
@@ -29,12 +29,35 @@ const getComplianceLabel = (key: string): string => {
 };
 
 // Helper to determine compliance status, with special logic for PDF/A Level B
-const isCompliant = (key: string, legacyCompliance: PdfCompliance): boolean => {
+const isCompliant = (key: string, legacyCompliance: PdfCompliance, complianceSummary?: PdfComplianceSummary[] | null): boolean => {
+  const isPdfACompliantKey = key === 'IsPDF/ACompliant';
   const isBCompliantKey = key === 'IsPDF/BCompliant';
   const conformanceLevel = legacyCompliance['PDF/AConformanceLevel'] as string | undefined;
 
-  // The backend already sets IsPDF/ACompliant. If that's true, we can trust it.
-  // We only need to add logic for the "Level B" virtual flag.
+  // Check detailed verification reports for PDF/A compliance
+  const hasPdfACompliance = complianceSummary?.some(item =>
+    item.Compliant &&
+    (item.Standard.toLowerCase().includes('pdfa-') ||
+      item.Standard.toLowerCase().includes('pdf_a'))
+  );
+
+  // Check if any detailed report shows Level B compliance (e.g., "pdfa-3b")
+  const hasLevelBCompliance = complianceSummary?.some(item =>
+    item.Compliant &&
+    item.Standard.toLowerCase().match(/pdfa?[-_]?\d+b/)
+  );
+
+  // If PDF/A compliance is asked and we found it in detailed reports, mark as compliant
+  if (isPdfACompliantKey && hasPdfACompliance) {
+    return true;
+  }
+
+  // If Level B compliance is asked and we found it in detailed reports, mark as compliant
+  if (isBCompliantKey && hasLevelBCompliance) {
+    return true;
+  }
+
+  // Legacy logic: check conformance level for Level B
   if (isBCompliantKey && !legacyCompliance[key] && conformanceLevel) {
     // PDF/A-1B, PDF/A-2B, etc., all count as "Level B".
     return conformanceLevel.toUpperCase().endsWith('B');
@@ -66,7 +89,7 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
                          if (!(key in legacyCompliance!)) return null;
 
                          const label = getComplianceLabel(key);
-                         const compliant = isCompliant(key, legacyCompliance!);
+                       const compliant = isCompliant(key, legacyCompliance!, complianceSummary);
                          const Icon = compliant ? CheckIcon : CloseIcon;
                          const color = compliant ? 'teal' : 'orange';
 
