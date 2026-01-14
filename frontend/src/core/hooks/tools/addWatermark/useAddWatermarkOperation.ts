@@ -18,12 +18,12 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
     formData.append("watermarkImage", parameters.watermarkImage);
   }
 
-  // Required parameters with correct formatting
-  formData.append("fontSize", (parameters.fontSize ?? 0).toString());
-  formData.append("rotation", (parameters.rotation ?? 0).toString());
-  formData.append("opacity", ((parameters.opacity ?? 0) / 100).toString()); // Convert percentage to decimal
-  formData.append("widthSpacer", (parameters.widthSpacer ?? 0).toString());
-  formData.append("heightSpacer", (parameters.heightSpacer ?? 0).toString());
+  // Required parameters with correct formatting (defaults merged in automationExecutor)
+  formData.append("fontSize", parameters.fontSize.toString());
+  formData.append("rotation", parameters.rotation.toString());
+  formData.append("opacity", (parameters.opacity / 100).toString()); // Convert percentage to decimal
+  formData.append("widthSpacer", parameters.widthSpacer.toString());
+  formData.append("heightSpacer", parameters.heightSpacer.toString());
 
   // Backend-expected parameters from user input
   formData.append("alphabet", parameters.alphabet || "");
