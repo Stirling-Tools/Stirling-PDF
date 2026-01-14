@@ -1,8 +1,11 @@
 unsavedChanges = "Máte neuložené změny v PDF."
+pendingRedactionsTitle = "Neaplikovaná začernění"
+pendingRedactions = "Máte neaplikovaná začernění, která budou ztracena."
 areYouSure = "Opravdu chcete odejít?"
 unsavedChangesTitle = "Neuložené změny"
 keepWorking = "Pokračovat v práci"
 discardChanges = "Zahodit a odejít"
+discardRedactions = "Zahodit a odejít"
 applyAndContinue = "Uložit a odejít"
 exportAndContinue = "Exportovat a pokračovat"
 cancel = "Zrušit"
@@ -356,7 +359,7 @@ teams = "Týmy"
 title = "Konfigurace"
 systemSettings = "Systémová nastavení"
 features = "Funkce"
-endpoints = "Koncové body"
+endpoints = "Endpoints"
 database = "Databáze"
 advanced = "Pokročilé"
 
@@ -364,6 +367,7 @@ advanced = "Pokročilé"
 title = "Zabezpečení a ověřování"
 security = "Zabezpečení"
 connections = "Připojení"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licencování a analytika"
@@ -438,6 +442,13 @@ currentVersion = "Aktuální verze"
 latestVersion = "Nejnovější verze"
 checkForUpdates = "Zkontrolovat aktualizace"
 viewDetails = "Zobrazit podrobnosti"
+serverNeedsUpdate = "Server musí být aktualizován administrátorem"
+
+[settings.general.versionInfo]
+title = "Informace o verzi"
+description = "Podrobnosti o verzích desktopu a serveru"
+desktop = "Verze desktopu"
+server = "Verze serveru"
 
 [settings.security]
 title = "Security"
@@ -528,6 +539,8 @@ accountSettings = "Nastavení účtu"
 adminSettings = "Nastavení správce - Zobrazit a přidat uživatele"
 userControlSettings = "Nastavení ovládání uživatelů"
 changeUsername = "Změnit uživatelské jméno"
+changeUsernameDescription = "Aktualizujte své uživatelské jméno. Po aktualizaci budete odhlášeni."
+newUsernamePlaceholder = "Zadejte své nové uživatelské jméno"
 newUsername = "Nové uživatelské jméno"
 password = "Potvrzovací heslo"
 oldPassword = "Staré heslo"
@@ -952,7 +965,7 @@ title = "Překrýt PDF"
 
 [home.pdfTextEditor]
 title = "Editor textu PDF"
-desc = "Upravujte existující text a obrázky v PDF"
+desc = "Prohlížejte a upravujte exporty JSON ze Stirling PDF se skupinovými úpravami textu a regenerací PDF"
 
 [home.addText]
 tags = "text,anotace,štítek"
@@ -963,6 +976,7 @@ desc = "Přidejte libovolný text kamkoli do PDF"
 addFiles = "Přidat soubory"
 uploadFromComputer = "Nahrát z počítače"
 openFromComputer = "Otevřít z počítače"
+mobileUpload = "Nahrát z mobilu"
 
 [viewPdf]
 tags = "zobrazit,číst,anotovat,text,obrázek"
@@ -1293,6 +1307,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "Možnosti převodu PDF do eBooku"
+epubOptionsDesc = "Možnosti pro převod PDF na EPUB/AZW3"
+detectChapters = "Detekovat kapitoly"
+detectChaptersDesc = "Rozpoznat nadpisy vypadající jako kapitoly a vložit zalomení stránek EPUB"
+targetDevice = "Cílové zařízení"
+targetDeviceDesc = "Vyberte výstupní profil optimalizovaný pro zařízení čtečky"
+outputFormat = "Výstupní formát"
+outputFormatDesc = "Vyberte výstupní formát pro eBook"
+tabletPhone = "Tablet/Telefon (s obrázky)"
+kindleEink = "Kindle e-Ink (optimalizováno pro text)"
 
 [imageToPdf]
 tags = "převod,img,jpg,obrázek,fotka"
@@ -3218,6 +3244,7 @@ title = "Metoda začernění"
 mode = "Režim"
 automatic = "Automatický"
 automaticDesc = "Začernit text podle vyhledávaných výrazů"
+automaticDisabledTooltip = "Vyberte soubory ve správci souborů, abyste začernili více souborů najednou"
 manual = "Manuální"
 manualDesc = "Kliknutím a tažením začerněte konkrétní oblasti"
 manualComingSoon = "Ruční začernění již brzy"
@@ -3288,8 +3315,35 @@ text = "Shoduje pouze celá slova, ne částečné. Při zapnutí se 'John' nesh
 title = "Převést na PDF-Image"
 text = "Po začernění převede PDF na obrazové PDF. Zajistí, že text pod začerněnými políčky je zcela odstraněn a nelze jej obnovit."
 
+[redact.tooltip.manual.header]
+title = "Ovládání ručního začernění"
+
+[redact.tooltip.manual.markText]
+title = "Nástroj pro označení textu"
+text = "Vyberte text přímo v PDF a označte ho pro začernění. Klikněte a tažením vyznačte konkrétní text, který chcete začernit."
+
+[redact.tooltip.manual.markArea]
+title = "Nástroj pro označení oblasti"
+text = "Kreslete v PDF obdélníkové oblasti a označte je pro začernění. Užitečné pro začernění obrázků, podpisů nebo nepravidelných tvarů."
+
+[redact.tooltip.manual.apply]
+title = "Použít začernění"
+text = "Po označení obsahu klikněte na „Použít“ a trvale začerněte všechny označené oblasti. Počet čekajících ukazuje, kolik začernění je připraveno k použití."
+bullet1 = "Před použitím můžete označit libovolný počet oblastí"
+bullet2 = "Všechna čekající začernění se použijí najednou"
+bullet3 = "Po použití nelze začernění vrátit zpět"
+
 [redact.manual]
+title = "Nástroje pro začernění"
+instructions = "Vyberte text nebo nakreslete oblasti v PDF a označte obsah pro začernění."
+markText = "Označit text"
+markArea = "Označit oblast"
+pendingLabel = "Čeká:"
+applyWarning = "⚠️ Trvalé použití, nelze vrátit zpět a data pod začerněním budou smazána"
+apply = "Použít"
+noMarks = "Žádné značky začernění. Pomocí nástrojů výše označte obsah pro začernění."
 header = "Ruční začernění"
+controlsTitle = "Ovládání ručního začernění"
 textBasedRedaction = "Začernění založené na textu"
 pageBasedRedaction = "Začernění podle stránek"
 convertPDFToImageLabel = "Převést PDF na PDF-Image (použito k odstranění textu za rámečkem)"
@@ -4077,11 +4131,16 @@ language = "Jazyk"
 toggleAnnotations = "Přepnout viditelnost anotací"
 search = "Hledat v PDF"
 panMode = "Režim posunu"
+applyRedactionsFirst = "Nejprve použijte začernění"
 rotateLeft = "Otočit doleva"
 rotateRight = "Otočit doprava"
 toggleSidebar = "Přepnout postranní panel"
 toggleBookmarks = "Přepnout záložky"
 print = "Tisk PDF"
+draw = "Kreslit"
+redact = "Začernit"
+exitRedaction = "Opustit režim začernění"
+save = "Uložit"
 downloadAll = "Stáhnout vše"
 saveAll = "Uložit vše"
 
@@ -4155,6 +4214,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Uložit změny"
 
 [search]
 title = "Hledat v PDF"
@@ -4237,6 +4297,8 @@ fetchError = "Nepodařilo se načíst nastavení"
 saveError = "Nepodařilo se uložit nastavení"
 saved = "Nastavení byla úspěšně uložena"
 saveSuccess = "Nastavení byla úspěšně uložena"
+success = "Nastavení byla úspěšně uložena"
+error = "Nastavení se nepodařilo uložit"
 save = "Uložit změny"
 discard = "Zahodit"
 restartRequired = "Vyžadován restart"
@@ -4360,6 +4422,13 @@ description = "Cesta ke spustitelnému souboru WeasyPrint pro převod HTML do PD
 label = "Spustitelný soubor unoconvert"
 description = "Cesta k LibreOffice unoconvert pro převody dokumentů (ponechte prázdné pro výchozí: /opt/venv/bin/unoconvert)"
 
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Základní URL pro frontend (např. https://pdf.example.com). Používá se pro odkazy v e‑mailových pozvánkách a nahrávání přes mobilní QR kód. Ponechte prázdné pro použití backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Klikněte pro zobrazení detailů tarifu"
+
 [admin.settings.security]
 title = "Zabezpečení"
 description = "Nakonfigurujte autentizaci, chování přihlášení a bezpečnostní zásady."
@@ -4436,7 +4505,7 @@ description = "Sledovat akce uživatelů a systémové události pro compliance 
 
 [admin.settings.security.audit.level]
 label = "Úroveň auditu"
-description = "0=VYPNUTO, 1=ZÁKLADNÍ, 2=STANDARDNÍ, 3=PODROBNÝ"
+description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 
 [admin.settings.security.audit.retentionDays]
 label = "Doba uchování auditů (dny)"
@@ -4496,6 +4565,19 @@ connect = "Připojit"
 disconnect = "Odpojit"
 disconnected = "Poskytovatel byl úspěšně odpojen"
 disconnectError = "Nepodařilo se odpojit poskytovatele"
+mobileScannerConvertToPdf = "Převádět obrázky do PDF"
+mobileScannerConvertToPdfDesc = "Automaticky převádí nahrané obrázky do formátu PDF. Pokud je vypnuto, obrázky zůstanou beze změny."
+mobileScannerImageResolution = "Rozlišení obrázků"
+mobileScannerImageResolutionDesc = "Rozlišení nahraných obrázků. \"Snížené\" zmenší obrázky na max. 1200 px pro snížení velikosti souboru."
+imageResolutionFull = "Plné (původní velikost)"
+imageResolutionReduced = "Snížené (max. 1200 px)"
+mobileScannerPageFormat = "Formát stránky"
+mobileScannerPageFormatDesc = "Velikost stránky PDF pro převedené obrázky. \"Ponechat\" použije původní rozměry obrázků."
+pageFormatKeep = "Ponechat (původní rozměry)"
+pageFormatA4 = "A4 (210×297 mm)"
+pageFormatLetter = "Letter (8,5×11 in)"
+mobileScannerStretchToFit = "Roztáhnout na celou stránku"
+mobileScannerStretchToFitDesc = "Roztáhne obrázky tak, aby vyplnily celou stránku. Pokud je vypnuto, obrázky se vystředí se zachováním poměru stran."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Automatické přihlášení SSO"
@@ -4563,6 +4645,122 @@ description = "Automaticky vytvořit uživatelské účty při prvním přihlá�
 [admin.settings.connections.saml2.blockRegistration]
 label = "Blokovat registraci"
 description = "Zabránit registraci nových uživatelů přes SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Nahrávání z mobilního telefonu"
+enable = "Povolit nahrávání pomocí QR kódu"
+description = "Umožní uživatelům nahrávat soubory z mobilních zařízení po načtení QR kódu"
+note = "Poznámka: Vyžaduje nastavenou Frontend URL. "
+link = "Nastavit v systémovém nastavení"
+mobileScannerConvertToPdf = "Převádět obrázky do PDF"
+mobileScannerConvertToPdfDesc = "Automaticky převádí nahrané obrázky do formátu PDF. Pokud je vypnuto, obrázky zůstanou beze změny."
+mobileScannerImageResolution = "Rozlišení obrázků"
+mobileScannerImageResolutionDesc = "Rozlišení nahraných obrázků. \"Snížené\" zmenší obrázky na max. 1200 px pro snížení velikosti souboru."
+imageResolutionFull = "Plné (původní velikost)"
+imageResolutionReduced = "Snížené (max. 1200 px)"
+mobileScannerPageFormat = "Formát stránky"
+mobileScannerPageFormatDesc = "Velikost stránky PDF pro převedené obrázky. \"Ponechat\" použije původní rozměry obrázků."
+pageFormatKeep = "Ponechat (původní rozměry)"
+pageFormatA4 = "A4 (210×297 mm)"
+pageFormatLetter = "Letter (8,5×11 in)"
+mobileScannerStretchToFit = "Roztáhnout na celou stránku"
+mobileScannerStretchToFitDesc = "Roztáhne obrázky tak, aby vyplnily celou stránku. Pokud je vypnuto, obrázky se vystředí se zachováním poměru stran."
+
+[admin.settings.telegram]
+title = "Telegram bot"
+description = "Nastavte připojení Telegram bota, řízení přístupu a způsob zpětné vazby."
+
+[admin.settings.telegram.enabled]
+label = "Povolit Telegram bota"
+description = "Umožněte uživatelům pracovat se Stirling PDF prostřednictvím vámi nastaveného Telegram bota."
+
+[admin.settings.telegram.botUsername]
+label = "Uživatelské jméno bota"
+description = "Veřejné uživatelské jméno vašeho Telegram bota."
+
+[admin.settings.telegram.botToken]
+label = "Token bota"
+description = "API token poskytnutý BotFatherem pro vašeho Telegram bota."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Složka doručených"
+description = "Složka v adresáři pipeline, kam se ukládají příchozí soubory z Telegramu."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Použít vlastní příponu složky"
+description = "Připojit ID chatu k příchozím složkám souborů pro oddělení nahrávání podle chatu."
+
+[admin.settings.telegram.accessControl]
+title = "Řízení přístupu"
+description = "Omezte, kteří uživatelé nebo kanály mohou s botem komunikovat."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Povolit konkrétní ID uživatelů"
+description = "Pokud je zapnuto, bota mohou používat pouze uvedená ID uživatelů."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Povolená ID uživatelů"
+description = "Zadejte ID uživatelů Telegramu, kteří mohou s botem komunikovat."
+placeholder = "Přidejte ID uživatele a stiskněte Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Povolit konkrétní ID kanálů"
+description = "Pokud je zapnuto, bota mohou používat pouze uvedená ID kanálů."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Povolená ID kanálů"
+description = "Zadejte ID kanálů Telegramu, které mohou s botem komunikovat."
+placeholder = "Přidejte ID kanálu a stiskněte Enter"
+
+[admin.settings.telegram.processing]
+title = "Zpracování"
+description = "Nastavte intervaly dotazování a limity zpracování pro nahrávání z Telegramu."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Časový limit zpracování (sekundy)"
+description = "Maximální doba čekání na úlohu zpracování před ohlášením chyby."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Interval dotazování (ms)"
+description = "Interval mezi kontrolami nových Telegram aktualizací."
+
+[admin.settings.telegram.feedback]
+title = "Zprávy zpětné vazby"
+description = "Zvolte, kdy má bot posílat zpětnou vazbu uživatelům a kanálům."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Povolit zpětnou vazbu"
+description = "Určuje, zda bot vůbec posílá zprávy se zpětnou vazbou."
+
+[admin.settings.telegram.feedback.channel]
+title = "Pravidla zpětné vazby pro kanály"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Zobrazit \"No valid document\" (Kanál)"
+description = "Potlačit odpověď no valid document pro nahrávání do kanálů."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Zobrazit chyby zpracování (Kanál)"
+description = "Posílat do kanálů chybové zprávy o zpracování."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Zobrazit chybová hlášení (Kanál)"
+description = "Zobrazit podrobná chybová hlášení pro kanály."
+
+[admin.settings.telegram.feedback.user]
+title = "Pravidla zpětné vazby pro uživatele"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Zobrazit \"No valid document\" (Uživatel)"
+description = "Potlačit odpověď no valid document pro nahrávání od uživatelů."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Zobrazit chyby zpracování (Uživatel)"
+description = "Posílat chybové zprávy o zpracování uživatelům."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Zobrazit chybová hlášení (Uživatel)"
+description = "Zobrazit podrobná chybová hlášení pro uživatele."
 
 [admin.settings.database]
 title = "Databáze"
@@ -4744,6 +4942,10 @@ description = "Umožnit správcům zvát uživatele e-mailem s automaticky gener
 [admin.settings.mail.frontendUrl]
 label = "URL frontendu"
 description = "Základní URL pro frontend (např. https://pdf.example.com). Používá se pro generování odkazů na pozvánky v e-mailech. Ponechte prázdné pro použití backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Poznámka: Vyžaduje nastavenou Frontend URL. "
+link = "Nastavit v systémovém nastavení"
 
 [admin.settings.legal]
 title = "Právní dokumenty"
@@ -4929,6 +5131,9 @@ googleDriveShort = "Drive"
 myFiles = "Moje soubory"
 noRecentFiles = "Nebyly nalezeny žádné nedávné soubory"
 googleDriveNotAvailable = "Integrace s Google Drive není dostupná"
+mobileUpload = "Nahrávání z mobilu"
+mobileShort = "Mobil"
+mobileUploadNotAvailable = "Nahrávání z mobilu není povoleno"
 downloadSelected = "Stáhnout vybrané"
 saveSelected = "Uložit vybrané"
 openFiles = "Otevřít soubory"
@@ -5307,6 +5512,15 @@ impact = "Všechny aplikace nebo služby, které tyto klíče aktuálně použí
 confirmPrompt = "Opravdu chcete pokračovat?"
 confirmCta = "Obnovit klíče"
 
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Chyba API klíče"
+failedToCreateApiKey = "Nepodařilo se vytvořit API klíč."
+failedToRetrieveApiKey = "Nepodařilo se získat API klíč z odpovědi."
+failedToFetchApiKey = "Nepodařilo se načíst API klíč."
+apiKeyRefreshed = "API klíč obnoven"
+apiKeyRefreshedBody = "Váš API klíč byl úspěšně obnoven."
+failedToRefreshApiKey = "Nepodařilo se obnovit API klíč."
+
 [AddAttachmentsRequest]
 attachments = "Vybrat přílohy"
 info = "Vyberte soubory, které chcete připojit k PDF. Tyto soubory budou vloženy a dostupné v panelu příloh PDF."
@@ -5452,7 +5666,7 @@ upgrade = "Upgradovat nyní →"
 freeTitle = "Serverová licence"
 overLimitTitle = "Vyžadována serverová licence"
 overLimitBody = "Naše licencování umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> uživatelů Stirling. Pro nepřerušené používání přejděte na plán Stirling Server – <strong>neomezený počet míst</strong>, úpravy textu PDF a plná správa za 99 $/server/měsíc."
-freeBody = "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušované škálování doporučujeme plán Stirling Server - <strong>neomezený počet míst</strong> a <strong>podpora SSO</strong> za $99/server/měs."
+freeBody = "Naše licencování <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> uživatelů zdarma na server. Pro nepřerušený růst a přednostní přístup k našemu novému <strong>nástroji pro úpravu textu PDF</strong> doporučujeme plán Stirling Server – plné úpravy a <strong>neomezený počet míst</strong> za 99 $/server/měsíc."
 
 [onboarding.desktopInstall]
 title = "Stáhnout"
@@ -6078,7 +6292,7 @@ title = "Graf využití endpointů"
 
 [usage.table]
 title = "Podrobné statistiky"
-endpoint = "Koncový bod"
+endpoint = "Endpoint"
 visits = "Návštěvy"
 percentage = "Procenta"
 noData = "Žádná data nejsou k dispozici"
@@ -6156,6 +6370,7 @@ description = "Zadejte úplnou URL vašeho samohostovaného serveru Stirling PDF
 
 [setup.server.error]
 emptyUrl = "Zadejte URL serveru"
+invalidUrl = "Neplatný formát URL. Zadejte prosím platné URL, například https://your-server.com"
 unreachable = "Nelze se připojit k serveru"
 testFailed = "Test připojení selhal"
 configFetch = "Nepodařilo se načíst konfiguraci serveru. Zkontrolujte prosím URL a zkuste to znovu."
@@ -6174,6 +6389,7 @@ connectingTo = "Připojuji se k:"
 submit = "Přihlásit se"
 signInWith = "Přihlásit se pomocí"
 oauthPending = "Otevírám prohlížeč pro ověření..."
+sso = "Jednotné přihlášení"
 orContinueWith = "Nebo pokračovat e-mailem"
 serverRequirement = "Poznámka: Na serveru musí být povoleno přihlášení."
 showInstructions = "Jak povolit?"
@@ -6225,7 +6441,7 @@ paragraph = "Odstavcová stránka"
 sparse = "Řídký text"
 
 [pdfTextEditor.groupingMode]
-auto = "Automaticky"
+auto = "Auto"
 paragraph = "Odstavec"
 singleLine = "Jeden řádek"
 
@@ -6340,13 +6556,13 @@ warnings = "Varování"
 suggestions = "Poznámky"
 currentPageFonts = "Fonty na této stránce"
 allFonts = "Všechny fonty"
-fallback = "náhradní"
+fallback = "fallback"
 missing = "chybí"
 perfectMessage = "Všechny fonty lze reprodukovat dokonale."
 warningMessage = "Některé fonty se nemusí vykreslit správně."
 infoMessage = "K dispozici jsou informace o reprodukci fontů."
-perfect = "dokonalé"
-subset = "podmnožina"
+perfect = "perfect"
+subset = "subset"
 
 [pdfTextEditor.errors]
 invalidJson = "Nelze přečíst soubor JSON. Ujistěte se, že byl vytvořen nástrojem PDF to JSON."
@@ -6398,3 +6614,58 @@ title = "Výsledky přidání textu"
 
 [addText.error]
 failed = "Při přidávání textu do PDF došlo k chybě."
+
+[mobileUpload]
+title = "Nahrát z mobilu"
+description = "Naskenujte pro nahrání fotografií. Obrázky se automaticky převedou do PDF."
+descriptionNoConvert = "Naskenujte pro nahrání fotografií z mobilního zařízení."
+error = "Chyba připojení"
+pollingError = "Chyba při kontrole souborů"
+sessionId = "ID relace"
+sessionCreateError = "Nepodařilo se vytvořit relaci"
+expiryWarning = "Relace brzy vyprší"
+expiryWarningMessage = "Tento QR kód vyprší za {{seconds}} s. Nový kód bude vygenerován automaticky."
+filesReceived = "Přijato {{count}} soubor(ů)"
+connected = "Mobilní zařízení připojeno"
+instructions = "Naskenujte fotoaparátem telefonu. Obrázky se automaticky převedou do PDF."
+instructionsNoConvert = "Naskenujte fotoaparátem telefonu pro nahrání souborů."
+
+[mobileScanner]
+title = "Mobilní skener"
+noSession = "Neplatná relace"
+noSessionMessage = "Pro přístup na tuto stránku naskenujte platný QR kód."
+validating = "Ověřuje se relace..."
+sessionInvalid = "Chyba relace"
+sessionExpired = "Tato relace vypršela. Obnovte stránku a zkuste to znovu."
+sessionNotFound = "Relace nebyla nalezena. Obnovte stránku a zkuste to znovu."
+sessionValidationError = "Relaci se nepodařilo ověřit. Zkuste to prosím znovu."
+uploadSuccess = "Nahrávání úspěšné!"
+uploadSuccessMessage = "Vaše obrázky byly přeneseny."
+httpsRequired = "Přístup ke kameře vyžaduje HTTPS nebo localhost. Použijte prosím HTTPS nebo přístup přes localhost."
+uploadFailed = "Nahrávání se nezdařilo. Zkuste to prosím znovu."
+uploading = "Nahrává se..."
+connected = "Připojeno"
+connecting = "Připojuje se..."
+chooseMethod = "Zvolte způsob nahrávání"
+chooseMethodDescription = "Vyberte, jak chcete skenovat a nahrávat dokumenty"
+camera = "Fotoaparát"
+cameraDescription = "Skenujte dokumenty fotoaparátem zařízení s automatickou detekcí okrajů"
+fileUpload = "Nahrání souboru"
+fileDescription = "Nahrajte existující fotografie nebo dokumenty ze zařízení"
+cameraAccessDenied = "Přístup ke kameře odepřen. Povolte prosím přístup ke kameře."
+back = "Zpět"
+settings = "Nastavení"
+edgeDetection = "Detekce okrajů"
+flashlight = "Svítilna"
+flash = "Blesk"
+processing = "Zpracovává se..."
+capture = "Pořídit snímek"
+selectFilesPrompt = "Vyberte soubory k nahrání"
+selectImage = "Vybrat obrázek"
+preview = "Náhled"
+retake = "Znovu vyfotit"
+addToBatch = "Přidat do dávky"
+upload = "Nahrát"
+batchImages = "Dávka"
+clearBatch = "Vymazat"
+uploadAll = "Nahrát vše"
