@@ -1344,18 +1344,6 @@ tabletPhone = "Tablet/Phone (with images)"
 targetDevice = "Target device"
 targetDeviceDesc = "Choose an output profile optimized for the reader device"
 
-[convert.epubOptions]
-detectChapters = "Detect chapters"
-detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
-epubOptions = "PDF to eBook Options"
-epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
-kindleEink = "Kindle e-Ink (text optimized)"
-outputFormat = "Output format"
-outputFormatDesc = "Choose the output format for the ebook"
-tabletPhone = "Tablet/Phone (with images)"
-targetDevice = "Target device"
-targetDeviceDesc = "Choose an output profile optimized for the reader device"
-
 [imageToPdf]
 tags = "konvertierung,img,jpg,bild,foto"
 
