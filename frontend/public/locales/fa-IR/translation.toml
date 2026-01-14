@@ -1,8 +1,11 @@
 unsavedChanges = "شما تغییرات ذخیره‌نشده‌ای در PDF دارید."
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "مطمئنید می‌خواهید خارج شوید؟"
 unsavedChangesTitle = "تغییرات ذخیره‌نشده"
 keepWorking = "ادامه کار"
 discardChanges = "لغو تغییرات و خروج"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "ذخیره و خروج"
 exportAndContinue = "خروجی بگیرید و ادامه دهید"
 cancel = "انصراف"
@@ -364,6 +367,7 @@ advanced = "پیشرفته"
 title = "امنیت و احراز هویت"
 security = "امنیت"
 connections = "اتصالات"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "مجوزها و آنالیتیکس"
@@ -438,6 +442,13 @@ currentVersion = "نسخه فعلی"
 latestVersion = "آخرین نسخه"
 checkForUpdates = "بررسی به‌روزرسانی"
 viewDetails = "مشاهده جزئیات"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "Security"
@@ -528,6 +539,8 @@ accountSettings = "تنظیمات حساب"
 adminSettings = "تنظیمات ادمین - مشاهده و اضافه کردن کاربران"
 userControlSettings = "تنظیمات کنترل کاربران"
 changeUsername = "تغییر نام کاربری"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "نام کاربری جدید"
 password = "رمز عبور تأییدیه"
 oldPassword = "رمز عبور قدیمی"
@@ -963,6 +976,7 @@ desc = "افزودن متن دلخواه در هر جای PDF"
 addFiles = "افزودن فایل‌ها"
 uploadFromComputer = "بارگذاری از رایانه"
 openFromComputer = "باز کردن از رایانه"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "مشاهده،خواندن،حاشیه‌نویسی،متن،تصویر"
@@ -1293,6 +1307,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "تبدیل،عکس،jpg،تصویر،عکس"
@@ -3218,6 +3244,7 @@ title = "روش پنهان‌سازی"
 mode = "حالت"
 automatic = "خودکار"
 automaticDesc = "پنهان‌سازی متن بر اساس عبارات جستجو"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "دستی"
 manualDesc = "برای پنهان‌سازی نواحی خاص کلیک و درگ کنید"
 manualComingSoon = "پنهان‌سازی دستی به‌زودی"
@@ -3288,8 +3315,35 @@ text = "فقط کلمات کامل را مطابقت می‌دهد، نه تطا
 title = "تبدیل به PDF-Image"
 text = "پس از پنهان‌سازی، PDF را به یک PDF مبتنی بر تصویر تبدیل می‌کند. این اطمینان می‌دهد که متن پشت کادرهای پنهان‌سازی کاملاً حذف و غیرقابل بازیابی شود."
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "پنهان‌سازی دستی"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "پنهان‌سازی مبتنی بر متن"
 pageBasedRedaction = "پنهان‌سازی مبتنی بر صفحه"
 convertPDFToImageLabel = "تبدیل PDF به PDF-Image (برای حذف متن پشت کادر استفاده می‌شود)"
@@ -4077,11 +4131,16 @@ language = "زبان"
 toggleAnnotations = "تغییر وضعیت نمایش حاشیه‌نویسی‌ها"
 search = "جستجوی PDF"
 panMode = "حالت پیمایش"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "چرخش به چپ"
 rotateRight = "چرخش به راست"
 toggleSidebar = "تغییر وضعیت نوار کناری"
 toggleBookmarks = "نمایش/پنهان‌کردن نشانک‌ها"
 print = "چاپ PDF"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
 downloadAll = "دانلود همه"
 saveAll = "ذخیره همه"
 
@@ -4155,6 +4214,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "جستجوی PDF"
@@ -4237,6 +4297,8 @@ fetchError = "بارگذاری تنظیمات ناموفق بود"
 saveError = "ذخیره تنظیمات ناموفق بود"
 saved = "تنظیمات با موفقیت ذخیره شد"
 saveSuccess = "تنظیمات با موفقیت ذخیره شد"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "ذخیره تغییرات"
 discard = "نادیده گرفتن"
 restartRequired = "نیاز به راه‌اندازی مجدد"
@@ -4359,6 +4421,13 @@ description = "مسیر فایل اجرایی WeasyPrint برای تبدیل HTM
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "فایل اجرایی Unoconvert"
 description = "مسیر LibreOffice unoconvert برای تبدیل اسناد (خالی بگذارید برای پیش‌فرض: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "امنیت"
@@ -4496,6 +4565,19 @@ connect = "اتصال"
 disconnect = "قطع اتصال"
 disconnected = "ارائه‌دهنده با موفقیت قطع شد"
 disconnectError = "قطع ارتباط ارائه‌دهنده ناموفق بود"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "ورود خودکار SSO"
@@ -4563,6 +4645,122 @@ description = "ایجاد خودکار حساب کاربری در اولین و�
 [admin.settings.connections.saml2.blockRegistration]
 label = "مسدود کردن ثبت‌نام"
 description = "جلوگیری از ثبت‌نام کاربر جدید از طریق SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Show \"No valid document\" (Channel)"
+description = "Suppress the no valid document response for channel uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Show processing errors (Channel)"
+description = "Send processing error messages to channels."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Show error messages (Channel)"
+description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Show \"No valid document\" (User)"
+description = "Suppress the no valid document response for user uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Show processing errors (User)"
+description = "Send processing error messages to users."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Show error messages (User)"
+description = "Show detailed error messages for users."
 
 [admin.settings.database]
 title = "پایگاه داده"
@@ -4744,6 +4942,10 @@ description = "اجازه به مدیران برای دعوت کاربران ا�
 [admin.settings.mail.frontendUrl]
 label = "URL فرانت‌اند"
 description = "URL پایه برای فرانت‌اند (مثلاً https://pdf.example.com). برای ایجاد لینک دعوت در ایمیل‌ها استفاده می‌شود. برای استفاده از URL بک‌اند خالی بگذارید."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "اسناد حقوقی"
@@ -4929,6 +5131,9 @@ googleDriveShort = "Drive"
 myFiles = "فایل‌های من"
 noRecentFiles = "هیچ فایل اخیری یافت نشد"
 googleDriveNotAvailable = "یکپارچگی Google Drive در دسترس نیست"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "دانلود انتخاب‌شده‌ها"
 saveSelected = "ذخیره موارد انتخاب‌شده"
 openFiles = "باز کردن فایل‌ها"
@@ -5306,6 +5511,15 @@ warning = "⚠️ هشدار: این اقدام کلیدهای API جدیدی ا
 impact = "هر برنامه یا سرویسی که اکنون از این کلیدها استفاده می‌کند، تا زمانی که آن‌ها را با کلیدهای جدید به‌روزرسانی نکنید از کار خواهد افتاد."
 confirmPrompt = "مطمئنید می‌خواهید ادامه دهید؟"
 confirmCta = "تازه‌سازی کلیدها"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "انتخاب پیوست‌ها"
@@ -6156,6 +6370,7 @@ description = "URL کامل سرور خودمیزبان Stirling PDF خود را
 
 [setup.server.error]
 emptyUrl = "لطفاً URL سرور را وارد کنید"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "اتصال به سرور ممکن نشد"
 testFailed = "آزمون اتصال ناموفق بود"
 configFetch = "بازیابی پیکربندی سرور ناموفق بود. لطفاً URL را بررسی کنید و دوباره تلاش کنید."
@@ -6174,6 +6389,7 @@ connectingTo = "در حال اتصال به:"
 submit = "ورود"
 signInWith = "ورود با"
 oauthPending = "در حال باز کردن مرورگر برای احراز هویت..."
+sso = "Single Sign-On"
 orContinueWith = "یا با ایمیل ادامه دهید"
 serverRequirement = "توجه: سرور باید ورود را فعال کرده باشد."
 showInstructions = "نحوه فعال‌سازی؟"
@@ -6398,3 +6614,58 @@ title = "نتایج افزودن متن"
 
 [addText.error]
 failed = "هنگام افزودن متن به PDF خطایی رخ داد."
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"

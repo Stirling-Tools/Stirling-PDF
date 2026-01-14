@@ -1,8 +1,11 @@
 unsavedChanges = "您對 PDF 的變更尚未儲存。"
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "確定要離開嗎？"
 unsavedChangesTitle = "未儲存的變更"
 keepWorking = "繼續編輯"
 discardChanges = "捨棄並離開"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "儲存並離開"
 exportAndContinue = "匯出並繼續"
 cancel = "取消"
@@ -364,6 +367,7 @@ advanced = "進階"
 title = "安全性與身分驗證"
 security = "安全性"
 connections = "連線"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "授權與分析"
@@ -438,6 +442,13 @@ currentVersion = "目前版本"
 latestVersion = "最新版本"
 checkForUpdates = "檢查更新"
 viewDetails = "檢視詳細資料"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "Security"
@@ -528,6 +539,8 @@ accountSettings = "帳號設定"
 adminSettings = "管理員設定 - 檢視和新增使用者"
 userControlSettings = "使用者控制設定"
 changeUsername = "修改使用者名稱"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "新使用者名稱"
 password = "確認密碼"
 oldPassword = "舊密碼"
@@ -963,6 +976,7 @@ desc = "在 PDF 的任意位置新增自訂文字"
 addFiles = "新增檔案"
 uploadFromComputer = "從電腦上傳"
 openFromComputer = "從電腦開啟"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "檢視,閱讀,註釋,文字,圖片"
@@ -1293,6 +1307,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "轉換,img,jpg,圖片,照片"
@@ -3218,6 +3244,7 @@ title = "遮蔽方式"
 mode = "模式"
 automatic = "自動"
 automaticDesc = "根據搜尋詞遮蔽文字"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "手動"
 manualDesc = "點擊並拖曳以遮蔽特定區域"
 manualComingSoon = "即將推出手動遮蔽"
@@ -3288,8 +3315,35 @@ text = "只比對完整單字，不進行部分比對。啟用後『John』不�
 title = "轉為 PDF-Image"
 text = "遮蔽後將 PDF 轉為以影像為基礎的 PDF，確保遮蔽方框後方的文字完全移除且無法復原。"
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "手動遮蔽"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "文字式遮蔽"
 pageBasedRedaction = "以頁面為單位遮蔽"
 convertPDFToImageLabel = "將 PDF 轉為 PDF-Image（用於移除方框後方文字）"
@@ -4077,11 +4131,16 @@ language = "語言"
 toggleAnnotations = "切換註解可見度"
 search = "搜尋 PDF"
 panMode = "平移模式"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "向左旋轉"
 rotateRight = "向右旋轉"
 toggleSidebar = "切換側邊欄"
 toggleBookmarks = "切換書籤"
 print = "列印 PDF"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
 downloadAll = "全部下載"
 saveAll = "全部儲存"
 
@@ -4155,6 +4214,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "搜尋 PDF"
@@ -4237,6 +4297,8 @@ fetchError = "載入設定失敗"
 saveError = "儲存設定失敗"
 saved = "設定已成功儲存"
 saveSuccess = "設定已成功儲存"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "儲存變更"
 discard = "捨棄"
 restartRequired = "需要重新啟動"
@@ -4359,6 +4421,13 @@ description = "用於 HTML 轉 PDF 的 WeasyPrint 可執行檔路徑（留空使
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert 可執行檔"
 description = "用於文件轉換的 LibreOffice unoconvert 路徑（留空使用預設：/opt/venv/bin/unoconvert）"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "安全性"
@@ -4496,6 +4565,19 @@ connect = "連線"
 disconnect = "中斷連線"
 disconnected = "已成功中斷提供者的連線"
 disconnectError = "無法中斷提供者的連線"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO 自動登入"
@@ -4563,6 +4645,122 @@ description = "首次以 SAML2 登入時自動建立使用者帳戶"
 [admin.settings.connections.saml2.blockRegistration]
 label = "阻止註冊"
 description = "阻止透過 SAML2 註冊新使用者"
+
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Show \"No valid document\" (Channel)"
+description = "Suppress the no valid document response for channel uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Show processing errors (Channel)"
+description = "Send processing error messages to channels."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Show error messages (Channel)"
+description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Show \"No valid document\" (User)"
+description = "Suppress the no valid document response for user uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Show processing errors (User)"
+description = "Send processing error messages to users."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Show error messages (User)"
+description = "Show detailed error messages for users."
 
 [admin.settings.database]
 title = "資料庫"
@@ -4744,6 +4942,10 @@ description = "允許管理員透過電子郵件邀請使用者，並自動產�
 [admin.settings.mail.frontendUrl]
 label = "前端 URL"
 description = "前端的基底 URL（例如：https://pdf.example.com）。用於在電子郵件中產生邀請連結。留空則使用後端 URL。"
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "法律文件"
@@ -4929,6 +5131,9 @@ googleDriveShort = "雲端硬碟"
 myFiles = "我的檔案"
 noRecentFiles = "找不到最近的檔案"
 googleDriveNotAvailable = "無法使用 Google Drive 整合"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "下載所選"
 saveSelected = "儲存已選"
 openFiles = "開啟檔案"
@@ -5306,6 +5511,15 @@ warning = "⚠️ 警告：此動作將產生新的 API 金鑰，並使您先前
 impact = "任何目前使用這些金鑰的應用程式或服務都會停止運作，直到您更新為新金鑰。"
 confirmPrompt = "確定要繼續嗎？"
 confirmCta = "重新產生金鑰"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "選擇附件"
@@ -6156,6 +6370,7 @@ description = "輸入你自託管 Stirling PDF 伺服器的完整 URL"
 
 [setup.server.error]
 emptyUrl = "請輸入伺服器 URL"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "無法連線至伺服器"
 testFailed = "連線測試失敗"
 configFetch = "無法擷取伺服器組態。請檢查 URL 後再試一次。"
@@ -6174,6 +6389,7 @@ connectingTo = "正在連線到："
 submit = "登入"
 signInWith = "以此登入"
 oauthPending = "正在開啟瀏覽器進行驗證..."
+sso = "Single Sign-On"
 orContinueWith = "或改用 Email 繼續"
 serverRequirement = "注意：伺服器必須啟用登入功能。"
 showInstructions = "如何啟用？"
@@ -6398,3 +6614,58 @@ title = "新增文字結果"
 
 [addText.error]
 failed = "將文字新增到 PDF 時發生錯誤。"
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"

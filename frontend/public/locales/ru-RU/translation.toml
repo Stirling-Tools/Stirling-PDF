@@ -1,8 +1,11 @@
 unsavedChanges = "У вас есть несохранённые изменения в вашем PDF. Что вы хотите сделать?"
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "Вы уверены, что хотите уйти?"
 unsavedChangesTitle = "Несохранённые изменения"
 keepWorking = "Продолжить работу"
 discardChanges = "Отменить изменения"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "Применить и продолжить"
 exportAndContinue = "Экспорт и продолжить"
 cancel = "Отмена"
@@ -364,6 +367,7 @@ advanced = "Дополнительно"
 title = "Безопасность и аутентификация"
 security = "Безопасность"
 connections = "Подключения"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Лицензирование и аналитика"
@@ -438,6 +442,13 @@ currentVersion = "Текущая версия"
 latestVersion = "Последняя версия"
 checkForUpdates = "Проверить обновления"
 viewDetails = "Подробнее"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "Security"
@@ -528,6 +539,8 @@ accountSettings = "Настройки аккаунта"
 adminSettings = "Настройки администратора - Просмотр и добавление пользователей"
 userControlSettings = "Настройки управления пользователями"
 changeUsername = "Изменить имя пользователя"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "Новое имя пользователя"
 password = "Пароль подтверждения"
 oldPassword = "Старый пароль"
@@ -963,6 +976,7 @@ desc = "Добавьте произвольный текст в ваш PDF"
 addFiles = "Добавить файлы"
 uploadFromComputer = "Загрузить с компьютера"
 openFromComputer = "Открыть с компьютера"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "просмотр,чтение,аннотации,текст,изображение"
@@ -1293,6 +1307,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "конвертация,изображение,jpg,картинка,фото"
@@ -3218,6 +3244,7 @@ title = "Метод редактирования"
 mode = "Режим"
 automatic = "Автоматически"
 automaticDesc = "Скрывать текст на основе поисковых терминов"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "Вручную"
 manualDesc = "Щёлкните и тяните, чтобы скрыть выбранные области"
 manualComingSoon = "Ручная редакция скоро появится"
@@ -3288,8 +3315,35 @@ text = "Совпадать только с целыми словами, не с 
 title = "Преобразовать в PDF-изображение"
 text = "Преобразует PDF в основанный на изображениях после сокрытия. Это гарантирует, что текст за рамками полностью удалён и невосстановим."
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "Ручная редакция"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "Сокрытие по тексту"
 pageBasedRedaction = "Сокрытие по страницам"
 convertPDFToImageLabel = "Преобразовать PDF в PDF-изображение (для удаления текста за рамкой)"
@@ -4077,11 +4131,16 @@ language = "Язык"
 toggleAnnotations = "Показать/скрыть аннотации"
 search = "Поиск по PDF"
 panMode = "Режим панорамирования"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "Повернуть влево"
 rotateRight = "Повернуть вправо"
 toggleSidebar = "Показать/скрыть боковую панель"
 toggleBookmarks = "Показать/скрыть закладки"
 print = "Печать PDF"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
 downloadAll = "Скачать все"
 saveAll = "Сохранить всё"
 
@@ -4155,6 +4214,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "Поиск по PDF"
@@ -4237,6 +4297,8 @@ fetchError = "Не удалось загрузить настройки"
 saveError = "Не удалось сохранить настройки"
 saved = "Настройки успешно сохранены"
 saveSuccess = "Настройки успешно сохранены"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "Сохранить изменения"
 discard = "Отменить"
 restartRequired = "Требуется перезапуск"
@@ -4359,6 +4421,13 @@ description = "Путь к исполняемому файлу WeasyPrint для
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Исполняемый файл Unoconvert"
 description = "Путь к LibreOffice unoconvert для конвертации документов (оставьте пустым по умолчанию: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "Безопасность"
@@ -4496,6 +4565,19 @@ connect = "Подключить"
 disconnect = "Отключить"
 disconnected = "Провайдер успешно отключен"
 disconnectError = "Не удалось отключить провайдера"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Автовход через SSO"
@@ -4563,6 +4645,122 @@ description = "Автоматически создавать учетные за
 [admin.settings.connections.saml2.blockRegistration]
 label = "Блокировать регистрацию"
 description = "Запретить регистрацию новых пользователей через SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Show \"No valid document\" (Channel)"
+description = "Suppress the no valid document response for channel uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Show processing errors (Channel)"
+description = "Send processing error messages to channels."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Show error messages (Channel)"
+description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Show \"No valid document\" (User)"
+description = "Suppress the no valid document response for user uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Show processing errors (User)"
+description = "Send processing error messages to users."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Show error messages (User)"
+description = "Show detailed error messages for users."
 
 [admin.settings.database]
 title = "База данных"
@@ -4744,6 +4942,10 @@ description = "Разрешить администраторам приглаш�
 [admin.settings.mail.frontendUrl]
 label = "URL фронтенда"
 description = "Базовый URL для фронтенда (например, https://pdf.example.com). Используется для генерации ссылок-приглашений в письмах. Оставьте пустым, чтобы использовать URL бэкенда."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Юридические документы"
@@ -4929,6 +5131,9 @@ googleDriveShort = "Диск"
 myFiles = "Мои файлы"
 noRecentFiles = "Недавние файлы не найдены"
 googleDriveNotAvailable = "Интеграция с Google Drive недоступна"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "Скачать выбранные"
 saveSelected = "Сохранить выбранные"
 openFiles = "Открыть файлы"
@@ -5306,6 +5511,15 @@ warning = "⚠️ Внимание: это действие сгенерируе
 impact = "Любые приложения или сервисы, использующие эти ключи, перестанут работать, пока вы не обновите их новыми ключами."
 confirmPrompt = "Вы уверены, что хотите продолжить?"
 confirmCta = "Обновить ключи"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "Выбор вложений"
@@ -6156,6 +6370,7 @@ description = "Введите полный URL вашего self-hosted серв
 
 [setup.server.error]
 emptyUrl = "Введите URL сервера"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "Не удалось подключиться к серверу"
 testFailed = "Тест подключения не пройден"
 configFetch = "Не удалось получить конфигурацию сервера. Проверьте URL и попробуйте ещё раз."
@@ -6174,6 +6389,7 @@ connectingTo = "Подключение к:"
 submit = "Войти"
 signInWith = "Войти через"
 oauthPending = "Открываем браузер для аутентификации..."
+sso = "Single Sign-On"
 orContinueWith = "Или продолжить по email"
 serverRequirement = "Примечание: на сервере должен быть включён вход в систему."
 showInstructions = "Как включить?"
@@ -6398,3 +6614,58 @@ title = "Результаты добавления текста"
 
 [addText.error]
 failed = "Произошла ошибка при добавлении текста в PDF."
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"

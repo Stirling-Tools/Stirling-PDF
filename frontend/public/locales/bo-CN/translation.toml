@@ -1,8 +1,11 @@
 unsavedChanges = "ཁྱེད་རང་ལ་ཁྱེད་རང་གི་PDFལ་འགྱུར་བ་མེད་པའི་འགྱུར་བ་ཡོད།"
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "ཁྱེད་རང་འགྲོ་འདོད་ཡོད་དམ།"
 unsavedChangesTitle = "གསོག་འཇོག་མེད་པའི་འགྱུར་བ།"
 keepWorking = "མུ་མཐུད་དུ་ལས་ཀ་བྱེད་པ།"
 discardChanges = "འདོར་བཞག་དང་ཕྱིར་འབུད།"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "སྲུང་དང་ཕྱིར་འབུད།"
 exportAndContinue = "ཕྱིར་གཏོང་དང་མུ་མཐུད་པ།"
 cancel = "འདོར་བ"
@@ -364,6 +367,7 @@ advanced = "ཡན་ཐོན་ཅན"
 title = "བདེ་འཇགས་དང་བདེན་དཔང་།"
 security = "ཉེན་སྲུང"
 connections = "འབྲེལ་མཐུད།"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "ཆོག་མཆན་དང་དབྱེ་ཞིབ།"
@@ -438,6 +442,13 @@ currentVersion = "ད་ལྟའི་ཐོན་རིམ།"
 latestVersion = "ཐོན་རིམ་གསར་ཤོས།"
 checkForUpdates = "གསར་བརྗེ་ལ་ཞིབ་བཤེར།"
 viewDetails = "ཞིབ་ཕྲའི་གནས་ཚུལ་ལ་ལྟོས།"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "ཉེན་སྲུང"
@@ -528,6 +539,8 @@ accountSettings = "རྩིས་ཁྲ་སྒྲིག་སྟངས།"
 adminSettings = "འཛིན་སྐྱོང་སྒྲིག་སྟངས། - བེད་སྤྱོད་བྱེད་མཁན་ལ་ལྟ་བ་དང་ཁ་སྣོན་བྱེད།"
 userControlSettings = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་སྟངས།"
 changeUsername = "སྤྱོད་མཁན་གྱི་མིང་བསྒྱུར་བ།"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "བཀོལ་སྤྱོད་མིང་གསར་པ།"
 password = "གཏན་འཁེལ་གྱི་གསང་གྲངས།"
 oldPassword = "གསང་གྲངས་རྙིང་པ།"
@@ -963,6 +976,7 @@ desc = "ཁྱེད་རང་གི་PDFནང་དུ་ས་ཆ་གང
 addFiles = "ཡིག་ཆ་ཁ་སྣོན་བྱེད།"
 uploadFromComputer = "གློག་ཀླད་ནས་ཡར་བླངས།"
 openFromComputer = "གློག་ཀླད་ནས་ཁ་ཕྱེ་བ།"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "མཐོང་སྣང་། ཀློག་པ། མཆན་འགྲེལ། ཚིག་ཕྲན། པར་རིས་དང་། འོད་མདངས།"
@@ -1293,6 +1307,18 @@ includePageNumbers = "ཤོག་ངོས་ཨང་རྟགས་བཀོ�
 includePageNumbersDesc = "ཐོན་པའི་PDFལ་ཤོག་ངོས་ཨང་གྲངས་ཁ་སྣོན་བྱེད།"
 optimizeForEbookPdf = "གློག་དེབ་ཀློག་མཁན་ལ་ལེགས་སྒྲིག་བྱེད་པ།"
 optimizeForEbookPdfDesc = "གློག་རྡུལ་དེབ་ཀྱི་ཀློག་ཆེད་དུ་PDFལེགས་བཅོས་བྱེད།"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "སྒྱུར་བཅོས། ཨམ་གྷི་,jpg, པར་རིས། པར་རིས།"
@@ -3218,6 +3244,7 @@ title = "དཔེ་བཟོ་ཐབས་ལམ།"
 mode = "ཐབས་ལམ།"
 automatic = "རང་འགུལ་ཅན།"
 automaticDesc = "འཚོལ་ཞིབ་ཐ་སྙད་ལ་བརྟེན་པའི་ཚིག་ཡིག་གསར་བརྗེ།"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "ལག་བཟོས"
 manualDesc = "བྱེ་བྲག་གི་ས་ཁུལ་བཅོས་སྒྲིག་བྱེད་པར་སྣུན་ནས་འདྲུད་པ།"
 manualComingSoon = "ལག་ཐོག་བསྐྱར་བཟོ་མགྱོགས་པོ་ཡོང་གི་རེད།"
@@ -3288,8 +3315,35 @@ text = "མིང་ཚིག་ཆ་ཚང་དང་མཐུན་པ་མ
 title = "PDF-Image ལ་སྒྱུར་བ།"
 text = "བསྐྱར་སྒྲིག་བྱས་རྗེས་PDFདེ་པར་རིས་ལ་གཞི་བཅོལ་བའི་PDFལ་སྒྱུར་བ། འདིས་བསྐྱར་བཟོ་སྒྲོམ་གྱི་རྒྱབ་ལྗོངས་ཀྱི་ཡིག་ཆ་ཆ་ཚང་མེད་པར་བཟོས་པ་དང་བསྐྱར་ལེན་བྱེད་མི་ཐུབ་པ་འགན་ལེན་བྱེད།"
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "ལག་དེབ་བསྐྱར་བཟོ།"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "ཡིག་ཚགས་ལ་བརྟེན་པའི་གསར་བརྗེ།"
 pageBasedRedaction = "ཤོག་ངོས་ལ་བརྟེན་པའི་བསྐྱར་བཟོ།"
 convertPDFToImageLabel = "PDF ལ་PDF-Image ལ་སྒྱུར་དགོས།"
@@ -4077,11 +4131,16 @@ language = "སྐད་རིགས"
 toggleAnnotations = "བསྒུལ་བསྒྱུར། མིང་ཚིག་མཐོང་ཐུབ་ཚད།"
 search = "འཚོལ་ཞིབ་PDF"
 panMode = "པན་ཐབས་ཀྱི་ཐབས་ལམ།"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "གཡོན་འཁོར་བ།"
 rotateRight = "གཡས་གཡོན་འཁོར་བ།"
 toggleSidebar = "བསྒྱུར་བའི་ཕྱོགས་བསྒྱུར།"
 toggleBookmarks = "བསྒྱུར་དེབ་ཀྱི་རྟགས་མཚན།"
 print = "པར་ཤུས་PDF"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
 downloadAll = "ཕབ་ལེན།"
 saveAll = "ཚང་མ་ཉར་ཚགས་བྱེད་པ།"
 
@@ -4155,6 +4214,7 @@ editSwitchToSelect = "མཆན་འདི་རྩོམ་སྒྲིག་�
 undo = "མེད་པ་བཟོ་བ།"
 redo = "བསྐྱར་དུ་བྱེད།"
 applyChanges = "འགྱུར་བ་འཇུག་པ།"
+saveChanges = "Save Changes"
 
 [search]
 title = "འཚོལ་ཞིབ་PDF"
@@ -4237,6 +4297,8 @@ fetchError = "དངོས་ཟོག་སྒྲིག་སྟངས་མ་
 saveError = "སྒྲིག་སྟངས་གསོག་མ་ཐུབ་པ།"
 saved = "སྒྲིག་སྟངས་ལེགས་འགྲུབ་བྱུང་བ།"
 saveSuccess = "སྒྲིག་སྟངས་ལེགས་འགྲུབ་བྱུང་བ།"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "འགྱུར་བ་སྲུང་བ།"
 discard = "འདོར་བ"
 restartRequired = "བསྐྱར་དུ་འགོ་འཛུགས་དགོས་པ།"
@@ -4359,6 +4421,13 @@ description = "HTMLནས་PDFབསྒྱུར་བའི་ཆེད་ད�
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "མེད་ཐབས་མེད་པ་ལག་བསྟར་བྱེད་ཐུབ།"
 description = "ཡིག་ཆ་སྒྱུར་བཀོད་ཀྱི་ཆེད་དུ་LibreOffice ནས་Oconcorvert (སྔོན་སྒྲིག་ཆེད་དུ་སྟོང་པར་བཞག་པ་: /opt/venv/bin/octurntert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "ཉེན་སྲུང"
@@ -4496,6 +4565,19 @@ connect = "འབྲེལ་བ"
 disconnect = "མཐུད་མཚམས་ཆད་པ།"
 disconnected = "མཁོ་སྤྲོད་བྱེད་མཁན་གྱིས་འབྲེལ་བ་ཆད་པ་ལེགས་འགྲུབ་བྱུང་བ།"
 disconnectError = "མཐུད་མཚམས་ཆད་མ་ཐུབ་པ།"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO རང་འགུལ་ནང་འཇུག།"
@@ -4563,6 +4645,122 @@ description = "རང་འགུལ་གྱིས་SAML2ནང་འཛུལ
 [admin.settings.connections.saml2.blockRegistration]
 label = "སྒོ་བརྒྱབ་པའི་ཐོ་འགོད་བྱེད་པ།"
 description = "SAML2 བརྒྱུད་ནས་སྤྱོད་མཁན་གྱི་ཐོ་འགོད་གསར་པ་འགོག་ཐུབ།"
+
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Show \"No valid document\" (Channel)"
+description = "Suppress the no valid document response for channel uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Show processing errors (Channel)"
+description = "Send processing error messages to channels."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Show error messages (Channel)"
+description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Show \"No valid document\" (User)"
+description = "Suppress the no valid document response for user uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Show processing errors (User)"
+description = "Send processing error messages to users."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Show error messages (User)"
+description = "Show detailed error messages for users."
 
 [admin.settings.database]
 title = "གཞི་གྲངས་རྟེན་གཞི།"
@@ -4744,6 +4942,10 @@ description = "བདག་སྐྱོང་བ་ཚོར་རང་འག�
 [admin.settings.mail.frontendUrl]
 label = "མདུན་གྱི་URL"
 description = "མདུན་གྱི་ཆེད་དུ་གཞི་རྩའི་URL (དཔེར་ན། https://pdf.example.com) གློག་འཕྲིན་ནང་གདན་ཞུའི་འབྲེལ་མཐུད་བཟོ་བར་བེད་སྤྱོད་བྱས། རྒྱབ་ཕྱོགས་ཀྱི་URLབེད་སྤྱོད་བྱེད་པར་སྟོང་པར་བཞག་རོགས།"
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "ཁྲིམས་ལུགས་ཡིག་ཆ།"
@@ -4929,6 +5131,9 @@ googleDriveShort = "བསྐོར་བ"
 myFiles = "ངའི་ཡིག་ཆ།"
 noRecentFiles = "ཉེ་ཆར་ཡིག་ཆ་གང་ཡང་མཐོང་མ་བྱུང་།"
 googleDriveNotAvailable = "གྷུ་གྷལ་སྒུལ་ཆས་གཅིག་སྒྲིལ་མེད་པ།"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "ཕབ་ལེན།"
 saveSelected = "ཉར་ཚགས་བྱས།"
 openFiles = "ཁ་ཕྱེ་བའི་ཡིག་ཆ།"
@@ -5306,6 +5511,15 @@ warning = "⚠️ ཉེན་བརྡ། བྱ་སྤྱོད་འདི�
 impact = "ལྡེ་མིག་འདི་དག་བེད་སྤྱོད་བྱེད་པའི་མཉེན་ཆས་དང་ཞབས་ཞུ་གང་རུང་གིས་ལྡེ་མིག་གསར་པ་དང་མཉམ་དུ་ཁ་སྐོང་མ་བྱེད་བར་དུ་ལས་ཀ་མཚམས་འཇོག་བྱེད།"
 confirmPrompt = "ཁྱེད་རང་མུ་མཐུད་འདོད་ཀྱི་ཡོད་དམ།"
 confirmCta = "གསར་བཅོས་ལྡེ་མིག་གསར་བ།"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "མཉམ་སྦྲེལ་འདེམས།"
@@ -6156,6 +6370,7 @@ description = "ཁྱེད་རང་གི་རང་ཉིད་ཀྱི�
 
 [setup.server.error]
 emptyUrl = "སར་བར་གྱི་URLནང་འཇུག་གནང་རོགས།"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "སར་བར་མཐུད་མི་ཐུབ་པ།"
 testFailed = "འབྲེལ་མཐུད་ཚོད་ལྟ་དེ་ལམ་ལྷོང་མ་བྱུང་།"
 configFetch = "སར་བར་གྱི་བཀོད་སྒྲིག་ལེན་མ་ཐུབ་པ། URL ལ་ལྟ་ཞིབ་བྱས་ནས་བསྐྱར་དུ་ཚོད་ལྟ་གནང་རོགས།"
@@ -6174,6 +6389,7 @@ connectingTo = "མཐུད་པ་སྟེ།"
 submit = "ནང་འཇུག"
 signInWith = "ནང་དུ་ཞུགས་པ།"
 oauthPending = "བདེན་དཔང་ཆེད་དུ་དྲ་ངོས་ཁ་ཕྱེ་བ།..."
+sso = "Single Sign-On"
 orContinueWith = "ཡང་ན་མུ་མཐུད་དུ་གློག་འཕྲིན་བརྒྱུད་ནས།"
 serverRequirement = "དྲན་ཐོ། སར་བར་ལ་ནང་འཇུག་ལག་བསྟར་བྱེད་དགོས།"
 showInstructions = "ཇི་ལྟར་བྱེད་ཐབས་ཡོད་དམ།"
@@ -6398,3 +6614,58 @@ title = "ཡིག་འབྲུའི་གྲུབ་འབྲས་ཁ་�
 
 [addText.error]
 failed = "ཡིག་ཆ་PDFལ་ཁ་སྣོན་བྱེད་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"

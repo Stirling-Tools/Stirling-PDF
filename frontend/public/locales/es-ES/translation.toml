@@ -1,8 +1,11 @@
 unsavedChanges = "Tiene cambios sin guardar en su PDF. ¿Qué le gustaría hacer?"
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "¿Seguro que quieres salir?"
 unsavedChangesTitle = "Cambios sin Guardar"
 keepWorking = "Seguir trabajando"
 discardChanges = "Descartar cambios"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "Aplicar y continuar"
 exportAndContinue = "Exportar y continuar"
 cancel = "Cancelar"
@@ -364,6 +367,7 @@ advanced = "Avanzado"
 title = "Seguridad y autenticación"
 security = "Seguridad"
 connections = "Conexiones"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licencias y analítica"
@@ -438,6 +442,13 @@ currentVersion = "Versión actual"
 latestVersion = "Última versión"
 checkForUpdates = "Buscar actualizaciones"
 viewDetails = "Ver detalles"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "Security"
@@ -528,6 +539,8 @@ accountSettings = "Configuración de la cuenta"
 adminSettings = "Configuración de Administrador - Ver y Añadir Usuarios"
 userControlSettings = "Configuración de control de usuario"
 changeUsername = "Cambiar nombre de usuario"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "nuevo nombre de usuario"
 password = "Confirmar contraseña"
 oldPassword = "Contraseña anterior"
@@ -963,6 +976,7 @@ desc = "Añada texto personalizado en cualquier parte del PDF"
 addFiles = "Agregar Archivos"
 uploadFromComputer = "Cargar desde el ordenador"
 openFromComputer = "Abrir desde el ordenador"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "ver,leer,anotar,texto,imagen"
@@ -1293,6 +1307,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "conversión,img,jpg,imagen,fotografía"
@@ -3218,6 +3244,7 @@ title = "Método de Censura"
 mode = "Modo"
 automatic = "Automático"
 automaticDesc = "Censurar texto basándose en términos de búsqueda"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "Manual"
 manualDesc = "Haga clic y arrastre para censurar áreas específicas"
 manualComingSoon = "Censura manual próximamente"
@@ -3288,8 +3315,35 @@ text = "Solo coincide palabras completas, no coincidencias parciales. 'Juan' no 
 title = "Convertir a PDF-Imagen"
 text = "Convierte el PDF a un PDF basado en imagen después de la censura. Esto asegura que el texto detrás de las cajas de censura se elimine completamente y sea irrecuperable."
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "Censura Manual"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "Censura Basada en Texto"
 pageBasedRedaction = "Censura Basada en Páginas"
 convertPDFToImageLabel = "Convertir PDF a PDF-Imagen (Usado para eliminar texto detrás de la caja)"
@@ -4077,11 +4131,16 @@ language = "Idioma"
 toggleAnnotations = "Mostrar/ocultar anotaciones"
 search = "Buscar en PDF"
 panMode = "Modo de Desplazamiento"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "Rotar a la Izquierda"
 rotateRight = "Rotar a la Derecha"
 toggleSidebar = "Alternar Barra Lateral"
 toggleBookmarks = "Mostrar/ocultar marcadores"
 print = "Imprimir PDF"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
 downloadAll = "Descargar Todo"
 saveAll = "Guardar todo"
 
@@ -4155,6 +4214,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "Buscar PDF"
@@ -4237,6 +4297,8 @@ fetchError = "Error al cargar la configuración"
 saveError = "Error al guardar la configuración"
 saved = "Configuración guardada correctamente"
 saveSuccess = "Configuración guardada correctamente"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "Guardar cambios"
 discard = "Descartar"
 restartRequired = "Se requiere reiniciar"
@@ -4359,6 +4421,13 @@ description = "Ruta al ejecutable de WeasyPrint para la conversión de HTML a PD
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Ejecutable de Unoconvert"
 description = "Ruta a LibreOffice unoconvert para conversiones de documentos (dejar vacío para el valor predeterminado: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "Seguridad"
@@ -4496,6 +4565,19 @@ connect = "Conectar"
 disconnect = "Desconectar"
 disconnected = "Proveedor desconectado correctamente"
 disconnectError = "No se pudo desconectar el proveedor"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Inicio de sesión automático SSO"
@@ -4563,6 +4645,122 @@ description = "Crear cuentas de usuario automáticamente en el primer inicio de 
 [admin.settings.connections.saml2.blockRegistration]
 label = "Bloquear el registro"
 description = "Evitar el registro de nuevos usuarios mediante SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Show \"No valid document\" (Channel)"
+description = "Suppress the no valid document response for channel uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Show processing errors (Channel)"
+description = "Send processing error messages to channels."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Show error messages (Channel)"
+description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Show \"No valid document\" (User)"
+description = "Suppress the no valid document response for user uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Show processing errors (User)"
+description = "Send processing error messages to users."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Show error messages (User)"
+description = "Show detailed error messages for users."
 
 [admin.settings.database]
 title = "Base de datos"
@@ -4744,6 +4942,10 @@ description = "Permitir a los administradores invitar usuarios por correo con co
 [admin.settings.mail.frontendUrl]
 label = "URL del frontend"
 description = "URL base del frontend (p. ej. https://pdf.example.com). Se usa para generar enlaces de invitación en emails. Deja vacío para usar la URL del backend."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Documentos legales"
@@ -4929,6 +5131,9 @@ googleDriveShort = "Drive"
 myFiles = "Mis Archivos"
 noRecentFiles = "No se encontraron archivos recientes"
 googleDriveNotAvailable = "Integración con Google Drive no disponible"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "Descargar Seleccionados"
 saveSelected = "Guardar seleccionados"
 openFiles = "Abrir Archivos"
@@ -5306,6 +5511,15 @@ warning = "⚠️ Advertencia: Esta acción generará nuevas claves API y hará 
 impact = "Cualquier aplicación o servicio que esté utilizando actualmente estas claves dejará de funcionar hasta que las actualice con las nuevas claves."
 confirmPrompt = "¿Está seguro de que desea continuar?"
 confirmCta = "Actualizar Claves"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "Seleccionar archivos adjuntos"
@@ -6156,6 +6370,7 @@ description = "Introduzca la URL completa de su servidor autoalojado de Stirling
 
 [setup.server.error]
 emptyUrl = "Introduzca una URL de servidor"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "No se pudo conectar con el servidor"
 testFailed = "Falló la prueba de conexión"
 configFetch = "No se pudo obtener la configuración del servidor. Compruebe la URL e inténtelo de nuevo."
@@ -6174,6 +6389,7 @@ connectingTo = "Conectando a:"
 submit = "Iniciar sesión"
 signInWith = "Iniciar sesión con"
 oauthPending = "Abriendo el navegador para autenticación..."
+sso = "Single Sign-On"
 orContinueWith = "O continuar con email"
 serverRequirement = "Nota: el servidor debe tener el inicio de sesión habilitado."
 showInstructions = "¿Cómo habilitarlo?"
@@ -6398,3 +6614,58 @@ title = "Resultados de añadir texto"
 
 [addText.error]
 failed = "Se produjo un error al añadir texto al PDF."
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"

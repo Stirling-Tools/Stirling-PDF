@@ -1,8 +1,11 @@
 unsavedChanges = "Έχετε μη αποθηκευμένες αλλαγές στο PDF σας."
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "Είστε βέβαιοι ότι θέλετε να αποχωρήσετε;"
 unsavedChangesTitle = "Μη αποθηκευμένες αλλαγές"
 keepWorking = "Συνέχεια εργασίας"
 discardChanges = "Απόρριψη & Έξοδος"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "Αποθήκευση & Έξοδος"
 exportAndContinue = "Εξαγωγή & Συνέχεια"
 cancel = "Άκυρο"
@@ -364,6 +367,7 @@ advanced = "Προχωρημένα"
 title = "Ασφάλεια & Αυθεντικοποίηση"
 security = "Ασφάλεια"
 connections = "Συνδέσεις"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Άδειες & Αναλύσεις"
@@ -438,6 +442,13 @@ currentVersion = "Τρέχουσα έκδοση"
 latestVersion = "Νεότερη έκδοση"
 checkForUpdates = "Έλεγχος για ενημερώσεις"
 viewDetails = "Προβολή λεπτομερειών"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "Security"
@@ -528,6 +539,8 @@ accountSettings = "Ρυθμίσεις λογαριασμού"
 adminSettings = "Ρυθμίσεις διαχειριστή - Προβολή και προσθήκη χρηστών"
 userControlSettings = "Ρυθμίσεις ελέγχου χρηστών"
 changeUsername = "Αλλαγή ονόματος χρήστη"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "Νέο όνομα χρήστη"
 password = "Κωδικός επιβεβαίωσης"
 oldPassword = "Παλιός κωδικός"
@@ -963,6 +976,7 @@ desc = "Προσθέστε προσαρμοσμένο κείμενο οπουδ�
 addFiles = "Προσθήκη αρχείων"
 uploadFromComputer = "Μεταφόρτωση από υπολογιστή"
 openFromComputer = "Άνοιγμα από τον υπολογιστή"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "προβολή,ανάγνωση,σχολιασμός,κείμενο,εικόνα"
@@ -1293,6 +1307,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "μετατροπή,εικόνα,jpg,φωτογραφία"
@@ -3218,6 +3244,7 @@ title = "Μέθοδος απόκρυψης"
 mode = "Λειτουργία"
 automatic = "Αυτόματη"
 automaticDesc = "Απόκρυψη κειμένου βάσει όρων αναζήτησης"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "Χειροκίνητη"
 manualDesc = "Κάντε κλικ και σύρετε για να αποκρύψετε συγκεκριμένες περιοχές"
 manualComingSoon = "Η χειροκίνητη απόκρυψη σύντομα διαθέσιμη"
@@ -3288,8 +3315,35 @@ text = "Ταιριάζει μόνο πλήρεις λέξεις, όχι μερι
 title = "Μετατροπή σε PDF-Image"
 text = "Μετατρέπει το PDF σε PDF βασισμένο σε εικόνα μετά την απόκρυψη. Αυτό διασφαλίζει ότι το κείμενο πίσω από τα πλαίσια απόκρυψης αφαιρείται πλήρως και δεν είναι ανακτήσιμο."
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "Χειροκίνητη απόκρυψη"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "Απόκρυψη βάσει κειμένου"
 pageBasedRedaction = "Απόκρυψη βάσει σελίδας"
 convertPDFToImageLabel = "Μετατροπή PDF σε PDF-Image (Χρησιμοποιείται για την αφαίρεση κειμένου πίσω από το πλαίσιο)"
@@ -4077,11 +4131,16 @@ language = "Γλώσσα"
 toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
 search = "Αναζήτηση PDF"
 panMode = "Λειτουργία μετακίνησης"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "Περιστροφή αριστερά"
 rotateRight = "Περιστροφή δεξιά"
 toggleSidebar = "Εναλλαγή πλευρικής γραμμής"
 toggleBookmarks = "Εναλλαγή σελιδοδεικτών"
 print = "Εκτύπωση PDF"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
 downloadAll = "Λήψη όλων"
 saveAll = "Αποθήκευση όλων"
 
@@ -4155,6 +4214,7 @@ editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 undo = "Undo"
 redo = "Redo"
 applyChanges = "Apply Changes"
+saveChanges = "Save Changes"
 
 [search]
 title = "Αναζήτηση στο PDF"
@@ -4237,6 +4297,8 @@ fetchError = "Αποτυχία φόρτωσης ρυθμίσεων"
 saveError = "Αποτυχία αποθήκευσης ρυθμίσεων"
 saved = "Οι ρυθμίσεις αποθηκεύτηκαν με επιτυχία"
 saveSuccess = "Οι ρυθμίσεις αποθηκεύτηκαν με επιτυχία"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "Αποθήκευση αλλαγών"
 discard = "Απόρριψη"
 restartRequired = "Απαιτείται επανεκκίνηση"
@@ -4359,6 +4421,13 @@ description = "Διαδρομή προς το εκτελέσιμο WeasyPrint γ
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Εκτελέσιμο Unoconvert"
 description = "Διαδρομή προς το LibreOffice unoconvert για μετατροπές εγγράφων (αφήστε κενό για προεπιλογή: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "Ασφάλεια"
@@ -4496,6 +4565,19 @@ connect = "Σύνδεση"
 disconnect = "Αποσύνδεση"
 disconnected = "Ο πάροχος αποσυνδέθηκε με επιτυχία"
 disconnectError = "Αποτυχία αποσύνδεσης παρόχου"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Αυτόματη σύνδεση SSO"
@@ -4563,6 +4645,122 @@ description = "Αυτόματη δημιουργία λογαριασμών χρ
 [admin.settings.connections.saml2.blockRegistration]
 label = "Αποκλεισμός εγγραφής"
 description = "Αποτροπή εγγραφής νέων χρηστών μέσω SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Show \"No valid document\" (Channel)"
+description = "Suppress the no valid document response for channel uploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Show processing errors (Channel)"
+description = "Send processing error messages to channels."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Show error messages (Channel)"
+description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Show \"No valid document\" (User)"
+description = "Suppress the no valid document response for user uploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Show processing errors (User)"
+description = "Send processing error messages to users."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Show error messages (User)"
+description = "Show detailed error messages for users."
 
 [admin.settings.database]
 title = "Βάση δεδομένων"
@@ -4744,6 +4942,10 @@ description = "Να επιτρέπεται στους διαχειριστές �
 [admin.settings.mail.frontendUrl]
 label = "URL front-end"
 description = "Βασικό URL για το frontend (π.χ. https://pdf.example.com). Χρησιμοποιείται για τη δημιουργία συνδέσμων πρόσκλησης στα email. Αφήστε κενό για χρήση του backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Νομικά έγγραφα"
@@ -4929,6 +5131,9 @@ googleDriveShort = "Drive"
 myFiles = "Τα αρχεία μου"
 noRecentFiles = "Δεν βρέθηκαν πρόσφατα αρχεία"
 googleDriveNotAvailable = "Η ενσωμάτωση με το Google Drive δεν είναι διαθέσιμη"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "Λήψη επιλεγμένων"
 saveSelected = "Αποθήκευση επιλεγμένων"
 openFiles = "Άνοιγμα αρχείων"
@@ -5306,6 +5511,15 @@ warning = "⚠️ Προειδοποίηση: Αυτή η ενέργεια θα 
 impact = "Οποιαδήποτε εφαρμογή ή υπηρεσία χρησιμοποιεί αυτά τα κλειδιά θα σταματήσει να λειτουργεί μέχρι να τα ενημερώσετε με τα νέα."
 confirmPrompt = "Είστε βέβαιοι ότι θέλετε να συνεχίσετε;"
 confirmCta = "Ανανέωση κλειδιών"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "Επιλογή συνημμένων"
@@ -6156,6 +6370,7 @@ description = "Εισαγάγετε το πλήρες URL του self-hosted δ�
 
 [setup.server.error]
 emptyUrl = "Εισαγάγετε URL διακομιστή"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "Αδυναμία σύνδεσης με τον διακομιστή"
 testFailed = "Αποτυχία ελέγχου σύνδεσης"
 configFetch = "Αποτυχία ανάκτησης της διαμόρφωσης του διακομιστή. Ελέγξτε το URL και δοκιμάστε ξανά."
@@ -6174,6 +6389,7 @@ connectingTo = "Σύνδεση με:"
 submit = "Σύνδεση"
 signInWith = "Σύνδεση με"
 oauthPending = "Άνοιγμα προγράμματος περιήγησης για έλεγχο ταυτότητας..."
+sso = "Single Sign-On"
 orContinueWith = "Ή συνεχίστε με email"
 serverRequirement = "Σημείωση: Ο διακομιστής πρέπει να έχει ενεργοποιημένη τη σύνδεση."
 showInstructions = "Πώς ενεργοποιείται;"
@@ -6398,3 +6614,58 @@ title = "Αποτελέσματα προσθήκης κειμένου"
 
 [addText.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκη κειμένου στο PDF."
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"
