@@ -74,7 +74,7 @@ export const accountService = {
   },
 
   async requestMfaSetup(): Promise<MfaSetupResponse> {
-    const response = await apiClient.get<MfaSetupResponse>('/api/v1/auth/mfa/setup');
+    const response = await apiClient.get<MfaSetupResponse>('/api/v1/auth/mfa/setup', { suppressErrorToast: true });
     return response.data;
   },
 

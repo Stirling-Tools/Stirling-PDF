@@ -482,6 +482,11 @@ const AccountSection: React.FC = () => {
             <Text size="sm" c="dimmed">
               {t('account.mfa.disableDescription', 'Enter a valid authentication code to disable two-factor authentication.')}
             </Text>
+            {mfaError && (
+              <Alert icon={<LocalIcon icon="error-rounded" width="1rem" height="1rem" />} color="red" variant="light">
+                {mfaError}
+              </Alert>
+            )}
             <TextInput
               label={t('account.mfa.codeLabel', 'Authentication code')}
               placeholder={t('account.mfa.codePlaceholder', 'Enter 6-digit code')}

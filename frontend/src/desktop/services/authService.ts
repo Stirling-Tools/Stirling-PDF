@@ -301,7 +301,7 @@ export class AuthService {
         const errMsg = rawMessage.toLowerCase();
 
         if (errMsg.includes('mfa_required')) {
-          // this.setAuthStatus('unauthenticated', null);
+          this.setAuthStatus('unauthenticated', null);
           console.error('[Desktop AuthService] Two-factor authentication required');
           throw new AuthServiceError('Two-factor code required.', 'mfa_required');
         }
@@ -492,10 +492,14 @@ export class AuthService {
         }
       );
 
-      const { token } = response.data;
+      const responseData = response.data as { access_token?: string; token?: string };
+      const refreshedToken = responseData.access_token || responseData.token;
+      if (!refreshedToken) {
+        throw new Error('Refresh response missing access token');
+      }
 
       // Save token to all storage locations
-      await this.saveTokenEverywhere(token);
+      await this.saveTokenEverywhere(refreshedToken);
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus('authenticated', userInfo);
