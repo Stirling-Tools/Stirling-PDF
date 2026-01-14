@@ -1,8 +1,11 @@
 unsavedChanges = "Bạn có thay đổi chưa lưu đối với PDF."
+pendingRedactionsTitle = "Bôi đen chưa áp dụng"
+pendingRedactions = "Bạn có các bôi đen chưa áp dụng và sẽ bị mất."
 areYouSure = "Bạn có chắc muốn rời đi không?"
 unsavedChangesTitle = "Thay đổi chưa lưu"
 keepWorking = "Tiếp tục làm việc"
 discardChanges = "Hủy và rời đi"
+discardRedactions = "Hủy và rời đi"
 applyAndContinue = "Lưu và rời đi"
 exportAndContinue = "Xuất và tiếp tục"
 cancel = "Hủy"
@@ -340,6 +343,10 @@ advance = "Nâng cao"
 edit = "Xem & Chỉnh sửa"
 popular = "Phổ biến"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Tùy chọn"
 
@@ -360,6 +367,7 @@ advanced = "Nâng cao"
 title = "Bảo mật & Xác thực"
 security = "Bảo mật"
 connections = "Kết nối"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Giấy phép & Phân tích"
@@ -434,6 +442,32 @@ currentVersion = "Phiên bản hiện tại"
 latestVersion = "Phiên bản mới nhất"
 checkForUpdates = "Kiểm tra cập nhật"
 viewDetails = "Xem chi tiết"
+serverNeedsUpdate = "Máy chủ cần được quản trị viên cập nhật"
+
+[settings.general.versionInfo]
+title = "Thông tin phiên bản"
+description = "Chi tiết phiên bản Desktop và máy chủ"
+desktop = "Phiên bản Desktop"
+server = "Phiên bản Máy chủ"
+
+[settings.security]
+title = "Bảo mật"
+description = "Cập nhật mật khẩu để giữ an toàn cho tài khoản của bạn."
+
+[settings.security.password]
+subtitle = "Đổi mật khẩu. Bạn sẽ bị đăng xuất sau khi cập nhật."
+required = "Tất cả các trường là bắt buộc."
+mismatch = "Mật khẩu mới không khớp."
+error = "Không thể cập nhật mật khẩu. Vui lòng xác minh mật khẩu hiện tại và thử lại."
+success = "Đã cập nhật mật khẩu thành công. Vui lòng đăng nhập lại."
+ssoDisabled = "Việc thay đổi mật khẩu do nhà cung cấp danh tính của bạn quản lý."
+current = "Mật khẩu hiện tại"
+currentPlaceholder = "Nhập mật khẩu hiện tại"
+new = "Mật khẩu mới"
+newPlaceholder = "Nhập mật khẩu mới"
+confirm = "Xác nhận mật khẩu mới"
+confirmPlaceholder = "Nhập lại mật khẩu mới"
+update = "Cập nhật mật khẩu"
 
 [settings.hotkeys]
 title = "Phím tắt"
@@ -488,11 +522,16 @@ low = "Thấp"
 title = "Thay đổi thông tin đăng nhập"
 header = "Cập nhật thông tin tài khoản của bạn"
 changePassword = "Bạn đang sử dụng thông tin đăng nhập mặc định. Vui lòng nhập mật khẩu mới"
+ssoManaged = "Tài khoản của bạn do nhà cung cấp danh tính quản lý."
 newUsername = "Tên người dùng mới"
 oldPassword = "Mật khẩu hiện tại"
 newPassword = "Mật khẩu mới"
 confirmNewPassword = "Xác nhận mật khẩu mới"
 submit = "Gửi thay đổi"
+credsUpdated = "Đã cập nhật tài khoản"
+description = "Đã lưu thay đổi. Vui lòng đăng nhập lại."
+error = "Không thể cập nhật tên người dùng. Vui lòng xác minh mật khẩu và thử lại."
+changeUsername = "Cập nhật tên người dùng. Bạn sẽ bị đăng xuất sau khi cập nhật."
 
 [account]
 title = "Cài đặt tài khoản"
@@ -500,6 +539,8 @@ accountSettings = "Cài đặt tài khoản"
 adminSettings = "Cài đặt quản trị - Xem và thêm người dùng"
 userControlSettings = "Cài đặt kiểm soát người dùng"
 changeUsername = "Thay đổi tên người dùng"
+changeUsernameDescription = "Cập nhật tên người dùng. Bạn sẽ bị đăng xuất sau khi cập nhật."
+newUsernamePlaceholder = "Nhập tên người dùng mới của bạn"
 newUsername = "Tên người dùng mới"
 password = "Mật khẩu xác nhận"
 oldPassword = "Mật khẩu cũ"
@@ -707,6 +748,11 @@ desc = "Phát hiện và chia ảnh đã quét thành các trang riêng"
 tags = "chữ ký,chữ ký tay"
 title = "Ký"
 desc = "Thêm chữ ký vào PDF bằng cách vẽ, văn bản hoặc hình ảnh"
+
+[home.annotate]
+tags = "chú thích,tô sáng,vẽ"
+title = "Chú thích"
+desc = "Tô sáng, vẽ, thêm ghi chú và hình dạng trong trình xem"
 
 [home.flatten]
 tags = "làm phẳng,loại bỏ,tương tác"
@@ -930,6 +976,7 @@ desc = "Thêm văn bản tùy chỉnh ở bất kỳ đâu trong PDF"
 addFiles = "Thêm tệp"
 uploadFromComputer = "Tải lên từ máy tính"
 openFromComputer = "Mở từ máy tính"
+mobileUpload = "Tải lên từ Di động"
 
 [viewPdf]
 tags = "xem,đọc,chú thích,văn bản,hình ảnh"
@@ -1245,6 +1292,33 @@ cbzOptions = "Tùy chọn CBZ sang PDF"
 optimizeForEbook = "Tối ưu PDF cho thiết bị đọc sách điện tử (dùng Ghostscript)"
 cbzOutputOptions = "Tùy chọn PDF sang CBZ"
 cbzDpi = "DPI cho kết xuất ảnh"
+cbrOptions = "Tùy chọn CBR"
+cbrOutputOptions = "Tùy chọn PDF sang CBR"
+cbrDpi = "DPI cho kết xuất hình ảnh"
+
+[convert.ebookOptions]
+ebookOptions = "Tùy chọn eBook sang PDF"
+ebookOptionsDesc = "Tùy chọn chuyển đổi eBook sang PDF"
+embedAllFonts = "Nhúng tất cả phông chữ"
+embedAllFontsDesc = "Nhúng mọi phông chữ từ eBook vào PDF được tạo"
+includeTableOfContents = "Bao gồm mục lục"
+includeTableOfContentsDesc = "Thêm mục lục được tạo vào PDF kết quả"
+includePageNumbers = "Bao gồm số trang"
+includePageNumbersDesc = "Thêm số trang vào PDF được tạo"
+optimizeForEbookPdf = "Tối ưu cho thiết bị đọc eBook"
+optimizeForEbookPdfDesc = "Tối ưu PDF cho việc đọc eBook (kích thước tệp nhỏ hơn, hiển thị tốt hơn trên thiết bị eInk)"
+
+[convert.epubOptions]
+epubOptions = "Tùy chọn PDF sang eBook"
+epubOptionsDesc = "Tùy chọn chuyển đổi PDF sang EPUB/AZW3"
+detectChapters = "Phát hiện chương"
+detectChaptersDesc = "Phát hiện các tiêu đề giống chương và chèn ngắt trang EPUB"
+targetDevice = "Thiết bị đích"
+targetDeviceDesc = "Chọn cấu hình đầu ra tối ưu cho thiết bị đọc"
+outputFormat = "Định dạng đầu ra"
+outputFormatDesc = "Chọn định dạng đầu ra cho ebook"
+tabletPhone = "Máy tính bảng/Điện thoại (có hình ảnh)"
+kindleEink = "Kindle e‑Ink (tối ưu văn bản)"
 
 [imageToPdf]
 tags = "chuyển đổi,img,jpg,hình ảnh,ảnh"
@@ -1361,6 +1435,11 @@ header = "Add attachments"
 add = "Thêm tệp đính kèm"
 remove = "Xóa tệp đính kèm"
 embed = "Nhúng tệp đính kèm"
+convertToPdfA3b = "Chuyển sang PDF/A-3b"
+convertToPdfA3bDescription = "Tạo PDF lưu trữ với tệp đính kèm được nhúng"
+convertToPdfA3bTooltip = "PDF/A-3b là định dạng lưu trữ đảm bảo bảo quản lâu dài. Nó cho phép nhúng các định dạng tệp bất kỳ dưới dạng tệp đính kèm. Chuyển đổi yêu cầu Ghostscript và có thể mất nhiều thời gian hơn với tệp lớn."
+convertToPdfA3bTooltipHeader = "Giới thiệu về chuyển đổi PDF/A-3b"
+convertToPdfA3bTooltipTitle = "Chức năng"
 submit = "Add attachments"
 
 [watermark]
@@ -2306,6 +2385,10 @@ saved = "Đã lưu"
 label = "Tải lên ảnh chữ ký"
 placeholder = "Chọn tệp hình ảnh"
 hint = "Tải lên ảnh chữ ký định dạng PNG hoặc JPG"
+removeBackground = "Xóa nền trắng (tạo trong suốt)"
+processing = "Đang xử lý hình ảnh..."
+backgroundRemovalFailedTitle = "Xóa nền thất bại"
+backgroundRemovalFailedMessage = "Không thể xóa nền khỏi hình ảnh. Sẽ dùng hình ảnh gốc."
 
 [sign.instructions]
 title = "Cách thêm chữ ký"
@@ -2350,6 +2433,11 @@ note = "Làm phẳng sẽ loại bỏ các thành phần tương tác khỏi PDF
 [flatten.options.flattenOnlyForms]
 label = "Chỉ làm phẳng biểu mẫu"
 desc = "Chỉ làm phẳng các trường biểu mẫu, giữ nguyên các thành phần tương tác khác"
+
+[flatten.renderDpi]
+label = "DPI kết xuất (tùy chọn, khuyến nghị 150 DPI)"
+help = "Để trống để dùng mặc định hệ thống. DPI cao hơn cho kết quả sắc nét hơn nhưng tăng thời gian xử lý và kích thước tệp."
+placeholder = "vd. 150"
 
 [flatten.results]
 title = "Kết quả làm phẳng"
@@ -2925,6 +3013,7 @@ header = "Cắt cúp PDF"
 submit = "Gửi"
 noFileSelected = "Chọn một tệp PDF để bắt đầu cắt xén"
 reset = "Đặt lại về toàn bộ PDF"
+autoCrop = "Tự động cắt khoảng trắng"
 
 [crop.preview]
 title = "Chọn vùng cắt"
@@ -3155,6 +3244,7 @@ title = "Phương thức che"
 mode = "Chế độ"
 automatic = "Tự động"
 automaticDesc = "Che văn bản dựa trên từ khóa tìm kiếm"
+automaticDisabledTooltip = "Chọn tệp trong trình quản lý tệp để bôi đen nhiều tệp cùng lúc"
 manual = "Thủ công"
 manualDesc = "Nhấp và kéo để che các vùng cụ thể"
 manualComingSoon = "Sắp có che thủ công"
@@ -3225,8 +3315,35 @@ text = "Chỉ khớp các từ hoàn chỉnh, không khớp một phần. 'John'
 title = "Chuyển sang PDF-Image"
 text = "Chuyển PDF thành PDF dựa trên ảnh sau khi che. Điều này đảm bảo văn bản phía sau hộp che được xóa hoàn toàn và không thể khôi phục."
 
+[redact.tooltip.manual.header]
+title = "Điều khiển bôi đen thủ công"
+
+[redact.tooltip.manual.markText]
+title = "Công cụ đánh dấu văn bản"
+text = "Chọn văn bản trực tiếp trên PDF để đánh dấu bôi đen. Nhấp và kéo để tô sáng phần văn bản bạn muốn bôi đen."
+
+[redact.tooltip.manual.markArea]
+title = "Công cụ đánh dấu vùng"
+text = "Vẽ các vùng hình chữ nhật trên PDF để đánh dấu khu vực cần bôi đen. Hữu ích để bôi đen hình ảnh, chữ ký, hoặc hình dạng không đều."
+
+[redact.tooltip.manual.apply]
+title = "Áp dụng bôi đen"
+text = "Sau khi đánh dấu nội dung, nhấp 'Áp dụng' để bôi đen vĩnh viễn tất cả vùng đã đánh dấu. Số đang chờ cho biết có bao nhiêu bôi đen sẵn sàng áp dụng."
+bullet1 = "Đánh dấu bao nhiêu vùng tùy ý trước khi áp dụng"
+bullet2 = "Tất cả bôi đen đang chờ sẽ được áp dụng cùng lúc"
+bullet3 = "Không thể hoàn tác sau khi áp dụng bôi đen"
+
 [redact.manual]
+title = "Công cụ bôi đen"
+instructions = "Chọn văn bản hoặc vẽ vùng trên PDF để đánh dấu nội dung cần bôi đen."
+markText = "Đánh dấu văn bản"
+markArea = "Đánh dấu vùng"
+pendingLabel = "Đang chờ:"
+applyWarning = "⚠️ Áp dụng vĩnh viễn, không thể hoàn tác và dữ liệu bên dưới sẽ bị xóa"
+apply = "Áp dụng"
+noMarks = "Chưa có dấu bôi đen. Hãy dùng các công cụ phía trên để đánh dấu nội dung cần bôi đen."
 header = "Che thủ công"
+controlsTitle = "Điều khiển bôi đen thủ công"
 textBasedRedaction = "Che theo văn bản"
 pageBasedRedaction = "Che theo trang"
 convertPDFToImageLabel = "Chuyển PDF thành PDF-Image (Dùng để xóa văn bản phía sau hộp)"
@@ -3341,6 +3458,19 @@ placeholder = "Nhập số lượng phân chia theo chiều ngang"
 [split-by-sections.vertical]
 label = "Phân chia theo chiều dọc"
 placeholder = "Nhập số lượng phân chia theo chiều dọc"
+
+[split-by-sections.splitMode]
+label = "Chế độ tách"
+description = "Chọn cách tách các trang"
+splitAll = "Tách tất cả các trang"
+splitAllExceptFirst = "Tách tất cả trừ trang đầu"
+splitAllExceptLast = "Tách tất cả trừ trang cuối"
+splitAllExceptFirstAndLast = "Tách tất cả trừ trang đầu và cuối"
+custom = "Trang tùy chỉnh"
+
+[split-by-sections.customPages]
+label = "Số trang tùy chỉnh"
+placeholder = "vd. 2,4,6"
 
 [AddStampRequest]
 tags = "Dấu,Thêm hình ảnh,căn giữa hình ảnh,Hình mờ,PDF,Nhúng,Tùy chỉnh"
@@ -3703,6 +3833,19 @@ filesize = "Kích thước tệp"
 [compress.grayscale]
 label = "Áp dụng thang độ xám để nén"
 
+[compress.linearize]
+label = "Linearize PDF để xem nhanh trên web"
+
+[compress.lineArt]
+label = "Chuyển hình ảnh thành tranh nét"
+description = "Sử dụng ImageMagick để giảm trang về đen trắng tương phản cao nhằm tối đa hóa mức độ nén."
+unavailable = "ImageMagick chưa được cài đặt hoặc bật trên máy chủ này"
+detailLevel = "Mức độ chi tiết"
+edgeEmphasis = "Nhấn mạnh đường biên"
+edgeLow = "Nhẹ"
+edgeMedium = "Cân bằng"
+edgeHigh = "Mạnh"
+
 [compress.tooltip.header]
 title = "Tổng quan cài đặt nén"
 
@@ -3720,6 +3863,10 @@ bullet2 = "Giá trị cao giảm kích thước tệp"
 title = "Thang xám"
 text = "Chọn tùy chọn này để chuyển tất cả hình ảnh sang đen trắng, có thể giảm đáng kể kích thước tệp, đặc biệt với PDF quét hoặc tài liệu nhiều hình ảnh."
 
+[compress.tooltip.lineArt]
+title = "Tranh nét"
+text = "Chuyển trang sang đen trắng tương phản cao bằng ImageMagick. Dùng mức độ chi tiết để kiểm soát lượng nội dung chuyển sang màu đen, và nhấn mạnh đường biên để kiểm soát mức phát hiện cạnh."
+
 [compress.error]
 failed = "Đã xảy ra lỗi khi nén PDF."
 
@@ -3731,6 +3878,11 @@ failed = "Đã xảy ra lỗi khi nén PDF."
 [compress.selectText.1]
 _value = "Cài đặt nén"
 1 = "1-3 nén PDF,</br> 4-6 nén ảnh nhẹ,</br> 7-9 nén ảnh mạnh sẽ làm giảm chất lượng hình ảnh đáng kể"
+
+[compress.compressionLevel]
+range1to3 = "Giá trị thấp giữ chất lượng tốt hơn nhưng tệp lớn hơn"
+range4to6 = "Nén trung bình với giảm chất lượng vừa phải"
+range7to9 = "Giá trị cao giảm đáng kể kích thước tệp nhưng có thể giảm độ rõ của hình ảnh"
 
 [decrypt]
 passwordPrompt = "Tệp này được bảo vệ bằng mật khẩu. Vui lòng nhập mật khẩu:"
@@ -3971,22 +4123,97 @@ deleteSelected = "Xóa các trang đã chọn"
 closePdf = "Đóng PDF"
 exportAll = "Xuất PDF"
 downloadSelected = "Tải xuống các tệp đã chọn"
-downloadAll = "Tải xuống tất cả"
-saveAll = "Lưu tất cả"
+annotations = "Chú thích"
+exportSelected = "Xuất các trang đã chọn"
+saveChanges = "Lưu thay đổi"
 toggleTheme = "Chuyển đổi chủ đề"
-toggleBookmarks = "Bật/tắt dấu trang"
 language = "Ngôn ngữ"
+toggleAnnotations = "Chuyển đổi hiển thị chú thích"
 search = "Tìm kiếm PDF"
 panMode = "Chế độ kéo"
+applyRedactionsFirst = "Áp dụng bôi đen trước"
 rotateLeft = "Xoay trái"
 rotateRight = "Xoay phải"
 toggleSidebar = "Chuyển đổi thanh bên"
-exportSelected = "Xuất các trang đã chọn"
-toggleAnnotations = "Chuyển đổi hiển thị chú thích"
-annotationMode = "Chuyển đổi chế độ chú thích"
+toggleBookmarks = "Bật/tắt dấu trang"
 print = "In PDF"
 draw = "Vẽ"
+redact = "Bôi đen"
+exitRedaction = "Thoát chế độ bôi đen"
 save = "Lưu"
+downloadAll = "Tải xuống tất cả"
+saveAll = "Lưu tất cả"
+
+[textAlign]
+left = "Trái"
+center = "Giữa"
+right = "Phải"
+
+[annotation]
+title = "Chú thích"
+desc = "Dùng tô sáng, bút, văn bản và ghi chú. Thay đổi được giữ nguyên trực tiếp—không cần làm phẳng."
+highlight = "Tô sáng"
+pen = "Bút"
+text = "Hộp văn bản"
+note = "Ghi chú"
+rectangle = "Hình chữ nhật"
+ellipse = "Hình elip"
+select = "Chọn"
+exit = "Thoát chế độ chú thích"
+strokeWidth = "Độ dày nét"
+opacity = "Độ mờ"
+strokeOpacity = "Độ mờ nét viền"
+fillOpacity = "Độ mờ phần tô"
+fontSize = "Cỡ chữ"
+chooseColor = "Chọn màu"
+color = "Màu"
+strokeColor = "Màu nét"
+fillColor = "Màu tô"
+underline = "Gạch dưới"
+strikeout = "Gạch bỏ"
+squiggly = "Gạch lượn sóng"
+inkHighlighter = "Bút tô sáng tự do"
+freehandHighlighter = "Bút tô sáng tự do"
+square = "Hình vuông"
+circle = "Hình tròn"
+polygon = "Đa giác"
+line = "Đường thẳng"
+stamp = "Thêm hình ảnh"
+textMarkup = "Đánh dấu văn bản"
+drawing = "Vẽ"
+shapes = "Hình dạng"
+notesStamps = "Ghi chú & Dấu"
+settings = "Cài đặt"
+borderOn = "Viền: Bật"
+borderOff = "Viền: Tắt"
+editInk = "Chỉnh sửa Bút"
+editLine = "Chỉnh sửa Đường thẳng"
+editNote = "Chỉnh sửa Ghi chú"
+editText = "Chỉnh sửa Hộp văn bản"
+editTextMarkup = "Chỉnh sửa Đánh dấu văn bản"
+editSelected = "Chỉnh sửa chú thích"
+editSquare = "Chỉnh sửa Hình vuông"
+editCircle = "Chỉnh sửa Hình tròn"
+editPolygon = "Chỉnh sửa Đa giác"
+unsupportedType = "Loại chú thích này chưa được hỗ trợ đầy đủ để chỉnh sửa."
+textAlignment = "Căn chỉnh văn bản"
+noteIcon = "Biểu tượng ghi chú"
+imagePreview = "Xem trước"
+contents = "Văn bản"
+backgroundColor = "Màu nền"
+clearBackground = "Xóa nền"
+noBackground = "Không nền"
+stampSettings = "Cài đặt dấu"
+savingCopy = "Đang chuẩn bị tải xuống..."
+saveFailed = "Không thể lưu bản sao"
+saveReady = "Sẵn sàng tải xuống"
+selectAndMove = "Chọn và Chỉnh sửa"
+editSelectDescription = "Nhấp một chú thích hiện có để chỉnh màu, độ mờ, văn bản hoặc kích thước của nó."
+editStampHint = "Để đổi hình ảnh, hãy xóa dấu này và thêm dấu mới."
+editSwitchToSelect = "Chuyển sang Chọn & Chỉnh sửa để chỉnh sửa chú thích này."
+undo = "Hoàn tác"
+redo = "Làm lại"
+applyChanges = "Áp dụng thay đổi"
 saveChanges = "Lưu thay đổi"
 
 [search]
@@ -4038,12 +4265,20 @@ settings = "Cài đặt"
 adminSettings = "Cài đặt quản trị"
 allTools = "All Tools"
 reader = "Trình đọc"
+tours = "Hướng dẫn"
+showMeAround = "Dẫn tôi tham quan"
+
+[quickAccess.toursTooltip]
+admin = "Xem video hướng dẫn tại đây: Tour công cụ, tour bố cục V2 mới và tour Quản trị."
+user = "Xem video hướng dẫn tại đây: Tour công cụ và tour bố cục V2 mới."
 
 [quickAccess.helpMenu]
 toolsTour = "Hướng dẫn công cụ"
 toolsTourDesc = "Tìm hiểu công cụ có thể làm gì"
 adminTour = "Hướng dẫn quản trị"
 adminTourDesc = "Khám phá cài đặt & tính năng quản trị"
+whatsNewTour = "Xem có gì mới trong V2"
+whatsNewTourDesc = "Tham quan bố cục đã cập nhật"
 
 [admin]
 error = "Lỗi"
@@ -4062,6 +4297,8 @@ fetchError = "Không thể tải cài đặt"
 saveError = "Không thể lưu cài đặt"
 saved = "Lưu cài đặt thành công"
 saveSuccess = "Lưu cài đặt thành công"
+success = "Đã lưu cài đặt thành công"
+error = "Không thể lưu cài đặt"
 save = "Lưu thay đổi"
 discard = "Bỏ"
 restartRequired = "Cần khởi động lại"
@@ -4184,6 +4421,13 @@ description = "Đường dẫn đến tệp thực thi WeasyPrint để chuyển
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Tệp thực thi Unoconvert"
 description = "Đường dẫn đến LibreOffice unoconvert để chuyển đổi tài liệu (để trống dùng mặc định: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "URL Frontend"
+description = "URL gốc cho frontend (vd., https://pdf.example.com). Dùng cho liên kết mời qua email và tải lên bằng mã QR trên di động. Để trống để dùng URL backend."
+
+[admin.settings.badge]
+clickToUpgrade = "Nhấp để xem chi tiết gói"
 
 [admin.settings.security]
 title = "Bảo mật"
@@ -4321,6 +4565,19 @@ connect = "Kết nối"
 disconnect = "Ngắt kết nối"
 disconnected = "Ngắt kết nối nhà cung cấp thành công"
 disconnectError = "Không thể ngắt kết nối nhà cung cấp"
+mobileScannerConvertToPdf = "Chuyển đổi Hình ảnh sang PDF"
+mobileScannerConvertToPdfDesc = "Tự động chuyển đổi hình ảnh tải lên sang định dạng PDF. Nếu tắt, hình ảnh sẽ được giữ nguyên."
+mobileScannerImageResolution = "Độ phân giải hình ảnh"
+mobileScannerImageResolutionDesc = "Độ phân giải của hình ảnh tải lên. \"Giảm\" sẽ co về tối đa 1200px để giảm kích thước tệp."
+imageResolutionFull = "Đầy đủ (Kích thước gốc)"
+imageResolutionReduced = "Giảm (Tối đa 1200px)"
+mobileScannerPageFormat = "Khổ trang"
+mobileScannerPageFormatDesc = "Kích thước trang PDF cho hình ảnh đã chuyển đổi. \"Giữ nguyên\" dùng kích thước ảnh gốc."
+pageFormatKeep = "Giữ nguyên (Kích thước gốc)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Kéo giãn vừa trang"
+mobileScannerStretchToFitDesc = "Kéo giãn hình ảnh để lấp đầy toàn bộ trang. Nếu tắt, hình ảnh sẽ được căn giữa và giữ tỷ lệ khung hình."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO tự động đăng nhập"
@@ -4388,6 +4645,122 @@ description = "Tự động tạo tài khoản người dùng khi đăng nhập 
 [admin.settings.connections.saml2.blockRegistration]
 label = "Chặn đăng ký"
 description = "Ngăn đăng ký người dùng mới qua SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Tải lên từ điện thoại di động"
+enable = "Bật tải lên bằng mã QR"
+description = "Cho phép người dùng tải tệp từ thiết bị di động bằng cách quét mã QR"
+note = "Lưu ý: Yêu cầu cấu hình Frontend URL. "
+link = "Cấu hình trong Cài đặt hệ thống"
+mobileScannerConvertToPdf = "Chuyển đổi Hình ảnh sang PDF"
+mobileScannerConvertToPdfDesc = "Tự động chuyển đổi hình ảnh tải lên sang định dạng PDF. Nếu tắt, hình ảnh sẽ được giữ nguyên."
+mobileScannerImageResolution = "Độ phân giải hình ảnh"
+mobileScannerImageResolutionDesc = "Độ phân giải của hình ảnh tải lên. \"Giảm\" sẽ co về tối đa 1200px để giảm kích thước tệp."
+imageResolutionFull = "Đầy đủ (Kích thước gốc)"
+imageResolutionReduced = "Giảm (Tối đa 1200px)"
+mobileScannerPageFormat = "Khổ trang"
+mobileScannerPageFormatDesc = "Kích thước trang PDF cho hình ảnh đã chuyển đổi. \"Giữ nguyên\" dùng kích thước ảnh gốc."
+pageFormatKeep = "Giữ nguyên (Kích thước gốc)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Kéo giãn vừa trang"
+mobileScannerStretchToFitDesc = "Kéo giãn hình ảnh để lấp đầy toàn bộ trang. Nếu tắt, hình ảnh sẽ được căn giữa và giữ tỷ lệ khung hình."
+
+[admin.settings.telegram]
+title = "Bot Telegram"
+description = "Cấu hình kết nối bot Telegram, kiểm soát truy cập và hành vi phản hồi."
+
+[admin.settings.telegram.enabled]
+label = "Bật Bot Telegram"
+description = "Cho phép người dùng tương tác với Stirling PDF qua bot Telegram đã cấu hình của bạn."
+
+[admin.settings.telegram.botUsername]
+label = "Tên người dùng Bot"
+description = "Tên người dùng công khai của bot Telegram của bạn."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token do BotFather cung cấp cho bot Telegram của bạn."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Thư mục Inbox"
+description = "Thư mục dưới thư mục pipeline nơi lưu trữ tệp Telegram đến."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Dùng hậu tố thư mục tùy chỉnh"
+description = "Thêm chat ID vào thư mục tệp đến để tách biệt tải lên theo từng cuộc trò chuyện."
+
+[admin.settings.telegram.accessControl]
+title = "Kiểm soát truy cập"
+description = "Hạn chế người dùng hoặc kênh được phép tương tác với bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Chỉ cho phép User ID cụ thể"
+description = "Khi bật, chỉ các User ID trong danh sách mới được dùng bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "User ID được phép"
+description = "Nhập các Telegram User ID được phép tương tác với bot."
+placeholder = "Thêm user ID và nhấn Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Chỉ cho phép Channel ID cụ thể"
+description = "Khi bật, chỉ các Channel ID trong danh sách mới được dùng bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Channel ID được phép"
+description = "Nhập các Telegram Channel ID được phép tương tác với bot."
+placeholder = "Thêm channel ID và nhấn Enter"
+
+[admin.settings.telegram.processing]
+title = "Xử lý"
+description = "Kiểm soát khoảng thăm dò và thời gian chờ xử lý cho tải lên từ Telegram."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Thời gian chờ xử lý (giây)"
+description = "Thời gian tối đa chờ một tác vụ xử lý trước khi báo lỗi."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Khoảng thăm dò (ms)"
+description = "Khoảng thời gian giữa các lần kiểm tra bản cập nhật Telegram mới."
+
+[admin.settings.telegram.feedback]
+title = "Tin nhắn phản hồi"
+description = "Chọn thời điểm bot nên gửi phản hồi cho người dùng và kênh."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Bật phản hồi"
+description = "Kiểm soát việc bot có gửi tin nhắn phản hồi hay không."
+
+[admin.settings.telegram.feedback.channel]
+title = "Quy tắc phản hồi kênh"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Hiển thị \"Không có tài liệu hợp lệ\" (Kênh)"
+description = "Ẩn phản hồi không có tài liệu hợp lệ đối với tải lên từ kênh."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Hiển thị lỗi xử lý (Kênh)"
+description = "Gửi tin nhắn lỗi xử lý tới các kênh."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Hiển thị thông báo lỗi (Kênh)"
+description = "Hiển thị thông báo lỗi chi tiết cho kênh."
+
+[admin.settings.telegram.feedback.user]
+title = "Quy tắc phản hồi người dùng"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Hiển thị \"Không có tài liệu hợp lệ\" (Người dùng)"
+description = "Ẩn phản hồi không có tài liệu hợp lệ đối với tải lên của người dùng."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Hiển thị lỗi xử lý (Người dùng)"
+description = "Gửi tin nhắn lỗi xử lý tới người dùng."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Hiển thị thông báo lỗi (Người dùng)"
+description = "Hiển thị thông báo lỗi chi tiết cho người dùng."
 
 [admin.settings.database]
 title = "Cơ sở dữ liệu"
@@ -4569,6 +4942,10 @@ description = "Cho phép quản trị viên mời người dùng qua email với
 [admin.settings.mail.frontendUrl]
 label = "URL Frontend"
 description = "URL cơ sở cho Frontend (ví dụ https://pdf.example.com). Dùng để tạo liên kết mời trong email. Để trống để dùng URL backend."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Lưu ý: Yêu cầu cấu hình Frontend URL. "
+link = "Cấu hình trong Cài đặt hệ thống"
 
 [admin.settings.legal]
 title = "Tài liệu pháp lý"
@@ -4754,6 +5131,9 @@ googleDriveShort = "Drive"
 myFiles = "Tệp của tôi"
 noRecentFiles = "Không tìm thấy tệp gần đây"
 googleDriveNotAvailable = "Tích hợp Google Drive không khả dụng"
+mobileUpload = "Tải lên từ di động"
+mobileShort = "Di động"
+mobileUploadNotAvailable = "Tải lên từ di động chưa được bật"
 downloadSelected = "Tải xuống mục đã chọn"
 saveSelected = "Lưu mục đã chọn"
 openFiles = "Mở các tệp"
@@ -5069,6 +5449,7 @@ loading = "Đang tải..."
 back = "Quay lại"
 continue = "Tiếp tục"
 error = "Lỗi"
+save = "Lưu"
 
 [config.overview]
 title = "Cấu hình ứng dụng"
@@ -5130,6 +5511,15 @@ warning = "⚠️ Cảnh báo: Thao tác này sẽ tạo khóa API mới và khi
 impact = "Bất kỳ ứng dụng hoặc dịch vụ nào đang dùng các khóa này sẽ ngừng hoạt động cho đến khi bạn cập nhật khóa mới."
 confirmPrompt = "Bạn có chắc muốn tiếp tục?"
 confirmCta = "Làm mới khóa"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Lỗi API Key"
+failedToCreateApiKey = "Không thể tạo API key."
+failedToRetrieveApiKey = "Không thể lấy API key từ phản hồi."
+failedToFetchApiKey = "Không thể truy xuất API key."
+apiKeyRefreshed = "Đã làm mới API Key"
+apiKeyRefreshedBody = "API key của bạn đã được làm mới thành công."
+failedToRefreshApiKey = "Không thể làm mới API key."
 
 [AddAttachmentsRequest]
 attachments = "Chọn tệp đính kèm"
@@ -5235,6 +5625,16 @@ finish = "Hoàn tất"
 startTour = "Bắt đầu tham quan"
 startTourDescription = "Tham quan có hướng dẫn các tính năng chính của Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Bắt đầu tại thanh <strong>Truy cập nhanh</strong> để chuyển giữa Reader, Automate, tệp của bạn và tất cả các hướng dẫn."
+leftPanel = "Bảng <strong>Công cụ</strong> bên trái liệt kê mọi việc bạn có thể làm. Duyệt theo danh mục hoặc tìm kiếm để nhanh chóng tìm công cụ."
+fileUpload = "Dùng nút <strong>Tệp</strong> để tải lên hoặc chọn một PDF gần đây. Chúng tôi sẽ tải một mẫu để bạn thấy không gian làm việc."
+rightRail = "<strong>Thanh bên phải</strong> có các thao tác nhanh để chọn tệp, đổi chủ đề hoặc ngôn ngữ, và tải kết quả."
+topBar = "Thanh trên cho phép bạn chuyển giữa <strong>Trình xem</strong>, <strong>Trình chỉnh sửa trang</strong> và <strong>Tệp đang hoạt động</strong>."
+pageEditorView = "Chuyển sang Trình chỉnh sửa trang để sắp xếp lại, xoay hoặc xóa trang."
+activeFilesView = "Dùng Tệp đang hoạt động để xem mọi thứ bạn đang mở và chọn việc cần làm."
+wrapUp = "Đó là những điểm mới trong V2. Mở menu <strong>Hướng dẫn</strong> bất cứ lúc nào để xem lại nội dung này, tour Công cụ hoặc tour Quản trị."
+
 [onboarding.welcomeModal]
 title = "Chào mừng đến với Stirling PDF!"
 description = "Bạn có muốn xem một chuyến tham quan nhanh 1 phút để tìm hiểu các tính năng chính và cách bắt đầu không?"
@@ -5254,6 +5654,10 @@ skipForNow = "Bỏ qua tạm thời"
 download = "Tải xuống →"
 showMeAround = "Hướng dẫn nhanh"
 skipTheTour = "Bỏ qua hướng dẫn"
+
+[onboarding.tourOverview]
+title = "Tổng quan tour"
+body = "Stirling PDF V2 đi kèm hàng chục công cụ và bố cục được làm mới. Hãy tham quan nhanh để xem những thay đổi và nơi tìm các tính năng bạn cần."
 
 [onboarding.serverLicense]
 skip = "Bỏ qua tạm thời"
@@ -5568,6 +5972,28 @@ contactSales = "Liên hệ bộ phận kinh doanh"
 contactToUpgrade = "Liên hệ với chúng tôi để nâng cấp hoặc tùy chỉnh gói của bạn"
 maxUsers = "Số người dùng tối đa"
 upTo = "Tối đa"
+getLicense = "Mua giấy phép Máy chủ"
+upgradeToEnterprise = "Nâng cấp lên Enterprise"
+selectPeriod = "Chọn chu kỳ thanh toán"
+monthlyBilling = "Thanh toán hàng tháng"
+yearlyBilling = "Thanh toán hàng năm"
+checkoutOpened = "Đã mở thanh toán"
+checkoutInstructions = "Hoàn tất mua hàng trong thẻ Stripe. Sau khi thanh toán, quay lại đây và làm mới trang để kích hoạt giấy phép. Bạn cũng sẽ nhận được email chứa khóa giấy phép."
+activateLicense = "Kích hoạt giấy phép của bạn"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Đã mở thanh toán trong thẻ mới"
+instructions = "Hoàn tất mua hàng trong thẻ Stripe. Khi thanh toán xong, bạn sẽ nhận được email chứa khóa giấy phép."
+enterKey = "Nhập khóa giấy phép của bạn bên dưới để kích hoạt gói:"
+keyDescription = "Dán khóa giấy phép từ email của bạn"
+activate = "Kích hoạt giấy phép"
+doLater = "Tôi sẽ làm việc này sau"
+success = "Đã kích hoạt giấy phép!"
+successMessage = "Giấy phép của bạn đã được kích hoạt thành công. Bạn có thể đóng cửa sổ này."
+
+[plan.static.billingPortal]
+title = "Cần xác minh email"
+message = "Bạn sẽ cần xác minh địa chỉ email trong cổng thanh toán Stripe. Kiểm tra email để lấy liên kết đăng nhập."
 
 [plan.period]
 month = "tháng"
@@ -5771,6 +6197,8 @@ notAvailable = "Hệ thống kiểm toán không khả dụng"
 notAvailableMessage = "Hệ thống kiểm toán chưa được cấu hình hoặc không khả dụng."
 disabled = "Ghi nhật ký kiểm toán đã bị tắt"
 disabledMessage = "Bật ghi nhật ký kiểm toán trong cấu hình ứng dụng để theo dõi các sự kiện hệ thống."
+enterpriseRequired = "Yêu cầu giấy phép Enterprise"
+enterpriseRequiredMessage = "Hệ thống ghi nhật ký kiểm toán là tính năng Enterprise. Vui lòng nâng cấp lên giấy phép Enterprise để truy cập nhật ký và phân tích."
 
 [audit.error]
 title = "Lỗi khi tải hệ thống kiểm toán"
@@ -5942,6 +6370,7 @@ description = "Nhập URL đầy đủ của server Stirling PDF tự lưu trữ
 
 [setup.server.error]
 emptyUrl = "Vui lòng nhập URL server"
+invalidUrl = "Định dạng URL không hợp lệ. Vui lòng nhập URL hợp lệ như https://your-server.com"
 unreachable = "Không thể kết nối đến server"
 testFailed = "Kiểm tra kết nối thất bại"
 configFetch = "Không thể lấy cấu hình máy chủ. Vui lòng kiểm tra URL và thử lại."
@@ -5960,6 +6389,7 @@ connectingTo = "Đang kết nối đến:"
 submit = "Đăng nhập"
 signInWith = "Đăng nhập với"
 oauthPending = "Đang mở trình duyệt để xác thực..."
+sso = "Single Sign-On"
 orContinueWith = "Hoặc tiếp tục bằng email"
 serverRequirement = "Lưu ý: Máy chủ phải bật đăng nhập."
 showInstructions = "Cách bật?"
@@ -6025,6 +6455,8 @@ reset = "Đặt lại thay đổi"
 downloadJson = "Tải JSON"
 generatePdf = "Tạo PDF"
 saveChanges = "Lưu thay đổi"
+applyChanges = "Áp dụng thay đổi"
+downloadCopy = "Tải bản sao"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tự căn chỉnh văn bản cho vừa hộp"
@@ -6042,6 +6474,24 @@ descriptionInline = "Mẹo: Giữ Ctrl (Cmd) hoặc Shift để chọn nhiều h
 [pdfTextEditor.options.forceSingleElement]
 title = "Khóa văn bản đã chỉnh sửa thành một phần tử PDF duy nhất"
 description = "Khi bật, trình chỉnh sửa xuất mỗi hộp văn bản đã chỉnh sửa thành một phần tử văn bản PDF để tránh chồng ký tự hoặc trộn font."
+
+[pdfTextEditor.options.advanced]
+title = "Cài đặt nâng cao"
+
+[pdfTextEditor.tooltip.header]
+title = "Giới hạn xem trước"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Tập trung Văn bản và Hình ảnh"
+text = "Không gian làm việc này tập trung vào chỉnh sửa văn bản và thay đổi vị trí hình ảnh nhúng. Tác phẩm trang phức tạp, tiện ích biểu mẫu và đồ họa nhiều lớp sẽ được giữ lại khi xuất nhưng không thể chỉnh sửa đầy đủ tại đây."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Sai lệch khi xem trước"
+text = "Một số yếu tố (như đường viền bảng, hình dạng hoặc giao diện chú thích) có thể không hiển thị chính xác trong bản xem trước. PDF xuất ra sẽ giữ các lệnh vẽ gốc khi có thể."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Trình xem Alpha"
+text = "Trình xem alpha này vẫn đang phát triển—một số phông chữ, màu sắc, hiệu ứng trong suốt và chi tiết bố cục có thể thay đổi nhẹ. Vui lòng kiểm tra lại PDF đã tạo trước khi chia sẻ."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Gộp các hộp đã chọn"
@@ -6164,3 +6614,58 @@ title = "Kết quả thêm văn bản"
 
 [addText.error]
 failed = "Đã xảy ra lỗi khi thêm văn bản vào PDF."
+
+[mobileUpload]
+title = "Tải lên từ Di động"
+description = "Quét để tải ảnh. Hình ảnh tự động chuyển sang PDF."
+descriptionNoConvert = "Quét để tải ảnh từ thiết bị di động của bạn."
+error = "Lỗi kết nối"
+pollingError = "Lỗi kiểm tra tệp"
+sessionId = "ID phiên"
+sessionCreateError = "Không thể tạo phiên"
+expiryWarning = "Phiên sắp hết hạn"
+expiryWarningMessage = "Mã QR này sẽ hết hạn trong {{seconds}} giây. Mã mới sẽ được tạo tự động."
+filesReceived = "Đã nhận {{count}} tệp"
+connected = "Thiết bị di động đã kết nối"
+instructions = "Quét bằng camera điện thoại của bạn. Hình ảnh sẽ tự động chuyển sang PDF."
+instructionsNoConvert = "Quét bằng camera điện thoại để tải tệp lên."
+
+[mobileScanner]
+title = "Máy quét di động"
+noSession = "Phiên không hợp lệ"
+noSessionMessage = "Vui lòng quét mã QR hợp lệ để truy cập trang này."
+validating = "Đang xác thực phiên..."
+sessionInvalid = "Lỗi phiên"
+sessionExpired = "Phiên này đã hết hạn. Vui lòng làm mới và thử lại."
+sessionNotFound = "Không tìm thấy phiên. Vui lòng làm mới và thử lại."
+sessionValidationError = "Không thể xác minh phiên. Vui lòng thử lại."
+uploadSuccess = "Tải lên thành công!"
+uploadSuccessMessage = "Hình ảnh của bạn đã được chuyển."
+httpsRequired = "Truy cập camera yêu cầu HTTPS hoặc localhost. Vui lòng dùng HTTPS hoặc truy cập qua localhost."
+uploadFailed = "Tải lên thất bại. Vui lòng thử lại."
+uploading = "Đang tải lên..."
+connected = "Đã kết nối"
+connecting = "Đang kết nối..."
+chooseMethod = "Chọn phương thức tải lên"
+chooseMethodDescription = "Chọn cách bạn muốn quét và tải tài liệu"
+camera = "Camera"
+cameraDescription = "Quét tài liệu bằng camera thiết bị với tự động phát hiện viền"
+fileUpload = "Tải tệp lên"
+fileDescription = "Tải lên ảnh hoặc tài liệu có sẵn từ thiết bị của bạn"
+cameraAccessDenied = "Bị từ chối truy cập camera. Vui lòng bật quyền camera."
+back = "Quay lại"
+settings = "Cài đặt"
+edgeDetection = "Phát hiện viền"
+flashlight = "Đèn pin"
+flash = "Đèn flash"
+processing = "Đang xử lý..."
+capture = "Chụp ảnh"
+selectFilesPrompt = "Chọn tệp để tải lên"
+selectImage = "Chọn ảnh"
+preview = "Xem trước"
+retake = "Chụp lại"
+addToBatch = "Thêm vào lô"
+upload = "Tải lên"
+batchImages = "Lô"
+clearBatch = "Xóa"
+uploadAll = "Tải lên tất cả"

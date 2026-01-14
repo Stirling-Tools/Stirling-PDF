@@ -367,6 +367,7 @@ advanced = "Ardroghanna"
 title = "Slándáil agus Fíordheimhniú"
 security = "Slándáil"
 connections = "Naisc"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Ceadúnú agus Anailísíocht"
@@ -441,6 +442,13 @@ currentVersion = "Leagan Reatha"
 latestVersion = "Leagan is Déanaí"
 checkForUpdates = "Seiceáil le haghaidh Nuashonruithe"
 viewDetails = "Féach Sonraí"
+serverNeedsUpdate = "Ní mór don riarthóir an freastalaí a nuashonrú"
+
+[settings.general.versionInfo]
+title = "Eolas faoin Leagan"
+description = "Sonraí leagain don deasc agus don fhreastalaí"
+desktop = "Leagan Deisce"
+server = "Leagan Freastalaí"
 
 [settings.security]
 title = "Slándáil"
@@ -531,6 +539,8 @@ accountSettings = "Socruithe cuntas"
 adminSettings = "Socruithe Riaracháin - Féach ar agus Cuir Úsáideoirí Leis"
 userControlSettings = "Socruithe Rialaithe Úsáideora"
 changeUsername = "Athraigh Ainm Úsáideora"
+changeUsernameDescription = "Nuashonraigh d'ainm úsáideora. Logálfar tú amach tar éis an nuashonraithe."
+newUsernamePlaceholder = "Cuir isteach d'ainm úsáideora nua"
 newUsername = "Ainm Úsáideora Nua"
 password = "Pasfhocal Deimhnithe"
 oldPassword = "Sean Pasfhocal"
@@ -1297,6 +1307,18 @@ includePageNumbers = "Cuir uimhreacha leathanach san áireamh"
 includePageNumbersDesc = "Cuir uimhreacha leathanach leis an PDF ginte"
 optimizeForEbookPdf = "Optamaigh do léitheoirí ríomhleabhar"
 optimizeForEbookPdfDesc = "An PDF a bharrfheabhsú le haghaidh léamh ríomhleabhar (méid comhaid níos lú, rindreáil níos fearr ar ghléasanna eInk)"
+
+[convert.epubOptions]
+epubOptions = "Roghanna PDF go eBook"
+epubOptionsDesc = "Roghanna chun PDF a thiontú go EPUB/AZW3"
+detectChapters = "Braith caibidlí"
+detectChaptersDesc = "Braith ceannteidil a bhfuil cuma caibidil orthu agus cuir briseadh leathanaigh EPUB isteach"
+targetDevice = "Gléas sprice"
+targetDeviceDesc = "Roghnaigh próifíl aschuir a bhfuil optamú déanta di don ghléas léitheoireachta"
+outputFormat = "Formáid aschuir"
+outputFormatDesc = "Roghnaigh an fhormáid aschuir don eBook"
+tabletPhone = "Táibléad/Fón (le híomhánna)"
+kindleEink = "Kindle e-Ink (téacs optamaithe)"
 
 [imageToPdf]
 tags = "comhshó, img, jpg, pictiúr, grianghraf"
@@ -2363,10 +2385,10 @@ saved = "Sábháilte"
 label = "Uaslódáil íomhá sínithe"
 placeholder = "Roghnaigh comhad íomhá"
 hint = "Uaslódáil íomhá PNG nó JPG de do shíniú"
-backgroundRemovalFailedMessage = "Níorbh fhéidir an cúlra a bhaint den íomhá. Íomhá bhunaidh á húsáid ina ionad."
-backgroundRemovalFailedTitle = "Theip ar bhaint an chúlra"
-processing = "Íomhá á phróiseáil..."
 removeBackground = "Bain an cúlra bán (déan trédhearcach)"
+processing = "Íomhá á phróiseáil..."
+backgroundRemovalFailedTitle = "Theip ar bhaint an chúlra"
+backgroundRemovalFailedMessage = "Níorbh fhéidir an cúlra a bhaint den íomhá. Íomhá bhunaidh á húsáid ina ionad."
 
 [sign.instructions]
 title = "Conas síniú a chur leis"
@@ -2441,8 +2463,6 @@ bullet1 = "Éiríonn foirmeacha neamheagarthóireachta"
 bullet2 = "Oibríonn naisc fós nuair a chliceáiltear orthu"
 bullet3 = "Fanann nótaí agus tráchtanna le feiceáil"
 bullet4 = "Cabhraíonn leabharmharcanna leat nascleanúint a dhéanamh fós"
-
-
 
 [repair]
 tags = "deisiú, athchóiriú, ceartú, aisghabháil"
@@ -3224,10 +3244,10 @@ title = "Modh Ceilte"
 mode = "Mód"
 automatic = "Uathoibríoch"
 automaticDesc = "Ceil téacs bunaithe ar théarmaí cuardaigh"
+automaticDisabledTooltip = "Roghnaigh comhaid sa bhainisteoir comhad chun comhaid iolracha a cheilt ag an am céanna"
 manual = "Láimhe"
 manualDesc = "Cliceáil agus tarraing chun limistéir shonracha a cheilt"
 manualComingSoon = "Ceilt láimhe ag teacht go luath"
-automaticDisabledTooltip = "Roghnaigh comhaid sa bhainisteoir comhad chun comhaid iolracha a cheilt ag an am céanna"
 
 [redact.auto]
 header = "Ceilt Uathoibríoch"
@@ -3844,8 +3864,8 @@ title = "Liathscála"
 text = "Roghnaigh an rogha seo chun gach íomhá a thiontú go dubh agus bán, rud a d'fhéadfadh méid an chomhaid a laghdú go mór, go háirithe do PDFanna scanta nó do dhoiciméid lán d’íomhánna."
 
 [compress.tooltip.lineArt]
-text = "Tiontaigh leathanaigh go dubh agus bán ardchodarsnachta ag baint úsáide as ImageMagick. Bain úsáid as leibhéal mionsonraí chun rialú a dhéanamh ar cé mhéad ábhair a thagann chun bheith dubh, agus béim imeall chun rialú a dhéanamh ar cé chomh ionsaitheach agus a bhraitear imill."
 title = "Ealaín Líne"
+text = "Tiontaigh leathanaigh go dubh agus bán ardchodarsnachta ag baint úsáide as ImageMagick. Bain úsáid as leibhéal mionsonraí chun rialú a dhéanamh ar cé mhéad ábhair a thagann chun bheith dubh, agus béim imeall chun rialú a dhéanamh ar cé chomh ionsaitheach agus a bhraitear imill."
 
 [compress.error]
 failed = "Tharla earráid agus an PDF á chomhbhrú."
@@ -4277,6 +4297,8 @@ fetchError = "Theip ar luchtú na socruithe"
 saveError = "Theip ar na socruithe a shábháil"
 saved = "Sábháladh na socruithe go rathúil"
 saveSuccess = "Sábháladh na socruithe go rathúil"
+success = "Sábháladh na socruithe go rathúil"
+error = "Theip ar shábháil na socruithe"
 save = "Sábháil Athruithe"
 discard = "Cuir i leataobh"
 restartRequired = "Athtosú de dhíth"
@@ -4543,6 +4565,19 @@ connect = "Ceangail"
 disconnect = "Dícheangail"
 disconnected = "Dícheanglaíodh an soláthraí go rathúil"
 disconnectError = "Theip ar an soláthraí a dhícheangal"
+mobileScannerConvertToPdf = "Tiontaigh Íomhánna go PDF"
+mobileScannerConvertToPdfDesc = "Tiontaigh íomhánna uaslódáilte go huathoibríoch go formáid PDF. Má dhíchumasaítear é, coimeádfar na híomhánna mar atá."
+mobileScannerImageResolution = "Taifeach Íomhá"
+mobileScannerImageResolutionDesc = "Taifeach na n-íomhánna uaslódáilte. Scálann \"Laghdaithe\" na híomhánna go huasmhéid 1200px chun méid an chomhaid a laghdú."
+imageResolutionFull = "Iomlán (Bunmhéid)"
+imageResolutionReduced = "Laghdaithe (Uasmhéid 1200px)"
+mobileScannerPageFormat = "Formáid Leathanaigh"
+mobileScannerPageFormatDesc = "Méid leathanaigh PDF d’íomhánna tiontaithe. Úsáideann \"Coimeád\" toisí bunaidh na híomhá."
+pageFormatKeep = "Coimeád (Toisí Bunaidh)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Sínigh chun luí"
+mobileScannerStretchToFitDesc = "Sínigh íomhánna chun an leathanach ar fad a líonadh. Má dhíchumasaítear é, lárnófar na híomhánna agus caomhnófar an cóimheas gné."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Logáil Isteach Uathoibríoch SSO"
@@ -4612,11 +4647,120 @@ label = "Cuir Clárú ar Chosc"
 description = "Cosc ar chlárú úsáideoirí nua trí SAML2"
 
 [admin.settings.connections.mobileScanner]
-description = "Ceadaigh d’úsáideoirí comhaid a uaslódáil ó ghléasanna soghluaiste trí chód QR a scanadh"
-enable = "Cumasaigh Uaslódáil Cód QR"
 label = "Uaslódáil Fón Póca"
-link = "Cumraigh i Socruithe an Chórais"
+enable = "Cumasaigh Uaslódáil Cód QR"
+description = "Ceadaigh d’úsáideoirí comhaid a uaslódáil ó ghléasanna soghluaiste trí chód QR a scanadh"
 note = "Nóta: Éilíonn sé go mbeidh URL an Tosaigh cumraithe."
+link = "Cumraigh i Socruithe an Chórais"
+mobileScannerConvertToPdf = "Tiontaigh Íomhánna go PDF"
+mobileScannerConvertToPdfDesc = "Tiontaigh íomhánna uaslódáilte go huathoibríoch go formáid PDF. Má dhíchumasaítear é, coimeádfar na híomhánna mar atá."
+mobileScannerImageResolution = "Taifeach Íomhá"
+mobileScannerImageResolutionDesc = "Taifeach na n-íomhánna uaslódáilte. Scálann \"Laghdaithe\" na híomhánna go huasmhéid 1200px chun méid an chomhaid a laghdú."
+imageResolutionFull = "Iomlán (Bunmhéid)"
+imageResolutionReduced = "Laghdaithe (Uasmhéid 1200px)"
+mobileScannerPageFormat = "Formáid Leathanaigh"
+mobileScannerPageFormatDesc = "Méid leathanaigh PDF d’íomhánna tiontaithe. Úsáideann \"Coimeád\" toisí bunaidh na híomhá."
+pageFormatKeep = "Coimeád (Toisí Bunaidh)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Sínigh chun luí"
+mobileScannerStretchToFitDesc = "Sínigh íomhánna chun an leathanach ar fad a líonadh. Má dhíchumasaítear é, lárnófar na híomhánna agus caomhnófar an cóimheas gné."
+
+[admin.settings.telegram]
+title = "Bot Telegram"
+description = "Cumraigh nascacht bot Telegram, rialuithe rochtana, agus iompar aiseolais."
+
+[admin.settings.telegram.enabled]
+label = "Cumasaigh Bot Telegram"
+description = "Ceadaigh d’úsáideoirí idirghníomhú le Stirling PDF tríd do bot Telegram cumraithe."
+
+[admin.settings.telegram.botUsername]
+label = "Ainm úsáideora an bhota"
+description = "Ainm úsáideora poiblí do bhota Telegram."
+
+[admin.settings.telegram.botToken]
+label = "Tócan an bhota"
+description = "Tócan API a sholáthraíonn BotFather do do bhota Telegram."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Fillteán Isteach"
+description = "Fillteán faoin eolaire pipeline ina stóráiltear comhaid Telegram isteach."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Úsáid iarmhír fhillteáin shaincheaptha"
+description = "Cuir an chat ID leis na fillteáin comhaid isteach chun uaslódálacha a leithlisiú de réir comhrá."
+
+[admin.settings.telegram.accessControl]
+title = "Rialú Rochtana"
+description = "Srian cé na húsáideoirí nó cainéil is féidir leo idirghníomhú leis an mbot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Ceadaigh IDanna Úsáideora Sonracha"
+description = "Nuair a chumasaítear é, ní féidir ach leis na IDanna úsáideora liostaithe an bot a úsáid."
+
+[admin.settings.telegram.allowUserIDs]
+label = "IDanna Úsáideora Ceadaithe"
+description = "Iontráil IDanna úsáideora Telegram a bhfuil cead acu idirghníomhú leis an mbot."
+placeholder = "Cuir ID úsáideora leis agus brúigh Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Ceadaigh IDanna Cainéil Sonracha"
+description = "Nuair a chumasaítear é, ní féidir ach leis na IDanna cainéil liostaithe an bot a úsáid."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "IDanna Cainéil Ceadaithe"
+description = "Iontráil IDanna cainéil Telegram a bhfuil cead acu idirghníomhú leis an mbot."
+placeholder = "Cuir ID cainéil leis agus brúigh Enter"
+
+[admin.settings.telegram.processing]
+title = "Próiseáil"
+description = "Rialaigh eatraimh sheiceála agus teorainneacha ama próiseála d’uaslódálacha Telegram."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Teorainn Ama Próiseála (soicind)"
+description = "Uasmhéid ama le fanacht le tasc próiseála sula dtuairiscítear earráid."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Eatramh Seiceála (ms)"
+description = "An t-eatramh idir sheiceálacha le haghaidh nuashonruithe nua Telegram."
+
+[admin.settings.telegram.feedback]
+title = "Teachtaireachtaí Aiseolais"
+description = "Roghnaigh cathain ba chóir don bot aiseolas a sheoladh chuig úsáideoirí agus cainéil."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Cumasaigh Aiseolas"
+description = "Rialaigh an seolann an bot teachtaireachtaí aiseolais ar chor ar bith."
+
+[admin.settings.telegram.feedback.channel]
+title = "Rialacha Aiseolais Cainéil"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Taispeáin \"Gan cáipéis bhailí\" (Cainéal)"
+description = "Cuir faoi chois an freagra \"Gan cáipéis bhailí\" do uaslódálacha cainéil."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Taispeáin earráidí próiseála (Cainéal)"
+description = "Seol teachtaireachtaí earráide próiseála chuig cainéil."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Taispeáin teachtaireachtaí earráide (Cainéal)"
+description = "Taispeáin teachtaireachtaí earráide mionsonraithe do chainéil."
+
+[admin.settings.telegram.feedback.user]
+title = "Rialacha Aiseolais Úsáideora"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Taispeáin \"Gan cáipéis bhailí\" (Úsáideoir)"
+description = "Cuir faoi chois an freagra \"Gan cáipéis bhailí\" d’uaslódálacha úsáideoirí."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Taispeáin earráidí próiseála (Úsáideoir)"
+description = "Seol teachtaireachtaí earráide próiseála chuig úsáideoirí."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Taispeáin teachtaireachtaí earráide (Úsáideoir)"
+description = "Taispeáin teachtaireachtaí earráide mionsonraithe d’úsáideoirí."
 
 [admin.settings.database]
 title = "Bunachar Sonraí"
@@ -4800,8 +4944,8 @@ label = "URL an Tosaigh"
 description = "Bun‑URL don tosaigh (m.sh. https://pdf.example.com). Úsáidtear é chun naisc chuireadh a ghiniúint i ríomhphoist. Fág folamh chun URL an chúlchórais a úsáid."
 
 [admin.settings.mail.frontendUrlNote]
-link = "Cumraigh i Socruithe an Chórais"
 note = "Nóta: Éilíonn sé go mbeidh URL an Tosaigh cumraithe. "
+link = "Cumraigh i Socruithe an Chórais"
 
 [admin.settings.legal]
 title = "Doiciméid Dhlíthiúla"
@@ -4869,7 +5013,6 @@ title = "Ceadúnas Gníomhach"
 file = "Foinse: Comhad ceadúnais ({{path}})"
 key = "Foinse: Eochair ceadúnais"
 type = "Cineál: {{type}}"
-
 noInput = "Tabhair eochair ceadúnais nó uaslódáil comhad teastais, le do thoil"
 success = "Rath"
 
@@ -4990,6 +5133,7 @@ noRecentFiles = "Níor aimsíodh comhaid le déanaí"
 googleDriveNotAvailable = "Níl comhtháthú Google Drive ar fáil"
 mobileUpload = "Uaslódáil Soghluaiste"
 mobileShort = "Soghluaiste"
+mobileUploadNotAvailable = "Níl uaslódáil soghluaiste cumasaithe"
 downloadSelected = "Íoslódáil Roghnaithe"
 saveSelected = "Sábháil Roghnaithe"
 openFiles = "Oscail Comhaid"
@@ -5367,6 +5511,15 @@ warning = "⚠️ Rabhadh: Ginfidh an gníomh seo eochracha API nua agus déanfa
 impact = "Stopfaidh aon fheidhmchláir nó seirbhísí atá ag úsáid na n-eochracha seo faoi láthair de bheith ag obair go dtí go ndéanfaidh tú iad a nuashonrú leis na heochracha nua."
 confirmPrompt = "An bhfuil tú cinnte gur mian leat leanúint ar aghaidh?"
 confirmCta = "Athnuaigh Eochracha"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Earráid API Key"
+failedToCreateApiKey = "Theip ar API Key a chruthú."
+failedToRetrieveApiKey = "Theip ar API Key a fháil ón bhfreagra."
+failedToFetchApiKey = "Theip ar API Key a fháil."
+apiKeyRefreshed = "API Key Athnuaite"
+apiKeyRefreshedBody = "Athnuaíodh do API Key go rathúil."
+failedToRefreshApiKey = "Theip ar an API Key a athnuachan."
 
 [AddAttachmentsRequest]
 attachments = "Roghnaigh Iatáin"
@@ -6217,6 +6370,7 @@ description = "Cuir isteach URL iomlán do fhreastalaí Stirling PDF féin-óst�
 
 [setup.server.error]
 emptyUrl = "Cuir isteach URL freastalaí le do thoil"
+invalidUrl = "Formáid URL neamhbhailí. Cuir isteach URL bailí cosúil le https://your-server.com"
 unreachable = "Níorbh fhéidir ceangal leis an bhfreastalaí"
 testFailed = "Theip ar thástáil an cheangail"
 configFetch = "Níor éirigh le cumraíocht an fhreastalaí a fháil. Seiceáil an URL agus bain triail eile as."
@@ -6235,6 +6389,7 @@ connectingTo = "Ag ceangal le:"
 submit = "Logáil Isteach"
 signInWith = "Sínigh isteach le"
 oauthPending = "Brabhsálaí á oscailt le haghaidh fíordheimhnithe..."
+sso = "Single Sign-On"
 orContinueWith = "Nó lean ar aghaidh le ríomhphost"
 serverRequirement = "Nóta: Ní mór an cumas logála isteach a bheith cumasaithe ar an bhfreastalaí."
 showInstructions = "Conas é a chumasú?"
@@ -6463,6 +6618,7 @@ failed = "Tharla earráid agus téacs á chur leis an PDF."
 [mobileUpload]
 title = "Uaslódáil ó Shoghluaiste"
 description = "Scan an cód QR seo le do ghléas soghluaiste chun grianghraif a uaslódáil go díreach chuig an leathanach seo."
+descriptionNoConvert = "Scanáil chun grianghraif a uaslódáil ó do ghléas soghluaiste."
 error = "Earráid Ceangail"
 pollingError = "Earráid ag seiceáil comhad"
 sessionId = "Aitheantas Seisiúin"
@@ -6472,6 +6628,7 @@ expiryWarningMessage = "Rachaidh an cód QR seo in éag i {{seconds}} soicind. G
 filesReceived = "{{count}} comhad(anna) faighte"
 connected = "Gléas soghluaiste ceangailte"
 instructions = "Oscail an aip ceamara ar do ghuthán agus scan an cód seo. Aistreofar comhaid go díreach idir gléasanna."
+instructionsNoConvert = "Scanáil le ceamara do ghutháin chun comhaid a uaslódáil."
 
 [mobileScanner]
 title = "Scanóir Soghluaiste"
@@ -6496,7 +6653,7 @@ cameraDescription = "Scan doiciméid ag baint úsáide as ceamara do ghléis le 
 fileUpload = "Uaslódáil Comhad"
 fileDescription = "Uaslódáil grianghraif nó doiciméid atá ann cheana féin ó do ghléas"
 cameraAccessDenied = "Diúltaíodh rochtain ceamara. Cumasaigh rochtain ceamara le do thoil."
-back= "Ar ais"
+back = "Ar ais"
 settings = "Socruithe"
 edgeDetection = "Braith Imeall"
 flashlight = "Splanc"
