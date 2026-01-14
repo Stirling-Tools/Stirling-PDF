@@ -340,6 +340,10 @@ advance = "متقدم"
 edit = "عرض وتعديل"
 popular = "المفضل"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "التفضيلات"
 
@@ -435,6 +439,25 @@ latestVersion = "أحدث إصدار"
 checkForUpdates = "التحقق من التحديثات"
 viewDetails = "عرض التفاصيل"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "اختصارات لوحة المفاتيح"
 description = "خصّص اختصارات لوحة المفاتيح للوصول السريع إلى الأدوات. انقر \"تغيير الاختصار\" واضغط مجموعة مفاتيح جديدة. اضغط Esc للإلغاء."
@@ -488,11 +511,16 @@ low = "منخفض"
 title = "تغيير بيانات الاعتماد"
 header = "تحديث تفاصيل حسابك"
 changePassword = "أنت تستخدم بيانات تسجيل الدخول الافتراضية. يرجى إدخال كلمة مرور جديدة"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "اسم المستخدم الجديد"
 oldPassword = "كلمة المرور الحالية"
 newPassword = "كلمة المرور الجديدة"
 confirmNewPassword = "تأكيد كلمة المرور الجديدة"
 submit = "إرسال التغييرات"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "إعدادات الحساب"
@@ -707,6 +735,11 @@ desc = "اكتشاف الصور الممسوحة وتقسيمها إلى صفح�
 tags = "توقيع،إمضاء"
 title = "توقيع"
 desc = "إضافة التوقيع إلى PDF عن طريق الرسم أو النص أو الصورة"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "تبسيط،إزالة،تفاعلي"
@@ -1245,6 +1278,21 @@ cbzOptions = "خيارات التحويل من CBZ إلى PDF"
 optimizeForEbook = "تحسين PDF لقارئات الكتب الإلكترونية (يستخدم Ghostscript)"
 cbzOutputOptions = "خيارات التحويل من PDF إلى CBZ"
 cbzDpi = "DPI لعرض الصور"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "تحويل,صورة,jpg,صورة,صورة فوتوغرافية"
@@ -1361,6 +1409,11 @@ header = "Add attachments"
 add = "إضافة مرفق"
 remove = "إزالة المرفق"
 embed = "تضمين مرفق"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add attachments"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "محفوظ"
 label = "رفع صورة التوقيع"
 placeholder = "اختر ملف صورة"
 hint = "ارفع صورة PNG أو JPG لتوقيعك"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "كيفية إضافة توقيع"
@@ -2350,6 +2407,11 @@ note = "التسطيح يزيل العناصر التفاعلية من PDF وي�
 [flatten.options.flattenOnlyForms]
 label = "تسطيح النماذج فقط"
 desc = "تسطيح حقول النماذج فقط مع إبقاء العناصر التفاعلية الأخرى كما هي"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "نتائج التسطيح"
@@ -2925,6 +2987,7 @@ header = "اقتصاص PDF"
 submit = "إرسال"
 noFileSelected = "حدّد ملف PDF لبدء القص"
 reset = "إعادة التعيين إلى كامل PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "معاينة منطقة القص"
@@ -3342,6 +3405,19 @@ placeholder = "أدخل عدد التقسيمات الأفقية"
 label = "التقسيمات العمودية"
 placeholder = "أدخل عدد التقسيمات العمودية"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "ختم, إضافة صورة, صورة وسط, علامة مائية, PDF, تضمين, تخصيص"
 header = "ختم PDF"
@@ -3703,6 +3779,19 @@ filesize = "حجم الملف"
 [compress.grayscale]
 label = "تطبيق التدرج الرمادي للضغط"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "نظرة عامة على إعدادات الضغط"
 
@@ -3720,6 +3809,10 @@ bullet2 = "القيم المرتفعة تقلّل حجم الملف"
 title = "تدرّج رمادي"
 text = "حدد هذا الخيار لتحويل جميع الصور إلى الأبيض والأسود، ما قد يقلّل حجم الملف بشكل ملحوظ خاصة لملفات PDF الممسوحة أو الكثيرة الصور."
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "حدث خطأ أثناء ضغط PDF."
 
@@ -3731,6 +3824,11 @@ failed = "حدث خطأ أثناء ضغط PDF."
 [compress.selectText.1]
 _value = "إعدادات الضغط"
 1 = "1-3 ضغط PDF،</br> 4-6 ضغط صور خفيف،</br> 7-9 ضغط صور قوي سيقلّل جودة الصور بشكل كبير"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "هذا الملف محمي بكلمة مرور. يرجى إدخال كلمة المرور:"
@@ -3971,23 +4069,92 @@ deleteSelected = "حذف الصفحات المحددة"
 closePdf = "إغلاق PDF"
 exportAll = "تصدير PDF"
 downloadSelected = "تنزيل الملفات المحددة"
-downloadAll = "تنزيل الكل"
-saveAll = "حفظ الكل"
+annotations = "Annotations"
+exportSelected = "تصدير الصفحات المحددة"
+saveChanges = "حفظ التغييرات"
 toggleTheme = "تبديل السِمة"
-toggleBookmarks = "تبديل الإشارات المرجعية"
 language = "اللغة"
+toggleAnnotations = "تبديل ظهور التعليقات التوضيحية"
 search = "بحث في PDF"
 panMode = "وضع السحب"
 rotateLeft = "تدوير لليسار"
 rotateRight = "تدوير لليمين"
 toggleSidebar = "تبديل الشريط الجانبي"
-exportSelected = "تصدير الصفحات المحددة"
-toggleAnnotations = "تبديل ظهور التعليقات التوضيحية"
-annotationMode = "تبديل وضع التعليقات"
+toggleBookmarks = "تبديل الإشارات المرجعية"
 print = "طباعة PDF"
-draw = "رسم"
-save = "حفظ"
-saveChanges = "حفظ التغييرات"
+downloadAll = "تنزيل الكل"
+saveAll = "حفظ الكل"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "بحث PDF"
@@ -4038,12 +4205,20 @@ settings = "إعدادات"
 adminSettings = "إعدادات المشرف"
 allTools = "كل الأدوات"
 reader = "القارئ"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "جولة الأدوات"
 toolsTourDesc = "تعرّف على ما تستطيع الأدوات فعله"
 adminTour = "جولة المسؤول"
 adminTourDesc = "استكشف إعدادات وميزات المسؤول"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "خطأ"
@@ -5069,6 +5244,7 @@ loading = "جارٍ التحميل..."
 back = "رجوع"
 continue = "متابعة"
 error = "خطأ"
+save = "Save"
 
 [config.overview]
 title = "تهيئة التطبيق"
@@ -5235,6 +5411,16 @@ finish = "إنهاء"
 startTour = "بدء الجولة"
 startTourDescription = "قم بجولة إرشادية للتعرّف على الميزات الرئيسية في Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "مرحبًا بك في Stirling PDF!"
 description = "هل ترغب في جولة سريعة لمدة دقيقة للتعرّف على الميزات الرئيسية وكيفية البدء؟"
@@ -5254,6 +5440,10 @@ skipForNow = "تخطي الآن"
 download = "تنزيل →"
 showMeAround = "أرني الجولة"
 skipTheTour = "تخطي الجولة"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "تخطي الآن"
@@ -5568,6 +5758,28 @@ contactSales = "اتصل بالمبيعات"
 contactToUpgrade = "اتصل بنا للترقية أو تخصيص خطتك"
 maxUsers = "الحد الأقصى للمستخدمين"
 upTo = "حتى"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "شهر"
@@ -5771,6 +5983,8 @@ notAvailable = "نظام التدقيق غير متاح"
 notAvailableMessage = "لم يتم تهيئة نظام التدقيق أو أنه غير متاح."
 disabled = "تم تعطيل تسجيل التدقيق"
 disabledMessage = "قم بتمكين تسجيل التدقيق في إعدادات التطبيق لتتبع أحداث النظام."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "خطأ في تحميل نظام التدقيق"
@@ -6025,6 +6239,8 @@ reset = "إعادة تعيين التغييرات"
 downloadJson = "تنزيل JSON"
 generatePdf = "توليد PDF"
 saveChanges = "حفظ التغييرات"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ضبط النص تلقائياً ليتناسب مع الصناديق"
@@ -6042,6 +6258,24 @@ descriptionInline = "نصيحة: اضغط Ctrl (Cmd) أو Shift لتحديد ع�
 [pdfTextEditor.options.forceSingleElement]
 title = "قفل النص المُحرّر ضمن عنصر PDF واحد"
 description = "عند التفعيل، يصدّر المحرر كل صندوق نص مُحرّر كعنصر نص PDF واحد لتجنب تراكب المحارف أو اختلاط الخطوط."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "دمج الصناديق المحددة"
