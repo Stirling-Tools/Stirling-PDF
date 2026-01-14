@@ -134,7 +134,7 @@ unsupported = "Não suportado"
 
 [toolPanel]
 placeholder = "Escolha uma ferramenta para começar"
-alpha = "Alfa"
+alpha = "Alpha"
 premiumFeature = "Recurso premium:"
 comingSoon = "Em breve:"
 
@@ -966,8 +966,8 @@ desc = "Sobrepor um PDF sobre outro"
 title = "Sobrepor PDFs"
 
 [home.pdfTextEditor]
-title = "Editor de Texto em PDF"
-desc = "Edite texto e imagens existentes em PDFs"
+title = "Editor de texto de PDF"
+desc = "Revise e edite exportações JSON do Stirling PDF com edição de texto agrupada e regeneração do PDF"
 
 [home.addText]
 tags = "texto,anotação,rótulo"
@@ -1274,7 +1274,7 @@ odtExt = "Texto OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Apresentação OpenDocument (.odp)"
 txtExt = "Texto simples (.txt)"
-rtfExt = "Formato Rich Text (.rtf)"
+rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Arquivos selecionados"
 noFileSelected = "Nenhum arquivo selecionado. Use o painel de arquivos para adicionar arquivos."
 convertFiles = "Converter arquivos"
@@ -4262,7 +4262,7 @@ files = "Arquivos"
 activity = "Ativ."
 help = "Ajuda"
 account = "Conta"
-config = "Configurações"
+config = "Config"
 settings = "Ajustes"
 adminSettings = "Ajustes admin"
 allTools = "Ferram."
@@ -4507,7 +4507,7 @@ description = "Rastrear ações do usuário e eventos do sistema para conformida
 
 [admin.settings.security.audit.level]
 label = "Nível de auditoria"
-description = "0=DESLIGADO, 1=BÁSICO, 2=PADRÃO, 3=DETALHADO"
+description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 
 [admin.settings.security.audit.retentionDays]
 label = "Retenção de auditoria (dias)"
@@ -4602,11 +4602,11 @@ label = "URL do emissor"
 description = "A URL do emissor do provedor OAuth2"
 
 [admin.settings.connections.oauth2.clientId]
-label = "ID do cliente"
+label = "Client ID"
 description = "O Client ID do OAuth2 do seu provedor"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Segredo do cliente"
+label = "Client Secret"
 description = "O Client Secret do OAuth2 do seu provedor"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -5668,7 +5668,7 @@ upgrade = "Fazer upgrade agora →"
 freeTitle = "Licença do servidor"
 overLimitTitle = "Necessária licença do servidor"
 overLimitBody = "Nossa licença permite até <strong>{{freeTierLimit}}</strong> usuários grátis por servidor. Você tem <strong>{{overLimitUserCopy}}</strong> usuários do Stirling. Para continuar sem interrupções, faça upgrade para o plano Stirling Server - <strong>assentos ilimitados</strong>, edição de texto em PDF e controle total de admin por US$ 99/servidor/mês."
-freeBody = "Nossa licença <strong>Open-Core</strong> permite até <strong>{{freeTierLimit}}</strong> usuários gratuitos por servidor. Para escalar sem interrupções, recomendamos o plano Stirling Server - <strong>assentos ilimitados</strong> e <strong>suporte a SSO</strong> por US$ 99/servidor/mês."
+freeBody = "Nossa licença <strong>Open-Core</strong> permite até <strong>{{freeTierLimit}}</strong> usuários grátis por servidor. Para escalar sem interrupções e ter acesso antecipado à nova <strong>ferramenta de edição de texto em PDF</strong>, recomendamos o plano Stirling Server - edição completa e <strong>assentos ilimitados</strong> por US$ 99/servidor/mês."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5714,7 +5714,7 @@ active = "Ativo"
 disabled = "Desativado"
 activeSession = "Sessão ativa"
 member = "Membro"
-admin = "Administrador"
+admin = "Admin"
 editRole = "Editar função"
 enable = "Ativar"
 disable = "Desativar"
@@ -6124,7 +6124,7 @@ emailInvalid = "Digite um endereço de e-mail válido"
 title = "Informe seu e-mail"
 description = "Usaremos isso para enviar sua chave de licença e recibos."
 emailLabel = "Endereço de e-mail"
-emailPlaceholder = "seu@email.com"
+emailPlaceholder = "your@email.com"
 continue = "Continuar"
 modalTitle = "Começar - {{planName}}"
 
@@ -6406,7 +6406,7 @@ label = "Usuário"
 placeholder = "Digite seu usuário"
 
 [setup.login.email]
-label = "E-mail"
+label = "Email"
 placeholder = "Digite seu e-mail"
 
 [setup.login.password]
@@ -6443,7 +6443,7 @@ paragraph = "Página de parágrafos"
 sparse = "Texto esparso"
 
 [pdfTextEditor.groupingMode]
-auto = "Automático"
+auto = "Auto"
 paragraph = "Parágrafo"
 singleLine = "Linha única"
 

@@ -102,7 +102,7 @@ visitGithub = "Bisitatu Github biltegia"
 donate = "Dohaintza egin"
 color = "Color"
 sponsor = "Babestu"
-info = "Informazioa"
+info = "Info"
 pro = "Pro"
 page = "Orrialdea"
 pages = "Orrialdeak"
@@ -134,7 +134,7 @@ unsupported = "Ez da onartzen"
 
 [toolPanel]
 placeholder = "Aukeratu tresna bat hasteko"
-alpha = "Alfa"
+alpha = "Alpha"
 premiumFeature = "Premium ezaugarria:"
 comingSoon = "Laster eskuragarri:"
 
@@ -282,7 +282,7 @@ iAgreeToThe = "Onartzen ditut honako hauek guztiak"
 terms = "Baldintzak eta erabilera-baldintzak"
 accessibility = "Irisgarritasuna"
 cookie = "Cookie politika"
-impressum = "Lege oharra"
+impressum = "Impressum"
 showCookieBanner = "Cookie-hobespenak"
 
 [pipeline]
@@ -304,7 +304,7 @@ saveSettings = "Gorde eragiketa-ezarpenak"
 pipelineNamePrompt = "Sartu hemen pipeline izena"
 selectOperation = "Aukeratu eragiketa"
 addOperationButton = "Gehitu eragiketa"
-pipelineHeader = "Pipelinea:"
+pipelineHeader = "Pipeline:"
 saveButton = "Distira"
 validateButton = "Balidatu"
 
@@ -359,7 +359,7 @@ teams = "Taldeak"
 title = "Konfigurazioa"
 systemSettings = "Sistemaren ezarpenak"
 features = "Eginbideak"
-endpoints = "Amaiera-puntuak"
+endpoints = "Endpoints"
 database = "Datu-basea"
 advanced = "Aurreratua"
 
@@ -377,7 +377,7 @@ usageAnalytics = "Erabilera-analitika"
 
 [settings.policiesPrivacy]
 title = "Politikak eta Pribatutasuna"
-legal = "Lege"
+legal = "Legal"
 privacy = "Pribatutasuna"
 
 [settings.developer]
@@ -561,7 +561,7 @@ syncToAccount = "Sync Kontua <- Nabigatzailea"
 [adminUserSettings]
 title = "Erabiltzailearen Ezarpenen Kontrolak"
 header = "Admin Erabiltzailearen Ezarpenen Kontrolak"
-admin = "Administratzailea"
+admin = "Admin"
 user = "Erabiltzaile"
 addUser = "Erabiltzaile berria"
 deleteUser = "Ezabatu erabiltzailea"
@@ -966,8 +966,8 @@ desc = "Overlays PDFs on-top of another PDF"
 title = "Gainjarri PDFak"
 
 [home.pdfTextEditor]
-title = "PDF testu editorea"
-desc = "Editatu PDFetako lehendik dauden testuak eta irudiak"
+title = "PDF testu-editorea"
+desc = "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
 
 [home.addText]
 tags = "testua,anotazioa,etiketa"
@@ -1274,7 +1274,7 @@ odtExt = "OpenDocument testua (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "OpenDocument aurkezpena (.odp)"
 txtExt = "Testu laua (.txt)"
-rtfExt = "Testu aberatsaren formatua (.rtf)"
+rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Hautatutako fitxategiak"
 noFileSelected = "Ez da fitxategirik hautatu. Erabili fitxategi-panela fitxategiak gehitzeko."
 convertFiles = "Bihurtu fitxategiak"
@@ -3769,7 +3769,7 @@ title = "PDF Orrialde bakarrera"
 header = "PDF Orrialde bakarrera"
 submit = "Orrialde bakarrera bihurtu"
 description = "Tresna honek zure PDFko orri guztiak orri handi bakarrean batuko ditu. Zabalera bera izango du jatorrizko orrienarekin, baina altuera orri guztien altueren batura izango da."
-filenamePrefix = "orrialde_bakarra"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "Hautatu PDF fitxategi bat ikuspegi nagusian hasteko"
@@ -4890,7 +4890,7 @@ description = "Sistema zabalagoko aldi baterako direktorioa garbitu ala ez (kont
 label = "Prozesu-exekutorearen mugak"
 description = "Konfiguratu saio-mugak eta denbora-mugak prozesu-exekutore bakoitzerako"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDFtik HTMLra"
+pdfToHtml = "PDF to HTML"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -4974,7 +4974,7 @@ label = "Cookieen politika"
 description = "Cookieen politikara doan URLa edo fitxategi-izena"
 
 [admin.settings.legal.impressum]
-label = "Lege oharra"
+label = "Impressum"
 description = "Impressum-era doan URLa edo fitxategi-izena (beharrezkoa jurisdikzio batzuetan)"
 
 [admin.settings.premium]
@@ -5668,7 +5668,7 @@ upgrade = "Eguneratu orain →"
 freeTitle = "Zerbitzari-lizentzia"
 overLimitTitle = "Beharrezkoa da zerbitzari-lizentzia"
 overLimitBody = "Gure lizentziak baimentzen ditu <strong>{{freeTierLimit}}</strong> erabiltzaile doan zerbitzari bakoitzeko. <strong>{{overLimitUserCopy}}</strong> Stirling erabiltzaile dituzu. Jarraitzeko etenik gabe, eguneratu Stirling Server planera - <strong>eserleku mugagabeak</strong>, PDF testu-edizioa, eta admin kontrol osoa $99/zerbitzari/hilean."
-freeBody = "Gure <strong>Open-Core</strong> lizentziak zerbitzari bakoitzeko doan gehienez <strong>{{freeTierLimit}}</strong> erabiltzaile baimentzen ditu. Etenik gabe eskalatzeko, Stirling Server plana gomendatzen dugu - <strong>eserleku mugagabeak</strong> eta <strong>SSO euskarria</strong> $99/server/mo."
+freeBody = "Gure <strong>Open-Core</strong> lizentziak <strong>{{freeTierLimit}}</strong> erabiltzaile arte baimentzen ditu doan zerbitzari bakoitzeko. Etenik gabe eskalatzeko eta gure <strong>PDF testu-edizio tresna</strong> berrirako sarbide goiztiarra lortzeko, gomendatzen dugu Stirling Server plana - edizio osoa eta <strong>eserleku mugagabeak</strong> $99/zerbitzari/hilean."
 
 [onboarding.desktopInstall]
 title = "Deskargatu"
@@ -5714,7 +5714,7 @@ active = "Aktibo"
 disabled = "Desgaituta"
 activeSession = "Saio aktiboa"
 member = "Kidea"
-admin = "Administratzailea"
+admin = "Admin"
 editRole = "Rola editatu"
 enable = "Gaitu"
 disable = "Desgaitu"
@@ -6294,7 +6294,7 @@ title = "Endpoints erabileraren diagrama"
 
 [usage.table]
 title = "Estatistika xeheak"
-endpoint = "Amaiera-puntua"
+endpoint = "Endpoint"
 visits = "Bisitak"
 percentage = "Ehunekoa"
 noData = "Ez dago daturik eskuragarri"
@@ -6443,7 +6443,7 @@ paragraph = "Paragrafo orria"
 sparse = "Testu sakabanatua"
 
 [pdfTextEditor.groupingMode]
-auto = "Automatikoa"
+auto = "Auto"
 paragraph = "Paragrafoa"
 singleLine = "Lerro bakarra"
 

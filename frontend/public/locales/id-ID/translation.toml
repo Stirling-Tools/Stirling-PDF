@@ -198,7 +198,7 @@ title = "Pengaturan Dibuka"
 message = "Silakan pilih Stirling PDF di pengaturan sistem Anda"
 
 [defaultApp.error]
-title = "Kesalahan"
+title = "Error"
 message = "Gagal menyetel penangan PDF default"
 
 [language]
@@ -360,7 +360,7 @@ title = "Konfigurasi"
 systemSettings = "Pengaturan Sistem"
 features = "Fitur"
 endpoints = "Endpoint"
-database = "Basis Data"
+database = "Database"
 advanced = "Lanjutan"
 
 [settings.securityAuth]
@@ -396,7 +396,7 @@ logout = "Keluar"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Dihost Sendiri"
+selfhosted = "Self-Hosted"
 
 [settings.general]
 title = "Umum"
@@ -592,8 +592,8 @@ usage = "Lihat Penggunaan"
 [endpointStatistics]
 title = "Statistik Endpoint"
 header = "Statistik Endpoint"
-top10 = "10 Teratas"
-top20 = "20 Teratas"
+top10 = "Top 10"
+top20 = "Top 20"
 all = "Semua"
 refresh = "Muat Ulang"
 dataTypeLabel = "Tipe Data:"
@@ -967,7 +967,7 @@ title = "Tumpuk PDF"
 
 [home.pdfTextEditor]
 title = "Editor Teks PDF"
-desc = "Edit teks dan gambar yang ada di dalam PDF"
+desc = "Tinjau dan edit ekspor Stirling PDF JSON dengan pengeditan teks terkelompok dan pembuatan ulang PDF"
 
 [home.addText]
 tags = "teks,anotasi,label"
@@ -1230,7 +1230,7 @@ selectFilesPlaceholder = "Pilih file di tampilan utama untuk memulai"
 settings = "Pengaturan"
 conversionCompleted = "Konversi selesai"
 results = "Hasil"
-defaultFilename = "file_terkonversi"
+defaultFilename = "converted_file"
 conversionResults = "Hasil Konversi"
 convertFrom = "Konversi dari"
 convertTo = "Konversi ke"
@@ -1449,7 +1449,7 @@ title = "Tambahkan Watermark"
 desc = "Tambahkan tanda air teks atau gambar ke file PDF"
 completed = "Tanda air ditambahkan"
 submit = "Tambahkan Watermark"
-filenamePrefix = "bertanda_air"
+filenamePrefix = "watermarked"
 
 [watermark.error]
 failed = "Terjadi kesalahan saat menambahkan tanda air ke PDF."
@@ -2807,7 +2807,7 @@ header = "Hapus sertifikat digital dari PDF"
 selectPDF = "Pilih file PDF:"
 submit = "Hapus Tanda Tangan"
 description = "Alat ini akan menghapus tanda tangan sertifikat digital dari dokumen PDF Anda."
-filenamePrefix = "tanpa_tanda_tangan"
+filenamePrefix = "unsigned"
 
 [removeCertSign.files]
 placeholder = "Pilih file PDF di tampilan utama untuk memulai"
@@ -3769,7 +3769,7 @@ title = "PDF Ke Halaman Tunggal"
 header = "PDF Ke Halaman Tunggal"
 submit = "Konversi ke Halaman Tunggal"
 description = "Alat ini akan menggabungkan semua halaman PDF Anda menjadi satu halaman besar. Lebarnya akan tetap sama dengan halaman asli, tetapi tingginya merupakan penjumlahan dari semua tinggi halaman."
-filenamePrefix = "halaman_tunggal"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "Pilih file PDF di tampilan utama untuk memulai"
@@ -4765,7 +4765,7 @@ label = "Tampilkan pesan kesalahan (Pengguna)"
 description = "Tampilkan pesan kesalahan terperinci untuk pengguna."
 
 [admin.settings.database]
-title = "Basis Data"
+title = "Database"
 description = "Konfigurasikan pengaturan koneksi database kustom untuk penerapan enterprise."
 configuration = "Konfigurasi Database"
 
@@ -5450,14 +5450,14 @@ done = "Selesai"
 loading = "Memuat..."
 back = "Kembali"
 continue = "Lanjut"
-error = "Kesalahan"
+error = "Error"
 save = "Simpan"
 
 [config.overview]
 title = "Konfigurasi Aplikasi"
 description = "Pengaturan dan detail konfigurasi aplikasi saat ini."
 loading = "Memuat konfigurasi..."
-error = "Kesalahan"
+error = "Error"
 warning = "Peringatan Konfigurasi"
 
 [config.overview.sections]
@@ -5668,7 +5668,7 @@ upgrade = "Upgrade sekarang →"
 freeTitle = "Lisensi Server"
 overLimitTitle = "Perlu Lisensi Server"
 overLimitBody = "Lisensi kami mengizinkan hingga <strong>{{freeTierLimit}}</strong> pengguna gratis per server. Anda memiliki <strong>{{overLimitUserCopy}}</strong> pengguna Stirling. Untuk terus berjalan tanpa gangguan, upgrade ke paket Stirling Server - <strong>kursi tanpa batas</strong>, pengeditan teks PDF, dan kontrol admin penuh seharga $99/server/bulan."
-freeBody = "Lisensi <strong>Open-Core</strong> kami mengizinkan hingga <strong>{{freeTierLimit}}</strong> pengguna gratis per server. Untuk meningkatkan skala tanpa gangguan, kami merekomendasikan paket Stirling Server - <strong>pengguna tanpa batas</strong> dan <strong>dukungan SSO</strong> seharga $99/server/mo."
+freeBody = "Lisensi <strong>Open-Core</strong> kami mengizinkan hingga <strong>{{freeTierLimit}}</strong> pengguna gratis per server. Untuk skala tanpa hambatan dan mendapatkan akses awal ke <strong>alat pengeditan teks PDF</strong> baru kami, kami sarankan paket Stirling Server - pengeditan penuh dan <strong>kursi tanpa batas</strong> seharga $99/server/bulan."
 
 [onboarding.desktopInstall]
 title = "Unduh"
@@ -5949,7 +5949,7 @@ hideComparison = "Sembunyikan Perbandingan Fitur"
 featureComparison = "Perbandingan Fitur"
 from = "Mulai"
 perMonth = "/bulan"
-perSeat = "/pengguna"
+perSeat = "/seat"
 withServer = "+ Paket Server"
 licensedSeats = "Berlisensi: {{count}} seat"
 includedInCurrent = "Termasuk dalam Paket Anda"
@@ -6132,7 +6132,7 @@ modalTitle = "Mulai - {{planName}}"
 title = "Pilih Periode Penagihan"
 savingsNote = "Hemat {{percent}}% dengan penagihan tahunan"
 basePrice = "Harga Dasar"
-seatPrice = "Per Pengguna"
+seatPrice = "Per Seat"
 totalForSeats = "Total ({{count}} seat)"
 selectMonthly = "Pilih Bulanan"
 selectYearly = "Pilih Tahunan"
@@ -6337,7 +6337,7 @@ label = "Pilih Server"
 description = "Server self-hosted"
 
 [setup.step3]
-label = "Masuk"
+label = "Login"
 description = "Masukkan kredensial"
 
 [setup.mode.saas]
@@ -6388,7 +6388,7 @@ step3 = "Mulai ulang server"
 title = "Masuk"
 subtitle = "Masukkan kredensial Anda untuk melanjutkan"
 connectingTo = "Menghubungkan ke:"
-submit = "Masuk"
+submit = "Login"
 signInWith = "Masuk dengan"
 oauthPending = "Membuka browser untuk autentikasi..."
 sso = "Single Sign-On"

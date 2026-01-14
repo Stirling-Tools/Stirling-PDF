@@ -967,7 +967,7 @@ title = "هم‌پوشانی PDF‌ها"
 
 [home.pdfTextEditor]
 title = "ویرایشگر متن PDF"
-desc = "ویرایش متن و تصاویر موجود در PDFها"
+desc = "بازبینی و ویرایش خروجی‌های JSON Stirling PDF با ویرایش گروهی متن و بازتولید PDF"
 
 [home.addText]
 tags = "متن,حاشیه‌نویسی,برچسب"
@@ -4602,11 +4602,11 @@ label = "URL صادرکننده"
 description = "Issuer URL ارائه‌دهنده OAuth2"
 
 [admin.settings.connections.oauth2.clientId]
-label = "شناسهٔ کلاینت"
+label = "Client ID"
 description = "Client ID مربوط به OAuth2 از ارائه‌دهنده شما"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "راز کلاینت"
+label = "Client Secret"
 description = "Client Secret مربوط به OAuth2 از ارائه‌دهنده شما"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4637,7 +4637,7 @@ label = "ارائه‌دهنده"
 description = "نام ارائه‌دهنده SAML2"
 
 [admin.settings.connections.saml2.registrationId]
-label = "شناسهٔ ثبت‌نام"
+label = "Registration ID"
 description = "شناسه ثبت‌نام SAML2"
 
 [admin.settings.connections.saml2.autoCreateUser]
@@ -4974,7 +4974,7 @@ label = "خط‌مشی کوکی"
 description = "URL یا نام فایل برای خط‌مشی کوکی"
 
 [admin.settings.legal.impressum]
-label = "اطلاعات حقوقی"
+label = "Impressum"
 description = "URL یا نام فایل برای impressum (در برخی حوزه‌های قضایی الزامی است)"
 
 [admin.settings.premium]
@@ -5668,7 +5668,7 @@ upgrade = "همین حالا ارتقا بده →"
 freeTitle = "لایسنس سرور"
 overLimitTitle = "نیاز به لایسنس سرور"
 overLimitBody = "مجوز ما تا <strong>{{freeTierLimit}}</strong> کاربر رایگان به‌ازای هر سرور را مجاز می‌داند. شما <strong>{{overLimitUserCopy}}</strong> کاربر Stirling دارید. برای ادامه بدون وقفه، به پلن Stirling Server ارتقا دهید - <strong>صندلی نامحدود</strong>، ویرایش متن PDF و کنترل کامل ادمین با 99$ به‌ازای هر سرور در ماه."
-freeBody = "مجوز <strong>Open-Core</strong> ما به‌ازای هر سرور اجازهٔ استفادهٔ رایگان برای حداکثر <strong>{{freeTierLimit}}</strong> کاربر را می‌دهد. برای مقیاس‌دهی بدون وقفه، طرح Stirling Server را توصیه می‌کنیم - <strong>تعداد کاربران نامحدود</strong> و <strong>پشتیبانی از SSO</strong> با $99/سرور/ماه."
+freeBody = "مجوز <strong>Open-Core</strong> ما تا <strong>{{freeTierLimit}}</strong> کاربر رایگان به‌ازای هر سرور را مجاز می‌داند. برای مقیاس‌پذیری بدون وقفه و دسترسی زودهنگام به <strong>ابزار ویرایش متن PDF</strong> جدیدمان، پلن Stirling Server را پیشنهاد می‌کنیم - ویرایش کامل و <strong>صندلی نامحدود</strong> با 99$ به‌ازای هر سرور در ماه."
 
 [onboarding.desktopInstall]
 title = "دانلود"

@@ -967,7 +967,7 @@ title = "PDF'leri Bindirme"
 
 [home.pdfTextEditor]
 title = "PDF Metin Düzenleyici"
-desc = "PDF'lerin içindeki mevcut metinleri ve görselleri düzenleyin"
+desc = "Gruplu metin düzenleme ve PDF yeniden oluşturma ile Stirling PDF JSON dışa aktarımlarını gözden geçirin ve düzenleyin"
 
 [home.addText]
 tags = "metin,ek açıklama,etiket"
@@ -5668,7 +5668,7 @@ upgrade = "Şimdi yükselt →"
 freeTitle = "Sunucu Lisansı"
 overLimitTitle = "Sunucu Lisansı Gerekli"
 overLimitBody = "Lisansımız, sunucu başına ücretsiz olarak en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya izin verir. <strong>{{overLimitUserCopy}}</strong> Stirling kullanıcınız var. Kesintisiz devam etmek için Stirling Server planına yükseltin - <strong>sınırsız koltuk</strong>, PDF metin düzenleme ve tam yönetici kontrolü $99/server/ay."
-freeBody = "<strong>Open-Core</strong> lisanslamamız, sunucu başına en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya ücretsiz izin verir. Kesintisiz ölçeklendirme için Stirling Server planını öneririz - <strong>sınırsız kullanıcı</strong> ve <strong>SSO desteği</strong> için $99/sunucu/ay."
+freeBody = "<strong>Open-Core</strong> lisansımız, sunucu başına ücretsiz olarak en fazla <strong>{{freeTierLimit}}</strong> kullanıcıya izin verir. Kesintisiz ölçeklemek ve yeni <strong>PDF metin düzenleme aracımıza</strong> erken erişim almak için Stirling Server planını öneririz - tam düzenleme ve <strong>sınırsız koltuk</strong> $99/server/ay."
 
 [onboarding.desktopInstall]
 title = "İndir"

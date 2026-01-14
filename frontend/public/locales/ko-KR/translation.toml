@@ -967,7 +967,7 @@ title = "PDF 오버레이"
 
 [home.pdfTextEditor]
 title = "PDF 텍스트 편집기"
-desc = "PDF 내부의 기존 텍스트와 이미지를 편집합니다"
+desc = "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
 
 [home.addText]
 tags = "텍스트,주석,레이블"
@@ -1990,8 +1990,8 @@ placeholder = "수정 날짜"
 [changeMetadata.trapped]
 label = "트래핑 상태"
 unknown = "알 수 없음"
-true = "참"
-false = "거짓"
+true = "True"
+false = "False"
 
 [changeMetadata.advanced]
 title = "고급 옵션"
@@ -4507,7 +4507,7 @@ description = "컴플라이언스 및 보안 모니터링을 위해 사용자 �
 
 [admin.settings.security.audit.level]
 label = "감사 수준"
-description = "0=끄기, 1=기본, 2=표준, 3=상세"
+description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 
 [admin.settings.security.audit.retentionDays]
 label = "감사 로그 보존 기간(일)"
@@ -4890,7 +4890,7 @@ description = "더 넓은 시스템 임시 디렉터리를 정리할지 여부(�
 label = "프로세스 실행기 제한"
 description = "각 프로세스 실행기의 세션 제한 및 시간 제한을 구성합니다"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF를 HTML로"
+pdfToHtml = "PDF to HTML"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -4974,7 +4974,7 @@ label = "쿠키 정책"
 description = "쿠키 정책의 URL 또는 파일 이름"
 
 [admin.settings.legal.impressum]
-label = "법적 고지"
+label = "Impressum"
 description = "Impressum의 URL 또는 파일 이름(일부 관할권에서 필수)"
 
 [admin.settings.premium]
@@ -5668,7 +5668,7 @@ upgrade = "지금 업그레이드 →"
 freeTitle = "서버 라이선스"
 overLimitTitle = "서버 라이선스 필요"
 overLimitBody = "당사의 라이선스는 서버당 무료로 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 허용합니다. 현재 <strong>{{overLimitUserCopy}}</strong>명의 Stirling 사용자가 있습니다. 중단 없이 계속 사용하려면 Stirling Server 플랜으로 업그레이드하세요 - <strong>무제한 좌석</strong>, PDF 텍스트 편집, 전체 관리자 제어 제공, $99/서버/월."
-freeBody = "당사의 <strong>Open-Core</strong> 라이선스는 서버당 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 무료로 허용합니다. 중단 없이 확장하려면 Stirling Server 플랜을 권장합니다 - <strong>무제한 좌석</strong> 및 <strong>SSO 지원</strong>, $99/서버/월."
+freeBody = "당사의 <strong>Open-Core</strong> 라이선스는 서버당 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 무료로 허용합니다. 중단 없이 확장하고 새로운 <strong>PDF 텍스트 편집 도구</strong>에 조기 액세스하려면 Stirling Server 플랜을 권장합니다 - 전체 편집과 <strong>무제한 좌석</strong>을 $99/서버/월에 제공합니다."
 
 [onboarding.desktopInstall]
 title = "다운로드"

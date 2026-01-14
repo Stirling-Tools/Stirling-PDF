@@ -359,7 +359,7 @@ teams = "Equipos"
 title = "Configuración"
 systemSettings = "Ajustes del sistema"
 features = "Funciones"
-endpoints = "Puntos de conexión"
+endpoints = "Endpoints"
 database = "Base de datos"
 advanced = "Avanzado"
 
@@ -966,8 +966,8 @@ desc = "Superponer PDFs encima de otro PDF"
 title = "Superponer PDFs"
 
 [home.pdfTextEditor]
-title = "Editor de texto de PDF"
-desc = "Edita texto e imágenes existentes dentro de archivos PDF"
+title = "Editor de texto PDF"
+desc = "Revise y edite exportaciones JSON de Stirling PDF con edición de texto agrupada y regeneración de PDF"
 
 [home.addText]
 tags = "texto,anotación,etiqueta"
@@ -5668,7 +5668,7 @@ upgrade = "Actualizar ahora →"
 freeTitle = "Licencia del servidor"
 overLimitTitle = "Se necesita licencia de servidor"
 overLimitBody = "Nuestra licencia permite hasta <strong>{{freeTierLimit}}</strong> usuarios gratis por servidor. Tiene <strong>{{overLimitUserCopy}}</strong> usuarios de Stirling. Para continuar sin interrupciones, actualice al plan Stirling Server: <strong>plazas ilimitadas</strong>, edición de texto PDF y control total de administración por 99 $/servidor/mes."
-freeBody = "Nuestra licencia <strong>Open-Core</strong> permite hasta <strong>{{freeTierLimit}}</strong> usuarios gratis por servidor. Para escalar sin interrupciones, recomendamos el plan Stirling Server - <strong>plazas ilimitadas</strong> y <strong>soporte SSO</strong> por $99/servidor/mes."
+freeBody = "Nuestra licencia <strong>Open-Core</strong> permite hasta <strong>{{freeTierLimit}}</strong> usuarios gratis por servidor. Para escalar sin interrupciones y obtener acceso anticipado a nuestra nueva <strong>herramienta de edición de texto PDF</strong>, recomendamos el plan Stirling Server: edición completa y <strong>plazas ilimitadas</strong> por 99 $/servidor/mes."
 
 [onboarding.desktopInstall]
 title = "Descargar"
@@ -5740,7 +5740,7 @@ user = "Usuario"
 [workspace.people.addMember]
 title = "Añadir miembro"
 username = "Nombre de usuario (correo)"
-usernamePlaceholder = "usuario@ejemplo.com"
+usernamePlaceholder = "user@example.com"
 password = "Contraseña"
 passwordPlaceholder = "Introduce la contraseña"
 role = "Rol"
@@ -5802,7 +5802,7 @@ error = "No se pudo actualizar la contraseña"
 tab = "Invitación por correo electrónico"
 description = "Escribe o pega correos a continuación, separados por comas. Los usuarios recibirán credenciales de inicio de sesión por correo electrónico."
 emails = "Direcciones de correo electrónico"
-emailsPlaceholder = "usuario1@ejemplo.com, usuario2@ejemplo.com"
+emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Se requiere al menos una dirección de correo electrónico"
 submit = "Enviar invitaciones"
 success = "usuario(s) invitado(s) correctamente"
@@ -6124,7 +6124,7 @@ emailInvalid = "Introduzca una dirección de correo válida"
 title = "Introduzca su correo electrónico"
 description = "Lo usaremos para enviar su clave de licencia y recibos."
 emailLabel = "Dirección de correo electrónico"
-emailPlaceholder = "su@email.com"
+emailPlaceholder = "your@email.com"
 continue = "Continuar"
 modalTitle = "Comenzar - {{planName}}"
 
@@ -6406,7 +6406,7 @@ label = "Nombre de usuario"
 placeholder = "Introduzca su nombre de usuario"
 
 [setup.login.email]
-label = "Correo electrónico"
+label = "Email"
 placeholder = "Introduzca su email"
 
 [setup.login.password]
@@ -6443,7 +6443,7 @@ paragraph = "Página de párrafos"
 sparse = "Texto disperso"
 
 [pdfTextEditor.groupingMode]
-auto = "Automático"
+auto = "Auto"
 paragraph = "Párrafo"
 singleLine = "Línea única"
 

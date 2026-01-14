@@ -966,8 +966,8 @@ desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
 [home.pdfTextEditor]
-title = "PDFテキストエディタ"
-desc = "PDF内の既存のテキストと画像を編集"
+title = "PDFテキストエディター"
+desc = "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
 
 [home.addText]
 tags = "テキスト,注釈,ラベル"
@@ -1230,7 +1230,7 @@ selectFilesPlaceholder = "開始するにはメインビューでファイルを
 settings = "設定"
 conversionCompleted = "変換が完了しました"
 results = "結果"
-defaultFilename = "変換済みファイル"
+defaultFilename = "converted_file"
 conversionResults = "変換結果"
 convertFrom = "変換元"
 convertTo = "変換先"
@@ -1449,7 +1449,7 @@ title = "透かしの追加"
 desc = "PDF ファイルにテキストまたは画像の透かしを追加"
 completed = "透かしを追加しました"
 submit = "透かしを追加"
-filenamePrefix = "透かし入り"
+filenamePrefix = "watermarked"
 
 [watermark.error]
 failed = "PDF への透かし追加中にエラーが発生しました。"
@@ -1724,7 +1724,7 @@ subtitle = "処理済みファイルをダウンロードするか、下で操�
 [removePages]
 tags = "ページを削除,ページ削除"
 title = "削除"
-filenamePrefix = "ページ削除済み"
+filenamePrefix = "pages_removed"
 submit = "削除"
 
 [removePages.pageNumbers]
@@ -1926,7 +1926,7 @@ title = "フォームフィールドから読み取り専用を削除"
 header = "PDFフォームのロックを解除"
 submit = "Remove"
 description = "このツールは PDF フォームフィールドの読み取り専用制限を解除し、編集・入力可能にします。"
-filenamePrefix = "フォームのロック解除済み"
+filenamePrefix = "unlocked_forms"
 
 [unlockPDFForms.files]
 placeholder = "メインビューで PDF ファイルを選択して開始してください"
@@ -1940,7 +1940,7 @@ title = "フォームのロック解除結果"
 [changeMetadata]
 header = "メタデータの変更"
 submit = "変更"
-filenamePrefix = "メタデータ"
+filenamePrefix = "metadata"
 
 [changeMetadata.settings]
 title = "メタデータ設定"
@@ -2419,7 +2419,7 @@ title = "平坦化"
 header = "PDFを平坦化する"
 flattenOnlyForms = "フォームのみを平坦にする"
 submit = "平坦化"
-filenamePrefix = "フラット化済み"
+filenamePrefix = "flattened"
 
 [flatten.files]
 placeholder = "開始するにはメインビューで PDF ファイルを選択してください"
@@ -2472,7 +2472,7 @@ title = "修復"
 header = "PDFを修復"
 submit = "修復"
 description = "このツールは破損または損傷した PDF ファイルの修復を試みます。追加の設定は不要です。"
-filenamePrefix = "修復済み"
+filenamePrefix = "repaired"
 
 [repair.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -2673,7 +2673,7 @@ stopButton = "比較を停止"
 [certSign]
 tags = "authenticate,PEM,P12,official,encrypt"
 title = "証明書による署名"
-filenamePrefix = "署名済み"
+filenamePrefix = "signed"
 chooseCertificate = "証明書ファイルを選択"
 chooseJksFile = "JKS ファイルを選択"
 chooseP12File = "PKCS12 ファイルを選択"
@@ -2807,7 +2807,7 @@ header = "PDFから電子証明書を削除する"
 selectPDF = "PDFファイルの選択:"
 submit = "署名の削除"
 description = "このツールは PDF 文書からデジタル証明書署名を削除します。"
-filenamePrefix = "署名なし"
+filenamePrefix = "unsigned"
 
 [removeCertSign.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -3769,7 +3769,7 @@ title = "PDFを単一ページに変換"
 header = "PDFを単一ページに変換"
 submit = "単一ページに変換"
 description = "このツールは PDF の全ページを 1 つの大きな単一ページに結合します。幅は元のページと同じで、高さは全ページの高さの合計になります。"
-filenamePrefix = "単一ページ"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "開始するにはメイン画面で PDF ファイルを選択してください"
@@ -4598,15 +4598,15 @@ label = "プロバイダ"
 description = "認証に使用する OAuth2 プロバイダ"
 
 [admin.settings.connections.oauth2.issuer]
-label = "発行者 URL"
+label = "Issuer URL"
 description = "OAuth2 プロバイダの Issuer URL"
 
 [admin.settings.connections.oauth2.clientId]
-label = "クライアント ID"
+label = "Client ID"
 description = "プロバイダから発行された OAuth2 の Client ID"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "クライアント シークレット"
+label = "Client Secret"
 description = "プロバイダから発行された OAuth2 の Client Secret"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4637,7 +4637,7 @@ label = "プロバイダ"
 description = "SAML2 プロバイダ名"
 
 [admin.settings.connections.saml2.registrationId]
-label = "登録 ID"
+label = "Registration ID"
 description = "SAML2 の登録識別子"
 
 [admin.settings.connections.saml2.autoCreateUser]
@@ -4890,7 +4890,7 @@ description = "より広範なシステム一時ディレクトリをクリー�
 label = "プロセス実行制限"
 description = "各プロセス実行器のセッション上限とタイムアウトを設定"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF を HTML に"
+pdfToHtml = "PDF to HTML"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -5181,7 +5181,7 @@ title = "サニタイズ"
 desc = "PDF ファイルから潜在的に有害な要素を削除します。"
 submit = "PDFをサニタイズ"
 completed = "サニタイズが正常に完了しました"
-filenamePrefix = "サニタイズ済み"
+filenamePrefix = "sanitised"
 sanitizationResults = "サニタイズ結果"
 
 [sanitize.error]
@@ -5229,7 +5229,7 @@ title = "パスワードの追加"
 desc = "パスワードで PDF 文書を暗号化します。"
 completed = "パスワード保護を適用しました"
 submit = "暗号化"
-filenamePrefix = "暗号化済み"
+filenamePrefix = "encrypted"
 
 [addPassword.error]
 failed = "PDF の暗号化中にエラーが発生しました。"
@@ -5324,7 +5324,7 @@ text = "これらの権限を変更不可にするには、パスワード追加
 title = "パスワードの削除"
 desc = "PDFからパスワードの削除します。"
 tags = "セキュア,復号,セキュリティ,パスワード解除,パスワード削除"
-filenamePrefix = "復号済み"
+filenamePrefix = "decrypted"
 submit = "削除"
 
 [removePassword.password]
@@ -5668,7 +5668,7 @@ upgrade = "今すぐアップグレード →"
 freeTitle = "サーバーライセンス"
 overLimitTitle = "サーバーライセンスが必要です"
 overLimitBody = "当社のライセンスでは、サーバーごとに <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。現在 <strong>{{overLimitUserCopy}}</strong> の Stirling ユーザーがいます。中断なく利用を続けるには、Stirling Server プランにアップグレードしてください - <strong>無制限席数</strong>、PDF テキスト編集、完全な管理機能が $99/サーバー/月 です。"
-freeBody = "当社の<strong>Open-Core</strong>ライセンスでは、サーバーごとに最大<strong>{{freeTierLimit}}</strong>ユーザーまで無料でご利用いただけます。中断なくスケールするには、Stirling Server プランをおすすめします - <strong>無制限の席数</strong>と<strong>SSO サポート</strong>で $99/サーバー/月。"
+freeBody = "当社の <strong>オープンコア</strong> ライセンスでは、サーバーごとに最大 <strong>{{freeTierLimit}}</strong> ユーザーまで無料です。中断なく拡張し、新しい <strong>PDF テキスト編集ツール</strong> に早期アクセスするには、Stirling Server プランをお勧めします。完全編集と <strong>無制限席数</strong> が $99/サーバー/月 です。"
 
 [onboarding.desktopInstall]
 title = "ダウンロード"
@@ -6406,7 +6406,7 @@ label = "ユーザー名"
 placeholder = "ユーザー名を入力"
 
 [setup.login.email]
-label = "メールアドレス"
+label = "Email"
 placeholder = "メールアドレスを入力"
 
 [setup.login.password]

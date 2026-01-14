@@ -966,8 +966,8 @@ desc = "Наложить один PDF поверх другого"
 title = "Наложение PDF"
 
 [home.pdfTextEditor]
-title = "Редактор текста PDF"
-desc = "Редактируйте существующий текст и изображения внутри PDF-файлов"
+title = "Редактор текста в PDF"
+desc = "Просмотр и редактирование экспортов Stirling PDF в JSON с групповым редактированием текста и регенерацией PDF"
 
 [home.addText]
 tags = "текст,аннотация,ярлык"
@@ -4974,7 +4974,7 @@ label = "Политика cookie"
 description = "URL или имя файла для политики cookie"
 
 [admin.settings.legal.impressum]
-label = "Юридическая информация"
+label = "Impressum"
 description = "URL или имя файла для impressum (требуется в некоторых юрисдикциях)"
 
 [admin.settings.premium]
@@ -5477,7 +5477,7 @@ description = "Привяжите аккаунт, чтобы сохранить 
 socialLogin = "Обновить через соцсеть"
 linkWith = "Привязать к"
 emailPassword = "или введите email и пароль"
-email = "Эл. почта"
+email = "Email"
 emailPlaceholder = "Введите ваш email"
 password = "Пароль (необязательно)"
 passwordPlaceholder = "Задайте пароль"
@@ -5668,7 +5668,7 @@ upgrade = "Обновить сейчас →"
 freeTitle = "Серверная лицензия"
 overLimitTitle = "Требуется серверная лицензия"
 overLimitBody = "Наша лицензия допускает до <strong>{{freeTierLimit}}</strong> пользователей бесплатно на сервер. У вас <strong>{{overLimitUserCopy}}</strong> пользователей Stirling. Чтобы продолжить без перебоев, перейдите на тариф Stirling Server — <strong>неограниченные места</strong>, редактирование текста в PDF и полный админ‑контроль за $99/server/mo."
-freeBody = "Наша лицензия <strong>Open-Core</strong> позволяет бесплатно использовать до <strong>{{freeTierLimit}}</strong> пользователей на сервер. Для бесшовного масштабирования мы рекомендуем план Stirling Server - <strong>неограниченное число мест</strong> и <strong>поддержка SSO</strong> за $99/сервер/мес."
+freeBody = "Наша лицензия <strong>Open-Core</strong> допускает до <strong>{{freeTierLimit}}</strong> пользователей бесплатно на сервер. Чтобы масштабироваться без ограничений и раньше получить доступ к новому <strong>инструменту редактирования текста в PDF</strong>, рекомендуем тариф Stirling Server — полный редактор и <strong>неограниченные места</strong> за $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Скачать"
@@ -6406,7 +6406,7 @@ label = "Имя пользователя"
 placeholder = "Введите имя пользователя"
 
 [setup.login.email]
-label = "Эл. почта"
+label = "Email"
 placeholder = "Введите email"
 
 [setup.login.password]

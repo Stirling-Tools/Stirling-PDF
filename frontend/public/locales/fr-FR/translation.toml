@@ -359,7 +359,7 @@ teams = "Équipes"
 title = "Configuration"
 systemSettings = "Paramètres système"
 features = "Fonctionnalités"
-endpoints = "Points de terminaison"
+endpoints = "Endpoints"
 database = "Base de données"
 advanced = "Avancé"
 
@@ -371,7 +371,7 @@ telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licences et analyses"
-plan = "Forfait"
+plan = "Plan"
 audit = "Audit"
 usageAnalytics = "Analyses d'utilisation"
 
@@ -967,7 +967,7 @@ title = "Superposer des PDF"
 
 [home.pdfTextEditor]
 title = "Éditeur de texte PDF"
-desc = "Modifier le texte et les images existants dans les PDF"
+desc = "Afficher et modifier les exports JSON de Stirling PDF avec édition de texte groupée et régénération du PDF"
 
 [home.addText]
 tags = "texte,annotation,étiquette"
@@ -1274,7 +1274,7 @@ odtExt = "Texte OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Présentation OpenDocument (.odp)"
 txtExt = "Texte brut (.txt)"
-rtfExt = "Format de texte enrichi (.rtf)"
+rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Fichiers sélectionnés"
 noFileSelected = "Aucun fichier sélectionné. Utilisez le panneau de fichiers pour ajouter des fichiers."
 convertFiles = "Convertir les fichiers"
@@ -4507,7 +4507,7 @@ description = "Suivre les actions des utilisateurs et les événements système 
 
 [admin.settings.security.audit.level]
 label = "Niveau d’audit"
-description = "0=DÉSACTIVÉ, 1=BASIQUE, 2=STANDARD, 3=VERBEUX"
+description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 
 [admin.settings.security.audit.retentionDays]
 label = "Rétention des journaux (jours)"
@@ -4978,7 +4978,7 @@ label = "Mentions légales"
 description = "URL ou nom de fichier de l’impressum (obligatoire dans certaines juridictions)"
 
 [admin.settings.premium]
-title = "Premium et Entreprise"
+title = "Premium & Enterprise"
 description = "Configurer votre clé de licence Premium ou Enterprise."
 license = "Configuration de la licence"
 noInput = "Veuillez fournir une clé de licence ou un fichier"
@@ -5668,7 +5668,7 @@ upgrade = "Mettre à niveau maintenant →"
 freeTitle = "Licence serveur"
 overLimitTitle = "Licence serveur requise"
 overLimitBody = "Notre licence autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Vous avez <strong>{{overLimitUserCopy}}</strong> utilisateurs Stirling. Pour continuer sans interruption, passez au plan Stirling Server — <strong>places illimitées</strong>, édition de texte PDF et contrôle d’administration complet pour 99 $/serveur/mois."
-freeBody = "Notre régime de licence <strong>Open-Core</strong> autorise jusqu'à <strong>{{freeTierLimit}}</strong> utilisateurs gratuitement par serveur. Pour évoluer sans interruption, nous recommandons le forfait Stirling Server - <strong>places illimitées</strong> et <strong>prise en charge du SSO</strong> pour 99 $/serveur/mois."
+freeBody = "Notre licence <strong>Open-Core</strong> autorise jusqu’à <strong>{{freeTierLimit}}</strong> utilisateurs gratuits par serveur. Pour évoluer sans interruption et accéder en avant-première à notre nouvel <strong>outil d’édition de texte PDF</strong>, nous recommandons le plan Stirling Server — édition complète et <strong>places illimitées</strong> pour 99 $/serveur/mois."
 
 [onboarding.desktopInstall]
 title = "Télécharger"
@@ -5714,7 +5714,7 @@ active = "Actif"
 disabled = "Désactivé"
 activeSession = "Session active"
 member = "Membre"
-admin = "Administrateur"
+admin = "Admin"
 editRole = "Modifier le rôle"
 enable = "Activer"
 disable = "Désactiver"
@@ -6294,7 +6294,7 @@ title = "Graphique d’utilisation des endpoints"
 
 [usage.table]
 title = "Statistiques détaillées"
-endpoint = "Point de terminaison"
+endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Pourcentage"
 noData = "Aucune donnée disponible"
@@ -6406,7 +6406,7 @@ label = "Nom d’utilisateur"
 placeholder = "Entrez votre nom d’utilisateur"
 
 [setup.login.email]
-label = "E-mail"
+label = "Email"
 placeholder = "Saisissez votre email"
 
 [setup.login.password]
@@ -6443,7 +6443,7 @@ paragraph = "Page de paragraphe"
 sparse = "Texte clairsemé"
 
 [pdfTextEditor.groupingMode]
-auto = "Automatique"
+auto = "Auto"
 paragraph = "Paragraphe"
 singleLine = "Ligne unique"
 

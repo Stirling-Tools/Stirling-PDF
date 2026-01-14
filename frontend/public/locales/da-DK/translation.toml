@@ -359,7 +359,7 @@ teams = "Teams"
 title = "Konfiguration"
 systemSettings = "Systemindstillinger"
 features = "Funktioner"
-endpoints = "Slutpunkter"
+endpoints = "Endpoints"
 database = "Database"
 advanced = "Avanceret"
 
@@ -372,7 +372,7 @@ telegram = "Telegram"
 [settings.licensingAnalytics]
 title = "Licensering & Analytics"
 plan = "Plan"
-audit = "Revision"
+audit = "Audit"
 usageAnalytics = "Brugsanalyse"
 
 [settings.policiesPrivacy]
@@ -604,13 +604,13 @@ totalEndpoints = "Endpoints i alt"
 totalVisits = "Besøg i alt"
 showing = "Viser"
 selectedVisits = "Valgte besøg"
-endpoint = "Slutpunkt"
+endpoint = "Endpoint"
 visits = "Besøg"
 percentage = "Procent"
 loading = "Laster..."
 failedToLoad = "Kunne ikke indlæse endpoint-data. Prøv at opdatere."
 home = "Hjem"
-login = "Log ind"
+login = "Login"
 top = "Top"
 numberOfVisits = "Antal besøg"
 visitsTooltip = "Besøg: {0} ({1}% af totalen)"
@@ -967,7 +967,7 @@ title = "Overlejr PDF'er"
 
 [home.pdfTextEditor]
 title = "PDF-teksteditor"
-desc = "Rediger eksisterende tekst og billeder i PDF'er"
+desc = "Gennemse og rediger Stirling PDF JSON-eksporter med grupperet tekstredigering og regenerering af PDF"
 
 [home.addText]
 tags = "tekst,annotering,etiket"
@@ -1230,7 +1230,7 @@ selectFilesPlaceholder = "Vælg filer i hovedvisningen for at komme i gang"
 settings = "Indstillinger"
 conversionCompleted = "Konvertering fuldført"
 results = "Resultater"
-defaultFilename = "konverteret_fil"
+defaultFilename = "converted_file"
 conversionResults = "Konverteringsresultater"
 convertFrom = "Konvertér fra"
 convertTo = "Konvertér til"
@@ -1270,9 +1270,9 @@ pdfaDigitalSignatureWarning = "PDF'en indeholder en digital signatur. Dette vil 
 fileFormat = "Filformat"
 wordDoc = "Word-dokument"
 wordDocExt = "Word-dokument (.docx)"
-odtExt = "OpenDocument-tekst (.odt)"
+odtExt = "OpenDocument Text (.odt)"
 pptExt = "PowerPoint (.pptx)"
-odpExt = "OpenDocument-præsentation (.odp)"
+odpExt = "OpenDocument Presentation (.odp)"
 txtExt = "Almindelig tekst (.txt)"
 rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Valgte filer"
@@ -4029,7 +4029,7 @@ version = "Nuværende udgivelse"
 title = "API-dokumentation"
 header = "API-dokumentation"
 desc = "Se og test Stirling PDF API-endpoints"
-tags = "api,dokumentation,swagger,endepunkter,udvikling"
+tags = "api,documentation,swagger,endpoints,development"
 
 [cookieBanner.popUp]
 title = "Sådan bruger vi cookies"
@@ -4602,11 +4602,11 @@ label = "Issuer-URL"
 description = "OAuth2-udbyderens issuer-URL"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Klient-ID"
+label = "Client ID"
 description = "OAuth2 Client ID fra din udbyder"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Klienthemmelighed"
+label = "Client Secret"
 description = "OAuth2 Client Secret fra din udbyder"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4826,7 +4826,7 @@ features = "Funktionsflag"
 processing = "Behandling"
 
 [admin.settings.advanced.endpoints]
-label = "Slutpunkter"
+label = "Endpoints"
 manage = "Administrer API-endpoints"
 description = "Endpointstyring konfigureres via YAML. Se dokumentationen for detaljer om aktivering/deaktivering af specifikke endpoints."
 
@@ -5668,7 +5668,7 @@ upgrade = "Opgrader nu →"
 freeTitle = "Serverlicens"
 overLimitTitle = "Serverlicens påkrævet"
 overLimitBody = "Vores licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brugere. For at fortsætte uden afbrydelser skal du opgradere til Stirling Server-abonnementet – <strong>ubegrænsede pladser</strong>, PDF-tekstredigering og fuld admin-kontrol for $99/server/md."
-freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser anbefaler vi Stirling Server-planen – <strong>ubegrænsede pladser</strong> og <strong>SSO-understøttelse</strong> for $99/server/md."
+freeBody = "Vores <strong>Open-Core</strong>-licens tillader op til <strong>{{freeTierLimit}}</strong> brugere gratis pr. server. For at skalere uden afbrydelser og få tidlig adgang til vores nye <strong>PDF-tekstredigeringsværktøj</strong> anbefaler vi Stirling Server-planen – fuld redigering og <strong>ubegrænsede pladser</strong> for $99/server/md."
 
 [onboarding.desktopInstall]
 title = "Download"
@@ -5849,8 +5849,8 @@ emailDisabled = "E-mailinvitationer kræver SMTP-konfiguration og mail.enableInv
 [workspace.people.license]
 users = "brugere"
 availableSlots = "Tilgængelige pladser"
-grandfathered = "På gamle vilkår"
-grandfatheredShort = "{{count}} på gamle vilkår"
+grandfathered = "Grandfathered"
+grandfatheredShort = "{{count}} grandfathered"
 fromLicense = "fra licens"
 slotsAvailable = "{{count}} ledig(e) brugerplads(er)"
 noSlotsAvailable = "Ingen pladser tilgængelige"
@@ -6294,7 +6294,7 @@ title = "Diagram over endpoint-brug"
 
 [usage.table]
 title = "Detaljeret statistik"
-endpoint = "Slutpunkt"
+endpoint = "Endpoint"
 visits = "Besøg"
 percentage = "Procent"
 noData = "Ingen data tilgængelige"
@@ -6337,7 +6337,7 @@ label = "Vælg server"
 description = "Selvhostet server"
 
 [setup.step3]
-label = "Log ind"
+label = "Login"
 description = "Indtast loginoplysninger"
 
 [setup.mode.saas]

@@ -295,7 +295,7 @@ help = "Βοήθεια Pipeline"
 scanHelp = "Βοήθεια σάρωσης φακέλων"
 deletePrompt = "Είστε βέβαιοι ότι θέλετε να διαγράψετε το pipeline;"
 tags = "αυτοματοποίηση,ακολουθία,προγραμματισμένο,επεξεργασία-παρτίδας"
-title = "Ροή"
+title = "Pipeline"
 
 [pipelineOptions]
 header = "Διαμόρφωση Pipeline"
@@ -304,7 +304,7 @@ saveSettings = "Αποθήκευση ρυθμίσεων λειτουργίας"
 pipelineNamePrompt = "Εισάγετε όνομα pipeline εδώ"
 selectOperation = "Επιλογή λειτουργίας"
 addOperationButton = "Προσθήκη λειτουργίας"
-pipelineHeader = "Ροή:"
+pipelineHeader = "Pipeline:"
 saveButton = "Λήψη"
 validateButton = "Επικύρωση"
 
@@ -359,7 +359,7 @@ teams = "Ομάδες"
 title = "Διαμόρφωση"
 systemSettings = "Ρυθμίσεις συστήματος"
 features = "Δυνατότητες"
-endpoints = "Σημεία τερματισμού"
+endpoints = "Endpoints"
 database = "Βάση δεδομένων"
 advanced = "Προχωρημένα"
 
@@ -382,7 +382,7 @@ privacy = "Απόρρητο"
 
 [settings.developer]
 title = "Προγραμματιστής"
-apiKeys = "Κλειδιά API"
+apiKeys = "API Keys"
 
 [settings.tooltips]
 enableLoginFirst = "Ενεργοποιήστε πρώτα τη λειτουργία σύνδεσης"
@@ -396,7 +396,7 @@ logout = "Αποσύνδεση"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
-selfhosted = "Αυτο-φιλοξενούμενο"
+selfhosted = "Self-Hosted"
 
 [settings.general]
 title = "Γενικά"
@@ -967,7 +967,7 @@ title = "Επικάλυψη PDF"
 
 [home.pdfTextEditor]
 title = "Επεξεργαστής κειμένου PDF"
-desc = "Επεξεργαστείτε υπάρχον κείμενο και εικόνες μέσα σε αρχεία PDF"
+desc = "Επιθεωρήστε και επεξεργαστείτε εξαγωγές JSON του Stirling PDF με ομαδοποιημένη επεξεργασία κειμένου και αναδημιουργία PDF"
 
 [home.addText]
 tags = "κείμενο,σχολιασμός,ετικέτα"
@@ -1230,7 +1230,7 @@ selectFilesPlaceholder = "Επιλέξτε αρχεία στην κύρια πρ
 settings = "Ρυθμίσεις"
 conversionCompleted = "Η μετατροπή ολοκληρώθηκε"
 results = "Αποτελέσματα"
-defaultFilename = "μετατραπμένο_αρχείο"
+defaultFilename = "converted_file"
 conversionResults = "Αποτελέσματα μετατροπής"
 convertFrom = "Μετατροπή από"
 convertTo = "Μετατροπή σε"
@@ -1449,7 +1449,7 @@ title = "Προσθήκη υδατογραφήματος"
 desc = "Προσθέστε υδατογραφήματα κειμένου ή εικόνας σε αρχεία PDF"
 completed = "Το υδατογράφημα προστέθηκε"
 submit = "Προσθήκη υδατογραφήματος"
-filenamePrefix = "υδατογραφημένο"
+filenamePrefix = "watermarked"
 
 [watermark.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκη υδατογραφήματος στο PDF."
@@ -2807,7 +2807,7 @@ header = "Αφαίρεση της ψηφιακής υπογραφής από τ�
 selectPDF = "Επιλέξτε ένα αρχείο PDF:"
 submit = "Αφαίρεση υπογραφής"
 description = "Αυτό το εργαλείο θα αφαιρέσει τις υπογραφές ψηφιακού πιστοποιητικού από το PDF σας."
-filenamePrefix = "ανυπόγραφο"
+filenamePrefix = "unsigned"
 
 [removeCertSign.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -3769,7 +3769,7 @@ title = "PDF σε μία σελίδα"
 header = "PDF σε μία σελίδα"
 submit = "Μετατροπή σε μία σελίδα"
 description = "Αυτό το εργαλείο θα συγχωνεύσει όλες τις σελίδες του PDF σας σε μία μεγάλη ενιαία σελίδα. Το πλάτος θα παραμείνει ίδιο με των αρχικών σελίδων, αλλά το ύψος θα είναι το άθροισμα όλων των υψών."
-filenamePrefix = "μονοσέλιδο"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "Επιλέξτε ένα αρχείο PDF στην κύρια προβολή για να ξεκινήσετε"
@@ -4029,7 +4029,7 @@ version = "Τρέχουσα έκδοση"
 title = "Τεκμηρίωση API"
 header = "Τεκμηρίωση API"
 desc = "Προβάλετε και δοκιμάστε τα endpoints του Stirling PDF API"
-tags = "api,τεκμηρίωση,swagger,τελικά σημεία,ανάπτυξη"
+tags = "api,documentation,swagger,endpoints,development"
 
 [cookieBanner.popUp]
 title = "Πώς χρησιμοποιούμε τα cookies"
@@ -4602,11 +4602,11 @@ label = "URL εκδότη"
 description = "Το URL εκδότη του παρόχου OAuth2"
 
 [admin.settings.connections.oauth2.clientId]
-label = "Αναγνωριστικό πελάτη (Client ID)"
+label = "Client ID"
 description = "Το Client ID OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.clientSecret]
-label = "Μυστικό πελάτη (Client Secret)"
+label = "Client Secret"
 description = "Το Client Secret OAuth2 από τον πάροχό σας"
 
 [admin.settings.connections.oauth2.useAsUsername]
@@ -4942,7 +4942,7 @@ label = "Ενεργοποίηση προσκλήσεων μέσω email"
 description = "Να επιτρέπεται στους διαχειριστές να προσκαλούν χρήστες μέσω email με αυτόματα παραγόμενους κωδικούς"
 
 [admin.settings.mail.frontendUrl]
-label = "URL front-end"
+label = "Frontend URL"
 description = "Βασικό URL για το frontend (π.χ. https://pdf.example.com). Χρησιμοποιείται για τη δημιουργία συνδέσμων πρόσκλησης στα email. Αφήστε κενό για χρήση του backend URL."
 
 [admin.settings.mail.frontendUrlNote]
@@ -5668,7 +5668,7 @@ upgrade = "Αναβάθμιση τώρα →"
 freeTitle = "Άδεια διακομιστή"
 overLimitTitle = "Απαιτείται άδεια διακομιστή"
 overLimitBody = "Η αδειοδότηση μας επιτρέπει έως <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Έχετε <strong>{{overLimitUserCopy}}</strong> χρήστες Stirling. Για να συνεχίσετε χωρίς διακοπές, αναβαθμίστε στο πλάνο Stirling Server - <strong>απεριόριστες θέσεις</strong>, επεξεργασία κειμένου PDF και πλήρης έλεγχος διαχειριστή για $99/server/μήνα."
-freeBody = "Οι άδειες χρήσης <strong>Open-Core</strong> επιτρέπουν έως και <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Για απρόσκοπτη κλιμάκωση, προτείνουμε το πλάνο Stirling Server - <strong>απεριόριστες θέσεις</strong> και <strong>υποστήριξη SSO</strong> με $99/διακομιστή/μήνα."
+freeBody = "Η αδειοδότηση <strong>Open-Core</strong> μας επιτρέπει έως <strong>{{freeTierLimit}}</strong> χρήστες δωρεάν ανά διακομιστή. Για απρόσκοπτη κλιμάκωση και έγκαιρη πρόσβαση στο νέο <strong>εργαλείο επεξεργασίας κειμένου PDF</strong>, προτείνουμε το πλάνο Stirling Server - πλήρης επεξεργασία και <strong>απεριόριστες θέσεις</strong> για $99/server/μήνα."
 
 [onboarding.desktopInstall]
 title = "Λήψη"
@@ -6294,7 +6294,7 @@ title = "Διάγραμμα χρήσης Endpoints"
 
 [usage.table]
 title = "Αναλυτικά στατιστικά"
-endpoint = "Σημείο τερματισμού"
+endpoint = "Endpoint"
 visits = "Επισκέψεις"
 percentage = "Ποσοστό"
 noData = "Δεν υπάρχουν διαθέσιμα δεδομένα"

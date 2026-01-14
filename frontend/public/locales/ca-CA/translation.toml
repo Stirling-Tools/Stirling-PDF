@@ -359,7 +359,7 @@ teams = "Equips"
 title = "Configuració"
 systemSettings = "Configuració del sistema"
 features = "Funcions"
-endpoints = "Punts finals"
+endpoints = "Endpoints"
 database = "Base de dades"
 advanced = "Avançat"
 
@@ -604,7 +604,7 @@ totalEndpoints = "Total d'endpoints"
 totalVisits = "Total de visites"
 showing = "Mostrant"
 selectedVisits = "Visites seleccionades"
-endpoint = "Punt final"
+endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Percentatge"
 loading = "Carregant..."
@@ -967,7 +967,7 @@ title = "Superposar PDFs"
 
 [home.pdfTextEditor]
 title = "Editor de text PDF"
-desc = "Edita el text i les imatges existents dins dels PDF"
+desc = "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
 
 [home.addText]
 tags = "text,anotació,etiqueta"
@@ -4262,7 +4262,7 @@ files = "Fitxers"
 activity = "Registre"
 help = "Ajuda"
 account = "Compte"
-config = "Configuració"
+config = "Config"
 settings = "Ajustos"
 adminSettings = "Ajustos admin"
 allTools = "All Tools"
@@ -4826,7 +4826,7 @@ features = "Banderes de funcions"
 processing = "Processament"
 
 [admin.settings.advanced.endpoints]
-label = "Punts finals"
+label = "Endpoints"
 manage = "Gestiona els endpoints de l'API"
 description = "La gestió d'endpoints es configura via YAML. Consulteu la documentació per a detalls sobre com habilitar/deshabilitar endpoints específics."
 
@@ -5668,7 +5668,7 @@ upgrade = "Actualitza ara →"
 freeTitle = "Llicència del servidor"
 overLimitTitle = "Cal una llicència de servidor"
 overLimitBody = "La nostra llicència permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Tens <strong>{{overLimitUserCopy}}</strong> usuaris de Stirling. Per continuar sense interrupcions, actualitza al pla Stirling Server: <strong>seients il·limitats</strong>, edició de text de PDF i control d'administració complet per 99 $/servidor/mes."
-freeBody = "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions, recomanem el pla Stirling Server - <strong>places il·limitades</strong> i <strong>suport SSO</strong> per $99/servidor/mes."
+freeBody = "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions i obtenir accés anticipat a la nova <strong>eina d'edició de text PDF</strong>, recomanem el pla Stirling Server: edició completa i <strong>seients il·limitats</strong> per 99 $/servidor/mes."
 
 [onboarding.desktopInstall]
 title = "Baixa"
@@ -6294,7 +6294,7 @@ title = "Gràfic d'ús dels endpoints"
 
 [usage.table]
 title = "Estadístiques detallades"
-endpoint = "Punt final"
+endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Percentatge"
 noData = "No hi ha dades disponibles"

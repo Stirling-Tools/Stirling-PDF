@@ -967,7 +967,7 @@ title = "PDF-ek egymásra helyezése"
 
 [home.pdfTextEditor]
 title = "PDF szövegszerkesztő"
-desc = "Meglévő szöveg és képek szerkesztése a PDF-ekben"
+desc = "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
 
 [home.addText]
 tags = "szöveg, megjegyzés, címke"
@@ -5668,7 +5668,7 @@ upgrade = "Frissítés most →"
 freeTitle = "Szerverlicenc"
 overLimitTitle = "Szerverlicenc szükséges"
 overLimitBody = "Licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. Önnek <strong>{{overLimitUserCopy}}</strong> Stirling felhasználója van. A zavartalan használathoz váltson a Stirling Server csomagra – <strong>korlátlan hely</strong>, PDF szövegszerkesztés és teljes adminisztrátori vezérlés $99/szerver/hó áron."
-freeBody = "A <strong>Open-Core</strong> licencünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót engedélyez ingyenesen. A zökkenőmentes skálázáshoz a Stirling Server csomagot ajánljuk - <strong>korlátlan felhasználó</strong> és <strong>SSO támogatás</strong> $99/szerver/hó."
+freeBody = "Az <strong>Open-Core</strong> licencelésünk szerverenként legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót enged ingyen. A zavartalan bővüléshez és az új <strong>PDF szövegszerkesztő eszköz</strong> korai eléréséhez a Stirling Server csomagot ajánljuk – teljes szerkesztés és <strong>korlátlan hely</strong> $99/szerver/hó áron."
 
 [onboarding.desktopInstall]
 title = "Letöltés"

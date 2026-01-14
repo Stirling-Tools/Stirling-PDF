@@ -102,7 +102,7 @@ visitGithub = "Navštíviť GitHub repozitár"
 donate = "Darovať"
 color = "Farba"
 sponsor = "Sponzorovať"
-info = "Informácie"
+info = "Info"
 pro = "Pro"
 page = "Strana"
 pages = "Strany"
@@ -282,7 +282,7 @@ iAgreeToThe = "Súhlasím so všetkými"
 terms = "Podmienkami používania"
 accessibility = "Prístupnosť"
 cookie = "Zásady používania súborov cookie"
-impressum = "Impresum"
+impressum = "Impressum"
 showCookieBanner = "Predvoľby súborov cookie"
 
 [pipeline]
@@ -561,7 +561,7 @@ syncToAccount = "Synchronizovať účet <- Prehliadač"
 [adminUserSettings]
 title = "Nastavenia kontroly používateľov"
 header = "Admin nastavenia kontroly používateľov"
-admin = "Administrátor"
+admin = "Admin"
 user = "Používateľ"
 addUser = "Pridať nového používateľa"
 deleteUser = "Odstrániť používateľa"
@@ -967,7 +967,7 @@ title = "Prekrývanie PDF"
 
 [home.pdfTextEditor]
 title = "Editor textu PDF"
-desc = "Upravujte existujúci text a obrázky v PDF"
+desc = "Kontrolujte a upravujte Stirling PDF JSON exporty so skupinovými úpravami textu a opätovným vytvorením PDF"
 
 [home.addText]
 tags = "text,anotácia,štítok"
@@ -3769,7 +3769,7 @@ title = "PDF na jednu stránku"
 header = "PDF na jednu stránku"
 submit = "Konvertovať na jednu stránku"
 description = "Tento nástroj zlúči všetky strany vášho PDF do jednej veľkej stránky. Šírka zostane rovnaká ako pri pôvodných stranách, výška bude súčtom výšok všetkých strán."
-filenamePrefix = "jedna_strana"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "Vyberte súbor PDF v hlavnom zobrazení, aby ste začali"
@@ -4029,7 +4029,7 @@ version = "Aktuálne vydanie"
 title = "Dokumentácia API"
 header = "Dokumentácia API"
 desc = "Zobraziť a testovať API endpointy Stirling PDF"
-tags = "api,dokumentácia,swagger,endpointy,vývoj"
+tags = "api,documentation,swagger,endpoints,development"
 
 [cookieBanner.popUp]
 title = "Ako používame súbory cookie"
@@ -4974,7 +4974,7 @@ label = "Zásady používania súborov cookie"
 description = "URL alebo názov súboru so zásadami používania súborov cookie"
 
 [admin.settings.legal.impressum]
-label = "Impresum"
+label = "Impressum"
 description = "URL alebo názov súboru k Impressu (požadované v niektorých jurisdikciách)"
 
 [admin.settings.premium]
@@ -5668,7 +5668,7 @@ upgrade = "Upgradovať teraz →"
 freeTitle = "Serverová licencia"
 overLimitTitle = "Potrebná serverová licencia"
 overLimitBody = "Naše licencovanie povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Máte <strong>{{overLimitUserCopy}}</strong> používateľov Stirling. Ak chcete pokračovať bez prerušenia, prejdite na plán Stirling Server - <strong>neobmedzené miesta</strong>, úpravy textu PDF a plná správa pre $99/server/mo."
-freeBody = "Naše licencovanie <strong>Open-Core</strong> umožňuje až <strong>{{freeTierLimit}}</strong> používateľov zadarmo na server. Na plynulé škálovanie odporúčame plán Stirling Server - <strong>neobmedzený počet používateľov</strong> a <strong>podporu SSO</strong> za $99/server/mes."
+freeBody = "Naše licencovanie <strong>Open-Core</strong> povoľuje až <strong>{{freeTierLimit}}</strong> používateľov zdarma na server. Ak chcete škálovať bez prerušenia a získať skorý prístup k nášmu novému <strong>nástroju na úpravu textu PDF</strong>, odporúčame plán Stirling Server - plné úpravy a <strong>neobmedzené miesta</strong> za $99/server/mo."
 
 [onboarding.desktopInstall]
 title = "Stiahnuť"
@@ -5714,7 +5714,7 @@ active = "Aktívny"
 disabled = "Zakázaný"
 activeSession = "Aktívna relácia"
 member = "Člen"
-admin = "Administrátor"
+admin = "Admin"
 editRole = "Upraviť rolu"
 enable = "Povoliť"
 disable = "Zakázať"
@@ -6406,7 +6406,7 @@ label = "Používateľské meno"
 placeholder = "Zadajte používateľské meno"
 
 [setup.login.email]
-label = "E-mail"
+label = "Email"
 placeholder = "Zadajte svoj email"
 
 [setup.login.password]
@@ -6443,7 +6443,7 @@ paragraph = "Strana s odsekmi"
 sparse = "Riedky text"
 
 [pdfTextEditor.groupingMode]
-auto = "Automaticky"
+auto = "Auto"
 paragraph = "Odsek"
 singleLine = "Jeden riadok"
 

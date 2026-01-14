@@ -134,7 +134,7 @@ unsupported = "Nieobsługiwane"
 
 [toolPanel]
 placeholder = "Wybierz narzędzie, aby zacząć"
-alpha = "Alfa"
+alpha = "Alpha"
 premiumFeature = "Funkcja premium:"
 comingSoon = "Wkrótce:"
 
@@ -611,7 +611,7 @@ loading = "Ładowanie..."
 failedToLoad = "Nie udało się załadować danych punktów końcowych. Spróbuj odświeżyć."
 home = "Strona główna"
 login = "Logowanie"
-top = "Najlepsze"
+top = "Top"
 numberOfVisits = "Liczba wizyt"
 visitsTooltip = "Wizyty: {0} ({1}% całości)"
 retry = "Spróbuj ponownie"
@@ -967,7 +967,7 @@ title = "Nałóż PDFa"
 
 [home.pdfTextEditor]
 title = "Edytor tekstu PDF"
-desc = "Edytuj istniejący tekst i obrazy w plikach PDF"
+desc = "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
 
 [home.addText]
 tags = "tekst,adnotacja,etykieta"
@@ -1274,7 +1274,7 @@ odtExt = "Tekst OpenDocument (.odt)"
 pptExt = "PowerPoint (.pptx)"
 odpExt = "Prezentacja OpenDocument (.odp)"
 txtExt = "Tekst niesformatowany (.txt)"
-rtfExt = "Format RTF (.rtf)"
+rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Wybrane pliki"
 noFileSelected = "Nie wybrano pliku. Użyj panelu plików, aby dodać pliki."
 convertFiles = "Konwertuj pliki"
@@ -3769,7 +3769,7 @@ title = "PDF do pojedyńczej strony"
 header = "PDF do pojedyńczej strony"
 submit = "Zapisz dokument jako PDF z jedną stroną"
 description = "To narzędzie scali wszystkie strony Twojego PDF w jedną dużą stronę. Szerokość pozostanie taka jak w oryginalnych stronach, a wysokość będzie sumą wysokości wszystkich stron."
-filenamePrefix = "pojedyncza_strona"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "Wybierz plik PDF w widoku głównym, aby rozpocząć"
@@ -4507,7 +4507,7 @@ description = "Śledź działania użytkowników i zdarzenia systemowe na potrze
 
 [admin.settings.security.audit.level]
 label = "Poziom audytu"
-description = "0=WYŁ., 1=PODSTAWOWY, 2=STANDARDOWY, 3=SZCZEGÓŁOWY"
+description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 
 [admin.settings.security.audit.retentionDays]
 label = "Przechowywanie audytu (dni)"
@@ -5668,7 +5668,7 @@ upgrade = "Ulepsz teraz →"
 freeTitle = "Licencja serwera"
 overLimitTitle = "Wymagana licencja serwera"
 overLimitBody = "Nasza licencja pozwala na maks. <strong>{{freeTierLimit}}</strong> użytkowników bez opłat na serwer. Masz <strong>{{overLimitUserCopy}}</strong> użytkowników Stirling. Aby kontynuować bez przerw, przejdź na plan Stirling Server – <strong>nielimitowane miejsca</strong>, edycja tekstu PDF i pełna kontrola administracyjna za 99 USD/serwer/mies."
-freeBody = "Nasza licencja <strong>Open-Core</strong> pozwala na maksymalnie <strong>{{freeTierLimit}}</strong> użytkowników bezpłatnie na serwer. Aby skalować bez zakłóceń, zalecamy plan Stirling Server - <strong>nielimitowana liczba miejsc</strong> i <strong>obsługa SSO</strong> za $99/serwer/mies."
+freeBody = "Nasza licencja <strong>Open-Core</strong> pozwala na maks. <strong>{{freeTierLimit}}</strong> użytkowników bez opłat na serwer. Aby skalować bez przerw i uzyskać wczesny dostęp do nowego <strong>narzędzia edycji tekstu PDF</strong>, polecamy plan Stirling Server – pełna edycja i <strong>nielimitowane miejsca</strong> za 99 USD/serwer/mies."
 
 [onboarding.desktopInstall]
 title = "Pobierz"
@@ -6124,7 +6124,7 @@ emailInvalid = "Wpisz poprawny adres e‑mail"
 title = "Podaj e‑mail"
 description = "Użyjemy go do wysłania klucza licencyjnego i rachunków."
 emailLabel = "Adres e‑mail"
-emailPlaceholder = "twoj@email.com"
+emailPlaceholder = "your@email.com"
 continue = "Kontynuuj"
 modalTitle = "Zaczynamy – {{planName}}"
 
@@ -6443,7 +6443,7 @@ paragraph = "Strona akapitowa"
 sparse = "Rzadki tekst"
 
 [pdfTextEditor.groupingMode]
-auto = "Automatycznie"
+auto = "Auto"
 paragraph = "Akapit"
 singleLine = "Pojedyncza linia"
 

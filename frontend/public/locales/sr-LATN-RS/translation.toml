@@ -967,7 +967,7 @@ title = "Preklapanje PDF-ova"
 
 [home.pdfTextEditor]
 title = "PDF uređivač teksta"
-desc = "Uređujte postojeći tekst i slike unutar PDF-ova"
+desc = "Pregledajte i uređujte Stirling PDF JSON izvoze uz grupisano uređivanje teksta i ponovno generisanje PDF-a"
 
 [home.addText]
 tags = "tekst,anotacija,oznaka"
@@ -1270,11 +1270,11 @@ pdfaDigitalSignatureWarning = "PDF sadrži digitalni potpis. Biće uklonjen u sl
 fileFormat = "Format datoteke"
 wordDoc = "Word dokument"
 wordDocExt = "Word dokument (.docx)"
-odtExt = "OpenDocument tekst (.odt)"
+odtExt = "OpenDocument Text (.odt)"
 pptExt = "PowerPoint (.pptx)"
-odpExt = "OpenDocument prezentacija (.odp)"
+odpExt = "OpenDocument Presentation (.odp)"
 txtExt = "Običan tekst (.txt)"
-rtfExt = "Format obogaćenog teksta (.rtf)"
+rtfExt = "Rich Text Format (.rtf)"
 selectedFiles = "Izabrane datoteke"
 noFileSelected = "Nije izabrana nijedna datoteka. Koristite panel datoteka da dodate datoteke."
 convertFiles = "Konvertuj datoteke"
@@ -2419,7 +2419,7 @@ title = "Ravnanje"
 header = "Ravnanje PDF fajlova"
 flattenOnlyForms = "Izravnaj samo forme"
 submit = "Ravnanje"
-filenamePrefix = "spljošteno"
+filenamePrefix = "flattened"
 
 [flatten.files]
 placeholder = "Izaberite PDF datoteku u glavnom prikazu da biste započeli"
@@ -4029,7 +4029,7 @@ version = "Aktuelno izdanje"
 title = "API dokumentacija"
 header = "API dokumentacija"
 desc = "Pregledajte i testirajte Stirling PDF API endpoints"
-tags = "api,dokumentacija,swagger,krajnje tačke,razvoj"
+tags = "api,documentation,swagger,endpoints,development"
 
 [cookieBanner.popUp]
 title = "Kako koristimo kolačiće"
@@ -5668,7 +5668,7 @@ upgrade = "Nadogradite sada →"
 freeTitle = "Serverska licenca"
 overLimitTitle = "Potrebna serverska licenca"
 overLimitBody = "Naše licenciranje dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Imate <strong>{{overLimitUserCopy}}</strong> Stirling korisnika. Da nastavite bez prekida, pređite na Stirling Server plan - <strong>neograničena mesta</strong>, uređivanje PDF teksta i puna admin kontrola za $99/server/mes."
-freeBody = "Naše licenciranje <strong>Open-Core</strong> dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Za neometano skaliranje, preporučujemo plan Stirling Server - <strong>neograničena mesta</strong> i <strong>SSO podrška</strong> za $99/server/mo."
+freeBody = "Naše <strong>Open-Core</strong> licenciranje dozvoljava do <strong>{{freeTierLimit}}</strong> korisnika besplatno po serveru. Da se bez prekida skalirate i dobijete rani pristup našem novom <strong>alatu za uređivanje PDF teksta</strong>, preporučujemo Stirling Server plan - puno uređivanje i <strong>neograničena mesta</strong> za $99/server/mes."
 
 [onboarding.desktopInstall]
 title = "Preuzmi"

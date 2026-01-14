@@ -967,7 +967,7 @@ title = "覆蓋 PDF"
 
 [home.pdfTextEditor]
 title = "PDF 文字編輯器"
-desc = "編輯 PDF 中既有的文字與圖片"
+desc = "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
 
 [home.addText]
 tags = "文字,註解,標籤"
@@ -1230,7 +1230,7 @@ selectFilesPlaceholder = "在主視圖選取檔案以開始"
 settings = "設定"
 conversionCompleted = "轉換完成"
 results = "結果"
-defaultFilename = "已轉換_檔案"
+defaultFilename = "converted_file"
 conversionResults = "轉換結果"
 convertFrom = "來源格式"
 convertTo = "目標格式"
@@ -1449,7 +1449,7 @@ title = "新增浮水印"
 desc = "將文字或影像浮水印加入 PDF 檔案"
 completed = "已加入浮水印"
 submit = "新增浮水印"
-filenamePrefix = "已加_浮水印"
+filenamePrefix = "watermarked"
 
 [watermark.error]
 failed = "為 PDF 新增浮水印時發生錯誤。"
@@ -3769,7 +3769,7 @@ title = "PDF 轉為單一頁面"
 header = "PDF 轉為單一頁面"
 submit = "轉換為單一頁面"
 description = "此工具會將 PDF 的所有頁面合併成一個大型單頁。寬度將與原頁相同，但高度會是所有頁面高度之總和。"
-filenamePrefix = "單一_頁面"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "在主畫面選擇一個 PDF 檔開始使用"
@@ -5668,7 +5668,7 @@ upgrade = "立即升級 →"
 freeTitle = "伺服器授權"
 overLimitTitle = "需要伺服器授權"
 overLimitBody = "我們的授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。你有 <strong>{{overLimitUserCopy}}</strong> 位 Stirling 使用者。若要不中斷使用，請升級至 Stirling Server 方案 - <strong>不限席次</strong>、PDF 文字編輯，以及完整管理控制，每台伺服器 $99/月。"
-freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充，我們建議選用 Stirling Server 方案 - <strong>不限席次</strong> 與 <strong>SSO 支援</strong>，每伺服器每月 $99。"
+freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充並搶先體驗全新的 <strong>PDF 文字編輯工具</strong>，建議升級至 Stirling Server 方案 - 完整編輯與 <strong>不限席次</strong>，每台伺服器 $99/月。"
 
 [onboarding.desktopInstall]
 title = "下載"
@@ -6406,7 +6406,7 @@ label = "使用者名稱"
 placeholder = "輸入你的使用者名稱"
 
 [setup.login.email]
-label = "電子郵件"
+label = "Email"
 placeholder = "輸入你的 Email"
 
 [setup.login.password]

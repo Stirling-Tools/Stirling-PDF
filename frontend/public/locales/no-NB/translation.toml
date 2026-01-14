@@ -134,7 +134,7 @@ unsupported = "Ikke støttet"
 
 [toolPanel]
 placeholder = "Velg et verktøy for å komme i gang"
-alpha = "Alfa"
+alpha = "Alpha"
 premiumFeature = "Premium-funksjon:"
 comingSoon = "Kommer snart:"
 
@@ -966,8 +966,8 @@ desc = "Legger PDF-er over hverandre"
 title = "Overlay PDF-er"
 
 [home.pdfTextEditor]
-title = "PDF-teksteditor"
-desc = "Rediger eksisterende tekst og bilder i PDF-filer"
+title = "PDF-tekstredigerer"
+desc = "Gå gjennom og rediger Stirling PDF JSON-eksporter med gruppert tekstredigering og regenerering av PDF"
 
 [home.addText]
 tags = "tekst,merknad,etikett"
@@ -4507,7 +4507,7 @@ description = "Spor brukerhandlinger og systemhendelser for etterlevelse og sikk
 
 [admin.settings.security.audit.level]
 label = "Revisjonsnivå"
-description = "0=AV, 1=GRUNNLEGGENDE, 2=STANDARD, 3=DETALJERT"
+description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 
 [admin.settings.security.audit.retentionDays]
 label = "Bevaring av revisjon (dager)"
@@ -5581,7 +5581,7 @@ title = "Erstatt-Inverter-Farge"
 
 [replace-color.options]
 fill = "Fyllfarge"
-gradient = "Fargeovergang"
+gradient = "Gradient"
 
 [replace-color.selectText]
 1 = "Erstatt eller Inverter farge alternativer"
@@ -5668,7 +5668,7 @@ upgrade = "Oppgrader nå →"
 freeTitle = "Serverlisens"
 overLimitTitle = "Serverlisens kreves"
 overLimitBody = "Lisensieringen vår tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brukere. For å fortsette uten avbrudd, oppgrader til Stirling Server-planen – <strong>ubegrensede plasser</strong>, PDF-tekstredigering og full admin-kontroll for $99/server/mnd."
-freeBody = "Vår <strong>Open-Core</strong>-lisensiering tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. For å skalere uten avbrudd anbefaler vi Stirling Server-planen - <strong>ubegrensede plasser</strong> og <strong>SSO-støtte</strong> for $99/server/mnd."
+freeBody = "Vår <strong>Open-Core</strong>-lisensiering tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. For å skalere uten avbrudd og få tidlig tilgang til vårt nye <strong>PDF-tekstredigeringsverktøy</strong>, anbefaler vi Stirling Server-planen – full redigering og <strong>ubegrensede plasser</strong> for $99/server/mnd."
 
 [onboarding.desktopInstall]
 title = "Last ned"
@@ -6443,7 +6443,7 @@ paragraph = "Avsnittsside"
 sparse = "Sparsom tekst"
 
 [pdfTextEditor.groupingMode]
-auto = "Automatisk"
+auto = "Auto"
 paragraph = "Avsnitt"
 singleLine = "Én linje"
 

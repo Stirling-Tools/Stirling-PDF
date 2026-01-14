@@ -966,8 +966,8 @@ desc = "Наслагва PDF файлове върху друг PDF"
 title = "Наслагване PDF-и"
 
 [home.pdfTextEditor]
-title = "Редактор на текст в PDF"
-desc = "Редактирайте съществуващ текст и изображения в PDF файлове"
+title = "PDF текстов редактор"
+desc = "Преглеждайте и редактирайте JSON експорти на Stirling PDF с групово редактиране на текст и повторно генериране на PDF"
 
 [home.addText]
 tags = "текст,анотация,етикет"
@@ -5668,7 +5668,7 @@ upgrade = "Надградете сега →"
 freeTitle = "Лиценз за сървър"
 overLimitTitle = "Необходим е лиценз за сървър"
 overLimitBody = "Нашият лиценз позволява до <strong>{{freeTierLimit}}</strong> безплатни потребители на сървър. Имате <strong>{{overLimitUserCopy}}</strong> потребители на Stirling. За да продължите без прекъсвания, надградете до плана Stirling Server – <strong>неограничени места</strong>, редакция на PDF текст и пълен админ контрол за $99/сървър/месец."
-freeBody = "Нашият лицензен модел <strong>Open-Core</strong> позволява до <strong>{{freeTierLimit}}</strong> потребители безплатно на сървър. За безпрепятствено мащабиране препоръчваме плана Stirling Server - <strong>неограничени места</strong> и <strong>поддръжка на SSO</strong> за $99/server/mo."
+freeBody = "Нашият <strong>Open-Core</strong> лиценз позволява до <strong>{{freeTierLimit}}</strong> безплатни потребители на сървър. За да мащабирате без прекъсвания и да получите ранен достъп до нашия нов <strong>инструмент за редакция на PDF текст</strong>, препоръчваме плана Stirling Server – пълно редактиране и <strong>неограничени места</strong> за $99/сървър/месец."
 
 [onboarding.desktopInstall]
 title = "Изтегляне"

@@ -967,7 +967,7 @@ title = "Üst-Üstə Qoy"
 
 [home.pdfTextEditor]
 title = "PDF Mətn Redaktoru"
-desc = "PDF-lərin içindəki mövcud mətn və şəkilləri redaktə edin"
+desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
 
 [home.addText]
 tags = "mətn,şərh,etiket"
@@ -4890,7 +4890,7 @@ description = "Daha geniş sistem müvəqqəti qovluğunu təmizləyib-təmizlə
 label = "Proses İcraedicisi Limitləri"
 description = "Hər icraedici üçün sessiya limitlərini və taym-outları konfiqurasiya edin"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF-dən HTML-ə"
+pdfToHtml = "PDF to HTML"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -5668,7 +5668,7 @@ upgrade = "İndi yüksəlt →"
 freeTitle = "Server lisenziyası"
 overLimitTitle = "Server lisenziyası tələb olunur"
 overLimitBody = "Lisenziyalaşmamız hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Sizdə <strong>{{overLimitUserCopy}}</strong> Stirling istifadəçisi var. Fasiləsiz davam etmək üçün Stirling Server planına yüksəldin - <strong>limitsiz yerlər</strong>, PDF mətn redaktəsi və tam admin nəzarəti cəmi $99/server/ay."
-freeBody = "Bizim <strong>Open-Core</strong> lisenziyalaşdırmamız hər server üçün pulsuz olaraq ən çox <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslama üçün Stirling Server planını tövsiyə edirik - <strong>limitsiz yerlər</strong> və <strong>SSO dəstəyi</strong> $99/server/ay."
+freeBody = "Bizim <strong>Open-Core</strong> lisenziyası hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslanmaq və yeni <strong>PDF mətn redaktəsi alətimizə</strong> erkən çıxış əldə etmək üçün Stirling Server planını tövsiyə edirik — tam redaktə və <strong>limitsiz yerlər</strong> $99/server/ay."
 
 [onboarding.desktopInstall]
 title = "Yüklə"
@@ -5849,8 +5849,8 @@ emailDisabled = "E-poçt dəvətləri üçün ayarlarda SMTP konfiqurasiyası v�
 [workspace.people.license]
 users = "istifadəçi"
 availableSlots = "Mövcud yerlər"
-grandfathered = "Əvvəlki şərtlərlə"
-grandfatheredShort = "{{count}} əvvəlki şərtlərlə"
+grandfathered = "Grandfathered"
+grandfatheredShort = "{{count}} grandfathered"
 fromLicense = "lisenziyadan"
 slotsAvailable = "{{count}} istifadəçi yeri mövcuddur"
 noSlotsAvailable = "Mövcud yer yoxdur"
