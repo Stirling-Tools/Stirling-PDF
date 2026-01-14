@@ -636,7 +636,11 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public String getCurrentUsername() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
 
         if (principal instanceof UserDetails detailsUser) {
             return detailsUser.getUsername();
