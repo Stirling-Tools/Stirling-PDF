@@ -22,6 +22,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 
 @Controller
 public class ReactRoutingController {
@@ -31,6 +32,12 @@ public class ReactRoutingController {
 
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
+
+    private final ApplicationProperties applicationProperties;
+
+    public ReactRoutingController(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     private String cachedIndexHtml;
     private String cachedCallbackHtml;
@@ -125,19 +132,48 @@ public class ReactRoutingController {
         return new ClassPathResource("static/index.html");
     }
 
+    /**
+     * Helper method to apply X-Frame-Options header based on configuration
+     */
+    private ResponseEntity.BodyBuilder applyXFrameOptions(ResponseEntity.BodyBuilder builder) {
+        String xFrameOptions = null;
+        if (applicationProperties != null
+                && applicationProperties.getSecurity() != null
+                && applicationProperties.getSecurity().getXFrameOptions() != null) {
+            xFrameOptions = applicationProperties.getSecurity().getXFrameOptions();
+        }
+
+        if (xFrameOptions != null && !xFrameOptions.isBlank()) {
+            String headerValue = xFrameOptions.toUpperCase();
+            if (!headerValue.equals("DISABLED")) {
+                // Apply the configured X-Frame-Options header
+                builder.header("X-Frame-Options", headerValue);
+            }
+            // If DISABLED, don't add the header at all
+        } else {
+            // Default to DENY if not configured
+            builder.header("X-Frame-Options", "DENY");
+        }
+
+        return builder;
+    }
+
     @GetMapping(
             value = {"/", "/index.html"},
             produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) {
         try {
             if (indexHtmlExists && cachedIndexHtml != null) {
-                return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedIndexHtml);
+                return applyXFrameOptions(ResponseEntity.ok().contentType(MediaType.TEXT_HTML))
+                        .body(cachedIndexHtml);
             }
             // Fallback: process on each request (dev mode or cache failed)
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(processIndexHtml());
+            return applyXFrameOptions(ResponseEntity.ok().contentType(MediaType.TEXT_HTML))
+                    .body(processIndexHtml());
         } catch (Exception ex) {
             log.error("Failed to serve index.html, returning fallback", ex);
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(buildFallbackHtml());
+            return applyXFrameOptions(ResponseEntity.ok().contentType(MediaType.TEXT_HTML))
+                    .body(buildFallbackHtml());
         }
     }
 
@@ -149,20 +185,21 @@ public class ReactRoutingController {
     @GetMapping(value = "/auth/callback/tauri", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveTauriAuthCallback(HttpServletRequest request) {
         // cachedCallbackHtml is always initialized in @PostConstruct
-        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedCallbackHtml);
+        return applyXFrameOptions(ResponseEntity.ok().contentType(MediaType.TEXT_HTML))
+                .body(cachedCallbackHtml);
     }
 
     @GetMapping(
             "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
     public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
-        return serveIndexHtml(request);
+        return serveIndexHtml(request); // Already applies X-Frame-Options
     }
 
     @GetMapping(
             "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
     public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
             throws IOException {
-        return serveIndexHtml(request);
+        return serveIndexHtml(request); // Already applies X-Frame-Options
     }
 
     private String buildFallbackHtml() {

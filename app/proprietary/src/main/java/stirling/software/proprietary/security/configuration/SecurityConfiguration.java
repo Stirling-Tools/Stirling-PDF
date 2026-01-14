@@ -201,6 +201,35 @@ public class SecurityConfiguration {
 
         http.csrf(CsrfConfigurer::disable);
 
+        // Configure X-Frame-Options header based on settings
+        String xFrameOptions = securityProperties.getXFrameOptions();
+        if (xFrameOptions != null && !xFrameOptions.isBlank()) {
+            http.headers(
+                    headers ->
+                            headers.frameOptions(
+                                    frameOptions -> {
+                                        switch (xFrameOptions.toUpperCase()) {
+                                            case "DENY":
+                                                frameOptions.deny();
+                                                break;
+                                            case "SAMEORIGIN":
+                                                frameOptions.sameOrigin();
+                                                break;
+                                            case "DISABLED":
+                                                frameOptions.disable();
+                                                break;
+                                            default:
+                                                // If custom value provided, disable Spring's
+                                                // X-Frame-Options
+                                                // and let a custom filter or header writer handle it
+                                                frameOptions.disable();
+                                                log.warn(
+                                                        "Custom X-Frame-Options value '{}' provided. You may need to set this via reverse proxy or custom filter.",
+                                                        xFrameOptions);
+                                        }
+                                    }));
+        }
+
         if (loginEnabledValue) {
 
             http.addFilterBefore(
