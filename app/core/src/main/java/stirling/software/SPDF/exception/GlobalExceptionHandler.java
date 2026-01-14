@@ -341,8 +341,6 @@ public class GlobalExceptionHandler {
                 ex, HttpStatus.SERVICE_UNAVAILABLE, ErrorTypes.FFMPEG_REQUIRED, title, request);
     }
 
-
-
     /**
      * Handle PDF and DPI-related BaseAppException subtypes.
      *

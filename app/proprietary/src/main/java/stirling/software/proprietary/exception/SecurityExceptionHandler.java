@@ -26,7 +26,7 @@ public class SecurityExceptionHandler {
     /**
      * Handle authentication exceptions (thrown by @PreAuthorize and other security checks).
      *
-     * @param ex      the AuthenticationException
+     * @param ex the AuthenticationException
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 401 UNAUTHORIZED
      */
@@ -56,7 +56,7 @@ public class SecurityExceptionHandler {
     /**
      * Handle access denied exceptions (thrown by @PreAuthorize for insufficient permissions).
      *
-     * @param ex      the AccessDeniedException
+     * @param ex the AccessDeniedException
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 403 FORBIDDEN
      */
