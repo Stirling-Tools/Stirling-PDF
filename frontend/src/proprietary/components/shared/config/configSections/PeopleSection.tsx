@@ -200,7 +200,7 @@ export default function PeopleSection() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch people data:', error);
+      console.error('[PeopleSection] Failed to fetch people data:', error);
       alert({ alertType: 'error', title: 'Failed to load people data' });
     } finally {
       setLoading(false);
@@ -221,7 +221,7 @@ export default function PeopleSection() {
       closeEditModal();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to update user:', error);
+      console.error('[PeopleSection] Failed to update user:', error);
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
                           error.message ||
@@ -238,7 +238,7 @@ export default function PeopleSection() {
       alert({ alertType: 'success', title: t('workspace.people.toggleEnabled.success') });
       fetchData();
     } catch (error: any) {
-      console.error('Failed to toggle user status:', error);
+      console.error('[PeopleSection] Failed to toggle user status:', error);
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
                           error.message ||
@@ -258,7 +258,7 @@ export default function PeopleSection() {
       alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
       fetchData();
     } catch (error: any) {
-      console.error('Failed to delete user:', error);
+      console.error('[PeopleSection] Failed to delete user:', error);
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
                           error.message ||
@@ -611,34 +611,36 @@ export default function PeopleSection() {
                           {!isCurrentUser(user) && (
                             <>
                               <Menu.Divider />
+                              <Menu.Item
+                                color="red"
+                                leftSection={<LocalIcon icon="key" width="1rem" height="1rem" />}
+                                onClick={async () => {
+                                  try {
+                                    await userManagementService.disableMfaByAdmin(user.username);
+                                    alert({ alertType: 'success', title: t('workspace.people.mfa.adminDisableSuccess', 'MFA disabled successfully for user') });
+                                  } catch (error: any) {
+                                    console.error('[PeopleSection] Failed to disable MFA for user:', error);
+                                    const errorMessage = error.response?.data?.message ||
+                                                        error.response?.data?.error ||
+                                                        error.message ||
+                                                        t('workspace.people.mfa.adminDisableError', 'Failed to disable MFA for user');
+                                    alert({ alertType: 'error', title: errorMessage });
+                                  }
+                                }}
+                                disabled={!loginEnabled}
+                              >
+                                {t('workspace.people.mfa.disableByAdmin', 'Disable MFA')}
+                              </Menu.Item>
+                            </>
+                          )}
+                          {!isCurrentUser(user) && (
+                            <>
+                              <Menu.Divider />
                               <Menu.Item color="red" leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />} onClick={() => handleDeleteUser(user)} disabled={!loginEnabled}>
                                 {t('workspace.people.deleteUser')}
                               </Menu.Item>
                             </>
                           )}
-                          <>
-                            <Menu.Divider />
-                            <Menu.Item
-                              color="red"
-                              leftSection={<LocalIcon icon="key" width="1rem" height="1rem" />}
-                              onClick={async () => {
-                                try {
-                                  await userManagementService.disableMfaByAdmin(user.username);
-                                  alert({ alertType: 'success', title: t('workspace.people.mfa.adminDisableSuccess', 'MFA disabled successfully for user') });
-                                } catch (error: any) {
-                                  console.error('Failed to disable MFA for user:', error);
-                                  const errorMessage = error.response?.data?.message ||
-                                                      error.response?.data?.error ||
-                                                      error.message ||
-                                                      t('workspace.people.mfa.adminDisableError', 'Failed to disable MFA for user');
-                                  alert({ alertType: 'error', title: errorMessage });
-                                }
-                              }}
-                              disabled={!loginEnabled}
-                            >
-                              {t('workspace.people.mfa.disableByAdmin', 'Disable MFA')}
-                            </Menu.Item>
-                          </>
                         </Menu.Dropdown>
                       </Menu>
                     </Group>

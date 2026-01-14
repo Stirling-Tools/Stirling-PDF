@@ -5875,6 +5875,11 @@ slotsAvailable = "{{count}} user slot(s) available"
 noSlotsAvailable = "No slots available"
 currentUsage = "Currently using {{current}} of {{max}} user licences"
 
+[workspace.people.mfa]
+adminDisableSuccess = "MFA disabled successfully for user"
+adminDisableError = "Failed to disable MFA for user"
+disableByAdmin = "Disable MFA"
+
 [workspace.teams]
 title = "Teams"
 description = "Manage teams and organize workspace members"
