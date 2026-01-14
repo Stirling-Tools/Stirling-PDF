@@ -31,13 +31,12 @@ import stirling.software.proprietary.service.SignatureService;
 /**
  * Controller for managing user signatures in proprietary/authenticated mode only. Requires user
  * authentication and enforces per-user storage limits. All endpoints require authentication
- * via @PreAuthorize("isAuthenticated()").
+ * and will return 401 for unauthenticated users.
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class SignatureController {
 
     private final SignatureService signatureService;
@@ -49,6 +48,7 @@ public class SignatureController {
      * requirements.
      */
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SavedSignatureResponse> saveSignature(
             @RequestBody SavedSignatureRequest request) {
         try {
@@ -77,6 +77,7 @@ public class SignatureController {
      * signatures.
      */
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<SavedSignatureResponse>> listSignatures() {
         try {
             String username = userService.getCurrentUsername();
@@ -93,7 +94,7 @@ public class SignatureController {
      * shared signatures.
      */
     @PostMapping("/{signatureId}/label")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> updateSignatureLabel(
             @PathVariable String signatureId, @RequestBody Map<String, String> body) {
         try {
@@ -119,7 +120,7 @@ public class SignatureController {
      * signatures. Admins can also delete shared signatures.
      */
     @DeleteMapping("/{signatureId}")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
         try {
             String username = userService.getCurrentUsername();
