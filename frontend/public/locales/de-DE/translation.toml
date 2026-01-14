@@ -1,8 +1,11 @@
 unsavedChanges = "Sie haben ungespeicherte Änderungen an Ihrer PDF. Was möchten Sie tun?"
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "Möchten Sie die Seite wirklich verlassen?"
 unsavedChangesTitle = "Ungespeicherte Änderungen"
 keepWorking = "Weiterarbeiten"
 discardChanges = "Änderungen verwerfen"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "Anwenden & Fortfahren"
 exportAndContinue = "Exportieren & Fortfahren"
 cancel = "Abbrechen"
@@ -128,9 +131,6 @@ undoQuotaError = "Rückgängig nicht möglich: unzureichender Speicherplatz"
 undoStorageError = "Rückgängig abgeschlossen, aber einige Dateien konnten nicht im Speicher gespeichert werden"
 undoSuccess = "Vorgang erfolgreich rückgängig gemacht"
 unsupported = "Nicht unterstützt"
-discardRedactions = "Discard & Leave"
-pendingRedactions = "You have unapplied redactions that will be lost."
-pendingRedactionsTitle = "Unapplied Redactions"
 
 [toolPanel]
 placeholder = "Wählen Sie ein Tool, um zu starten"
@@ -445,10 +445,10 @@ viewDetails = "Details anzeigen"
 serverNeedsUpdate = "Server needs to be updated by administrator"
 
 [settings.general.versionInfo]
+title = "Version Information"
 description = "Desktop and server version details"
 desktop = "Desktop Version"
 server = "Server Version"
-title = "Version Information"
 
 [settings.security]
 title = "Sicherheit"
@@ -468,6 +468,8 @@ newPlaceholder = "Neues Passwort eingeben"
 confirm = "Neues Passwort bestätigen"
 confirmPlaceholder = "Neues Passwort erneut eingeben"
 update = "Passwort aktualisieren"
+
+
 
 [settings.hotkeys]
 title = "Tastenkürzel"
@@ -539,6 +541,8 @@ accountSettings = "Kontoeinstellungen"
 adminSettings = "Admin-Einstellungen – Benutzer anzeigen und hinzufügen"
 userControlSettings = "Benutzerkontrolle"
 changeUsername = "Benutzername ändern"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "Neuer Benutzername"
 password = "Bestätigungspasswort"
 oldPassword = "Altes Passwort"
@@ -553,8 +557,6 @@ property = "Eigenschaft"
 webBrowserSettings = "Webbrowser-Einstellung"
 syncToBrowser = "Konto → Browser synchronisieren"
 syncToAccount = "Konto ← Browser synchronisieren"
-changeUsernameDescription = "Update your username. You will be logged out after updating."
-newUsernamePlaceholder = "Enter your new username"
 
 [adminUserSettings]
 title = "Benutzerkontrolle"
@@ -1319,6 +1321,7 @@ outputFormatDesc = "Choose the output format for the ebook"
 tabletPhone = "Tablet/Phone (with images)"
 targetDevice = "Target device"
 targetDeviceDesc = "Choose an output profile optimized for the reader device"
+
 
 [imageToPdf]
 tags = "konvertierung,img,jpg,bild,foto"
@@ -3244,10 +3247,10 @@ title = "Schwärzungs-Methode"
 mode = "Modus"
 automatic = "Automatisch"
 automaticDesc = "Text basierend auf Suchbegriffen schwärzen"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "Manuell"
 manualDesc = "Klicken und ziehen zum Schwärzen bestimmter Bereiche"
 manualComingSoon = "Manuelle Schwärzung kommt bald"
-automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 
 [redact.auto]
 header = "Auto-Schwärzung"
@@ -3315,26 +3318,35 @@ text = "Nur vollständige Wörter abgleichen, keine Teilübereinstimmungen. 'Joh
 title = "In PDF-Bild konvertieren"
 text = "Konvertiert das PDF nach der Schwärzung in ein bildbasiertes PDF. Dies stellt sicher, dass Text hinter Schwärzungskästen vollständig entfernt und nicht wiederherstellbar ist."
 
-[redact.tooltip.manual.apply]
-bullet1 = "Mark as many areas as needed before applying"
-bullet2 = "All pending redactions are applied at once"
-bullet3 = "Redactions cannot be undone after applying"
-text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
-title = "Apply Redactions"
-
 [redact.tooltip.manual.header]
 title = "Manual Redaction Controls"
 
-[redact.tooltip.manual.markArea]
-text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
-title = "Mark Area Tool"
-
 [redact.tooltip.manual.markText]
-text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
 title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
 
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "Manuelle Schwärzung"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "Textbasierte Schwärzung"
 pageBasedRedaction = "Seitenbasierte Schwärzung"
 convertPDFToImageLabel = "PDF zu PDF-Bild konvertieren (Verwendet, um Text hinter dem Kasten zu entfernen)"
@@ -3354,15 +3366,6 @@ showLayers = "Ebenen anzeigen (Doppelklick, um alle Ebenen auf den Standardzusta
 colourPicker = "Farbwähler"
 findCurrentOutlineItem = "Aktuelles Gliederungselement finden"
 applyChanges = "Änderungen anwenden"
-apply = "Apply"
-applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
-controlsTitle = "Manual Redaction Controls"
-instructions = "Select text or draw areas on the PDF to mark content for redaction."
-markArea = "Mark Area"
-markText = "Mark Text"
-noMarks = "No redaction marks. Use the tools above to mark content for redaction."
-pendingLabel = "Pending:"
-title = "Redaction Tools"
 
 [redact.manual.pageRedactionNumbers]
 title = "Seiten"
@@ -4131,6 +4134,7 @@ language = "Sprache"
 toggleAnnotations = "Anmerkungen ein-/ausblenden"
 search = "PDF durchsuchen"
 panMode = "Verschiebemodus"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "Nach links drehen"
 rotateRight = "Nach rechts drehen"
 toggleSidebar = "Seitenleiste umschalten"
@@ -4138,10 +4142,9 @@ toggleBookmarks = "Lesezeichen ein-/ausblenden"
 print = "PDF drucken"
 downloadAll = "Alle herunterladen"
 saveAll = "Alle speichern"
-applyRedactionsFirst = "Apply redactions first"
 draw = "Draw"
-exitRedaction = "Exit Redaction Mode"
 redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
 save = "Save"
 
 [textAlign]
@@ -4215,6 +4218,8 @@ undo = "Rückgängig"
 redo = "Wiederholen"
 applyChanges = "Änderungen anwenden"
 saveChanges = "Save Changes"
+
+
 
 [search]
 title = "PDF durchsuchen"
@@ -4297,6 +4302,8 @@ fetchError = "Einstellungen konnten nicht geladen werden"
 saveError = "Einstellungen konnten nicht gespeichert werden"
 saved = "Einstellungen erfolgreich gespeichert"
 saveSuccess = "Einstellungen erfolgreich gespeichert"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "Änderungen speichern"
 discard = "Verwerfen"
 restartRequired = "Neustart erforderlich"
@@ -4304,8 +4311,6 @@ loginRequired = "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu
 restarting = "Server wird neu gestartet"
 restartingMessage = "Der Server wird neu gestartet. Bitte einen Moment warten..."
 restartError = "Server konnte nicht neu gestartet werden. Bitte manuell neu starten."
-error = "Failed to save settings"
-success = "Settings saved successfully"
 
 [admin.settings.unsavedChanges]
 title = "Ungespeicherte Änderungen"
@@ -4423,8 +4428,11 @@ label = "Unoconvert-Ausführbare Datei"
 description = "Pfad zu LibreOffice unoconvert für Dokumentkonvertierungen (leer lassen für Standard: /opt/venv/bin/unoconvert)"
 
 [admin.settings.general.frontendUrl]
-description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
 label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "Sicherheit"
@@ -4562,19 +4570,19 @@ connect = "Verbinden"
 disconnect = "Trennen"
 disconnected = "Anbieter erfolgreich getrennt"
 disconnectError = "Anbieter konnte nicht getrennt werden"
-imageResolutionFull = "Full (Original Size)"
-imageResolutionReduced = "Reduced (Max 1200px)"
 mobileScannerConvertToPdf = "Convert Images to PDF"
 mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
 mobileScannerImageResolution = "Image Resolution"
 mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
 mobileScannerPageFormat = "Page Format"
 mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
 mobileScannerStretchToFit = "Stretch to Fit"
 mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
-pageFormatA4 = "A4 (210×297mm)"
-pageFormatKeep = "Keep (Original Dimensions)"
-pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO-Autoanmeldung"
@@ -4644,24 +4652,24 @@ label = "Registrierung blockieren"
 description = "Neue Benutzerregistrierung über SAML2 verhindern"
 
 [admin.settings.connections.mobileScanner]
-description = "Allow users to upload files from mobile devices by scanning a QR code"
-enable = "Enable QR Code Upload"
-imageResolutionFull = "Full (Original Size)"
-imageResolutionReduced = "Reduced (Max 1200px)"
 label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
 link = "Configure in System Settings"
 mobileScannerConvertToPdf = "Convert Images to PDF"
 mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
 mobileScannerImageResolution = "Image Resolution"
 mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
 mobileScannerPageFormat = "Page Format"
 mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
 mobileScannerStretchToFit = "Stretch to Fit"
 mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
-note = "Note: Requires Frontend URL to be configured. "
-pageFormatA4 = "A4 (210×297mm)"
-pageFormatKeep = "Keep (Original Dimensions)"
-pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.database]
 title = "Datenbank"
@@ -4845,8 +4853,8 @@ label = "Frontend-URL"
 description = "Basis-URL für das Frontend (z. B. https://pdf.example.com). Wird zum Erzeugen von Einladungslinks in E-Mails verwendet. Leer lassen, um Backend-URL zu verwenden."
 
 [admin.settings.mail.frontendUrlNote]
-link = "Configure in System Settings"
 note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Rechtliche Dokumente"
@@ -4963,8 +4971,6 @@ description = "Einzelne zu deaktivierende Endpunkte auswählen"
 label = "Deaktivierte Endpunktgruppen"
 description = "Zu deaktivierende Endpunktgruppen auswählen"
 
-[admin.settings.badge]
-clickToUpgrade = "Click to view plan details"
 
 [admin.settings.telegram]
 description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
@@ -5131,6 +5137,9 @@ googleDriveShort = "Drive"
 myFiles = "Meine Dateien"
 noRecentFiles = "Keine kürzlichen Dateien gefunden"
 googleDriveNotAvailable = "Google Drive-Integration nicht verfügbar"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "Ausgewählte herunterladen"
 saveSelected = "Auswahl speichern"
 openFiles = "Dateien öffnen"
@@ -5161,9 +5170,6 @@ showAll = "Alle anzeigen"
 sortByDate = "Nach Datum sortieren"
 sortByName = "Nach Name sortieren"
 sortBySize = "Nach Größe sortieren"
-mobileShort = "Mobile"
-mobileUpload = "Mobile Upload"
-mobileUploadNotAvailable = "Mobile upload not enabled"
 
 [storage]
 temporaryNotice = "Dateien werden temporär in Ihrem Browser gespeichert und können automatisch gelöscht werden"
@@ -5514,12 +5520,12 @@ confirmCta = "Schlüssel aktualisieren"
 
 [config.apiKeys.alert]
 apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
 apiKeyRefreshed = "API Key Refreshed"
 apiKeyRefreshedBody = "Your API key has been successfully refreshed."
-failedToCreateApiKey = "Failed to create API key."
-failedToFetchApiKey = "Failed to fetch API key."
 failedToRefreshApiKey = "Failed to refresh API key."
-failedToRetrieveApiKey = "Failed to retrieve API key from response."
 
 [AddAttachmentsRequest]
 attachments = "Anhänge auswählen"
@@ -5995,6 +6001,7 @@ successMessage = "Ihre Lizenz wurde erfolgreich aktiviert. Sie können dieses Fe
 title = "E-Mail-Verifizierung erforderlich"
 message = "Sie müssen Ihre E-Mail-Adresse im Stripe-Abrechnungsportal verifizieren. Prüfen Sie Ihre E-Mails auf einen Login-Link."
 
+
 [plan.period]
 month = "Monat"
 perUserPerMonth = "/Benutzer/Monat"
@@ -6370,10 +6377,10 @@ description = "Geben Sie die vollständige URL Ihres selbst gehosteten Stirling 
 
 [setup.server.error]
 emptyUrl = "Bitte eine Server-URL eingeben"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "Verbindung zum Server konnte nicht hergestellt werden"
 testFailed = "Verbindungstest fehlgeschlagen"
 configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
-invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 
 [setup.server.error.securityDisabled]
 title = "Anmeldung nicht aktiviert"
@@ -6389,6 +6396,7 @@ connectingTo = "Verbinden mit:"
 submit = "Anmelden"
 signInWith = "Anmelden mit"
 oauthPending = "Browser zur Authentifizierung wird geöffnet..."
+sso = "Single Sign-On"
 orContinueWith = "Oder mit E-Mail fortfahren"
 serverRequirement = "Hinweis: Auf dem Server muss die Anmeldung aktiviert sein."
 showInstructions = "Wie aktivieren?"
@@ -6397,7 +6405,6 @@ instructions = "So aktivieren Sie die Anmeldung auf Ihrem Stirling PDF-Server:"
 instructionsEnvVar = "Setzen Sie die Umgebungsvariable:"
 instructionsOrYml = "Oder in der settings.yml:"
 instructionsRestart = "Starten Sie anschließend Ihren Server neu, damit die Änderungen wirksam werden."
-sso = "Single Sign-On"
 
 [setup.login.username]
 label = "Benutzername"
@@ -6656,16 +6663,17 @@ uploading = "Uploading..."
 validating = "Validating session..."
 
 [mobileUpload]
-connected = "Mobile device connected"
+title = "Upload from Mobile"
 description = "Scan to upload photos. Images auto-convert to PDF."
 descriptionNoConvert = "Scan to upload photos from your mobile device."
 error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
 expiryWarning = "Session Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
 filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
 instructions = "Scan with your phone camera. Images convert to PDF automatically."
 instructionsNoConvert = "Scan with your phone camera to upload files."
-pollingError = "Error checking for files"
-sessionCreateError = "Failed to create session"
-sessionId = "Session ID"
-title = "Upload from Mobile"
+
