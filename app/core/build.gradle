@@ -208,6 +208,14 @@ tasks.register('npmInstall', Exec) {
             println "node_modules not found, will install..."
             return true
         }
+
+        // if required devDependency is missing, reinstall
+        def iconifyPkg = new File(frontendDir, 'node_modules/@iconify-json/material-symbols/package.json')
+        if (!iconifyPkg.exists()) {
+            println "@iconify-json/material-symbols missing, will reinstall..."
+            return true
+        }
+
         def packageJson = new File(frontendDir, 'package.json')
         def packageLock = new File(frontendDir, 'package-lock.json')
         def isOutdated = nodeModules.lastModified() < packageJson.lastModified() ||
