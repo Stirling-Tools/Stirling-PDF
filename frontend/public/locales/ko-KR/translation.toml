@@ -340,6 +340,10 @@ advance = "고급"
 edit = "보기 & 편집"
 popular = "인기"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "환경설정"
 
@@ -435,6 +439,25 @@ latestVersion = "최신 버전"
 checkForUpdates = "업데이트 확인"
 viewDetails = "자세히 보기"
 
+[settings.security]
+title = "Security"
+description = "Update your password to keep your account secure."
+
+[settings.security.password]
+subtitle = "Change your password. You will be logged out after updating."
+required = "All fields are required."
+mismatch = "New passwords do not match."
+error = "Unable to update password. Please verify your current password and try again."
+success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
+current = "Current password"
+currentPlaceholder = "Enter your current password"
+new = "New password"
+newPlaceholder = "Enter a new password"
+confirm = "Confirm new password"
+confirmPlaceholder = "Re-enter your new password"
+update = "Update password"
+
 [settings.hotkeys]
 title = "키보드 단축키"
 description = "빠르게 도구에 접근할 수 있도록 키보드 단축키를 사용자 지정하세요. \"단축키 변경\"을 클릭하고 새 키 조합을 누르세요. 취소하려면 Esc를 누르세요."
@@ -488,11 +511,16 @@ low = "낮음"
 title = "자격 증명 변경"
 header = "계정 정보 업데이트"
 changePassword = "기본 로그인 자격 증명을 사용 중입니다. 새 비밀번호를 입력하세요"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "새 사용자 이름"
 oldPassword = "현재 비밀번호"
 newPassword = "새 비밀번호"
 confirmNewPassword = "새 비밀번호 확인"
 submit = "변경 사항 제출"
+credsUpdated = "Account updated"
+description = "Changes saved. Please log in again."
+error = "Unable to update username. Please verify your password and try again."
+changeUsername = "Update your username. You will be logged out after updating."
 
 [account]
 title = "계정 설정"
@@ -707,6 +735,11 @@ desc = "스캔한 사진을 감지하여 개별 페이지로 분할"
 tags = "서명,사인"
 title = "서명"
 desc = "그리기, 텍스트 또는 이미지로 PDF에 서명 추가"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "단순화,제거,대화형"
@@ -1245,6 +1278,21 @@ cbzOptions = "CBZ → PDF 옵션"
 optimizeForEbook = "전자책 리더기에 맞게 PDF 최적화(Ghostscript 사용)"
 cbzOutputOptions = "PDF → CBZ 옵션"
 cbzDpi = "이미지 렌더링용 DPI"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
 
 [imageToPdf]
 tags = "변환,이미지,jpg,사진"
@@ -1361,6 +1409,11 @@ header = "Add attachments"
 add = "첨부 파일 추가"
 remove = "첨부 파일 제거"
 embed = "첨부 파일 내장"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add attachments"
 
 [watermark]
@@ -2306,6 +2359,10 @@ saved = "저장됨"
 label = "서명 이미지 업로드"
 placeholder = "이미지 파일 선택"
 hint = "서명 PNG 또는 JPG 이미지를 업로드하세요"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "서명 추가 방법"
@@ -2350,6 +2407,11 @@ note = "평탄화는 PDF의 대화형 요소를 제거하여 편집할 수 없�
 [flatten.options.flattenOnlyForms]
 label = "양식만 평면화"
 desc = "양식 필드만 평탄화하고 다른 대화형 요소는 그대로 둡니다"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "평탄화 결과"
@@ -2925,6 +2987,7 @@ header = "PDF 자르기"
 submit = "제출"
 noFileSelected = "자르기를 시작하려면 PDF 파일을 선택하세요"
 reset = "전체 PDF로 재설정"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "자르기 영역 선택"
@@ -3342,6 +3405,19 @@ placeholder = "수평 분할 수 입력"
 label = "수직 분할"
 placeholder = "수직 분할 수 입력"
 
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
+
 [AddStampRequest]
 tags = "스탬프,이미지 추가,중앙 이미지,워터마크,PDF,삽입,사용자 지정"
 header = "PDF 스탬프"
@@ -3703,6 +3779,19 @@ filesize = "파일 크기"
 [compress.grayscale]
 label = "압축을 위해 그레이스케일 적용"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
+[compress.lineArt]
+label = "Convert images to line art"
+description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+unavailable = "ImageMagick is not installed or enabled on this server"
+detailLevel = "Detail level"
+edgeEmphasis = "Edge emphasis"
+edgeLow = "Gentle"
+edgeMedium = "Balanced"
+edgeHigh = "Strong"
+
 [compress.tooltip.header]
 title = "압축 설정 개요"
 
@@ -3720,6 +3809,10 @@ bullet2 = "높은 값은 파일 크기 감소"
 title = "그레이스케일"
 text = "이 옵션을 선택하면 모든 이미지를 흑백으로 변환합니다. 특히 스캔한 PDF나 이미지가 많은 문서의 파일 크기를 크게 줄일 수 있습니다."
 
+[compress.tooltip.lineArt]
+title = "Line Art"
+text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+
 [compress.error]
 failed = "PDF를 압축하는 중 오류가 발생했습니다."
 
@@ -3731,6 +3824,11 @@ failed = "PDF를 압축하는 중 오류가 발생했습니다."
 [compress.selectText.1]
 _value = "압축 설정"
 1 = "1-3 PDF 압축,</br> 4-6 약한 이미지 압축,</br> 7-9 강한 이미지 압축은 이미지 품질을 크게 낮춥니다"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "이 파일은 비밀번호로 보호되어 있습니다. 비밀번호를 입력하세요:"
@@ -3971,23 +4069,92 @@ deleteSelected = "선택한 페이지 삭제"
 closePdf = "PDF 닫기"
 exportAll = "PDF 내보내기"
 downloadSelected = "선택한 파일 다운로드"
-downloadAll = "전체 다운로드"
-saveAll = "모두 저장"
+annotations = "Annotations"
+exportSelected = "선택한 페이지 내보내기"
+saveChanges = "변경 내용 저장"
 toggleTheme = "테마 전환"
-toggleBookmarks = "북마크 표시/숨기기"
 language = "언어"
+toggleAnnotations = "주석 가시성 전환"
 search = "PDF 검색"
 panMode = "이동 모드"
 rotateLeft = "왼쪽으로 회전"
 rotateRight = "오른쪽으로 회전"
 toggleSidebar = "사이드바 전환"
-exportSelected = "선택한 페이지 내보내기"
-toggleAnnotations = "주석 가시성 전환"
-annotationMode = "주석 모드 전환"
+toggleBookmarks = "북마크 표시/숨기기"
 print = "PDF 인쇄"
-draw = "그리기"
-save = "저장"
-saveChanges = "변경 내용 저장"
+downloadAll = "전체 다운로드"
+saveAll = "모두 저장"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 
 [search]
 title = "PDF 검색"
@@ -4038,12 +4205,20 @@ settings = "설정"
 adminSettings = "관리자 설정"
 allTools = "All Tools"
 reader = "리더"
+tours = "Tours"
+showMeAround = "Show me around"
+
+[quickAccess.toursTooltip]
+admin = "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour."
+user = "Watch walkthroughs here: Tools tour and the New V2 layout tour."
 
 [quickAccess.helpMenu]
 toolsTour = "도구 둘러보기"
 toolsTourDesc = "도구로 할 수 있는 일을 알아보세요"
 adminTour = "관리자 둘러보기"
 adminTourDesc = "관리자 설정 및 기능을 살펴보세요"
+whatsNewTour = "See what's new in V2"
+whatsNewTourDesc = "Tour the updated layout"
 
 [admin]
 error = "오류"
@@ -5069,6 +5244,7 @@ loading = "불러오는 중..."
 back = "뒤로"
 continue = "계속"
 error = "오류"
+save = "Save"
 
 [config.overview]
 title = "애플리케이션 구성"
@@ -5235,6 +5411,16 @@ finish = "완료"
 startTour = "투어 시작"
 startTourDescription = "Stirling PDF의 주요 기능을 둘러보는 가이드 투어"
 
+[onboarding.whatsNew]
+quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
+leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
+fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
+pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
+activeFilesView = "Use Active Files to see everything you have open and pick what to work on."
+wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
 [onboarding.welcomeModal]
 title = "Stirling PDF에 오신 것을 환영합니다!"
 description = "주요 기능과 시작 방법을 1분 만에 알아보는 간단한 투어를 진행할까요?"
@@ -5254,6 +5440,10 @@ skipForNow = "나중에 건너뛰기"
 download = "다운로드 →"
 showMeAround = "둘러보기"
 skipTheTour = "투어 건너뛰기"
+
+[onboarding.tourOverview]
+title = "Tour Overview"
+body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
 
 [onboarding.serverLicense]
 skip = "나중에 건너뛰기"
@@ -5568,6 +5758,28 @@ contactSales = "영업팀 문의"
 contactToUpgrade = "요금제 업그레이드 또는 맞춤 설정은 문의해 주세요"
 maxUsers = "최대 사용자 수"
 upTo = "최대"
+getLicense = "Get Server License"
+upgradeToEnterprise = "Upgrade to Enterprise"
+selectPeriod = "Select Billing Period"
+monthlyBilling = "Monthly Billing"
+yearlyBilling = "Yearly Billing"
+checkoutOpened = "Checkout Opened"
+checkoutInstructions = "Complete your purchase in the Stripe tab. After payment, return here and refresh the page to activate your license. You will also receive an email with your license key."
+activateLicense = "Activate Your License"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Checkout Opened in New Tab"
+instructions = "Complete your purchase in the Stripe tab. Once your payment is complete, you will receive an email with your license key."
+enterKey = "Enter your license key below to activate your plan:"
+keyDescription = "Paste the license key from your email"
+activate = "Activate License"
+doLater = "I'll do this later"
+success = "License Activated!"
+successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.static.billingPortal]
+title = "Email Verification Required"
+message = "You will need to verify your email address in the Stripe billing portal. Check your email for a login link."
 
 [plan.period]
 month = "월"
@@ -5771,6 +5983,8 @@ notAvailable = "감사 시스템을 사용할 수 없습니다"
 notAvailableMessage = "감사 시스템이 구성되어 있지 않거나 사용할 수 없습니다."
 disabled = "감사 로깅이 비활성화되었습니다"
 disabledMessage = "시스템 이벤트를 추적하려면 애플리케이션 구성에서 감사 로깅을 활성화하세요."
+enterpriseRequired = "Enterprise License Required"
+enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
 
 [audit.error]
 title = "감사 시스템을 불러오는 중 오류"
@@ -6025,6 +6239,8 @@ reset = "변경 사항 초기화"
 downloadJson = "JSON 다운로드"
 generatePdf = "PDF 생성"
 saveChanges = "변경 사항 저장"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "텍스트 자동 크기 조정"
@@ -6042,6 +6258,24 @@ descriptionInline = "팁: Ctrl(Cmd) 또는 Shift를 눌러 텍스트 상자를 �
 [pdfTextEditor.options.forceSingleElement]
 title = "편집된 텍스트를 단일 PDF 요소로 고정"
 description = "활성화하면 겹치는 글리프나 혼합 폰트를 피하기 위해 편집된 각 텍스트 상자를 하나의 PDF 텍스트 요소로 내보냅니다."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "선택 항목 병합"
