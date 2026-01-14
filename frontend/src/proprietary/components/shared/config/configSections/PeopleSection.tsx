@@ -589,7 +589,7 @@ export default function PeopleSection() {
                               onClick={() => openEditModal(user)}
                               disabled={!loginEnabled}
                             >
-                              {t('workspace.people.editRole')}
+                              {t('workspace.people.editRole', 'Edit Role & Team')}
                             </Menu.Item>
                           )}
                           <Menu.Item
@@ -616,6 +616,29 @@ export default function PeopleSection() {
                               </Menu.Item>
                             </>
                           )}
+                          <>
+                            <Menu.Divider />
+                            <Menu.Item
+                              color="red"
+                              leftSection={<LocalIcon icon="key" width="1rem" height="1rem" />}
+                              onClick={async () => {
+                                try {
+                                  await userManagementService.disableMfaByAdmin(user.username);
+                                  alert({ alertType: 'success', title: t('workspace.people.mfa.adminDisableSuccess', 'MFA disabled successfully for user') });
+                                } catch (error: any) {
+                                  console.error('Failed to disable MFA for user:', error);
+                                  const errorMessage = error.response?.data?.message ||
+                                                      error.response?.data?.error ||
+                                                      error.message ||
+                                                      t('workspace.people.mfa.adminDisableError', 'Failed to disable MFA for user');
+                                  alert({ alertType: 'error', title: errorMessage });
+                                }
+                              }}
+                              disabled={!loginEnabled}
+                            >
+                              {t('workspace.people.mfa.disableByAdmin', 'Disable MFA')}
+                            </Menu.Item>
+                          </>
                         </Menu.Dropdown>
                       </Menu>
                     </Group>

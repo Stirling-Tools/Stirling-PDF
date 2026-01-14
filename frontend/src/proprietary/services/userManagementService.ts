@@ -291,4 +291,12 @@ export const userManagementService = {
       suppressErrorToast: true, // Component will handle error display
     } as any);
   },
+
+  /**
+   * Disable MFA for a user (admin only)
+   */
+  async disableMfaByAdmin(username: string): Promise<void> {
+    await apiClient.post(`/api/v1/auth/mfa/disable/admin/${encodeURIComponent(username)}`, undefined);
+  },
+
 };

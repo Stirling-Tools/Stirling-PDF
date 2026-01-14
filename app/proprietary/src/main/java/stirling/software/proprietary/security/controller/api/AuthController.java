@@ -209,7 +209,7 @@ public class AuthController {
 
             if (auth == null
                     || !auth.isAuthenticated()
-                    || auth.getPrincipal().equals("anonymousUser")) {
+                    || "anonymousUser".equals(auth.getPrincipal())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Not authenticated"));
             }
@@ -458,6 +458,61 @@ public class AuthController {
             log.error("Failed to clear MFA setup for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to clear MFA setup"));
+        }
+    }
+
+    /**
+     * Admin endpoint to disable MFA for a user
+     *
+     * @param username Username of the user to disable MFA for
+     * @return Response indicating success or failure
+     */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/mfa/disable/admin/{username}")
+    public ResponseEntity<?> disableMfaByAdmin(@PathVariable String username) {
+        try {
+            User user =
+                    userService
+                            .findByUsernameIgnoreCaseWithSettings(username)
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            if (!mfaService.isMfaEnabled(user)) {
+                return ResponseEntity.ok(Map.of("enabled", false));
+            }
+
+            mfaService.disableMfa(user);
+            return ResponseEntity.ok(Map.of("enabled", false));
+        } catch (UsernameNotFoundException e) {
+            log.warn("User not found for MFA disable: {}", username);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found"));
+        } catch (Exception e) {
+            log.error("Failed to disable MFA for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to disable MFA"));
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/mfa/status/admin/{username}")
+    public ResponseEntity<?> getMfaStatus(@PathVariable String username) {
+        try {
+            User user =
+                    userService
+                            .findByUsernameIgnoreCaseWithSettings(username)
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            boolean enabled = mfaService.isMfaEnabled(user);
+            log.error("MFA status for user {}: {}", username, enabled);
+            return ResponseEntity.ok(Map.of("enabled", enabled));
+        } catch (UsernameNotFoundException e) {
+            log.warn("User not found for MFA status check: {}", username);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found"));
+        } catch (Exception e) {
+            log.error("Failed to check MFA status for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to check MFA status"));
         }
     }
 
