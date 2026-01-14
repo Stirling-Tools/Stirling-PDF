@@ -312,11 +312,6 @@ const AccountSection: React.FC = () => {
           <Text size="sm" c="dimmed">
             {t('account.mfa.description', 'Add an extra layer of security to your account.')}
           </Text>
-          {mfaError && (
-            <Alert icon={<LocalIcon icon="error-rounded" width="1rem" height="1rem" />} color="red" variant="light">
-              {mfaError}
-            </Alert>
-          )}
           {isSsoUser ? (
             <Alert icon={<LocalIcon icon="info" width="1rem" height="1rem" />} color="blue" variant="light">
               {t(
@@ -446,6 +441,11 @@ const AccountSection: React.FC = () => {
                 </Text>
               </Stack>
             )}
+            {mfaError && (
+              <Alert icon={<LocalIcon icon="error-rounded" width="1rem" height="1rem" />} color="red" variant="light">
+                {mfaError}
+              </Alert>
+            )}
             <TextInput
               label={t('account.mfa.codeLabel', 'Authentication code')}
               placeholder={t('account.mfa.codePlaceholder', 'Enter 6-digit code')}
@@ -457,7 +457,6 @@ const AccountSection: React.FC = () => {
               minLength={6}
               autoComplete="one-time-code"
               required
-              autoFocus
             />
             <Group justify="flex-end" gap="sm">
               <Button variant="default" onClick={handleCloseMfaSetupModal}>
@@ -494,7 +493,6 @@ const AccountSection: React.FC = () => {
               minLength={6}
               autoComplete="one-time-code"
               required
-              autoFocus
             />
             <Group justify="flex-end" gap="sm">
               <Button variant="default" onClick={handleCloseMfaDisableModal}>

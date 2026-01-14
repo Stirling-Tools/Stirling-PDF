@@ -79,11 +79,11 @@ export const accountService = {
   },
 
   async enableMfa(code: string): Promise<void> {
-    await apiClient.post('/api/v1/auth/mfa/enable', { code });
+    await apiClient.post('/api/v1/auth/mfa/enable', { code }, { skipAuthRedirect: true });
   },
 
   async disableMfa(code: string): Promise<void> {
-    await apiClient.post('/api/v1/auth/mfa/disable', { code });
+    await apiClient.post('/api/v1/auth/mfa/disable', { code }, { skipAuthRedirect: true });
   },
 
   async cancelMfaSetup(): Promise<void> {
