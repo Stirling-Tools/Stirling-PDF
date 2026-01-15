@@ -127,6 +127,7 @@ function FirstLoginForm({ username, onPasswordChanged, usingDefaultCredentials =
             placeholder={t('firstLogin.enterNewPassword', 'Enter new password (min 8 characters)')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.currentTarget.value)}
+            minLength={8}
             required
             styles={{
               input: { height: 44 },
@@ -139,6 +140,7 @@ function FirstLoginForm({ username, onPasswordChanged, usingDefaultCredentials =
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.currentTarget.value)}
             required
+            minLength={8}
             styles={{
               input: { height: 44 },
             }}
@@ -148,7 +150,7 @@ function FirstLoginForm({ username, onPasswordChanged, usingDefaultCredentials =
             fullWidth
             onClick={handleSubmit}
             loading={loading}
-            disabled={!newPassword || !confirmPassword}
+            disabled={!newPassword || !confirmPassword || newPassword.length < 8 || confirmPassword.length < 8}
             size="md"
             mt="xs"
           >
@@ -169,9 +171,9 @@ export default function FirstLoginSlide({
     key: 'first-login',
     title: 'Set Your Password',
     body: (
-      <FirstLoginForm 
-        username={username} 
-        onPasswordChanged={onPasswordChanged} 
+      <FirstLoginForm
+        username={username}
+        onPasswordChanged={onPasswordChanged}
         usingDefaultCredentials={usingDefaultCredentials}
       />
     ),

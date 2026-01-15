@@ -42,6 +42,7 @@ export interface OnboardingStep {
   type: OnboardingStepType;
   condition: (ctx: OnboardingConditionContext) => boolean;
   slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license' | 'tour-overview' | 'analytics-choice';
+  allowDismiss?: boolean;
 }
 
 export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
@@ -69,6 +70,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: 'modal-slide',
     slideId: 'first-login',
     condition: (ctx) => ctx.requiresPasswordChange,
+    allowDismiss: false,
   },
   {
     id: 'welcome',

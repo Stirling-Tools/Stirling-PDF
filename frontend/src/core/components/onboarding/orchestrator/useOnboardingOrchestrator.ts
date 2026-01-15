@@ -231,7 +231,7 @@ export function useOnboardingOrchestrator(
 
   const activeFlow = useMemo(() => {
     // If password change is required, ONLY show the first-login step
-    if (runtimeState.requiresPasswordChange) {
+    if (runtimeState.requiresPasswordChange !== false) {
       return ONBOARDING_STEPS.filter((step) => step.id === 'first-login');
     }
     return ONBOARDING_STEPS.filter((step) => step.condition(conditionContext));
@@ -302,9 +302,10 @@ export function useOnboardingOrchestrator(
 
   const skip = useCallback(() => {
     // Skip marks the entire onboarding as completed
+    if (runtimeState.requiresPasswordChange !== false) return;
     markOnboardingCompleted();
     setCurrentStepIndex(totalSteps);
-  }, [totalSteps]);
+  }, [totalSteps, runtimeState.requiresPasswordChange]);
 
   const complete = useCallback(() => {
     const nextIndex = currentStepIndex + 1;

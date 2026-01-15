@@ -128,7 +128,7 @@ public class AuthController {
                             "MFA required but no code provided for user: {} from IP: {}",
                             username,
                             ip);
-                    loginAttemptService.loginFailed(username);
+                    // loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(
                                     Map.of(

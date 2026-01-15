@@ -133,6 +133,7 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
           placeholder={t('firstLogin.enterNewPassword', 'Enter new password (min 8 characters)')}
           value={newPassword}
           onChange={(e) => setNewPassword(e.currentTarget.value)}
+          minLength={8}
           required
         />
 
@@ -141,6 +142,7 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
           placeholder={t('firstLogin.reEnterNewPassword', 'Re-enter new password')}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+          minLength={8}
           required
         />
 
@@ -148,7 +150,7 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
           fullWidth
           onClick={handleSubmit}
           loading={loading}
-          disabled={!currentPassword || !newPassword || !confirmPassword}
+          disabled={!currentPassword || !newPassword || !confirmPassword || newPassword.length < 8 || confirmPassword.length < 8}
           mt="md"
         >
           {t('firstLogin.changePassword', 'Change Password')}
