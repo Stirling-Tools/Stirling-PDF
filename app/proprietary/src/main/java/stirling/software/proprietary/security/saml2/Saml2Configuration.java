@@ -134,11 +134,11 @@ public class Saml2Configuration {
         // Validate required IdP configuration
         if (idpEntityId == null || idpEntityId.isBlank()) {
             throw new IllegalStateException(
-                    "SAML2 IdP Entity ID is required. Set security.saml2.idpEntityId or provide idpMetadataUri");
+                    "SAML2 IdP Entity ID is required. Set security.saml2.entityId or provide security.saml2.metadataUri");
         }
         if (idpSingleLoginUrl == null || idpSingleLoginUrl.isBlank()) {
             throw new IllegalStateException(
-                    "SAML2 IdP Single Sign-On URL is required. Set security.saml2.idpSingleLoginUrl or provide idpMetadataUri");
+                    "SAML2 IdP Single Sign-On URL is required. Set security.saml2.provider.singleLoginUrl or provide security.saml2.metadataUri");
         }
 
         log.info(

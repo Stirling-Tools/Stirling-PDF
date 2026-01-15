@@ -1,7 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { springAuth } from '@app/auth/springAuthClient';
-import { handleAuthCallbackSuccess } from '@app/extensions/authCallback';
 import styles from '@app/routes/AuthCallback.module.css';
 import { useAuth } from '@app/auth/UseSession';
 
@@ -26,7 +24,7 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<'extracting' | 'validating' | 'error'>('extracting');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [_errorMessage, setErrorMessage] = useState<string | null>(null);
   const [tokenStored, setTokenStored] = useState(false);
   const processingRef = useRef(false);
 
@@ -155,9 +153,10 @@ export default function AuthCallback() {
       return;
     }
 
-        await handleAuthCallbackSuccess(token);
-
-        console.log('[AuthCallback] Token validated, redirecting to home');
+    const timeoutId = setTimeout(() => {
+      if (!session) {
+        setStatus('error');
+        setErrorMessage('Authentication timed out. Please try again.');
 
         setTimeout(() => {
           navigate('/login', {

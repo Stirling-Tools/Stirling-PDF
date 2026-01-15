@@ -56,7 +56,7 @@ security:
       name: "" # Display name for your IdP (optional)
       singleLoginUrl: "" # SSO URL
       singleLogoutUrl: "" # SLO URL
-      entityId: '' # IdP Entity ID
+      entityId: "" # IdP Entity ID
       cert: classpath:okta.cert # IdP signing certificate
     sp: # Service Provider (your app) credentials for signing SAML requests. Generated from your keypair
       privateKey: classpath:saml-private-key.key # Your private key.

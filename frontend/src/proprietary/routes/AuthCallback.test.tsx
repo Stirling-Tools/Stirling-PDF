@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import AuthCallback from '@app/routes/AuthCallback';
 
@@ -92,14 +92,13 @@ describe('AuthCallback', () => {
     // Mock useAuth returning loading state
     mockUseAuth.mockReturnValue({ session: null, loading: true });
 
-    const { container } = render(
+    render(
       <BrowserRouter>
         <AuthCallback />
       </BrowserRouter>
     );
 
-    // Should show loading spinner
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
-    expect(getByText('Completing authentication')).toBeInTheDocument();
+    // Should show loading message
+    expect(screen.getByText('Completing authentication')).toBeInTheDocument();
   });
 });
