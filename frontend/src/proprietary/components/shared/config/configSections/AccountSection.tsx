@@ -14,7 +14,6 @@ import { MfaSetupResponse } from '@app/responses/Mfa/MfaResponse';
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
-  const accountLogout = useAccountLogout();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [usernameModalOpen, setUsernameModalOpen] = useState(false);
 
@@ -59,8 +58,6 @@ const AccountSection: React.FC = () => {
     // Do NOT navigate after signOut - it will redirect the page
     await signOut();
   }, [signOut]);
-    await accountLogout({ signOut, redirectToLogin });
-  }, [accountLogout, redirectToLogin, signOut]);
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
