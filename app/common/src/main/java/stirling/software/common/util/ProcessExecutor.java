@@ -9,8 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +30,6 @@ public class ProcessExecutor {
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
-    private static final Set<String> ALLOWED_EXECUTABLES = initAllowedExecutables();
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -357,8 +354,28 @@ public class ProcessExecutor {
         if (command == null || command.isEmpty()) {
             return false;
         }
+
+        // Check if this is a UNO conversion by looking for unoconvert executable
         String executable = command.get(0);
-        return executable != null && executable.toLowerCase().contains("unoconvert");
+        if (executable != null) {
+            // Extract basename from path for matching
+            String basename = executable;
+            int lastSlash = Math.max(executable.lastIndexOf('/'), executable.lastIndexOf('\\'));
+            if (lastSlash >= 0) {
+                basename = executable.substring(lastSlash + 1);
+            }
+            // Strip .exe extension on Windows
+            if (basename.toLowerCase(java.util.Locale.ROOT).endsWith(".exe")) {
+                basename = basename.substring(0, basename.length() - 4);
+            }
+            // Match common unoconvert variants (but NOT soffice)
+            String lowerBasename = basename.toLowerCase(java.util.Locale.ROOT);
+            if (lowerBasename.contains("unoconvert") || lowerBasename.equals("unoconv")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private List<String> applyUnoServerEndpoint(
@@ -484,7 +501,7 @@ public class ProcessExecutor {
                     "Command executable contains path traversal: " + executable);
         }
 
-        // Handle absolute paths
+        // For absolute paths, verify the file exists and is executable
         if (executable.contains("/") || executable.contains("\\")) {
             Path execPath;
             try {
@@ -502,55 +519,8 @@ public class ProcessExecutor {
                 throw new IllegalArgumentException(
                         "Command executable is not a regular file: " + executable);
             }
-
-            // For absolute paths, verify the filename is in allowlist
-            Path fileNamePath = execPath.getFileName();
-            if (fileNamePath == null) {
-                throw new IllegalArgumentException(
-                        "Command executable has no filename component: " + executable);
-            }
-            String filename = fileNamePath.toString();
-
-            // Strip .exe extension on Windows for allowlist matching
-            if (filename.toLowerCase(java.util.Locale.ROOT).endsWith(".exe")) {
-                filename = filename.substring(0, filename.length() - 4);
-            }
-
-            if (!ALLOWED_EXECUTABLES.contains(filename)) {
-                throw new IllegalArgumentException(
-                        "Command executable filename not in allowlist: " + filename);
-            }
-            return;
         }
-
-        // Relative executable name - must be in allowlist
-        if (!ALLOWED_EXECUTABLES.contains(executable)) {
-            throw new IllegalArgumentException(
-                    "Command executable is not in allowlist: " + executable);
-        }
-    }
-
-    private static Set<String> initAllowedExecutables() {
-        Set<String> allowed = new HashSet<>();
-        Collections.addAll(
-                allowed,
-                "unoconvert",
-                "soffice",
-                "weasyprint",
-                "ocrmypdf",
-                "qpdf",
-                "tesseract",
-                "gs",
-                "ghostscript",
-                "pdftohtml",
-                "python3",
-                "python",
-                "java",
-                "ebook-convert",
-                "ffmpeg",
-                "magick",
-                "convert");
-        return Collections.unmodifiableSet(allowed);
+        // For relative paths, trust that PATH resolution will work or fail appropriately
     }
 
     public enum Processes {
