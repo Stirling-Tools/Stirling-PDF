@@ -42,28 +42,55 @@ FROM debian:stable-slim@sha256:1c25564b03942d874bf6a2b71f2062b71af8bc1475aa873c5
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
+# ------------------------------------------------------------------------------
+# Locale: force UTF-8 like Gotenberg (helps LO/unoconvert edge cases)
+# ------------------------------------------------------------------------------
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
+# ------------------------------------------------------------------------------
 # Install core runtime dependencies + tools required by Stirling-PDF features
+# NOTE: Only LibreOffice + fonts-related changes vs your original Dockerfile.
+# ------------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
     openjdk-21-jre-headless \
     ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
-    libreoffice-nogui libreoffice-java-common \
+    \
+    # ---------------------------
+    # Fonts (expanded, gotenberg-style)
+    # ---------------------------
+    fonts-dejavu \
+    fonts-liberation fonts-liberation2 \
+    fonts-crosextra-caladea fonts-crosextra-carlito \
+    fonts-linuxlibertine \
+    fonts-noto-core fonts-noto-cjk fonts-noto-mono fonts-noto-ui-core \
+    fonts-noto-color-emoji \
+    ttf-wqy-zenhei \
+    fonts-arphic-ukai fonts-arphic-uming \
+    \
+    # LO + python UNO plumbing
     python3 python3-venv python3-uno \
+    \
     tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
     tesseract-ocr-por tesseract-ocr-chi-sim \
     libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
     gosu unpaper qpdf \
+    \
     # AWT headless support (required for some Java graphics operations)
     libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
     libxinerama1 libxkbcommon0 libxkbfile1 libsm6 libice6 \
+    \
     # Qt WebEngine dependencies for Calibre
     libegl1 libopengl0 libgl1 libxdamage1 libxfixes3 libxshmfence1 libdrm2 libgbm1 \
     libxkbcommon-x11-0 libxrandr2 libxcomposite1 libnss3 libx11-xcb1 \
     libxcb-cursor0 libdbus-1-3 libglib2.0-0 \
+    \
     # Virtual framebuffer (required for headless LibreOffice)
     xvfb x11-utils coreutils \
+    \
     # Temporary packages only needed for Calibre installer
     xz-utils gpgv curl xdg-utils \
     \
@@ -74,6 +101,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get purge -y xz-utils gpgv xdg-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+# ------------------------------------------------------------------------------
+# LibreOffice install: pull from Debian backports for newer LO builds
+# (This is the single biggest “Gotenberg-like” reliability change for DOCX import.)
+# ------------------------------------------------------------------------------
+RUN set -eux; \
+    . /etc/os-release; \
+    echo "deb http://deb.debian.org/debian ${VERSION_CODENAME}-backports main" > /etc/apt/sources.list.d/backports.list; \
+    apt-get update; \
+    # Install LO from backports (full package, not -nogui, for maximum filter coverage)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -t ${VERSION_CODENAME}-backports \
+        libreoffice libreoffice-java-common; \
+    rm -rf /var/lib/apt/lists/*; \
+    libreoffice --version
 
 # Make ebook-convert available in PATH
 RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
@@ -140,6 +181,8 @@ ENV VERSION_TAG=$VERSION_TAG \
     PGID=${PGID} \
     UMASK=022 \
     UNO_PATH=/usr/lib/libreoffice/program \
+    # Be explicit like Gotenberg
+    LIBREOFFICE_BIN_PATH=/usr/lib/libreoffice/program/soffice.bin \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
@@ -152,9 +195,12 @@ RUN python3 -m venv /opt/venv --system-site-packages \
     && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
     && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
 
-# Separate venv for unoserver (keeps it isolated)
+# ==============================================================================
+# Unoserver: pin version for reproducibility (avoid “pip latest” drift)
+# ==============================================================================
+ARG UNOSERVER_VERSION=3.6
 RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir unoserver
+    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}"
 
 # Make unoserver tools available in main venv PATH
 RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
