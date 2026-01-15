@@ -835,7 +835,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Pro/#activation",
+        link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
         synonyms: getSynonyms(t, "devAirgapped"),
         supportsAutomate: false,
         automationSettings: null
