@@ -30,14 +30,14 @@ setup_ocr() {
     # The cp -rn above won't overwrite user files, just adds missing system files.
 
     # Install additional languages if specified
-    if [[ -n "$TESSERACT_LANGS" ]]; then
+    if [ -n "$TESSERACT_LANGS" ]; then
         SPACE_SEPARATED_LANGS=$(echo $TESSERACT_LANGS | tr ',' ' ')
-        pattern='^[a-zA-Z]{2,4}(_[a-zA-Z]{2,4})?$'
         for LANG in $SPACE_SEPARATED_LANGS; do
-            if [[ $LANG =~ $pattern ]]; then
-                echo "Installing tesseract language: $LANG"
-                apk add --no-cache "tesseract-ocr-data-$LANG" 2>/dev/null || true
-            fi
+            case "$LANG" in
+                [a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z]_[a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z]_[a-zA-Z][a-zA-Z][a-zA-Z]|[a-zA-Z][a-zA-Z][a-zA-Z][a-zA-Z]_[a-zA-Z][a-zA-Z][a-zA-Z][a-zA-Z])
+                    apk add --no-cache "tesseract-ocr-data-$LANG" 2>/dev/null || true
+                    ;;
+            esac
         done
     fi
 
@@ -100,6 +100,201 @@ run_as_user() {
     fi
 }
 
+run_with_timeout() {
+    local secs=$1; shift
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "${secs}s" "$@"
+    else
+        "$@"
+    fi
+}
+
+run_as_user_with_timeout() {
+    local secs=$1; shift
+    if command -v timeout >/dev/null 2>&1; then
+        run_as_user timeout "${secs}s" "$@"
+    else
+        run_as_user "$@"
+    fi
+}
+
+tcp_port_check() {
+    local host=$1
+    local port=$2
+    local timeout_secs=${3:-5}
+
+    # Try nc first (most portable)
+    if command -v nc >/dev/null 2>&1; then
+        run_with_timeout "$timeout_secs" nc -z "$host" "$port" 2>/dev/null
+        return $?
+    fi
+
+    # Fallback to /dev/tcp (bash-specific)
+    if [ -n "${BASH_VERSION:-}" ] && command -v bash >/dev/null 2>&1; then
+        run_with_timeout "$timeout_secs" bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null
+        local result=$?
+        exec 3>&- 2>/dev/null || true
+        return $result
+    fi
+
+    # No TCP check method available
+    return 2
+}
+
+CONFIG_FILE=${CONFIG_FILE:-/configs/settings.yml}
+UNOSERVER_PIDS=()
+UNOSERVER_PORTS=()
+UNOSERVER_UNO_PORTS=()
+
+read_setting_value() {
+    local key=$1
+    if [ ! -f "$CONFIG_FILE" ]; then
+        return
+    fi
+    awk -F: -v key="$key" '
+        $1 ~ "^[[:space:]]*"key"[[:space:]]*$" {
+            val=$2
+            sub(/#.*/, "", val)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
+            gsub(/^["'"'"']|["'"'"']$/, "", val)
+            print val
+            exit
+        }
+    ' "$CONFIG_FILE"
+}
+
+get_unoserver_auto() {
+    if [ -n "${PROCESS_EXECUTOR_AUTO_UNO_SERVER:-}" ]; then
+        echo "$PROCESS_EXECUTOR_AUTO_UNO_SERVER"
+        return
+    fi
+    if [ -n "${UNO_SERVER_AUTO:-}" ]; then
+        echo "$UNO_SERVER_AUTO"
+        return
+    fi
+    read_setting_value "autoUnoServer"
+}
+
+get_unoserver_count() {
+    if [ -n "${PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT:-}" ]; then
+        echo "$PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT"
+        return
+    fi
+    if [ -n "${UNO_SERVER_COUNT:-}" ]; then
+        echo "$UNO_SERVER_COUNT"
+        return
+    fi
+    read_setting_value "libreOfficeSessionLimit"
+}
+
+start_unoserver_instance() {
+    local port=$1
+    local uno_port=$2
+    run_as_user /opt/venv/bin/unoserver --port "$port" --interface 127.0.0.1 --uno-port "$uno_port" &
+    LAST_UNOSERVER_PID=$!
+}
+
+start_unoserver_watchdog() {
+    local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
+    case "$interval" in
+        ''|*[!0-9]*) interval=30 ;;
+    esac
+    (
+        while true; do
+            local i=0
+            while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
+                local pid=${UNOSERVER_PIDS[$i]}
+                local port=${UNOSERVER_PORTS[$i]}
+                local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+                local needs_restart=false
+
+                # Check 1: PID exists
+                if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+                    echo "unoserver PID ${pid} not found for port ${port}"
+                    needs_restart=true
+                else
+                    # PID exists, now check if server is actually healthy
+                    local health_ok=false
+
+                    # Check 2A: Health check with unoping (best - checks actual server health)
+                    if command -v unoping >/dev/null 2>&1; then
+                        if run_as_user_with_timeout 5 unoping --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
+                            health_ok=true
+                        else
+                            echo "unoserver health check failed (unoping) for port ${port}, trying TCP fallback"
+                        fi
+                    fi
+
+                    # Check 2B: Fallback to TCP port check (verifies service is listening)
+                    if [ "$health_ok" = false ]; then
+                        tcp_port_check "127.0.0.1" "$port" 5
+                        local tcp_rc=$?
+                        if [ $tcp_rc -eq 0 ]; then
+                            health_ok=true
+                        elif [ $tcp_rc -eq 2 ]; then
+                            echo "No TCP check available; falling back to PID-only for port ${port}"
+                            health_ok=true
+                        else
+                            echo "unoserver TCP check failed for port ${port}"
+                            needs_restart=true
+                        fi
+                    fi
+                fi
+
+                if [ "$needs_restart" = true ]; then
+                    echo "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+                    # Kill the old process if it exists
+                    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                        kill -TERM "$pid" 2>/dev/null || true
+                        sleep 1
+                        kill -KILL "$pid" 2>/dev/null || true
+                    fi
+                    start_unoserver_instance "$port" "$uno_port"
+                    UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+                fi
+                i=$((i + 1))
+            done
+            sleep "$interval"
+        done
+    ) &
+}
+
+start_unoserver_pool() {
+    local auto
+    auto="$(get_unoserver_auto)"
+    auto="${auto,,}"
+    if [ -z "$auto" ]; then
+        auto="true"
+    fi
+    if [ "$auto" != "true" ]; then
+        echo "Skipping local unoserver pool (autoUnoServer=$auto)"
+        return
+    fi
+
+    local count
+    count="$(get_unoserver_count)"
+    case "$count" in
+        ''|*[!0-9]*) count=1 ;;
+    esac
+    if [ "$count" -le 0 ]; then
+        count=1
+    fi
+
+    local i=0
+    while [ "$i" -lt "$count" ]; do
+        local port=$((2003 + (i * 2)))
+        local uno_port=$((2004 + (i * 2)))
+        echo "Starting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+        UNOSERVER_PORTS+=("$port")
+        UNOSERVER_UNO_PORTS+=("$uno_port")
+        start_unoserver_instance "$port" "$uno_port"
+        UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
+        i=$((i + 1))
+    done
+
+    start_unoserver_watchdog
+}
+
 # Setup OCR and permissions
 setup_ocr
 setup_permissions
@@ -120,9 +315,8 @@ case "$MODE" in
             -jar /app.jar" &
         BACKEND_PID=$!
 
-        # Start unoserver for document conversion
-        run_as_user /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1 &
-        UNO_PID=$!
+        # Start unoserver pool for document conversion
+        start_unoserver_pool
 
         # Wait for backend to start
         sleep 3
@@ -165,8 +359,9 @@ case "$MODE" in
         run_as_user sh -c "java -Dfile.encoding=UTF-8 \
             -Djava.io.tmpdir=/tmp/stirling-pdf \
             -Dserver.port=8080 \
-            -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1" &
+            -jar /app.jar" &
         BACKEND_PID=$!
+        start_unoserver_pool
 
         echo "==================================="
         echo "✓ Backend API available at: http://localhost:8080/api"

@@ -119,6 +119,11 @@ All modes support standard Stirling-PDF environment variables:
 - `SYSTEM_MAXFILESIZE` - Max upload size (MB)
 - `TESSERACT_LANGS` - Comma-separated OCR language codes
 - `JAVA_CUSTOM_OPTS` - Additional JVM options
+- `PROCESS_EXECUTOR_AUTO_UNO_SERVER` - Overrides `processExecutor.autoUnoServer` (true or false)
+- `PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT` - Overrides `processExecutor.sessionLimit.libreOfficeSessionLimit`
+- `UNO_SERVER_AUTO` - Legacy alias for `processExecutor.autoUnoServer`
+- `UNO_SERVER_COUNT` - Legacy alias for `processExecutor.sessionLimit.libreOfficeSessionLimit`
+- `UNO_SERVER_HEALTH_INTERVAL` - Seconds between unoserver PID checks (default: 30)
 
 See full configuration docs at: https://docs.stirlingpdf.com
 
