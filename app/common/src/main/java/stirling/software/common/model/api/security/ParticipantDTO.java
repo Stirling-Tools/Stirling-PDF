@@ -10,10 +10,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ParticipantDTO {
-    private String email;
-    private String name;
+    private Long userId;
+    private String username;
+    private String displayName;
     private ParticipantStatus status;
-    private String shareToken;
     private LocalDateTime lastUpdated;
-    private String participantUrl;
+
+    // Signature appearance settings (owner-controlled)
+    private Boolean showSignature;
+    private Integer pageNumber;
+    private String reason;
+    private String location;
+    private Boolean showLogo;
 }

@@ -34,42 +34,9 @@ public class SigningSessionService implements SigningSessionServiceInterface {
 
     @Override
     public SigningSession createSession(Object requestObj, String username) throws IOException {
-        CreateSigningSessionRequest request = (CreateSigningSessionRequest) requestObj;
-        if (request.getParticipantEmails() == null || request.getParticipantEmails().isEmpty()) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.optionsNotSpecified",
-                    "{0} options are not specified",
-                    "participant emails");
-        }
-
-        SigningSession session = new SigningSession();
-        session.setDocumentName(request.getFileInput().getOriginalFilename());
-        session.setOwnerEmail(request.getOwnerEmail());
-        session.setMessage(request.getMessage());
-        session.setDueDate(request.getDueDate());
-        session.setOriginalPdf(request.getFileInput().getBytes());
-
-        for (int i = 0; i < request.getParticipantEmails().size(); i++) {
-            SigningParticipant participant = new SigningParticipant();
-            participant.setEmail(request.getParticipantEmails().get(i));
-            if (request.getParticipantNames() != null
-                    && request.getParticipantNames().size() > i
-                    && StringUtils.isNotBlank(request.getParticipantNames().get(i))) {
-                participant.setName(request.getParticipantNames().get(i));
-            }
-            session.getParticipants().add(participant);
-        }
-
-        if (Boolean.TRUE.equals(request.getNotifyOnCreate())) {
-            broadcastNotification(
-                    session,
-                    request.getMessage() != null
-                            ? request.getMessage()
-                            : "You have been invited to sign a document.");
-        }
-
-        sessions.put(session.getSessionId(), session);
-        return session;
+        // In-memory implementation not supported for user-based signing (requires database)
+        throw new UnsupportedOperationException(
+                "User-based signing requires database-backed implementation");
     }
 
     public SigningSession getSession(String sessionId) {
@@ -101,25 +68,11 @@ public class SigningSessionService implements SigningSessionServiceInterface {
     }
 
     @Override
-    public SigningSession attachCertificate(
-            String sessionId, String participantEmail, Object requestObj) throws IOException {
-        ParticipantCertificateRequest request = (ParticipantCertificateRequest) requestObj;
-        SigningSession session = getSession(sessionId);
-        SigningParticipant participant =
-                session.getParticipants().stream()
-                        .filter(p -> participantEmail.equalsIgnoreCase(p.getEmail()))
-                        .findFirst()
-                        .orElseThrow(
-                                () ->
-                                        ExceptionUtils.createIllegalArgumentException(
-                                                "error.notFound",
-                                                "Participant {0} does not exist",
-                                                participantEmail));
-
-        participant.setCertificateSubmission(toSubmission(request));
-        participant.setStatus(ParticipantStatus.SIGNED);
-        session.touch();
-        return session;
+    public SigningSession attachCertificate(String sessionId, Long userId, Object requestObj)
+            throws IOException {
+        // In-memory implementation doesn't support user-based participants
+        throw new UnsupportedOperationException(
+                "User-based signing not supported in non-database mode");
     }
 
     private void broadcastNotification(SigningSession session, String message) {
@@ -202,10 +155,10 @@ public class SigningSessionService implements SigningSessionServiceInterface {
     }
 
     @Override
-    public void removeParticipant(String sessionId, String participantEmail, String username) {
-        // In-memory implementation doesn't support removing participants
+    public void removeParticipant(String sessionId, Long userId, String username) {
+        // In-memory implementation doesn't support user-based participants
         throw new UnsupportedOperationException(
-                "Removing participants not supported in non-database mode");
+                "User-based signing not supported in non-database mode");
     }
 
     @Override
@@ -215,22 +168,36 @@ public class SigningSessionService implements SigningSessionServiceInterface {
     }
 
     @Override
-    public byte[] getSessionPdf(String sessionId, String token) {
-        SigningSession session = getSession(sessionId);
-        // Validate token
-        boolean validToken =
-                session.getParticipants().stream().anyMatch(p -> p.getShareToken().equals(token));
-        if (!validToken) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.unauthorized", "Invalid token for session", sessionId);
-        }
-        return session.getOriginalPdf();
+    public byte[] getSessionPdf(String sessionId, String username) {
+        // In-memory implementation doesn't support user authentication
+        throw new UnsupportedOperationException(
+                "User-based signing not supported in non-database mode");
     }
 
     @Override
     public byte[] getSignedPdf(String sessionId, String username) {
         throw new UnsupportedOperationException(
                 "getSignedPdf is only available in database-backed mode");
+    }
+
+    @Override
+    public List<?> listSignRequests(String username) {
+        // In-memory implementation doesn't support user-based sign requests
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Object getSignRequestDetail(String sessionId, String username) {
+        // In-memory implementation doesn't support user-based signing
+        throw new UnsupportedOperationException(
+                "User-based signing not supported in non-database mode");
+    }
+
+    @Override
+    public void declineSignRequest(String sessionId, String username) {
+        // In-memory implementation doesn't support user-based signing
+        throw new UnsupportedOperationException(
+                "User-based signing not supported in non-database mode");
     }
 
     @Override

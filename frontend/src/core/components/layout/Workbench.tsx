@@ -71,6 +71,16 @@ export default function Workbench() {
   };
 
   const renderMainContent = () => {
+    // Check if we're showing a custom workbench first
+    // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
+    if (!isBaseWorkbench(currentView)) {
+      const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+      if (customView) {
+        const CustomComponent = customView.component;
+        return <CustomComponent data={customView.data} />;
+      }
+    }
+
     if (activeFiles.length === 0) {
       return (
         <LandingPage

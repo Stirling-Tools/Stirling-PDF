@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +19,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.model.ParticipantCertificateSubmissionEntity;
 import stirling.software.proprietary.model.SigningParticipantEntity;
 import stirling.software.proprietary.model.SigningSessionEntity;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.SigningParticipantRepository;
 import stirling.software.proprietary.security.repository.SigningSessionRepository;
@@ -31,20 +32,21 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
     private final SigningSessionRepository sessionRepository;
     private final SigningParticipantRepository participantRepository;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
     public SigningSessionDetailDTO createSession(Object requestObj, String username)
             throws IOException {
         CreateSigningSessionRequest request = (CreateSigningSessionRequest) requestObj;
-        if (request.getParticipantEmails() == null || request.getParticipantEmails().isEmpty()) {
+        if (request.getParticipantUserIds() == null || request.getParticipantUserIds().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.optionsNotSpecified",
                     "{0} options are not specified",
-                    "participant emails");
+                    "participant user IDs");
         }
 
-        User user =
+        User owner =
                 userService
                         .findByUsernameIgnoreCase(username)
                         .orElseThrow(
@@ -64,21 +66,37 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
         }
 
         SigningSessionEntity session = new SigningSessionEntity();
-        session.setUser(user);
+        session.setUser(owner);
         session.setDocumentName(request.getFileInput().getOriginalFilename());
         session.setOwnerEmail(request.getOwnerEmail());
         session.setMessage(request.getMessage());
         session.setDueDate(request.getDueDate());
         session.setOriginalPdf(pdfBytes);
 
-        for (int i = 0; i < request.getParticipantEmails().size(); i++) {
+        // Add participants by user ID
+        for (Long userId : request.getParticipantUserIds()) {
+            User participantUser =
+                    userRepository
+                            .findById(userId)
+                            .orElseThrow(
+                                    () ->
+                                            ExceptionUtils.createIllegalArgumentException(
+                                                    "error.notFound",
+                                                    "User ID {0} not found",
+                                                    userId));
+
             SigningParticipantEntity participant = new SigningParticipantEntity();
-            participant.setEmail(request.getParticipantEmails().get(i));
-            if (request.getParticipantNames() != null
-                    && request.getParticipantNames().size() > i
-                    && StringUtils.isNotBlank(request.getParticipantNames().get(i))) {
-                participant.setName(request.getParticipantNames().get(i));
-            }
+            participant.setUser(participantUser);
+            participant.setEmail(participantUser.getUsername()); // Keep for audit trail
+            participant.setName(participantUser.getUsername());
+
+            // Apply owner's signature appearance settings
+            participant.setShowSignature(request.getShowSignature());
+            participant.setPageNumber(request.getPageNumber());
+            participant.setReason(request.getReason());
+            participant.setLocation(request.getLocation());
+            participant.setShowLogo(request.getShowLogo());
+
             session.addParticipant(participant);
         }
 
@@ -188,23 +206,43 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
     public SigningSessionDetailDTO addParticipants(
             String sessionId, Object requestObj, String username) {
         AddParticipantsRequest request = (AddParticipantsRequest) requestObj;
-        if (request.getParticipantEmails() == null || request.getParticipantEmails().isEmpty()) {
+        if (request.getParticipantUserIds() == null || request.getParticipantUserIds().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.optionsNotSpecified",
                     "{0} options are not specified",
-                    "participant emails");
+                    "participant user IDs");
         }
 
         SigningSessionEntity session = getSessionEntityByIdWithOwnershipCheck(sessionId, username);
 
-        for (int i = 0; i < request.getParticipantEmails().size(); i++) {
+        // Add participants by user ID
+        for (Long userId : request.getParticipantUserIds()) {
+            User participantUser =
+                    userRepository
+                            .findById(userId)
+                            .orElseThrow(
+                                    () ->
+                                            ExceptionUtils.createIllegalArgumentException(
+                                                    "error.notFound",
+                                                    "User ID {0} not found",
+                                                    userId));
+
             SigningParticipantEntity participant = new SigningParticipantEntity();
-            participant.setEmail(request.getParticipantEmails().get(i));
-            if (request.getParticipantNames() != null
-                    && request.getParticipantNames().size() > i
-                    && StringUtils.isNotBlank(request.getParticipantNames().get(i))) {
-                participant.setName(request.getParticipantNames().get(i));
+            participant.setUser(participantUser);
+            participant.setEmail(participantUser.getUsername()); // Keep for audit trail
+            participant.setName(participantUser.getUsername());
+
+            // Copy signature settings from existing participants (or use defaults)
+            SigningParticipantEntity firstParticipant =
+                    session.getParticipants().isEmpty() ? null : session.getParticipants().get(0);
+            if (firstParticipant != null) {
+                participant.setShowSignature(firstParticipant.getShowSignature());
+                participant.setPageNumber(firstParticipant.getPageNumber());
+                participant.setReason(firstParticipant.getReason());
+                participant.setLocation(firstParticipant.getLocation());
+                participant.setShowLogo(firstParticipant.getShowLogo());
             }
+
             session.addParticipant(participant);
         }
 
@@ -214,25 +252,25 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
 
     @Override
     @Transactional
-    public void removeParticipant(String sessionId, String participantEmail, String username) {
+    public void removeParticipant(String sessionId, Long userId, String username) {
         SigningSessionEntity session = getSessionEntityByIdWithOwnershipCheck(sessionId, username);
 
         SigningParticipantEntity participant =
                 session.getParticipants().stream()
-                        .filter(p -> participantEmail.equalsIgnoreCase(p.getEmail()))
+                        .filter(p -> p.getUser().getId().equals(userId))
                         .findFirst()
                         .orElseThrow(
                                 () ->
                                         ExceptionUtils.createIllegalArgumentException(
                                                 "error.notFound",
-                                                "Participant {0} not found",
-                                                participantEmail));
+                                                "Participant with user ID {0} not found",
+                                                userId));
 
         if (participant.getStatus() == ParticipantStatus.SIGNED) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidArgument",
                     "Cannot remove participant who has already signed",
-                    participantEmail);
+                    userId);
         }
 
         session.removeParticipant(participant);
@@ -264,20 +302,20 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
 
     @Override
     @Transactional
-    public SigningSession attachCertificate(
-            String sessionId, String participantEmail, Object requestObj) throws IOException {
+    public SigningSession attachCertificate(String sessionId, Long userId, Object requestObj)
+            throws IOException {
         ParticipantCertificateRequest request = (ParticipantCertificateRequest) requestObj;
         SigningSessionEntity session = getSessionEntityById(sessionId);
         SigningParticipantEntity participant =
                 session.getParticipants().stream()
-                        .filter(p -> participantEmail.equalsIgnoreCase(p.getEmail()))
+                        .filter(p -> p.getUser().getId().equals(userId))
                         .findFirst()
                         .orElseThrow(
                                 () ->
                                         ExceptionUtils.createIllegalArgumentException(
                                                 "error.notFound",
-                                                "Participant {0} does not exist",
-                                                participantEmail));
+                                                "Participant with user ID {0} does not exist",
+                                                userId));
 
         ParticipantCertificateSubmissionEntity submissionEntity =
                 toSubmissionEntity(request, participant);
@@ -320,16 +358,20 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] getSessionPdf(String sessionId, String token) {
+    public byte[] getSessionPdf(String sessionId, String username) {
         SigningSessionEntity session = getSessionEntityById(sessionId);
 
-        // Validate token belongs to a participant in this session
-        boolean validToken =
-                session.getParticipants().stream().anyMatch(p -> p.getShareToken().equals(token));
+        // Validate user is a participant in this session
+        boolean isParticipant =
+                session.getParticipants().stream()
+                        .anyMatch(p -> p.getUser().getUsername().equalsIgnoreCase(username));
 
-        if (!validToken) {
+        if (!isParticipant) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.unauthorized", "Invalid token for session", sessionId);
+                    "error.unauthorized",
+                    "User {0} is not a participant in session {1}",
+                    username,
+                    sessionId);
         }
 
         return session.getOriginalPdf();
@@ -366,6 +408,120 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
         return signedPdf;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<SignRequestSummaryDTO> listSignRequests(String username) {
+        User user =
+                userService
+                        .findByUsernameIgnoreCase(username)
+                        .orElseThrow(
+                                () ->
+                                        ExceptionUtils.createIllegalArgumentException(
+                                                "error.notFound", "User {0} not found", username));
+
+        // Find all sessions where user is a participant
+        List<SigningSessionEntity> sessions =
+                sessionRepository.findAll().stream()
+                        .filter(
+                                session ->
+                                        session.getParticipants().stream()
+                                                .anyMatch(
+                                                        p ->
+                                                                p.getUser()
+                                                                        .getId()
+                                                                        .equals(user.getId())))
+                        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                        .collect(Collectors.toList());
+
+        return sessions.stream()
+                .map(session -> toSignRequestSummaryDTO(session, user.getId()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SignRequestDetailDTO getSignRequestDetail(String sessionId, String username) {
+        SigningSessionEntity session = getSessionEntityById(sessionId);
+
+        User user =
+                userService
+                        .findByUsernameIgnoreCase(username)
+                        .orElseThrow(
+                                () ->
+                                        ExceptionUtils.createIllegalArgumentException(
+                                                "error.notFound", "User {0} not found", username));
+
+        // Find participant matching user
+        SigningParticipantEntity participant =
+                session.getParticipants().stream()
+                        .filter(p -> p.getUser().getId().equals(user.getId()))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        ExceptionUtils.createIllegalArgumentException(
+                                                "error.unauthorized",
+                                                "User {0} is not a participant in session {1}",
+                                                username,
+                                                sessionId));
+
+        String ownerUsername =
+                session.getUser() != null
+                        ? session.getUser().getUsername()
+                        : session.getOwnerEmail();
+
+        return new SignRequestDetailDTO(
+                session.getSessionId(),
+                session.getDocumentName(),
+                ownerUsername,
+                session.getMessage(),
+                session.getDueDate(),
+                session.getCreatedAt().toString(),
+                participant.getStatus(),
+                participant.getShowSignature(),
+                participant.getPageNumber(),
+                participant.getReason(),
+                participant.getLocation(),
+                participant.getShowLogo());
+    }
+
+    @Override
+    @Transactional
+    public void declineSignRequest(String sessionId, String username) {
+        SigningSessionEntity session = getSessionEntityById(sessionId);
+
+        User user =
+                userService
+                        .findByUsernameIgnoreCase(username)
+                        .orElseThrow(
+                                () ->
+                                        ExceptionUtils.createIllegalArgumentException(
+                                                "error.notFound", "User {0} not found", username));
+
+        // Find participant matching user
+        SigningParticipantEntity participant =
+                session.getParticipants().stream()
+                        .filter(p -> p.getUser().getId().equals(user.getId()))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        ExceptionUtils.createIllegalArgumentException(
+                                                "error.unauthorized",
+                                                "User {0} is not a participant in session {1}",
+                                                username,
+                                                sessionId));
+
+        if (participant.getStatus() == ParticipantStatus.SIGNED) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidState",
+                    "Cannot decline - participant has already signed",
+                    sessionId);
+        }
+
+        participant.setStatus(ParticipantStatus.DECLINED);
+        session.touch();
+        sessionRepository.save(session);
+    }
+
     private void validateSessionOwnership(SigningSessionEntity session, String username) {
         if (!session.getUser().getUsername().equalsIgnoreCase(username)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -396,12 +552,13 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
         entity.setCertificate(toBytes(request.getCertFile()));
         entity.setP12Keystore(toBytes(request.getP12File()));
         entity.setJksKeystore(toBytes(request.getJksFile()));
-        entity.setShowSignature(request.getShowSignature());
-        entity.setPageNumber(request.getPageNumber());
-        entity.setName(request.getName());
-        entity.setReason(request.getReason());
-        entity.setLocation(request.getLocation());
-        entity.setShowLogo(request.getShowLogo());
+        // Copy signature appearance settings from participant (configured by owner)
+        entity.setShowSignature(participant.getShowSignature());
+        entity.setPageNumber(participant.getPageNumber());
+        entity.setName(participant.getName());
+        entity.setReason(participant.getReason());
+        entity.setLocation(participant.getLocation());
+        entity.setShowLogo(participant.getShowLogo());
         return entity;
     }
 
@@ -429,6 +586,30 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
                 entity.isFinalized());
     }
 
+    private SignRequestSummaryDTO toSignRequestSummaryDTO(
+            SigningSessionEntity entity, Long userId) {
+        // Find participant matching user to get their status
+        SigningParticipantEntity participant =
+                entity.getParticipants().stream()
+                        .filter(p -> p.getUser().getId().equals(userId))
+                        .findFirst()
+                        .orElse(null);
+
+        ParticipantStatus myStatus =
+                participant != null ? participant.getStatus() : ParticipantStatus.PENDING;
+
+        String ownerUsername =
+                entity.getUser() != null ? entity.getUser().getUsername() : entity.getOwnerEmail();
+
+        return new SignRequestSummaryDTO(
+                entity.getSessionId(),
+                entity.getDocumentName(),
+                ownerUsername,
+                entity.getCreatedAt().toString(),
+                entity.getDueDate(),
+                myStatus);
+    }
+
     private SigningSessionDetailDTO toDetailDTO(SigningSessionEntity entity) {
         List<ParticipantDTO> participants =
                 entity.getParticipants().stream()
@@ -448,21 +629,18 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
     }
 
     private ParticipantDTO toParticipantDTO(SigningParticipantEntity entity) {
-        String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-        String participantUrl =
-                baseUrl
-                        + "/signing-session?sessionId="
-                        + entity.getSession().getSessionId()
-                        + "&token="
-                        + entity.getShareToken();
-
+        User user = entity.getUser();
         return new ParticipantDTO(
-                entity.getEmail(),
-                entity.getName(),
+                user.getId(),
+                user.getUsername(),
+                entity.getName() != null ? entity.getName() : user.getUsername(),
                 entity.getStatus(),
-                entity.getShareToken(),
                 entity.getLastUpdated(),
-                participantUrl);
+                entity.getShowSignature(),
+                entity.getPageNumber(),
+                entity.getReason(),
+                entity.getLocation(),
+                entity.getShowLogo());
     }
 
     private SigningSession toSigningSession(SigningSessionEntity entity) {
@@ -492,7 +670,8 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
         participant.setName(entity.getName());
         participant.setStatus(entity.getStatus());
         participant.setShareToken(entity.getShareToken());
-        participant.setNotifications(entity.getNotifications());
+        // Force lazy collection to load by creating a new ArrayList
+        participant.setNotifications(new ArrayList<>(entity.getNotifications()));
         participant.setLastUpdated(entity.getLastUpdated().toString());
 
         if (entity.getCertificateSubmission() != null) {

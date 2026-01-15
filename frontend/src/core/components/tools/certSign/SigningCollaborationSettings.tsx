@@ -1,7 +1,9 @@
-import { Stack, Text, TextInput, Switch, Textarea, Alert, TagsInput } from '@mantine/core';
+import { Stack, Text, TextInput, Switch, Textarea, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import InfoIcon from '@mui/icons-material/Info';
 import { SigningWorkflowParameters } from '@app/hooks/tools/certSign/useSigningWorkflowParameters';
+import UserSelector from '@app/components/tools/certSign/UserSelector';
+import SignatureSettingsInput from '@app/components/tools/certSign/SignatureSettingsInput';
 
 interface SigningCollaborationSettingsProps {
   parameters: SigningWorkflowParameters;
@@ -16,41 +18,34 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
     <Stack gap="sm">
       <Alert icon={<InfoIcon fontSize="small" />} radius="md" color="blue" variant="light" p="xs">
         <Text size="xs">
-          {t('certSign.collab.helper', 'Invite multiple participants to sign by entering emails separated with commas. Each invite gets its own tracking token and you will receive a JSON summary back for sharing or automation.')}
+          {t('certSign.collab.helper', 'Select users from your organization to participate in signing. You can configure signature appearance and set a due date.')}
         </Text>
       </Alert>
 
-      <TagsInput
-        label={t('certSign.collab.emails', 'Participant emails')}
-        placeholder={t('certSign.collab.emailsPlaceholder', 'Enter email and press Enter')}
-        value={parameters.participantEmails ? parameters.participantEmails.split(',').map(e => e.trim()).filter(Boolean) : []}
-        onChange={(values) => onParameterChange('participantEmails', values.join(','))}
-        disabled={disabled}
+      <UserSelector
+        value={parameters.participantUserIds}
+        onChange={(userIds) => onParameterChange('participantUserIds', userIds)}
+        placeholder={t('certSign.collab.userSelector.placeholder', 'Select users...')}
         size="xs"
-        splitChars={[',']}
-        clearable
-        acceptValueOnBlur
+        disabled={disabled}
       />
 
-      <TagsInput
-        label={t('certSign.collab.names', 'Participant names (optional)')}
-        placeholder={t('certSign.collab.namesPlaceholder', 'Enter name and press Enter')}
-        value={parameters.participantNames ? parameters.participantNames.split(',').map(n => n.trim()).filter(Boolean) : []}
-        onChange={(values) => onParameterChange('participantNames', values.join(','))}
+      <SignatureSettingsInput
+        value={{
+          showSignature: parameters.showSignature,
+          pageNumber: parameters.pageNumber,
+          reason: parameters.reason,
+          location: parameters.location,
+          showLogo: parameters.showLogo,
+        }}
+        onChange={(settings) => {
+          onParameterChange('showSignature', settings.showSignature);
+          onParameterChange('pageNumber', settings.pageNumber);
+          onParameterChange('reason', settings.reason);
+          onParameterChange('location', settings.location);
+          onParameterChange('showLogo', settings.showLogo);
+        }}
         disabled={disabled}
-        size="xs"
-        splitChars={[',']}
-        clearable
-        acceptValueOnBlur
-      />
-
-      <TextInput
-        label={t('certSign.collab.owner', 'Your email for updates (optional)')}
-        placeholder="you@example.com"
-        value={parameters.ownerEmail}
-        onChange={(event) => onParameterChange('ownerEmail', event.currentTarget.value)}
-        disabled={disabled}
-        size="xs"
       />
 
       <Textarea
@@ -82,7 +77,7 @@ const SigningCollaborationSettings = ({ parameters, onParameterChange, disabled 
       />
 
       <Text size="xs" c="dimmed">
-        {t('certSign.collab.footer', 'After submitting you will get a session summary with per-signer links and can return later to finalize signatures.')}
+        {t('certSign.collab.footer', 'After submitting, users will see sign requests in their inbox. You can track status and finalize when all signatures are collected.')}
       </Text>
     </Stack>
   );

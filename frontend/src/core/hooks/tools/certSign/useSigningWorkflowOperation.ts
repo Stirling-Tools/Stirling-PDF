@@ -8,24 +8,33 @@ const buildSessionFormData = (parameters: SigningWorkflowParameters, file: File)
   const formData = new FormData();
   formData.append('fileInput', file);
 
-  parameters.participantEmails.split(',').map((email) => email.trim()).filter(Boolean).forEach((email) => {
-    formData.append('participantEmails', email);
-  });
-
-  parameters.participantNames.split(',').map((name) => name.trim()).filter(Boolean).forEach((name) => {
-    formData.append('participantNames', name);
+  parameters.participantUserIds.forEach((userId) => {
+    formData.append('participantUserIds', userId.toString());
   });
 
   if (parameters.message) {
     formData.append('message', parameters.message);
   }
-  if (parameters.ownerEmail) {
-    formData.append('ownerEmail', parameters.ownerEmail);
-  }
   if (parameters.dueDate) {
     formData.append('dueDate', parameters.dueDate);
   }
-  formData.append('notifyOnCreate', parameters.notifyOnCreate ? 'true' : 'false');
+
+  // Signature appearance settings (applied to all participants)
+  if (parameters.showSignature !== undefined) {
+    formData.append('showSignature', parameters.showSignature.toString());
+  }
+  if (parameters.pageNumber) {
+    formData.append('pageNumber', parameters.pageNumber.toString());
+  }
+  if (parameters.reason) {
+    formData.append('reason', parameters.reason);
+  }
+  if (parameters.location) {
+    formData.append('location', parameters.location);
+  }
+  if (parameters.showLogo !== undefined) {
+    formData.append('showLogo', parameters.showLogo.toString());
+  }
 
   return formData;
 };
@@ -44,14 +53,10 @@ export const signingWorkflowOperationConfig = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    // Log participant URLs for easy testing
+    // Log session info for easy testing
     console.log('\n🔐 Signing Session Created!');
     console.log('📄 Session ID:', data.sessionId);
-    console.log('\n👥 Participant Links:');
-    data.participants?.forEach((participant: any, index: number) => {
-      console.log(`\n${index + 1}. ${participant.email}${participant.name ? ` (${participant.name})` : ''}`);
-      console.log(`   ${participant.participantUrl}`);
-    });
+    console.log('👥 Participants:', data.participants?.length || 0);
     console.log('\n');
 
     if (parameters.notifyOnCreate) {
@@ -60,9 +65,8 @@ export const signingWorkflowOperationConfig = {
       });
     }
 
-    // Return empty array since we don't need files - session data is in response
-    // The session data will be available via operation.data
-    return { files: [], data };
+    // Return empty array - session is created on server, no files produced
+    return [];
   },
 } as const;
 
@@ -72,7 +76,7 @@ export const useSigningWorkflowOperation = () => {
   return useToolOperation<SigningWorkflowParameters>({
     ...signingWorkflowOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t('certSign.collab.error', 'Unable to start shared signing session. Please verify participant emails and try again.'),
+      t('certSign.collab.error', 'Unable to start shared signing session. Please verify participant selection and try again.'),
     ),
   });
 };

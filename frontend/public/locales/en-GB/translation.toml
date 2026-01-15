@@ -122,6 +122,7 @@ quickPosition = "Quick Position"
 size = "Size"
 submit = "Submit"
 success = "Success"
+errorLabel = "Error"
 undoDataMismatch = "Cannot undo: operation data is corrupted"
 undoFailed = "Failed to undo operation"
 undoQuotaError = "Cannot undo: insufficient storage space"
@@ -757,12 +758,9 @@ finalized = "Finalized"
 title = "Session Details"
 participants = "Participants"
 addParticipants = "Add Participants"
-addParticipantsEmails = "Participant emails (comma-separated)"
-addParticipantsNames = "Participant names (comma-separated, optional)"
+selectUsers = "Select users..."
 addButton = "Add Participants"
 removeParticipant = "Remove"
-copyLink = "Copy link"
-linkCopied = "Participant link copied to clipboard"
 deleteSession = "Delete Session"
 deleteConfirm = "Are you sure? This cannot be undone."
 backToList = "Back to Sessions"
@@ -787,6 +785,7 @@ pending = "Pending"
 notified = "Notified"
 viewed = "Viewed"
 signed = "Signed"
+declined = "Declined"
 
 [certSign.collab.message]
 placeholder = "Please review and sign this document by the due date."
@@ -822,6 +821,46 @@ tooltip = "Apply all collected certificates and load the final signed document"
 processing = "Applying signatures..."
 success = "Signed PDF added to active files"
 error = "Failed to finalize signatures. Some participants may not have submitted certificates."
+
+[certSign.collab.tabs]
+mySessions = "My Sessions"
+signRequests = "Sign Requests"
+
+[certSign.collab.userSelector]
+placeholder = "Select users..."
+loadError = "Failed to load users"
+noTeam = "No Team"
+
+[certSign.collab.signatureSettings]
+title = "Signature Appearance"
+description = "Configure how signatures will appear for all participants"
+
+[certSign.collab.signRequests]
+empty = "No pending sign requests."
+from = "From"
+due = "Due"
+
+[certSign.collab.signRequest]
+backToList = "Back to Sign Requests"
+from = "From"
+dueDate = "Due Date"
+signatureSettings = "Signature Settings"
+signatureInfo = "These settings are configured by the document owner"
+certificateChoice = "Certificate Choice"
+useServerCert = "Use My Server Certificate"
+uploadCert = "Upload Custom Certificate"
+p12File = "P12/PFX Certificate File"
+selectFile = "Select file..."
+password = "Certificate Password"
+signButton = "Sign Document"
+declineButton = "Decline"
+signed = "Document signed successfully"
+signError = "Failed to sign document"
+declined = "Sign request declined"
+declineError = "Failed to decline request"
+noCertificate = "Please select a certificate file"
+noUser = "User not authenticated"
+alreadyProcessed = "You have already processed this sign request."
 incomplete = "Not all participants have submitted certificates yet"
 
 [home.repair]
@@ -2730,6 +2769,7 @@ stepTitle = "Certificate Files"
 
 [certSign.appearance]
 stepTitle = "Signature Appearance"
+visibility = "Visibility"
 invisible = "Invisible"
 visible = "Visible"
 

@@ -72,6 +72,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        // Skip H2 console
+        if (request.getRequestURI().startsWith("/h2-console")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (!apiKeyExists(request, response)) {
             String jwtToken = jwtService.extractToken(request);

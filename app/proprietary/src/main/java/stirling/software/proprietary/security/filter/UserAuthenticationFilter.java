@@ -113,6 +113,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         if (authentication == null || !authentication.isAuthenticated()) {
             String contextPath = request.getContextPath();
 
+            // Allow H2 console to pass through without authentication
+            if (requestURI.startsWith("/h2-console")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // Allow public auth endpoints to pass through without authentication
             if (isPublicAuthEndpoint(requestURI, contextPath)) {
                 filterChain.doFilter(request, response);

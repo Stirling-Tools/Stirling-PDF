@@ -95,7 +95,7 @@ public class InitialSetup {
         isNewServer =
                 existingVersion == null
                         || existingVersion.isEmpty()
-                        || existingVersion.equals("0.0.0");
+                        || "0.0.0".equals(existingVersion);
 
         String appVersion = "0.0.0";
         Resource resource = new ClassPathResource("version.properties");

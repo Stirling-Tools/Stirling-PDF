@@ -2,21 +2,28 @@ import { BaseParameters } from '@app/types/parameters';
 import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface SigningWorkflowParameters extends BaseParameters {
-  participantEmails: string;
-  participantNames: string;
+  participantUserIds: number[];
   message: string;
-  ownerEmail: string;
   dueDate: string;
   notifyOnCreate: boolean;
+  // Signature appearance settings (applied to all participants)
+  showSignature?: boolean;
+  pageNumber?: number;
+  reason?: string;
+  location?: string;
+  showLogo?: boolean;
 }
 
 export const defaultSigningWorkflowParameters: SigningWorkflowParameters = {
-  participantEmails: '',
-  participantNames: '',
+  participantUserIds: [],
   message: '',
-  ownerEmail: '',
   dueDate: '',
   notifyOnCreate: true,
+  showSignature: false,
+  pageNumber: 1,
+  reason: '',
+  location: '',
+  showLogo: false,
 };
 
 export type SigningWorkflowParametersHook = BaseParametersHook<SigningWorkflowParameters>;
@@ -26,8 +33,7 @@ export const useSigningWorkflowParameters = (): SigningWorkflowParametersHook =>
     defaultParameters: defaultSigningWorkflowParameters,
     endpointName: 'signing-workflow',
     validateFn: (params) => {
-      const emails = params.participantEmails.split(',').map((email) => email.trim()).filter(Boolean);
-      return emails.length > 0;
+      return params.participantUserIds.length > 0;
     },
   });
 };

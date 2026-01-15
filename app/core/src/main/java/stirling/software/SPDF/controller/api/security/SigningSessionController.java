@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -165,17 +164,16 @@ public class SigningSessionController {
     }
 
     @Operation(summary = "Remove a participant from a session")
-    @DeleteMapping(value = "/cert-sign/sessions/{sessionId}/participants/{participantEmail}")
+    @DeleteMapping(value = "/cert-sign/sessions/{sessionId}/participants/{userId}")
     public ResponseEntity<?> removeParticipant(
             @PathVariable("sessionId") @NotBlank String sessionId,
-            @PathVariable("participantEmail") @NotBlank String participantEmail,
+            @PathVariable("userId") Long userId,
             Principal principal) {
         if (principal == null || !sessionServiceInterface.isDatabaseBacked()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
         try {
-            sessionServiceInterface.removeParticipant(
-                    sessionId, participantEmail, principal.getName());
+            sessionServiceInterface.removeParticipant(sessionId, userId, principal.getName());
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -186,10 +184,12 @@ public class SigningSessionController {
     @Operation(summary = "Get session PDF for participant view")
     @GetMapping(value = "/cert-sign/sessions/{sessionId}/pdf")
     public ResponseEntity<byte[]> getSessionPdf(
-            @PathVariable("sessionId") @NotBlank String sessionId,
-            @RequestParam @NotBlank String token) {
+            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        if (principal == null || !sessionServiceInterface.isDatabaseBacked()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         try {
-            byte[] pdfBytes = sessionServiceInterface.getSessionPdf(sessionId, token);
+            byte[] pdfBytes = sessionServiceInterface.getSessionPdf(sessionId, principal.getName());
             return WebResponseUtils.bytesToWebResponse(pdfBytes, "document.pdf");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -205,7 +205,7 @@ public class SigningSessionController {
     }
 
     @PostMapping(
-            value = "/cert-sign/sessions/{sessionId}/participants/{participantEmail}/certificate",
+            value = "/cert-sign/sessions/{sessionId}/participants/{userId}/certificate",
             consumes = {
                 MediaType.MULTIPART_FORM_DATA_VALUE,
                 MediaType.APPLICATION_FORM_URLENCODED_VALUE
@@ -213,11 +213,11 @@ public class SigningSessionController {
     @Operation(summary = "Attach certificate details for a specific participant")
     public SigningSession attachCertificate(
             @PathVariable("sessionId") @NotBlank String sessionId,
-            @PathVariable("participantEmail") @NotBlank String participantEmail,
+            @PathVariable("userId") Long userId,
             @ModelAttribute ParticipantCertificateRequest request)
             throws Exception {
         return (SigningSession)
-                sessionServiceInterface.attachCertificate(sessionId, participantEmail, request);
+                sessionServiceInterface.attachCertificate(sessionId, userId, request);
     }
 
     @Operation(summary = "Get signed PDF from finalized session")
@@ -392,6 +392,52 @@ public class SigningSessionController {
                         "error.invalidArgument",
                         "Invalid argument: {0}",
                         "certificate type: " + submission.getCertType());
+        }
+    }
+
+    @Operation(summary = "List sign requests for authenticated user")
+    @GetMapping(value = "/cert-sign/sign-requests")
+    public ResponseEntity<?> listSignRequests(Principal principal) {
+        if (principal == null || !sessionServiceInterface.isDatabaseBacked()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        }
+        try {
+            return ResponseEntity.ok(sessionServiceInterface.listSignRequests(principal.getName()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Cannot list sign requests: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Get sign request detail for participant")
+    @GetMapping(value = "/cert-sign/sign-requests/{sessionId}")
+    public ResponseEntity<?> getSignRequestDetail(
+            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        if (principal == null || !sessionServiceInterface.isDatabaseBacked()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        }
+        try {
+            return ResponseEntity.ok(
+                    sessionServiceInterface.getSignRequestDetail(sessionId, principal.getName()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Access denied or sign request not found: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Decline a sign request")
+    @PostMapping(value = "/cert-sign/sign-requests/{sessionId}/decline")
+    public ResponseEntity<?> declineSignRequest(
+            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        if (principal == null || !sessionServiceInterface.isDatabaseBacked()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        }
+        try {
+            sessionServiceInterface.declineSignRequest(sessionId, principal.getName());
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Cannot decline sign request: " + e.getMessage());
         }
     }
 }

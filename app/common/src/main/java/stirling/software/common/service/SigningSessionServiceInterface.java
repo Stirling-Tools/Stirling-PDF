@@ -61,10 +61,10 @@ public interface SigningSessionServiceInterface {
      * Removes a participant from a session
      *
      * @param sessionId The session ID
-     * @param participantEmail The participant's email
+     * @param userId The participant's user ID
      * @param username The username for ownership validation
      */
-    void removeParticipant(String sessionId, String participantEmail, String username);
+    void removeParticipant(String sessionId, Long userId, String username);
 
     /**
      * Notifies participants
@@ -79,12 +79,11 @@ public interface SigningSessionServiceInterface {
      * Attaches a certificate for a participant
      *
      * @param sessionId The session ID
-     * @param participantEmail The participant's email
+     * @param userId The participant's user ID
      * @param request The certificate request
      * @return The updated session (implementation-specific return type)
      */
-    Object attachCertificate(String sessionId, String participantEmail, Object request)
-            throws IOException;
+    Object attachCertificate(String sessionId, Long userId, Object request) throws IOException;
 
     /**
      * Marks a session as finalized
@@ -95,13 +94,13 @@ public interface SigningSessionServiceInterface {
     void markSessionFinalized(String sessionId, byte[] signedPdf);
 
     /**
-     * Gets the PDF for a session with token validation
+     * Gets the PDF for a session with user authentication
      *
      * @param sessionId The session ID
-     * @param token The participant's share token
+     * @param username The participant's username
      * @return The PDF bytes
      */
-    byte[] getSessionPdf(String sessionId, String token);
+    byte[] getSessionPdf(String sessionId, String username);
 
     /**
      * Gets the signed PDF from a finalized session with ownership validation
@@ -111,6 +110,31 @@ public interface SigningSessionServiceInterface {
      * @return The signed PDF bytes, or null if not finalized
      */
     byte[] getSignedPdf(String sessionId, String username);
+
+    /**
+     * Lists sign requests for a participant
+     *
+     * @param username The participant's username
+     * @return List of sign requests where user is a participant
+     */
+    List<?> listSignRequests(String username);
+
+    /**
+     * Gets sign request detail for a participant
+     *
+     * @param sessionId The session ID
+     * @param username The participant's username
+     * @return Sign request detail DTO (implementation-specific return type)
+     */
+    Object getSignRequestDetail(String sessionId, String username);
+
+    /**
+     * Declines a sign request
+     *
+     * @param sessionId The session ID
+     * @param username The participant's username
+     */
+    void declineSignRequest(String sessionId, String username);
 
     /**
      * Checks if this is the database-backed implementation

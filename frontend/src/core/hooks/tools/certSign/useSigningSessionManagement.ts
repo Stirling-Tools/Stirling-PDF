@@ -56,7 +56,7 @@ export const useSigningSessionManagement = () => {
   }, [fetchSessions]);
 
   const addParticipants = useCallback(
-    async (sessionId: string, participants: { participantEmails: string[]; participantNames?: string[] }) => {
+    async (sessionId: string, participants: { participantUserIds: number[] }) => {
       setLoading(true);
       setError(null);
       try {
@@ -77,12 +77,12 @@ export const useSigningSessionManagement = () => {
     []
   );
 
-  const removeParticipant = useCallback(async (sessionId: string, participantEmail: string) => {
+  const removeParticipant = useCallback(async (sessionId: string, userId: number) => {
     setLoading(true);
     setError(null);
     try {
       await apiClient.delete(
-        `/api/v1/security/cert-sign/sessions/${sessionId}/participants/${encodeURIComponent(participantEmail)}`
+        `/api/v1/security/cert-sign/sessions/${sessionId}/participants/${userId}`
       );
       // Refresh session detail after removal
       await fetchSessionDetail(sessionId);

@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -15,6 +14,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import stirling.software.common.model.api.security.ParticipantStatus;
+import stirling.software.proprietary.security.model.User;
 
 @Entity
 @Table(name = "signing_participants")
@@ -39,7 +39,12 @@ public class SigningParticipantEntity implements Serializable {
     @JsonIgnore
     private SigningSessionEntity session;
 
-    @Column(name = "email", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = true)
+    @JsonIgnore
+    private User user;
+
+    @Column(name = "email")
     private String email;
 
     @Column(name = "name")
@@ -49,9 +54,25 @@ public class SigningParticipantEntity implements Serializable {
     @Column(name = "status", nullable = false)
     private ParticipantStatus status = ParticipantStatus.PENDING;
 
-    @Column(name = "share_token", unique = true, nullable = false, length = 36)
+    @Column(name = "share_token", unique = true, length = 36)
     @EqualsAndHashCode.Include
-    private String shareToken = UUID.randomUUID().toString();
+    private String shareToken;
+
+    // Signature appearance settings (owner-controlled)
+    @Column(name = "show_signature")
+    private Boolean showSignature;
+
+    @Column(name = "page_number")
+    private Integer pageNumber;
+
+    @Column(name = "reason")
+    private String reason;
+
+    @Column(name = "location")
+    private String location;
+
+    @Column(name = "show_logo")
+    private Boolean showLogo;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(

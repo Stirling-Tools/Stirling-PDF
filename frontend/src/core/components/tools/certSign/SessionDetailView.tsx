@@ -12,25 +12,25 @@ import {
   Divider,
   Alert,
   Modal,
-  TagsInput,
 } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
-import PersonIcon from '@mui/icons-material/Person';
+import CancelIcon from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
 import InfoIcon from '@mui/icons-material/Info';
 import { SessionDetail } from '@app/types/signingSession';
+import UserSelector from '@app/components/tools/certSign/UserSelector';
+import SignatureSettingsInput, { SignatureSettings } from '@app/components/tools/certSign/SignatureSettingsInput';
 
 interface SessionDetailViewProps {
   session: SessionDetail;
   onFinalize: () => Promise<void>;
   onDelete: () => Promise<void>;
-  onAddParticipants: (participants: { participantEmails: string[]; participantNames?: string[] }) => Promise<void>;
-  onRemoveParticipant: (email: string) => Promise<void>;
+  onAddParticipants: (participants: { participantUserIds: number[] }) => Promise<void>;
+  onRemoveParticipant: (userId: number) => Promise<void>;
   onLoadSignedPdf?: () => Promise<void>;
   onBack: () => void;
   onRefresh: () => void;
@@ -47,8 +47,14 @@ const SessionDetailView = ({
   onRefresh,
 }: SessionDetailViewProps) => {
   const { t } = useTranslation();
-  const [newEmails, setNewEmails] = useState<string[]>([]);
-  const [newNames, setNewNames] = useState<string[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [signatureSettings, setSignatureSettings] = useState<SignatureSettings>({
+    showSignature: false,
+    pageNumber: 1,
+    reason: '',
+    location: '',
+    showLogo: false,
+  });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -64,28 +70,18 @@ const SessionDetailView = ({
     }
   }, [session.finalized, onRefresh]);
 
-  const handleCopyLink = (url: string) => {
-    navigator.clipboard.writeText(url);
-    alert({
-      alertType: 'success',
-      title: t('success'),
-      body: t('certSign.collab.sessionDetail.linkCopied', 'Participant link copied to clipboard'),
-    });
-  };
-
   const handleAddParticipants = async () => {
-    if (newEmails.length === 0) return;
+    if (selectedUserIds.length === 0) return;
 
     try {
-      await onAddParticipants({ participantEmails: newEmails, participantNames: newNames });
-      setNewEmails([]);
-      setNewNames([]);
+      await onAddParticipants({ participantUserIds: selectedUserIds });
+      setSelectedUserIds([]);
       alert({
         alertType: 'success',
         title: t('success'),
         body: t('certSign.collab.sessionDetail.participantsAdded', 'Participants added successfully'),
       });
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('error'),
@@ -94,15 +90,15 @@ const SessionDetailView = ({
     }
   };
 
-  const handleRemoveParticipant = async (email: string) => {
+  const handleRemoveParticipant = async (userId: number) => {
     try {
-      await onRemoveParticipant(email);
+      await onRemoveParticipant(userId);
       alert({
         alertType: 'success',
         title: t('success'),
         body: t('certSign.collab.sessionDetail.participantRemoved', 'Participant removed'),
       });
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('error'),
@@ -115,7 +111,7 @@ const SessionDetailView = ({
     setFinalizing(true);
     try {
       await onFinalize();
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('error'),
@@ -136,7 +132,7 @@ const SessionDetailView = ({
         title: t('success'),
         body: t('certSign.collab.sessionDetail.deleted', 'Session deleted'),
       });
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('error'),
@@ -151,7 +147,7 @@ const SessionDetailView = ({
     setLoadingPdf(true);
     try {
       await onLoadSignedPdf();
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('error'),
@@ -217,53 +213,42 @@ const SessionDetailView = ({
           <List spacing={4} size="sm">
             {session.participants.map((participant) => {
               const isSigned = participant.status === 'SIGNED';
+              const isDeclined = participant.status === 'DECLINED';
+              const getIcon = () => {
+                if (isSigned) return <CheckCircleIcon style={{ color: 'green', fontSize: '1rem' }} />;
+                if (isDeclined) return <CancelIcon style={{ color: 'red', fontSize: '1rem' }} />;
+                return <PendingIcon style={{ color: 'orange', fontSize: '1rem' }} />;
+              };
+              const getColor = () => {
+                if (isSigned) return 'green';
+                if (isDeclined) return 'red';
+                return 'orange';
+              };
+
               return (
-                <List.Item
-                  key={participant.email}
-                  icon={
-                    isSigned ? (
-                      <CheckCircleIcon style={{ color: 'green', fontSize: '1rem' }} />
-                    ) : (
-                      <PendingIcon style={{ color: 'orange', fontSize: '1rem' }} />
-                    )
-                  }
-                >
+                <List.Item key={participant.userId} icon={getIcon()}>
                   <Group justify="space-between" wrap="nowrap" gap={4}>
                     <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                       <Text size="xs" truncate>
-                        {participant.name || participant.email}
-                        {participant.name && (
-                          <Text span size="xs" c="dimmed" ml={4}>
-                            ({participant.email})
-                          </Text>
-                        )}
+                        {participant.displayName}
+                        <Text span size="xs" c="dimmed" ml={4}>
+                          (@{participant.username})
+                        </Text>
                       </Text>
-                      <Badge size="xs" color={isSigned ? 'green' : 'orange'} variant="light">
+                      <Badge size="xs" color={getColor()} variant="light">
                         {t(`certSign.collab.status.${participant.status.toLowerCase()}`, participant.status)}
                       </Badge>
                     </Stack>
-                    {!session.finalized && (
-                      <Group gap={4}>
-                        <ActionIcon
-                          size="xs"
-                          variant="subtle"
-                          onClick={() => handleCopyLink(participant.participantUrl)}
-                          title={t('certSign.collab.sessionDetail.copyLink', 'Copy link')}
-                        >
-                          <ContentCopyIcon style={{ fontSize: '0.875rem' }} />
-                        </ActionIcon>
-                        {!isSigned && (
-                          <ActionIcon
-                            size="xs"
-                            variant="subtle"
-                            color="red"
-                            onClick={() => handleRemoveParticipant(participant.email)}
-                            title={t('certSign.collab.sessionDetail.removeParticipant', 'Remove')}
-                          >
-                            <DeleteIcon style={{ fontSize: '0.875rem' }} />
-                          </ActionIcon>
-                        )}
-                      </Group>
+                    {!session.finalized && !isSigned && !isDeclined && (
+                      <ActionIcon
+                        size="xs"
+                        variant="subtle"
+                        color="red"
+                        onClick={() => handleRemoveParticipant(participant.userId)}
+                        title={t('certSign.collab.sessionDetail.removeParticipant', 'Remove')}
+                      >
+                        <DeleteIcon style={{ fontSize: '0.875rem' }} />
+                      </ActionIcon>
                     )}
                   </Group>
                 </List.Item>
@@ -277,31 +262,19 @@ const SessionDetailView = ({
               <Text size="xs" fw={600}>
                 {t('certSign.collab.sessionDetail.addParticipants', 'Add Participants')}
               </Text>
-              <TagsInput
-                placeholder={t(
-                  'certSign.collab.sessionDetail.addParticipantsEmails',
-                  'Enter email and press Enter'
-                )}
-                value={newEmails}
-                onChange={setNewEmails}
+              <UserSelector
+                value={selectedUserIds}
+                onChange={setSelectedUserIds}
+                placeholder={t('certSign.collab.sessionDetail.selectUsers', 'Select users...')}
                 size="xs"
-                splitChars={[',', ' ']}
-                clearable
-                acceptValueOnBlur
               />
-              <TagsInput
-                placeholder={t(
-                  'certSign.collab.sessionDetail.addParticipantsNames',
-                  'Enter name and press Enter (optional)'
-                )}
-                value={newNames}
-                onChange={setNewNames}
+              <SignatureSettingsInput value={signatureSettings} onChange={setSignatureSettings} />
+              <Button
+                leftSection={<AddIcon />}
+                onClick={handleAddParticipants}
+                disabled={selectedUserIds.length === 0}
                 size="xs"
-                splitChars={[',']}
-                clearable
-                acceptValueOnBlur
-              />
-              <Button leftSection={<AddIcon />} onClick={handleAddParticipants} disabled={newEmails.length === 0} size="xs">
+              >
                 {t('certSign.collab.sessionDetail.addButton', 'Add Participants')}
               </Button>
             </>

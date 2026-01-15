@@ -222,6 +222,11 @@ public class SecurityConfiguration {
                                                 request -> {
                                                     String uri = request.getRequestURI();
 
+                                                    // Ignore CSRF for H2 console
+                                                    if (uri.startsWith("/h2-console")) {
+                                                        return true;
+                                                    }
+
                                                     // Ignore CSRF for auth endpoints
                                                     if (uri.startsWith("/api/v1/auth/")) {
                                                         return true;
@@ -251,6 +256,9 @@ public class SecurityConfiguration {
                                         .csrfTokenRepository(cookieRepo)
                                         .csrfTokenRequestHandler(requestHandler));
             }
+
+            // Allow frames for H2 console
+            http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
             http.sessionManagement(
                     sessionManagement -> {
@@ -308,7 +316,9 @@ public class SecurityConfiguration {
                                     .alwaysRemember(false));
             http.authorizeHttpRequests(
                     authz ->
-                            authz.requestMatchers(
+                            authz.requestMatchers("/h2-console/**")
+                                    .permitAll()
+                                    .requestMatchers(
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();

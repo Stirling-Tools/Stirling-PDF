@@ -17,12 +17,9 @@ public class CreateSigningSessionRequest extends PDFFile {
     private String ownerEmail;
 
     @Schema(
-            description = "Emails of participants to invite for signing",
+            description = "User IDs of participants to invite for signing",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private List<String> participantEmails;
-
-    @Schema(description = "Names of participants aligned with participantEmails")
-    private List<String> participantNames;
+    private List<Long> participantUserIds;
 
     @Schema(description = "Optional message included in notifications")
     private String message;
@@ -32,4 +29,20 @@ public class CreateSigningSessionRequest extends PDFFile {
 
     @Schema(description = "Whether to send notifications immediately")
     private Boolean notifyOnCreate;
+
+    // Signature appearance settings (owner-controlled, applied to all participants)
+    @Schema(description = "Whether to show visible signature")
+    private Boolean showSignature;
+
+    @Schema(description = "Page number for signature (1-indexed)")
+    private Integer pageNumber;
+
+    @Schema(description = "Signature reason")
+    private String reason;
+
+    @Schema(description = "Signature location")
+    private String location;
+
+    @Schema(description = "Whether to show Stirling PDF logo in signature")
+    private Boolean showLogo;
 }

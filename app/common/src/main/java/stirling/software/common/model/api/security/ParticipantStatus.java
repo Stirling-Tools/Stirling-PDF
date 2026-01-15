@@ -4,5 +4,6 @@ public enum ParticipantStatus {
     PENDING,
     NOTIFIED,
     VIEWED,
-    SIGNED
+    SIGNED,
+    DECLINED
 }
