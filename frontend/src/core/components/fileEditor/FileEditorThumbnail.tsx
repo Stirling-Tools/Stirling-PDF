@@ -414,6 +414,7 @@ const FileEditorThumbnail = ({
                 display: 'block',
                 marginLeft: 'auto',
                 marginRight: 'auto',
+                justifySelf: 'center',
                 alignSelf: 'start'
               }}
             />

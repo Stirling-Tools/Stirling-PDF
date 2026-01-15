@@ -182,8 +182,8 @@ export const ViewerZoomTransition: React.FC = () => {
     ? (viewerTransition.exitTargetRect || viewerTransition.sourceRect || getFallbackRect())
     : (viewerTransition.sourceRect || getFallbackRect());
 
-  const initialRadius = isExitTransition ? '0' : '8px';
-  const targetRadius = isExitTransition ? '8px' : '0';
+  const initialRadius = '0';
+  const targetRadius = '0';
   const initialWidth = Math.max(initialRect.width, 1);
   const initialHeight = Math.max(initialRect.height, 1);
 

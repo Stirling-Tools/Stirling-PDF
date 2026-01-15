@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas';
+import { domToPng } from 'modern-screenshot';
 
 /**
  * Capture a screenshot of a DOM element as a data URL
@@ -8,20 +8,15 @@ import html2canvas from 'html2canvas';
  */
 export async function captureElementScreenshot(element: HTMLElement): Promise<string | null> {
   try {
-    const canvas = await html2canvas(element, {
-      backgroundColor: null,
-      scale: 1,
-      logging: false,
-      useCORS: true,
+    const dataUrl = await domToPng(element, {
       width: window.innerWidth,
       height: window.innerHeight,
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      x: 0,
-      y: 0,
+      style: {
+        transform: 'none',
+      },
     });
 
-    return canvas.toDataURL('image/png');
+    return dataUrl;
   } catch (error) {
     console.warn('Failed to capture screenshot:', error);
     return null;
