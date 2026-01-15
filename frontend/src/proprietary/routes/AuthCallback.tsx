@@ -62,7 +62,7 @@ export default function AuthCallback() {
 
         try {
           const accountData = await accountService.getAccountData();
-          if (accountData.changeCredsFlag || accountData.mfaRequired) {
+          if (accountData.changeCredsFlag) {
             requestFirstLoginSlide();
             if (isOnboardingCompleted()) {
               markOnboardingIncomplete();

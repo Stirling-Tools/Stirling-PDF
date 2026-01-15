@@ -270,12 +270,10 @@ export default function Onboarding() {
       firstLoginUsername: runtimeState.firstLoginUsername,
       onPasswordChanged: handlePasswordChanged,
       usingDefaultCredentials: runtimeState.usingDefaultCredentials,
-      mfaRequired: runtimeState.mfaRequired,
-      requiresPasswordChange: runtimeState.requiresPasswordChange,
       analyticsError,
       analyticsLoading,
     });
-  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged, runtimeState.usingDefaultCredentials, runtimeState.mfaRequired, runtimeState.requiresPasswordChange]);
+  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
 
   const modalSlideCount = useMemo(() => {
     return activeFlow.filter((step) => step.type === 'modal-slide').length;

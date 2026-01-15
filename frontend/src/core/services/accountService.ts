@@ -8,7 +8,6 @@ export interface AccountData {
   oAuth2Login: boolean;
   saml2Login: boolean;
   mfaEnabled?: boolean;
-  mfaRequired?: boolean;
 }
 
 export interface LoginPageData {
@@ -57,11 +56,10 @@ export const accountService = {
   /**
    * Change user password on first login (resets firstLogin flag)
    */
-  async changePasswordOnLogin(currentPassword: string, newPassword: string, confirmPassword: string): Promise<void> {
+  async changePasswordOnLogin(currentPassword: string, newPassword: string): Promise<void> {
     const formData = new FormData();
     formData.append('currentPassword', currentPassword);
     formData.append('newPassword', newPassword);
-    formData.append('confirmPassword', confirmPassword);
     await apiClient.post('/api/v1/user/change-password-on-login', formData);
   },
 
