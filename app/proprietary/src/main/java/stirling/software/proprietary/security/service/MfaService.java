@@ -25,6 +25,7 @@ public class MfaService {
     public static final String MFA_ENABLED_KEY = "mfaEnabled";
     public static final String MFA_SECRET_KEY = "mfaSecret";
     public static final String MFA_LAST_USED_STEP_KEY = "mfaLastUsedStep";
+    public static final String MFA_REQUIRED_KEY = "mfaRequired";
 
     private final UserRepository userRepository;
     private final DatabaseServiceInterface databaseService;
@@ -166,6 +167,33 @@ public class MfaService {
         settings.put(MFA_LAST_USED_STEP_KEY, Long.toString(timeStep));
         persist(managedUser);
         return true;
+    }
+
+    /**
+     * Determines whether MFA is required for the given user.
+     *
+     * @param user target user
+     * @return {@code true} if MFA is required
+     */
+    public boolean isMfaRequired(User user) {
+        String value = getSetting(user, MFA_REQUIRED_KEY);
+        return Boolean.parseBoolean(value);
+    }
+
+    /**
+     * Sets whether MFA is required for the given user.
+     *
+     * @param user target user
+     * @param required {@code true} to require MFA
+     * @throws SQLException when database persistence fails
+     * @throws UnsupportedProviderException when the database provider is unsupported
+     */
+    public void setMfaRequired(User user, boolean required)
+            throws SQLException, UnsupportedProviderException {
+        User managedUser = getUserWithSettings(user);
+        Map<String, String> settings = ensureSettings(managedUser);
+        settings.put(MFA_REQUIRED_KEY, Boolean.toString(required));
+        persist(managedUser);
     }
 
     private String getSetting(User user, String key) {
