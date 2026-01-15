@@ -68,8 +68,8 @@ export default function Onboarding() {
     setAnalyticsLoading(true);
     setAnalyticsError(null);
 
-      const formData = new FormData();
-      formData.append('enabled', enableAnalytics.toString());
+    const formData = new FormData();
+    formData.append('enabled', enableAnalytics.toString());
 
     await apiClient.post('/api/v1/settings/update-enable-analytics', formData)
         .then(async () => {

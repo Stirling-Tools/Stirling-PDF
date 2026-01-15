@@ -18,6 +18,7 @@ export interface User {
   // Enriched client-side fields
   isActive?: boolean;
   lastRequest?: number; // timestamp in milliseconds
+  mfaEnabled?: boolean; // whether MFA is enabled for the user
 }
 
 export interface AdminSettingsData {
@@ -38,6 +39,7 @@ export interface AdminSettingsData {
   licenseMaxUsers: number;
   premiumEnabled: boolean;
   mailEnabled: boolean;
+  userSettings?: Record<string, any>;
 }
 
 export interface CreateUserRequest {
@@ -47,6 +49,7 @@ export interface CreateUserRequest {
   teamId?: number;
   authType: 'password' | 'SSO';
   forceChange?: boolean;
+  forceMFA?: boolean;
 }
 
 export interface UpdateUserRoleRequest {
@@ -144,6 +147,9 @@ export const userManagementService = {
     formData.append('authType', data.authType);
     if (data.forceChange !== undefined) {
       formData.append('forceChange', data.forceChange.toString());
+    }
+    if (data.forceMFA !== undefined) {
+      formData.append('forceMFA', data.forceMFA.toString());
     }
     await apiClient.post('/api/v1/user/admin/saveUser', formData, {
       suppressErrorToast: true, // Component will handle error display

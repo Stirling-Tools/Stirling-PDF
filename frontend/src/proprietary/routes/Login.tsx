@@ -6,12 +6,18 @@ import { useAuth } from '@app/auth/UseSession';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useTranslation } from 'react-i18next';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
+import { accountService } from '@app/services/accountService';
 import AuthLayout from '@app/routes/authShared/AuthLayout';
 import { useBackendProbe } from '@app/hooks/useBackendProbe';
 import apiClient from '@app/services/apiClient';
 import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
 import { updateSupportedLanguages } from '@app/i18n';
+import {
+  isOnboardingCompleted,
+  markOnboardingIncomplete,
+  requestFirstLoginSlide,
+} from '@app/components/onboarding/orchestrator/onboardingStorage';
 
 // Import login components
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -302,6 +308,17 @@ export default function Login() {
         console.log('[Login] Email sign in successful');
         setRequiresMfa(false);
         setMfaCode('');
+        try {
+          const accountData = await accountService.getAccountData();
+          if (accountData.changeCredsFlag) {
+            requestFirstLoginSlide();
+            if (isOnboardingCompleted()) {
+              markOnboardingIncomplete();
+            }
+          }
+        } catch (accountError) {
+          console.error('[Login] Failed to check account data after login:', accountError);
+        }
         // Auth state will update automatically and Landing will redirect to home
         // No need to navigate manually here
       }

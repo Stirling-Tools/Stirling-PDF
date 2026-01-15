@@ -2,6 +2,12 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { springAuth } from '@app/auth/springAuthClient';
 import { handleAuthCallbackSuccess } from '@app/extensions/authCallback';
+import { accountService } from '@app/services/accountService';
+import {
+  isOnboardingCompleted,
+  markOnboardingIncomplete,
+  requestFirstLoginSlide,
+} from '@app/components/onboarding/orchestrator/onboardingStorage';
 import styles from '@app/routes/AuthCallback.module.css';
 
 /**
@@ -52,6 +58,18 @@ export default function AuthCallback() {
             state: { error: 'OAuth login failed - invalid token.' }
           });
           return;
+        }
+
+        try {
+          const accountData = await accountService.getAccountData();
+          if (accountData.changeCredsFlag) {
+            requestFirstLoginSlide();
+            if (isOnboardingCompleted()) {
+              markOnboardingIncomplete();
+            }
+          }
+        } catch (accountError) {
+          console.error('[AuthCallback] Failed to check account data after login:', accountError);
         }
 
         await handleAuthCallbackSuccess(token);

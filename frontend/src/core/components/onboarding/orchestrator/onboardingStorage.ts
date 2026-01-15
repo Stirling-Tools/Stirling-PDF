@@ -1,6 +1,7 @@
 const STORAGE_PREFIX = 'onboarding';
 const TOURS_TOOLTIP_KEY = `${STORAGE_PREFIX}::tours-tooltip-shown`;
 const ONBOARDING_COMPLETED_KEY = `${STORAGE_PREFIX}::completed`;
+const FORCE_FIRST_LOGIN_KEY = `${STORAGE_PREFIX}::force-first-login`;
 
 export function isOnboardingCompleted(): boolean {
   if (typeof window === 'undefined') return false;
@@ -19,6 +20,38 @@ export function markOnboardingCompleted(): void {
     console.error('[onboardingStorage] Error marking onboarding as completed:', error);
   }
 }
+
+export function markOnboardingIncomplete(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(ONBOARDING_COMPLETED_KEY, 'false');
+  } catch (error) {
+    console.error('[onboardingStorage] Error marking onboarding as incomplete:', error);
+  }
+}
+
+export function requestFirstLoginSlide(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(FORCE_FIRST_LOGIN_KEY, 'true');
+  } catch (error) {
+    console.error('[onboardingStorage] Error requesting first login slide:', error);
+  }
+}
+
+export function consumeFirstLoginSlideRequest(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const requested = sessionStorage.getItem(FORCE_FIRST_LOGIN_KEY) === 'true';
+    if (requested) {
+      sessionStorage.removeItem(FORCE_FIRST_LOGIN_KEY);
+    }
+    return requested;
+  } catch {
+    return false;
+  }
+}
+
 
 export function resetOnboardingProgress(): void {
   if (typeof window === 'undefined') return;

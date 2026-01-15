@@ -70,7 +70,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: 'modal-slide',
     slideId: 'first-login',
     condition: (ctx) => ctx.requiresPasswordChange,
-    allowDismiss: false,
   },
   {
     id: 'welcome',

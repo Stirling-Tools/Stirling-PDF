@@ -107,11 +107,15 @@ export default function PeopleSection() {
           teamService.getTeams(),
         ]);
 
+        console.log('[PeopleSection] Fetched users:', adminData.users);
+        console.log('[PeopleSection] Fetched user settings:', adminData.userSettings);
+
         // Enrich users with session data
         const enrichedUsers = adminData.users.map(user => ({
           ...user,
           isActive: adminData.userSessions[user.username] || false,
           lastRequest: adminData.userLastRequest[user.username] || undefined,
+          mfaEnabled: adminData.userSettings?.[user.username]?.mfaEnabled === 'true' || false,
         }));
 
         setUsers(enrichedUsers);
@@ -576,6 +580,7 @@ export default function PeopleSection() {
                       </Tooltip>
 
                       {/* Actions menu */}
+                      {!isCurrentUser(user) && (
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
                           <ActionIcon variant="subtle"  disabled={!loginEnabled}>
@@ -592,6 +597,7 @@ export default function PeopleSection() {
                               {t('workspace.people.editRole', 'Edit Role & Team')}
                             </Menu.Item>
                           )}
+                          {!isCurrentUser(user) && (
                           <Menu.Item
                             leftSection={<LocalIcon icon="lock" width="1rem" height="1rem" />}
                             onClick={() => openChangePasswordModal(user)}
@@ -599,6 +605,7 @@ export default function PeopleSection() {
                           >
                             {t('workspace.people.changePassword.action', 'Change password')}
                           </Menu.Item>
+                          )}
                           {!isCurrentUser(user) && (
                             <Menu.Item
                               leftSection={user.enabled ? <LocalIcon icon="person-off" width="1rem" height="1rem" /> : <LocalIcon icon="person-check" width="1rem" height="1rem" />}
@@ -608,7 +615,7 @@ export default function PeopleSection() {
                               {user.enabled ? t('workspace.people.disable') : t('workspace.people.enable')}
                             </Menu.Item>
                           )}
-                          {!isCurrentUser(user) && (
+                          {!isCurrentUser(user) && user.mfaEnabled && (
                             <>
                               <Menu.Divider />
                               <Menu.Item
@@ -643,6 +650,7 @@ export default function PeopleSection() {
                           )}
                         </Menu.Dropdown>
                       </Menu>
+                      )}
                     </Group>
                   </Table.Td>
                 </Table.Tr>

@@ -249,12 +249,14 @@ public class ProprietaryUIDataController {
 
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Map<String, String>> userSettings = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
 
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
+                String username = user.getUsername();
                 boolean shouldRemove = false;
 
                 // Check if user is an INTERNAL_API_USER
@@ -282,7 +284,7 @@ public class ProprietaryUIDataController {
                 boolean hasActiveSession = false;
                 Date lastRequest = null;
                 Optional<SessionEntity> latestSession =
-                        sessionPersistentRegistry.findLatestSession(user.getUsername());
+                        sessionPersistentRegistry.findLatestSession(username);
 
                 if (latestSession.isPresent()) {
                     SessionEntity sessionEntity = latestSession.get();
@@ -303,8 +305,12 @@ public class ProprietaryUIDataController {
                     lastRequest = new Date(0);
                 }
 
-                userSessions.put(user.getUsername(), hasActiveSession);
-                userLastRequest.put(user.getUsername(), lastRequest);
+                User userWithSettings =
+                        userRepository.findByIdWithSettings(user.getId()).orElse(user);
+
+                userSettings.put(username, userWithSettings.getSettings());
+                userSessions.put(username, hasActiveSession);
+                userLastRequest.put(username, lastRequest);
 
                 if (hasActiveSession) activeUsers++;
                 if (!user.isEnabled()) disabledUsers++;
@@ -360,6 +366,7 @@ public class ProprietaryUIDataController {
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
+        data.setUserSettings(userSettings);
 
         return ResponseEntity.ok(data);
     }
@@ -546,6 +553,7 @@ public class ProprietaryUIDataController {
         private int licenseMaxUsers;
         private boolean premiumEnabled;
         private boolean mailEnabled;
+        private Map<String, Map<String, String>> userSettings;
     }
 
     @Data

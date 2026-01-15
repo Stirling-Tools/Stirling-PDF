@@ -57,6 +57,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
     role: 'ROLE_USER',
     teamId: undefined as number | undefined,
     forceChange: false,
+    forceMFA: false,
   });
 
   // Form state for email invite
@@ -134,6 +135,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         teamId: inviteForm.teamId,
         authType: 'password',
         forceChange: inviteForm.forceChange,
+        forceMFA: inviteForm.forceMFA,
       });
       alert({ alertType: 'success', title: t('workspace.people.addMember.success') });
       onClose();
@@ -145,6 +147,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         role: 'ROLE_USER',
         teamId: undefined,
         forceChange: false,
+        forceMFA: false,
       });
     } catch (error: any) {
       console.error('Failed to invite user:', error);
@@ -244,6 +247,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       role: 'ROLE_USER',
       teamId: undefined,
       forceChange: false,
+      forceMFA: false,
     });
     setEmailInviteForm({
       emails: '',
@@ -274,7 +278,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       handleInviteUser();
     }
   };
-  
+
   return (
     <Modal
       opened={opened}
@@ -529,6 +533,11 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                 label={t('workspace.people.addMember.forcePasswordChange', 'Force password change on first login')}
                 checked={inviteForm.forceChange}
                 onChange={(e) => setInviteForm({ ...inviteForm, forceChange: e.currentTarget.checked })}
+              />
+              <Checkbox
+                label="Force MFA on first login (Coming Soon)"
+                checked={inviteForm.forceMFA}
+                onChange={(e) => setInviteForm({ ...inviteForm, forceMFA: e.currentTarget.checked })}
               />
             </>
           )}

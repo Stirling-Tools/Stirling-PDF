@@ -221,6 +221,7 @@ public class UserController {
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,
             @RequestParam(name = "newPassword") String newPassword,
+            @RequestParam(name = "confirmPassword") String confirmPassword,
             HttpServletRequest request,
             HttpServletResponse response)
             throws SQLException, UnsupportedProviderException {
@@ -233,6 +234,27 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "userNotFound", "message", "User not found"));
         }
+
+        if (!newPassword.equals(confirmPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "passwordMismatch",
+                                    "message",
+                                    "New password and confirmation do not match"));
+        }
+
+        if (newPassword.equals(currentPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "passwordUnchanged",
+                                    "message",
+                                    "New password must be different from the current password"));
+        }
+
         User user = userOpt.get();
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -325,7 +347,9 @@ public class UserController {
             @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
-                    boolean forceChange)
+                    boolean forceChange,
+            @RequestParam(name = "forceMFA", required = false, defaultValue = "false")
+                    boolean forceMFA)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(username)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

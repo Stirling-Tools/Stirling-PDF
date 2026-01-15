@@ -28,7 +28,7 @@ import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
-import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
+import stirling.software.proprietary.security.model.api.user.UsernameAndPassMfa;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -63,7 +63,7 @@ public class AuthController {
     @PostMapping("/login")
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public ResponseEntity<?> login(
-            @RequestBody UsernameAndPass request,
+            @RequestBody UsernameAndPassMfa request,
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
         try {

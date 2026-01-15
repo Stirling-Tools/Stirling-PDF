@@ -12,6 +12,7 @@ import {
   DEFAULT_RUNTIME_STATE,
 } from '@app/components/onboarding/orchestrator/onboardingConfig';
 import {
+  consumeFirstLoginSlideRequest,
   isOnboardingCompleted,
   markOnboardingCompleted,
   migrateFromLegacyPreferences,
@@ -43,12 +44,14 @@ function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRu
       ? sessionTourType
       : 'whatsnew';
     const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as 'admin' | 'user' | null;
+    const forceFirstLogin = consumeFirstLoginSlideRequest();
 
     return {
       ...baseState,
       tourRequested,
       tourType,
       selectedRole,
+      requiresPasswordChange: forceFirstLogin || baseState.requiresPasswordChange,
     };
   } catch {
     return baseState;
@@ -302,7 +305,6 @@ export function useOnboardingOrchestrator(
 
   const skip = useCallback(() => {
     // Skip marks the entire onboarding as completed
-    if (runtimeState.requiresPasswordChange !== false) return;
     markOnboardingCompleted();
     setCurrentStepIndex(totalSteps);
   }, [totalSteps, runtimeState.requiresPasswordChange]);
