@@ -14,6 +14,7 @@ interface FirstLoginSlideProps {
   onPasswordChanged: () => void;
   usingDefaultCredentials?: boolean;
   mfaRequired?: boolean;
+  requiresPasswordChange?: boolean;
 }
 
 const DEFAULT_PASSWORD = 'stirling';
@@ -23,6 +24,7 @@ function FirstLoginForm({
   onPasswordChanged,
   usingDefaultCredentials = false,
   mfaRequired = false,
+  requiresPasswordChange = false,
 }: FirstLoginSlideProps) {
   const { t } = useTranslation();
   // If using default credentials, pre-fill with "stirling" - user won't see this field
@@ -35,8 +37,10 @@ function FirstLoginForm({
   const [mfaSetupCode, setMfaSetupCode] = useState('');
   const [mfaError, setMfaError] = useState('');
   const [mfaLoading, setMfaLoading] = useState(false);
-  const [stepPassword, setStepPassword] = useState(true);
+  const [stepPassword, setStepPassword] = useState(requiresPasswordChange);
+  const [stepMfa, setStepMfa] = useState(mfaRequired);
 
+  const tempStepPassword = requiresPasswordChange;
   const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, '').slice(0, 6), []);
 
   useEffect(() => {
@@ -140,7 +144,8 @@ function FirstLoginForm({
       });
       setMfaSetupCode('');
       setMfaSetupData(null);
-      setStepPassword(true);
+      setStepPassword(tempStepPassword);
+      setStepMfa(false);
     } catch (enableError) {
       console.error('Failed to enable MFA:', enableError);
       setMfaError(
@@ -151,6 +156,12 @@ function FirstLoginForm({
       );
     } finally {
       setMfaLoading(false);
+      if (!stepPassword) {
+        // Wait a moment for the user to see the success message
+        setTimeout(() => {
+          onPasswordChanged();
+        }, 1500);
+      }
     }
   };
 
@@ -173,7 +184,7 @@ function FirstLoginForm({
           </Text>
 
           {/* MFA Setup Section */}
-          {mfaRequired && mfaSetupData && (
+          {stepMfa && (
             <Stack gap="sm">
               <Alert
                 icon={<LocalIcon icon="security" width="1rem" height="1rem" />}
@@ -322,6 +333,7 @@ export default function FirstLoginSlide({
   onPasswordChanged,
   usingDefaultCredentials = false,
   mfaRequired = false,
+  requiresPasswordChange = false,
 }: FirstLoginSlideProps): SlideConfig {
   return {
     key: 'first-login',
@@ -332,6 +344,7 @@ export default function FirstLoginSlide({
         onPasswordChanged={onPasswordChanged}
         usingDefaultCredentials={usingDefaultCredentials}
         mfaRequired={mfaRequired}
+        requiresPasswordChange={requiresPasswordChange}
       />
     ),
     background: {

@@ -310,7 +310,7 @@ export default function Login() {
         setMfaCode('');
         try {
           const accountData = await accountService.getAccountData();
-          if (accountData.changeCredsFlag) {
+          if (accountData.changeCredsFlag || accountData.mfaRequired) {
             requestFirstLoginSlide();
             if (isOnboardingCompleted()) {
               markOnboardingIncomplete();
