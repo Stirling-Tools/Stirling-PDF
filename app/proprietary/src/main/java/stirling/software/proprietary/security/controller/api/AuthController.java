@@ -291,6 +291,45 @@ public class AuthController {
     }
 
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @GetMapping("/mfa/required")
+    public ResponseEntity<?> isMfaRequired(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+        String username = authentication.getName();
+        User user =
+                userService
+                        .findByUsernameIgnoreCaseWithSettings(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        boolean required = mfaService.isMfaRequired(user);
+        return ResponseEntity.ok(Map.of("mfaRequired", required));
+    }
+
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
+    @PutMapping("/mfa/required")
+    public ResponseEntity<?> setMfaRequired(
+            @RequestParam("required") boolean required, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+        String username = authentication.getName();
+        User user =
+                userService
+                        .findByUsernameIgnoreCaseWithSettings(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        try {
+            mfaService.setMfaRequired(user, required);
+            return ResponseEntity.ok(Map.of("mfaRequired", required));
+        } catch (Exception e) {
+            log.error("Failed to set MFA requirement for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to set MFA requirement"));
+        }
+    }
+
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     @GetMapping("/mfa/setup")
     public ResponseEntity<?> setupMfa(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

@@ -42,6 +42,7 @@ import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -60,6 +61,8 @@ public class UserController {
     private final UserRepository userRepository;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService licenseSettingsService;
+
+    private final MfaService mfaService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -371,8 +374,9 @@ public class UserController {
                                             + availableSlots));
         }
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+        User user = null;
         if (userOpt.isPresent()) {
-            User user = userOpt.get();
+            user = userOpt.get();
             if (user.getUsername().equalsIgnoreCase(username)) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(Map.of("error", "Username already exists."));
@@ -425,7 +429,8 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password must be at least 6 characters."));
             }
-            userService.saveUser(username, password, effectiveTeamId, role, forceChange);
+            user = userService.saveUser(username, password, effectiveTeamId, role, forceChange);
+            mfaService.setMfaRequired(user, forceMFA);
         }
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
     }
