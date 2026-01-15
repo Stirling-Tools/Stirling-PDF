@@ -419,6 +419,7 @@ public class ProprietaryUIDataController {
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
         data.setMfaEnabled(mfaService.isMfaEnabled(user.get()));
+        data.setMfaRequired(mfaService.isMfaRequired(user.get()));
 
         return ResponseEntity.ok(data);
     }
@@ -565,6 +566,7 @@ public class ProprietaryUIDataController {
         private boolean oAuth2Login;
         private boolean saml2Login;
         private boolean mfaEnabled;
+        private boolean mfaRequired;
     }
 
     @Data

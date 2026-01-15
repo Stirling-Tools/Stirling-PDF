@@ -59,6 +59,7 @@ export interface SlideFactoryParams {
   firstLoginUsername?: string;
   onPasswordChanged?: () => void;
   usingDefaultCredentials?: boolean;
+  mfaRequired?: boolean;
   analyticsError?: string | null;
   analyticsLoading?: boolean;
 }
@@ -88,11 +89,12 @@ export interface SlideDefinition {
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   'first-login': {
     id: 'first-login',
-    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials }) =>
+    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials, mfaRequired }) =>
       FirstLoginSlide({
         username: firstLoginUsername || '',
         onPasswordChanged: onPasswordChanged || (() => {}),
         usingDefaultCredentials: usingDefaultCredentials || false,
+        mfaRequired: mfaRequired || false,
       }),
     hero: { type: 'lock' },
     buttons: [], // Form has its own submit button

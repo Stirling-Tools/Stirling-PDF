@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -20,6 +21,7 @@ import stirling.software.proprietary.security.model.User;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MfaService {
 
     public static final String MFA_ENABLED_KEY = "mfaEnabled";
@@ -177,6 +179,10 @@ public class MfaService {
      */
     public boolean isMfaRequired(User user) {
         String value = getSetting(user, MFA_REQUIRED_KEY);
+        if (value == null) {
+            value = "false";
+        }
+        log.info("MFA required for user {}: {}", user.getUsername(), value);
         return Boolean.parseBoolean(value);
     }
 
@@ -193,6 +199,7 @@ public class MfaService {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_REQUIRED_KEY, Boolean.toString(required));
+        log.info("Set MFA required={} for user {}", required, managedUser.getUsername());
         persist(managedUser);
     }
 

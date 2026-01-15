@@ -408,6 +408,7 @@ public class AuthController {
             }
             mfaService.enableMfa(user);
             mfaService.markTotpStepUsed(user, timeStep);
+            mfaService.setMfaRequired(user, false);
             return ResponseEntity.ok(Map.of("enabled", true));
         } catch (Exception e) {
             log.error("Failed to enable MFA for user: {}", username, e);

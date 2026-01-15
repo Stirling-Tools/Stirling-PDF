@@ -30,6 +30,7 @@ export interface OnboardingRuntimeState {
   requiresPasswordChange: boolean;
   firstLoginUsername: string;
   usingDefaultCredentials: boolean;
+  mfaRequired: boolean;
 }
 
 export interface OnboardingConditionContext extends OnboardingRuntimeState {
@@ -61,6 +62,7 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   requiresPasswordChange: false,
   firstLoginUsername: '',
   usingDefaultCredentials: false,
+  mfaRequired: false,
   desktopSlideEnabled: true,
 };
 

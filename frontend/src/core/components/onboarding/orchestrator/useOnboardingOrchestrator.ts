@@ -208,6 +208,7 @@ export function useOnboardingOrchestrator(
           requiresPasswordChange: accountData.changeCredsFlag,
           firstLoginUsername: accountData.username,
           usingDefaultCredentials: loginPageData.showDefaultCredentials,
+          mfaRequired: accountData.mfaRequired ?? false,
         }));
       } catch {
         // Account endpoint failed - user not logged in or security disabled
