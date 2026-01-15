@@ -38,6 +38,9 @@ RUN DISABLE_ADDITIONAL_FEATURES=true \
 # Stage 2: Runtime image
 FROM alpine:3.23.2@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62
 
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 ARG VERSION_TAG
 
 # Labels
