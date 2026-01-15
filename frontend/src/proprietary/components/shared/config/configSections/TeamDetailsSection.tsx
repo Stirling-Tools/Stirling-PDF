@@ -362,7 +362,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                     <Table.Td w={100}>
                       <Badge
                         size="sm"
-                        color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'gray'}
+                        color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'cyan'}
                         variant="light"
                       >
                         {(user.rolesAsString || '').includes('ROLE_ADMIN')

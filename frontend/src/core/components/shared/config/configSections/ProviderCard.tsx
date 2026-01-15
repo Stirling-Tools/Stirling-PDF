@@ -1,5 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Paper, Group, Text, Button, Collapse, Stack, TextInput, Textarea, Switch, PasswordInput } from '@mantine/core';
+import {
+  Paper,
+  Group,
+  Text,
+  Button,
+  Collapse,
+  Stack,
+  TextInput,
+  Textarea,
+  Switch,
+  PasswordInput,
+  NumberInput,
+  TagsInput,
+} from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Provider, ProviderField } from '@app/components/shared/config/configSections/providerDefinitions';
@@ -104,6 +117,36 @@ export default function ProviderCard({
             disabled={disabled}
           />
         );
+
+      case 'number':
+        return (
+          <NumberInput
+            key={field.key}
+            label={field.label}
+            description={field.description}
+            placeholder={field.placeholder}
+            value={value}
+            onChange={(num) => handleFieldChange(field.key, num)}
+            disabled={disabled}
+            allowDecimal={false}
+          />
+        );
+
+      case 'tags': {
+        const tagValue = Array.isArray(value) ? value.map((val) => `${val}`) : [];
+
+        return (
+          <TagsInput
+            key={field.key}
+            label={field.label}
+            description={field.description}
+            placeholder={field.placeholder}
+            value={tagValue}
+            onChange={(vals) => handleFieldChange(field.key, vals)}
+            disabled={disabled}
+          />
+        );
+      }
 
       default:
         return (

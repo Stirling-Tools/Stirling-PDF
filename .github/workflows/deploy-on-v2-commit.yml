@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Get commit hashes for frontend and backend
         id: commit-hashes
@@ -119,7 +119,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           chmod 600 ../private.key
 
       - name: Deploy to VPS on port 3000
@@ -158,17 +158,17 @@ jobs:
               ports:
                 - "3000:80"
               environment:
-                VITE_API_BASE_URL: "http://${{ secrets.VPS_HOST }}:13000"
+                VITE_API_BASE_URL: "http://${{ secrets.NEW_VPS_HOST }}:13000"
               depends_on:
                 - backend
               restart: on-failure:5
           EOF
 
           # Copy to remote with unique name
-          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/$UNIQUE_NAME
+          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/$UNIQUE_NAME
 
           # SSH and rename/move atomically to avoid interference
-          ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             mkdir -p /stirling/V2/{data,config,logs}
             mv /tmp/$UNIQUE_NAME /stirling/V2/docker-compose.yml
             cd /stirling/V2
