@@ -68,19 +68,19 @@ export default function Onboarding() {
     setAnalyticsLoading(true);
     setAnalyticsError(null);
 
-    try {
       const formData = new FormData();
       formData.append('enabled', enableAnalytics.toString());
 
-      await apiClient.post('/api/v1/settings/update-enable-analytics', formData);
-      await refetchConfig();
-      setShowAnalyticsModal(false);
-      setAnalyticsModalDismissed(true);
-      setAnalyticsLoading(false);
-    } catch (error) {
-      setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
-      setAnalyticsLoading(false);
-    }
+    await apiClient.post('/api/v1/settings/update-enable-analytics', formData)
+        .then(async () => {
+            await refetchConfig();
+            setShowAnalyticsModal(false);
+            setAnalyticsModalDismissed(true);
+            setAnalyticsLoading(false);
+        }).catch ((error) => {
+            setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
+            setAnalyticsLoading(false);
+        });
   }, [analyticsLoading, refetchConfig]);
 
   const handleButtonAction = useCallback(async (action: ButtonAction) => {
@@ -403,6 +403,7 @@ export default function Onboarding() {
           currentModalSlideIndex={currentModalSlideIndex}
           onSkip={actions.skip}
           onAction={handleButtonAction}
+          allowDismiss={currentStep.allowDismiss}
         />
       );
 
