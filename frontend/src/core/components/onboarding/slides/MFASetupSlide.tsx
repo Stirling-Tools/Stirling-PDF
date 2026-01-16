@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { Alert, Box, Button, Group, Loader, Stack, Text, TextInput } from '@mantine/core';
-import { QRCodeSVG } from 'qrcode.react';
-import { SlideConfig } from '@app/types/types';
-import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
-import { accountService, type MfaSetupResponse } from '@app/services/accountService';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { Alert, Box, Button, Group, Loader, Stack, Text, TextInput } from "@mantine/core";
+import { QRCodeSVG } from "qrcode.react";
+import { SlideConfig } from "@app/types/types";
+import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import { accountService, type MfaSetupResponse } from "@app/services/accountService";
+import { useAccountLogout } from '@app/extensions/accountLogout';
+import { useAuth } from "@app/auth/UseSession";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 interface MFASetupSlideProps {
   onMfaSetupComplete?: () => void;
@@ -13,28 +15,27 @@ interface MFASetupSlideProps {
 
 function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   const [mfaSetupData, setMfaSetupData] = useState<MfaSetupResponse | null>(null);
-  const [mfaSetupCode, setMfaSetupCode] = useState('');
-  const [mfaError, setMfaError] = useState('');
+  const [mfaSetupCode, setMfaSetupCode] = useState("");
+  const [mfaError, setMfaError] = useState("");
   const [mfaLoading, setMfaLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
   const setupCompleteRef = useRef(false);
+  const { signOut } = useAuth();
+  const accountLogout = useAccountLogout();
 
-  const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, '').slice(0, 6), []);
+  const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, "").slice(0, 6), []);
 
   const fetchMfaSetup = useCallback(async () => {
     try {
       setMfaLoading(true);
-      setMfaError('');
-      setMfaSetupCode('');
+      setMfaError("");
+      setMfaSetupCode("");
       const data = await accountService.requestMfaSetup();
       setMfaSetupData(data);
     } catch (err) {
       const axiosError = err as { response?: { data?: { error?: string } } };
-      setMfaError(
-        axiosError.response?.data?.error ||
-          'Unable to start two-factor setup. Please try again.'
-      );
+      setMfaError(axiosError.response?.data?.error || "Unable to start two-factor setup. Please try again.");
     } finally {
       setMfaLoading(false);
     }
@@ -54,30 +55,40 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
     };
   }, [fetchMfaSetup]);
 
-  const handleEnableMfa = useCallback(async (event: FormEvent) => {
-    event.preventDefault();
+  const redirectToLogin = useCallback(() => {
+    window.location.assign('/login');
+  }, []);
 
-    if (!mfaSetupCode.trim()) {
-      setMfaError('Enter the authentication code to continue.');
-      return;
-    }
+  const onLogout = useCallback(async() => {
+    await accountLogout({ signOut, redirectToLogin });
+  }, [accountLogout, redirectToLogin, signOut]);
 
-    try {
-      setSubmitting(true);
-      setMfaError('');
-      await accountService.enableMfa(mfaSetupCode.trim());
-      setSetupComplete(true);
-      onMfaSetupComplete?.();
-    } catch (err) {
-      const axiosError = err as { response?: { data?: { error?: string } } };
-      setMfaError(
-        axiosError.response?.data?.error ||
-          'Unable to enable two-factor authentication. Check the code and try again.'
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }, [mfaSetupCode, onMfaSetupComplete]);
+  const handleEnableMfa = useCallback(
+    async (event: FormEvent) => {
+      event.preventDefault();
+
+      if (!mfaSetupCode.trim()) {
+        setMfaError("Enter the authentication code to continue.");
+        return;
+      }
+
+      try {
+        setSubmitting(true);
+        setMfaError("");
+        await accountService.enableMfa(mfaSetupCode.trim());
+        setSetupComplete(true);
+        onMfaSetupComplete?.();
+      } catch (err) {
+        const axiosError = err as { response?: { data?: { error?: string } } };
+        setMfaError(
+          axiosError.response?.data?.error || "Unable to enable two-factor authentication. Check the code and try again."
+        );
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [mfaSetupCode, onMfaSetupComplete]
+  );
 
   const isReady = Boolean(mfaSetupData);
 
@@ -86,15 +97,12 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       <div className={styles.mfaCard}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish.
+            Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the
+            6-digit code to finish.
           </Text>
 
           {mfaError && (
-            <Alert
-              icon={<LocalIcon icon="error" width={16} height={16} />}
-              color="red"
-              variant="light"
-            >
+            <Alert icon={<LocalIcon icon="error" width={16} height={16} />} color="red" variant="light">
               {mfaError}
             </Alert>
           )}
@@ -109,22 +117,26 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
           {isReady && (
             <div className={styles.mfaSetupGrid}>
               <Box className={styles.mfaQrCard}>
-                <QRCodeSVG value={mfaSetupData.otpauthUri} size={168} level="H" includeMargin />
+                <QRCodeSVG value={mfaSetupData.otpauthUri} size={168} level="H" />
               </Box>
 
               <Stack gap="xs">
-                <Text size="sm" fw={600}>Step-by-step</Text>
+                <Text size="sm" fw={600}>
+                  Step-by-step
+                </Text>
                 <ol className={styles.mfaSteps}>
                   <li>Open Google Authenticator, Authy, or 1Password.</li>
                   <li>Scan the QR code or enter the setup key below.</li>
                   <li>Enter the 6-digit code from your app.</li>
                 </ol>
-                <Text size="xs" c="dimmed">Setup key (manual entry)</Text>
+                <Text size="xs" c="dimmed">
+                  Setup key (manual entry)
+                </Text>
                 <TextInput
                   value={mfaSetupData.secret}
                   readOnly
                   variant="filled"
-                  styles={{ input: { fontFamily: 'monospace' } }}
+                  styles={{ input: { fontFamily: "monospace" } }}
                 />
               </Stack>
             </div>
@@ -133,12 +145,14 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
           <form onSubmit={handleEnableMfa} className={styles.mfaForm}>
             <Stack gap="sm">
               <TextInput
+                id="mfa-setup-code"
                 label="Authentication code"
                 placeholder="123456"
                 value={mfaSetupCode}
                 onChange={(event) => setMfaSetupCode(normalizeMfaCode(event.currentTarget.value))}
                 inputMode="numeric"
                 maxLength={6}
+                minLength={6}
                 disabled={!isReady || submitting || setupComplete}
               />
 
@@ -154,9 +168,16 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                 <Button
                   type="submit"
                   loading={submitting}
-                  disabled={!isReady || setupComplete}
+                  disabled={!isReady || setupComplete || mfaSetupCode.length < 6}
                 >
                   Enable MFA
+                </Button>
+                <Button
+                  type="button"
+                  variant="light"
+                  onClick={onLogout}
+                >
+                  Logout
                 </Button>
               </Group>
 
@@ -175,11 +196,11 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
 
 export default function MFASetupSlide({ onMfaSetupComplete }: MFASetupSlideProps = {}): SlideConfig {
   return {
-    key: 'mfa-setup-slide',
-    title: 'Multi-Factor Authentication Setup',
+    key: "mfa-setup-slide",
+    title: "Multi-Factor Authentication Setup",
     body: <MFASetupContent onMfaSetupComplete={onMfaSetupComplete} />,
     background: {
-      gradientStops: ['#059669', '#0891B2'], // Green to teal - security/trust colors
+      gradientStops: ["#059669", "#0891B2"], // Green to teal - security/trust colors
       circles: UNIFIED_CIRCLE_CONFIG,
     },
   };

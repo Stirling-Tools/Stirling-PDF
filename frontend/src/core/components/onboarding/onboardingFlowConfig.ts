@@ -286,7 +286,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   'mfa-setup': {
     id: 'mfa-setup',
-    createSlide: ({ onMfaSetupComplete }) => MFASetupSlide({ onMfaSetupComplete }),
+    createSlide: ({ onMfaSetupComplete = () => {} }: SlideFactoryParams) => MFASetupSlide({ onMfaSetupComplete }),
     hero: { type: 'lock' },
     buttons: [], // Form has its own submit button
   },

@@ -242,7 +242,7 @@ export default function Onboarding() {
 
   // Handle first-login password change modal
   useEffect(() => {
-    if(runtimeState.requiresPasswordChange) {
+    if(runtimeState.requiresPasswordChange === true) {
       console.log('[Onboarding] User requires password change on first login.');
       setFirstLoginModalOpen(true);
     } else {
@@ -252,7 +252,7 @@ export default function Onboarding() {
 
   // Handle MFA setup modal
   useEffect(() => {
-    if(runtimeState.requiresMfaSetup) {
+    if(runtimeState.requiresMfaSetup === true) {
       console.log('[Onboarding] User requires MFA setup.');
       setMfaModalOpen(true);
     } else {
@@ -415,7 +415,7 @@ export default function Onboarding() {
         onSkip={() => {}}
         onAction={async (action) => {
           if (action === 'complete-close') {
-            // No specific action defined yet for MFA setup completion
+            handleMfaSetupComplete();
           }
         }}
         allowDismiss={false}

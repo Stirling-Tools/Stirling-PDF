@@ -34,6 +34,7 @@ const AccountSection: React.FC = () => {
   const [mfaDisableCode, setMfaDisableCode] = useState('');
   const [mfaError, setMfaError] = useState('');
   const [mfaLoading, setMfaLoading] = useState(false);
+  const [changeButtonDisabled, setChangeButtonDisabled] = useState(false);
   const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, '').slice(0, 6), []);
 
   const authTypeFromMetadata = useMemo(() => {
@@ -104,12 +105,17 @@ const AccountSection: React.FC = () => {
 
   useEffect(() => {
     const fetchAccountData = async () => {
+      setChangeButtonDisabled(true);
       try {
-        const data = await accountService.getAccountData();
+        const data = await accountService.getAccountData().then((data) => data).finally(() => {
+          setChangeButtonDisabled(false);
+        });
         setMfaEnabled(data.mfaEnabled ?? false);
       } catch {
         // ignore fetch errors for account data
         console.warn('Failed to fetch account data');
+      } finally {
+        setChangeButtonDisabled(false);
       }
     };
     void fetchAccountData();
@@ -323,9 +329,10 @@ const AccountSection: React.FC = () => {
             <Group gap="sm" wrap="wrap">
               {!mfaEnabled ? (
                 <Button
-                  leftSection={<LocalIcon icon="shield-check-rounded" />}
+                  leftSection={<LocalIcon icon="check-circle-outline-rounded" />}
                   onClick={handleStartMfaSetup}
                   loading={mfaLoading}
+                  disabled={changeButtonDisabled}
                 >
                   {t('account.mfa.enableButton', 'Enable two-factor authentication')}
                 </Button>
@@ -333,12 +340,13 @@ const AccountSection: React.FC = () => {
                 <Button
                   variant="outline"
                   color="red"
-                  leftSection={<LocalIcon icon="shield-cross-rounded" />}
+                  leftSection={<LocalIcon icon="close-rounded" />}
                   onClick={() => {
                     setMfaError('');
                     setMfaDisableCode('');
                     setMfaDisableModalOpen(true);
                   }}
+                  disabled={changeButtonDisabled}
                 >
                   {t('account.mfa.disableButton', 'Disable two-factor authentication')}
                 </Button>
