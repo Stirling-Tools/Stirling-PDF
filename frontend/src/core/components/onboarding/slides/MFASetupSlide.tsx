@@ -7,6 +7,7 @@ import { accountService, type MfaSetupResponse } from "@app/services/accountServ
 import { useAccountLogout } from '@app/extensions/accountLogout';
 import { useAuth } from "@app/auth/UseSession";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { BASE_PATH } from "@app/constants/app";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 interface MFASetupSlideProps {
@@ -23,6 +24,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   const setupCompleteRef = useRef(false);
   const { signOut } = useAuth();
   const accountLogout = useAccountLogout();
+  const qrLogoSrc = `${BASE_PATH}/modern-logo/StirlingPDFLogoNoTextDark.svg`;
 
   const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, "").slice(0, 6), []);
 
@@ -94,7 +96,17 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   const mfaSetupContent = mfaSetupData ? (
     <div className={styles.mfaSetupGrid}>
       <Box className={styles.mfaQrCard}>
-        <QRCodeSVG value={mfaSetupData.otpauthUri} size={168} level="H" />
+        <QRCodeSVG
+          value={mfaSetupData.otpauthUri}
+          size={168}
+          level="H"
+          imageSettings={{
+            src: qrLogoSrc,
+            height: 36,
+            width: 36,
+            excavate: true,
+          }}
+        />
       </Box>
 
       <Stack gap="xs">

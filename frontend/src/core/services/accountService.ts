@@ -88,6 +88,6 @@ export const accountService = {
   },
 
   async cancelMfaSetup(): Promise<void> {
-    await apiClient.post('/api/v1/auth/mfa/setup/cancel');
+    await apiClient.post('/api/v1/auth/mfa/setup/cancel', undefined, { suppressErrorToast: true });
   },
 };

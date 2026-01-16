@@ -8,6 +8,7 @@ import { accountService, type MfaSetupResponse } from '@app/services/accountServ
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAccountLogout } from '@app/extensions/accountLogout';
+import { BASE_PATH } from '@app/constants/app';
 
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
@@ -36,6 +37,7 @@ const AccountSection: React.FC = () => {
   const [mfaLoading, setMfaLoading] = useState(false);
   const [changeButtonDisabled, setChangeButtonDisabled] = useState(false);
   const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, '').slice(0, 6), []);
+  const qrLogoSrc = `${BASE_PATH}/modern-logo/StirlingPDFLogoNoTextDark.svg`;
 
   const authTypeFromMetadata = useMemo(() => {
     const metadata = user?.app_metadata as { authType?: string; authenticationType?: string } | undefined;
@@ -436,7 +438,17 @@ const AccountSection: React.FC = () => {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                   }}
                 >
-                  <QRCodeSVG value={mfaSetupData.otpauthUri} size={180} />
+                  <QRCodeSVG
+                    value={mfaSetupData.otpauthUri}
+                    size={180}
+                    level="H"
+                    imageSettings={{
+                      src: qrLogoSrc,
+                      height: 40,
+                      width: 40,
+                      excavate: true,
+                    }}
+                  />
                 </Box>
                 <Text size="sm" c="dimmed">
                   {t('account.mfa.manualKey', 'Manual setup key')}: <strong>{mfaSetupData.secret}</strong>
