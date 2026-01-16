@@ -9,4 +9,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ShareWithUserRequest {
     private String username;
+    private String accessRole;
 }

@@ -547,6 +547,7 @@ public class AdminSettingsController {
             case "endpoints" -> applicationProperties.getEndpoints();
             case "metrics" -> applicationProperties.getMetrics();
             case "mail" -> applicationProperties.getMail();
+            case "storage" -> applicationProperties.getStorage();
             case "premium" -> applicationProperties.getPremium();
             case "processexecutor", "processExecutor" -> applicationProperties.getProcessExecutor();
             case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
@@ -567,6 +568,7 @@ public class AdminSettingsController {
                     "endpoints",
                     "metrics",
                     "mail",
+                    "storage",
                     "premium",
                     "processExecutor",
                     "processexecutor",

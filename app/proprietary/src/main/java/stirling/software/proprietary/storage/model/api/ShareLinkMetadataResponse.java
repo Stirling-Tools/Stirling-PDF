@@ -13,7 +13,7 @@ public class ShareLinkMetadataResponse {
     private final String fileName;
     private final String owner;
     private final boolean ownedByCurrentUser;
-    private final boolean publicLink;
+    private final String accessRole;
     private final LocalDateTime createdAt;
     private final LocalDateTime lastAccessedAt;
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Group, Text, ActionIcon, Tooltip, SegmentedControl } from "@mantine/core";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -33,13 +33,36 @@ const FileActions: React.FC = () => {
     onStorageFilterChange
   } =
     useFileManagerContext();
-  const showStorageFilter =
-    (config?.enableLogin !== false) && (config?.storageEnabled !== false);
   const uploadEnabled = (config?.enableLogin !== false) && (config?.storageEnabled !== false);
+  const sharingEnabled =
+    uploadEnabled && (config?.storageSharingEnabled !== false);
+  const shareLinksEnabled =
+    sharingEnabled && (config?.storageShareLinksEnabled !== false);
+  const showStorageFilter = uploadEnabled;
+  const storageFilterOptions = sharingEnabled
+    ? [
+        { value: "all", label: t("fileManager.filterAll", "All") },
+        { value: "local", label: t("fileManager.filterLocal", "Local") },
+        { value: "sharedWithMe", label: t("fileManager.filterSharedWithMe", "Shared with me") },
+        { value: "sharedByMe", label: t("fileManager.filterSharedByMe", "Shared by me") }
+      ]
+    : [
+        { value: "all", label: t("fileManager.filterAll", "All") },
+        { value: "local", label: t("fileManager.filterLocal", "Local") }
+      ];
+  useEffect(() => {
+    if (!sharingEnabled && (storageFilter === "sharedWithMe" || storageFilter === "sharedByMe")) {
+      onStorageFilterChange("all");
+    }
+  }, [sharingEnabled, storageFilter, onStorageFilterChange]);
   const hasSelection = selectedFileIds.length > 0;
   const hasOnlyOwnedSelection = selectedFiles.every((file) => file.remoteOwnedByCurrentUser !== false);
+  const hasDownloadAccess = selectedFiles.every((file) => {
+    const role = (file.remoteAccessRole || '').toLowerCase();
+    return file.remoteOwnedByCurrentUser !== false || role === 'editor' || !role;
+  });
   const canBulkUpload = uploadEnabled && hasSelection && hasOnlyOwnedSelection;
-  const canBulkShare = uploadEnabled && hasSelection && hasOnlyOwnedSelection;
+  const canBulkShare = shareLinksEnabled && hasSelection && hasOnlyOwnedSelection;
 
   const handleSelectAll = () => {
     onSelectAll();
@@ -99,12 +122,7 @@ const FileActions: React.FC = () => {
             onChange={(value) =>
               onStorageFilterChange(value as "all" | "local" | "sharedWithMe" | "sharedByMe")
             }
-            data={[
-              { value: "all", label: t("fileManager.filterAll", "All") },
-              { value: "local", label: t("fileManager.filterLocal", "Local") },
-              { value: "sharedWithMe", label: t("fileManager.filterSharedWithMe", "Shared with me") },
-              { value: "sharedByMe", label: t("fileManager.filterSharedByMe", "Shared by me") }
-            ]}
+            data={storageFilterOptions}
           />
         )}
       </Group>
@@ -173,7 +191,7 @@ const FileActions: React.FC = () => {
             size="sm"
             color="dimmed"
             onClick={handleDownloadSelected}
-            disabled={!hasSelection}
+            disabled={!hasSelection || !hasDownloadAccess}
             radius="sm"
           >
             <DownloadIcon style={{ fontSize: "1rem" }} />

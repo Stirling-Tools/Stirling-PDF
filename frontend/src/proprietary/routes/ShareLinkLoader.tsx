@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import JSZip from 'jszip';
-
 import apiClient from '@app/services/apiClient';
+import { useAuth } from '@app/auth/UseSession';
 import { useFileActions } from '@app/contexts/FileContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { alert } from '@app/components/toast';
 import type { StirlingFile } from '@app/types/fileContext';
 import type { FileId } from '@app/types/file';
 import { fileStorage } from '@app/services/fileStorage';
-import type { ShareBundleManifest } from '@app/services/serverStorageBundle';
+import {
+  getShareBundleEntryRootId,
+  isZipBundle,
+  loadShareBundleEntries,
+  parseContentDispositionFilename,
+} from '@app/services/shareBundleUtils';
 
 interface ShareLinkLoaderProps {
   token: string;
@@ -22,31 +26,19 @@ interface ShareLinkMetadata {
   fileName?: string;
   owner?: string | null;
   ownedByCurrentUser?: boolean;
-}
-
-function parseFilename(disposition: string | undefined): string | null {
-  if (!disposition) return null;
-  const filenameMatch = /filename="([^"]+)"/i.exec(disposition);
-  if (filenameMatch?.[1]) return filenameMatch[1];
-  const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
-  if (utf8Match?.[1]) {
-    try {
-      return decodeURIComponent(utf8Match[1]);
-    } catch (_e) {
-      return utf8Match[1];
-    }
-  }
-  return null;
+  accessRole?: string | null;
 }
 
 export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
   const { actions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const handledTokenRef = useRef<string | null>(null);
 
   const normalizedToken = useMemo(() => token.trim(), [token]);
+  const isAuthenticated = Boolean(user);
 
   useEffect(() => {
     if (!normalizedToken) {
@@ -97,48 +89,14 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
           (response.headers &&
             (response.headers['content-disposition'] || response.headers['Content-Disposition'])) ||
           '';
-        const filename = parseFilename(disposition) || 'shared-file';
+        const filename = parseContentDispositionFilename(disposition) || 'shared-file';
         const blob = response.data as Blob;
         const contentTypeValue = contentType || blob.type;
 
-        const isZip =
-          contentTypeValue.includes('zip') || filename.toLowerCase().endsWith('.zip');
-
-        if (isZip) {
-          const zip = await JSZip.loadAsync(blob);
-          const manifestEntry = zip.file('stirling-share.json');
-          if (manifestEntry) {
-            const manifestText = await manifestEntry.async('text');
-            const manifest = JSON.parse(manifestText) as ShareBundleManifest;
-            const entryRootId = (entry: ShareBundleManifest['entries'][number]) =>
-              entry.rootLogicalId || manifest.rootLogicalId;
-            const rootOrder =
-              manifest.rootLogicalIds && manifest.rootLogicalIds.length > 0
-                ? manifest.rootLogicalIds
-                : Array.from(new Set(manifest.entries.map(entryRootId)));
-            const sortedEntries: ShareBundleManifest['entries'] = [];
-            for (const rootId of rootOrder) {
-              const rootEntries = manifest.entries
-                .filter((entry) => entryRootId(entry) === rootId)
-                .sort((a, b) => a.versionNumber - b.versionNumber);
-              sortedEntries.push(...rootEntries);
-            }
-
-            const files: File[] = [];
-            for (const entry of sortedEntries) {
-              const zipEntry = zip.file(entry.filePath);
-              if (!zipEntry) {
-                throw new Error(`Missing file entry ${entry.filePath}`);
-              }
-              const fileBlob = await zipEntry.async('blob');
-              files.push(
-                new File([fileBlob], entry.name, {
-                  type: entry.type,
-                  lastModified: entry.lastModified,
-                })
-              );
-            }
-
+        if (isZipBundle(contentTypeValue, filename)) {
+          const bundle = await loadShareBundleEntries(blob);
+          if (bundle) {
+            const { manifest, rootOrder, sortedEntries, files } = bundle;
             const stirlingFiles = await actions.addFilesWithOptions(files, {
               selectFiles: false,
               autoUnzip: false,
@@ -167,13 +125,14 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
                 ? idMap.get(entry.parentLogicalId)
                 : undefined;
               const rootId =
-                rootIdMap.get(entryRootId(entry)) ||
+                rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
                 idMap.get(manifest.rootLogicalId) ||
                 newId;
               const sharedUpdates = {
                 remoteStorageId: shareMetadata?.fileId,
                 remoteOwnerUsername: shareMetadata?.owner ?? undefined,
                 remoteOwnedByCurrentUser: false,
+                remoteAccessRole: shareMetadata?.accessRole ?? undefined,
                 remoteSharedViaLink: true,
                 remoteHasShareLinks: false,
                 remoteShareToken: shareMetadata?.shareToken || normalizedToken,
@@ -199,7 +158,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             const selectedIds: FileId[] = [];
             for (const rootId of rootOrder) {
               const rootEntries = sortedEntries.filter(
-                (entry) => entryRootId(entry) === rootId
+                (entry) => getShareBundleEntryRootId(manifest, entry) === rootId
               );
               const latestEntry = rootEntries[rootEntries.length - 1];
               if (!latestEntry) {
@@ -231,14 +190,15 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         if (stirlingFiles.length > 0) {
           const ids = stirlingFiles.map((stirlingFile: StirlingFile) => stirlingFile.fileId);
           actions.setSelectedFiles(ids);
-          const sharedUpdates = {
-            remoteStorageId: shareMetadata?.fileId,
-            remoteOwnerUsername: shareMetadata?.owner ?? undefined,
-            remoteOwnedByCurrentUser: false,
-            remoteSharedViaLink: true,
-            remoteHasShareLinks: false,
-            remoteShareToken: shareMetadata?.shareToken || normalizedToken,
-          };
+        const sharedUpdates = {
+          remoteStorageId: shareMetadata?.fileId,
+          remoteOwnerUsername: shareMetadata?.owner ?? undefined,
+          remoteOwnedByCurrentUser: false,
+          remoteAccessRole: shareMetadata?.accessRole ?? undefined,
+          remoteSharedViaLink: true,
+          remoteHasShareLinks: false,
+          remoteShareToken: shareMetadata?.shareToken || normalizedToken,
+        };
           for (const fileId of ids) {
             actions.updateStirlingFileStub(fileId, sharedUpdates);
             await fileStorage.updateFileMetadata(fileId, sharedUpdates);
@@ -251,16 +211,29 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         if (!isMounted) return;
         const status = error?.response?.status;
         if (status === 401 || status === 403) {
+          if (!isAuthenticated && !authLoading) {
+            alert({
+              alertType: 'warning',
+              title: t('storageShare.requiresLogin', 'This shared file requires login.'),
+              expandable: false,
+              durationMs: 4000,
+            });
+            navigate('/login', {
+              replace: true,
+              state: { from: { pathname: `/share/${normalizedToken}` } },
+            });
+            return;
+          }
           alert({
             alertType: 'warning',
-            title: t('storageShare.requiresLogin', 'This shared file requires login.'),
+            title: t(
+              'storageShare.accessDenied',
+              'You do not have access to this shared file. Ask the owner to share it with you.'
+            ),
             expandable: false,
-            durationMs: 4000,
+            durationMs: 4500,
           });
-          navigate('/login', {
-            replace: true,
-            state: { from: { pathname: `/share/${normalizedToken}` } },
-          });
+          navigate('/', { replace: true });
         } else {
           alert({
             alertType: 'error',
@@ -277,7 +250,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
     return () => {
       isMounted = false;
     };
-  }, [normalizedToken, actions, navActions, navigate, t]);
+  }, [normalizedToken, actions, navActions, navigate, t, isAuthenticated, authLoading]);
 
   return null;
 }

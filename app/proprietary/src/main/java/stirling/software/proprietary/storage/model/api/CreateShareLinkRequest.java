@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class CreateShareLinkRequest {
-    private boolean publicLink;
+    private String accessRole;
 }

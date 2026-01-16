@@ -1,5 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Stack, Text, Button, Group, Alert, TextInput, Divider, Badge } from '@mantine/core';
+import {
+  Modal,
+  Stack,
+  Text,
+  Button,
+  Group,
+  Alert,
+  TextInput,
+  Badge,
+  Paper,
+  SimpleGrid,
+  ScrollArea,
+  Select,
+} from '@mantine/core';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HistoryIcon from '@mui/icons-material/History';
@@ -17,7 +30,7 @@ import { useFileActions } from '@app/contexts/FileContext';
 
 interface ShareLinkResponse {
   token: string;
-  publicLink?: boolean;
+  accessRole?: string | null;
   createdAt?: string;
 }
 
@@ -30,6 +43,8 @@ interface ShareLinkAccessResponse {
 interface StoredFileResponse {
   shareLinks?: ShareLinkResponse[];
   ownedByCurrentUser?: boolean;
+  sharedWithUsers?: string[];
+  sharedUsers?: Array<{ username: string; accessRole?: string | null }>;
 }
 
 interface ShareManagementModalProps {
@@ -45,11 +60,37 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const sharingEnabled = config?.storageSharingEnabled !== false;
+  const shareLinksEnabled = config?.storageShareLinksEnabled !== false;
+  const emailSharingEnabled = config?.storageShareEmailEnabled !== false;
   const { actions } = useFileActions();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shareLinks, setShareLinks] = useState<ShareLinkResponse[]>([]);
   const [activityMap, setActivityMap] = useState<Record<string, ShareLinkAccessResponse[]>>({});
+  const [sharedUsers, setSharedUsers] = useState<Array<{ username: string; accessRole?: string | null }>>([]);
+  const [shareUsername, setShareUsername] = useState('');
+  const [shareRole, setShareRole] = useState<'editor' | 'commenter' | 'viewer'>('editor');
+  const [showEmailWarning, setShowEmailWarning] = useState(false);
+  const [selectedActivityToken, setSelectedActivityToken] = useState<string | null>(null);
+
+  const normalizedShareUsername = shareUsername.trim();
+  const lowerShareUsername = normalizedShareUsername.toLowerCase();
+  const isEmailInput = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedShareUsername);
+  const isSimpleUsername = /^[A-Za-z0-9@._+-]{3,50}$/.test(normalizedShareUsername);
+  const isReservedUsername =
+    lowerShareUsername === 'all_users' || lowerShareUsername === 'anonymoususer';
+  const isValidShareUsername =
+    normalizedShareUsername.length > 0 && !isReservedUsername && (isEmailInput || isSimpleUsername);
+  const shareUsernameError =
+    normalizedShareUsername.length > 0 && !isValidShareUsername
+      ? t(
+          'storageShare.invalidUsername',
+          'Enter a valid username or email address.'
+        )
+      : isEmailInput && !emailSharingEnabled
+        ? t('storageShare.emailShareDisabled', 'Sharing via email is disabled by your server settings.')
+        : null;
 
   const shareBaseUrl = useMemo(() => {
     const frontendUrl = (config?.frontendUrl || '').trim();
@@ -72,7 +113,14 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
         { suppressErrorToast: true } as any
       );
       const links = response.data?.shareLinks ?? [];
+      const users =
+        response.data?.sharedUsers ??
+        (response.data?.sharedWithUsers ?? []).map((username) => ({
+          username,
+          accessRole: 'editor',
+        }));
       setShareLinks(links);
+      setSharedUsers(users);
     } catch (error) {
       console.error('Failed to load share links:', error);
       setErrorMessage(
@@ -87,27 +135,42 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
     if (opened) {
       loadShareLinks();
       setActivityMap({});
+      setShareRole('editor');
+      setSelectedActivityToken(null);
     }
   }, [opened, loadShareLinks]);
 
+  useEffect(() => {
+    if (!opened) {
+      setSelectedActivityToken(null);
+      return;
+    }
+    if (shareLinks.length === 0) {
+      setSelectedActivityToken(null);
+      return;
+    }
+    if (!selectedActivityToken || !shareLinks.some((link) => link.token === selectedActivityToken)) {
+      setSelectedActivityToken(shareLinks[0].token);
+    }
+  }, [opened, selectedActivityToken, shareLinks]);
+
   const createShareLink = useCallback(
-    async (makePublic: boolean) => {
+    async () => {
       if (!file.remoteStorageId) return;
       setIsLoading(true);
       setErrorMessage(null);
       try {
         const response = await apiClient.post(
           `/api/v1/storage/files/${file.remoteStorageId}/shares/links`,
-          { publicLink: makePublic }
+          { accessRole: shareRole }
         );
         const token = response.data?.token as string | undefined;
-        const publicLink = response.data?.publicLink as boolean | undefined;
         if (token) {
           setShareLinks((prev) => [
             ...prev,
             {
               token,
-              publicLink,
+              accessRole: shareRole,
               createdAt: new Date().toISOString(),
             },
           ]);
@@ -121,41 +184,6 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
           });
         }
       } catch (error: any) {
-        const status = error?.response?.status as number | undefined;
-        if (status === 400 && makePublic) {
-          try {
-            const response = await apiClient.post(
-              `/api/v1/storage/files/${file.remoteStorageId}/shares/links`,
-              { publicLink: false }
-            );
-            const token = response.data?.token as string | undefined;
-            const publicLink = response.data?.publicLink as boolean | undefined;
-            if (token) {
-              setShareLinks((prev) => [
-                ...prev,
-                {
-                  token,
-                  publicLink,
-                  createdAt: new Date().toISOString(),
-                },
-              ]);
-              actions.updateStirlingFileStub(file.id, { remoteHasShareLinks: true });
-              await fileStorage.updateFileMetadata(file.id, { remoteHasShareLinks: true });
-              alert({
-                alertType: 'success',
-                title: t('storageShare.generated', 'Share link generated'),
-                expandable: false,
-                durationMs: 2500,
-              });
-            }
-          } catch (fallbackError) {
-            console.error('Failed to create login-required share link:', fallbackError);
-            setErrorMessage(
-              t('storageShare.failure', 'Unable to generate a share link. Please try again.')
-            );
-          }
-          return;
-        }
         console.error('Failed to create share link:', error);
         setErrorMessage(
           t('storageShare.failure', 'Unable to generate a share link. Please try again.')
@@ -164,7 +192,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
         setIsLoading(false);
       }
     },
-    [file.remoteStorageId, t]
+    [file.remoteStorageId, shareRole, t]
   );
 
   const handleCopyLink = useCallback(async (token: string) => {
@@ -198,6 +226,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
         delete updated[token];
         return updated;
       });
+      setSelectedActivityToken((prev) => (prev === token ? null : prev));
       const nextHasLinks =
         shareLinks.filter((link) => link.token !== token).length > 0;
       actions.updateStirlingFileStub(file.id, { remoteHasShareLinks: nextHasLinks });
@@ -236,6 +265,126 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
     }
   }, [file.remoteStorageId, t]);
 
+  useEffect(() => {
+    if (!selectedActivityToken) return;
+    if (activityMap[selectedActivityToken] === undefined) {
+      void handleLoadActivity(selectedActivityToken);
+    }
+  }, [activityMap, handleLoadActivity, selectedActivityToken]);
+
+  const handleAddUser = useCallback(async (forceEmailConfirm = false) => {
+    if (!file.remoteStorageId) return;
+    const trimmed = shareUsername.trim();
+    if (!trimmed) return;
+    if (!isValidShareUsername) {
+      return;
+    }
+    if (isEmailInput && !forceEmailConfirm) {
+      setShowEmailWarning(true);
+      return;
+    }
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await apiClient.post(`/api/v1/storage/files/${file.remoteStorageId}/shares/users`, {
+        username: trimmed,
+        accessRole: shareRole,
+      });
+      setSharedUsers((prev) => {
+        if (prev.some((user) => user.username === trimmed)) {
+          return prev.map((user) =>
+            user.username === trimmed ? { ...user, accessRole: shareRole } : user
+          );
+        }
+        return [...prev, { username: trimmed, accessRole: shareRole }].sort((a, b) =>
+          a.username.localeCompare(b.username)
+        );
+      });
+      setShareUsername('');
+      setShowEmailWarning(false);
+      alert({
+        alertType: 'success',
+        title: t('storageShare.userAdded', 'User added to shared list.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+    } catch (error) {
+      console.error('Failed to share with user:', error);
+      setErrorMessage(
+        t('storageShare.userAddFailed', 'Unable to share with that user.')
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [file.remoteStorageId, isEmailInput, isValidShareUsername, shareRole, shareUsername, t]);
+
+  const handleUpdateUserRole = useCallback(
+    async (username: string, nextRole: 'editor' | 'commenter' | 'viewer') => {
+      if (!file.remoteStorageId) return;
+      setIsLoading(true);
+      setErrorMessage(null);
+      try {
+        await apiClient.post(`/api/v1/storage/files/${file.remoteStorageId}/shares/users`, {
+          username,
+          accessRole: nextRole,
+        });
+        setSharedUsers((prev) =>
+          prev.map((user) =>
+            user.username === username ? { ...user, accessRole: nextRole } : user
+          )
+        );
+        alert({
+          alertType: 'success',
+          title: t('storageShare.userAdded', 'User added to shared list.'),
+          expandable: false,
+          durationMs: 2500,
+        });
+      } catch (error) {
+        console.error('Failed to update shared user role:', error);
+        setErrorMessage(
+          t('storageShare.userAddFailed', 'Unable to share with that user.')
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [file.remoteStorageId, t]
+  );
+
+  const handleRemoveUser = useCallback(async (username: string) => {
+    if (!file.remoteStorageId) return;
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await apiClient.delete(
+        `/api/v1/storage/files/${file.remoteStorageId}/shares/users/${encodeURIComponent(
+          username
+        )}`
+      );
+      setSharedUsers((prev) => prev.filter((user) => user.username !== username));
+      alert({
+        alertType: 'success',
+        title: t('storageShare.userRemoved', 'User removed from shared list.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+    } catch (error) {
+      console.error('Failed to remove shared user:', error);
+      setErrorMessage(
+        t('storageShare.userRemoveFailed', 'Unable to remove that user.')
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [file.remoteStorageId, t]);
+
+  const selectedActivity = selectedActivityToken
+    ? activityMap[selectedActivityToken]
+    : undefined;
+  const selectedLink = selectedActivityToken
+    ? shareLinks.find((link) => link.token === selectedActivityToken)
+    : undefined;
+
   return (
     <Modal
       opened={opened}
@@ -243,122 +392,339 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
       centered
       title={t('storageShare.manageTitle', 'Manage Sharing')}
       zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
+      size="xl"
+      overlayProps={{ blur: 8 }}
     >
-      <Stack gap="sm">
-        <Text size="sm">
-          {t(
-            'storageShare.manageDescription',
-            'Create and manage links to share this file.'
-          )}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {t('storageShare.fileLabel', 'File')}: {file.name}
-        </Text>
+      <Stack gap="lg">
+        <Stack gap={4}>
+          <Text size="sm" c="dimmed">
+            {t('storageShare.manageDescription', 'Create and manage links to share this file.')}
+          </Text>
+          <Text size="sm">
+            {t('storageShare.fileLabel', 'File')}: <Text span fw={600}>{file.name}</Text>
+          </Text>
+        </Stack>
 
         {errorMessage && (
           <Alert color="red" title={t('storageShare.errorTitle', 'Sharing error')}>
             {errorMessage}
           </Alert>
         )}
-
-        <Group justify="flex-end" gap="sm">
-          <Button
-            leftSection={<LinkIcon style={{ fontSize: 18 }} />}
-            onClick={() => createShareLink(true)}
-            loading={isLoading}
-          >
-            {t('storageShare.generate', 'Generate Link')}
-          </Button>
-        </Group>
-
-        {shareLinks.length > 0 && <Divider />}
-
-        {shareLinks.length === 0 && !isLoading && (
-          <Text size="sm" c="dimmed">
-            {t('storageShare.noLinks', 'No active share links yet.')}
-          </Text>
+        {!sharingEnabled && (
+          <Alert color="yellow" title={t('storageShare.sharingDisabled', 'Sharing is disabled.')}>
+            {t('storageShare.sharingDisabledBody', 'Sharing has been disabled by your server settings.')}
+          </Alert>
         )}
 
-        {shareLinks.map((link) => {
-          const activity = activityMap[link.token];
-          return (
-            <Stack key={link.token} gap="xs">
-              <Group justify="space-between" align="center">
-                <TextInput
-                  readOnly
-                  value={`${shareBaseUrl}${link.token}`}
-                  label={t('storageShare.linkLabel', 'Share link')}
-                  rightSection={
+        <SimpleGrid cols={2} spacing="lg" breakpoints={[{ maxWidth: 'md', cols: 1 }]}>
+          <Stack gap="lg">
+            {shareLinksEnabled && (
+              <Paper withBorder radius="md" p="md">
+                <Stack gap="sm">
+                  <Group justify="space-between">
+                    <Text size="sm" fw={600}>
+                      {t('storageShare.linkAccessTitle', 'Share link access')}
+                    </Text>
+                  </Group>
+                  <Select
+                    label={t('storageShare.roleLabel', 'Role')}
+                    value={shareRole}
+                    onChange={(value) => setShareRole((value as typeof shareRole) || 'editor')}
+                    comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10 }}
+                    data={[
+                      { value: 'editor', label: t('storageShare.roleEditor', 'Editor') },
+                      { value: 'commenter', label: t('storageShare.roleCommenter', 'Commenter') },
+                      { value: 'viewer', label: t('storageShare.roleViewer', 'Viewer') },
+                    ]}
+                  />
+                  {shareRole === 'commenter' && (
+                    <Text size="xs" c="dimmed">
+                      {t('storageShare.commenterHint', 'Commenting is coming soon.')}
+                    </Text>
+                  )}
+                  <Group justify="flex-end" gap="sm">
                     <Button
-                      variant="subtle"
-                      size="xs"
-                      leftSection={<ContentCopyRoundedIcon style={{ fontSize: 16 }} />}
-                      onClick={() => handleCopyLink(link.token)}
+                      leftSection={<LinkIcon style={{ fontSize: 18 }} />}
+                      onClick={() => createShareLink()}
+                      loading={isLoading}
                     >
-                      {t('storageShare.copy', 'Copy')}
+                      {t('storageShare.generate', 'Generate Link')}
                     </Button>
-                  }
-                />
-              </Group>
-              <Group gap="xs">
-                {link.publicLink === false && (
-                  <Badge size="xs" variant="light">
-                    {t('storageShare.requiresLogin', 'Login required')}
-                  </Badge>
+                  </Group>
+                </Stack>
+              </Paper>
+            )}
+
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="sm">
+                <Text size="sm" fw={600}>
+                  {t('storageShare.sharedUsersTitle', 'Shared users')}
+                </Text>
+                <Group align="flex-end" gap="sm">
+                  <TextInput
+                    label={t('storageShare.usernameLabel', 'Username or email')}
+                    placeholder={t('storageShare.usernamePlaceholder', 'Enter a username or email')}
+                    value={shareUsername}
+                    onChange={(event) => {
+                      setShareUsername(event.currentTarget.value);
+                      setShowEmailWarning(false);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        void handleAddUser();
+                      }
+                    }}
+                    disabled={!sharingEnabled || isLoading}
+                    error={shareUsernameError}
+                  />
+                  <Button
+                    onClick={() => handleAddUser()}
+                    disabled={!sharingEnabled || isLoading || !normalizedShareUsername || !!shareUsernameError}
+                  >
+                    {t('storageShare.addUser', 'Add')}
+                  </Button>
+                </Group>
+                {showEmailWarning && (
+                  <Alert color="yellow" title={t('storageShare.emailWarningTitle', 'Email address')} variant="light">
+                    <Stack gap="xs">
+                      <Text size="sm">
+                        {t(
+                          'storageShare.emailWarningBody',
+                          'This looks like an email address. If this person is not already a Stirling PDF user, they will not be able to access the file.'
+                        )}
+                      </Text>
+                      <Group justify="flex-end" gap="sm">
+                        <Button
+                          variant="default"
+                          onClick={() => setShowEmailWarning(false)}
+                          disabled={isLoading}
+                        >
+                          {t('cancel', 'Cancel')}
+                        </Button>
+                        <Button
+                          onClick={() => handleAddUser(true)}
+                          loading={isLoading}
+                        >
+                          {t('storageShare.emailWarningConfirm', 'Share anyway')}
+                        </Button>
+                      </Group>
+                    </Stack>
+                  </Alert>
                 )}
-                {link.createdAt && (
-                  <Text size="xs" c="dimmed">
-                    {t('storageShare.createdAt', 'Created')} {new Date(link.createdAt).toLocaleString()}
+                {sharedUsers.length === 0 ? (
+                  <Text size="sm" c="dimmed">
+                    {t('storageShare.noSharedUsers', 'No users have access yet.')}
+                  </Text>
+                ) : (
+                  <Stack gap="xs">
+                    {sharedUsers.map((user) => (
+                      <Group key={user.username} justify="space-between" align="flex-start">
+                        <Stack gap={2}>
+                          <Text size="sm">{user.username}</Text>
+                          {user.accessRole === 'commenter' && (
+                            <Text size="xs" c="dimmed">
+                              {t('storageShare.commenterHint', 'Commenting is coming soon.')}
+                            </Text>
+                          )}
+                        </Stack>
+                        <Group gap="xs" align="center">
+                          <Select
+                            value={user.accessRole ?? 'editor'}
+                            onChange={(value) => {
+                              const nextRole = (value as 'editor' | 'commenter' | 'viewer') || 'editor';
+                              void handleUpdateUserRole(user.username, nextRole);
+                            }}
+                            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10 }}
+                            data={[
+                              { value: 'editor', label: t('storageShare.roleEditor', 'Editor') },
+                              { value: 'commenter', label: t('storageShare.roleCommenter', 'Commenter') },
+                              { value: 'viewer', label: t('storageShare.roleViewer', 'Viewer') },
+                            ]}
+                            size="xs"
+                          />
+                          <Button
+                            variant="light"
+                            size="xs"
+                            color="red"
+                            leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                            onClick={() => handleRemoveUser(user.username)}
+                          >
+                            {t('storageShare.removeUser', 'Remove')}
+                          </Button>
+                        </Group>
+                      </Group>
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
+            </Paper>
+
+            {shareLinksEnabled && (
+              <Paper withBorder radius="md" p="md">
+                <Stack gap="sm">
+                  <Group justify="space-between">
+                    <Text size="sm" fw={600}>
+                      {t('storageShare.linkLabel', 'Share link')}
+                    </Text>
+                    {shareLinks.length > 0 && (
+                      <Badge variant="light" color="blue">
+                        {shareLinks.length}
+                      </Badge>
+                    )}
+                  </Group>
+
+                  {shareLinks.length === 0 && !isLoading && (
+                    <Text size="sm" c="dimmed">
+                      {t('storageShare.noLinks', 'No active share links yet.')}
+                    </Text>
+                  )}
+
+                  {shareLinks.map((link) => {
+                    const activity = activityMap[link.token];
+                    const viewCount = activity?.filter((entry) => entry.accessType === 'VIEW').length ?? 0;
+                    const downloadCount = activity?.filter((entry) => entry.accessType === 'DOWNLOAD').length ?? 0;
+                    const lastAccessedAt = activity?.[0]?.accessedAt;
+                    const isSelected = selectedActivityToken === link.token;
+                    return (
+                      <Paper key={link.token} withBorder radius="md" p="sm">
+                        <Stack gap="xs">
+                          <TextInput
+                            readOnly
+                            value={`${shareBaseUrl}${link.token}`}
+                            label={t('storageShare.linkLabel', 'Share link')}
+                            rightSection={
+                              <Button
+                                variant="subtle"
+                                size="xs"
+                                leftSection={<ContentCopyRoundedIcon style={{ fontSize: 16 }} />}
+                                onClick={() => handleCopyLink(link.token)}
+                              >
+                                {t('storageShare.copy', 'Copy')}
+                              </Button>
+                            }
+                          />
+                          <Group justify="space-between" align="center">
+                            <Stack gap={4}>
+                              <Group gap="xs">
+                                {link.accessRole && (
+                                  <Badge variant="light" color="gray">
+                                    {link.accessRole === 'editor'
+                                      ? t('storageShare.roleEditor', 'Editor')
+                                      : link.accessRole === 'commenter'
+                                        ? t('storageShare.roleCommenter', 'Commenter')
+                                        : t('storageShare.roleViewer', 'Viewer')}
+                                  </Badge>
+                                )}
+                              </Group>
+                              <Group gap="sm" align="center">
+                                <Text size="xs" c="dimmed">
+                                  {t('storageShare.viewsCount', 'Views: {{count}}', { count: viewCount })}
+                                </Text>
+                                <Text size="xs" c="dimmed">
+                                  {t('storageShare.downloadsCount', 'Downloads: {{count}}', { count: downloadCount })}
+                                </Text>
+                                {lastAccessedAt && (
+                                  <Text size="xs" c="dimmed">
+                                    {t('storageShare.lastAccessed', 'Last accessed')}: {new Date(lastAccessedAt).toLocaleString()}
+                                  </Text>
+                                )}
+                              </Group>
+                            </Stack>
+                            <Group gap="xs">
+                              <Button
+                                variant={isSelected ? 'filled' : 'light'}
+                                size="xs"
+                                leftSection={<HistoryIcon style={{ fontSize: 16 }} />}
+                                onClick={() =>
+                                  setSelectedActivityToken((prev) => (prev === link.token ? null : link.token))
+                                }
+                              >
+                                {isSelected
+                                  ? t('storageShare.hideActivity', 'Hide activity')
+                                  : t('storageShare.viewActivity', 'View activity')}
+                              </Button>
+                              <Button
+                                variant="light"
+                                size="xs"
+                                color="red"
+                                leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                                onClick={() => handleRevokeLink(link.token)}
+                              >
+                                {t('storageShare.removeLink', 'Remove link')}
+                              </Button>
+                            </Group>
+                          </Group>
+                        </Stack>
+                      </Paper>
+                    );
+                  })}
+                </Stack>
+              </Paper>
+            )}
+          </Stack>
+
+          {shareLinksEnabled && (
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="sm">
+                <Group justify="space-between">
+                  <Text size="sm" fw={600}>
+                    {t('storageShare.viewActivity', 'View activity')}
+                  </Text>
+                  {selectedLink && selectedLink.accessRole && (
+                    <Badge variant="light" color="gray">
+                      {selectedLink.accessRole === 'editor'
+                        ? t('storageShare.roleEditor', 'Editor')
+                        : selectedLink.accessRole === 'commenter'
+                          ? t('storageShare.roleCommenter', 'Commenter')
+                          : t('storageShare.roleViewer', 'Viewer')}
+                    </Badge>
+                  )}
+                </Group>
+                {!selectedActivityToken && (
+                  <Text size="sm" c="dimmed">
+                    {t('storageShare.noActivity', 'No activity yet.')}
                   </Text>
                 )}
-              </Group>
-              <Group justify="flex-end" gap="xs">
-                <Button
-                  variant="light"
-                  size="xs"
-                  leftSection={<HistoryIcon style={{ fontSize: 16 }} />}
-                  onClick={() => handleLoadActivity(link.token)}
-                >
-                  {t('storageShare.viewActivity', 'View activity')}
-                </Button>
-                <Button
-                  variant="light"
-                  size="xs"
-                  color="red"
-                  leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                  onClick={() => handleRevokeLink(link.token)}
-                >
-                  {t('storageShare.removeLink', 'Remove link')}
-                </Button>
-              </Group>
-              {activity && (
-                <Stack gap="xs" pl="sm">
-                  {activity.length === 0 ? (
-                    <Text size="xs" c="dimmed">
-                      {t('storageShare.noActivity', 'No activity yet.')}
-                    </Text>
-                  ) : (
-                    activity.map((entry, index) => {
-                      const accessLabel = entry.accessType === 'VIEW'
-                        ? t('storageShare.viewed', 'Viewed')
-                        : entry.accessType === 'DOWNLOAD'
-                        ? t('storageShare.downloaded', 'Downloaded')
-                        : t('storageShare.accessed', 'Accessed');
-                      return (
-                        <Text size="xs" key={`${link.token}-${index}`}>
-                          {entry.username || t('storageShare.unknownUser', 'Unknown user')} •{' '}
-                          {accessLabel} •{' '}
-                          {entry.accessedAt ? new Date(entry.accessedAt).toLocaleString() : ''}
+                {selectedActivityToken && (
+                  <ScrollArea h={360} offsetScrollbars>
+                    <Stack gap="xs">
+                      {(selectedActivity ?? []).length > 0 ? (
+                        selectedActivity?.map((entry, index) => (
+                          <Paper key={`${selectedActivityToken}-${index}`} radius="md" p="xs" withBorder>
+                            <Group justify="space-between">
+                              <Stack gap={2}>
+                                <Text size="xs" c="dimmed">
+                                  {entry.accessedAt
+                                    ? new Date(entry.accessedAt).toLocaleString()
+                                    : t('unknown', 'Unknown')}
+                                </Text>
+                                <Text size="sm">
+                                  {entry.username || t('storageShare.unknownUser', 'Unknown user')}
+                                </Text>
+                              </Stack>
+                              <Badge size="sm" variant="light">
+                                {entry.accessType === 'VIEW'
+                                  ? t('storageShare.viewed', 'Viewed')
+                                  : entry.accessType === 'DOWNLOAD'
+                                    ? t('storageShare.downloaded', 'Downloaded')
+                                    : t('storageShare.accessed', 'Accessed')}
+                              </Badge>
+                            </Group>
+                          </Paper>
+                        ))
+                      ) : (
+                        <Text size="sm" c="dimmed">
+                          {t('storageShare.noActivity', 'No activity yet.')}
                         </Text>
-                      );
-                    })
-                  )}
-                </Stack>
-              )}
-              <Divider />
-            </Stack>
-          );
-        })}
+                      )}
+                    </Stack>
+                  </ScrollArea>
+                )}
+              </Stack>
+            </Paper>
+          )}
+        </SimpleGrid>
       </Stack>
     </Modal>
   );

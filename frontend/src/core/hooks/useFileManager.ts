@@ -15,7 +15,9 @@ interface StoredFileResponse {
   updatedAt?: string | null;
   owner?: string | null;
   ownedByCurrentUser?: boolean;
+  accessRole?: string | null;
   shareLinks?: Array<{ token?: string | null }>;
+  sharedWithUsers?: string[];
 }
 
 interface AccessedShareLinkResponse {
@@ -24,7 +26,6 @@ interface AccessedShareLinkResponse {
   fileName?: string | null;
   owner?: string | null;
   ownedByCurrentUser?: boolean;
-  publicLink?: boolean;
   createdAt?: string | null;
   lastAccessedAt?: string | null;
 }
@@ -137,6 +138,7 @@ export const useFileManager = () => {
                 remoteStorageUpdatedAt: undefined,
                 remoteOwnerUsername: undefined,
                 remoteOwnedByCurrentUser: undefined,
+                remoteAccessRole: undefined,
                 remoteSharedViaLink: false,
                 remoteHasShareLinks: undefined,
               };
@@ -153,6 +155,7 @@ export const useFileManager = () => {
                 typeof serverFile.ownedByCurrentUser === 'boolean'
                   ? serverFile.ownedByCurrentUser
                   : stub.remoteOwnedByCurrentUser,
+              remoteAccessRole: serverFile.accessRole ?? stub.remoteAccessRole,
               remoteSharedViaLink: stub.remoteSharedViaLink,
               remoteHasShareLinks: Boolean(serverFile.shareLinks?.length),
               remoteStorageUpdatedAt:
@@ -196,6 +199,7 @@ export const useFileManager = () => {
                 typeof file.ownedByCurrentUser === 'boolean'
                   ? file.ownedByCurrentUser
                   : undefined,
+              remoteAccessRole: file.accessRole ?? undefined,
               remoteSharedViaLink: false,
               remoteHasShareLinks: Boolean(file.shareLinks?.length),
             });

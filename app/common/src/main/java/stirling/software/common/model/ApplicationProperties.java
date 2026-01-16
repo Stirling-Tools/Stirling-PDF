@@ -451,7 +451,7 @@ public class ApplicationProperties {
         private boolean enabled = true;
         private String provider = "local";
         private Local local = new Local();
-        private ShareLinks shareLinks = new ShareLinks();
+        private Sharing sharing = new Sharing();
 
         @Data
         public static class Local {
@@ -459,9 +459,10 @@ public class ApplicationProperties {
         }
 
         @Data
-        public static class ShareLinks {
-            private boolean allowPublic = true;
-            private String accessMode = "authenticated";
+        public static class Sharing {
+            private boolean enabled = true;
+            private boolean linkEnabled = true;
+            private boolean emailEnabled = false;
         }
     }
 

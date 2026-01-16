@@ -122,13 +122,17 @@ const FileEditorThumbnail = ({
   const isCBZ = extLower === 'cbz';
   const isCBR = extLower === 'cbr';
   const uploadEnabled = (config?.enableLogin !== false) && (config?.storageEnabled !== false);
+  const sharingEnabled =
+    uploadEnabled && (config?.storageSharingEnabled !== false);
+  const shareLinksEnabled =
+    sharingEnabled && (config?.storageShareLinksEnabled !== false);
   const isOwnedOrLocal = file.remoteOwnedByCurrentUser !== false;
   const localUpdatedAt = file.createdAt ?? file.lastModified ?? 0;
   const remoteUpdatedAt = file.remoteStorageUpdatedAt ?? 0;
   const isUploaded = Boolean(file.remoteStorageId);
   const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
   const canUpload = uploadEnabled && isOwnedOrLocal && file.isLeaf && (!isUploaded || !isUpToDate);
-  const canShare = uploadEnabled && isOwnedOrLocal && file.isLeaf;
+  const canShare = shareLinksEnabled && isOwnedOrLocal && file.isLeaf;
 
   const pageLabel = useMemo(
     () =>

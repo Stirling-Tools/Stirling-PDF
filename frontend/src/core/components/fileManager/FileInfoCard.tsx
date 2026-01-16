@@ -7,6 +7,7 @@ import ToolChain from '@app/components/shared/ToolChain';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
 import ShareManagementModal from '@app/components/shared/ShareManagementModal';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 interface FileInfoCardProps {
   currentFile: StirlingFileStub | null;
@@ -18,6 +19,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
   modalHeight
 }) => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
   const { onMakeCopy } = useFileManagerContext();
   const [showShareManageModal, setShowShareManageModal] = useState(false);
   const isSharedWithYou = useMemo(() => {
@@ -28,10 +30,18 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
     if (!currentFile) return false;
     return Boolean(currentFile.remoteStorageId) && currentFile.remoteOwnedByCurrentUser !== false;
   }, [currentFile]);
+  const localUpdatedAt = currentFile?.createdAt ?? currentFile?.lastModified ?? 0;
+  const remoteUpdatedAt = currentFile?.remoteStorageUpdatedAt ?? 0;
+  const isUploaded = Boolean(currentFile?.remoteStorageId);
+  const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
+  const isOutOfSync = isUploaded && !isUpToDate && isOwnedRemote;
+  const isLocalOnly = !currentFile?.remoteStorageId && !currentFile?.remoteSharedViaLink;
   const isSharedByYou = useMemo(() => {
     if (!currentFile) return false;
     return isOwnedRemote && Boolean(currentFile.remoteHasShareLinks);
   }, [currentFile, isOwnedRemote]);
+  const sharingEnabled = (config?.storageSharingEnabled !== false);
+  const uploadEnabled = (config?.storageEnabled !== false);
   const ownerLabel = useMemo(() => {
     if (!currentFile) return '';
     if (currentFile.remoteOwnerUsername) {
@@ -99,7 +109,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               </Badge>}
 
           </Group>
-          {isSharedWithYou && (
+          {sharingEnabled && isSharedWithYou && (
             <>
               <Divider />
               <Group justify="space-between" py="xs">
@@ -148,9 +158,15 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               <Divider />
               <Group justify="space-between" py="xs">
                 <Text size="sm" c="dimmed">{t('fileManager.cloudFile', 'Cloud file')}</Text>
-                <Badge size="xs" variant="light" color="teal">
-                  {t('fileManager.synced', 'Synced')}
-                </Badge>
+                {uploadEnabled && isOutOfSync ? (
+                  <Badge size="xs" variant="light" color="yellow">
+                    {t('fileManager.changesNotUploaded', 'Changes not uploaded')}
+                  </Badge>
+                ) : uploadEnabled ? (
+                  <Badge size="xs" variant="light" color="teal">
+                    {t('fileManager.synced', 'Synced')}
+                  </Badge>
+                ) : null}
               </Group>
               {lastSyncedLabel && (
                 <Group justify="space-between" py="xs">
@@ -158,7 +174,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
                   <Text size="sm" fw={500}>{lastSyncedLabel}</Text>
                 </Group>
               )}
-              {isSharedByYou && (
+              {isSharedByYou && sharingEnabled && (
                 <>
                   <Divider />
                   <Group justify="space-between" py="xs">
@@ -179,9 +195,20 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               )}
             </>
           )}
+          {currentFile && isLocalOnly && (
+            <>
+              <Divider />
+              <Group justify="space-between" py="xs">
+                <Text size="sm" c="dimmed">{t('fileManager.storageState', 'Storage')}</Text>
+                <Badge size="xs" variant="light" color="gray">
+                  {t('fileManager.localOnly', 'Local only')}
+                </Badge>
+              </Group>
+            </>
+          )}
         </Stack>
       </ScrollArea>
-      {currentFile && isOwnedRemote && isSharedByYou && (
+      {currentFile && isOwnedRemote && isSharedByYou && sharingEnabled && (
         <ShareManagementModal
           opened={showShareManageModal}
           onClose={() => setShowShareManageModal(false)}

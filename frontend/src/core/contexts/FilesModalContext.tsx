@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import JSZip from 'jszip';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileActions } from '@app/contexts/FileContext';
 import { useFileContext } from '@app/contexts/file/fileHooks';
@@ -7,8 +6,14 @@ import { StirlingFileStub } from '@app/types/fileContext';
 import type { FileId } from '@app/types/file';
 import { fileStorage } from '@app/services/fileStorage';
 import apiClient from '@app/services/apiClient';
-import type { ShareBundleManifest } from '@app/services/serverStorageBundle';
 import { alert } from '@app/components/toast';
+import {
+  extractLatestFilesFromBundle,
+  getShareBundleEntryRootId,
+  isZipBundle,
+  loadShareBundleEntries,
+  parseContentDispositionFilename,
+} from '@app/services/shareBundleUtils';
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
@@ -31,67 +36,6 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
   const [customHandler, setCustomHandler] = useState<((files: File[], insertAfterPage?: number) => void) | undefined>();
 
-  const parseFilename = useCallback((disposition: string | undefined): string | null => {
-    if (!disposition) return null;
-    const filenameMatch = /filename="([^"]+)"/i.exec(disposition);
-    if (filenameMatch?.[1]) return filenameMatch[1];
-    const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
-    if (utf8Match?.[1]) {
-      try {
-        return decodeURIComponent(utf8Match[1]);
-      } catch {
-        return utf8Match[1];
-      }
-    }
-    return null;
-  }, []);
-
-  const extractLatestFilesFromBundle = useCallback(async (blob: Blob, filename: string, contentType: string): Promise<File[]> => {
-    const isZip = contentType.includes('zip') || filename.toLowerCase().endsWith('.zip');
-    if (!isZip) {
-      return [new File([blob], filename, { type: contentType || blob.type })];
-    }
-
-    const zip = await JSZip.loadAsync(blob);
-    const manifestEntry = zip.file('stirling-share.json');
-    if (!manifestEntry) {
-      return [new File([blob], filename, { type: contentType || blob.type })];
-    }
-
-    const manifestText = await manifestEntry.async('text');
-    const manifest = JSON.parse(manifestText) as ShareBundleManifest;
-    const entryRootId = (entry: ShareBundleManifest['entries'][number]) =>
-      entry.rootLogicalId || manifest.rootLogicalId;
-    const rootOrder =
-      manifest.rootLogicalIds && manifest.rootLogicalIds.length > 0
-        ? manifest.rootLogicalIds
-        : Array.from(new Set(manifest.entries.map(entryRootId)));
-
-    const latestFiles: File[] = [];
-    for (const rootId of rootOrder) {
-      const rootEntries = manifest.entries
-        .filter((entry) => entryRootId(entry) === rootId)
-        .sort((a, b) => a.versionNumber - b.versionNumber);
-      const latestEntry = rootEntries[rootEntries.length - 1];
-      if (!latestEntry) continue;
-      const zipEntry = zip.file(latestEntry.filePath);
-      if (!zipEntry) continue;
-      const fileBlob = await zipEntry.async('blob');
-      latestFiles.push(
-        new File([fileBlob], latestEntry.name, {
-          type: latestEntry.type,
-          lastModified: latestEntry.lastModified,
-        })
-      );
-    }
-
-    if (latestFiles.length > 0) {
-      return latestFiles;
-    }
-
-    return [new File([blob], filename, { type: contentType || blob.type })];
-  }, []);
-
   const importBundleToWorkbench = useCallback(
     async (
       blob: Blob,
@@ -104,107 +48,74 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       remoteSharedViaLink?: boolean,
       remoteShareToken?: string
     ): Promise<FileId[]> => {
-      const isZip = contentType.includes('zip') || filename.toLowerCase().endsWith('.zip');
-      if (isZip) {
-        const zip = await JSZip.loadAsync(blob);
-        const manifestEntry = zip.file('stirling-share.json');
-        if (manifestEntry) {
-          const manifestText = await manifestEntry.async('text');
-          const manifest = JSON.parse(manifestText) as ShareBundleManifest;
-          const entryRootId = (entry: ShareBundleManifest['entries'][number]) =>
-            entry.rootLogicalId || manifest.rootLogicalId;
-          const rootOrder =
-            manifest.rootLogicalIds && manifest.rootLogicalIds.length > 0
-              ? manifest.rootLogicalIds
-              : Array.from(new Set(manifest.entries.map(entryRootId)));
-          const sortedEntries: ShareBundleManifest['entries'] = [];
-          for (const rootId of rootOrder) {
-            const rootEntries = manifest.entries
-              .filter((entry) => entryRootId(entry) === rootId)
-              .sort((a, b) => a.versionNumber - b.versionNumber);
-            sortedEntries.push(...rootEntries);
-          }
+      const bundle = isZipBundle(contentType, filename) ? await loadShareBundleEntries(blob) : null;
+      if (bundle) {
+        const { manifest, rootOrder, sortedEntries, files } = bundle;
 
-          const files: File[] = [];
-          for (const entry of sortedEntries) {
-            const zipEntry = zip.file(entry.filePath);
-            if (!zipEntry) {
-              throw new Error(`Missing file entry ${entry.filePath}`);
-            }
-            const fileBlob = await zipEntry.async('blob');
-            files.push(
-              new File([fileBlob], entry.name, {
-                type: entry.type,
-                lastModified: entry.lastModified,
-              })
-            );
-          }
+        const stirlingFiles = await actions.addFilesWithOptions(files, {
+          selectFiles: false,
+          autoUnzip: false,
+          skipAutoUnzip: false,
+          allowDuplicates: true,
+        });
 
-          const stirlingFiles = await actions.addFilesWithOptions(files, {
-            selectFiles: false,
-            autoUnzip: false,
-            skipAutoUnzip: false,
-            allowDuplicates: true,
-          });
-
-          const idMap = new Map<string, FileId>();
-          for (let i = 0; i < stirlingFiles.length; i += 1) {
-            idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId as FileId);
-          }
-
-          const rootIdMap = new Map<string, FileId>();
-          for (const rootLogicalId of rootOrder) {
-            const mappedId = idMap.get(rootLogicalId);
-            if (mappedId) {
-              rootIdMap.set(rootLogicalId, mappedId);
-            }
-          }
-
-          const remoteUpdatedAt = remoteStorageUpdatedAt ?? Date.now();
-          for (const entry of sortedEntries) {
-            const newId = idMap.get(entry.logicalId);
-            if (!newId) continue;
-            const parentId = entry.parentLogicalId
-              ? idMap.get(entry.parentLogicalId)
-              : undefined;
-            const rootId =
-              rootIdMap.get(entryRootId(entry)) ||
-              idMap.get(manifest.rootLogicalId) ||
-              newId;
-            const updates = {
-              versionNumber: entry.versionNumber,
-              originalFileId: rootId,
-              parentFileId: parentId,
-              toolHistory: entry.toolHistory,
-              isLeaf: entry.isLeaf,
-              remoteStorageId,
-              remoteStorageUpdatedAt: remoteUpdatedAt,
-              remoteOwnerUsername,
-              remoteOwnedByCurrentUser,
-              remoteSharedViaLink,
-              remoteShareToken,
-            };
-            actions.updateStirlingFileStub(newId, updates);
-            await fileStorage.updateFileMetadata(newId, updates);
-          }
-
-          const selectedIds: FileId[] = [];
-          for (const rootId of rootOrder) {
-            const rootEntries = sortedEntries.filter(
-              (entry) => entryRootId(entry) === rootId
-            );
-            const latestEntry = rootEntries[rootEntries.length - 1];
-            if (!latestEntry) {
-              continue;
-            }
-            const latestId = idMap.get(latestEntry.logicalId);
-            if (latestId) {
-              selectedIds.push(latestId);
-            }
-          }
-
-          return selectedIds;
+        const idMap = new Map<string, FileId>();
+        for (let i = 0; i < stirlingFiles.length; i += 1) {
+          idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId as FileId);
         }
+
+        const rootIdMap = new Map<string, FileId>();
+        for (const rootLogicalId of rootOrder) {
+          const mappedId = idMap.get(rootLogicalId);
+          if (mappedId) {
+            rootIdMap.set(rootLogicalId, mappedId);
+          }
+        }
+
+        const remoteUpdatedAt = remoteStorageUpdatedAt ?? Date.now();
+        for (const entry of sortedEntries) {
+          const newId = idMap.get(entry.logicalId);
+          if (!newId) continue;
+          const parentId = entry.parentLogicalId
+            ? idMap.get(entry.parentLogicalId)
+            : undefined;
+          const rootId =
+            rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
+            idMap.get(manifest.rootLogicalId) ||
+            newId;
+          const updates = {
+            versionNumber: entry.versionNumber,
+            originalFileId: rootId,
+            parentFileId: parentId,
+            toolHistory: entry.toolHistory,
+            isLeaf: entry.isLeaf,
+            remoteStorageId,
+            remoteStorageUpdatedAt: remoteUpdatedAt,
+            remoteOwnerUsername,
+            remoteOwnedByCurrentUser,
+            remoteSharedViaLink,
+            remoteShareToken,
+          };
+          actions.updateStirlingFileStub(newId, updates);
+          await fileStorage.updateFileMetadata(newId, updates);
+        }
+
+        const selectedIds: FileId[] = [];
+        for (const rootId of rootOrder) {
+          const rootEntries = sortedEntries.filter(
+            (entry) => getShareBundleEntryRootId(manifest, entry) === rootId
+          );
+          const latestEntry = rootEntries[rootEntries.length - 1];
+          if (!latestEntry) {
+            continue;
+          }
+          const latestId = idMap.get(latestEntry.logicalId);
+          if (latestId) {
+            selectedIds.push(latestId);
+          }
+        }
+
+        return selectedIds;
       }
 
       const file = new File([blob], filename, { type: contentType || blob.type });
@@ -246,11 +157,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       (response.headers &&
         (response.headers['content-disposition'] || response.headers['Content-Disposition'])) ||
       '';
-    const filename = parseFilename(disposition) || 'server-file';
+    const filename = parseContentDispositionFilename(disposition) || 'server-file';
     const blob = response.data as Blob;
     const contentTypeValue = contentType || blob.type;
     return { blob, filename, contentType: contentTypeValue };
-  }, [parseFilename]);
+  }, []);
 
   const downloadShareLinkFile = useCallback(async (shareToken: string) => {
     const response = await apiClient.get(`/api/v1/storage/share-links/${shareToken}`, {
@@ -265,11 +176,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       (response.headers &&
         (response.headers['content-disposition'] || response.headers['Content-Disposition'])) ||
       '';
-    const filename = parseFilename(disposition) || 'shared-file';
+    const filename = parseContentDispositionFilename(disposition) || 'shared-file';
     const blob = response.data as Blob;
     const contentTypeValue = contentType || blob.type;
     return { blob, filename, contentType: contentTypeValue };
-  }, [parseFilename]);
+  }, []);
 
   const openFilesModal = useCallback((options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => {
     setInsertAfterPage(options?.insertAfterPage);

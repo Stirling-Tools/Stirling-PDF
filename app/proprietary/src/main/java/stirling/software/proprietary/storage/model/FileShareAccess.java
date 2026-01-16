@@ -13,6 +13,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -24,7 +25,15 @@ import lombok.Setter;
 import stirling.software.proprietary.security.model.User;
 
 @Entity
-@Table(name = "file_share_accesses")
+@Table(
+        name = "file_share_accesses",
+        indexes = {
+            @Index(name = "idx_share_access_file_share", columnList = "file_share_id"),
+            @Index(name = "idx_share_access_user", columnList = "user_id"),
+            @Index(
+                    name = "idx_share_access_file_share_accessed",
+                    columnList = "file_share_id, accessed_at")
+        })
 @NoArgsConstructor
 @Getter
 @Setter

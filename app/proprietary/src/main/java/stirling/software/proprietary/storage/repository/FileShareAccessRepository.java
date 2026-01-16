@@ -11,7 +11,13 @@ import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.security.model.User;
 
 public interface FileShareAccessRepository extends JpaRepository<FileShareAccess, Long> {
-    List<FileShareAccess> findByFileShareOrderByAccessedAtDesc(FileShare fileShare);
+    @Query(
+            "SELECT a FROM FileShareAccess a "
+                    + "LEFT JOIN FETCH a.user "
+                    + "WHERE a.fileShare = :fileShare "
+                    + "ORDER BY a.accessedAt DESC")
+    List<FileShareAccess> findByFileShareWithUserOrderByAccessedAtDesc(
+            @Param("fileShare") FileShare fileShare);
 
     void deleteByFileShare(FileShare fileShare);
 

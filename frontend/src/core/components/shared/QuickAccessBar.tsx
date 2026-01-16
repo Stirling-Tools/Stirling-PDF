@@ -1,4 +1,5 @@
-import React, { useState, useRef, forwardRef, useEffect } from "react";
+import React, { useState, useRef, forwardRef, useEffect, useMemo } from "react";
+import { createPortal } from 'react-dom';
 import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -6,6 +7,7 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useFileSelection, useFileState } from '@app/contexts/file/fileHooks';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
@@ -20,6 +22,10 @@ import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
 import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
 import { useToursTooltip } from '@app/components/shared/quickAccessBar/useToursTooltip';
+import ShareManagementModal from '@app/components/shared/ShareManagementModal';
+import apiClient from '@app/services/apiClient';
+import { absoluteWithBasePath } from '@app/constants/app';
+import { alert } from '@app/components/toast';
 
 import {
   isNavButtonActive,
@@ -35,6 +41,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
   const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { state, selectors } = useFileState();
   const { hasUnsavedChanges } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
@@ -42,7 +50,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
+  const [accessMenuOpen, setAccessMenuOpen] = useState(false);
+  const [selectedAccessFileId, setSelectedAccessFileId] = useState<string | null>(null);
+  const [shareManageOpen, setShareManageOpen] = useState(false);
   const scrollableRef = useRef<HTMLDivElement>(null);
+  const accessButtonRef = useRef<HTMLDivElement>(null);
+  const accessPopoverRef = useRef<HTMLDivElement>(null);
+  const [accessPopoverPosition, setAccessPopoverPosition] = useState({ top: 160, left: 84 });
+  const sharingEnabled = config?.storageSharingEnabled !== false;
+  const shareLinksEnabled = config?.storageShareLinksEnabled !== false;
   const {
     tooltipOpen,
     manualCloseOnly,
@@ -53,6 +69,136 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   } = useToursTooltip();
 
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+  const hasSelectedFiles = selectedFiles.length > 0;
+  const selectedFileStubs = useMemo(
+    () => selectedFileIds.map((id) => selectors.getStirlingFileStub(id)).filter(Boolean),
+    [selectedFileIds, selectors, state.files.byId]
+  );
+  const selectedAccessFileStub =
+    selectedFileStubs.find((file) => file.id === selectedAccessFileId) || selectedFileStubs[0];
+  useEffect(() => {
+    if (!hasSelectedFiles) {
+      setAccessMenuOpen(false);
+      setSelectedAccessFileId(null);
+      return;
+    }
+    if (!selectedAccessFileId || !selectedFiles.some((file) => file.fileId === selectedAccessFileId)) {
+      setSelectedAccessFileId(selectedFiles[0]?.fileId ?? null);
+    }
+  }, [hasSelectedFiles, selectedAccessFileId, selectedFiles]);
+
+  useEffect(() => {
+    if (!accessMenuOpen) return;
+    const updatePosition = () => {
+      const anchor = accessButtonRef.current;
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      const left = isRTL ? Math.max(16, rect.left - 360) : rect.right + 12;
+      const top = Math.max(24, rect.top - 24);
+      setAccessPopoverPosition({ top, left });
+    };
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [accessMenuOpen, isRTL]);
+
+  useEffect(() => {
+    if (!accessMenuOpen) return;
+    const handleOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (accessPopoverRef.current?.contains(target)) return;
+      if (accessButtonRef.current?.contains(target)) return;
+      setAccessMenuOpen(false);
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setAccessMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [accessMenuOpen]);
+
+  const shareBaseUrl = useMemo(() => {
+    const frontendUrl = (config?.frontendUrl || '').trim();
+    if (frontendUrl) {
+      const normalized = frontendUrl.endsWith('/')
+        ? frontendUrl.slice(0, -1)
+        : frontendUrl;
+      return `${normalized}/share/`;
+    }
+    return absoluteWithBasePath('/share/');
+  }, [config?.frontendUrl]);
+
+  const handleCopyShareLink = async () => {
+    if (!shareLinksEnabled) {
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.linksDisabled', 'Share links are disabled.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      return;
+    }
+    if (selectedFileStubs.length > 1) {
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.selectSingleFile', 'Select a single file to copy a link.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      return;
+    }
+    if (!selectedAccessFileStub?.remoteStorageId) {
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.uploadRequired', 'Upload this file to enable sharing.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      return;
+    }
+    try {
+      const response = await apiClient.get<{ shareLinks?: Array<{ token?: string }> }>(
+        `/api/v1/storage/files/${selectedAccessFileStub.remoteStorageId}`,
+        { suppressErrorToast: true } as any
+      );
+      const links = response.data?.shareLinks ?? [];
+      const token = links[links.length - 1]?.token;
+      if (!token) {
+        alert({
+          alertType: 'warning',
+          title: t('storageShare.noLinks', 'No active share links yet.'),
+          expandable: false,
+          durationMs: 2500,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(`${shareBaseUrl}${token}`);
+      alert({
+        alertType: 'success',
+        title: t('storageShare.copied', 'Link copied to clipboard'),
+        expandable: false,
+        durationMs: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to copy share link:', error);
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.copyFailed', 'Copy failed'),
+        expandable: false,
+        durationMs: 2500,
+      });
+    }
+  };
 
   // Open modal if URL is at /settings/*
   useEffect(() => {
@@ -204,6 +350,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     } as ButtonConfig])
   ];
 
+
   return (
     <div
       ref={ref}
@@ -251,6 +398,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     {renderNavButton(config, index)}
                   </React.Fragment>
                 ))}
+                {hasSelectedFiles && sharingEnabled && (
+                  <div ref={accessButtonRef}>
+                    <QuickAccessButton
+                      icon={<LocalIcon icon="group-rounded" width="1.25rem" height="1.25rem" />}
+                      label={t('quickAccess.access', 'Access')}
+                      isActive={accessMenuOpen}
+                      onClick={() => {
+                        setAccessMenuOpen((prev) => !prev);
+                      }}
+                      ariaLabel={t('quickAccess.access', 'Access')}
+                      dataTestId="access-button"
+                    />
+                  </div>
+                )}
               </Stack>
             </>
           )}
@@ -377,6 +538,173 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
       />
+
+      {selectedAccessFileStub && (
+        <ShareManagementModal
+          opened={shareManageOpen}
+          onClose={() => setShareManageOpen(false)}
+          file={selectedAccessFileStub}
+        />
+      )}
+      {hasSelectedFiles && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={accessPopoverRef}
+          className={`quick-access-popout ${accessMenuOpen ? 'is-open' : ''}`}
+          style={{
+            top: `${accessPopoverPosition.top}px`,
+            left: `${accessPopoverPosition.left}px`,
+            zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
+          }}
+          role="dialog"
+          aria-label={t('quickAccess.accessPanel', 'Document access')}
+        >
+          <div className="quick-access-popout__card">
+            <div className="quick-access-popout__header">
+              <div className="quick-access-popout__title">
+                {t('quickAccess.accessTitle', 'Document Access')}
+              </div>
+              <div className="quick-access-popout__header-actions">
+                <button
+                  type="button"
+                  className="quick-access-popout__header-action"
+                  onClick={() => {
+                    if (!sharingEnabled) {
+                      alert({
+                        alertType: 'warning',
+                        title: t('storageShare.sharingDisabled', 'Sharing is disabled.'),
+                        expandable: false,
+                        durationMs: 2500,
+                      });
+                      return;
+                    }
+                    if (selectedFileStubs.length > 1) {
+                      alert({
+                        alertType: 'warning',
+                        title: t('storageShare.selectSingleFile', 'Select a single file to manage sharing.'),
+                        expandable: false,
+                        durationMs: 2500,
+                      });
+                      return;
+                    }
+                    if (!selectedAccessFileStub?.remoteStorageId) {
+                      alert({
+                        alertType: 'warning',
+                        title: t('storageShare.uploadRequired', 'Upload this file to enable sharing.'),
+                        expandable: false,
+                        durationMs: 2500,
+                      });
+                      return;
+                    }
+                    if (selectedAccessFileStub?.remoteOwnedByCurrentUser === false) {
+                      alert({
+                        alertType: 'warning',
+                        title: t('storageShare.ownerOnly', 'Only the owner can manage sharing.'),
+                        expandable: false,
+                        durationMs: 2500,
+                      });
+                      return;
+                    }
+                    setAccessMenuOpen(false);
+                    setShareManageOpen(true);
+                  }}
+                  aria-label={t('storageShare.manage', 'Manage sharing')}
+                >
+                  <LocalIcon icon="settings-rounded" width="1rem" height="1rem" />
+                </button>
+                <button
+                  type="button"
+                  className="quick-access-popout__header-action"
+                  onClick={() => setAccessMenuOpen(false)}
+                  aria-label={t('close', 'Close')}
+                >
+                  <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+                </button>
+              </div>
+            </div>
+
+            <div className="quick-access-popout__body">
+              <div className="quick-access-popout__panel">
+                <div className="quick-access-popout__section">
+                  <div className="quick-access-popout__label">
+                    {t('quickAccess.accessFileLabel', 'File')}
+                  </div>
+                  <select
+                    className="quick-access-popout__select"
+                    value={selectedAccessFileStub?.id ?? ''}
+                    onChange={(event) => setSelectedAccessFileId(event.target.value)}
+                  >
+                    {selectedFileStubs.map((file) => (
+                      <option key={file.id} value={file.id}>
+                        {file.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="quick-access-popout__divider" />
+
+                <div className="quick-access-popout__section">
+                  <div className="quick-access-popout__label">
+                    {t('quickAccess.accessGeneral', 'General Access')}
+                  </div>
+                  <div className="quick-access-popout__row">
+                    <div className="quick-access-popout__icon-bubble">
+                      <LocalIcon icon="lock-rounded" width="1rem" height="1rem" />
+                    </div>
+                    <div className="quick-access-popout__row-text">
+                      <div className="quick-access-popout__row-title">
+                        {t('quickAccess.accessRestricted', 'Restricted')}
+                      </div>
+                      <div className="quick-access-popout__row-subtitle">
+                        {t('quickAccess.accessRestrictedHint', 'Only people with access can open')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="quick-access-popout__divider" />
+
+                <div className="quick-access-popout__section">
+                  <div className="quick-access-popout__label">
+                    {t('quickAccess.accessPeople', 'People with access')}
+                  </div>
+                  <div className="quick-access-popout__person">
+                    <div className="quick-access-popout__avatar">
+                      {(selectedAccessFileStub?.remoteOwnerUsername || 'You').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="quick-access-popout__person-text">
+                      <div className="quick-access-popout__row-title">
+                        {selectedAccessFileStub?.remoteOwnerUsername || t('quickAccess.accessYou', 'You')}
+                      </div>
+                      <div className="quick-access-popout__row-subtitle">
+                        {selectedAccessFileStub?.name ?? t('quickAccess.accessSelectedFile', 'Selected file')}
+                      </div>
+                    </div>
+                    <span className="quick-access-popout__pill">
+                      {t('quickAccess.accessOwner', 'Owner')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="quick-access-popout__footer">
+              {shareLinksEnabled && (
+                <button
+                  type="button"
+                  className="quick-access-popout__link"
+                  onClick={handleCopyShareLink}
+                >
+                  <LocalIcon icon="link-rounded" width="1rem" height="1rem" />
+                  {t('quickAccess.accessCopyLink', 'Copy link')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 });

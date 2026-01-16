@@ -204,9 +204,10 @@ storage:
   provider: local # storage provider: 'local' for filesystem storage (future support for S3)
   local:
     basePath: './storage' # base directory for stored files
-  shareLinks:
-    allowPublic: true # set to 'false' to require login for all shareable links
-    accessMode: authenticated # Options: authenticated (any login), shared-users (only shared users)
+  sharing:
+    enabled: true # set to 'false' to disable all sharing features
+    linkEnabled: true # set to 'false' to disable share links (requires system.frontendUrl)
+    emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
 
 ui:
   appNameNavbar: '' # name displayed on the navigation bar

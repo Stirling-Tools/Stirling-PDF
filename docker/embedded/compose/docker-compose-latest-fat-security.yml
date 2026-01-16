@@ -4,7 +4,7 @@ services:
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
     build:
       context: ../../../
-      dockerfile: docker/embedded/Dockerfile.fat
+      dockerfile: docker/embedded/Dockerfile
     deploy:
       resources:
         limits:

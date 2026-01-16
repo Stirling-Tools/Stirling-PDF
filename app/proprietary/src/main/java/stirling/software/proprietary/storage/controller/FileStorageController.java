@@ -1,9 +1,7 @@
 package stirling.software.proprietary.storage.controller;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Locale;
 
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -28,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FileShare;
-import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.CreateShareLinkRequest;
 import stirling.software.proprietary.storage.model.api.ShareLinkAccessResponse;
@@ -51,8 +48,7 @@ public class FileStorageController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public StoredFileResponse uploadFile(@RequestPart("file") MultipartFile file) {
         User user = fileStorageService.requireAuthenticatedUser();
-        StoredFile storedFile = fileStorageService.storeFile(user, file);
-        return buildResponse(storedFile, user);
+        return fileStorageService.storeFileResponse(user, file);
     }
 
     @PutMapping(
@@ -62,25 +58,19 @@ public class FileStorageController {
     public StoredFileResponse updateFile(
             @PathVariable Long fileId, @RequestPart("file") MultipartFile file) {
         User user = fileStorageService.requireAuthenticatedUser();
-        StoredFile existing = fileStorageService.getOwnedFile(user, fileId);
-        StoredFile updated = fileStorageService.replaceFile(user, existing, file);
-        return buildResponse(updated, user);
+        return fileStorageService.updateFileResponse(user, fileId, file);
     }
 
     @GetMapping(value = "/files", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<StoredFileResponse> listFiles() {
         User user = fileStorageService.requireAuthenticatedUser();
-        return fileStorageService.listAccessibleFiles(user).stream()
-                .sorted(Comparator.comparing(StoredFile::getCreatedAt).reversed())
-                .map(file -> buildResponse(file, user))
-                .collect(Collectors.toList());
+        return fileStorageService.listAccessibleFileResponses(user);
     }
 
     @GetMapping(value = "/files/{fileId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public StoredFileResponse getFileMetadata(@PathVariable Long fileId) {
         User user = fileStorageService.requireAuthenticatedUser();
-        StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
-        return buildResponse(file, user);
+        return fileStorageService.getAccessibleFileResponse(user, fileId);
     }
 
     @GetMapping("/files/{fileId}/download")
@@ -89,6 +79,7 @@ public class FileStorageController {
             @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
+        fileStorageService.requireEditorAccess(user, file);
         return buildFileResponse(file, inline);
     }
 
@@ -106,12 +97,14 @@ public class FileStorageController {
     public StoredFileResponse shareWithUser(
             @PathVariable Long fileId, @RequestBody ShareWithUserRequest request) {
         User owner = fileStorageService.requireAuthenticatedUser();
-        StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         if (request == null || request.getUsername() == null || request.getUsername().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
         }
-        fileStorageService.shareWithUser(owner, file, request.getUsername());
-        return buildResponse(fileStorageService.getOwnedFile(owner, fileId), owner);
+        return fileStorageService.shareWithUserResponse(
+                owner,
+                fileId,
+                request.getUsername(),
+                fileStorageService.normalizeShareRole(request.getAccessRole()));
     }
 
     @DeleteMapping("/files/{fileId}/shares/users/{username}")
@@ -123,6 +116,14 @@ public class FileStorageController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/files/{fileId}/shares/self")
+    public ResponseEntity<Void> leaveUserShare(@PathVariable Long fileId) {
+        User user = fileStorageService.requireAuthenticatedUser();
+        StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
+        fileStorageService.leaveUserShare(user, file);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping(
             value = "/files/{fileId}/shares/links",
             produces = MediaType.APPLICATION_JSON_VALUE)
@@ -130,11 +131,18 @@ public class FileStorageController {
             @PathVariable Long fileId, @RequestBody CreateShareLinkRequest request) {
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
-        boolean publicLink = request != null && request.isPublicLink();
-        FileShare share = fileStorageService.createShareLink(owner, file, publicLink);
+        FileShare share =
+                fileStorageService.createShareLink(
+                        owner,
+                        file,
+                        fileStorageService.normalizeShareRole(
+                                request != null ? request.getAccessRole() : null));
         return ShareLinkResponse.builder()
                 .token(share.getShareToken())
-                .publicLink(share.isPublicLink())
+                .accessRole(
+                        share.getAccessRole() != null
+                                ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
+                                : null)
                 .createdAt(share.getCreatedAt())
                 .build();
     }
@@ -153,11 +161,18 @@ public class FileStorageController {
             @PathVariable String token,
             Authentication authentication,
             @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
+        fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
         if (!fileStorageService.canAccessShareLink(share, authentication)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Authentication required for this share link");
+            HttpStatus status =
+                    isAuthenticated(authentication) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            String message =
+                    status == HttpStatus.FORBIDDEN
+                            ? "Access denied for this share link"
+                            : "Authentication required for this share link";
+            throw new ResponseStatusException(status, message);
         }
+        fileStorageService.requireEditorAccess(share);
         fileStorageService.recordShareAccess(share, authentication, inline);
         StoredFile file = share.getFile();
         return buildFileResponse(file, inline);
@@ -166,10 +181,16 @@ public class FileStorageController {
     @GetMapping("/share-links/{token}/metadata")
     public ShareLinkMetadataResponse getShareLinkMetadata(
             @PathVariable String token, Authentication authentication) {
+        fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
         if (!fileStorageService.canAccessShareLink(share, authentication)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Authentication required for this share link");
+            HttpStatus status =
+                    isAuthenticated(authentication) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            String message =
+                    status == HttpStatus.FORBIDDEN
+                            ? "Access denied for this share link"
+                            : "Authentication required for this share link";
+            throw new ResponseStatusException(status, message);
         }
         StoredFile file = share.getFile();
         User currentUser = null;
@@ -188,59 +209,28 @@ public class FileStorageController {
                 .fileName(file.getOriginalFilename())
                 .owner(file.getOwner() != null ? file.getOwner().getUsername() : null)
                 .ownedByCurrentUser(ownedByCurrentUser)
-                .publicLink(share.isPublicLink())
+                .accessRole(
+                        share.getAccessRole() != null
+                                ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
+                                : null)
                 .createdAt(share.getCreatedAt())
                 .build();
     }
 
     @GetMapping("/share-links/accessed")
     public List<ShareLinkMetadataResponse> listAccessedShareLinks() {
+        fileStorageService.ensureShareLinksEnabled();
         User user = fileStorageService.requireAuthenticatedUser();
-        List<FileShareAccess> accesses = fileStorageService.listAccessedShareLinks(user);
-        return accesses.stream()
-                .map(
-                        access -> {
-                            FileShare share = access.getFileShare();
-                            StoredFile file = share != null ? share.getFile() : null;
-                            boolean ownedByCurrentUser =
-                                    file != null
-                                            && file.getOwner() != null
-                                            && file.getOwner().getId().equals(user.getId());
-                            return ShareLinkMetadataResponse.builder()
-                                    .shareToken(share != null ? share.getShareToken() : null)
-                                    .fileId(file != null ? file.getId() : null)
-                                    .fileName(file != null ? file.getOriginalFilename() : null)
-                                    .owner(file != null && file.getOwner() != null
-                                            ? file.getOwner().getUsername()
-                                            : null)
-                                    .ownedByCurrentUser(ownedByCurrentUser)
-                                    .publicLink(share != null && share.isPublicLink())
-                                    .createdAt(share != null ? share.getCreatedAt() : null)
-                                    .lastAccessedAt(access.getAccessedAt())
-                                    .build();
-                        })
-                .filter(response -> response.getShareToken() != null)
-                .collect(Collectors.toList());
+        return fileStorageService.listAccessedShareLinkResponses(user);
     }
 
     @GetMapping("/files/{fileId}/shares/links/{token}/accesses")
     public List<ShareLinkAccessResponse> listShareAccesses(
             @PathVariable Long fileId, @PathVariable String token) {
+        fileStorageService.ensureShareLinksEnabled();
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
-        List<FileShareAccess> accesses = fileStorageService.listShareAccesses(owner, file, token);
-        return accesses.stream()
-                .map(
-                        access ->
-                                ShareLinkAccessResponse.builder()
-                                        .username(
-                                                access.getUser() != null
-                                                        ? access.getUser().getUsername()
-                                                        : null)
-                                        .accessType(access.getAccessType().name())
-                                        .accessedAt(access.getAccessedAt())
-                                        .build())
-                .collect(Collectors.toList());
+        return fileStorageService.listShareAccessResponses(owner, file, token);
     }
 
     private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(
@@ -261,44 +251,10 @@ public class FileStorageController {
         return ResponseEntity.ok().headers(headers).body(resource);
     }
 
-    private StoredFileResponse buildResponse(StoredFile file, User currentUser) {
-        boolean ownedByCurrentUser =
-                file.getOwner() != null
-                        && Objects.equals(file.getOwner().getId(), currentUser.getId());
-        List<String> sharedWithUsers =
-                ownedByCurrentUser
-                        ? file.getShares().stream()
-                                .map(FileShare::getSharedWithUser)
-                                .filter(Objects::nonNull)
-                                .map(User::getUsername)
-                                .sorted(String.CASE_INSENSITIVE_ORDER)
-                                .collect(Collectors.toList())
-                        : List.of();
-        List<ShareLinkResponse> shareLinks =
-                ownedByCurrentUser
-                        ? file.getShares().stream()
-                                .filter(share -> share.getShareToken() != null)
-                                .map(
-                                        share ->
-                                                ShareLinkResponse.builder()
-                                                        .token(share.getShareToken())
-                                                        .publicLink(share.isPublicLink())
-                                                        .createdAt(share.getCreatedAt())
-                                                        .build())
-                                .sorted(Comparator.comparing(ShareLinkResponse::getCreatedAt))
-                                .collect(Collectors.toList())
-                        : List.of();
-        return StoredFileResponse.builder()
-                .id(file.getId())
-                .fileName(file.getOriginalFilename())
-                .contentType(file.getContentType())
-                .sizeBytes(file.getSizeBytes())
-                .owner(file.getOwner() != null ? file.getOwner().getUsername() : null)
-                .ownedByCurrentUser(ownedByCurrentUser)
-                .createdAt(file.getCreatedAt())
-                .updatedAt(file.getUpdatedAt())
-                .sharedWithUsers(sharedWithUsers)
-                .shareLinks(shareLinks)
-                .build();
+    private boolean isAuthenticated(Authentication authentication) {
+        return authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal());
     }
+
 }

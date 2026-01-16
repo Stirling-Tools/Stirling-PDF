@@ -15,8 +15,10 @@ public class StoredFileResponse {
     private final long sizeBytes;
     private final String owner;
     private final boolean ownedByCurrentUser;
+    private final String accessRole;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final List<String> sharedWithUsers;
+    private final List<SharedUserResponse> sharedUsers;
     private final List<ShareLinkResponse> shareLinks;
 }

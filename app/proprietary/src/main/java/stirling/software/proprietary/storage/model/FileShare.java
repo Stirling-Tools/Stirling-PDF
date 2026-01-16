@@ -11,8 +11,11 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -32,6 +35,10 @@ import stirling.software.proprietary.security.model.User;
             @UniqueConstraint(
                     name = "uk_file_share_token",
                     columnNames = {"share_token"})
+        },
+        indexes = {
+            @Index(name = "idx_file_shares_file_id", columnList = "stored_file_id"),
+            @Index(name = "idx_file_shares_share_token", columnList = "share_token")
         })
 @NoArgsConstructor
 @Getter
@@ -58,6 +65,10 @@ public class FileShare implements Serializable {
 
     @Column(name = "public_link")
     private boolean publicLink;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "access_role")
+    private ShareAccessRole accessRole;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

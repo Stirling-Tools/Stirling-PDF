@@ -41,6 +41,7 @@ export interface BaseFileMetadata {
   remoteStorageUpdatedAt?: number; // Timestamp when chain was last uploaded
   remoteOwnerUsername?: string; // Server-side owner username (if known)
   remoteOwnedByCurrentUser?: boolean; // Ownership flag for server files
+  remoteAccessRole?: string; // Access role for shared server files
   remoteSharedViaLink?: boolean; // True when imported from a share link
   remoteHasShareLinks?: boolean; // True when owner has shared this file
   remoteShareToken?: string; // Share token when file is from a share link

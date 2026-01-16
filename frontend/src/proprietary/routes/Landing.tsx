@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@app/auth/UseSession'
 import { useAppConfig } from '@app/contexts/AppConfigContext'
@@ -7,7 +7,6 @@ import { useBackendProbe } from '@app/hooks/useBackendProbe'
 import AuthLayout from '@app/routes/authShared/AuthLayout'
 import LoginHeader from '@app/routes/login/LoginHeader'
 import { useTranslation } from 'react-i18next'
-import ShareLinkLoader from '@app/routes/ShareLinkLoader'
 
 /**
  * Landing component - Smart router based on authentication status
@@ -59,11 +58,6 @@ export default function Landing() {
     loginEnabled: config?.enableLogin === true && !backendProbe.loginDisabled,
   });
 
-  const shareToken = useMemo(() => {
-    const match = /^\/share\/([^/]+)$/.exec(location.pathname);
-    return match?.[1] || null;
-  }, [location.pathname]);
-
   // Show loading while checking auth and config
   if (loading) {
     return (
@@ -82,10 +76,7 @@ export default function Landing() {
   if (config?.enableLogin === false || backendProbe.loginDisabled) {
     console.debug('[Landing] Login disabled - showing app in anonymous mode');
     return (
-      <>
-        {shareToken && <ShareLinkLoader token={shareToken} />}
-        <HomePage />
-      </>
+      <HomePage />
     );
   }
 
@@ -132,10 +123,7 @@ export default function Landing() {
   // Note: First login password change is now handled by the onboarding flow
   if (session) {
     return (
-      <>
-        {shareToken && <ShareLinkLoader token={shareToken} />}
-        <HomePage />
-      </>
+      <HomePage />
     );
   }
 
