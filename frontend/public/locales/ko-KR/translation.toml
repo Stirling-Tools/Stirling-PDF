@@ -1295,6 +1295,10 @@ cbzDpi = "이미지 렌더링용 DPI"
 cbrOptions = "CBR 옵션"
 cbrOutputOptions = "PDF에서 CBR로 옵션"
 cbrDpi = "이미지 렌더링용 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook에서 PDF로 옵션"
@@ -1396,6 +1400,7 @@ applySignatures = "이미지 적용"
 name = "이미지"
 placeholder = "이미지 업로드"
 label = "이미지 파일"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "이미지 구성"
