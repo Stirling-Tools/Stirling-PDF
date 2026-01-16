@@ -30,7 +30,6 @@ public class SvgOverlayUtil {
     public void overlaySvgOnPage(
             PDDocument document,
             PDPage page,
-            PDPageContentStream contentStream,
             byte[] svgBytes,
             float x,
             float y)
@@ -64,8 +63,6 @@ public class SvgOverlayUtil {
             }
 
             PDFormXObject xform = pdfGraphics.getXFormObject();
-
-            contentStream.close();
 
             try (PDPageContentStream newContentStream =
                     new PDPageContentStream(

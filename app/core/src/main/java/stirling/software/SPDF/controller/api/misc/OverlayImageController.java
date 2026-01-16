@@ -62,16 +62,7 @@ public class OverlayImageController {
                 PDPage page = document.getPage(i);
 
                 if (isSvg) {
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    document,
-                                    page,
-                                    PDPageContentStream.AppendMode.APPEND,
-                                    true,
-                                    true)) {
-                        SvgOverlayUtil.overlaySvgOnPage(
-                                document, page, contentStream, imageBytes, x, y);
-                    }
+                    SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
                 } else {
                     try (PDPageContentStream contentStream =
                             new PDPageContentStream(
