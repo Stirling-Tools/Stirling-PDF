@@ -28,11 +28,7 @@ import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 public class SvgOverlayUtil {
 
     public void overlaySvgOnPage(
-            PDDocument document,
-            PDPage page,
-            byte[] svgBytes,
-            float x,
-            float y)
+            PDDocument document, PDPage page, byte[] svgBytes, float x, float y)
             throws IOException {
         try {
             String parser = XMLResourceDescriptor.getXMLParserClassName();
