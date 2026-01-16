@@ -89,6 +89,18 @@ function clearRuntimeStateSession(): void {
   }
 }
 
+function parseMfaRequired(settings: string | null | undefined): boolean {
+  if (!settings) return false;
+
+  try {
+    const parsed = JSON.parse(settings) as { mfaRequired?: string };
+    return parsed.mfaRequired?.toLowerCase() === 'true';
+  } catch (error) {
+    console.warn('[useOnboardingOrchestrator] Failed to parse account settings JSON:', error);
+    return false;
+  }
+}
+
 export interface OnboardingOrchestratorState {
   /** Whether onboarding is currently active */
   isActive: boolean;
@@ -205,7 +217,7 @@ export function useOnboardingOrchestrator(
           requiresPasswordChange: accountData.changeCredsFlag,
           firstLoginUsername: accountData.username,
           usingDefaultCredentials: loginPageData.showDefaultCredentials,
-          requiresMfaSetup: JSON.parse(accountData.settings).mfaRequired?.toLowerCase() === "true",
+          requiresMfaSetup: parseMfaRequired(accountData.settings),
         }));
       } catch (error) {
         console.log('[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:', error);
