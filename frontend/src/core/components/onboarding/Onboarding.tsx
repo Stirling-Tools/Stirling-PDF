@@ -88,16 +88,16 @@ export default function Onboarding() {
     const formData = new FormData();
     formData.append('enabled', enableAnalytics.toString());
 
-    await apiClient.post('/api/v1/settings/update-enable-analytics', formData)
-        .then(async () => {
-            await refetchConfig();
-            setShowAnalyticsModal(false);
-            setAnalyticsModalDismissed(true);
-            setAnalyticsLoading(false);
-        }).catch ((error) => {
-            setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
-            setAnalyticsLoading(false);
-        });
+    try {
+      await apiClient.post('/api/v1/settings/update-enable-analytics', formData);
+      await refetchConfig();
+      setShowAnalyticsModal(false);
+      setAnalyticsModalDismissed(true);
+    } catch (error) {
+      setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setAnalyticsLoading(false);
+    }
   }, [analyticsLoading, refetchConfig]);
 
   const handleButtonAction = useCallback(async (action: ButtonAction) => {
