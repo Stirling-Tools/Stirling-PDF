@@ -550,7 +550,7 @@ public class AuthController {
                             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             boolean enabled = mfaService.isMfaEnabled(user);
-            log.error("MFA status for user {}: {}", username, enabled);
+            log.info("MFA status for user {}: {}", username, enabled);
             return ResponseEntity.ok(Map.of("enabled", enabled));
         } catch (UsernameNotFoundException e) {
             log.warn("User not found for MFA status check: {}", username);
