@@ -194,7 +194,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
                     if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
                       try {
-
                         // Convert data URL to bytes
                         const base64Data = imageDataUrl.split(',')[1];
                         const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
@@ -206,6 +205,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         } else if (imageDataUrl.includes('data:image/png')) {
                           image = await pdfDoc.embedPng(imageBytes);
                         } else {
+                          // Default to PNG for other formats (including converted SVGs)
                           image = await pdfDoc.embedPng(imageBytes);
                         }
 

@@ -91,6 +91,9 @@ dependencies {
     // Batik
     implementation 'org.apache.xmlgraphics:batik-all:1.19'
 
+    // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
+    implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
+
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"

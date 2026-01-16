@@ -77,15 +77,26 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         setCurrentFile(file);
         onImageChange(file);
 
-        const originalDataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
+        let dataUrlToProcess: string;
+        
+        // Check if file is SVG
+        const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+        
+        if (isSvg) {
+          // For SVG, convert to PNG so it can be embedded in PDF
+          dataUrlToProcess = await convertSvgToPng(file);
+        } else {
+          // For other images, read as data URL directly
+          dataUrlToProcess = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+          });
+        }
 
-        setOriginalImageData(originalDataUrl);
-        await processImage(file, removeBackground);
+        setOriginalImageData(dataUrlToProcess);
+        await processImage(dataUrlToProcess, removeBackground);
       } catch (error) {
         console.error('Error processing image file:', error);
       }
@@ -96,6 +107,115 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       onImageChange(null);
       onProcessedImageData?.(null);
     }
+  };
+
+  // Helper function to convert SVG to PNG
+  const convertSvgToPng = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const svgText = e.target?.result as string;
+          
+          // Parse SVG to get dimensions
+          const parser = new DOMParser();
+          const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+          const svgElement = svgDoc.documentElement;
+          
+          // Get SVG dimensions
+          let width = 800;  // Default width
+          let height = 600; // Default height
+          
+          if (svgElement.hasAttribute('width') && svgElement.hasAttribute('height')) {
+            width = parseFloat(svgElement.getAttribute('width') || '800');
+            height = parseFloat(svgElement.getAttribute('height') || '600');
+          } else if (svgElement.hasAttribute('viewBox')) {
+            const viewBox = svgElement.getAttribute('viewBox')?.split(/\s+|,/);
+            if (viewBox && viewBox.length === 4) {
+              width = parseFloat(viewBox[2]);
+              height = parseFloat(viewBox[3]);
+            }
+          }
+          
+          // Ensure reasonable dimensions
+          if (width === 0 || height === 0 || !isFinite(width) || !isFinite(height)) {
+            width = 800;
+            height = 600;
+          }
+          
+          // Scale large SVGs down
+          const maxDimension = 2048;
+          if (width > maxDimension || height > maxDimension) {
+            const scale = Math.min(maxDimension / width, maxDimension / height);
+            width *= scale;
+            height *= scale;
+          }
+          
+          console.log('Converting SVG to PNG:', { width, height });
+          
+          // Create an image element to render SVG
+          const img = new Image();
+          const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          
+          img.onload = () => {
+            try {
+              // Use computed dimensions or image natural dimensions
+              const finalWidth = img.naturalWidth || img.width || width;
+              const finalHeight = img.naturalHeight || img.height || height;
+              
+              console.log('Image loaded:', { naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight, finalWidth, finalHeight });
+              
+              // Create canvas to convert to PNG
+              const canvas = document.createElement('canvas');
+              canvas.width = finalWidth;
+              canvas.height = finalHeight;
+              
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                URL.revokeObjectURL(url);
+                reject(new Error('Failed to get canvas context'));
+                return;
+              }
+              
+              // Fill with white background (optional, for transparency support)
+              ctx.fillStyle = 'white';
+              ctx.fillRect(0, 0, finalWidth, finalHeight);
+              
+              // Draw SVG
+              ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
+              URL.revokeObjectURL(url);
+              
+              // Convert canvas to PNG data URL
+              const pngDataUrl = canvas.toDataURL('image/png');
+              console.log('SVG converted to PNG successfully');
+              resolve(pngDataUrl);
+            } catch (error) {
+              URL.revokeObjectURL(url);
+              console.error('Error during canvas rendering:', error);
+              reject(error);
+            }
+          };
+          
+          img.onerror = (error) => {
+            URL.revokeObjectURL(url);
+            console.error('Failed to load SVG image:', error);
+            reject(new Error('Failed to load SVG image'));
+          };
+          
+          img.src = url;
+        } catch (error) {
+          console.error('Error parsing SVG:', error);
+          reject(error);
+        }
+      };
+      
+      reader.onerror = () => {
+        console.error('Error reading file:', reader.error);
+        reject(reader.error);
+      };
+      reader.readAsText(file);
+    });
   };
 
   const handleBackgroundRemovalChange = async (checked: boolean) => {
