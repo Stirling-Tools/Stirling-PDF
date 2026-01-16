@@ -309,7 +309,9 @@ public class ProprietaryUIDataController {
                         userRepository.findByIdWithSettings(user.getId()).orElse(user);
 
                 // Mask mfaSecret if present in settings
-                Map<String, String> settingsCopy = new HashMap<>(userWithSettings.getSettings());
+                Map<String, String> originalSettings = userWithSettings.getSettings();
+                Map<String, String> settingsCopy =
+                        originalSettings != null ? new HashMap<>(originalSettings) : new HashMap<>();
                 if (settingsCopy.containsKey("mfaSecret")) {
                     settingsCopy.put("mfaSecret", "********");
                 }
