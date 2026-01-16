@@ -394,6 +394,9 @@ export default function Onboarding() {
     );
   }
 
+  /**
+   * First login must be completed, and only then may MFA setup be performed.
+   */
   if (!firstLoginModalOpen && mfaModalOpen) {
     console.log('[Onboarding] Rendering MFA setup modal slide.');
     const baseSlideDefinition = SLIDE_DEFINITIONS['mfa-setup'];
