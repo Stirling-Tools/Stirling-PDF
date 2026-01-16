@@ -311,7 +311,9 @@ public class ProprietaryUIDataController {
                 // Mask mfaSecret if present in settings
                 Map<String, String> originalSettings = userWithSettings.getSettings();
                 Map<String, String> settingsCopy =
-                        originalSettings != null ? new HashMap<>(originalSettings) : new HashMap<>();
+                        originalSettings != null
+                                ? new HashMap<>(originalSettings)
+                                : new HashMap<>();
                 if (settingsCopy.containsKey("mfaSecret")) {
                     settingsCopy.put("mfaSecret", "********");
                 }
@@ -479,11 +481,8 @@ public class ProprietaryUIDataController {
                                         (user.getTeam() == null
                                                         || !user.getTeam().getId().equals(id))
                                                 && (user.getTeam() == null
-                                                        || !TeamService
-                                                                .INTERNAL_TEAM_NAME
-                                                                .equals(
-                                                                        user.getTeam()
-                                                                                .getName())))
+                                                        || !TeamService.INTERNAL_TEAM_NAME.equals(
+                                                                user.getTeam().getName())))
                         .toList();
 
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);

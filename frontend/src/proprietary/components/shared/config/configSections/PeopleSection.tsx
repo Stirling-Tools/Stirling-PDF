@@ -115,7 +115,7 @@ export default function PeopleSection() {
           ...user,
           isActive: adminData.userSessions[user.username] || false,
           lastRequest: adminData.userLastRequest[user.username] || undefined,
-          mfaEnabled: adminData.userSettings?.[user.username]?.mfaEnabled === 'true' || false,
+          mfaEnabled: adminData.userSettings?.[user.username]?.mfaEnabled === 'true',
         }));
 
         setUsers(enrichedUsers);
