@@ -38,6 +38,7 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
 
             boolean isHealthCheck =
                     trimmedUri.startsWith("/actuator/health")
+                            || "/health".equals(trimmedUri)
                             || "/healthz".equals(trimmedUri)
                             || "/liveness".equals(trimmedUri)
                             || "/readiness".equals(trimmedUri);
