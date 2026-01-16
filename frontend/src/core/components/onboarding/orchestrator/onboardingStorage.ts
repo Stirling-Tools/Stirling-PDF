@@ -20,15 +20,6 @@ export function markOnboardingCompleted(): void {
   }
 }
 
-export function markOnboardingIncomplete(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(ONBOARDING_COMPLETED_KEY, 'false');
-  } catch (error) {
-    console.error('[onboardingStorage] Error marking onboarding as incomplete:', error);
-  }
-}
-
 export function resetOnboardingProgress(): void {
   if (typeof window === 'undefined') return;
   try {
