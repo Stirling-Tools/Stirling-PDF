@@ -59,6 +59,7 @@ dependencies {
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'com.posthog.java:posthog:1.2.0'
+    implementation 'org.telegram:telegrambots:6.9.7.1'
     implementation 'commons-io:commons-io:2.21.0'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
@@ -207,6 +208,14 @@ tasks.register('npmInstall', Exec) {
             println "node_modules not found, will install..."
             return true
         }
+
+        // if required devDependency is missing, reinstall
+        def iconifyPkg = new File(frontendDir, 'node_modules/@iconify-json/material-symbols/package.json')
+        if (!iconifyPkg.exists()) {
+            println "@iconify-json/material-symbols missing, will reinstall..."
+            return true
+        }
+
         def packageJson = new File(frontendDir, 'package.json')
         def packageLock = new File(frontendDir, 'package-lock.json')
         def isOutdated = nodeModules.lastModified() < packageJson.lastModified() ||
