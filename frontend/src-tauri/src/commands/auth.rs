@@ -286,8 +286,12 @@ pub async fn login(
             "password": password,
         });
 
-        if let Some(code) = mfa_code.as_ref().map(|c| c.trim().to_string()).filter(|c| !c.is_empty()) {
-            payload["mfaCode"] = serde_json::Value::String(code);
+        if let Some(code) = mfa_code
+            .as_ref()
+            .map(|c| c.trim())
+            .filter(|c| !c.is_empty())
+        {
+            payload["mfaCode"] = serde_json::Value::String(code.to_string());
         }
 
         let response = client

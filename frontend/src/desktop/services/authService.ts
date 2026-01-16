@@ -492,10 +492,13 @@ export class AuthService {
         }
       );
 
+      console.log('[Desktop AuthService] Token refresh response received:', response.data);
+
+      // Support legacy desktop/backend versions that still return `token` instead of `access_token`.
       const responseData = response.data as { access_token?: string; token?: string };
-      const refreshedToken = responseData.access_token || responseData.token;
+      const refreshedToken = responseData.access_token ?? responseData.token;
       if (!refreshedToken) {
-        throw new Error('Refresh response missing access token');
+        throw new Error('[Desktop AuthService] Refresh response missing access token');
       }
 
       // Save token to all storage locations
@@ -504,10 +507,10 @@ export class AuthService {
       const userInfo = await this.getUserInfo();
       this.setAuthStatus('authenticated', userInfo);
 
-      console.log('Token refreshed successfully');
+      console.log('[Desktop AuthService] Token refreshed successfully');
       return true;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error('[Desktop AuthService] Token refresh failed:', error);
       this.setAuthStatus('unauthenticated', null);
 
       // Clear stored credentials on refresh failure
@@ -560,7 +563,7 @@ export class AuthService {
    */
   async loginWithOAuth(provider: string, authServerUrl: string, successHtml: string, errorHtml: string): Promise<UserInfo> {
     try {
-      console.log('Starting OAuth login with provider:', provider);
+      console.log('[Desktop AuthService] Starting OAuth login with provider:', provider);
       this.setAuthStatus('oauth_pending', null);
 
       // Validate Supabase key is configured for OAuth
@@ -581,7 +584,7 @@ export class AuthService {
         errorHtml,
       });
 
-      console.log('OAuth authentication successful, storing tokens');
+      console.log('[Desktop AuthService] OAuth authentication successful, storing tokens');
 
       // Save token to all storage locations
       await this.saveTokenEverywhere(result.access_token);
@@ -596,11 +599,11 @@ export class AuthService {
       });
 
       this.setAuthStatus('authenticated', userInfo);
-      console.log('OAuth login successful');
+      console.log('[Desktop AuthService] OAuth login successful');
 
       return userInfo;
     } catch (error) {
-      console.error('Failed to complete OAuth login:', error);
+      console.error('[Desktop AuthService] Failed to complete OAuth login:', error);
       this.setAuthStatus('unauthenticated', null);
       throw error;
     }
