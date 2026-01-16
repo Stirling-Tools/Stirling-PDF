@@ -56,11 +56,12 @@ export const accountService = {
   /**
    * Change user password on first login (resets firstLogin flag)
    */
-  async changePasswordOnLogin(currentPassword: string, newPassword: string): Promise<void> {
+  async changePasswordOnLogin(currentPassword: string, newPassword: string, confirmPassword: string): Promise<void> {
     const formData = new FormData();
     formData.append('currentPassword', currentPassword);
     formData.append('newPassword', newPassword);
-    await apiClient.post('/api/v1/user/change-password-on-login', formData);
+    formData.append('confirmPassword', confirmPassword);
+    await apiClient.post('/api/v1/user/change-password-on-login', formData, { responseType: 'json'});
   },
 
   /**

@@ -26,6 +26,8 @@ import { useServerExperience } from '@app/hooks/useServerExperience';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import apiClient from '@app/services/apiClient';
 import '@app/components/onboarding/OnboardingTour.css';
+import { useAccountLogout } from '@app/extensions/accountLogout';
+import { useAuth } from '@app/auth/UseSession';
 
 export default function Onboarding() {
   const { t } = useTranslation();
@@ -45,16 +47,24 @@ export default function Onboarding() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [analyticsModalDismissed, setAnalyticsModalDismissed] = useState(false);
+  const [firstLoginModalOpen, setFirstLoginModalOpen] = useState(false);
+  const accountLogout = useAccountLogout();
+  const { signOut } = useAuth();
 
   const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
     actions.updateRuntimeState({ selectedRole: role });
     serverExperience.setSelfReportedAdmin(role === 'admin');
   }, [actions, serverExperience]);
 
-  const handlePasswordChanged = useCallback(() => {
+  const redirectToLogin = useCallback(() => {
+    window.location.assign('/login');
+  }, []);
+
+  const handlePasswordChanged = useCallback(async () => {
     actions.updateRuntimeState({ requiresPasswordChange: false });
-    window.location.href = '/login';
-  }, [actions]);
+    // delete session and redirect to login page
+    await accountLogout({ signOut, redirectToLogin });
+  }, [actions, accountLogout, redirectToLogin, signOut]);
 
   // Check if we should show analytics modal before onboarding
   useEffect(() => {
@@ -223,6 +233,19 @@ export default function Onboarding() {
     return () => removeAllGlows();
   }, [isTourOpen]);
 
+  useEffect(() => {
+    // if (runtimeState.firstLoginUsername) {
+    //   console.log('[Onboarding] Detected first login with username:', runtimeState.firstLoginUsername);
+    //   setFirstLoginModalOpen(true);
+    // } else
+    if(runtimeState.requiresPasswordChange) {
+      console.log('[Onboarding] User requires password change on first login.');
+      setFirstLoginModalOpen(true);
+    } else {
+      setFirstLoginModalOpen(false);
+    }
+  }, [runtimeState.firstLoginUsername, runtimeState.requiresPasswordChange]);
+
   const finishTour = useCallback(() => {
     setIsTourOpen(false);
     if (runtimeState.tourType === 'admin') {
@@ -318,6 +341,36 @@ export default function Onboarding() {
             await handleAnalyticsChoice(true);
           } else if (action === 'disable-analytics') {
             await handleAnalyticsChoice(false);
+          }
+        }}
+        allowDismiss={false}
+      />
+    );
+  }
+
+  if (firstLoginModalOpen) {
+    const baseSlideDefinition = SLIDE_DEFINITIONS['first-login'];
+    const slideContent = baseSlideDefinition.createSlide({
+      osLabel: '',
+      osUrl: '',
+      selectedRole: null,
+      onRoleSelect: () => {},
+      firstLoginUsername: runtimeState.firstLoginUsername,
+      onPasswordChanged: handlePasswordChanged,
+      usingDefaultCredentials: runtimeState.usingDefaultCredentials,
+    });
+
+    return (
+      <OnboardingModalSlide
+        slideDefinition={baseSlideDefinition}
+        slideContent={slideContent}
+        runtimeState={runtimeState}
+        modalSlideCount={1}
+        currentModalSlideIndex={0}
+        onSkip={() => {}}
+        onAction={async (action) => {
+          if (action === 'complete-close') {
+            handlePasswordChanged();
           }
         }}
         allowDismiss={false}

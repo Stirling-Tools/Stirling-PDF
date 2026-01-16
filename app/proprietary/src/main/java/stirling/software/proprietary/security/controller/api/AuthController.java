@@ -11,7 +11,14 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -577,6 +584,11 @@ public class AuthController {
         Map<String, Object> appMetadata = new HashMap<>();
         appMetadata.put("provider", user.getAuthenticationType());
         userMap.put("app_metadata", appMetadata);
+
+        // Add user metadata
+        Map<String, Object> userMetadata = new HashMap<>();
+        userMetadata.put("firstLogin", user.isFirstLogin());
+        userMap.put("user_metadata", userMetadata);
 
         return userMap;
     }

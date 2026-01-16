@@ -308,7 +308,12 @@ public class ProprietaryUIDataController {
                 User userWithSettings =
                         userRepository.findByIdWithSettings(user.getId()).orElse(user);
 
-                userSettings.put(username, userWithSettings.getSettings());
+                // Mask mfaSecret if present in settings
+                Map<String, String> settingsCopy = new HashMap<>(userWithSettings.getSettings());
+                if (settingsCopy.containsKey("mfaSecret")) {
+                    settingsCopy.put("mfaSecret", "********");
+                }
+                userSettings.put(username, settingsCopy);
                 userSessions.put(username, hasActiveSession);
                 userLastRequest.put(username, lastRequest);
 
