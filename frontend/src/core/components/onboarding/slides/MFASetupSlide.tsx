@@ -91,6 +91,33 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   );
 
   const isReady = Boolean(mfaSetupData);
+  const mfaSetupContent = mfaSetupData ? (
+    <div className={styles.mfaSetupGrid}>
+      <Box className={styles.mfaQrCard}>
+        <QRCodeSVG value={mfaSetupData.otpauthUri} size={168} level="H" />
+      </Box>
+
+      <Stack gap="xs">
+        <Text size="sm" fw={600}>
+          Step-by-step
+        </Text>
+        <ol className={styles.mfaSteps}>
+          <li>Open Google Authenticator, Authy, or 1Password.</li>
+          <li>Scan the QR code or enter the setup key below.</li>
+          <li>Enter the 6-digit code from your app.</li>
+        </ol>
+        <Text size="xs" c="dimmed">
+          Setup key (manual entry)
+        </Text>
+        <TextInput
+          value={mfaSetupData.secret}
+          readOnly
+          variant="filled"
+          styles={{ input: { fontFamily: "monospace" } }}
+        />
+      </Stack>
+    </div>
+  ) : null;
 
   return (
     <div className={styles.mfaSlideContent}>
@@ -114,33 +141,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
             </Group>
           )}
 
-          {isReady && (
-            <div className={styles.mfaSetupGrid}>
-              <Box className={styles.mfaQrCard}>
-                <QRCodeSVG value={mfaSetupData.otpauthUri} size={168} level="H" />
-              </Box>
-
-              <Stack gap="xs">
-                <Text size="sm" fw={600}>
-                  Step-by-step
-                </Text>
-                <ol className={styles.mfaSteps}>
-                  <li>Open Google Authenticator, Authy, or 1Password.</li>
-                  <li>Scan the QR code or enter the setup key below.</li>
-                  <li>Enter the 6-digit code from your app.</li>
-                </ol>
-                <Text size="xs" c="dimmed">
-                  Setup key (manual entry)
-                </Text>
-                <TextInput
-                  value={mfaSetupData.secret}
-                  readOnly
-                  variant="filled"
-                  styles={{ input: { fontFamily: "monospace" } }}
-                />
-              </Stack>
-            </div>
-          )}
+          {isReady && mfaSetupContent}
 
           <form onSubmit={handleEnableMfa} className={styles.mfaForm}>
             <Stack gap="sm">
