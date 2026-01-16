@@ -1295,6 +1295,10 @@ cbzDpi = "DPI за изобразяване на изображение"
 cbrOptions = "Опции за CBR"
 cbrOutputOptions = "Опции за PDF към CBR"
 cbrDpi = "DPI за рендериране на изображения"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Опции за eBook към PDF"
@@ -1396,6 +1400,7 @@ applySignatures = "Приложи изображения"
 name = "Изображение"
 placeholder = "Качете изображение"
 label = "Файл с изображение"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Конфигурирай изображението"

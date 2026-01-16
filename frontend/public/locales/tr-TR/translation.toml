@@ -1295,6 +1295,10 @@ cbzDpi = "Görüntü oluşturma için DPI"
 cbrOptions = "CBR Seçenekleri"
 cbrOutputOptions = "PDF'den CBR'ye Dönüştürme Seçenekleri"
 cbrDpi = "Görüntü oluşturma için DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook'tan PDF'ye Dönüştürme Seçenekleri"
@@ -1396,6 +1400,7 @@ applySignatures = "Resimleri Uygula"
 name = "Resim"
 placeholder = "Bir resim yükleyin"
 label = "Resim dosyası"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Resmi Yapılandır"
