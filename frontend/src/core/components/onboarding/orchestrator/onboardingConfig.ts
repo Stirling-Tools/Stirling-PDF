@@ -7,7 +7,8 @@ export type OnboardingStepId =
   | 'tool-layout'
   | 'tour-overview'
   | 'server-license'
-  | 'analytics-choice';
+  | 'analytics-choice'
+  | 'mfa-setup';
 
 export type OnboardingStepType =
   | 'modal-slide'
@@ -30,6 +31,7 @@ export interface OnboardingRuntimeState {
   requiresPasswordChange: boolean;
   firstLoginUsername: string;
   usingDefaultCredentials: boolean;
+  requiresMfaSetup: boolean;
 }
 
 export interface OnboardingConditionContext extends OnboardingRuntimeState {
@@ -41,7 +43,7 @@ export interface OnboardingStep {
   id: OnboardingStepId;
   type: OnboardingStepType;
   condition: (ctx: OnboardingConditionContext) => boolean;
-  slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license' | 'tour-overview' | 'analytics-choice';
+  slideId?: 'first-login' | 'welcome' | 'desktop-install' | 'security-check' | 'admin-overview' | 'server-license' | 'tour-overview' | 'analytics-choice' | 'mfa-setup';
   allowDismiss?: boolean;
 }
 
@@ -62,6 +64,7 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   firstLoginUsername: '',
   usingDefaultCredentials: false,
   desktopSlideEnabled: true,
+  requiresMfaSetup: false,
 };
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
@@ -112,6 +115,12 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     slideId: 'server-license',
     condition: (ctx) => ctx.effectiveIsAdmin && ctx.licenseNotice.requiresLicense,
   },
+  {
+    id: 'mfa-setup',
+    type: 'modal-slide',
+    slideId: 'mfa-setup',
+    condition: (ctx) => ctx.requiresMfaSetup,
+  }
 ];
 
 export function getStepById(id: OnboardingStepId): OnboardingStep | undefined {

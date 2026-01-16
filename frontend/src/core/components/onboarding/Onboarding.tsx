@@ -48,6 +48,7 @@ export default function Onboarding() {
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [analyticsModalDismissed, setAnalyticsModalDismissed] = useState(false);
   const [firstLoginModalOpen, setFirstLoginModalOpen] = useState(false);
+  const [mfaModalOpen, setMfaModalOpen] = useState(false);
   const accountLogout = useAccountLogout();
   const { signOut } = useAuth();
 
@@ -233,18 +234,26 @@ export default function Onboarding() {
     return () => removeAllGlows();
   }, [isTourOpen]);
 
+  // Handle first-login password change modal
   useEffect(() => {
-    // if (runtimeState.firstLoginUsername) {
-    //   console.log('[Onboarding] Detected first login with username:', runtimeState.firstLoginUsername);
-    //   setFirstLoginModalOpen(true);
-    // } else
     if(runtimeState.requiresPasswordChange) {
       console.log('[Onboarding] User requires password change on first login.');
       setFirstLoginModalOpen(true);
     } else {
       setFirstLoginModalOpen(false);
     }
-  }, [runtimeState.firstLoginUsername, runtimeState.requiresPasswordChange]);
+  }, [runtimeState.requiresPasswordChange]);
+
+  // Handle MFA setup modal
+  useEffect(() => {
+    if(runtimeState.requiresMfaSetup) {
+      console.log('[Onboarding] User requires MFA setup.');
+      setMfaModalOpen(true);
+    } else {
+      console.log('[Onboarding] User does not require MFA setup.');
+      setMfaModalOpen(false);
+    }
+  }, [runtimeState.requiresMfaSetup]);
 
   const finishTour = useCallback(() => {
     setIsTourOpen(false);
@@ -371,6 +380,34 @@ export default function Onboarding() {
         onAction={async (action) => {
           if (action === 'complete-close') {
             handlePasswordChanged();
+          }
+        }}
+        allowDismiss={false}
+      />
+    );
+  }
+
+  if (!firstLoginModalOpen && mfaModalOpen) {
+    console.log('[Onboarding] Rendering MFA setup modal slide.');
+    const baseSlideDefinition = SLIDE_DEFINITIONS['mfa-setup'];
+    const slideContent = baseSlideDefinition.createSlide({
+      osLabel: '',
+      osUrl: '',
+      selectedRole: null,
+      onRoleSelect: () => {},
+    });
+
+    return (
+      <OnboardingModalSlide
+        slideDefinition={baseSlideDefinition}
+        slideContent={slideContent}
+        runtimeState={runtimeState}
+        modalSlideCount={1}
+        currentModalSlideIndex={0}
+        onSkip={() => {}}
+        onAction={async (action) => {
+          if (action === 'complete-close') {
+            // No specific action defined yet for MFA setup completion
           }
         }}
         allowDismiss={false}

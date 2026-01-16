@@ -200,13 +200,17 @@ export function useOnboardingOrchestrator(
           accountService.getLoginPageData(),
         ]);
 
+        console.log('[OnboardingOrchestrator] Fetched account data for onboarding runtime state:', accountData);
+
         setRuntimeState((prev) => ({
           ...prev,
           requiresPasswordChange: accountData.changeCredsFlag,
           firstLoginUsername: accountData.username,
           usingDefaultCredentials: loginPageData.showDefaultCredentials,
+          requiresMfaSetup: JSON.parse(accountData.settings).mfaRequired,
         }));
-      } catch {
+      } catch (error) {
+        console.log('[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:', error);
         // Account endpoint failed - user not logged in or security disabled
       }
     };
