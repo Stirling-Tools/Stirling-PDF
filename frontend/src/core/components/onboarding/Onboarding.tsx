@@ -67,6 +67,12 @@ export default function Onboarding() {
     await accountLogout({ signOut, redirectToLogin });
   }, [actions, accountLogout, redirectToLogin, signOut]);
 
+  const handleMfaSetupComplete = useCallback(() => {
+    actions.updateRuntimeState({ requiresMfaSetup: false });
+    setMfaModalOpen(false);
+    actions.complete();
+  }, [actions]);
+
   // Check if we should show analytics modal before onboarding
   useEffect(() => {
     if (!isLoading && !analyticsModalDismissed && serverExperience.effectiveIsAdmin && config?.enableAnalytics == null) {
@@ -304,8 +310,9 @@ export default function Onboarding() {
       usingDefaultCredentials: runtimeState.usingDefaultCredentials,
       analyticsError,
       analyticsLoading,
+      onMfaSetupComplete: handleMfaSetupComplete,
     });
-  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
+  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged, handleMfaSetupComplete]);
 
   const modalSlideCount = useMemo(() => {
     return activeFlow.filter((step) => step.type === 'modal-slide').length;
@@ -395,6 +402,7 @@ export default function Onboarding() {
       osUrl: '',
       selectedRole: null,
       onRoleSelect: () => {},
+      onMfaSetupComplete: handleMfaSetupComplete,
     });
 
     return (

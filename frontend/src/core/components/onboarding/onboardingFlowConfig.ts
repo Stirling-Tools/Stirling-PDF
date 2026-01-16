@@ -63,6 +63,7 @@ export interface SlideFactoryParams {
   usingDefaultCredentials?: boolean;
   analyticsError?: string | null;
   analyticsLoading?: boolean;
+  onMfaSetupComplete?: () => void;
 }
 
 export interface HeroDefinition {
@@ -285,7 +286,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   'mfa-setup': {
     id: 'mfa-setup',
-    createSlide: () => MFASetupSlide(),
+    createSlide: ({ onMfaSetupComplete }) => MFASetupSlide({ onMfaSetupComplete }),
     hero: { type: 'lock' },
     buttons: [], // Form has its own submit button
   },
