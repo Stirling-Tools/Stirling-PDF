@@ -1295,6 +1295,10 @@ cbzDpi = "画像レンダリングの DPI"
 cbrOptions = "CBR オプション"
 cbrOutputOptions = "PDF から CBR へのオプション"
 cbrDpi = "画像レンダリング用 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook から PDF へのオプション"
@@ -1396,6 +1400,7 @@ applySignatures = "画像を適用"
 name = "画像"
 placeholder = "画像をアップロード"
 label = "画像ファイル"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "画像を設定"

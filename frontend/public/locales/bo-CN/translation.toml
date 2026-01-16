@@ -1295,6 +1295,10 @@ cbzDpi = "པར་རིས་པར་ལེན་ཆེད་ཀྱི་DPI�
 cbrOptions = "CBR གདམ་ག།"
 cbrOutputOptions = "PDF ནས་ CBR གདམ་ག།"
 cbrDpi = "པར་རིས་པར་ལེན་ཆེད་ཀྱི་DPI།"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "གློག་རྡུལ་དེབ་ནས་PDFགདམ་ག།"
@@ -1396,6 +1400,7 @@ applySignatures = "པར་རིས་སྦྱར་བ།"
 name = "པར་རིས"
 placeholder = "པར་རིས་ཤིག་བསྒྱུར།"
 label = "པར་རིས་ཡིག་ཆ།"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "པར་རིས་སྒྲིག་བཀོད་བྱེད་པ།"

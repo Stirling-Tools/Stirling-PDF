@@ -1295,6 +1295,10 @@ cbzDpi = "影像轉繪的 DPI"
 cbrOptions = "CBR 選項"
 cbrOutputOptions = "PDF 轉 CBR 選項"
 cbrDpi = "影像渲染的 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "電子書轉 PDF 選項"
@@ -1396,6 +1400,7 @@ applySignatures = "套用圖片"
 name = "圖片"
 placeholder = "上傳一張圖片"
 label = "圖片檔"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "設定圖片"
