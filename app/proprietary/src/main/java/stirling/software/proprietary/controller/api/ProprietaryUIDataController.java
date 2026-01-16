@@ -270,7 +270,7 @@ public class ProprietaryUIDataController {
 
                 // Check if user is part of the Internal team
                 if (user.getTeam() != null
-                        && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                        && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
                     shouldRemove = true;
                 }
 
@@ -309,7 +309,9 @@ public class ProprietaryUIDataController {
                         userRepository.findByIdWithSettings(user.getId()).orElse(user);
 
                 // Mask mfaSecret if present in settings
-                Map<String, String> settingsCopy = new HashMap<>(userWithSettings.getSettings());
+                Map<String, String> originalSettings = userWithSettings.getSettings();
+                Map<String, String> settingsCopy =
+                        originalSettings != null ? new HashMap<>(originalSettings) : new HashMap<>();
                 if (settingsCopy.containsKey("mfaSecret")) {
                     settingsCopy.put("mfaSecret", "********");
                 }
@@ -344,7 +346,7 @@ public class ProprietaryUIDataController {
 
         List<Team> allTeams =
                 teamRepository.findAll().stream()
-                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
                         .toList();
 
         // Calculate license limits
@@ -436,7 +438,7 @@ public class ProprietaryUIDataController {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
         List<TeamWithUserCountDTO> teamsWithCounts =
                 allTeamsWithCounts.stream()
-                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
                         .toList();
 
         List<Object[]> teamActivities = sessionRepository.findLatestActivityByTeam();
@@ -464,7 +466,7 @@ public class ProprietaryUIDataController {
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("Team not found"));
 
-        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
             return ResponseEntity.status(403).build();
         }
 
@@ -477,11 +479,11 @@ public class ProprietaryUIDataController {
                                         (user.getTeam() == null
                                                         || !user.getTeam().getId().equals(id))
                                                 && (user.getTeam() == null
-                                                        || !user.getTeam()
-                                                                .getName()
+                                                        || !TeamService
+                                                                .INTERNAL_TEAM_NAME
                                                                 .equals(
-                                                                        TeamService
-                                                                                .INTERNAL_TEAM_NAME)))
+                                                                        user.getTeam()
+                                                                                .getName())))
                         .toList();
 
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);
