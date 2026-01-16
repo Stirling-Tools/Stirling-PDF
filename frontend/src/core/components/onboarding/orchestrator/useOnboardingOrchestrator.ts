@@ -200,14 +200,12 @@ export function useOnboardingOrchestrator(
           accountService.getLoginPageData(),
         ]);
 
-        console.log('[OnboardingOrchestrator] Fetched account data for onboarding runtime state:', accountData);
-
         setRuntimeState((prev) => ({
           ...prev,
           requiresPasswordChange: accountData.changeCredsFlag,
           firstLoginUsername: accountData.username,
           usingDefaultCredentials: loginPageData.showDefaultCredentials,
-          requiresMfaSetup: JSON.parse(accountData.settings).mfaRequired,
+          requiresMfaSetup: JSON.parse(accountData.settings).mfaRequired?.toLowerCase() === "true",
         }));
       } catch (error) {
         console.log('[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:', error);

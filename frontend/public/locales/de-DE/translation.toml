@@ -556,30 +556,6 @@ webBrowserSettings = "Webbrowser-Einstellung"
 syncToBrowser = "Konto → Browser synchronisieren"
 syncToAccount = "Konto ← Browser synchronisieren"
 
-[account.mfa]
-title = "Zwei-Faktor-Authentifizierung"
-setupFailed = "Zwei-Faktor-Einrichtung konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
-codeRequired = "Geben Sie den Authentifizierungscode ein, um fortzufahren."
-enabled = "Zwei-Faktor-Authentifizierung aktiviert."
-enableFailed = "Zwei-Faktor-Authentifizierung konnte nicht aktiviert werden. Prüfen Sie den Code und versuchen Sie es erneut."
-disabled = "Zwei-Faktor-Authentifizierung deaktiviert."
-disableFailed = "Zwei-Faktor-Authentifizierung konnte nicht deaktiviert werden. Prüfen Sie den Code und versuchen Sie es erneut."
-description = "Fügen Sie Ihrem Konto eine zusätzliche Sicherheitsebene hinzu."
-enableButton = "Zwei-Faktor-Authentifizierung aktivieren"
-disableButton = "Zwei-Faktor-Authentifizierung deaktivieren"
-setupTitle = "Zwei-Faktor-Authentifizierung einrichten"
-setupDescription = "Scannen Sie den QR-Code mit Ihrer Authenticator-App und geben Sie dann den 6-stelligen Code zur Bestätigung ein."
-manualKey = "Manueller Einrichtungsschlüssel"
-codePlaceholder = "6-stelligen Code eingeben"
-confirmEnable = "Aktivieren"
-disableTitle = "Zwei-Faktor-Authentifizierung deaktivieren"
-disableDescription = "Geben Sie einen gültigen Authentifizierungscode ein, um die Zwei-Faktor-Authentifizierung zu deaktivieren."
-codeLabel = "Authentifizierungscode"
-confirmDisable = "Deaktivieren"
-ssoDescription = "Die Zwei-Faktor-Authentifizierung wird durch Ihren Identitätsanbieter für Single-Sign-On-Konten verwaltet."
-ssoManaged = "Konfigurieren Sie MFA über Ihren Identitätsanbieter."
-secretWarning = "Speichern Sie diesen geheimen Schlüssel an einem sicheren Ort. Er wird benötigt, um Ihre Authenticator-App erneut einzurichten, wenn Sie den Zugriff verlieren."
-
 [adminUserSettings]
 title = "Benutzerkontrolle"
 header = "Administrator-Benutzerkontrolle"
@@ -3742,13 +3718,6 @@ passwordChangedSuccess = "Passwort erfolgreich geändert! Bitte melden Sie sich 
 credentialsUpdated = "Ihre Anmeldedaten wurden aktualisiert. Bitte melden Sie sich erneut an."
 defaultCredentials = "Standard-Login-Daten"
 changePasswordWarning = "Bitte ändern Sie Ihr Passwort nach dem ersten Login."
-mfaRequired = "Zwei-Faktor-Code erforderlich"
-mfaCode = "Authentifizierungscode"
-enterMfaCode = "6-stelligen Code eingeben"
-mfaPromptTitle = "Zwei-Faktor-Authentifizierung"
-mfaPromptBody = "Geben Sie den Authentifizierungscode aus Ihrer Authenticator-App ein, um fortzufahren."
-verifyingMfa = "Überprüfung läuft..."
-verifyMfa = "Code überprüfen"
 
 [login.slides.overview]
 alt = "Stirling PDF Übersicht"
@@ -5884,11 +5853,6 @@ fromLicense = "aus der Lizenz"
 slotsAvailable = "{{count}} Benutzer-Slot(s) verfügbar"
 noSlotsAvailable = "Keine Slots verfügbar"
 currentUsage = "Derzeit werden {{current}} von {{max}} Benutzerlizenzen verwendet"
-
-[workspace.people.mfa]
-adminDisableError = "Failed to disable MFA for user"
-adminDisableSuccess = "MFA disabled successfully for user"
-disableByAdmin = "Disable MFA"
 
 [workspace.teams]
 title = "Teams"

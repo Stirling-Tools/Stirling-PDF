@@ -33,7 +33,8 @@ fn get_keyring_entry() -> Result<Entry, String> {
 
 #[tauri::command]
 pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
-    if token.is_empty() {
+    let trimmed = token.trim();
+    if trimmed.is_empty() {
         log::warn!("Attempted to save empty auth token");
         return Err("Token cannot be empty".to_string());
     }
@@ -41,7 +42,7 @@ pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<()
     let entry = get_keyring_entry()?;
 
     entry
-        .set_password(&token)
+        .set_password(trimmed)
         .map_err(|e| {
             log::error!("Failed to set password in keyring: {}", e);
             format!("Failed to save token to keyring: {}", e)
@@ -50,7 +51,7 @@ pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<()
     // Verify the save worked
     match entry.get_password() {
         Ok(retrieved_token) => {
-            if retrieved_token != token {
+            if retrieved_token != trimmed {
                 log::error!("Token verification failed: Retrieved token doesn't match");
                 return Err("Token verification failed after save".to_string());
             }
@@ -69,7 +70,14 @@ pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, St
     let entry = get_keyring_entry()?;
 
     match entry.get_password() {
-        Ok(token) => Ok(Some(token)),
+        Ok(token) => {
+            if token.trim().is_empty() {
+                log::warn!("Retrieved empty auth token from keyring; treating as missing");
+                Ok(None)
+            } else {
+                Ok(Some(token))
+            }
+        }
         Err(keyring::Error::NoEntry) => Ok(None),
         Err(e) => {
             log::error!("Failed to retrieve token from keyring: {}", e);
