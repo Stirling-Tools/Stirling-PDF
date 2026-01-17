@@ -14,7 +14,7 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     Optional<StoredFile> findByIdAndOwner(Long id, User owner);
 
     @Query(
-            "SELECT f FROM StoredFile f "
+            "SELECT DISTINCT f FROM StoredFile f "
                     + "LEFT JOIN FETCH f.owner "
                     + "LEFT JOIN FETCH f.shares s "
                     + "LEFT JOIN FETCH s.sharedWithUser "
@@ -23,7 +23,7 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
             @Param("id") Long id, @Param("owner") User owner);
 
     @Query(
-            "SELECT f FROM StoredFile f "
+            "SELECT DISTINCT f FROM StoredFile f "
                     + "LEFT JOIN FETCH f.owner "
                     + "LEFT JOIN FETCH f.shares s "
                     + "LEFT JOIN FETCH s.sharedWithUser "

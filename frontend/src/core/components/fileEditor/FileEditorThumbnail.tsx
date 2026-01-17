@@ -86,6 +86,8 @@ const FileEditorThumbnail = ({
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showSharedEditNotice, setShowSharedEditNotice] = useState(false);
+  const sharedEditNoticeShownRef = useRef(false);
 
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
@@ -121,12 +123,11 @@ const FileEditorThumbnail = ({
 
   const isCBZ = extLower === 'cbz';
   const isCBR = extLower === 'cbr';
-  const uploadEnabled = (config?.enableLogin !== false) && (config?.storageEnabled !== false);
-  const sharingEnabled =
-    uploadEnabled && (config?.storageSharingEnabled !== false);
-  const shareLinksEnabled =
-    sharingEnabled && (config?.storageShareLinksEnabled !== false);
+  const uploadEnabled = config?.storageEnabled === true;
+  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
+  const shareLinksEnabled = sharingEnabled && config?.storageShareLinksEnabled === true;
   const isOwnedOrLocal = file.remoteOwnedByCurrentUser !== false;
+  const isSharedFile = file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink;
   const localUpdatedAt = file.createdAt ?? file.lastModified ?? 0;
   const remoteUpdatedAt = file.remoteStorageUpdatedAt ?? 0;
   const isUploaded = Boolean(file.remoteStorageId);
@@ -306,6 +307,10 @@ const FileEditorThumbnail = ({
     // Clear error state if file has an error (click to clear error)
     if (hasError) {
       try { fileActions.clearFileError(file.id); } catch (_e) { void _e; }
+    }
+    if (isSharedFile && !sharedEditNoticeShownRef.current) {
+      sharedEditNoticeShownRef.current = true;
+      setShowSharedEditNotice(true);
     }
     onToggleFile(file.id);
   };
@@ -538,6 +543,27 @@ const FileEditorThumbnail = ({
             </Button>
             <Button variant="filled" color="red" onClick={handleConfirmClose}>
               {t('confirmCloseConfirm', 'Close File')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+      <Modal
+        opened={showSharedEditNotice}
+        onClose={() => setShowSharedEditNotice(false)}
+        title={t('fileManager.sharedEditNoticeTitle', 'Read-only server copy')}
+        centered
+        size="auto"
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            {t(
+              'fileManager.sharedEditNoticeBody',
+              'You do not have edit rights to the server version of this file. Any edits you make will be saved as a local copy.'
+            )}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button onClick={() => setShowSharedEditNotice(false)}>
+              {t('fileManager.sharedEditNoticeConfirm', 'Got it')}
             </Button>
           </Group>
         </Stack>

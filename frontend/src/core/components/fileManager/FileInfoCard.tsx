@@ -40,8 +40,8 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
     if (!currentFile) return false;
     return isOwnedRemote && Boolean(currentFile.remoteHasShareLinks);
   }, [currentFile, isOwnedRemote]);
-  const sharingEnabled = (config?.storageSharingEnabled !== false);
-  const uploadEnabled = (config?.storageEnabled !== false);
+  const uploadEnabled = config?.storageEnabled === true;
+  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
   const ownerLabel = useMemo(() => {
     if (!currentFile) return '';
     if (currentFile.remoteOwnerUsername) {

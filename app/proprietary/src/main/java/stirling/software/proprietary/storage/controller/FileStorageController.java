@@ -79,7 +79,7 @@ public class FileStorageController {
             @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
-        fileStorageService.requireEditorAccess(user, file);
+        fileStorageService.requireReadAccess(user, file);
         return buildFileResponse(file, inline);
     }
 
@@ -172,7 +172,7 @@ public class FileStorageController {
                             : "Authentication required for this share link";
             throw new ResponseStatusException(status, message);
         }
-        fileStorageService.requireEditorAccess(share);
+        fileStorageService.requireReadAccess(share);
         fileStorageService.recordShareAccess(share, authentication, inline);
         StoredFile file = share.getFile();
         return buildFileResponse(file, inline);
@@ -246,7 +246,11 @@ public class FileStorageController {
                         .build();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentDisposition(disposition);
-        headers.setContentType(MediaType.parseMediaType(contentType));
+        try {
+            headers.setContentType(MediaType.parseMediaType(contentType));
+        } catch (IllegalArgumentException ex) {
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        }
         headers.setContentLength(file.getSizeBytes());
         return ResponseEntity.ok().headers(headers).body(resource);
     }

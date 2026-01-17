@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from 'react-dom';
 import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,11 @@ import ShareManagementModal from '@app/components/shared/ShareManagementModal';
 import apiClient from '@app/services/apiClient';
 import { absoluteWithBasePath } from '@app/constants/app';
 import { alert } from '@app/components/toast';
+import { uploadHistoryChain } from '@app/services/serverStorageUpload';
+import { fileStorage } from '@app/services/fileStorage';
+import { useFileActions } from '@app/contexts/FileContext';
+import type { FileId } from '@app/types/file';
+import type { StirlingFileStub } from '@app/types/fileContext';
 
 import {
   isNavButtonActive,
@@ -43,6 +48,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { state, selectors } = useFileState();
+  const { actions } = useFileActions();
   const { hasUnsavedChanges } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
@@ -51,14 +57,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const [accessMenuOpen, setAccessMenuOpen] = useState(false);
+  const [accessInviteOpen, setAccessInviteOpen] = useState(false);
   const [selectedAccessFileId, setSelectedAccessFileId] = useState<string | null>(null);
   const [shareManageOpen, setShareManageOpen] = useState(false);
   const scrollableRef = useRef<HTMLDivElement>(null);
   const accessButtonRef = useRef<HTMLDivElement>(null);
   const accessPopoverRef = useRef<HTMLDivElement>(null);
   const [accessPopoverPosition, setAccessPopoverPosition] = useState({ top: 160, left: 84 });
-  const sharingEnabled = config?.storageSharingEnabled !== false;
-  const shareLinksEnabled = config?.storageShareLinksEnabled !== false;
+  const sharingEnabled = config?.storageSharingEnabled === true;
+  const shareLinksEnabled = config?.storageShareLinksEnabled === true;
+  const emailSharingEnabled = config?.storageShareEmailEnabled === true;
+  const [inviteRows, setInviteRows] = useState<Array<{ id: number; email: string; role: 'editor' | 'commenter' | 'viewer'; error?: string }>>([
+    { id: Date.now(), email: '', role: 'editor' },
+  ]);
+  const [isInviting, setIsInviting] = useState(false);
   const {
     tooltipOpen,
     manualCloseOnly,
@@ -80,6 +92,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (!hasSelectedFiles) {
       setAccessMenuOpen(false);
       setSelectedAccessFileId(null);
+      setAccessInviteOpen(false);
       return;
     }
     if (!selectedAccessFileId || !selectedFiles.some((file) => file.fileId === selectedAccessFileId)) {
@@ -87,8 +100,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     }
   }, [hasSelectedFiles, selectedAccessFileId, selectedFiles]);
 
+  const resetInviteRows = useCallback(() => {
+    setInviteRows([{ id: Date.now(), email: '', role: 'editor' }]);
+  }, []);
+
   useEffect(() => {
     if (!accessMenuOpen) return;
+    setAccessInviteOpen(false);
+    setIsInviting(false);
+    resetInviteRows();
     const updatePosition = () => {
       const anchor = accessButtonRef.current;
       if (!anchor) return;
@@ -104,7 +124,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
     };
-  }, [accessMenuOpen, isRTL]);
+  }, [accessMenuOpen, isRTL, resetInviteRows]);
 
   useEffect(() => {
     if (!accessMenuOpen) return;
@@ -138,6 +158,162 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     return absoluteWithBasePath('/share/');
   }, [config?.frontendUrl]);
 
+  const ensureStoredFile = useCallback(async (fileStub: StirlingFileStub): Promise<number> => {
+    const localUpdatedAt = fileStub.createdAt ?? fileStub.lastModified ?? 0;
+    const isUpToDate =
+      Boolean(fileStub.remoteStorageId) &&
+      Boolean(fileStub.remoteStorageUpdatedAt) &&
+      (fileStub.remoteStorageUpdatedAt as number) >= localUpdatedAt;
+    if (isUpToDate && fileStub.remoteStorageId) {
+      return fileStub.remoteStorageId as number;
+    }
+    const originalFileId = (fileStub.originalFileId || fileStub.id) as FileId;
+    const remoteId = fileStub.remoteStorageId as number | undefined;
+    const { remoteId: storedId, updatedAt, chain } = await uploadHistoryChain(
+      originalFileId,
+      remoteId
+    );
+    for (const stub of chain) {
+      actions.updateStirlingFileStub(stub.id, {
+        remoteStorageId: storedId,
+        remoteStorageUpdatedAt: updatedAt,
+        remoteOwnedByCurrentUser: true,
+        remoteSharedViaLink: false,
+      });
+      await fileStorage.updateFileMetadata(stub.id, {
+        remoteStorageId: storedId,
+        remoteStorageUpdatedAt: updatedAt,
+        remoteOwnedByCurrentUser: true,
+        remoteSharedViaLink: false,
+      });
+    }
+    return storedId;
+  }, [actions]);
+
+  const openShareManage = useCallback(async () => {
+    if (!sharingEnabled) {
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.sharingDisabled', 'Sharing is disabled.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      return;
+    }
+    if (selectedFileStubs.length > 1) {
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.selectSingleFile', 'Select a single file to manage sharing.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      return;
+    }
+    if (selectedAccessFileStub?.remoteOwnedByCurrentUser === false) {
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.ownerOnly', 'Only the owner can manage sharing.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      return;
+    }
+    try {
+      if (selectedAccessFileStub) {
+        await ensureStoredFile(selectedAccessFileStub);
+      }
+      setAccessMenuOpen(false);
+      setShareManageOpen(true);
+    } catch (error) {
+      console.error('Failed to upload file for sharing:', error);
+      alert({
+        alertType: 'warning',
+        title: t('storageUpload.failure', 'Upload failed. Please check your login and storage settings.'),
+        expandable: false,
+        durationMs: 3000,
+      });
+    }
+  }, [ensureStoredFile, selectedAccessFileStub, selectedFileStubs.length, sharingEnabled, t]);
+
+  const handleInviteRowChange = useCallback(
+    (id: number, updates: Partial<{ email: string; role: 'editor' | 'commenter' | 'viewer'; error?: string }>) => {
+      setInviteRows((prev) =>
+        prev.map((row) => {
+          if (row.id !== id) return row;
+          const nextError = Object.prototype.hasOwnProperty.call(updates, 'error')
+            ? updates.error
+            : row.error;
+          return { ...row, ...updates, error: nextError };
+        })
+      );
+    },
+    []
+  );
+
+  const handleAddInviteRow = useCallback(() => {
+    setInviteRows((prev) => [...prev, { id: Date.now(), email: '', role: 'editor' }]);
+  }, []);
+
+  const handleRemoveInviteRow = useCallback((id: number) => {
+    setInviteRows((prev) => (prev.length > 1 ? prev.filter((row) => row.id !== id) : prev));
+  }, []);
+
+  const handleSendInvites = useCallback(async () => {
+    if (!selectedAccessFileStub) return;
+    if (selectedAccessFileStub.remoteOwnedByCurrentUser === false) {
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.ownerOnly', 'Only the owner can manage sharing.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      return;
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const nextRows = inviteRows.map((row) => {
+      const trimmed = row.email.trim();
+      let error: string | undefined;
+      if (!trimmed || !emailPattern.test(trimmed)) {
+        error = t('storageShare.invalidUsername', 'Enter a valid username or email address.');
+      } else if (!emailSharingEnabled) {
+        error = t('storageShare.emailShareDisabled', 'Sharing via email is disabled by your server settings.');
+      }
+      return { ...row, email: trimmed, error };
+    });
+    setInviteRows(nextRows);
+    if (nextRows.some((row) => row.error)) {
+      return;
+    }
+    setIsInviting(true);
+    try {
+      const storedId = await ensureStoredFile(selectedAccessFileStub);
+      for (const row of nextRows) {
+        await apiClient.post(`/api/v1/storage/files/${storedId}/shares/users`, {
+          username: row.email.trim(),
+          accessRole: row.role,
+        });
+      }
+      alert({
+        alertType: 'success',
+        title: t('storageShare.userAdded', 'User added to shared list.'),
+        expandable: false,
+        durationMs: 2500,
+      });
+      setAccessInviteOpen(false);
+      resetInviteRows();
+    } catch (error) {
+      console.error('Failed to send invite:', error);
+      alert({
+        alertType: 'warning',
+        title: t('storageShare.userAddFailed', 'Unable to share with that user.'),
+        expandable: false,
+        durationMs: 3000,
+      });
+    } finally {
+      setIsInviting(false);
+    }
+  }, [emailSharingEnabled, ensureStoredFile, inviteRows, resetInviteRows, selectedAccessFileStub, t]);
+
   const handleCopyShareLink = async () => {
     if (!shareLinksEnabled) {
       alert({
@@ -157,26 +333,51 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       });
       return;
     }
-    if (!selectedAccessFileStub?.remoteStorageId) {
+    if (selectedAccessFileStub?.remoteOwnedByCurrentUser === false) {
       alert({
         alertType: 'warning',
-        title: t('storageShare.uploadRequired', 'Upload this file to enable sharing.'),
+        title: t('storageShare.ownerOnly', 'Only the owner can manage sharing.'),
         expandable: false,
         durationMs: 2500,
       });
       return;
     }
+    if (!selectedAccessFileStub?.remoteStorageId) {
+      try {
+        await ensureStoredFile(selectedAccessFileStub);
+      } catch (error) {
+        console.error('Failed to upload file for sharing:', error);
+        alert({
+          alertType: 'warning',
+          title: t('storageUpload.failure', 'Upload failed. Please check your login and storage settings.'),
+          expandable: false,
+          durationMs: 3000,
+        });
+        return;
+      }
+    }
     try {
+      const storedId = await ensureStoredFile(selectedAccessFileStub);
       const response = await apiClient.get<{ shareLinks?: Array<{ token?: string }> }>(
-        `/api/v1/storage/files/${selectedAccessFileStub.remoteStorageId}`,
+        `/api/v1/storage/files/${storedId}`,
         { suppressErrorToast: true } as any
       );
       const links = response.data?.shareLinks ?? [];
-      const token = links[links.length - 1]?.token;
+      let token = links[links.length - 1]?.token;
+      if (!token) {
+        const shareResponse = await apiClient.post(`/api/v1/storage/files/${storedId}/shares/links`, {
+          accessRole: 'editor',
+        });
+        token = shareResponse.data?.token;
+        if (token) {
+          actions.updateStirlingFileStub(selectedAccessFileStub.id, { remoteHasShareLinks: true });
+          await fileStorage.updateFileMetadata(selectedAccessFileStub.id, { remoteHasShareLinks: true });
+        }
+      }
       if (!token) {
         alert({
           alertType: 'warning',
-          title: t('storageShare.noLinks', 'No active share links yet.'),
+          title: t('storageShare.failure', 'Unable to generate a share link. Please try again.'),
           expandable: false,
           durationMs: 2500,
         });
@@ -560,57 +761,32 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         >
           <div className="quick-access-popout__card">
             <div className="quick-access-popout__header">
+              <button
+                type="button"
+                className={`quick-access-popout__back ${accessInviteOpen ? 'is-visible' : ''}`}
+                onClick={() => setAccessInviteOpen(false)}
+                aria-label={t('quickAccess.accessBack', 'Back')}
+              >
+                <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
+              </button>
               <div className="quick-access-popout__title">
-                {t('quickAccess.accessTitle', 'Document Access')}
+                {accessInviteOpen
+                  ? t('quickAccess.accessInviteTitle', 'Invite People')
+                  : t('quickAccess.accessTitle', 'Document Access')}
               </div>
               <div className="quick-access-popout__header-actions">
-                <button
-                  type="button"
-                  className="quick-access-popout__header-action"
-                  onClick={() => {
-                    if (!sharingEnabled) {
-                      alert({
-                        alertType: 'warning',
-                        title: t('storageShare.sharingDisabled', 'Sharing is disabled.'),
-                        expandable: false,
-                        durationMs: 2500,
-                      });
-                      return;
-                    }
-                    if (selectedFileStubs.length > 1) {
-                      alert({
-                        alertType: 'warning',
-                        title: t('storageShare.selectSingleFile', 'Select a single file to manage sharing.'),
-                        expandable: false,
-                        durationMs: 2500,
-                      });
-                      return;
-                    }
-                    if (!selectedAccessFileStub?.remoteStorageId) {
-                      alert({
-                        alertType: 'warning',
-                        title: t('storageShare.uploadRequired', 'Upload this file to enable sharing.'),
-                        expandable: false,
-                        durationMs: 2500,
-                      });
-                      return;
-                    }
-                    if (selectedAccessFileStub?.remoteOwnedByCurrentUser === false) {
-                      alert({
-                        alertType: 'warning',
-                        title: t('storageShare.ownerOnly', 'Only the owner can manage sharing.'),
-                        expandable: false,
-                        durationMs: 2500,
-                      });
-                      return;
-                    }
-                    setAccessMenuOpen(false);
-                    setShareManageOpen(true);
-                  }}
-                  aria-label={t('storageShare.manage', 'Manage sharing')}
-                >
-                  <LocalIcon icon="settings-rounded" width="1rem" height="1rem" />
-                </button>
+                {!accessInviteOpen && (
+                  <button
+                    type="button"
+                    className="quick-access-popout__header-action"
+                    onClick={() => {
+                      void openShareManage();
+                    }}
+                    aria-label={t('storageShare.manage', 'Manage sharing')}
+                  >
+                    <LocalIcon icon="settings-rounded" width="1rem" height="1rem" />
+                  </button>
+                )}
                 <button
                   type="button"
                   className="quick-access-popout__header-action"
@@ -622,7 +798,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
               </div>
             </div>
 
-            <div className="quick-access-popout__body">
+            <div className={`quick-access-popout__body ${accessInviteOpen ? 'is-invite' : ''}`}>
               <div className="quick-access-popout__panel">
                 <div className="quick-access-popout__section">
                   <div className="quick-access-popout__label">
@@ -687,18 +863,116 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 </div>
               </div>
 
+              <div className="quick-access-popout__panel quick-access-popout__panel--invite">
+                <div className="quick-access-popout__section">
+                  <div className="quick-access-popout__label">
+                    {t('quickAccess.accessInviteTitle', 'Invite People')}
+                  </div>
+                </div>
+                {inviteRows.map((row) => (
+                  <div key={row.id} className="quick-access-popout__invite-row">
+                    <div className="quick-access-popout__input-group">
+                      <label className="quick-access-popout__label">
+                        {t('quickAccess.accessEmail', 'Email Address')}
+                      </label>
+                      <input
+                        className={`quick-access-popout__input ${row.error ? 'has-error' : ''}`}
+                        placeholder={t('quickAccess.accessEmailPlaceholder', 'name@company.com')}
+                        value={row.email}
+                        onChange={(event) =>
+                          handleInviteRowChange(row.id, { email: event.target.value, error: undefined })
+                        }
+                      />
+                      {row.error && (
+                        <div className="quick-access-popout__input-error">{row.error}</div>
+                      )}
+                    </div>
+                    <div className="quick-access-popout__input-group">
+                      <label className="quick-access-popout__label">
+                        {t('quickAccess.accessRole', 'Role')}
+                      </label>
+                      <select
+                        className="quick-access-popout__select"
+                        value={row.role}
+                        onChange={(event) =>
+                          handleInviteRowChange(row.id, {
+                            role: event.target.value as 'editor' | 'commenter' | 'viewer',
+                          })
+                        }
+                      >
+                        <option value="editor">{t('quickAccess.accessRoleEditor', 'Editor')}</option>
+                        <option value="commenter">{t('quickAccess.accessRoleCommenter', 'Commenter')}</option>
+                        <option value="viewer">{t('quickAccess.accessRoleViewer', 'Viewer')}</option>
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      className="quick-access-popout__remove"
+                      onClick={() => handleRemoveInviteRow(row.id)}
+                      disabled={inviteRows.length === 1}
+                      aria-label={t('quickAccess.accessRemove', 'Remove')}
+                    >
+                      <LocalIcon icon="close-rounded" width="0.9rem" height="0.9rem" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="quick-access-popout__add"
+                  onClick={handleAddInviteRow}
+                >
+                  <span className="quick-access-popout__add-icon">+</span>
+                  {t('quickAccess.accessAddPerson', 'Add another person')}
+                </button>
+              </div>
             </div>
 
             <div className="quick-access-popout__footer">
-              {shareLinksEnabled && (
-                <button
-                  type="button"
-                  className="quick-access-popout__link"
-                  onClick={handleCopyShareLink}
-                >
-                  <LocalIcon icon="link-rounded" width="1rem" height="1rem" />
-                  {t('quickAccess.accessCopyLink', 'Copy link')}
-                </button>
+              {accessInviteOpen ? (
+                <>
+                  <button
+                    type="button"
+                    className="quick-access-popout__primary"
+                    onClick={() => void handleSendInvites()}
+                    disabled={isInviting}
+                  >
+                    <LocalIcon icon="send-rounded" width="1rem" height="1rem" />
+                    {t('quickAccess.accessSendInvite', 'Send Invite')}
+                  </button>
+                  {shareLinksEnabled && (
+                    <button
+                      type="button"
+                      className="quick-access-popout__link"
+                      onClick={handleCopyShareLink}
+                    >
+                      <LocalIcon icon="link-rounded" width="1rem" height="1rem" />
+                      {t('quickAccess.accessCopyLink', 'Copy link')}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  {sharingEnabled && (
+                    <button
+                      type="button"
+                      className="quick-access-popout__primary"
+                      onClick={() => setAccessInviteOpen(true)}
+                    >
+                      <LocalIcon icon="person-add-rounded" width="1rem" height="1rem" />
+                      {t('accessInvite', 'Invite')}
+                    </button>
+                  )}
+                  {shareLinksEnabled && (
+                    <button
+                      type="button"
+                      className="quick-access-popout__link"
+                      onClick={handleCopyShareLink}
+                    >
+                      <LocalIcon icon="link-rounded" width="1rem" height="1rem" />
+                      {t('quickAccess.accessCopyLink', 'Copy link')}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -29,9 +29,11 @@ export default function ShareLinkPage() {
   const [isWorking, setIsWorking] = useState(false);
 
   const normalizedToken = useMemo(() => (token || '').trim(), [token]);
-  const shareRole = (metadata?.accessRole || 'editor').toLowerCase();
-  const canDownload = shareRole === 'editor';
-  const canOpen = shareRole === 'editor';
+  const shareRole = (metadata?.accessRole ?? 'viewer').toLowerCase();
+  const hasReadAccess =
+    shareRole === 'editor' || shareRole === 'commenter' || shareRole === 'viewer';
+  const canDownload = hasReadAccess;
+  const canOpen = hasReadAccess;
 
   const loadMetadata = useCallback(async () => {
     if (!normalizedToken) {

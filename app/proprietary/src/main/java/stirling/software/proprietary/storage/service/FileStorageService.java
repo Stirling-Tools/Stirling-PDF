@@ -100,7 +100,19 @@ public class FileStorageService {
             storedFile.setContentType(storedObject.getContentType());
             storedFile.setSizeBytes(storedObject.getSizeBytes());
             storedFile.setStorageKey(storedObject.getStorageKey());
-            return storedFileRepository.save(storedFile);
+            try {
+                return storedFileRepository.save(storedFile);
+            } catch (RuntimeException saveError) {
+                try {
+                    storageProvider.delete(storedObject.getStorageKey());
+                } catch (IOException deleteError) {
+                    log.warn(
+                            "Failed to delete stored file (key: {}) after save failure",
+                            storedObject.getStorageKey(),
+                            deleteError);
+                }
+                throw saveError;
+            }
         } catch (IOException e) {
             log.error(
                     "Failed to store file for user {} (name: {}, size: {})",
@@ -127,7 +139,20 @@ public class FileStorageService {
             existing.setSizeBytes(storedObject.getSizeBytes());
             existing.setStorageKey(storedObject.getStorageKey());
 
-            StoredFile updated = storedFileRepository.save(existing);
+            StoredFile updated;
+            try {
+                updated = storedFileRepository.save(existing);
+            } catch (RuntimeException saveError) {
+                try {
+                    storageProvider.delete(storedObject.getStorageKey());
+                } catch (IOException deleteError) {
+                    log.warn(
+                            "Failed to delete stored file (key: {}) after update failure",
+                            storedObject.getStorageKey(),
+                            deleteError);
+                }
+                throw saveError;
+            }
             try {
                 storageProvider.delete(oldStorageKey);
             } catch (IOException deleteError) {
@@ -194,6 +219,25 @@ public class FileStorageService {
         if (role != ShareAccessRole.EDITOR) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "Insufficient permissions to download");
+        }
+    }
+
+    public void requireReadAccess(User user, StoredFile file) {
+        if (isOwner(file, user)) {
+            return;
+        }
+        ShareAccessRole role = resolveUserShareRole(file, user);
+        if (!hasReadAccess(role)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Insufficient permissions to access this file");
+        }
+    }
+
+    public void requireReadAccess(FileShare share) {
+        ShareAccessRole role = resolveShareRole(share);
+        if (!hasReadAccess(role)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Insufficient permissions to access this file");
         }
     }
 
@@ -661,6 +705,12 @@ public class FileStorageService {
             return user;
         }
         return null;
+    }
+
+    private boolean hasReadAccess(ShareAccessRole role) {
+        return role == ShareAccessRole.EDITOR
+                || role == ShareAccessRole.COMMENTER
+                || role == ShareAccessRole.VIEWER;
     }
 
 }

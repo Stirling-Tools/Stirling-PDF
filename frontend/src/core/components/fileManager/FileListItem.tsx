@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -25,9 +25,6 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import ShareManagementModal from '@app/components/shared/ShareManagementModal';
 import apiClient from '@app/services/apiClient';
 import { absoluteWithBasePath } from '@app/constants/app';
-import { useFileActions } from '@app/contexts/FileContext';
-import { fileStorage } from '@app/services/fileStorage';
-import { uploadHistoryChain } from '@app/services/serverStorageUpload';
 import { alert } from '@app/components/toast';
 
 interface FileListItemProps {
@@ -65,8 +62,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const { config } = useAppConfig();
   const {expandedFileIds, onToggleExpansion, onUnzipFile, refreshRecentFiles } = useFileManagerContext();
   const { removeFiles } = useFileManagement();
-  const { actions } = useFileActions();
-  const autoSyncAttemptedRef = useRef(false);
 
   // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
@@ -84,11 +79,9 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const hasVersionHistory = (file.versionNumber || 1) > 1; // Show history for any processed file (v2+)
   const currentVersion = file.versionNumber || 1; // Display original files as v1
   const isExpanded = expandedFileIds.has(leafFileId);
-  const uploadEnabled = (config?.enableLogin !== false) && (config?.storageEnabled !== false);
-  const sharingEnabled =
-    uploadEnabled && (config?.storageSharingEnabled !== false);
-  const shareLinksEnabled =
-    sharingEnabled && (config?.storageShareLinksEnabled !== false);
+  const uploadEnabled = config?.storageEnabled === true;
+  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
+  const shareLinksEnabled = sharingEnabled && config?.storageShareLinksEnabled === true;
   const isOwnedOrLocal = file.remoteOwnedByCurrentUser !== false;
   const isSharedWithYou =
     sharingEnabled && (file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink);
@@ -98,14 +91,14 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
   const isOutOfSync = isUploaded && !isUpToDate && isOwnedOrLocal;
   const isLocalOnly = !file.remoteStorageId && !file.remoteSharedViaLink;
-  const accessRole = (file.remoteAccessRole || '').toLowerCase();
-  const hasEditorAccess = isOwnedOrLocal || accessRole === 'editor' || !accessRole;
+  const accessRole = (isOwnedOrLocal ? 'editor' : (file.remoteAccessRole ?? 'viewer')).toLowerCase();
+  const hasReadAccess = isOwnedOrLocal || accessRole === 'editor' || accessRole === 'commenter' || accessRole === 'viewer';
   const canUpload = uploadEnabled && isOwnedOrLocal && isLatestVersion && (!isUploaded || !isUpToDate);
   const canShare = shareLinksEnabled && isOwnedOrLocal && isLatestVersion;
   const canManageShare = sharingEnabled && isOwnedOrLocal && Boolean(file.remoteStorageId);
   const canCopyShareLink =
     shareLinksEnabled && Boolean(file.remoteHasShareLinks) && Boolean(file.remoteStorageId);
-  const canDownloadFile = Boolean(onDownload) && hasEditorAccess;
+  const canDownloadFile = Boolean(onDownload) && hasReadAccess;
 
   const shareBaseUrl = useMemo(() => {
     const frontendUrl = (config?.frontendUrl || '').trim();
@@ -153,54 +146,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
       });
     }
   }, [file.remoteStorageId, shareBaseUrl, t]);
-
-  useEffect(() => {
-    if (!uploadEnabled || !isOwnedOrLocal || !isLatestVersion || !isUploaded || isUpToDate) {
-      autoSyncAttemptedRef.current = false;
-      return;
-    }
-    if (autoSyncAttemptedRef.current) {
-      return;
-    }
-    autoSyncAttemptedRef.current = true;
-    const sync = async () => {
-      try {
-        const originalFileId = (file.originalFileId || file.id) as FileId;
-        const remoteId = file.remoteStorageId;
-        if (!remoteId) return;
-        const { remoteId: storedId, updatedAt, chain } = await uploadHistoryChain(
-          originalFileId,
-          remoteId
-        );
-        for (const stub of chain) {
-          const updates = {
-            remoteStorageId: storedId,
-            remoteStorageUpdatedAt: updatedAt,
-            remoteOwnedByCurrentUser: true,
-            remoteSharedViaLink: false,
-          };
-          actions.updateStirlingFileStub(stub.id, updates);
-          await fileStorage.updateFileMetadata(stub.id, updates);
-        }
-        await refreshRecentFiles();
-      } catch (error) {
-        autoSyncAttemptedRef.current = false;
-        console.error('Auto-sync failed:', error);
-      }
-    };
-    void sync();
-  }, [
-    actions,
-    file.id,
-    file.originalFileId,
-    file.remoteStorageId,
-    isLatestVersion,
-    isOwnedOrLocal,
-    isUploaded,
-    isUpToDate,
-    refreshRecentFiles,
-    uploadEnabled,
-  ]);
 
   return (
     <>

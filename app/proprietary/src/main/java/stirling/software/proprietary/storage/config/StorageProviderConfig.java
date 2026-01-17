@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -24,6 +25,7 @@ public class StorageProviderConfig {
 
     @Bean
     public StorageProvider storageProvider() {
+        boolean storageEnabled = applicationProperties.getStorage().isEnabled();
         String providerName =
                 Optional.ofNullable(applicationProperties.getStorage().getProvider())
                         .orElse("local")
@@ -35,14 +37,19 @@ public class StorageProviderConfig {
         }
         String basePathValue = applicationProperties.getStorage().getLocal().getBasePath();
         if (basePathValue == null || basePathValue.isBlank()) {
-            throw new IllegalStateException("Storage base path is not configured");
+            if (storageEnabled) {
+                throw new IllegalStateException("Storage base path is not configured");
+            }
+            basePathValue = InstallationPathConfig.getPath() + "storage";
         }
         Path basePath = Paths.get(basePathValue).toAbsolutePath().normalize();
-        try {
-            Files.createDirectories(basePath);
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Unable to create storage base directory: " + basePath, e);
+        if (storageEnabled) {
+            try {
+                Files.createDirectories(basePath);
+            } catch (IOException e) {
+                throw new IllegalStateException(
+                        "Unable to create storage base directory: " + basePath, e);
+            }
         }
         return new LocalStorageProvider(basePath);
     }

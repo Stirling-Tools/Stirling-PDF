@@ -118,7 +118,8 @@ public class ConfigController {
             configData.put("enableEmailInvites", smtpEnabled && invitesEnabled);
 
             // Storage settings
-            boolean storageEnabled = applicationProperties.getStorage().isEnabled();
+            boolean storageEnabled =
+                    enableLogin && applicationProperties.getStorage().isEnabled();
             boolean sharingEnabled =
                     storageEnabled
                             && applicationProperties.getStorage().getSharing().isEnabled();

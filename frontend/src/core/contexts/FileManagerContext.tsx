@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button, Group, Modal, Stack, Text } from '@mantine/core';
 import { fileStorage } from '@app/services/fileStorage';
+import { useFileActions } from '@app/contexts/FileContext';
 import { zipFileService } from '@app/services/zipFileService';
 import { StirlingFileStub } from '@app/types/fileContext';
 import { downloadFiles } from '@app/utils/downloadUtils';
@@ -109,6 +110,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const [deletePromptFile, setDeletePromptFile] = useState<StirlingFileStub | null>(null);
   const deletePromptResolveRef = useRef<((choice: RemoteDeleteChoice) => void) | null>(null);
   const { t } = useTranslation();
+  const { actions } = useFileActions();
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
@@ -770,7 +772,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           contentTypeValue
         );
         if (latestFiles.length > 0) {
-          onNewFilesSelect(latestFiles);
+          await actions.addFilesWithOptions(latestFiles, {
+            selectFiles: true,
+            allowDuplicates: true,
+            autoUnzip: false,
+            skipAutoUnzip: false,
+          });
           await refreshRecentFiles();
           alert({
             alertType: 'success',
@@ -789,7 +796,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         });
       }
     },
-    [onNewFilesSelect, refreshRecentFiles, t]
+    [actions, refreshRecentFiles, t]
   );
 
   // Cleanup blob URLs when component unmounts

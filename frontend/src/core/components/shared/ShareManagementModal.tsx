@@ -60,8 +60,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const sharingEnabled = config?.storageSharingEnabled !== false;
-  const shareLinksEnabled = config?.storageShareLinksEnabled !== false;
+  const sharingEnabled = config?.storageSharingEnabled === true;
+  const shareLinksEnabled = config?.storageShareLinksEnabled === true;
   const emailSharingEnabled = config?.storageShareEmailEnabled !== false;
   const { actions } = useFileActions();
   const [isLoading, setIsLoading] = useState(false);

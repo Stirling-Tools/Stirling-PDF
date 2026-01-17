@@ -31,7 +31,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { actions } = useFileActions();
-  const shareLinksEnabled = config?.storageShareLinksEnabled !== false;
+  const shareLinksEnabled = config?.storageShareLinksEnabled === true;
   const [isWorking, setIsWorking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shareToken, setShareToken] = useState<string | null>(null);

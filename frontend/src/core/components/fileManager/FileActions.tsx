@@ -33,11 +33,9 @@ const FileActions: React.FC = () => {
     onStorageFilterChange
   } =
     useFileManagerContext();
-  const uploadEnabled = (config?.enableLogin !== false) && (config?.storageEnabled !== false);
-  const sharingEnabled =
-    uploadEnabled && (config?.storageSharingEnabled !== false);
-  const shareLinksEnabled =
-    sharingEnabled && (config?.storageShareLinksEnabled !== false);
+  const uploadEnabled = config?.storageEnabled === true;
+  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
+  const shareLinksEnabled = sharingEnabled && config?.storageShareLinksEnabled === true;
   const showStorageFilter = uploadEnabled;
   const storageFilterOptions = sharingEnabled
     ? [
@@ -58,8 +56,10 @@ const FileActions: React.FC = () => {
   const hasSelection = selectedFileIds.length > 0;
   const hasOnlyOwnedSelection = selectedFiles.every((file) => file.remoteOwnedByCurrentUser !== false);
   const hasDownloadAccess = selectedFiles.every((file) => {
-    const role = (file.remoteAccessRole || '').toLowerCase();
-    return file.remoteOwnedByCurrentUser !== false || role === 'editor' || !role;
+    const role = (file.remoteOwnedByCurrentUser !== false
+      ? 'editor'
+      : (file.remoteAccessRole ?? 'viewer')).toLowerCase();
+    return role === 'editor' || role === 'commenter' || role === 'viewer';
   });
   const canBulkUpload = uploadEnabled && hasSelection && hasOnlyOwnedSelection;
   const canBulkShare = shareLinksEnabled && hasSelection && hasOnlyOwnedSelection;

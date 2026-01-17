@@ -156,10 +156,6 @@ public class RequestUriUtils {
                         ? requestURI.substring(contextPath.length())
                         : requestURI;
 
-        boolean shareLinkPublicEndpoint =
-                trimmedUri.startsWith("/api/v1/storage/share-links/")
-                        && !trimmedUri.startsWith("/api/v1/storage/share-links/accessed");
-
         // Public auth endpoints that don't require authentication
         return trimmedUri.startsWith("/login")
                 || trimmedUri.startsWith("/auth/")
@@ -179,8 +175,6 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/invite/accept")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
-                || trimmedUri.startsWith("/share/")
-                || shareLinkPublicEndpoint
                 || trimmedUri.startsWith("/v1/api-docs");
     }
 

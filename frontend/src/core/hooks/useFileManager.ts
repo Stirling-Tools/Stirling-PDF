@@ -102,8 +102,7 @@ export const useFileManager = () => {
       );
       let combinedStubs = stirlingFileStubs;
 
-      const shouldFetchServerFiles =
-        (config?.enableLogin !== false) && (config?.storageEnabled !== false);
+      const shouldFetchServerFiles = config?.storageEnabled === true;
 
       if (shouldFetchServerFiles) {
         try {

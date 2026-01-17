@@ -5239,6 +5239,9 @@ removeBoth = "Remove from both"
 localOnly = "Local only"
 changesNotUploaded = "Changes not uploaded"
 storageState = "Storage"
+sharedEditNoticeTitle = "Read-only server copy"
+sharedEditNoticeBody = "You do not have edit rights to the server version of this file. Any edits you make will be saved as a local copy."
+sharedEditNoticeConfirm = "Got it"
 
 [storageShare]
 copyLink = "Copy share link"
