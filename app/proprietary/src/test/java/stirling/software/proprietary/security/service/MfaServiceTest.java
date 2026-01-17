@@ -102,4 +102,22 @@ class MfaServiceTest {
         verify(userRepository, times(1)).save(user);
         verify(databaseService, times(1)).exportDatabase();
     }
+
+    @Test
+    void isMfaRequiredDefaultsToFalse() {
+        User user = new User();
+
+        assertFalse(mfaService.isMfaRequired(user));
+    }
+
+    @Test
+    void setMfaRequiredStoresFlag() throws Exception {
+        User user = new User();
+
+        mfaService.setMfaRequired(user, true);
+
+        assertEquals("true", user.getSettings().get(MfaService.MFA_REQUIRED_KEY));
+        verify(userRepository).save(user);
+        verify(databaseService).exportDatabase();
+    }
 }

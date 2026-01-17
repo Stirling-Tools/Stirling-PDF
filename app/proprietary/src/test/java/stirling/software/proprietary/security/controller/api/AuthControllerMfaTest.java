@@ -1,6 +1,8 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -88,6 +90,19 @@ class AuthControllerMfaTest {
     }
 
     @Test
+    void setupMfaReturnsConflictWhenAlreadyEnabled() throws Exception {
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
+                .thenReturn(Optional.of(user));
+        when(mfaService.isMfaEnabled(user)).thenReturn(true);
+
+        mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
+                .andExpect(status().isConflict())
+                .andExpect(content().json("{\"error\":\"MFA already enabled\"}"));
+
+        verify(totpService, never()).generateSecret();
+    }
+
+    @Test
     void enableMfaRejectsMissingCode() throws Exception {
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
@@ -120,6 +135,7 @@ class AuthControllerMfaTest {
 
         verify(mfaService).enableMfa(user);
         verify(mfaService).markTotpStepUsed(user, 42L);
+        verify(mfaService).setMfaRequired(user, false);
     }
 
     @Test
@@ -144,6 +160,24 @@ class AuthControllerMfaTest {
     }
 
     @Test
+    void disableMfaReturnsDisabledWhenNotEnabled() throws Exception {
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
+                .thenReturn(Optional.of(user));
+        when(mfaService.isMfaEnabled(user)).thenReturn(false);
+
+        mockMvc.perform(
+                        post("/api/v1/auth/mfa/disable")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(Map.of("code", "654321"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled").value(false));
+
+        verify(mfaService, never()).getSecret(user);
+        verifyNoInteractions(totpService);
+    }
+
+    @Test
     void cancelMfaSetupClearsPendingSecret() throws Exception {
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
@@ -153,5 +187,18 @@ class AuthControllerMfaTest {
                 .andExpect(jsonPath("$.cleared").value(true));
 
         verify(mfaService).clearPendingSecret(user);
+    }
+
+    @Test
+    void cancelMfaSetupReturnsConflictWhenEnabled() throws Exception {
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
+                .thenReturn(Optional.of(user));
+        when(mfaService.isMfaEnabled(user)).thenReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/mfa/setup/cancel").principal(authentication))
+                .andExpect(status().isConflict())
+                .andExpect(content().json("{\"error\":\"MFA already enabled\"}"));
+
+        verify(mfaService, never()).clearPendingSecret(user);
     }
 }
