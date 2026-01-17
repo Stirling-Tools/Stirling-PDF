@@ -41,6 +41,10 @@ pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<()
 
     let entry = get_keyring_entry()?;
 
+    if trimmed.len() != token.len() {
+        log::debug!("Auth token had surrounding whitespace; storing trimmed token");
+    }
+
     entry
         .set_password(trimmed)
         .map_err(|e| {
@@ -71,11 +75,20 @@ pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, St
 
     match entry.get_password() {
         Ok(token) => {
-            if token.trim().is_empty() {
+            let trimmed = token.trim();
+            if trimmed.is_empty() {
                 log::warn!("Retrieved empty auth token from keyring; treating as missing");
+                if let Err(err) = entry.delete_credential() {
+                    log::warn!("Failed to delete empty keyring token: {}", err);
+                }
                 Ok(None)
             } else {
-                Ok(Some(token))
+                if trimmed.len() != token.len() {
+                    if let Err(err) = entry.set_password(trimmed) {
+                        log::warn!("Failed to normalize keyring token whitespace: {}", err);
+                    }
+                }
+                Ok(Some(trimmed.to_string()))
             }
         }
         Err(keyring::Error::NoEntry) => Ok(None),

@@ -55,6 +55,19 @@ export class TauriBackendService {
     this.statusListeners.forEach(listener => listener(status));
   }
 
+  private normalizeToken(token: string | null | undefined): string | null {
+    if (!token) {
+      return null;
+    }
+
+    const trimmed = token.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    return trimmed;
+  }
+
   /**
    * Initialize health monitoring for an external server (server mode)
    * Does not start bundled backend, but enables health checks
@@ -122,13 +135,23 @@ export class TauriBackendService {
   private async getAuthToken(): Promise<string | null> {
     // Check localStorage first (web layer token)
     const localStorageToken = localStorage.getItem('stirling_jwt');
-    if (localStorageToken) {
-      return localStorageToken;
+    const normalizedLocalToken = this.normalizeToken(localStorageToken);
+    if (normalizedLocalToken) {
+      return normalizedLocalToken;
+    }
+
+    if (localStorageToken !== null) {
+      localStorage.removeItem('stirling_jwt');
     }
 
     // Fallback to Tauri store
     try {
-      return await invoke<string | null>('get_auth_token');
+      const token = await invoke<string | null>('get_auth_token');
+      const normalizedToken = this.normalizeToken(token);
+      if (!normalizedToken && token !== null) {
+        await invoke('clear_auth_token').catch(() => {});
+      }
+      return normalizedToken;
     } catch {
       console.debug('[TauriBackendService] No auth token available');
       return null;

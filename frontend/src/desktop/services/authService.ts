@@ -48,19 +48,34 @@ export class AuthService {
     return AuthService.instance;
   }
 
+  private normalizeToken(token: string | null | undefined): string | null {
+    if (!token) {
+      return null;
+    }
+
+    const trimmed = token.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    return trimmed;
+  }
+
   /**
    * Save token to all storage locations and notify listeners
    */
   private async saveTokenEverywhere(token: string): Promise<void> {
+    const normalizedToken = this.normalizeToken(token);
+
     // Validate token before caching
-    if (!token || token.trim().length === 0) {
+    if (!normalizedToken) {
       console.warn('[Desktop AuthService] Attempted to save invalid/empty token');
       throw new Error('Invalid token');
     }
 
     try {
       // Save to Tauri store
-      await invoke('save_auth_token', { token });
+      await invoke('save_auth_token', { token: normalizedToken });
       console.log('[Desktop AuthService] ✅ Token saved to Tauri store');
     } catch (error) {
       console.error('[Desktop AuthService] ❌ Failed to save token to Tauri store:', error);
@@ -69,14 +84,14 @@ export class AuthService {
 
     try {
       // Sync to localStorage for web layer
-      localStorage.setItem('stirling_jwt', token);
+      localStorage.setItem('stirling_jwt', normalizedToken);
       console.log('[Desktop AuthService] ✅ Token saved to localStorage');
     } catch (error) {
       console.error('[Desktop AuthService] ❌ Failed to save token to localStorage:', error);
     }
 
     // Cache the valid token in memory
-    this.cachedToken = token;
+    this.cachedToken = normalizedToken;
     console.log('[Desktop AuthService] ✅ Token cached in memory');
 
     // Notify other parts of the system
@@ -91,10 +106,16 @@ export class AuthService {
     // Try Tauri store first
     try {
       const token = await invoke<string | null>('get_auth_token');
+      const normalizedToken = this.normalizeToken(token);
 
-      if (token) {
-        console.log(`[Desktop AuthService] ✅ Token found in Tauri store (length: ${token.length})`);
-        return token;
+      if (normalizedToken) {
+        console.log('[Desktop AuthService] ✅ Token found in Tauri store');
+        return normalizedToken;
+      }
+
+      if (token !== null) {
+        console.warn('[Desktop AuthService] ⚠️ Invalid token found in Tauri store, clearing');
+        await invoke('clear_auth_token').catch(() => {});
       }
 
       console.log('[Desktop AuthService] ℹ️ No token in Tauri store, checking localStorage...');
@@ -104,13 +125,19 @@ export class AuthService {
 
     // Fallback to localStorage
     const localStorageToken = localStorage.getItem('stirling_jwt');
-    if (localStorageToken) {
-      console.log(`[Desktop AuthService] ✅ Token found in localStorage (length: ${localStorageToken.length})`);
-    } else {
-      console.log('[Desktop AuthService] ❌ No token found in any storage');
+    const normalizedLocalToken = this.normalizeToken(localStorageToken);
+    if (normalizedLocalToken) {
+      console.log('[Desktop AuthService] ✅ Token found in localStorage');
+      return normalizedLocalToken;
     }
 
-    return localStorageToken;
+    if (localStorageToken !== null) {
+      console.warn('[Desktop AuthService] ⚠️ Invalid token found in localStorage, clearing');
+      localStorage.removeItem('stirling_jwt');
+    }
+
+    console.log('[Desktop AuthService] ❌ No token found in any storage');
+    return null;
   }
 
   /**
@@ -431,7 +458,7 @@ export class AuthService {
       const token = await this.getTokenFromAnySource();
 
       // Cache the token if valid
-      if (token && token.trim().length > 0) {
+      if (token) {
         this.cachedToken = token;
         console.log('[Desktop AuthService] ✅ Token cached in memory after retrieval');
       }
