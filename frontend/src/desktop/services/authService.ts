@@ -82,13 +82,7 @@ export class AuthService {
       // Don't throw - we can still use localStorage
     }
 
-    try {
-      // Sync to localStorage for web layer
-      localStorage.setItem('stirling_jwt', normalizedToken);
-      console.log('[Desktop AuthService] ✅ Token saved to localStorage');
-    } catch (error) {
-      console.error('[Desktop AuthService] ❌ Failed to save token to localStorage:', error);
-    }
+    console.warn('[Desktop AuthService] Skipping localStorage token persistence for security');
 
     // Cache the valid token in memory
     this.cachedToken = normalizedToken;
