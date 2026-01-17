@@ -137,7 +137,10 @@ export class AuthService {
   /**
    * Clear token from all storage locations
    */
-  private async clearTokenEverywhere(): Promise<void> {
+  private async clearTokenEverywhere(reason?: string): Promise<void> {
+    if (reason) {
+      console.log(`[Desktop AuthService] Clearing token everywhere due to: ${reason}`);
+    }
     // Invalidate cache
     this.cachedToken = null;
     console.log('[Desktop AuthService] Cache invalidated');
@@ -163,7 +166,7 @@ export class AuthService {
    * Local clear only (no backend calls) to reset auth state in desktop contexts
    */
   async localClearAuth(): Promise<void> {
-    await this.clearTokenEverywhere().catch(() => {});
+    await this.clearTokenEverywhere("Local Clear Auth").catch(() => {});
     try {
       await invoke('clear_user_info');
     } catch (err) {
@@ -423,7 +426,7 @@ export class AuthService {
       }
 
       // Clear token from all storage locations
-      await this.clearTokenEverywhere();
+      await this.clearTokenEverywhere("Logout: clear token from all storage locations").catch(() => {});
 
       // Clear user info from Tauri store
       await invoke('clear_user_info');
@@ -436,7 +439,7 @@ export class AuthService {
       // Still set status to unauthenticated even if clear fails
       this.setAuthStatus('unauthenticated', null);
       // Still try to clear token
-      await this.clearTokenEverywhere().catch(() => {});
+      await this.clearTokenEverywhere("Logout: Still try to clear token").catch(() => {});
     }
   }
 
@@ -455,8 +458,11 @@ export class AuthService {
       if (token) {
         this.cachedToken = token;
         console.log('[Desktop AuthService] ✅ Token cached in memory after retrieval');
+      } else if (this.authStatus === 'authenticated') {
+        console.warn('[Desktop AuthService] Authenticated state without token; resetting auth state');
+        await this.localClearAuth();
       }
-
+      console.log('[Desktop AuthService] ✅ Auth token retrieved successfully', token ? '' : '(no token found)');
       return token;
     } catch (error) {
       console.error('[Desktop AuthService] Failed to get auth token:', error);
@@ -498,6 +504,7 @@ export class AuthService {
 
       const currentToken = await this.getAuthToken();
       if (!currentToken) {
+        console.warn('[Desktop AuthService] No current token available for refresh');
         this.setAuthStatus('unauthenticated', null);
         return false;
       }
@@ -548,7 +555,7 @@ export class AuthService {
     if (path.startsWith('/login') || path.startsWith('/setup')) {
       console.log('[Desktop AuthService] On login/setup path, clearing any cached auth');
       // Local clear only; avoid backend logout to prevent noisy errors when already unauthenticated
-      await this.clearTokenEverywhere().catch(() => {});
+      await this.clearTokenEverywhere("Login/Setup Init: clear token from all storage locations").catch(() => {});
       try {
         await invoke('clear_user_info');
       } catch (err) {
@@ -575,7 +582,7 @@ export class AuthService {
       console.log('[Desktop AuthService] Auth state initialized as unauthenticated');
 
       // Defensive: ensure any partial tokens are purged to prevent auto-login loops
-      await this.clearTokenEverywhere().catch(() => {});
+      await this.clearTokenEverywhere("Init: clear token from all storage locations").catch(() => {});
     }
   }
 
