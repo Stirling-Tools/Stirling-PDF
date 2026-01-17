@@ -178,8 +178,7 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/health")
                 || trimmedUri.startsWith("/healthz")
                 || trimmedUri.startsWith("/liveness")
-                || trimmedUri.startsWith("/readiness");
-
+                || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
                 || trimmedUri.startsWith("/v1/api-docs");
