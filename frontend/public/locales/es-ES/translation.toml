@@ -1295,6 +1295,10 @@ cbzDpi = "DPI para renderizado de imágenes"
 cbrOptions = "Opciones de CBR"
 cbrOutputOptions = "Opciones de PDF a CBR"
 cbrDpi = "DPI para el renderizado de imágenes"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opciones de eBook a PDF"
@@ -1396,6 +1400,7 @@ applySignatures = "Aplicar imágenes"
 name = "Imagen"
 placeholder = "Suba una imagen"
 label = "Archivo de imagen"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configurar imagen"
