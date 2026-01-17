@@ -11,15 +11,19 @@ import org.springframework.web.servlet.ModelAndView;
 import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.CheckProgramInstall;
 
 // @Controller // Disabled - Backend-only mode, no Thymeleaf UI
 @RequiredArgsConstructor
+@Slf4j
 public class OtherWebController {
 
     private final ApplicationProperties applicationProperties;
+    private final RuntimePathConfig runtimePathConfig;
 
     @Deprecated
     // @GetMapping("/compress-pdf")
@@ -129,7 +133,7 @@ public class OtherWebController {
     }
 
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = applicationProperties.getSystem().getTessdataDir();
+        String tessdataDir = runtimePathConfig.getTessDataPath();
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
@@ -215,5 +219,13 @@ public class OtherWebController {
     public String attachmentsForm(Model model) {
         model.addAttribute("currentPage", "add-attachments");
         return "misc/add-attachments";
+    }
+
+    @Deprecated
+    // @GetMapping("/extract-attachments")
+    @Hidden
+    public String extractAttachmentsForm(Model model) {
+        model.addAttribute("currentPage", "extract-attachments");
+        return "misc/extract-attachments";
     }
 }

@@ -1,8 +1,11 @@
 unsavedChanges = "You have unsaved changes to your PDF."
+pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "You have unapplied redactions that will be lost."
 areYouSure = "Are you sure you want to leave?"
 unsavedChangesTitle = "Unsaved Changes"
 keepWorking = "Keep Working"
 discardChanges = "Discard & Leave"
+discardRedactions = "Discard & Leave"
 applyAndContinue = "Save & Leave"
 exportAndContinue = "Export & Continue"
 cancel = "Cancel"
@@ -364,6 +367,7 @@ advanced = "Advanced"
 title = "Security & Authentication"
 security = "Security"
 connections = "Connections"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licensing & Analytics"
@@ -438,6 +442,13 @@ currentVersion = "Current Version"
 latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "Security"
@@ -449,6 +460,7 @@ required = "All fields are required."
 mismatch = "New passwords do not match."
 error = "Unable to update password. Please verify your current password and try again."
 success = "Password updated successfully. Please sign in again."
+ssoDisabled = "Password changes are managed by your identity provider."
 current = "Current password"
 currentPlaceholder = "Enter your current password"
 new = "New password"
@@ -510,6 +522,7 @@ low = "Low"
 title = "Change Credentials"
 header = "Update Your Account Details"
 changePassword = "You are using default login credentials. Please enter a new password"
+ssoManaged = "Your account is managed by your identity provider."
 newUsername = "New Username"
 oldPassword = "Current Password"
 newPassword = "New Password"
@@ -526,6 +539,8 @@ accountSettings = "Account Settings"
 adminSettings = "Admin Settings - View and Add Users"
 userControlSettings = "User Control Settings"
 changeUsername = "Change Username"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "New Username"
 password = "Confirmation Password"
 oldPassword = "Old password"
@@ -733,6 +748,11 @@ desc = "Detect and split scanned photos into separate pages"
 tags = "signature,autograph"
 title = "Sign"
 desc = "Adds signature to PDF by drawing, text or image"
+
+[home.annotate]
+tags = "annotate,highlight,draw"
+title = "Annotate"
+desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
 tags = "simplify,remove,interactive"
@@ -956,6 +976,7 @@ desc = "Add custom text anywhere in your PDF"
 addFiles = "Add Files"
 uploadFromComputer = "Upload from computer"
 openFromComputer = "Open from computer"
+mobileUpload = "Upload from Mobile"
 
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
@@ -1242,7 +1263,7 @@ includeAllRecipients = "Include CC and BCC recipients in header"
 downloadHtml = "Download HTML intermediate file instead of PDF"
 pdfaOptions = "PDF/A Options"
 outputFormat = "Output Format"
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features."
+pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
 fileFormat = "File Format"
 wordDoc = "Word Document"
@@ -1271,6 +1292,37 @@ cbzOptions = "CBZ to PDF Options"
 optimizeForEbook = "Optimize PDF for ebook readers (uses Ghostscript)"
 cbzOutputOptions = "PDF to CBZ Options"
 cbzDpi = "DPI for image rendering"
+cbrOptions = "CBR Options"
+cbrOutputOptions = "PDF to CBR Options"
+cbrDpi = "DPI for image rendering"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "eBook to PDF Options"
+ebookOptionsDesc = "Options for converting eBooks to PDF"
+embedAllFonts = "Embed all fonts"
+embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
+includeTableOfContents = "Include table of contents"
+includeTableOfContentsDesc = "Add a generated table of contents to the resulting PDF"
+includePageNumbers = "Include page numbers"
+includePageNumbersDesc = "Add page numbers to the generated PDF"
+optimizeForEbookPdf = "Optimize for ebook readers"
+optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
@@ -1348,6 +1400,7 @@ applySignatures = "Apply Images"
 name = "Image"
 placeholder = "Upload an image"
 label = "Image file"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configure Image"
@@ -1387,6 +1440,11 @@ header = "Add Attachments"
 add = "Add Attachment"
 remove = "Remove Attachment"
 embed = "Embed Attachment"
+convertToPdfA3b = "Convert to PDF/A-3b"
+convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
+convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
+convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
+convertToPdfA3bTooltipTitle = "What it does"
 submit = "Add Attachments"
 
 [watermark]
@@ -2332,6 +2390,10 @@ saved = "Saved"
 label = "Upload signature image"
 placeholder = "Select image file"
 hint = "Upload a PNG or JPG image of your signature"
+removeBackground = "Remove white background (make transparent)"
+processing = "Processing image..."
+backgroundRemovalFailedTitle = "Background removal failed"
+backgroundRemovalFailedMessage = "Could not remove the background from the image. Using original image instead."
 
 [sign.instructions]
 title = "How to add signature"
@@ -2376,6 +2438,11 @@ note = "Flattening removes interactive elements from the PDF, making them non-ed
 [flatten.options.flattenOnlyForms]
 label = "Flatten only forms"
 desc = "Only flatten form fields, leaving other interactive elements intact"
+
+[flatten.renderDpi]
+label = "Rendering DPI (optional, recommended 150 DPI)"
+help = "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size."
+placeholder = "e.g. 150"
 
 [flatten.results]
 title = "Flatten Results"
@@ -2951,6 +3018,7 @@ header = "Crop PDF"
 submit = "Apply Crop"
 noFileSelected = "Select a PDF file to begin cropping"
 reset = "Reset to full PDF"
+autoCrop = "Auto-crop whitespace"
 
 [crop.preview]
 title = "Crop Area Selection"
@@ -3181,6 +3249,7 @@ title = "Redaction Method"
 mode = "Mode"
 automatic = "Automatic"
 automaticDesc = "Redact text based on search terms"
+automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
 manual = "Manual"
 manualDesc = "Click and drag to redact specific areas"
 manualComingSoon = "Manual redaction coming soon"
@@ -3251,8 +3320,35 @@ text = "Only match complete words, not partial matches. 'John' won't match 'John
 title = "Convert to PDF-Image"
 text = "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable."
 
+[redact.tooltip.manual.header]
+title = "Manual Redaction Controls"
+
+[redact.tooltip.manual.markText]
+title = "Mark Text Tool"
+text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+
+[redact.tooltip.manual.markArea]
+title = "Mark Area Tool"
+text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+
+[redact.tooltip.manual.apply]
+title = "Apply Redactions"
+text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet1 = "Mark as many areas as needed before applying"
+bullet2 = "All pending redactions are applied at once"
+bullet3 = "Redactions cannot be undone after applying"
+
 [redact.manual]
+title = "Redaction Tools"
+instructions = "Select text or draw areas on the PDF to mark content for redaction."
+markText = "Mark Text"
+markArea = "Mark Area"
+pendingLabel = "Pending:"
+applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+apply = "Apply"
+noMarks = "No redaction marks. Use the tools above to mark content for redaction."
 header = "Manual Redaction"
+controlsTitle = "Manual Redaction Controls"
 textBasedRedaction = "Text-based Redaction"
 pageBasedRedaction = "Page-based Redaction"
 convertPDFToImageLabel = "Convert PDF to PDF-Image (Used to remove text behind the box)"
@@ -3367,6 +3463,19 @@ placeholder = "Enter number of horizontal divisions"
 [split-by-sections.vertical]
 label = "Vertical Divisions"
 placeholder = "Enter number of vertical divisions"
+
+[split-by-sections.splitMode]
+label = "Split Mode"
+description = "Choose how to split the pages"
+splitAll = "Split all pages"
+splitAllExceptFirst = "Split all except first"
+splitAllExceptLast = "Split all except last"
+splitAllExceptFirstAndLast = "Split all except first and last"
+custom = "Custom pages"
+
+[split-by-sections.customPages]
+label = "Custom Page Numbers"
+placeholder = "e.g. 2,4,6"
 
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize,Customise"
@@ -3729,6 +3838,9 @@ filesize = "File Size"
 [compress.grayscale]
 label = "Apply Grayscale for Compression"
 
+[compress.linearize]
+label = "Linearize PDF for fast web viewing"
+
 [compress.lineArt]
 label = "Convert images to line art"
 description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
@@ -3771,6 +3883,11 @@ failed = "An error occurred while compressing the PDF."
 [compress.selectText.1]
 _value = "Compression Settings"
 1 = "1-3 PDF compression,</br> 4-6 lite image compression,</br> 7-9 intense image compression Will dramatically reduce image quality"
+
+[compress.compressionLevel]
+range1to3 = "Lower values preserve quality but result in larger files"
+range4to6 = "Medium compression with moderate quality reduction"
+range7to9 = "Higher values reduce file size significantly but may reduce image clarity"
 
 [decrypt]
 passwordPrompt = "This file is password-protected. Please enter the password:"
@@ -4011,22 +4128,97 @@ deleteSelected = "Delete Selected Pages"
 closePdf = "Close PDF"
 exportAll = "Export PDF"
 downloadSelected = "Download Selected Files"
-downloadAll = "Download All"
-saveAll = "Save All"
+annotations = "Annotations"
+exportSelected = "Export Selected Pages"
+saveChanges = "Save Changes"
 toggleTheme = "Toggle Theme"
-toggleBookmarks = "Toggle Bookmarks"
 language = "Language"
+toggleAnnotations = "Toggle Annotations Visibility"
 search = "Search PDF"
 panMode = "Pan Mode"
+applyRedactionsFirst = "Apply redactions first"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 toggleSidebar = "Toggle Sidebar"
-exportSelected = "Export Selected Pages"
-toggleAnnotations = "Toggle Annotations Visibility"
-annotationMode = "Toggle Annotation Mode"
+toggleBookmarks = "Toggle Bookmarks"
 print = "Print PDF"
 draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
 save = "Save"
+downloadAll = "Download All"
+saveAll = "Save All"
+
+[textAlign]
+left = "Left"
+center = "Center"
+right = "Right"
+
+[annotation]
+title = "Annotate"
+desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+highlight = "Highlight"
+pen = "Pen"
+text = "Text box"
+note = "Note"
+rectangle = "Rectangle"
+ellipse = "Ellipse"
+select = "Select"
+exit = "Exit annotation mode"
+strokeWidth = "Width"
+opacity = "Opacity"
+strokeOpacity = "Stroke Opacity"
+fillOpacity = "Fill Opacity"
+fontSize = "Font size"
+chooseColor = "Choose colour"
+color = "Colour"
+strokeColor = "Stroke Colour"
+fillColor = "Fill Colour"
+underline = "Underline"
+strikeout = "Strikeout"
+squiggly = "Squiggly"
+inkHighlighter = "Freehand Highlighter"
+freehandHighlighter = "Freehand Highlighter"
+square = "Square"
+circle = "Circle"
+polygon = "Polygon"
+line = "Line"
+stamp = "Add Image"
+textMarkup = "Text Markup"
+drawing = "Drawing"
+shapes = "Shapes"
+notesStamps = "Notes & Stamps"
+settings = "Settings"
+borderOn = "Border: On"
+borderOff = "Border: Off"
+editInk = "Edit Pen"
+editLine = "Edit Line"
+editNote = "Edit Note"
+editText = "Edit Text Box"
+editTextMarkup = "Edit Text Markup"
+editSelected = "Edit Annotation"
+editSquare = "Edit Square"
+editCircle = "Edit Circle"
+editPolygon = "Edit Polygon"
+unsupportedType = "This annotation type is not fully supported for editing."
+textAlignment = "Text Alignment"
+noteIcon = "Note Icon"
+imagePreview = "Preview"
+contents = "Text"
+backgroundColor = "Background colour"
+clearBackground = "Remove background"
+noBackground = "No background"
+stampSettings = "Stamp Settings"
+savingCopy = "Preparing download..."
+saveFailed = "Unable to save copy"
+saveReady = "Download ready"
+selectAndMove = "Select and Edit"
+editSelectDescription = "Click an existing annotation to edit its colour, opacity, text, or size."
+editStampHint = "To change the image, delete this stamp and add a new one."
+editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
+undo = "Undo"
+redo = "Redo"
+applyChanges = "Apply Changes"
 saveChanges = "Save Changes"
 
 [search]
@@ -4110,6 +4302,8 @@ fetchError = "Failed to load settings"
 saveError = "Failed to save settings"
 saved = "Settings saved successfully"
 saveSuccess = "Settings saved successfully"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "Save Changes"
 discard = "Discard"
 restartRequired = "Restart Required"
@@ -4232,6 +4426,13 @@ description = "Path to WeasyPrint executable for HTML to PDF conversion (leave e
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert Executable"
 description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Click to view plan details"
 
 [admin.settings.security]
 title = "Security"
@@ -4369,6 +4570,19 @@ connect = "Connect"
 disconnect = "Disconnect"
 disconnected = "Provider disconnected successfully"
 disconnectError = "Failed to disconnect provider"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO Auto Login"
@@ -4436,6 +4650,110 @@ description = "Automatically create user accounts on first SAML2 login"
 [admin.settings.connections.saml2.blockRegistration]
 label = "Block Registration"
 description = "Prevent new user registration via SAML2"
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+noValidDocument.label = "Show \"No valid document\" (Channel)"
+noValidDocument.description = "Suppress the no valid document response for channel uploads."
+errorProcessing.label = "Show processing errors (Channel)"
+errorProcessing.description = "Send processing error messages to channels."
+errorMessage.label = "Show error messages (Channel)"
+errorMessage.description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+noValidDocument.label = "Show \"No valid document\" (User)"
+noValidDocument.description = "Suppress the no valid document response for user uploads."
+errorProcessing.label = "Show processing errors (User)"
+errorProcessing.description = "Send processing error messages to users."
+errorMessage.label = "Show error messages (User)"
+errorMessage.description = "Show detailed error messages for users."
+
+[admin.settings.connections.mobileScanner]
+label = "Mobile Phone Upload"
+enable = "Enable QR Code Upload"
+description = "Allow users to upload files from mobile devices by scanning a QR code"
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.database]
 title = "Database"
@@ -4617,6 +4935,10 @@ description = "Allow admins to invite users via email with auto-generated passwo
 [admin.settings.mail.frontendUrl]
 label = "Frontend URL"
 description = "Base URL for frontend (e.g. https://pdf.example.com). Used for generating invite links in emails. Leave empty to use backend URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Note: Requires Frontend URL to be configured. "
+link = "Configure in System Settings"
 
 [admin.settings.legal]
 title = "Legal Documents"
@@ -4803,6 +5125,9 @@ googleDriveShort = "Drive"
 myFiles = "My Files"
 noRecentFiles = "No recent files found"
 googleDriveNotAvailable = "Google Drive integration not available"
+mobileUpload = "Mobile Upload"
+mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "Download Selected"
 saveSelected = "Save Selected"
 openFiles = "Open Files"
@@ -5180,6 +5505,15 @@ warning = "⚠️ Warning: This action will generate new API keys and make your 
 impact = "Any applications or services currently using these keys will stop working until you update them with the new keys."
 confirmPrompt = "Are you sure you want to continue?"
 confirmCta = "Refresh Keys"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "Select Attachments"
@@ -6030,6 +6364,7 @@ description = "Enter the full URL of your self-hosted Stirling PDF server"
 
 [setup.server.error]
 emptyUrl = "Please enter a server URL"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "Could not connect to server"
 testFailed = "Connection test failed"
 configFetch = "Failed to fetch server configuration. Please check the URL and try again."
@@ -6048,6 +6383,7 @@ connectingTo = "Connecting to:"
 submit = "Login"
 signInWith = "Sign in with"
 oauthPending = "Opening browser for authentication..."
+sso = "Single Sign-On"
 orContinueWith = "Or continue with email"
 serverRequirement = "Note: The server must have login enabled."
 showInstructions = "How to enable?"
@@ -6084,7 +6420,7 @@ title = "Authentication Failed"
 message = "Authentication was not successful. You can close this window and try again."
 
 [pdfTextEditor]
-title = "PDF JSON Editor"
+title = "PDF Text Editor"
 viewLabel = "PDF Editor"
 converting = "Converting PDF to editable format..."
 conversionFailed = "Failed to convert PDF. Please try again."
@@ -6113,6 +6449,8 @@ reset = "Reset Changes"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
 saveChanges = "Save Changes"
+applyChanges = "Apply Changes"
+downloadCopy = "Download Copy"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Auto-scale text to fit boxes"
@@ -6130,6 +6468,24 @@ descriptionInline = "Tip: Hold Ctrl (Cmd) or Shift to multi-select text boxes. A
 [pdfTextEditor.options.forceSingleElement]
 title = "Lock edited text to a single PDF element"
 description = "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts."
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.tooltip.header]
+title = "Preview Limitations"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Text and Image Focus"
+text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Preview Variance"
+text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha Viewer"
+text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Merge selected boxes"
@@ -6150,8 +6506,8 @@ alpha = "This alpha viewer is still evolving—certain fonts, colours, transpare
 [pdfTextEditor.empty]
 title = "No document loaded"
 subtitle = "Load a PDF or JSON file to begin editing text content."
-dropzone = "Drag and drop a PDF or JSON file here, or click to browse"
-dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF or JSON file here, or click to browse"
+dropzone = "Drag and drop a PDF here, or click to browse"
+dropzoneWithFiles = "Select a file from the Files tab, or drag and drop a PDF here, or click to browse"
 
 [pdfTextEditor.welcomeBanner]
 title = "Welcome to PDF Text Editor (Early Access)"
@@ -6252,3 +6608,58 @@ title = "Add Text Results"
 
 [addText.error]
 failed = "An error occurred while adding text to the PDF."
+
+[mobileUpload]
+title = "Upload from Mobile"
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
+error = "Connection Error"
+pollingError = "Error checking for files"
+sessionId = "Session ID"
+sessionCreateError = "Failed to create session"
+expiryWarning = "Session Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+filesReceived = "{{count}} file(s) received"
+connected = "Mobile device connected"
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
+
+[mobileScanner]
+title = "Mobile Scanner"
+noSession = "Invalid Session"
+noSessionMessage = "Please scan a valid QR code to access this page."
+validating = "Validating session..."
+sessionInvalid = "Session Error"
+sessionExpired = "This session has expired. Please refresh and try again."
+sessionNotFound = "Session not found. Please refresh and try again."
+sessionValidationError = "Unable to verify session. Please try again."
+uploadSuccess = "Upload Successful!"
+uploadSuccessMessage = "Your images have been transferred."
+httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+uploadFailed = "Upload failed. Please try again."
+uploading = "Uploading..."
+connected = "Connected"
+connecting = "Connecting..."
+chooseMethod = "Choose Upload Method"
+chooseMethodDescription = "Select how you want to scan and upload documents"
+camera = "Camera"
+cameraDescription = "Scan documents using your device camera with automatic edge detection"
+fileUpload = "File Upload"
+fileDescription = "Upload existing photos or documents from your device"
+cameraAccessDenied = "Camera access denied. Please enable camera access."
+back = "Back"
+settings = "Settings"
+edgeDetection = "Edge Detection"
+flashlight = "Flashlight"
+flash = "Flash"
+processing = "Processing..."
+capture = "Capture Photo"
+selectFilesPrompt = "Select files to upload"
+selectImage = "Select Image"
+preview = "Preview"
+retake = "Retake"
+addToBatch = "Add to Batch"
+upload = "Upload"
+batchImages = "Batch"
+clearBatch = "Clear"
+uploadAll = "Upload All"

@@ -21,11 +21,10 @@ import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
 import { PrintPluginPackage } from '@embedpdf/plugin-print/react';
-
-// Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
+import { RedactionPluginPackage, RedactionLayer } from '@embedpdf/plugin-redaction/react';
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
 import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
@@ -38,26 +37,35 @@ import { SearchAPIBridge } from '@app/components/viewer/SearchAPIBridge';
 import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
 import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
 import { SignatureAPIBridge } from '@app/components/viewer/SignatureAPIBridge';
+import { AnnotationAPIBridge } from '@app/components/viewer/AnnotationAPIBridge';
 import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
-import type { SignatureAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
+import type { SignatureAPI, AnnotationAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
 import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
+import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
+import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
+import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
 import { absoluteWithBasePath } from '@app/constants/app';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
   enableAnnotations?: boolean;
+  enableRedaction?: boolean;
+  isManualRedactionMode?: boolean;
+  showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
   signatureApiRef?: React.RefObject<SignatureAPI>;
+  annotationApiRef?: React.RefObject<AnnotationAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
+  redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatureAdded, signatureApiRef, historyApiRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -100,7 +108,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: true,
-        withAnnotations: true,
+        withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -122,10 +130,16 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         selectAfterCreate: true,
       }),
 
+      // Register redaction plugin (depends on InteractionManager, Selection, History)
+      // Always register for redaction functionality
+      createPluginRegistration(RedactionPluginPackage),
+
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
         defaultMode: 'mobile', // Try mobile mode which might be more permissive
       }),
+      // Register pan plugin (depends on Viewport, InteractionManager) - keep disabled to prevent drag panning
+      createPluginRegistration(PanPluginPackage, {}),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -166,7 +180,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl]);
+  }, [pdfUrl, enableAnnotations, showBakedAnnotations]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
@@ -251,7 +265,315 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
           if (!annotationApi) return;
 
           if (enableAnnotations) {
-            annotationApi.addTool({
+            const ensureTool = (tool: any) => {
+              const existing = annotationApi.getTool?.(tool.id);
+              if (!existing) {
+                annotationApi.addTool(tool);
+              }
+            };
+
+            ensureTool({
+              id: 'highlight',
+              name: 'Highlight',
+              interaction: { exclusive: true, cursor: 'text', textSelection: true },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.HIGHLIGHT,
+                color: '#ffd54f',
+                opacity: 0.6,
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'underline',
+              name: 'Underline',
+              interaction: { exclusive: true, cursor: 'text', textSelection: true },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.UNDERLINE,
+                color: '#ffb300',
+                opacity: 1,
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'strikeout',
+              name: 'Strikeout',
+              interaction: { exclusive: true, cursor: 'text', textSelection: true },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.STRIKEOUT,
+                color: '#e53935',
+                opacity: 1,
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'squiggly',
+              name: 'Squiggly',
+              interaction: { exclusive: true, cursor: 'text', textSelection: true },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.SQUIGGLY,
+                color: '#00acc1',
+                opacity: 1,
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'ink',
+              name: 'Pen',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.INK ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.INK,
+                color: '#1f2933',
+                opacity: 1,
+                borderWidth: 2,
+                lineWidth: 2,
+                strokeWidth: 2,
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'inkHighlighter',
+              name: 'Ink Highlighter',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.INK && annotation.color === '#ffd54f' ? 8 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.INK,
+                color: '#ffd54f',
+                opacity: 0.5,
+                borderWidth: 6,
+                lineWidth: 6,
+                strokeWidth: 6,
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'square',
+              name: 'Square',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.SQUARE,
+                color: '#0000ff', // fill color (blue)
+                strokeColor: '#cf5b5b', // border color (reddish pink)
+                opacity: 0.5,
+                borderWidth: 1,
+                strokeWidth: 1,
+                lineWidth: 1,
+              },
+              clickBehavior: {
+                enabled: true,
+                defaultSize: { width: 120, height: 90 },
+              },
+              behavior: {
+                deactivateToolAfterCreate: true,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'circle',
+              name: 'Circle',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.CIRCLE,
+                color: '#0000ff', // fill color (blue)
+                strokeColor: '#cf5b5b', // border color (reddish pink)
+                opacity: 0.5,
+                borderWidth: 1,
+                strokeWidth: 1,
+                lineWidth: 1,
+              },
+              clickBehavior: {
+                enabled: true,
+                defaultSize: { width: 100, height: 100 },
+              },
+              behavior: {
+                deactivateToolAfterCreate: true,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'line',
+              name: 'Line',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.LINE,
+                color: '#1565c0',
+                opacity: 1,
+                borderWidth: 2,
+                strokeWidth: 2,
+                lineWidth: 2,
+              },
+              clickBehavior: {
+                enabled: true,
+                defaultLength: 120,
+                defaultAngle: 0,
+              },
+              behavior: {
+                deactivateToolAfterCreate: true,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'lineArrow',
+              name: 'Arrow',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.LINE && (annotation.endStyle === 'ClosedArrow' || annotation.lineEndingStyles?.end === 'ClosedArrow') ? 9 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.LINE,
+                color: '#1565c0',
+                opacity: 1,
+                borderWidth: 2,
+                startStyle: 'None',
+                endStyle: 'ClosedArrow',
+                lineEndingStyles: { start: 'None', end: 'ClosedArrow' },
+              },
+              clickBehavior: {
+                enabled: true,
+                defaultLength: 120,
+                defaultAngle: 0,
+              },
+              behavior: {
+                deactivateToolAfterCreate: true,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'polyline',
+              name: 'Polyline',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.POLYLINE,
+                color: '#1565c0',
+                opacity: 1,
+                borderWidth: 2,
+              },
+              clickBehavior: {
+                enabled: true,
+                finishOnDoubleClick: true,
+              },
+              behavior: {
+                deactivateToolAfterCreate: true,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'polygon',
+              name: 'Polygon',
+              interaction: { exclusive: true, cursor: 'crosshair' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.POLYGON,
+                color: '#0000ff', // fill color (blue)
+                strokeColor: '#cf5b5b', // border color (reddish pink)
+                opacity: 0.5,
+                borderWidth: 1,
+              },
+              clickBehavior: {
+                enabled: true,
+                finishOnDoubleClick: true,
+                defaultSize: { width: 140, height: 100 },
+              },
+              behavior: {
+                deactivateToolAfterCreate: true,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'text',
+              name: 'Text',
+              interaction: { exclusive: true, cursor: 'text' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.FREETEXT,
+                textColor: '#111111',
+                fontSize: 14,
+                fontFamily: 'Helvetica',
+                opacity: 1,
+                interiorColor: '#fffef7',
+                contents: 'Text',
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'note',
+              name: 'Note',
+              interaction: { exclusive: true, cursor: 'pointer' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.FREETEXT,
+                textColor: '#1b1b1b',
+                color: '#ffa000',
+                interiorColor: '#fff8e1',
+                opacity: 1,
+                contents: 'Note',
+                fontSize: 12,
+              },
+              clickBehavior: {
+                enabled: true,
+                defaultSize: { width: 160, height: 100 },
+              },
+              behavior: {
+                deactivateToolAfterCreate: false,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
+              id: 'stamp',
+              name: 'Image Stamp',
+              interaction: { exclusive: false, cursor: 'copy' },
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0),
+              defaults: {
+                type: PdfAnnotationSubtype.STAMP,
+              },
+              behavior: {
+                deactivateToolAfterCreate: true,
+                selectAfterCreate: true,
+              },
+            });
+
+            ensureTool({
               id: 'signatureStamp',
               name: 'Digital Signature',
               interaction: { exclusive: false, cursor: 'copy' },
@@ -261,7 +583,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
               },
             });
 
-            annotationApi.addTool({
+            ensureTool({
               id: 'signatureInk',
               name: 'Signature Draw',
               interaction: { exclusive: true, cursor: 'crosshair' },
@@ -308,8 +630,14 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
-        {enableAnnotations && <SignatureAPIBridge ref={signatureApiRef} />}
-        {enableAnnotations && <HistoryAPIBridge ref={historyApiRef} />}
+        {(enableAnnotations || enableRedaction || isManualRedactionMode) && <HistoryAPIBridge ref={historyApiRef} />}
+        {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
+        {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
+        {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
+        {(enableAnnotations || enableRedaction || isManualRedactionMode) && <SignatureAPIBridge ref={signatureApiRef} />}
+        {(enableRedaction || isManualRedactionMode) && <RedactionPendingTracker ref={redactionTrackerRef} />}
+        {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
+        
         <ExportAPIBridge />
         <BookmarkAPIBridge />
         <PrintAPIBridge />
@@ -374,6 +702,16 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, onSignatur
                           pageHeight={height}
                           rotation={rotation}
                           selectionOutlineColor="#007ACC"
+                        />
+                      )}
+
+                      {/* Redaction layer for marking areas to redact (only when enabled) */}
+                      {enableRedaction && (
+                        <RedactionLayer
+                          pageIndex={pageIndex}
+                          scale={scale}
+                          rotation={rotation}
+                          selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
                         />
                       )}
                     </div>

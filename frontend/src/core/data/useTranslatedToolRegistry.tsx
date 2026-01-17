@@ -51,6 +51,7 @@ import Crop from "@app/tools/Crop";
 import Sign from "@app/tools/Sign";
 import AddText from "@app/tools/AddText";
 import AddImage from "@app/tools/AddImage";
+import Annotate from "@app/tools/Annotate";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
@@ -223,7 +224,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false, //TODO make support Sign
       },
       addText: {
-        icon: <LocalIcon icon="material-symbols:text-fields-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="text-fields-rounded" width="1.5rem" height="1.5rem" />,
         name: t('home.addText.title', 'Add Text'),
         component: AddText,
         description: t('home.addText.desc', 'Add custom text anywhere in your PDF'),
@@ -244,6 +245,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: signOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, 'addImage'),
+        supportsAutomate: false,
+      },
+      annotate: {
+        icon: <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />,
+        name: t('home.annotate.title', 'Annotate'),
+        component: Annotate,
+        description: t('home.annotate.desc', 'Highlight, draw, add notes, and shapes directly in the viewer'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: 'viewer',
+        operationConfig: signOperationConfig,
+        automationSettings: null,
+        synonyms: getSynonyms(t, 'annotate'),
         supportsAutomate: false,
       },
 
@@ -821,7 +835,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Pro/#activation",
+        link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
         synonyms: getSynonyms(t, "devAirgapped"),
         supportsAutomate: false,
         automationSettings: null
@@ -878,6 +892,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "pdf-to-markdown",
           "pdf-to-pdfa",
           "eml-to-pdf",
+          "pdf-to-epub",
         ],
 
         operationConfig: convertOperationConfig,
