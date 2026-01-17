@@ -469,8 +469,6 @@ confirm = "Konfirmasi kata sandi baru"
 confirmPlaceholder = "Masukkan ulang kata sandi baru"
 update = "Perbarui kata sandi"
 
-
-
 [settings.hotkeys]
 title = "Pintasan Keyboard"
 description = "Sesuaikan pintasan keyboard untuk akses cepat ke alat. Klik \"Change shortcut\" dan tekan kombinasi tombol baru. Tekan Esc untuk membatalkan."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI untuk perenderan gambar"
 cbrOptions = "Opsi CBR"
 cbrOutputOptions = "Opsi PDF ke CBR"
 cbrDpi = "DPI untuk perenderan gambar"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opsi eBook ke PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Terapkan Gambar"
 name = "Gambar"
 placeholder = "Unggah gambar"
 label = "File gambar"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Konfigurasi Gambar"

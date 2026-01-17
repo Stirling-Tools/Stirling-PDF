@@ -469,8 +469,6 @@ confirm = "Confirmar nova senha"
 confirmPlaceholder = "Redigite sua nova senha"
 update = "Atualizar senha"
 
-
-
 [settings.hotkeys]
 title = "Atalhos de teclado"
 description = "Personalize atalhos de teclado para acesso rápido às ferramentas. Clique em \"Alterar atalho\" e pressione uma nova combinação de teclas. Pressione Esc para cancelar."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI para renderização de imagem"
 cbrOptions = "Opções de CBR"
 cbrOutputOptions = "Opções de PDF para CBR"
 cbrDpi = "DPI para renderização de imagem"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opções de eBook para PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Aplicar imagens"
 name = "Imagem"
 placeholder = "Enviar uma imagem"
 label = "Arquivo de imagem"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configurar imagem"

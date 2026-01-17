@@ -469,8 +469,6 @@ confirm = "പുതിയ പാസ്‌വേഡ് സ്ഥിരീകര�
 confirmPlaceholder = "നിങ്ങളുടെ പുതിയ പാസ്‌വേഡ് വീണ്ടും നൽകുക"
 update = "പാസ്‌വേഡ് അപ്‌ഡേറ്റ് ചെയ്യുക"
 
-
-
 [settings.hotkeys]
 title = "കീബോർഡ് ഷോർട്ട്‌കട്ടുകൾ"
 description = "ടൂൾസ് വേഗത്തിൽ ആക്‌സസ് ചെയ്യാൻ കീബോർഡ് ഷോർട്ട്‌കട്ടുകൾ ഇഷ്ടാനുസൃതമാക്കുക. \"Change shortcut\" ക്ലിക്ക് ചെയ്ത് ഒരു പുതിയ കീ കോംബിനേഷൻ അമർത്തുക. റദ്ദാക്കാൻ Esc അമർത്തുക."
@@ -1297,6 +1295,10 @@ cbzDpi = "ഇമേജ് റെൻഡറിംഗിനുള്ള DPI"
 cbrOptions = "CBR ഓപ്ഷനുകൾ"
 cbrOutputOptions = "PDF-നെ CBR ആക്കാനുള്ള ഓപ്ഷനുകൾ"
 cbrDpi = "ഇമേജ് റൻഡറിംഗിനുള്ള DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook-നെ PDF ആക്കാനുള്ള ഓപ്ഷനുകൾ"
@@ -1398,6 +1400,7 @@ applySignatures = "ചിത്രങ്ങൾ പ്രയോഗിക്കു
 name = "ചിത്രം"
 placeholder = "ഒരു ചിത്രം അപ്‌ലോഡ് ചെയ്യുക"
 label = "ചിത്ര ഫയൽ"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "ചിത്രം ക്രമീകരിക്കുക"

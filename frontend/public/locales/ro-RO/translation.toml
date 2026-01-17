@@ -469,8 +469,6 @@ confirm = "Confirmați parola nouă"
 confirmPlaceholder = "Reintroduceți parola nouă"
 update = "Actualizați parola"
 
-
-
 [settings.hotkeys]
 title = "Scurtături de tastatură"
 description = "Personalizați scurtăturile de tastatură pentru acces rapid la instrumente. Faceți clic pe \"Schimbă scurtătura\" și apăsați o nouă combinație de taste. Apăsați Esc pentru a anula."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI pentru randarea imaginilor"
 cbrOptions = "Opțiuni CBR"
 cbrOutputOptions = "Opțiuni PDF către CBR"
 cbrDpi = "DPI pentru randarea imaginilor"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opțiuni eBook către PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Aplică imagini"
 name = "Imagine"
 placeholder = "Încarcă o imagine"
 label = "Fișier imagine"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configurează imaginea"

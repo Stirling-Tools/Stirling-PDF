@@ -469,8 +469,6 @@ confirm = "Xác nhận mật khẩu mới"
 confirmPlaceholder = "Nhập lại mật khẩu mới"
 update = "Cập nhật mật khẩu"
 
-
-
 [settings.hotkeys]
 title = "Phím tắt"
 description = "Tùy chỉnh phím tắt để truy cập công cụ nhanh. Nhấp \"Change shortcut\" và nhấn một tổ hợp phím mới. Nhấn Esc để hủy."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI cho kết xuất ảnh"
 cbrOptions = "Tùy chọn CBR"
 cbrOutputOptions = "Tùy chọn PDF sang CBR"
 cbrDpi = "DPI cho kết xuất hình ảnh"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Tùy chọn eBook sang PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Áp dụng ảnh"
 name = "Ảnh"
 placeholder = "Tải lên một ảnh"
 label = "Tệp ảnh"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Cấu hình ảnh"

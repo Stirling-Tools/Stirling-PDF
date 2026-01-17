@@ -469,8 +469,6 @@ confirm = "Potwierdź nowe hasło"
 confirmPlaceholder = "Wpisz ponownie nowe hasło"
 update = "Zaktualizuj hasło"
 
-
-
 [settings.hotkeys]
 title = "Skróty klawiaturowe"
 description = "Dostosuj skróty klawiaturowe, aby szybko uzyskiwać dostęp do narzędzi. Kliknij \"Zmień skrót\" i naciśnij nową kombinację klawiszy. Naciśnij Esc, aby anulować."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI renderowania obrazu"
 cbrOptions = "Opcje CBR"
 cbrOutputOptions = "Opcje konwersji PDF do CBR"
 cbrDpi = "DPI renderowania obrazu"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opcje konwersji eBook do PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Zastosuj obrazy"
 name = "Obraz"
 placeholder = "Prześlij obraz"
 label = "Plik obrazu"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Skonfiguruj obraz"

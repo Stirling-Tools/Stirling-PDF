@@ -469,8 +469,6 @@ confirm = "Berretsi pasahitz berria"
 confirmPlaceholder = "Sartu berriro pasahitz berria"
 update = "Eguneratu pasahitza"
 
-
-
 [settings.hotkeys]
 title = "Laster-teklak"
 description = "Pertsonalizatu laster-teklak tresnetara azkar sartzeko. Egin klik \"Laster-tekla aldatu\" eta sakatu tekla-konbinazio berria. Sakatu Esc ezeztatzeko."
@@ -1297,6 +1295,10 @@ cbzDpi = "Irudien errendatzeko DPI"
 cbrOptions = "CBR aukerak"
 cbrOutputOptions = "PDFtik CBRrako aukerak"
 cbrDpi = "Irudien errendatzeko DPIa"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBooketik PDFra aukerak"
@@ -1398,6 +1400,7 @@ applySignatures = "Aplikatu irudiak"
 name = "Irudia"
 placeholder = "Igo irudi bat"
 label = "Irudi fitxategia"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Irudia konfiguratu"

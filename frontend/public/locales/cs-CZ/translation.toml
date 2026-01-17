@@ -469,8 +469,6 @@ confirm = "Confirm new password"
 confirmPlaceholder = "Re-enter your new password"
 update = "Update password"
 
-
-
 [settings.hotkeys]
 title = "Klávesové zkratky"
 description = "Přizpůsobte si klávesové zkratky pro rychlý přístup k nástrojům. Klikněte na „Změnit zkratku“ a stiskněte novou kombinaci kláves. Stisknutím Esc zrušíte."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI pro vykreslení obrázků"
 cbrOptions = "CBR Options"
 cbrOutputOptions = "PDF to CBR Options"
 cbrDpi = "DPI for image rendering"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -1398,6 +1400,7 @@ applySignatures = "Použít obrázky"
 name = "Obrázek"
 placeholder = "Nahrajte obrázek"
 label = "Soubor obrázku"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Nastavit obrázek"

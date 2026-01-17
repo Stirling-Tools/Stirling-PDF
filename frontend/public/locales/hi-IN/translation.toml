@@ -469,8 +469,6 @@ confirm = "नए पासवर्ड की पुष्टि करें"
 confirmPlaceholder = "अपने नए पासवर्ड को फिर से दर्ज करें"
 update = "पासवर्ड अपडेट करें"
 
-
-
 [settings.hotkeys]
 title = "कीबोर्ड शॉर्टकट्स"
 description = "त्वरित टूल एक्सेस के लिए कीबोर्ड शॉर्टकट्स कस्टमाइज़ करें। \"Change shortcut\" पर क्लिक करें और नया की कॉम्बिनेशन दबाएँ। रद्द करने के लिए Esc दबाएँ।"
@@ -1297,6 +1295,10 @@ cbzDpi = "इमेज रेंडरिंग के लिए DPI"
 cbrOptions = "CBR विकल्प"
 cbrOutputOptions = "PDF से CBR विकल्प"
 cbrDpi = "छवि रेंडरिंग के लिए DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook से PDF विकल्प"
@@ -1398,6 +1400,7 @@ applySignatures = "इमेज लागू करें"
 name = "इमेज"
 placeholder = "एक इमेज अपलोड करें"
 label = "इमेज फ़ाइल"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "इमेज कॉन्फ़िगर करें"

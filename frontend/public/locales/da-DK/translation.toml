@@ -469,8 +469,6 @@ confirm = "Bekræft ny adgangskode"
 confirmPlaceholder = "Indtast din nye adgangskode igen"
 update = "Opdater adgangskode"
 
-
-
 [settings.hotkeys]
 title = "Tastaturgenveje"
 description = "Tilpas tastaturgenveje for hurtig adgang til værktøjer. Klik på \"Skift genvej\" og tryk en ny tastekombination. Tryk Esc for at annullere."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI for billedgengivelse"
 cbrOptions = "CBR-indstillinger"
 cbrOutputOptions = "PDF til CBR-indstillinger"
 cbrDpi = "DPI for billedgengivelse"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "e-bog til PDF-indstillinger"
@@ -1398,6 +1400,7 @@ applySignatures = "Anvend billeder"
 name = "Billede"
 placeholder = "Upload et billede"
 label = "Billedfil"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Konfigurer billede"

@@ -469,8 +469,6 @@ confirm = "确认新密码"
 confirmPlaceholder = "再次输入新密码"
 update = "更新密码"
 
-
-
 [settings.hotkeys]
 title = "键盘快捷键"
 description = "自定义键盘快捷键以快速访问工具。点击“更改快捷键”，然后按下新的组合键。按 Esc 取消。"
@@ -1297,6 +1295,10 @@ cbzDpi = "图像渲染的 DPI"
 cbrOptions = "CBR 选项"
 cbrOutputOptions = "PDF 转 CBR 选项"
 cbrDpi = "图像渲染的 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "电子书转 PDF 选项"
@@ -1398,6 +1400,7 @@ applySignatures = "应用图像"
 name = "图像"
 placeholder = "上传图像"
 label = "图像文件"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "配置图像"

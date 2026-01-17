@@ -469,8 +469,6 @@ confirm = "تأكيد كلمة المرور الجديدة"
 confirmPlaceholder = "أعد إدخال كلمة المرور الجديدة"
 update = "تحديث كلمة المرور"
 
-
-
 [settings.hotkeys]
 title = "اختصارات لوحة المفاتيح"
 description = "خصّص اختصارات لوحة المفاتيح للوصول السريع إلى الأدوات. انقر \"تغيير الاختصار\" واضغط مجموعة مفاتيح جديدة. اضغط Esc للإلغاء."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI لعرض الصور"
 cbrOptions = "خيارات CBR"
 cbrOutputOptions = "خيارات تحويل PDF إلى CBR"
 cbrDpi = "DPI لعرض الصور"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "خيارات تحويل الكتب الإلكترونية إلى PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "تطبيق الصور"
 name = "صورة"
 placeholder = "ارفع صورة"
 label = "ملف صورة"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "تهيئة الصورة"

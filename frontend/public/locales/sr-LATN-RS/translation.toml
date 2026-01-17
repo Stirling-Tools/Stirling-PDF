@@ -469,8 +469,6 @@ confirm = "Potvrdite novu lozinku"
 confirmPlaceholder = "Ponovo unesite novu lozinku"
 update = "Ažuriraj lozinku"
 
-
-
 [settings.hotkeys]
 title = "Prečice na tastaturi"
 description = "Prilagodite prečice na tastaturi za brz pristup alatima. Kliknite \"Promeni prečicu\" i pritisnite novu kombinaciju tastera. Pritisnite Esc za otkazivanje."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI za renderovanje slike"
 cbrOptions = "CBR opcije"
 cbrOutputOptions = "Opcije za PDF u CBR"
 cbrDpi = "DPI za renderovanje slike"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opcije za eBook u PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Primeni slike"
 name = "Slika"
 placeholder = "Otpremite sliku"
 label = "Datoteka slike"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Podesi sliku"

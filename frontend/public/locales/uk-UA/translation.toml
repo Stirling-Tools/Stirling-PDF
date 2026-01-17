@@ -469,8 +469,6 @@ confirm = "Підтвердження нового пароля"
 confirmPlaceholder = "Повторно введіть новий пароль"
 update = "Оновити пароль"
 
-
-
 [settings.hotkeys]
 title = "Комбінації клавіш"
 description = "Налаштуйте комбінації клавіш для швидкого доступу до інструментів. Клацніть \"Change shortcut\" і натисніть нову комбінацію клавіш. Натисніть Esc, щоб скасувати."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI для рендерингу зображень"
 cbrOptions = "Параметри CBR"
 cbrOutputOptions = "Параметри перетворення PDF у CBR"
 cbrDpi = "DPI для рендерингу зображень"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Параметри перетворення електронної книги у PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Застосувати зображення"
 name = "Зображення"
 placeholder = "Завантажте зображення"
 label = "Файл зображення"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Налаштувати зображення"

@@ -469,8 +469,6 @@ confirm = "Confirma la contrasenya nova"
 confirmPlaceholder = "Torna a introduir la contrasenya nova"
 update = "Actualitza la contrasenya"
 
-
-
 [settings.hotkeys]
 title = "Dreceres de teclat"
 description = "Personalitza les dreceres de teclat per accedir ràpidament a les eines. Fes clic a \"Canvia la drecera\" i prem una nova combinació de tecles. Prem Esc per cancel·lar."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI per al renderitzat d'imatges"
 cbrOptions = "Opcions CBR"
 cbrOutputOptions = "Opcions de PDF a CBR"
 cbrDpi = "DPI per al renderitzat d'imatges"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opcions d'eBook a PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Aplica les imatges"
 name = "Imatge"
 placeholder = "Puja una imatge"
 label = "Fitxer d'imatge"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configura la imatge"

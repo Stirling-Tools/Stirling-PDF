@@ -469,8 +469,6 @@ confirm = "Επιβεβαίωση νέου κωδικού"
 confirmPlaceholder = "Εισαγάγετε ξανά τον νέο κωδικό"
 update = "Ενημέρωση κωδικού"
 
-
-
 [settings.hotkeys]
 title = "Συντομεύσεις πληκτρολογίου"
 description = "Προσαρμόστε τις συντομεύσεις για γρήγορη πρόσβαση στα εργαλεία. Κάντε κλικ στο \"Αλλαγή συντόμευσης\" και πατήστε νέο συνδυασμό. Πατήστε Esc για ακύρωση."
@@ -1297,6 +1295,10 @@ cbzDpi = "DPI για απόδοση εικόνας"
 cbrOptions = "Επιλογές CBR"
 cbrOutputOptions = "Επιλογές PDF σε CBR"
 cbrDpi = "DPI για απόδοση εικόνων"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Επιλογές eBook σε PDF"
@@ -1398,6 +1400,7 @@ applySignatures = "Εφαρμογή εικόνων"
 name = "Εικόνα"
 placeholder = "Ανεβάστε μια εικόνα"
 label = "Αρχείο εικόνας"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Ρύθμιση εικόνας"
