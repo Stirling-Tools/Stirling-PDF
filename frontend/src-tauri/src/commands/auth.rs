@@ -74,23 +74,7 @@ pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, St
     let entry = get_keyring_entry()?;
 
     match entry.get_password() {
-        Ok(token) => {
-            let trimmed = token.trim();
-            if trimmed.is_empty() {
-                log::warn!("Retrieved empty auth token from keyring; treating as missing");
-                if let Err(err) = entry.delete_credential() {
-                    log::warn!("Failed to delete empty keyring token: {}", err);
-                }
-                Ok(None)
-            } else {
-                if trimmed.len() != token.len() {
-                    if let Err(err) = entry.set_password(trimmed) {
-                        log::warn!("Failed to normalize keyring token whitespace: {}", err);
-                    }
-                }
-                Ok(Some(trimmed.to_string()))
-            }
-        }
+        Ok(token) => Ok(Some(token)),
         Err(keyring::Error::NoEntry) => Ok(None),
         Err(e) => {
             log::error!("Failed to retrieve token from keyring: {}", e);
