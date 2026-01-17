@@ -490,7 +490,6 @@ export class AuthService {
         }
       );
 
-      // const { access_token } = response.data;
       const { token } = response.data;
 
       // Save token to all storage locations

@@ -107,9 +107,6 @@ export default function PeopleSection() {
           teamService.getTeams(),
         ]);
 
-        console.log('[PeopleSection] Fetched users:', adminData.users);
-        console.log('[PeopleSection] Fetched user settings:', adminData.userSettings);
-
         // Enrich users with session data
         const enrichedUsers = adminData.users.map(user => ({
           ...user,
