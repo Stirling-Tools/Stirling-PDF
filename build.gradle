@@ -14,6 +14,8 @@ plugins {
 import com.github.jk1.license.render.*
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import groovy.xml.XmlSlurper
+import org.gradle.api.tasks.testing.Test
 
 ext {
     springBootVersion = "3.5.7"
@@ -65,7 +67,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.2.0'
+    version = '2.3.0'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
@@ -202,30 +204,142 @@ subprojects {
         }
     }
 
-    compileJava {
-        options.compilerArgs << "-parameters"
+    tasks.named("compileJava", JavaCompile).configure {
+        options.compilerArgs.add("-parameters")
     }
 
-    test {
+    def jacocoReport = tasks.named("jacocoTestReport")
+
+    tasks.withType(Test).configureEach {
         useJUnitPlatform()
-        finalizedBy jacocoTestReport
+        finalizedBy(jacocoReport)
     }
 
-    jacocoTestReport {
-        dependsOn test
+    jacocoReport.configure {
+        dependsOn(tasks.named("test"))
         reports {
             xml.required.set(true)
             csv.required.set(false)
             html.required.set(true)
         }
+        doLast {
+            def xmlReport = reports.xml.outputLocation.get().asFile
+            if (!xmlReport.exists()) {
+                logger.lifecycle("Jacoco coverage report not found at ${xmlReport}")
+                return
+            }
+
+            def xmlContent = xmlReport.getText("UTF-8")
+            xmlContent = xmlContent.replaceFirst('(?s)<!DOCTYPE.*?>', '')
+            def report = new XmlSlurper(false, false).parseText(xmlContent)
+            def counters = report.counter.collectEntries { counter ->
+                def type = counter.@type.text()
+                def covered = counter.@covered.text() as BigDecimal
+                def missed = counter.@missed.text() as BigDecimal
+                [(type): [covered: covered, missed: missed]]
+            }
+
+            def thresholds = [
+                    LINE       : 0.16,
+                    INSTRUCTION: 0.14,
+                    BRANCH     : 0.09
+            ]
+
+            def types = ["LINE", "INSTRUCTION", "BRANCH"]
+            def headers = ["Metric", "Coverage", "Covered/Total", "Status", "Target"]
+
+            def rows = types.collect { String type ->
+                def data = counters[type]
+                if (!data) {
+                    return [type, "—", "—", "No data", ""]
+                }
+
+                def total = data.covered + data.missed
+                if (total == 0) {
+                    return [type, "—", "0/${total.toBigInteger()}", "No executions", ""]
+                }
+
+                def ratio = data.covered / total * 100
+                def coverageText = String.format(Locale.ROOT, "%.2f%%", ratio)
+                def coveredText = String.format(Locale.ROOT, "%d/%d",
+                        data.covered.toBigInteger(),
+                        total.toBigInteger())
+
+                def threshold = thresholds[type]
+                def thresholdPercent = threshold != null ? threshold * 100 : null
+                def targetText = thresholdPercent != null ?
+                        String.format(Locale.ROOT, ">= %.2f%%", thresholdPercent) : ""
+                def passed = thresholdPercent != null ? ratio >= thresholdPercent : null
+                def statusText = passed == null ? "" : (passed ? "PASS" : "FAIL")
+
+                return [type, coverageText, coveredText, statusText, targetText]
+            }
+
+            def columnIndexes = (0..<headers.size())
+            def columnWidths = columnIndexes.collect { idx ->
+                Math.max(headers[idx].length(), rows.collect { row ->
+                    row[idx] != null ? row[idx].toString().length() : 0
+                }.max() ?: 0)
+            }
+
+            def formatRow = { List<String> values ->
+                columnIndexes.collect { idx ->
+                    def value = values[idx] ?: ""
+                    value.padRight(columnWidths[idx])
+                }.join(" | ")
+            }
+
+            def separator = columnIndexes.collect { idx ->
+                ''.padRight(columnWidths[idx], '-')
+            }.join("-+-")
+
+            logger.lifecycle("")
+            logger.lifecycle("==== JaCoCo Coverage Summary ====")
+            logger.lifecycle(formatRow(headers))
+            logger.lifecycle(separator)
+            rows.each { row ->
+                logger.lifecycle(formatRow(row))
+            }
+            logger.lifecycle(separator)
+
+            def htmlReport = reports.html.outputLocation.get().asFile
+            logger.lifecycle("Detailed HTML report available at: ${htmlReport}")
+            if (rows.any { it[3] == "FAIL" }) {
+                logger.lifecycle("Some coverage targets were missed. Please review the detailed report above.")
+            } else if (rows.any { it[3] == "PASS" }) {
+                logger.lifecycle("Great job! All tracked coverage metrics meet their targets.")
+            }
+            logger.lifecycle("=================================\n")
+        }
+    }
+
+    tasks.named("build") {
+        dependsOn jacocoReport
     }
 
     jacocoTestCoverageVerification {
-        dependsOn jacocoTestReport
+        dependsOn jacocoReport
         violationRules {
             rule {
+                enabled = true
+                element = 'BUNDLE'
+                // Bytecode-Anweisungen abgedeckt
                 limit {
-                    minimum = 0.0
+                    counter = 'INSTRUCTION'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.14
+                }
+                // wie viele Quellcode-Zeilen abgedeckt
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.16
+                }
+                // Verzweigungen (if/else, switch) abgedeckt; misst Logik-Abdeckung
+                limit {
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.09
                 }
             }
         }
