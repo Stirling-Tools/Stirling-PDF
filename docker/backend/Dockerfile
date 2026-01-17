@@ -6,7 +6,7 @@
 # ========================================
 # STAGE 1: Build stage - Alpine with Gradle
 # ========================================
-FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
+FROM gradle:9.3-jdk21@sha256:a1a8b6220c308f3cfda14e60b02e1c1c4e3205876f492951f1da587aa53527f1 AS build
 
 COPY build.gradle .
 COPY settings.gradle .
