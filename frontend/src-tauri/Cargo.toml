@@ -41,7 +41,7 @@ url = "2.5"
 urlencoding = "2.1"
 sha2 = "0.10"
 base64 = "0.22"
-rand = "0.8"
+rand = "0.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"
