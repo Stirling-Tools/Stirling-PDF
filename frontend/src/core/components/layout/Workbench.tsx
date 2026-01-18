@@ -12,6 +12,7 @@ import type { FileId } from '@app/types/fileContext';
 import { VIEWER_TRANSITION } from '@app/constants/animations';
 import { captureElementScreenshot } from '@app/utils/screenshot';
 import { useViewerTransition } from '@app/hooks/useViewerTransition';
+import { usePageEditorTransition } from '@app/hooks/usePageEditorTransition';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -23,6 +24,7 @@ import LandingPage from '@app/components/shared/LandingPage';
 import Footer from '@app/components/shared/Footer';
 import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
 import { ViewerZoomTransition } from '@app/components/viewer/ViewerZoomTransition';
+import { PageEditorSpreadTransition } from '@app/components/pageEditor/PageEditorSpreadTransition';
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -106,6 +108,12 @@ export default function Workbench() {
     captureScreenshot: captureMainContentScreenshot,
   });
 
+  // Get page editor transition handlers
+  const { handleEntryTransition: handlePageEditorEntry, handleExitTransition: handlePageEditorExit } = usePageEditorTransition({
+    currentView,
+    captureScreenshot: captureMainContentScreenshot,
+  });
+
   // Wrapper for setCurrentView that adds transition when switching to/from viewer
   const setCurrentView = useCallback(async (view: typeof currentView, fileId?: FileId, sourceRect?: DOMRect) => {
     // Handle entry transition (fileEditor/pageEditor → viewer)
@@ -118,8 +126,18 @@ export default function Workbench() {
       handleExitTransition(view);
     }
 
+    // Handle page editor entry (fileEditor → pageEditor)
+    if (view === 'pageEditor' && currentView === 'fileEditor') {
+      await handlePageEditorEntry();
+    }
+
+    // Handle page editor exit (pageEditor → fileEditor)
+    if (view === 'fileEditor' && currentView === 'pageEditor') {
+      handlePageEditorExit();
+    }
+
     navActions.setWorkbench(view);
-  }, [currentView, navActions, handleEntryTransition, handleExitTransition]);
+  }, [currentView, navActions, handleEntryTransition, handleExitTransition, handlePageEditorEntry, handlePageEditorExit]);
 
   const renderMainContent = () => {
     // During viewer transition with screenshot, show screenshot overlay
@@ -297,6 +315,9 @@ export default function Workbench() {
 
       {/* Viewer Zoom Transition Overlay */}
       <ViewerZoomTransition />
+
+      {/* Page Editor Spread Transition Overlay */}
+      <PageEditorSpreadTransition />
 
       <Box style={{ position: 'relative', zIndex: 100 }}>
         <Footer

@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, useLayoutEffect } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import { useNavigationGuard, useNavigationState } from "@app/contexts/NavigationContext";
 import { usePageEditor } from "@app/contexts/PageEditorContext";
 import { PageEditorFunctions } from "@app/types/pageEditor";
 // Thumbnail generation is now handled by individual PageThumbnail components
@@ -12,6 +12,7 @@ import SkeletonLoader from '@app/components/shared/SkeletonLoader';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { FileId } from "@app/types/file";
 import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
+import { PAGE_EDITOR_TRANSITION } from '@app/constants/animations';
 import { useInitialPageDocument } from '@app/components/pageEditor/hooks/useInitialPageDocument';
 import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
 import { usePageEditorState } from '@app/components/pageEditor/hooks/usePageEditorState';
@@ -38,6 +39,7 @@ const PageEditor = ({
 
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges } = useNavigationGuard();
+  const { pageEditorTransition } = useNavigationState();
 
   // Get PageEditor coordination functions
   const { updateFileOrderFromPages, fileOrder, reorderedPages, clearReorderedPages, updateCurrentPages } = usePageEditor();
@@ -77,6 +79,7 @@ const PageEditor = ({
 
   const fileObjectsRef = useRef(new Map<FileId, any>());
   const gridItemRefsRef = useRef<React.MutableRefObject<Map<string, HTMLDivElement>> | null>(null);
+  const burstAnimatedPagesRef = useRef<Set<string>>(new Set());
 
   const pageEditorFiles = useMemo(() => {
     const cache = fileObjectsRef.current;
@@ -338,8 +341,146 @@ const PageEditor = ({
     };
   }, [isContainerHovered, zoomIn, zoomOut]);
 
-  // Display all pages - use edited or original document
-  const displayedPages = displayDocument?.pages || [];
+  // Progressive page loading for smooth animation
+  const [visiblePageCount, setVisiblePageCount] = useState(1);
+  const [firstPageVisible, setFirstPageVisible] = useState(false);
+  const [animatingPages, setAnimatingPages] = useState(false);
+  const allPages = displayDocument?.pages || [];
+
+  // Animation sequence coordination
+  useEffect(() => {
+    let cancelled = false;
+    let fadeDelay: number | null = null;
+    let remainingDelay: number | null = null;
+    let glideListener: (() => void) | null = null;
+
+    if (allPages.length <= 1) {
+      setFirstPageVisible(true);
+      setVisiblePageCount(allPages.length);
+      return;
+    }
+
+    const waitForGlideCompletion = () => new Promise<void>((resolve) => {
+      if (!pageEditorTransition?.isAnimating) {
+        resolve();
+        return;
+      }
+
+      let resolved = false;
+
+      glideListener = () => {
+        if (resolved) return;
+        resolved = true;
+        resolve();
+      };
+
+      window.addEventListener(PAGE_EDITOR_TRANSITION.GLIDE_COMPLETE_EVENT, glideListener, { once: true });
+
+      const tick = () => {
+        if (resolved) return;
+        if (cancelled) {
+          resolved = true;
+          resolve();
+          return;
+        }
+        requestAnimationFrame(tick);
+      };
+
+      requestAnimationFrame(tick);
+    });
+
+    const runAnimation = async () => {
+      await waitForGlideCompletion();
+      if (cancelled) return;
+
+      // Phase 2: Fade in first page (300ms)
+      setFirstPageVisible(true);
+
+      fadeDelay = window.setTimeout(() => {
+        // Phase 3: Show first 20 pages for burst (or all if < 20)
+        const burstPageCount = Math.min(20, allPages.length);
+        setVisiblePageCount(burstPageCount);
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setAnimatingPages(true);
+          });
+        });
+
+        // Phase 4: Load remaining pages without animation after burst completes
+        if (allPages.length > 20) {
+          remainingDelay = window.setTimeout(() => {
+            setVisiblePageCount(allPages.length);
+          }, 600); // After burst animation completes
+        }
+      }, 300);
+    };
+
+    runAnimation();
+
+    return () => {
+      cancelled = true;
+      if (glideListener) {
+        window.removeEventListener(PAGE_EDITOR_TRANSITION.GLIDE_COMPLETE_EVENT, glideListener);
+      }
+      if (fadeDelay !== null) clearTimeout(fadeDelay);
+      if (remainingDelay !== null) clearTimeout(remainingDelay);
+    };
+  }, [allPages.length, pageEditorTransition?.isAnimating]);
+
+  // Reset on document change
+  useEffect(() => {
+    setVisiblePageCount(1);
+    setFirstPageVisible(false);
+    setAnimatingPages(false);
+    burstAnimatedPagesRef.current.clear();
+  }, [allPages.length]);
+
+  const displayedPages = allPages.slice(0, visiblePageCount);
+
+  useLayoutEffect(() => {
+    if (!animatingPages) {
+      return;
+    }
+
+    const firstPageElement = document.querySelector('[data-page-number="1"]') as HTMLElement | null;
+    if (!firstPageElement) {
+      return;
+    }
+
+    const firstRect = firstPageElement.getBoundingClientRect();
+    const burstLimit = Math.min(20, allPages.length);
+    const pagesToAnimate = allPages.slice(1, Math.min(visiblePageCount, burstLimit));
+
+    pagesToAnimate.forEach((page) => {
+      if (burstAnimatedPagesRef.current.has(page.id)) {
+        return;
+      }
+
+      const currentPageElement = document.querySelector(`[data-page-id="${page.id}"]`) as HTMLElement | null;
+      if (!currentPageElement) {
+        return;
+      }
+
+      const currentRect = currentPageElement.getBoundingClientRect();
+      const deltaX = firstRect.left - currentRect.left;
+      const deltaY = firstRect.top - currentRect.top;
+      const scaleX = firstRect.width / currentRect.width;
+      const scaleY = firstRect.height / currentRect.height;
+
+      currentPageElement.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`;
+      currentPageElement.style.transformOrigin = 'top left';
+      currentPageElement.style.opacity = '1';
+      currentPageElement.style.transition = 'none';
+
+      requestAnimationFrame(() => {
+        currentPageElement.style.transform = 'translate(0, 0) scale(1)';
+        currentPageElement.style.transition = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      });
+
+      burstAnimatedPagesRef.current.add(page.id);
+    });
+  }, [animatingPages, allPages, visiblePageCount]);
 
   // Track color assignments by insertion order (files keep their color)
   const fileColorIndexMap = useFileColorMap(orderedFileIds);
@@ -462,32 +603,68 @@ const PageEditor = ({
               gridItemRefsRef.current = refs;
               const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
               const isBoxSelected = boxSelectedIds.includes(page.id);
+              const isFirstPage = index === 0;
+              const isSecondaryPage = index > 0;
+              const pageStyle: React.CSSProperties = {};
+
+              if (isFirstPage) {
+                // Fade in first page after glide completes
+                if (!firstPageVisible) {
+                  pageStyle.opacity = 0;
+                } else {
+                  pageStyle.opacity = 1;
+                  pageStyle.transition = 'opacity 300ms ease-in-out';
+                }
+                // Keep first page on top during burst
+                pageStyle.zIndex = 10;
+                pageStyle.position = 'relative';
+              } else if (isSecondaryPage) {
+                // Burst from behind the real first page
+                if (!animatingPages) {
+                  // Before animation: hide behind first page
+                  // Use data attributes to calculate in useLayoutEffect
+                  pageStyle.opacity = 0;
+                  pageStyle.transition = 'none';
+                  pageStyle.zIndex = -1;
+                } else {
+                  // Burst animation is applied once in useLayoutEffect
+                  pageStyle.opacity = 1;
+                  pageStyle.zIndex = 0;
+                }
+              }
+
               return (
-                <PageThumbnail
-                  key={page.id}
-                  page={page}
-                  index={index}
-                  totalPages={displayDocument.pages.length}
-                  originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
-                  fileColorIndex={fileColorIndex}
-                  selectedPageIds={selectedPageIds}
-                  selectionMode={selectionMode}
-                  movingPage={movingPage}
-                  isAnimating={isAnimating}
-                  isBoxSelected={isBoxSelected}
-                  clearBoxSelection={clearBoxSelection}
-                  activeDragIds={activeDragIds}
-                  justMoved={justMoved}
-                  pageRefs={refs}
-                  dragHandleProps={dragHandleProps}
-                  onReorderPages={handleReorderPages}
-                  onTogglePage={togglePage}
-                  onAnimateReorder={animateReorder}
-                  onExecuteCommand={executeCommand}
-                  onSetStatus={() => {}}
-                  onSetMovingPage={setMovingPage}
-                  onDeletePage={handleDeletePage}
-                  createRotateCommand={createRotateCommand}
+                <div
+                  data-page-id={page.id}
+                  data-page-number={index + 1}
+                  data-original-file-id={page.originalFileId}
+                  style={pageStyle}
+                >
+                  <PageThumbnail
+                    key={page.id}
+                    page={page}
+                    index={index}
+                    totalPages={displayDocument.pages.length}
+                    originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
+                    fileColorIndex={fileColorIndex}
+                    selectedPageIds={selectedPageIds}
+                    selectionMode={selectionMode}
+                    movingPage={movingPage}
+                    isAnimating={isAnimating}
+                    isBoxSelected={isBoxSelected}
+                    clearBoxSelection={clearBoxSelection}
+                    activeDragIds={activeDragIds}
+                    justMoved={justMoved}
+                    pageRefs={refs}
+                    dragHandleProps={dragHandleProps}
+                    onReorderPages={handleReorderPages}
+                    onTogglePage={togglePage}
+                    onAnimateReorder={animateReorder}
+                    onExecuteCommand={executeCommand}
+                    onSetStatus={() => {}}
+                    onSetMovingPage={setMovingPage}
+                    onDeletePage={handleDeletePage}
+                    createRotateCommand={createRotateCommand}
                   createDeleteCommand={createDeleteCommand}
                   createSplitCommand={createSplitCommand}
                   pdfDocument={displayDocument}
@@ -496,6 +673,7 @@ const PageEditor = ({
                   onInsertFiles={handleInsertFiles}
                   zoomLevel={zoomLevel}
                 />
+                </div>
               );
             }}
           />
