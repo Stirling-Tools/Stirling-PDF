@@ -1,6 +1,6 @@
 import apiClient from '@app/services/apiClient';
 import { fileStorage } from '@app/services/fileStorage';
-import { buildHistoryBundle } from '@app/services/serverStorageBundle';
+import { buildHistoryBundle, buildSharePackage } from '@app/services/serverStorageBundle';
 import type { FileId } from '@app/types/file';
 import type { StirlingFileStub } from '@app/types/fileContext';
 
@@ -24,9 +24,22 @@ export async function uploadHistoryChain(
     throw new Error('No history chain found.');
   }
 
-  const { bundleFile } = await buildHistoryBundle(originalFileId);
+  const finalStub =
+    chain.slice().reverse().find((stub) => stub.isLeaf !== false) || chain[chain.length - 1];
+  const finalFile = await fileStorage.getStirlingFile(finalStub.id);
+  if (!finalFile) {
+    throw new Error('Missing final file data for sharing.');
+  }
+
+  const { bundleFile, manifest } = await buildHistoryBundle(originalFileId);
+  const auditLog = new File([JSON.stringify(manifest, null, 2)], 'audit-log.json', {
+    type: 'application/json',
+    lastModified: Date.now(),
+  });
   const formData = new FormData();
-  formData.append('file', bundleFile, bundleFile.name);
+  formData.append('file', finalFile, finalFile.name);
+  formData.append('historyBundle', bundleFile, bundleFile.name);
+  formData.append('auditLog', auditLog, auditLog.name);
 
   if (existingRemoteId) {
     const response = await apiClient.put(`/api/v1/storage/files/${existingRemoteId}`, formData);
@@ -52,6 +65,7 @@ export async function uploadHistoryChains(
   const chainMap = new Map<FileId, StirlingFileStub[]>();
   const combinedChain: StirlingFileStub[] = [];
   const seenIds = new Set<FileId>();
+  const leafStubs: StirlingFileStub[] = [];
 
   for (const rootId of uniqueRoots) {
     const chain = await fileStorage.getHistoryChainStubs(rootId);
@@ -59,6 +73,11 @@ export async function uploadHistoryChains(
       throw new Error('No history chain found.');
     }
     chainMap.set(rootId, chain);
+    const finalStub =
+      chain.slice().reverse().find((stub) => stub.isLeaf !== false) || chain[chain.length - 1];
+    if (finalStub) {
+      leafStubs.push(finalStub);
+    }
     for (const stub of chain) {
       if (!seenIds.has(stub.id as FileId)) {
         seenIds.add(stub.id as FileId);
@@ -67,9 +86,27 @@ export async function uploadHistoryChains(
     }
   }
 
-  const { bundleFile } = await buildHistoryBundle(uniqueRoots);
+  let shareFile: File;
+  if (leafStubs.length === 1) {
+    const finalFile = await fileStorage.getStirlingFile(leafStubs[0].id);
+    if (!finalFile) {
+      throw new Error('Missing final file data for sharing.');
+    }
+    shareFile = finalFile;
+  } else {
+    const { bundleFile } = await buildSharePackage(leafStubs);
+    shareFile = bundleFile;
+  }
+
+  const { bundleFile, manifest } = await buildHistoryBundle(uniqueRoots);
+  const auditLog = new File([JSON.stringify(manifest, null, 2)], 'audit-log.json', {
+    type: 'application/json',
+    lastModified: Date.now(),
+  });
   const formData = new FormData();
-  formData.append('file', bundleFile, bundleFile.name);
+  formData.append('file', shareFile, shareFile.name);
+  formData.append('historyBundle', bundleFile, bundleFile.name);
+  formData.append('auditLog', auditLog, auditLog.name);
 
   if (existingRemoteId) {
     const response = await apiClient.put(`/api/v1/storage/files/${existingRemoteId}`, formData);

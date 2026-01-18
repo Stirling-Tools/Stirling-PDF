@@ -15,5 +15,6 @@ public class ShareLinkMetadataResponse {
     private final boolean ownedByCurrentUser;
     private final String accessRole;
     private final LocalDateTime createdAt;
+    private final LocalDateTime expiresAt;
     private final LocalDateTime lastAccessedAt;
 }

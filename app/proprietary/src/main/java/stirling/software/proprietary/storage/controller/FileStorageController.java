@@ -46,9 +46,12 @@ public class FileStorageController {
             value = "/files",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public StoredFileResponse uploadFile(@RequestPart("file") MultipartFile file) {
+    public StoredFileResponse uploadFile(
+            @RequestPart("file") MultipartFile file,
+            @RequestPart(name = "historyBundle", required = false) MultipartFile historyBundle,
+            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
-        return fileStorageService.storeFileResponse(user, file);
+        return fileStorageService.storeFileResponse(user, file, historyBundle, auditLog);
     }
 
     @PutMapping(
@@ -56,9 +59,12 @@ public class FileStorageController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public StoredFileResponse updateFile(
-            @PathVariable Long fileId, @RequestPart("file") MultipartFile file) {
+            @PathVariable Long fileId,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart(name = "historyBundle", required = false) MultipartFile historyBundle,
+            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
-        return fileStorageService.updateFileResponse(user, fileId, file);
+        return fileStorageService.updateFileResponse(user, fileId, file, historyBundle, auditLog);
     }
 
     @GetMapping(value = "/files", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -144,6 +150,7 @@ public class FileStorageController {
                                 ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
                                 : null)
                 .createdAt(share.getCreatedAt())
+                .expiresAt(share.getExpiresAt())
                 .build();
     }
 
@@ -165,7 +172,9 @@ public class FileStorageController {
         FileShare share = fileStorageService.getShareByToken(token);
         if (!fileStorageService.canAccessShareLink(share, authentication)) {
             HttpStatus status =
-                    isAuthenticated(authentication) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+                    isAuthenticated(authentication)
+                            ? HttpStatus.FORBIDDEN
+                            : HttpStatus.UNAUTHORIZED;
             String message =
                     status == HttpStatus.FORBIDDEN
                             ? "Access denied for this share link"
@@ -185,7 +194,9 @@ public class FileStorageController {
         FileShare share = fileStorageService.getShareByToken(token);
         if (!fileStorageService.canAccessShareLink(share, authentication)) {
             HttpStatus status =
-                    isAuthenticated(authentication) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+                    isAuthenticated(authentication)
+                            ? HttpStatus.FORBIDDEN
+                            : HttpStatus.UNAUTHORIZED;
             String message =
                     status == HttpStatus.FORBIDDEN
                             ? "Access denied for this share link"
@@ -193,12 +204,7 @@ public class FileStorageController {
             throw new ResponseStatusException(status, message);
         }
         StoredFile file = share.getFile();
-        User currentUser = null;
-        try {
-            currentUser = fileStorageService.requireAuthenticatedUser();
-        } catch (ResponseStatusException ignored) {
-            // ignore if not authenticated (public link)
-        }
+        User currentUser = fileStorageService.requireAuthenticatedUser();
         boolean ownedByCurrentUser =
                 currentUser != null
                         && file.getOwner() != null
@@ -214,6 +220,7 @@ public class FileStorageController {
                                 ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
                                 : null)
                 .createdAt(share.getCreatedAt())
+                .expiresAt(share.getExpiresAt())
                 .build();
     }
 
@@ -260,5 +267,4 @@ public class FileStorageController {
                 && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getPrincipal());
     }
-
 }

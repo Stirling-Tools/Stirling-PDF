@@ -37,4 +37,16 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
                     + "LEFT JOIN FETCH s.sharedWithUser "
                     + "WHERE f.owner = :user OR s.sharedWithUser = :user")
     List<StoredFile> findAccessibleFiles(@Param("user") User user);
+
+    @Query(
+            "SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
+                    + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
+                    + "FROM StoredFile f WHERE f.owner = :owner")
+    long sumStorageBytesByOwner(@Param("owner") User owner);
+
+    @Query(
+            "SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
+                    + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
+                    + "FROM StoredFile f")
+    long sumStorageBytesTotal();
 }

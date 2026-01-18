@@ -14,14 +14,17 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.storage.provider.DatabaseStorageProvider;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
 @Configuration
 @RequiredArgsConstructor
 public class StorageProviderConfig {
 
     private final ApplicationProperties applicationProperties;
+    private final StoredFileBlobRepository storedFileBlobRepository;
 
     @Bean
     public StorageProvider storageProvider() {
@@ -31,9 +34,11 @@ public class StorageProviderConfig {
                         .orElse("local")
                         .trim()
                         .toLowerCase(Locale.ROOT);
+        if ("database".equals(providerName)) {
+            return new DatabaseStorageProvider(storedFileBlobRepository);
+        }
         if (!"local".equals(providerName)) {
-            throw new IllegalStateException(
-                    "Storage provider not supported: " + providerName);
+            throw new IllegalStateException("Storage provider not supported: " + providerName);
         }
         String basePathValue = applicationProperties.getStorage().getLocal().getBasePath();
         if (basePathValue == null || basePathValue.isBlank()) {

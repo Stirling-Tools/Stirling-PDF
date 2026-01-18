@@ -51,7 +51,7 @@ export default function ShareLinkPage() {
         setStatus('login');
       } else if (statusCode === 403) {
         setStatus('forbidden');
-      } else if (statusCode === 404) {
+      } else if (statusCode === 404 || statusCode === 410) {
         setStatus('notfound');
       } else {
         setStatus('error');
@@ -89,7 +89,7 @@ export default function ShareLinkPage() {
         setStatus('login');
       } else if (statusCode === 403) {
         setStatus('forbidden');
-      } else if (statusCode === 404) {
+      } else if (statusCode === 404 || statusCode === 410) {
         setStatus('notfound');
       } else {
         alert({
@@ -124,7 +124,7 @@ export default function ShareLinkPage() {
         setStatus('login');
       } else if (statusCode === 403) {
         setStatus('forbidden');
-      } else if (statusCode === 404) {
+      } else if (statusCode === 404 || statusCode === 410) {
         setStatus('notfound');
       } else {
         alert({

@@ -1,6 +1,8 @@
 package stirling.software.proprietary.storage.service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -12,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,16 +23,20 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.mail.MessagingException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.storage.model.FileShareAccessType;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
+import stirling.software.proprietary.storage.model.StorageCleanupEntry;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.ShareLinkAccessResponse;
 import stirling.software.proprietary.storage.model.api.ShareLinkMetadataResponse;
@@ -40,6 +47,7 @@ import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
+import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
 @Service
@@ -48,8 +56,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 @Slf4j
 public class FileStorageService {
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final StoredFileRepository storedFileRepository;
     private final FileShareRepository fileShareRepository;
@@ -57,6 +64,8 @@ public class FileStorageService {
     private final UserRepository userRepository;
     private final ApplicationProperties applicationProperties;
     private final StorageProvider storageProvider;
+    private final Optional<EmailService> emailService;
+    private final StorageCleanupEntryRepository storageCleanupEntryRepository;
 
     public void ensureStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
@@ -90,30 +99,49 @@ public class FileStorageService {
     }
 
     public StoredFile storeFile(User owner, MultipartFile file) {
-        ensureStorageEnabled();
+        return storeFile(owner, file, null, null);
+    }
 
+    public StoredFile storeFile(
+            User owner, MultipartFile file, MultipartFile historyBundle, MultipartFile auditLog) {
+        ensureStorageEnabled();
+        validateMainUpload(file);
+
+        long uploadBytes = calculateUploadBytes(file, historyBundle, auditLog);
+        enforceStorageQuotas(owner, uploadBytes, 0);
+
+        StoredObject mainObject = null;
+        StoredObject historyObject = null;
+        StoredObject auditObject = null;
         try {
-            StoredObject storedObject = storageProvider.store(owner, file);
+            mainObject = storageProvider.store(owner, file);
+            if (isValidUpload(historyBundle)) {
+                historyObject = storageProvider.store(owner, historyBundle);
+            }
+            if (isValidUpload(auditLog)) {
+                auditObject = storageProvider.store(owner, auditLog);
+            }
+
             StoredFile storedFile = new StoredFile();
             storedFile.setOwner(owner);
-            storedFile.setOriginalFilename(storedObject.getOriginalFilename());
-            storedFile.setContentType(storedObject.getContentType());
-            storedFile.setSizeBytes(storedObject.getSizeBytes());
-            storedFile.setStorageKey(storedObject.getStorageKey());
+            storedFile.setOriginalFilename(mainObject.getOriginalFilename());
+            storedFile.setContentType(mainObject.getContentType());
+            storedFile.setSizeBytes(mainObject.getSizeBytes());
+            storedFile.setStorageKey(mainObject.getStorageKey());
+            applyHistoryMetadata(storedFile, historyObject);
+            applyAuditMetadata(storedFile, auditObject);
             try {
                 return storedFileRepository.save(storedFile);
             } catch (RuntimeException saveError) {
-                try {
-                    storageProvider.delete(storedObject.getStorageKey());
-                } catch (IOException deleteError) {
-                    log.warn(
-                            "Failed to delete stored file (key: {}) after save failure",
-                            storedObject.getStorageKey(),
-                            deleteError);
-                }
+                cleanupStoredObject(mainObject);
+                cleanupStoredObject(historyObject);
+                cleanupStoredObject(auditObject);
                 throw saveError;
             }
         } catch (IOException e) {
+            cleanupStoredObject(mainObject);
+            cleanupStoredObject(historyObject);
+            cleanupStoredObject(auditObject);
             log.error(
                     "Failed to store file for user {} (name: {}, size: {})",
                     owner != null ? owner.getId() : null,
@@ -126,45 +154,73 @@ public class FileStorageService {
     }
 
     public StoredFile replaceFile(User owner, StoredFile existing, MultipartFile file) {
+        return replaceFile(owner, existing, file, null, null);
+    }
+
+    public StoredFile replaceFile(
+            User owner,
+            StoredFile existing,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog) {
         ensureStorageEnabled();
         if (!isOwner(existing, owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can update");
         }
+        validateMainUpload(file);
+
+        long newTotalBytes = calculateUploadBytes(file, historyBundle, auditLog, existing);
+        enforceStorageQuotas(owner, newTotalBytes, totalStoredBytes(existing));
+
+        StoredObject mainObject = null;
+        StoredObject historyObject = null;
+        StoredObject auditObject = null;
+        String oldStorageKey = existing.getStorageKey();
+        String oldHistoryKey = existing.getHistoryStorageKey();
+        String oldAuditKey = existing.getAuditLogStorageKey();
 
         try {
-            StoredObject storedObject = storageProvider.store(owner, file);
-            String oldStorageKey = existing.getStorageKey();
-            existing.setOriginalFilename(storedObject.getOriginalFilename());
-            existing.setContentType(storedObject.getContentType());
-            existing.setSizeBytes(storedObject.getSizeBytes());
-            existing.setStorageKey(storedObject.getStorageKey());
+            mainObject = storageProvider.store(owner, file);
+            if (isValidUpload(historyBundle)) {
+                historyObject = storageProvider.store(owner, historyBundle);
+            }
+            if (isValidUpload(auditLog)) {
+                auditObject = storageProvider.store(owner, auditLog);
+            }
+
+            existing.setOriginalFilename(mainObject.getOriginalFilename());
+            existing.setContentType(mainObject.getContentType());
+            existing.setSizeBytes(mainObject.getSizeBytes());
+            existing.setStorageKey(mainObject.getStorageKey());
+            if (historyObject != null) {
+                applyHistoryMetadata(existing, historyObject);
+            }
+            if (auditObject != null) {
+                applyAuditMetadata(existing, auditObject);
+            }
 
             StoredFile updated;
             try {
                 updated = storedFileRepository.save(existing);
             } catch (RuntimeException saveError) {
-                try {
-                    storageProvider.delete(storedObject.getStorageKey());
-                } catch (IOException deleteError) {
-                    log.warn(
-                            "Failed to delete stored file (key: {}) after update failure",
-                            storedObject.getStorageKey(),
-                            deleteError);
-                }
+                cleanupStoredObject(mainObject);
+                cleanupStoredObject(historyObject);
+                cleanupStoredObject(auditObject);
                 throw saveError;
             }
-            try {
-                storageProvider.delete(oldStorageKey);
-            } catch (IOException deleteError) {
-                log.warn(
-                        "Failed to delete old stored file {} (key: {}) after update",
-                        existing.getId(),
-                        oldStorageKey,
-                        deleteError);
+            cleanupStoredKey(oldStorageKey);
+            if (historyObject != null) {
+                cleanupStoredKey(oldHistoryKey);
+            }
+            if (auditObject != null) {
+                cleanupStoredKey(oldAuditKey);
             }
 
             return updated;
         } catch (IOException e) {
+            cleanupStoredObject(mainObject);
+            cleanupStoredObject(historyObject);
+            cleanupStoredObject(auditObject);
             log.error(
                     "Failed to update stored file {} for user {}",
                     existing.getId(),
@@ -250,13 +306,27 @@ public class FileStorageService {
     }
 
     public StoredFileResponse storeFileResponse(User owner, MultipartFile file) {
-        StoredFile storedFile = storeFile(owner, file);
+        return storeFileResponse(owner, file, null, null);
+    }
+
+    public StoredFileResponse storeFileResponse(
+            User owner, MultipartFile file, MultipartFile historyBundle, MultipartFile auditLog) {
+        StoredFile storedFile = storeFile(owner, file, historyBundle, auditLog);
         return buildResponse(storedFile, owner);
     }
 
     public StoredFileResponse updateFileResponse(User owner, Long fileId, MultipartFile file) {
+        return updateFileResponse(owner, fileId, file, null, null);
+    }
+
+    public StoredFileResponse updateFileResponse(
+            User owner,
+            Long fileId,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog) {
         StoredFile existing = getOwnedFile(owner, fileId);
-        StoredFile updated = replaceFile(owner, existing, file);
+        StoredFile updated = replaceFile(owner, existing, file, historyBundle, auditLog);
         return buildResponse(updated, owner);
     }
 
@@ -320,6 +390,7 @@ public class FileStorageService {
                 ownedByCurrentUser && isShareLinksEnabled()
                         ? file.getShares().stream()
                                 .filter(share -> share.getShareToken() != null)
+                                .filter(share -> !isShareLinkExpired(share))
                                 .map(
                                         share ->
                                                 ShareLinkResponse.builder()
@@ -329,6 +400,7 @@ public class FileStorageService {
                                                                         .name()
                                                                         .toLowerCase(Locale.ROOT))
                                                         .createdAt(share.getCreatedAt())
+                                                        .expiresAt(share.getExpiresAt())
                                                         .build())
                                 .sorted(Comparator.comparing(ShareLinkResponse::getCreatedAt))
                                 .collect(Collectors.toList())
@@ -340,7 +412,9 @@ public class FileStorageService {
                                 .map(
                                         share ->
                                                 SharedUserResponse.builder()
-                                                        .username(share.getSharedWithUser().getUsername())
+                                                        .username(
+                                                                share.getSharedWithUser()
+                                                                        .getUsername())
                                                         .accessRole(
                                                                 resolveShareRole(share)
                                                                         .name()
@@ -414,62 +488,86 @@ public class FileStorageService {
         if (!isOwner(file, owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can delete");
         }
-        try {
-            storageProvider.delete(file.getStorageKey());
-        } catch (IOException e) {
-            log.error(
-                    "Failed to delete stored file {} (key: {})",
-                    file != null ? file.getId() : null,
-                    file != null ? file.getStorageKey() : null,
-                    e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete file", e);
-        }
+        List<String> storageKeys = collectStorageKeys(file);
         List<FileShare> shareLinks = fileShareRepository.findShareLinks(file);
         for (FileShare share : shareLinks) {
             fileShareAccessRepository.deleteByFileShare(share);
         }
         storedFileRepository.delete(file);
+        for (String storageKey : storageKeys) {
+            cleanupStoredKey(storageKey);
+        }
     }
 
     public FileShare shareWithUser(
             User owner, StoredFile file, String username, ShareAccessRole role) {
         ensureStorageEnabled();
         ensureSharingEnabled();
-        if (isEmailAddress(username) && !isEmailSharingEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Email sharing is disabled");
-        }
         if (!isOwner(file, owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can share");
         }
 
-        User targetUser =
-                userRepository
-                        .findByUsernameIgnoreCase(username)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "User not found"));
+        String normalizedUsername = username != null ? username.trim() : "";
+        boolean isEmail = isEmailAddress(normalizedUsername);
 
-        if (targetUser.getId().equals(owner.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot share with yourself");
+        Optional<User> targetUserOpt = userRepository.findByUsernameIgnoreCase(normalizedUsername);
+        if (targetUserOpt.isPresent()) {
+            User targetUser = targetUserOpt.get();
+            if (targetUser.getId().equals(owner.getId())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Cannot share with yourself");
+            }
+
+            FileShare share =
+                    fileShareRepository
+                            .findByFileAndSharedWithUser(file, targetUser)
+                            .map(
+                                    existingShare -> {
+                                        existingShare.setAccessRole(role);
+                                        return fileShareRepository.save(existingShare);
+                                    })
+                            .orElseGet(
+                                    () -> {
+                                        FileShare newShare = new FileShare();
+                                        newShare.setFile(file);
+                                        newShare.setSharedWithUser(targetUser);
+                                        newShare.setAccessRole(role);
+                                        return fileShareRepository.save(newShare);
+                                    });
+
+            if (isEmail) {
+                if (!isEmailSharingEnabled()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST, "Email sharing is disabled");
+                }
+                if (!isShareLinksEnabled()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Share links must be enabled for email sharing");
+                }
+                String shareLinkUrl = null;
+                FileShare linkShare = createShareLink(owner, file, role);
+                shareLinkUrl = buildShareLinkUrl(linkShare);
+                sendShareNotification(owner, file, normalizedUsername, role, shareLinkUrl);
+            }
+
+            return share;
         }
 
-        Optional<FileShare> existing =
-                fileShareRepository.findByFileAndSharedWithUser(file, targetUser);
-        if (existing.isPresent()) {
-            FileShare share = existing.get();
-            share.setAccessRole(role);
-            return fileShareRepository.save(share);
+        if (!isEmail) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        if (!isEmailSharingEnabled()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email sharing is disabled");
+        }
+        if (!isShareLinksEnabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Share links must be enabled for email sharing");
         }
 
-        FileShare share = new FileShare();
-        share.setFile(file);
-        share.setSharedWithUser(targetUser);
-        share.setPublicLink(false);
-        share.setAccessRole(role);
-        return fileShareRepository.save(share);
+        FileShare linkShare = createShareLink(owner, file, role);
+        sendShareNotification(owner, file, normalizedUsername, role, buildShareLinkUrl(linkShare));
+        return linkShare;
     }
 
     public void revokeUserShare(User owner, StoredFile file, String username) {
@@ -514,9 +612,9 @@ public class FileStorageService {
 
         FileShare share = new FileShare();
         share.setFile(file);
-        share.setPublicLink(false);
         share.setShareToken(UUID.randomUUID().toString());
         share.setAccessRole(role);
+        share.setExpiresAt(resolveShareLinkExpiration());
         return fileShareRepository.save(share);
     }
 
@@ -541,17 +639,25 @@ public class FileStorageService {
 
     public FileShare getShareByToken(String token) {
         ensureStorageEnabled();
-        return fileShareRepository
-                .findByShareTokenWithFile(token)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "Share link not found"));
+        FileShare share =
+                fileShareRepository
+                        .findByShareTokenWithFile(token)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "Share link not found"));
+        if (isShareLinkExpired(share)) {
+            throw new ResponseStatusException(HttpStatus.GONE, "Share link has expired");
+        }
+        return share;
     }
 
     public boolean canAccessShareLink(FileShare share, Authentication authentication) {
         ensureStorageEnabled();
         if (!isShareLinksEnabled()) {
+            return false;
+        }
+        if (isShareLinkExpired(share)) {
             return false;
         }
         if (authentication == null
@@ -564,6 +670,9 @@ public class FileStorageService {
 
     public void recordShareAccess(FileShare share, Authentication authentication, boolean inline) {
         if (share == null) {
+            return;
+        }
+        if (isShareLinkExpired(share)) {
             return;
         }
         if (!isShareLinksEnabled()) {
@@ -583,7 +692,8 @@ public class FileStorageService {
     public List<FileShareAccess> listShareAccesses(User owner, StoredFile file, String token) {
         ensureStorageEnabled();
         if (!isOwner(file, owner)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can view access");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Only the owner can view access");
         }
         FileShare share =
                 fileShareRepository
@@ -626,6 +736,9 @@ public class FileStorageService {
             if (token == null || token.isBlank()) {
                 continue;
             }
+            if (isShareLinkExpired(access.getFileShare())) {
+                continue;
+            }
             if (!latestByToken.containsKey(token)) {
                 latestByToken.put(token, access);
             }
@@ -647,16 +760,19 @@ public class FileStorageService {
                                     .shareToken(share != null ? share.getShareToken() : null)
                                     .fileId(file != null ? file.getId() : null)
                                     .fileName(file != null ? file.getOriginalFilename() : null)
-                                    .owner(file != null && file.getOwner() != null
-                                            ? file.getOwner().getUsername()
-                                            : null)
+                                    .owner(
+                                            file != null && file.getOwner() != null
+                                                    ? file.getOwner().getUsername()
+                                                    : null)
                                     .ownedByCurrentUser(ownedByCurrentUser)
-                                    .accessRole(share != null
-                                            ? resolveShareRole(share)
-                                                    .name()
-                                                    .toLowerCase(Locale.ROOT)
-                                            : null)
+                                    .accessRole(
+                                            share != null
+                                                    ? resolveShareRole(share)
+                                                            .name()
+                                                            .toLowerCase(Locale.ROOT)
+                                                    : null)
                                     .createdAt(share != null ? share.getCreatedAt() : null)
+                                    .expiresAt(share != null ? share.getExpiresAt() : null)
                                     .lastAccessedAt(access.getAccessedAt())
                                     .build();
                         })
@@ -707,10 +823,224 @@ public class FileStorageService {
         return null;
     }
 
+    private void validateMainUpload(MultipartFile file) {
+        if (!isValidUpload(file)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
+        }
+    }
+
+    private boolean isValidUpload(MultipartFile file) {
+        return file != null && !file.isEmpty();
+    }
+
+    private long calculateUploadBytes(
+            MultipartFile file, MultipartFile historyBundle, MultipartFile auditLog) {
+        return safeSize(file) + safeSize(historyBundle) + safeSize(auditLog);
+    }
+
+    private long calculateUploadBytes(
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            StoredFile existing) {
+        long historyBytes =
+                isValidUpload(historyBundle)
+                        ? safeSize(historyBundle)
+                        : safeStoredBytes(existing.getHistorySizeBytes());
+        long auditBytes =
+                isValidUpload(auditLog)
+                        ? safeSize(auditLog)
+                        : safeStoredBytes(existing.getAuditLogSizeBytes());
+        return safeSize(file) + historyBytes + auditBytes;
+    }
+
+    private long safeSize(MultipartFile file) {
+        if (file == null) {
+            return 0;
+        }
+        return Math.max(0, file.getSize());
+    }
+
+    private long totalStoredBytes(StoredFile file) {
+        if (file == null) {
+            return 0;
+        }
+        return file.getSizeBytes()
+                + safeStoredBytes(file.getHistorySizeBytes())
+                + safeStoredBytes(file.getAuditLogSizeBytes());
+    }
+
+    private long safeStoredBytes(Long value) {
+        if (value == null) {
+            return 0;
+        }
+        return Math.max(0, value);
+    }
+
+    private void enforceStorageQuotas(User owner, long newBytes, long existingBytes) {
+        ApplicationProperties.Storage.Quotas quotas =
+                applicationProperties.getStorage().getQuotas();
+        if (quotas == null) {
+            return;
+        }
+        long maxFileBytes = toBytes(quotas.getMaxFileMb());
+        if (maxFileBytes > 0 && newBytes > maxFileBytes) {
+            throw new ResponseStatusException(
+                    HttpStatus.PAYLOAD_TOO_LARGE, "Stored file exceeds the maximum size");
+        }
+
+        long delta = newBytes - existingBytes;
+        if (delta <= 0) {
+            return;
+        }
+
+        long maxUserBytes = toBytes(quotas.getMaxStorageMbPerUser());
+        if (maxUserBytes > 0) {
+            long currentBytes = storedFileRepository.sumStorageBytesByOwner(owner);
+            if (currentBytes + delta > maxUserBytes) {
+                throw new ResponseStatusException(
+                        HttpStatus.PAYLOAD_TOO_LARGE, "User storage quota exceeded");
+            }
+        }
+
+        long maxTotalBytes = toBytes(quotas.getMaxStorageMbTotal());
+        if (maxTotalBytes > 0) {
+            long totalBytes = storedFileRepository.sumStorageBytesTotal();
+            if (totalBytes + delta > maxTotalBytes) {
+                throw new ResponseStatusException(
+                        HttpStatus.PAYLOAD_TOO_LARGE, "System storage quota exceeded");
+            }
+        }
+    }
+
+    private long toBytes(long megabytes) {
+        if (megabytes <= 0) {
+            return megabytes;
+        }
+        return megabytes * 1024L * 1024L;
+    }
+
+    private void applyHistoryMetadata(StoredFile storedFile, StoredObject historyObject) {
+        if (storedFile == null || historyObject == null) {
+            return;
+        }
+        storedFile.setHistoryFilename(historyObject.getOriginalFilename());
+        storedFile.setHistoryContentType(historyObject.getContentType());
+        storedFile.setHistorySizeBytes(historyObject.getSizeBytes());
+        storedFile.setHistoryStorageKey(historyObject.getStorageKey());
+    }
+
+    private void applyAuditMetadata(StoredFile storedFile, StoredObject auditObject) {
+        if (storedFile == null || auditObject == null) {
+            return;
+        }
+        storedFile.setAuditLogFilename(auditObject.getOriginalFilename());
+        storedFile.setAuditLogContentType(auditObject.getContentType());
+        storedFile.setAuditLogSizeBytes(auditObject.getSizeBytes());
+        storedFile.setAuditLogStorageKey(auditObject.getStorageKey());
+    }
+
+    private List<String> collectStorageKeys(StoredFile file) {
+        if (file == null) {
+            return List.of();
+        }
+        return java.util.stream.Stream.of(
+                        file.getStorageKey(),
+                        file.getHistoryStorageKey(),
+                        file.getAuditLogStorageKey())
+                .filter(value -> value != null && !value.isBlank())
+                .collect(Collectors.toList());
+    }
+
+    private void cleanupStoredObject(StoredObject storedObject) {
+        if (storedObject == null) {
+            return;
+        }
+        cleanupStoredKey(storedObject.getStorageKey());
+    }
+
+    private void cleanupStoredKey(String storageKey) {
+        if (storageKey == null || storageKey.isBlank()) {
+            return;
+        }
+        try {
+            storageProvider.delete(storageKey);
+        } catch (IOException e) {
+            log.warn("Failed to delete storage key {}. Scheduling cleanup.", storageKey, e);
+            StorageCleanupEntry entry = new StorageCleanupEntry();
+            entry.setStorageKey(storageKey);
+            storageCleanupEntryRepository.save(entry);
+        }
+    }
+
+    private String buildShareLinkUrl(FileShare share) {
+        if (share == null || share.getShareToken() == null) {
+            return null;
+        }
+        String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
+        if (frontendUrl == null || frontendUrl.trim().isEmpty()) {
+            return null;
+        }
+        String normalized = frontendUrl.trim();
+        if (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized + "/share/" + share.getShareToken();
+    }
+
+    private void sendShareNotification(
+            User owner, StoredFile file, String email, ShareAccessRole role, String shareLinkUrl) {
+        if (emailService.isEmpty() || !applicationProperties.getMail().isEnabled()) {
+            log.warn("Email sharing configured but mail service is unavailable");
+            return;
+        }
+        String ownerName = owner != null ? owner.getUsername() : "A user";
+        String fileName = file != null ? file.getOriginalFilename() : "a file";
+        String subject = "A file was shared with you";
+        StringBuilder body = new StringBuilder();
+        body.append(ownerName)
+                .append(" shared \"")
+                .append(fileName)
+                .append("\" with ")
+                .append(role != null ? role.name().toLowerCase(Locale.ROOT) : "viewer")
+                .append(" access.")
+                .append(System.lineSeparator())
+                .append(System.lineSeparator());
+        if (shareLinkUrl != null) {
+            body.append("Open the shared file: ")
+                    .append(shareLinkUrl)
+                    .append(System.lineSeparator());
+        } else {
+            String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
+            if (frontendUrl != null && !frontendUrl.trim().isEmpty()) {
+                body.append("Sign in to access the file: ").append(frontendUrl.trim());
+            }
+        }
+        try {
+            emailService.get().sendPlainEmail(email, subject, body.toString(), false);
+        } catch (MessagingException ex) {
+            log.warn("Failed to send share email to {}", email, ex);
+        }
+    }
+
+    private LocalDateTime resolveShareLinkExpiration() {
+        int days = applicationProperties.getStorage().getSharing().getLinkExpirationDays();
+        if (days <= 0) {
+            return null;
+        }
+        return LocalDateTime.now().plus(days, ChronoUnit.DAYS);
+    }
+
+    private boolean isShareLinkExpired(FileShare share) {
+        if (share == null || share.getExpiresAt() == null) {
+            return false;
+        }
+        return LocalDateTime.now().isAfter(share.getExpiresAt());
+    }
+
     private boolean hasReadAccess(ShareAccessRole role) {
         return role == ShareAccessRole.EDITOR
                 || role == ShareAccessRole.COMMENTER
                 || role == ShareAccessRole.VIEWER;
     }
-
 }

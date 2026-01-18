@@ -11,4 +11,5 @@ public class ShareLinkResponse {
     private final String token;
     private final String accessRole;
     private final LocalDateTime createdAt;
+    private final LocalDateTime expiresAt;
 }

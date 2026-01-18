@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.FileShareAccess;
-import stirling.software.proprietary.security.model.User;
 
 public interface FileShareAccessRepository extends JpaRepository<FileShareAccess, Long> {
     @Query(

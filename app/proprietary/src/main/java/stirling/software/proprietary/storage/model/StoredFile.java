@@ -30,9 +30,7 @@ import stirling.software.proprietary.security.model.User;
 @Entity
 @Table(
         name = "stored_files",
-        indexes = {
-            @Index(name = "idx_stored_files_owner", columnList = "owner_id")
-        })
+        indexes = {@Index(name = "idx_stored_files_owner", columnList = "owner_id")})
 @NoArgsConstructor
 @Getter
 @Setter
@@ -60,6 +58,30 @@ public class StoredFile implements Serializable {
 
     @Column(name = "storage_key", nullable = false, unique = true)
     private String storageKey;
+
+    @Column(name = "history_filename")
+    private String historyFilename;
+
+    @Column(name = "history_content_type")
+    private String historyContentType;
+
+    @Column(name = "history_size_bytes")
+    private Long historySizeBytes;
+
+    @Column(name = "history_storage_key", unique = true)
+    private String historyStorageKey;
+
+    @Column(name = "audit_log_filename")
+    private String auditLogFilename;
+
+    @Column(name = "audit_log_content_type")
+    private String auditLogContentType;
+
+    @Column(name = "audit_log_size_bytes")
+    private Long auditLogSizeBytes;
+
+    @Column(name = "audit_log_storage_key", unique = true)
+    private String auditLogStorageKey;
 
     @OneToMany(
             mappedBy = "file",

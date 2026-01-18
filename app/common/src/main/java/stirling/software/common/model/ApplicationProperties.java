@@ -452,6 +452,7 @@ public class ApplicationProperties {
         private boolean enabled = true;
         private String provider = "local";
         private Local local = new Local();
+        private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
 
         @Data
@@ -464,6 +465,14 @@ public class ApplicationProperties {
             private boolean enabled = true;
             private boolean linkEnabled = true;
             private boolean emailEnabled = false;
+            private int linkExpirationDays = 3;
+        }
+
+        @Data
+        public static class Quotas {
+            private long maxStorageMbPerUser = -1;
+            private long maxStorageMbTotal = -1;
+            private long maxFileMb = -1;
         }
     }
 

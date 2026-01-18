@@ -66,7 +66,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const [accessPopoverPosition, setAccessPopoverPosition] = useState({ top: 160, left: 84 });
   const sharingEnabled = config?.storageSharingEnabled === true;
   const shareLinksEnabled = config?.storageShareLinksEnabled === true;
-  const emailSharingEnabled = config?.storageShareEmailEnabled === true;
   const [inviteRows, setInviteRows] = useState<Array<{ id: number; email: string; role: 'editor' | 'commenter' | 'viewer'; error?: string }>>([
     { id: Date.now(), email: '', role: 'editor' },
   ]);
@@ -269,14 +268,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       });
       return;
     }
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const nextRows = inviteRows.map((row) => {
       const trimmed = row.email.trim();
       let error: string | undefined;
-      if (!trimmed || !emailPattern.test(trimmed)) {
+      if (!trimmed) {
         error = t('storageShare.invalidUsername', 'Enter a valid username or email address.');
-      } else if (!emailSharingEnabled) {
-        error = t('storageShare.emailShareDisabled', 'Sharing via email is disabled by your server settings.');
       }
       return { ...row, email: trimmed, error };
     });
@@ -312,7 +308,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     } finally {
       setIsInviting(false);
     }
-  }, [emailSharingEnabled, ensureStoredFile, inviteRows, resetInviteRows, selectedAccessFileStub, t]);
+  }, [ensureStoredFile, inviteRows, resetInviteRows, selectedAccessFileStub, t]);
 
   const handleCopyShareLink = async () => {
     if (!shareLinksEnabled) {

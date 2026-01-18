@@ -18,6 +18,7 @@ export interface ShareLinkMetadata {
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
   createdAt?: string;
+  expiresAt?: string;
 }
 
 export async function fetchShareLinkMetadata(token: string): Promise<ShareLinkMetadata> {

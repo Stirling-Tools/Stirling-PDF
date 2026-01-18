@@ -225,13 +225,18 @@ system:
 
 storage:
   enabled: true # set to 'true' to allow users to store files on the server (requires security.enableLogin)
-  provider: local # storage provider: 'local' for filesystem storage (future support for S3)
+  provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
   local:
     basePath: './storage' # base directory for stored files
+  quotas:
+    maxStorageMbPerUser: -1 # Max storage per user in MB; -1 disables per-user cap
+    maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
+    maxFileMb: -1 # Max size per stored file (including history/audit) in MB; -1 disables limit
   sharing:
     enabled: true # set to 'false' to disable all sharing features
     linkEnabled: true # set to 'false' to disable share links (requires system.frontendUrl)
     emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
+    linkExpirationDays: 3 # Number of days before share links expire
 
 ui:
   appNameNavbar: "" # name displayed on the navigation bar

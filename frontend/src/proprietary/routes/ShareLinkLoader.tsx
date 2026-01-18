@@ -27,6 +27,7 @@ interface ShareLinkMetadata {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  expiresAt?: string;
 }
 
 export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
@@ -232,6 +233,14 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             ),
             expandable: false,
             durationMs: 4500,
+          });
+          navigate('/', { replace: true });
+        } else if (status === 404 || status === 410) {
+          alert({
+            alertType: 'error',
+            title: t('storageShare.expiredTitle', 'Link expired'),
+            expandable: false,
+            durationMs: 4000,
           });
           navigate('/', { replace: true });
         } else {

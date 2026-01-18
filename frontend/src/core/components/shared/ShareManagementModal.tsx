@@ -62,7 +62,6 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
   const { config } = useAppConfig();
   const sharingEnabled = config?.storageSharingEnabled === true;
   const shareLinksEnabled = config?.storageShareLinksEnabled === true;
-  const emailSharingEnabled = config?.storageShareEmailEnabled !== false;
   const { actions } = useFileActions();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -88,9 +87,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
           'storageShare.invalidUsername',
           'Enter a valid username or email address.'
         )
-      : isEmailInput && !emailSharingEnabled
-        ? t('storageShare.emailShareDisabled', 'Sharing via email is disabled by your server settings.')
-        : null;
+      : null;
 
   const shareBaseUrl = useMemo(() => {
     const frontendUrl = (config?.frontendUrl || '').trim();
