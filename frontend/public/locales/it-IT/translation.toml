@@ -3880,7 +3880,7 @@ failed = "Si è verificato un errore durante la compressione del PDF."
 4 = "Modalità automatica - Regola automaticamente la qualità per ottenere le dimensioni esatte del PDF"
 5 = "Dimensioni PDF previste (ad es. 25 MB, 10,8 MB, 25 KB)"
 
-[compress.selectText.1]ombinare: Questa è la traduzione più diretta e generica. Si usa quando si parla di unire o mescolare elementi diversi. Esempi: "Combinare ingredienti per una ricetta", "Combinare colori in un dipinto".
+[compress.selectText.1]
 _value = "Impostazioni di compressione"
 1 = "1-3 Compressione PDF,</br> 4-6 Compressione immagine leggera,</br> 7-9 Compressione immagine intensa Ridurrà drasticamente la qualità dell'immagine"
 
