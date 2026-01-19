@@ -5777,6 +5777,7 @@ usernameRequired = "Username and password are required"
 passwordTooShort = "Password must be at least 6 characters"
 success = "User created successfully"
 error = "Failed to create user"
+forceMFA = "Force MFA setup on next login"
 
 [workspace.people.editMember]
 title = "Edit Member"

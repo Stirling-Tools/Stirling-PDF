@@ -68,16 +68,17 @@ public class MfaService {
             throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
-        // Clear any existing secret/step to avoid duplicate inserts in the element collection.
+        settings.put(MFA_ENABLED_KEY, "false");
+        // Clear existing values and flush the removals before inserting a new secret. This keeps
+        // the (user_id, setting_key) PK satisfied even when the persistence context re-inserts the
+        // same keys within a single transaction.
         settings.remove(MFA_SECRET_KEY);
         settings.remove(MFA_LAST_USED_STEP_KEY);
-        // Also delete persisted rows eagerly to satisfy the unique (user_id, setting_key)
-        // constraint before re-inserting.
         if (managedUser != null && managedUser.getId() != null) {
             userRepository.deleteSettingsByUserIdAndKeys(
                     managedUser.getId(), Arrays.asList(MFA_SECRET_KEY, MFA_LAST_USED_STEP_KEY));
+            userRepository.flush();
         }
-        settings.put(MFA_ENABLED_KEY, "false");
         settings.put(MFA_SECRET_KEY, secret);
         persist(managedUser);
     }

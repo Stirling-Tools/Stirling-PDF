@@ -535,7 +535,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                 onChange={(e) => setInviteForm({ ...inviteForm, forceChange: e.currentTarget.checked })}
               />
               <Checkbox
-                label="Force MFA on first login (Coming Soon)"
+                label={t('workspace.people.addMember.forceMFA', 'Force MFA setup on next login')}
                 checked={inviteForm.forceMFA}
                 onChange={(e) => setInviteForm({ ...inviteForm, forceMFA: e.currentTarget.checked })}
               />

@@ -236,6 +236,22 @@ public class UserController {
                     .body(Map.of("error", "userNotFound", "message", "User not found"));
         }
 
+        if (currentPassword == null
+                || currentPassword.isEmpty()
+                || newPassword == null
+                || newPassword.isEmpty()
+                || confirmPassword == null
+                || confirmPassword.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "missingParameters",
+                                    "message",
+                                    "Current password, new password, and confirmation are"
+                                            + " required"));
+        }
+
         if (!newPassword.equals(confirmPassword)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(
