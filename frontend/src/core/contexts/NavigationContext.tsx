@@ -30,7 +30,7 @@ export interface PageEditorTransitionState {
   direction: 'enter' | 'exit';
   fileCardRects: Map<string, DOMRect>;
   filePageCounts: Map<string, number>;
-  pageThumbnails: Map<number, string>; // Map page index to thumbnail URL
+  pageThumbnails: Map<string, string>; // Map file ID to first page thumbnail URL
   targetPageRects: Map<string, DOMRect> | null;
   editorScreenshotUrl: string | null;
 }

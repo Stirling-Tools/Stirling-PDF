@@ -1,14 +1,14 @@
-import { domToPng } from 'modern-screenshot';
+import { domToBlob } from 'modern-screenshot';
 
 /**
  * Capture a screenshot of a DOM element as a data URL
  *
  * @param element - The DOM element to capture
- * @returns Promise resolving to a data URL of the screenshot, or null if capture fails
+ * @returns Promise resolving to an object URL of the screenshot, or null if capture fails
  */
 export async function captureElementScreenshot(element: HTMLElement): Promise<string | null> {
   try {
-    const dataUrl = await domToPng(element, {
+    const blob = await domToBlob(element, {
       width: window.innerWidth,
       height: window.innerHeight,
       style: {
@@ -16,7 +16,7 @@ export async function captureElementScreenshot(element: HTMLElement): Promise<st
       },
     });
 
-    return dataUrl;
+    return URL.createObjectURL(blob);
   } catch (error) {
     console.warn('Failed to capture screenshot:', error);
     return null;

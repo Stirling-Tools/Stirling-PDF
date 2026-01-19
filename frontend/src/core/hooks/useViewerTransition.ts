@@ -39,10 +39,9 @@ export function useViewerTransition({
         return;
       }
 
-      // Only capture screenshot for fileEditor transitions
-      // pageEditor doesn't need it since we're animating the thumbnail directly
+      // Capture screenshot for smooth fade during transition
       let screenshot: string | null = null;
-      if (currentView === 'fileEditor') {
+      if (currentView === 'fileEditor' || currentView === 'pageEditor') {
         try {
           screenshot = await captureScreenshot();
         } catch {

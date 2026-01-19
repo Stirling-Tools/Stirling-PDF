@@ -206,12 +206,43 @@ export const PageEditorSpreadTransition: React.FC = () => {
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('idle');
   const [firstPageTargetRect, setFirstPageTargetRect] = useState<DOMRect | null>(null);
   const transitionRef = useRef<HTMLDivElement | null>(null);
+  const lastScreenshotRef = useRef<string | null>(null);
 
   const isActive = pageEditorTransition?.isAnimating ?? false;
   const direction = pageEditorTransition?.direction ?? 'enter';
   const fileCardRects = pageEditorTransition?.fileCardRects ?? new Map();
   const filePageCounts = pageEditorTransition?.filePageCounts ?? new Map();
   const pageThumbnails = pageEditorTransition?.pageThumbnails ?? new Map();
+
+  useEffect(() => {
+    const currentUrl = pageEditorTransition?.editorScreenshotUrl ?? null;
+    const previousUrl = lastScreenshotRef.current;
+
+    if (currentUrl && currentUrl !== previousUrl) {
+      if (previousUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previousUrl);
+      }
+      lastScreenshotRef.current = currentUrl;
+    }
+
+    if (!isActive && lastScreenshotRef.current) {
+      const urlToRevoke = lastScreenshotRef.current;
+      if (urlToRevoke.startsWith('blob:')) {
+        URL.revokeObjectURL(urlToRevoke);
+      }
+      lastScreenshotRef.current = null;
+    }
+
+    return () => {
+      if (lastScreenshotRef.current) {
+        const urlToRevoke = lastScreenshotRef.current;
+        if (urlToRevoke.startsWith('blob:')) {
+          URL.revokeObjectURL(urlToRevoke);
+        }
+        lastScreenshotRef.current = null;
+      }
+    };
+  }, [pageEditorTransition?.editorScreenshotUrl, isActive]);
 
   // Build animation data for all pages
   const pageAnimations = useMemo(() => {
@@ -237,34 +268,36 @@ export const PageEditorSpreadTransition: React.FC = () => {
       const cardRect = fileCardRects.get(fileId);
       const pageCount = filePageCounts.get(fileId) || 0;
 
-      if (!cardRect || pageCount === 0) return;
+      if (pageCount === 0) return;
 
-      for (let i = 0; i < pageCount; i++) {
-        const pageIndex = cumulativePageIndex + i;
-        const isFirstPage = i === 0;
+      if (cardRect) {
+        for (let i = 0; i < pageCount; i++) {
+          const pageIndex = cumulativePageIndex + i;
+          const isFirstPage = i === 0;
 
-        // Get actual page thumbnail from the captured map
-        const thumbnailUrl = pageThumbnails.get(pageIndex) || null;
+          // Get actual page thumbnail from the captured map
+          const thumbnailUrl = isFirstPage ? pageThumbnails.get(fileId) || null : null;
 
-        // Target rect will be queried from actual DOM elements
-        const targetRect = null;
+          // Target rect will be queried from actual DOM elements
+          const targetRect = null;
 
-        // For the first page, source is the file card
-        // For other pages, source is the first page's target position (they burst from there)
-        const sourceRect = isFirstPage ? cardRect : firstPageTargetRect;
+          // For the first page, source is the file card
+          // For other pages, source is the first page's target position (they burst from there)
+          const sourceRect = isFirstPage ? cardRect : firstPageTargetRect;
 
-        // No stagger - all pages burst simultaneously
-        const staggerDelay = 0;
+          // No stagger - all pages burst simultaneously
+          const staggerDelay = 0;
 
-        animations.push({
-          pageIndex,
-          fileId,
-          sourceRect,
-          targetRect,
-          staggerDelay,
-          thumbnailUrl,
-          isFirstPage,
-        });
+          animations.push({
+            pageIndex,
+            fileId,
+            sourceRect,
+            targetRect,
+            staggerDelay,
+            thumbnailUrl,
+            isFirstPage,
+          });
+        }
       }
 
       cumulativePageIndex += pageCount;
@@ -365,12 +398,13 @@ export const PageEditorSpreadTransition: React.FC = () => {
     };
   }, [isActive, actions]);
 
-  if (!isActive || pageAnimations.length === 0) {
+  if (!isActive) {
     return null;
   }
 
   const isReady = animationPhase === 'ready';
   const isGliding = animationPhase === 'gliding';
+  const shouldRenderGlide = (isReady || isGliding) && firstPageTargetRect && firstPages.length > 0;
 
   return (
     <>
@@ -403,7 +437,7 @@ export const PageEditorSpreadTransition: React.FC = () => {
       )}
 
       {/* First page(s) gliding animation */}
-      {(isReady || isGliding) && firstPageTargetRect && firstPages.map((anim, idx) => {
+      {shouldRenderGlide && firstPages.map((anim, idx) => {
         const { sourceRect, thumbnailUrl } = anim;
         const targetRect = firstPageTargetRect;
 

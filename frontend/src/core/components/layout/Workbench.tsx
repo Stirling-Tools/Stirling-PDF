@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -61,6 +61,8 @@ export default function Workbench() {
 
   // Get active file index from ViewerContext
   const { activeFileIndex, setActiveFileIndex } = useViewer();
+  const activeFileId = activeFiles[activeFileIndex]?.fileId;
+  const lastViewerScreenshotRef = useRef<string | null>(null);
   
   // Get navigation guard for unsaved changes check when switching files
   const { requestNavigation } = useNavigationGuard();
@@ -101,6 +103,36 @@ export default function Workbench() {
     return captureElementScreenshot(mainContentRef.current);
   }, []);
 
+  useEffect(() => {
+    const currentUrl = viewerTransition.editorScreenshotUrl;
+    const previousUrl = lastViewerScreenshotRef.current;
+
+    if (currentUrl && currentUrl !== previousUrl) {
+      if (previousUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previousUrl);
+      }
+      lastViewerScreenshotRef.current = currentUrl;
+    }
+
+    if (!viewerTransition.isAnimating && lastViewerScreenshotRef.current) {
+      const urlToRevoke = lastViewerScreenshotRef.current;
+      if (urlToRevoke.startsWith('blob:')) {
+        URL.revokeObjectURL(urlToRevoke);
+      }
+      lastViewerScreenshotRef.current = null;
+    }
+
+    return () => {
+      if (lastViewerScreenshotRef.current) {
+        const urlToRevoke = lastViewerScreenshotRef.current;
+        if (urlToRevoke.startsWith('blob:')) {
+          URL.revokeObjectURL(urlToRevoke);
+        }
+        lastViewerScreenshotRef.current = null;
+      }
+    };
+  }, [viewerTransition.editorScreenshotUrl, viewerTransition.isAnimating]);
+
   // Get transition handlers
   const { handleEntryTransition, handleExitTransition } = useViewerTransition({
     activeFileIndex,
@@ -112,6 +144,7 @@ export default function Workbench() {
   const { handleEntryTransition: handlePageEditorEntry, handleExitTransition: handlePageEditorExit } = usePageEditorTransition({
     currentView,
     captureScreenshot: captureMainContentScreenshot,
+    activeFileId,
   });
 
   // Wrapper for setCurrentView that adds transition when switching to/from viewer
@@ -127,8 +160,8 @@ export default function Workbench() {
     }
 
     // Handle page editor entry (fileEditor → pageEditor)
-    if (view === 'pageEditor' && currentView === 'fileEditor') {
-      await handlePageEditorEntry();
+    if (view === 'pageEditor' && (currentView === 'fileEditor' || currentView === 'viewer')) {
+      await handlePageEditorEntry(currentView === 'viewer' ? { sourceFileId: activeFileId } : undefined);
     }
 
     // Handle page editor exit (pageEditor → fileEditor)
@@ -137,7 +170,7 @@ export default function Workbench() {
     }
 
     navActions.setWorkbench(view);
-  }, [currentView, navActions, handleEntryTransition, handleExitTransition, handlePageEditorEntry, handlePageEditorExit]);
+  }, [currentView, navActions, handleEntryTransition, handleExitTransition, handlePageEditorEntry, handlePageEditorExit, activeFileId]);
 
   const renderMainContent = () => {
     // During viewer transition with screenshot, show screenshot overlay
