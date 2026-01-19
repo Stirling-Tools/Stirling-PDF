@@ -213,6 +213,7 @@ export const PageEditorSpreadTransition: React.FC = () => {
   const fileCardRects = pageEditorTransition?.fileCardRects ?? new Map();
   const filePageCounts = pageEditorTransition?.filePageCounts ?? new Map();
   const pageThumbnails = pageEditorTransition?.pageThumbnails ?? new Map();
+  const screenshotRect = pageEditorTransition?.editorScreenshotRect ?? null;
 
   useEffect(() => {
     const currentUrl = pageEditorTransition?.editorScreenshotUrl ?? null;
@@ -412,11 +413,11 @@ export const PageEditorSpreadTransition: React.FC = () => {
       {pageEditorTransition?.editorScreenshotUrl && (
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: window.innerWidth,
-            height: window.innerHeight,
+            position: 'fixed',
+            top: `${screenshotRect?.top ?? 0}px`,
+            left: `${screenshotRect?.left ?? 0}px`,
+            width: `${screenshotRect?.width ?? window.innerWidth}px`,
+            height: `${screenshotRect?.height ?? window.innerHeight}px`,
             opacity: isGliding ? 0 : 1,
             transition: 'opacity 200ms ease-out',
             pointerEvents: 'none',

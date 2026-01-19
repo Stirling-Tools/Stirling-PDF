@@ -33,6 +33,7 @@ export interface PageEditorTransitionState {
   pageThumbnails: Map<string, string>; // Map file ID to first page thumbnail URL
   targetPageRects: Map<string, DOMRect> | null;
   editorScreenshotUrl: string | null;
+  editorScreenshotRect: DOMRect | null;
 }
 
 // Navigation state

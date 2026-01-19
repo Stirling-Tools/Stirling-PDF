@@ -97,10 +97,71 @@ export default function Workbench() {
     }
   };
 
+  const buildPageEditorFilter = useCallback((root: HTMLElement) => {
+    const rootRect = root.getBoundingClientRect();
+    const margin = 100;
+    const isRectVisible = (rect: DOMRect) =>
+      rect.bottom >= rootRect.top - margin &&
+      rect.right >= rootRect.left - margin &&
+      rect.top <= rootRect.bottom + margin &&
+      rect.left <= rootRect.right + margin;
+
+    const visiblePageIds = new Set<string>();
+    root.querySelectorAll<HTMLElement>('[data-page-id]').forEach((page) => {
+      const rect = page.getBoundingClientRect();
+      if (isRectVisible(rect)) {
+        const id = page.getAttribute('data-page-id');
+        if (id) {
+          visiblePageIds.add(id);
+        }
+      }
+    });
+
+    return (node: Node) => {
+      if (node === root) return true;
+      if (!(node instanceof Element)) return true;
+
+      const pageElement = node.closest('[data-page-id]') as HTMLElement | null;
+      if (pageElement) {
+        const pageId = pageElement.getAttribute('data-page-id');
+        const isVisible = pageId ? visiblePageIds.has(pageId) : true;
+        if (isVisible) {
+          return true;
+        }
+        return node === pageElement;
+      }
+
+      return true;
+    };
+  }, []);
+
   // Capture screenshot helper for TopControls transitions
   const captureMainContentScreenshot = useCallback(async (): Promise<string | null> => {
-    if (!mainContentRef.current) return null;
-    return captureElementScreenshot(mainContentRef.current);
+    const root = mainContentRef.current;
+    if (!root) return null;
+
+    const filter = currentView === 'pageEditor'
+      ? buildPageEditorFilter(root)
+      : undefined;
+
+    return captureElementScreenshot(root, { filter });
+  }, [currentView, buildPageEditorFilter]);
+
+  const capturePageEditorScreenshot = useCallback(async (): Promise<string | null> => {
+    const root = mainContentRef.current;
+    if (!root) return null;
+    const rootRect = root.getBoundingClientRect();
+    const filter = buildPageEditorFilter(root);
+    return captureElementScreenshot(root, {
+      filter,
+      width: Math.max(1, Math.round(rootRect.width)),
+      height: Math.max(1, Math.round(rootRect.height)),
+    });
+  }, [buildPageEditorFilter]);
+
+  const getMainContentRect = useCallback((): DOMRect | null => {
+    const root = mainContentRef.current;
+    return root ? root.getBoundingClientRect() : null;
   }, []);
 
   useEffect(() => {
@@ -143,8 +204,9 @@ export default function Workbench() {
   // Get page editor transition handlers
   const { handleEntryTransition: handlePageEditorEntry, handleExitTransition: handlePageEditorExit } = usePageEditorTransition({
     currentView,
-    captureScreenshot: captureMainContentScreenshot,
+    captureScreenshot: capturePageEditorScreenshot,
     activeFileId,
+    getScreenshotRect: getMainContentRect,
   });
 
   // Wrapper for setCurrentView that adds transition when switching to/from viewer

@@ -9,6 +9,7 @@ interface UsePageEditorTransitionParams {
   currentView: WorkbenchType;
   captureScreenshot: () => Promise<string | null>;
   activeFileId?: FileId;
+  getScreenshotRect?: () => DOMRect | null;
 }
 
 interface PageEditorTransitionHandlers {
@@ -24,6 +25,7 @@ export function usePageEditorTransition({
   currentView,
   captureScreenshot,
   activeFileId,
+  getScreenshotRect,
 }: UsePageEditorTransitionParams): PageEditorTransitionHandlers {
   const { actions: navActions } = useNavigationActions();
   const { selectors } = useFileState();
@@ -110,6 +112,7 @@ export function usePageEditorTransition({
 
       // Optional: capture screenshot for static background
       let screenshot: string | null = null;
+      const screenshotRect = getScreenshotRect ? getScreenshotRect() : null;
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       if (!prefersReducedMotion) {
@@ -141,9 +144,10 @@ export function usePageEditorTransition({
         pageThumbnails,
         targetPageRects: null, // Will be set after PageEditor renders
         editorScreenshotUrl: screenshot,
+        editorScreenshotRect: screenshotRect,
       });
     },
-    [currentView, selectors, captureScreenshot, navActions, activeFileId, decodeImage]
+    [currentView, selectors, captureScreenshot, navActions, activeFileId, decodeImage, getScreenshotRect]
   );
 
   /**
@@ -197,6 +201,7 @@ export function usePageEditorTransition({
       fileCardRects, // Will be filled after FileEditor renders
       filePageCounts,
       editorScreenshotUrl: null,
+      editorScreenshotRect: null,
     });
   }, [currentView, navActions]);
 
