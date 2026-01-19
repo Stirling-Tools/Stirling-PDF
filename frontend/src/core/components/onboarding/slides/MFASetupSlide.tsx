@@ -98,7 +98,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
     <div className={styles.mfaSetupGrid}>
       <Box className={styles.mfaQrCard}>
         <QRCodeSVG
-          value={mfaSetupData.otpauthUri}
+          value={mfaSetupData.otpauthUri ?? ""}
           size={168}
           level="H"
           imageSettings={{
@@ -123,7 +123,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
           Setup key (manual entry)
         </Text>
         <TextInput
-          value={mfaSetupData.secret}
+          value={mfaSetupData.secret ?? ""}
           readOnly
           variant="filled"
           styles={{ input: { fontFamily: "monospace" } }}
