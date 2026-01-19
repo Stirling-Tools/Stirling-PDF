@@ -14,10 +14,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -298,45 +296,6 @@ public class AuthController {
     }
 
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
-    @GetMapping("/mfa/required")
-    public ResponseEntity<?> isMfaRequired(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
-        }
-        String username = authentication.getName();
-        User user =
-                userService
-                        .findByUsernameIgnoreCaseWithSettings(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        boolean required = mfaService.isMfaRequired(user);
-        return ResponseEntity.ok(Map.of("mfaRequired", required));
-    }
-
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
-    @PutMapping("/mfa/required")
-    public ResponseEntity<?> setMfaRequired(
-            @RequestParam("required") boolean required, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
-        }
-        String username = authentication.getName();
-        User user =
-                userService
-                        .findByUsernameIgnoreCaseWithSettings(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        try {
-            mfaService.setMfaRequired(user, required);
-            return ResponseEntity.ok(Map.of("mfaRequired", required));
-        } catch (Exception e) {
-            log.error("Failed to set MFA requirement for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to set MFA requirement"));
-        }
-    }
-
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     @GetMapping("/mfa/setup")
     public ResponseEntity<?> setupMfa(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -537,29 +496,6 @@ public class AuthController {
             log.error("Failed to disable MFA for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to disable MFA"));
-        }
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/mfa/status/admin/{username}")
-    public ResponseEntity<?> getMfaStatus(@PathVariable String username) {
-        try {
-            User user =
-                    userService
-                            .findByUsernameIgnoreCaseWithSettings(username)
-                            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            boolean enabled = mfaService.isMfaEnabled(user);
-            log.info("MFA status for user {}: {}", username, enabled);
-            return ResponseEntity.ok(Map.of("enabled", enabled));
-        } catch (UsernameNotFoundException e) {
-            log.warn("User not found for MFA status check: {}", username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found"));
-        } catch (Exception e) {
-            log.error("Failed to check MFA status for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to check MFA status"));
         }
     }
 

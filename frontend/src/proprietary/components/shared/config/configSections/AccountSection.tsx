@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert as showToast } from '@app/components/toast';
 import { useAuth } from '@app/auth/UseSession';
-import { accountService, type MfaSetupResponse } from '@app/services/accountService';
+import { accountService } from '@app/services/accountService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAccountLogout } from '@app/extensions/accountLogout';
 import { BASE_PATH } from '@app/constants/app';
+import { MfaSetupResponse } from '@app/responses/Mfa/MfaResponse';
 
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
@@ -439,7 +440,7 @@ const AccountSection: React.FC = () => {
                   }}
                 >
                   <QRCodeSVG
-                    value={mfaSetupData.otpauthUri}
+                    value={mfaSetupData.otpauthUri || ''}
                     size={180}
                     level="H"
                     imageSettings={{

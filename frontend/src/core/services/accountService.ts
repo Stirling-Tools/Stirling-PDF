@@ -1,3 +1,4 @@
+import { MfaSetupResponse } from '@app/responses/Mfa/MfaResponse';
 import apiClient from '@app/services/apiClient';
 
 export interface AccountData {
@@ -14,11 +15,6 @@ export interface LoginPageData {
   showDefaultCredentials: boolean;
   firstTimeSetup: boolean;
   enableLogin: boolean;
-}
-
-export interface MfaSetupResponse {
-  secret: string;
-  otpauthUri: string;
 }
 
 /**

@@ -258,6 +258,8 @@ public class DatabaseService implements DatabaseServiceInterface {
         }
     }
 
+    private int i = 1;
+
     private boolean verifyBackup(Path backupPath) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -272,7 +274,12 @@ public class DatabaseService implements DatabaseServiceInterface {
             }
             return true;
         } catch (IOException | NoSuchAlgorithmException | SQLException e) {
-            log.error("Backup verification failed for {}: {}", backupPath, e.getMessage(), e);
+            if (i < 3) {
+                i++;
+                log.warn("Retrying backup verification for {} (attempt {}/3)", backupPath, i);
+                return verifyBackup(backupPath);
+            }
+            log.error("Backup verification failed for {}: {}", backupPath, e.getMessage());
         }
         return false;
     }

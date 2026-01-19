@@ -3,12 +3,13 @@ import { Alert, Box, Button, Group, Loader, Stack, Text, TextInput } from "@mant
 import { QRCodeSVG } from "qrcode.react";
 import { SlideConfig } from "@app/types/types";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import { accountService, type MfaSetupResponse } from "@app/services/accountService";
+import { accountService } from "@app/services/accountService";
 import { useAccountLogout } from '@app/extensions/accountLogout';
 import { useAuth } from "@app/auth/UseSession";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BASE_PATH } from "@app/constants/app";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
 
 interface MFASetupSlideProps {
   onMfaSetupComplete?: () => void;
