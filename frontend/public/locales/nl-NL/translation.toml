@@ -1,8 +1,11 @@
 unsavedChanges = "U heeft niet-opgeslagen wijzigingen in uw PDF."
+pendingRedactionsTitle = "Niet-toegepaste anonimiseringen"
+pendingRedactions = "U hebt niet-toegepaste anonimiseringen die verloren gaan."
 areYouSure = "Weet u zeker dat u wilt vertrekken?"
 unsavedChangesTitle = "Niet-opgeslagen wijzigingen"
 keepWorking = "Doorgaan met werken"
 discardChanges = "Verwerpen en verlaten"
+discardRedactions = "Verwerpen & verlaten"
 applyAndContinue = "Opslaan en verlaten"
 exportAndContinue = "Exporteren en doorgaan"
 cancel = "Annuleren"
@@ -364,6 +367,7 @@ advanced = "Geavanceerd"
 title = "Beveiliging & Authenticatie"
 security = "Beveiliging"
 connections = "Verbindingen"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licenties & Analyse"
@@ -438,6 +442,13 @@ currentVersion = "Huidige versie"
 latestVersion = "Laatste versie"
 checkForUpdates = "Op updates controleren"
 viewDetails = "Details bekijken"
+serverNeedsUpdate = "Server moet door de beheerder worden bijgewerkt"
+
+[settings.general.versionInfo]
+title = "Versie-informatie"
+description = "Details van desktop- en serverversie"
+desktop = "Desktopversie"
+server = "Serverversie"
 
 [settings.security]
 title = "Beveiliging"
@@ -528,6 +539,8 @@ accountSettings = "Account instellingen"
 adminSettings = "Beheerdersinstellingen - Gebruikers bekijken en toevoegen"
 userControlSettings = "Gebruikerscontrole instellingen"
 changeUsername = "Wijzig gebruikersnaam"
+changeUsernameDescription = "Werk uw gebruikersnaam bij. U wordt afgemeld na het bijwerken."
+newUsernamePlaceholder = "Voer uw nieuwe gebruikersnaam in"
 newUsername = "Nieuwe gebruikersnaam"
 password = "Bevestigingswachtwoord"
 oldPassword = "Oud wachtwoord"
@@ -735,6 +748,11 @@ desc = "Detecteer en splits gescande foto's in afzonderlijke pagina's"
 tags = "handtekening,ondertekenen"
 title = "Ondertekenen"
 desc = "Voegt handtekening toe aan PDF via tekenen, tekst of afbeelding"
+
+[home.annotate]
+tags = "annoteren,markeren,tekenen"
+title = "Annoteren"
+desc = "Markeer, teken en voeg notities en vormen toe in de viewer"
 
 [home.flatten]
 tags = "vereenvoudigen,verwijderen,interactief"
@@ -958,6 +976,7 @@ desc = "Voeg overal in uw PDF aangepaste tekst toe"
 addFiles = "Bestanden toevoegen"
 uploadFromComputer = "Uploaden vanaf computer"
 openFromComputer = "Openen vanaf computer"
+mobileUpload = "Uploaden vanaf mobiel"
 
 [viewPdf]
 tags = "bekijken,lezen,annoteren,tekst,afbeelding"
@@ -1273,6 +1292,37 @@ cbzOptions = "CBZ-naar-PDF-opties"
 optimizeForEbook = "PDF optimaliseren voor e-readers (gebruikt Ghostscript)"
 cbzOutputOptions = "PDF-naar-CBZ-opties"
 cbzDpi = "DPI voor weergave van afbeeldingen"
+cbrOptions = "CBR-opties"
+cbrOutputOptions = "Opties voor PDF naar CBR"
+cbrDpi = "DPI voor afbeeldingsrendering"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "Opties voor eBook naar PDF"
+ebookOptionsDesc = "Opties voor het converteren van eBooks naar PDF"
+embedAllFonts = "Alle lettertypen insluiten"
+embedAllFontsDesc = "Alle lettertypen uit het eBook in de gegenereerde PDF insluiten"
+includeTableOfContents = "Inhoudsopgave opnemen"
+includeTableOfContentsDesc = "Een gegenereerde inhoudsopgave toevoegen aan de resulterende PDF"
+includePageNumbers = "Paginanummers opnemen"
+includePageNumbersDesc = "Paginanummers toevoegen aan de gegenereerde PDF"
+optimizeForEbookPdf = "Optimaliseren voor e-readers"
+optimizeForEbookPdfDesc = "De PDF optimaliseren voor eBook-lezen (kleinere bestandsgrootte, betere weergave op eInk-apparaten)"
+
+[convert.epubOptions]
+epubOptions = "Opties voor PDF naar eBook"
+epubOptionsDesc = "Opties voor het converteren van PDF naar EPUB/AZW3"
+detectChapters = "Hoofdstukken detecteren"
+detectChaptersDesc = "Koppen die op hoofdstukken lijken detecteren en EPUB-paginabreuken invoegen"
+targetDevice = "Doelapparaat"
+targetDeviceDesc = "Kies een uitvoerprofiel dat is geoptimaliseerd voor het leesapparaat"
+outputFormat = "Uitvoerformaat"
+outputFormatDesc = "Kies het uitvoerformaat voor het eBook"
+tabletPhone = "Tablet/Telefoon (met afbeeldingen)"
+kindleEink = "Kindle e-Ink (tekst geoptimaliseerd)"
 
 [imageToPdf]
 tags = "conversie,img,jpg,foto"
@@ -1350,6 +1400,7 @@ applySignatures = "Afbeeldingen toepassen"
 name = "Afbeelding"
 placeholder = "Upload een afbeelding"
 label = "Afbeeldingsbestand"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Afbeelding configureren"
@@ -1389,6 +1440,11 @@ header = "Add attachments"
 add = "Bijlage toevoegen"
 remove = "Bijlage verwijderen"
 embed = "Bijlage insluiten"
+convertToPdfA3b = "Converteren naar PDF/A-3b"
+convertToPdfA3bDescription = "Maakt een archief-PDF met ingesloten bijlagen"
+convertToPdfA3bTooltip = "PDF/A-3b is een archiefformaat dat langdurige bewaring waarborgt. Het staat het insluiten van willekeurige bestandsformaten als bijlagen toe. Converteren vereist Ghostscript en kan langer duren voor grote bestanden."
+convertToPdfA3bTooltipHeader = "Over PDF/A-3b-conversie"
+convertToPdfA3bTooltipTitle = "Wat het doet"
 submit = "Add attachments"
 
 [watermark]
@@ -2334,6 +2390,10 @@ saved = "Opgeslagen"
 label = "Handtekeningafbeelding uploaden"
 placeholder = "Afbeeldingsbestand selecteren"
 hint = "Upload een PNG- of JPG-afbeelding van uw handtekening"
+removeBackground = "Witte achtergrond verwijderen (transparant maken)"
+processing = "Afbeelding verwerken..."
+backgroundRemovalFailedTitle = "Achtergrond verwijderen mislukt"
+backgroundRemovalFailedMessage = "Kan de achtergrond niet uit de afbeelding verwijderen. De originele afbeelding wordt gebruikt."
 
 [sign.instructions]
 title = "Hoe een handtekening toevoegen"
@@ -2378,6 +2438,11 @@ note = "Afvlakken verwijdert interactieve elementen uit de PDF, waardoor deze ni
 [flatten.options.flattenOnlyForms]
 label = "Alleen formulieren afvlakken"
 desc = "Alleen formuliervelden afvlakken; andere interactieve elementen blijven intact"
+
+[flatten.renderDpi]
+label = "Render-DPI (optioneel, aanbevolen 150 DPI)"
+help = "Laat leeg om de systeemstandaard te gebruiken. Hogere DPI verscherpt de uitvoer maar verhoogt de verwerkingstijd en bestandsgrootte."
+placeholder = "bijv. 150"
 
 [flatten.results]
 title = "Resultaten afvlakken"
@@ -2953,6 +3018,7 @@ header = "PDF bijsnijden"
 submit = "Indienen"
 noFileSelected = "Selecteer een PDF-bestand om te beginnen met bijsnijden"
 reset = "Resetten naar volledige PDF"
+autoCrop = "Witruimte automatisch bijsnijden"
 
 [crop.preview]
 title = "Selectie bijsnijgebied"
@@ -3183,6 +3249,7 @@ title = "Methode voor zwartlakken"
 mode = "Modus"
 automatic = "Automatisch"
 automaticDesc = "Tekst zwartlakken op basis van zoektermen"
+automaticDisabledTooltip = "Selecteer bestanden in de bestandsbeheerder om meerdere bestanden tegelijk te anonimiseren"
 manual = "Handmatig"
 manualDesc = "Klik en sleep om specifieke gebieden te zwartlakken"
 manualComingSoon = "Handmatig zwartlakken komt binnenkort"
@@ -3253,8 +3320,35 @@ text = "Match alleen complete woorden, geen gedeeltelijke overeenkomsten. 'John'
 title = "Converteren naar PDF-afbeelding"
 text = "Converteert de PDF na zwartlakken naar een op afbeeldingen gebaseerde PDF. Dit zorgt ervoor dat tekst achter zwartlakvakken volledig wordt verwijderd en onherstelbaar is."
 
+[redact.tooltip.manual.header]
+title = "Handmatige anonimiseringsbesturingselementen"
+
+[redact.tooltip.manual.markText]
+title = "Tekst markeren"
+text = "Selecteer tekst direct op de PDF om deze te markeren voor anonimisering. Klik en sleep om specifieke tekst te markeren die u wilt anonimiseren."
+
+[redact.tooltip.manual.markArea]
+title = "Gebied markeren"
+text = "Teken rechthoekige gebieden op de PDF om regio's te markeren voor anonimisering. Handig voor het anonimiseren van afbeeldingen, handtekeningen of onregelmatige vormen."
+
+[redact.tooltip.manual.apply]
+title = "Anonimiseringen toepassen"
+text = "Klik na het markeren op 'Toepassen' om alle gemarkeerde gebieden permanent te anonimiseren. De teller in behandeling toont hoeveel anonimiseringen klaar zijn om toegepast te worden."
+bullet1 = "Markeer zoveel gebieden als nodig voordat u toepast"
+bullet2 = "Alle openstaande anonimiseringen worden in één keer toegepast"
+bullet3 = "Anonimiseringen kunnen na toepassing niet ongedaan worden gemaakt"
+
 [redact.manual]
+title = "Anonimiseringshulpmiddelen"
+instructions = "Selecteer tekst of teken gebieden op de PDF om inhoud te markeren voor anonimisering."
+markText = "Tekst markeren"
+markArea = "Gebied markeren"
+pendingLabel = "In behandeling:"
+applyWarning = "⚠️ Permanente toepassing, kan niet ongedaan worden gemaakt en de onderliggende gegevens worden verwijderd"
+apply = "Toepassen"
+noMarks = "Geen anonimiseringsmarkeringen. Gebruik de bovenstaande tools om inhoud te markeren voor anonimisering."
 header = "Handmatig zwartlakken"
+controlsTitle = "Handmatige anonimiseringsbesturingselementen"
 textBasedRedaction = "Tekstgebaseerd zwartlakken"
 pageBasedRedaction = "Pagina-gebaseerd zwartlakken"
 convertPDFToImageLabel = "PDF converteren naar PDF-afbeelding (gebruikt om tekst achter het vak te verwijderen)"
@@ -3369,6 +3463,19 @@ placeholder = "Voer het aantal horizontale secties in"
 [split-by-sections.vertical]
 label = "Verticale secties"
 placeholder = "Voer het aantal verticale secties in"
+
+[split-by-sections.splitMode]
+label = "Splitsmodus"
+description = "Kies hoe de pagina's worden gesplitst"
+splitAll = "Alle pagina's splitsen"
+splitAllExceptFirst = "Alles behalve de eerste splitsen"
+splitAllExceptLast = "Alles behalve de laatste splitsen"
+splitAllExceptFirstAndLast = "Alles behalve de eerste en laatste splitsen"
+custom = "Aangepaste pagina's"
+
+[split-by-sections.customPages]
+label = "Aangepaste paginanummers"
+placeholder = "bijv. 2,4,6"
 
 [AddStampRequest]
 tags = "Stempel, Afbeelding toevoegen, afbeelding centreren, watermerk, PDF, Insluiten, Aanpassen"
@@ -3731,6 +3838,9 @@ filesize = "Bestandsgrootte"
 [compress.grayscale]
 label = "Grijstinten toepassen voor compressie"
 
+[compress.linearize]
+label = "PDF lineariseren voor snelle webweergave"
+
 [compress.lineArt]
 label = "Afbeeldingen omzetten in lijntekening"
 description = "Gebruikt ImageMagick om pagina's te reduceren tot hoogcontrast zwart-wit voor maximale verkleining van de bestandsgrootte."
@@ -3773,6 +3883,11 @@ failed = "Er is een fout opgetreden bij het comprimeren van de PDF."
 [compress.selectText.1]
 _value = "Compressie-instellingen"
 1 = "1-3 PDF-compressie,</br> 4-6 lichte afbeeldingscompressie,</br> 7-9 intense afbeeldingscompressie Zal de beeldkwaliteit sterk verminderen"
+
+[compress.compressionLevel]
+range1to3 = "Lagere waarden behouden kwaliteit maar resulteren in grotere bestanden"
+range4to6 = "Gemiddelde compressie met matige kwaliteitsvermindering"
+range7to9 = "Hogere waarden verkleinen de bestandsgrootte aanzienlijk maar kunnen de afbeeldingsscherpte verminderen"
 
 [decrypt]
 passwordPrompt = "Dit bestand is met een wachtwoord beveiligd. Voer het wachtwoord in:"
@@ -4013,22 +4128,97 @@ deleteSelected = "Geselecteerde pagina's verwijderen"
 closePdf = "PDF sluiten"
 exportAll = "PDF exporteren"
 downloadSelected = "Geselecteerde bestanden downloaden"
-downloadAll = "Alles downloaden"
-saveAll = "Alles opslaan"
+annotations = "Annotaties"
+exportSelected = "Geselecteerde pagina's exporteren"
+saveChanges = "Wijzigingen opslaan"
 toggleTheme = "Thema wisselen"
-toggleBookmarks = "Bladwijzers tonen/verbergen"
 language = "Taal"
+toggleAnnotations = "Annotaties tonen/verbergen"
 search = "PDF doorzoeken"
 panMode = "Pan-modus"
+applyRedactionsFirst = "Eerst anonimiseringen toepassen"
 rotateLeft = "Linksom draaien"
 rotateRight = "Rechtsom draaien"
 toggleSidebar = "Zijbalk tonen/verbergen"
-exportSelected = "Geselecteerde pagina's exporteren"
-toggleAnnotations = "Annotaties tonen/verbergen"
-annotationMode = "Annotatiemodus schakelen"
+toggleBookmarks = "Bladwijzers tonen/verbergen"
 print = "PDF afdrukken"
 draw = "Tekenen"
+redact = "Anonimiseren"
+exitRedaction = "Anonimiseringsmodus verlaten"
 save = "Opslaan"
+downloadAll = "Alles downloaden"
+saveAll = "Alles opslaan"
+
+[textAlign]
+left = "Links"
+center = "Midden"
+right = "Rechts"
+
+[annotation]
+title = "Annoteren"
+desc = "Gebruik markeren, pen, tekst en notities. Wijzigingen blijven actief—afvlakken is niet nodig."
+highlight = "Markeren"
+pen = "Pen"
+text = "Tekstvak"
+note = "Notitie"
+rectangle = "Rechthoek"
+ellipse = "Ellips"
+select = "Selecteren"
+exit = "Annotatiemodus verlaten"
+strokeWidth = "Breedte"
+opacity = "Dekking"
+strokeOpacity = "Lijndekking"
+fillOpacity = "Vuldekking"
+fontSize = "Lettergrootte"
+chooseColor = "Kleur kiezen"
+color = "Kleur"
+strokeColor = "Lijnkleur"
+fillColor = "Vulkleur"
+underline = "Onderstrepen"
+strikeout = "Doorhalen"
+squiggly = "Gekruld"
+inkHighlighter = "Vrije markeerstift"
+freehandHighlighter = "Vrije markeerstift"
+square = "Vierkant"
+circle = "Cirkel"
+polygon = "Veelhoek"
+line = "Lijn"
+stamp = "Afbeelding toevoegen"
+textMarkup = "Tekstmarkering"
+drawing = "Tekening"
+shapes = "Vormen"
+notesStamps = "Notities en stempels"
+settings = "Instellingen"
+borderOn = "Rand: Aan"
+borderOff = "Rand: Uit"
+editInk = "Pen bewerken"
+editLine = "Lijn bewerken"
+editNote = "Notitie bewerken"
+editText = "Tekstvak bewerken"
+editTextMarkup = "Tekstmarkering bewerken"
+editSelected = "Annotatie bewerken"
+editSquare = "Vierkant bewerken"
+editCircle = "Cirkel bewerken"
+editPolygon = "Veelhoek bewerken"
+unsupportedType = "Dit annotatietype wordt niet volledig ondersteund voor bewerken."
+textAlignment = "Tekstuitlijning"
+noteIcon = "Notitiepictogram"
+imagePreview = "Voorbeeld"
+contents = "Tekst"
+backgroundColor = "Achtergrondkleur"
+clearBackground = "Achtergrond verwijderen"
+noBackground = "Geen achtergrond"
+stampSettings = "Stempelinstellingen"
+savingCopy = "Download voorbereiden..."
+saveFailed = "Kan kopie niet opslaan"
+saveReady = "Download gereed"
+selectAndMove = "Selecteren en bewerken"
+editSelectDescription = "Klik op een bestaande annotatie om de kleur, dekking, tekst of grootte te bewerken."
+editStampHint = "Om de afbeelding te wijzigen, verwijder deze stempel en voeg een nieuwe toe."
+editSwitchToSelect = "Schakel over naar Selecteren en bewerken om deze annotatie te bewerken."
+undo = "Ongedaan maken"
+redo = "Opnieuw"
+applyChanges = "Wijzigingen toepassen"
 saveChanges = "Wijzigingen opslaan"
 
 [search]
@@ -4112,6 +4302,8 @@ fetchError = "Instellingen laden mislukt"
 saveError = "Instellingen opslaan mislukt"
 saved = "Instellingen succesvol opgeslagen"
 saveSuccess = "Instellingen succesvol opgeslagen"
+success = "Instellingen succesvol opgeslagen"
+error = "Opslaan van instellingen mislukt"
 save = "Wijzigingen opslaan"
 discard = "Verwerpen"
 restartRequired = "Herstart vereist"
@@ -4234,6 +4426,13 @@ description = "Pad naar WeasyPrint-uitvoerbaar bestand voor HTML-naar-PDF-conver
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert-uitvoerbaar bestand"
 description = "Pad naar LibreOffice unoconvert voor documentconversies (laat leeg voor standaard: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend-URL"
+description = "Basis-URL voor frontend (bijv. https://pdf.example.com). Gebruikt voor e-mailuitnodigingslinks en mobiele QR-codeuploads. Laat leeg om de backend-URL te gebruiken."
+
+[admin.settings.badge]
+clickToUpgrade = "Klik om plandetails te bekijken"
 
 [admin.settings.security]
 title = "Beveiliging"
@@ -4371,6 +4570,19 @@ connect = "Verbinden"
 disconnect = "Verbinding verbreken"
 disconnected = "Provider succesvol ontkoppeld"
 disconnectError = "Ontkoppelen van provider mislukt"
+mobileScannerConvertToPdf = "Afbeeldingen naar PDF converteren"
+mobileScannerConvertToPdfDesc = "Geüploade afbeeldingen automatisch naar PDF-formaat converteren. Indien uitgeschakeld, blijven afbeeldingen ongewijzigd."
+mobileScannerImageResolution = "Beeldresolutie"
+mobileScannerImageResolutionDesc = "Resolutie van geüploade afbeeldingen. \"Verlaagd\" schaalt afbeeldingen naar max 1200px om de bestandsgrootte te verkleinen."
+imageResolutionFull = "Volledig (oorspronkelijke grootte)"
+imageResolutionReduced = "Verlaagd (max 1200px)"
+mobileScannerPageFormat = "Paginaformaat"
+mobileScannerPageFormatDesc = "PDF-paginaformaat voor geconverteerde afbeeldingen. \"Behouden\" gebruikt oorspronkelijke afbeeldingsafmetingen."
+pageFormatKeep = "Behouden (oorspronkelijke afmetingen)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Passend maken"
+mobileScannerStretchToFitDesc = "Rek afbeeldingen op om de hele pagina te vullen. Indien uitgeschakeld, worden afbeeldingen gecentreerd met behoud van de beeldverhouding."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO automatisch inloggen"
@@ -4438,6 +4650,122 @@ description = "Automatisch gebruikersaccounts aanmaken bij de eerste SAML2-login
 [admin.settings.connections.saml2.blockRegistration]
 label = "Registratie blokkeren"
 description = "Nieuwe gebruikersregistratie via SAML2 voorkomen"
+
+[admin.settings.connections.mobileScanner]
+label = "Uploaden via mobiele telefoon"
+enable = "QR-code-upload inschakelen"
+description = "Sta gebruikers toe bestanden te uploaden vanaf mobiele apparaten door een QR-code te scannen"
+note = "Opmerking: hiervoor moet de Frontend-URL worden geconfigureerd. "
+link = "Configureren in systeeminstellingen"
+mobileScannerConvertToPdf = "Afbeeldingen naar PDF converteren"
+mobileScannerConvertToPdfDesc = "Geüploade afbeeldingen automatisch naar PDF-formaat converteren. Indien uitgeschakeld, blijven afbeeldingen ongewijzigd."
+mobileScannerImageResolution = "Beeldresolutie"
+mobileScannerImageResolutionDesc = "Resolutie van geüploade afbeeldingen. \"Verlaagd\" schaalt afbeeldingen naar max 1200px om de bestandsgrootte te verkleinen."
+imageResolutionFull = "Volledig (oorspronkelijke grootte)"
+imageResolutionReduced = "Verlaagd (max 1200px)"
+mobileScannerPageFormat = "Paginaformaat"
+mobileScannerPageFormatDesc = "PDF-paginaformaat voor geconverteerde afbeeldingen. \"Behouden\" gebruikt oorspronkelijke afbeeldingsafmetingen."
+pageFormatKeep = "Behouden (oorspronkelijke afmetingen)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Passend maken"
+mobileScannerStretchToFitDesc = "Rek afbeeldingen op om de hele pagina te vullen. Indien uitgeschakeld, worden afbeeldingen gecentreerd met behoud van de beeldverhouding."
+
+[admin.settings.telegram]
+title = "Telegram-bot"
+description = "Telegram-botconnectiviteit, toegangsbeheer en feedbackgedrag configureren."
+
+[admin.settings.telegram.enabled]
+label = "Telegram-bot inschakelen"
+description = "Gebruikers toestaan te werken met Stirling PDF via uw geconfigureerde Telegram-bot."
+
+[admin.settings.telegram.botUsername]
+label = "Botgebruikersnaam"
+description = "De openbare gebruikersnaam van uw Telegram-bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot-token"
+description = "API-token geleverd door BotFather voor uw Telegram-bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inboxmap"
+description = "Map onder de pipeline-map waar inkomende Telegram-bestanden worden opgeslagen."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Aangepaste mapachtervoegsel gebruiken"
+description = "Voeg de chat-ID toe aan mappen met inkomende bestanden om uploads per chat te isoleren."
+
+[admin.settings.telegram.accessControl]
+title = "Toegangsbeheer"
+description = "Beperk welke gebruikers of kanalen met de bot kunnen communiceren."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Specifieke gebruikers-ID's toestaan"
+description = "Indien ingeschakeld, kunnen alleen vermelde gebruikers-ID's de bot gebruiken."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Toegestane gebruikers-ID's"
+description = "Voer Telegram-gebruikers-ID's in die met de bot mogen communiceren."
+placeholder = "Voeg gebruikers-ID toe en druk op Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Specifieke kanaal-ID's toestaan"
+description = "Indien ingeschakeld, kunnen alleen vermelde kanaal-ID's de bot gebruiken."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Toegestane kanaal-ID's"
+description = "Voer Telegram-kanaal-ID's in die met de bot mogen communiceren."
+placeholder = "Voeg kanaal-ID toe en druk op Enter"
+
+[admin.settings.telegram.processing]
+title = "Verwerking"
+description = "Polling-intervallen en verwerkingstime-outs voor Telegram-uploads beheren."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Verwerkingstime-out (seconden)"
+description = "Maximale wachttijd voor een verwerkingstaak voordat een fout wordt gemeld."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling-interval (ms)"
+description = "Interval tussen controles op nieuwe Telegram-updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedbackberichten"
+description = "Kies wanneer de bot feedback naar gebruikers en kanalen moet sturen."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Feedback inschakelen"
+description = "Bepaal of de bot überhaupt feedbackberichten verzendt."
+
+[admin.settings.telegram.feedback.channel]
+title = "Feedbackregels voor kanalen"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "‘Geen geldig document’ weergeven (kanaal)"
+description = "Onderdruk de ‘geen geldig document’-reactie voor kanaaluploads."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Verwerkingsfouten weergeven (kanaal)"
+description = "Verzend verwerkingsfoutmeldingen naar kanalen."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Foutmeldingen weergeven (kanaal)"
+description = "Gedetailleerde foutmeldingen voor kanalen weergeven."
+
+[admin.settings.telegram.feedback.user]
+title = "Feedbackregels voor gebruikers"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "‘Geen geldig document’ weergeven (gebruiker)"
+description = "Onderdruk de ‘geen geldig document’-reactie voor gebruikersuploads."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Verwerkingsfouten weergeven (gebruiker)"
+description = "Verzend verwerkingsfoutmeldingen naar gebruikers."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Foutmeldingen weergeven (gebruiker)"
+description = "Gedetailleerde foutmeldingen voor gebruikers weergeven."
 
 [admin.settings.database]
 title = "Database"
@@ -4620,6 +4948,10 @@ description = "Sta beheerders toe om gebruikers via e-mail uit te nodigen met au
 label = "Frontend-URL"
 description = "Basis-URL voor de frontend (bijv. https://pdf.example.com). Wordt gebruikt voor het genereren van uitnodigingslinks in e-mails. Laat leeg om de back-end-URL te gebruiken."
 
+[admin.settings.mail.frontendUrlNote]
+note = "Opmerking: hiervoor moet de Frontend-URL worden geconfigureerd. "
+link = "Configureren in systeeminstellingen"
+
 [admin.settings.legal]
 title = "Juridische documenten"
 description = "Links naar juridische documenten en beleidsregels configureren."
@@ -4686,7 +5018,6 @@ title = "Actieve licentie"
 file = "Bron: licentiebestand ({{path}})"
 key = "Bron: licentiesleutel"
 type = "Type: {{type}}"
-
 noInput = "Geef een licentiesleutel op of upload een certificaatbestand"
 success = "Succes"
 
@@ -4805,6 +5136,9 @@ googleDriveShort = "Drive"
 myFiles = "Mijn bestanden"
 noRecentFiles = "Geen recente bestanden gevonden"
 googleDriveNotAvailable = "Google Drive-integratie niet beschikbaar"
+mobileUpload = "Mobiele upload"
+mobileShort = "Mobiel"
+mobileUploadNotAvailable = "Mobiele upload niet ingeschakeld"
 downloadSelected = "Geselecteerde downloaden"
 saveSelected = "Selectie opslaan"
 openFiles = "Bestanden openen"
@@ -5182,6 +5516,15 @@ warning = "⚠️ Waarschuwing: deze actie genereert nieuwe API-sleutels en maak
 impact = "Eventuele applicaties of services die deze sleutels momenteel gebruiken, werken niet meer totdat u ze bijwerkt met de nieuwe sleutels."
 confirmPrompt = "Weet u zeker dat u wilt doorgaan?"
 confirmCta = "Sleutels vernieuwen"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API-sleutelfout"
+failedToCreateApiKey = "API-sleutel maken mislukt."
+failedToRetrieveApiKey = "Kan API-sleutel niet uit antwoord ophalen."
+failedToFetchApiKey = "API-sleutel ophalen mislukt."
+apiKeyRefreshed = "API-sleutel vernieuwd"
+apiKeyRefreshedBody = "Uw API-sleutel is succesvol vernieuwd."
+failedToRefreshApiKey = "Vernieuwen van API-sleutel mislukt."
 
 [AddAttachmentsRequest]
 attachments = "Bijlagen selecteren"
@@ -6032,6 +6375,7 @@ description = "Voer de volledige URL van uw self-hosted Stirling PDF-server in"
 
 [setup.server.error]
 emptyUrl = "Voer een server-URL in"
+invalidUrl = "Ongeldig URL-formaat. Voer een geldige URL in, zoals https://your-server.com"
 unreachable = "Kan geen verbinding maken met server"
 testFailed = "Verbindingstest mislukt"
 configFetch = "Ophalen van serverconfiguratie mislukt. Controleer de URL en probeer het opnieuw."
@@ -6050,6 +6394,7 @@ connectingTo = "Verbinden met:"
 submit = "Inloggen"
 signInWith = "Inloggen met"
 oauthPending = "Browser wordt geopend voor authenticatie..."
+sso = "Single Sign-On"
 orContinueWith = "Of ga verder met e-mail"
 serverRequirement = "Let op: op de server moet inloggen zijn ingeschakeld."
 showInstructions = "Hoe inschakelen?"
@@ -6115,6 +6460,8 @@ reset = "Wijzigingen resetten"
 downloadJson = "JSON downloaden"
 generatePdf = "PDF genereren"
 saveChanges = "Wijzigingen opslaan"
+applyChanges = "Wijzigingen toepassen"
+downloadCopy = "Kopie downloaden"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Tekst automatisch schalen zodat deze in vakken past"
@@ -6132,6 +6479,24 @@ descriptionInline = "Tip: Houd Ctrl (Cmd) of Shift ingedrukt om meerdere tekstva
 [pdfTextEditor.options.forceSingleElement]
 title = "Bewerkte tekst vastzetten op één PDF‑element"
 description = "Wanneer ingeschakeld, exporteert de editor elk bewerkt tekstvak als één PDF-tekstelement om overlappende glyphen of gemengde lettertypen te voorkomen."
+
+[pdfTextEditor.options.advanced]
+title = "Geavanceerde instellingen"
+
+[pdfTextEditor.tooltip.header]
+title = "Beperkingen van de voorbeeldweergave"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Tekst- en afbeeldingsfocus"
+text = "Deze werkruimte richt zich op het bewerken van tekst en het herpositioneren van ingesloten afbeeldingen. Complexe pagina-artwork, formulierwidgets en gelaagde graphics blijven behouden voor export maar zijn hier niet volledig bewerkbaar."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Voorbeeldvariaties"
+text = "Sommige visuals (zoals tabelranden, vormen of weergaven van annotaties) worden mogelijk niet exact weergegeven in het voorbeeld. De geëxporteerde PDF behoudt waar mogelijk de oorspronkelijke tekenopdrachten."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha-viewer"
+text = "Deze alpha-viewer is nog in ontwikkeling—bepaalde lettertypen, kleuren, transparantie-effecten en details in de lay-out kunnen licht afwijken. Controleer de gegenereerde PDF voordat u deze deelt."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Geselecteerde vakken samenvoegen"
@@ -6254,3 +6619,58 @@ title = "Resultaten van tekst toevoegen"
 
 [addText.error]
 failed = "Er is een fout opgetreden bij het toevoegen van tekst aan de PDF."
+
+[mobileUpload]
+title = "Uploaden vanaf mobiel"
+description = "Scan om foto's te uploaden. Afbeeldingen worden automatisch naar PDF geconverteerd."
+descriptionNoConvert = "Scan om foto's vanaf uw mobiele apparaat te uploaden."
+error = "Verbindingsfout"
+pollingError = "Fout bij controleren op bestanden"
+sessionId = "Sessie-ID"
+sessionCreateError = "Sessie maken mislukt"
+expiryWarning = "Sessie verloopt binnenkort"
+expiryWarningMessage = "Deze QR-code verloopt over {{seconds}} seconden. Er wordt automatisch een nieuwe code gegenereerd."
+filesReceived = "{{count}} bestand(en) ontvangen"
+connected = "Mobiel apparaat verbonden"
+instructions = "Scan met de camera van uw telefoon. Afbeeldingen worden automatisch naar PDF geconverteerd."
+instructionsNoConvert = "Scan met de camera van uw telefoon om bestanden te uploaden."
+
+[mobileScanner]
+title = "Mobiele scanner"
+noSession = "Ongeldige sessie"
+noSessionMessage = "Scan een geldige QR-code om deze pagina te openen."
+validating = "Sessie valideren..."
+sessionInvalid = "Sessie-fout"
+sessionExpired = "Deze sessie is verlopen. Vernieuw de pagina en probeer het opnieuw."
+sessionNotFound = "Sessie niet gevonden. Vernieuw de pagina en probeer het opnieuw."
+sessionValidationError = "Kan sessie niet verifiëren. Probeer het opnieuw."
+uploadSuccess = "Uploaden geslaagd!"
+uploadSuccessMessage = "Uw afbeeldingen zijn overgezet."
+httpsRequired = "Cameratoegang vereist HTTPS of localhost. Gebruik HTTPS of ga via localhost."
+uploadFailed = "Uploaden mislukt. Probeer het opnieuw."
+uploading = "Bezig met uploaden..."
+connected = "Verbonden"
+connecting = "Verbinden..."
+chooseMethod = "Kies uploadmethode"
+chooseMethodDescription = "Selecteer hoe u documenten wilt scannen en uploaden"
+camera = "Camera"
+cameraDescription = "Scan documenten met de camera van uw apparaat met automatische randdetectie"
+fileUpload = "Bestandsupload"
+fileDescription = "Upload bestaande foto's of documenten vanaf uw apparaat"
+cameraAccessDenied = "Cameratoegang geweigerd. Schakel cameratoegang in."
+back = "Terug"
+settings = "Instellingen"
+edgeDetection = "Randdetectie"
+flashlight = "Zaklamp"
+flash = "Flitser"
+processing = "Verwerken..."
+capture = "Foto maken"
+selectFilesPrompt = "Selecteer bestanden om te uploaden"
+selectImage = "Afbeelding selecteren"
+preview = "Voorbeeld"
+retake = "Opnieuw maken"
+addToBatch = "Toevoegen aan batch"
+upload = "Uploaden"
+batchImages = "Batch"
+clearBatch = "Wissen"
+uploadAll = "Alles uploaden"

@@ -44,7 +44,7 @@ const FileEditor = ({
   const { clearAllFileErrors } = fileContextActions;
 
   // Extract needed values from state (memoized to prevent infinite loops)
-  const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [selectors.getFilesSignature()]);
+  const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [state.files.byId, state.files.ids]);
   const selectedFileIds = state.ui.selectedFileIds;
   const totalItems = state.files.ids.length;
   const selectedCount = selectedFileIds.length;
@@ -389,7 +389,7 @@ const FileEditor = ({
           overflow: 'auto',
         }}
       >
-        <LoadingOverlay visible={false} />
+        <LoadingOverlay visible={state.ui.isProcessing} />
 
         <Box p="md">
 
