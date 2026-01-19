@@ -2,11 +2,6 @@ apply plugin: 'org.springframework.boot'
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-repositories {
-    maven { url = 'https://build.shibboleth.net/maven/releases' }
-    maven { url = 'https://maven.pkg.github.com/jcefmaven/jcefmaven' }
-}
-
 configurations {
     developmentOnly
     runtimeClasspath {

@@ -336,11 +336,19 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
       - name: Check licenses and generate report
         id: license-check
         run: |
-          ./gradlew clean checkLicense generateLicenseReport || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
+          ./gradlew checkLicense generateLicenseReport || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: false
           STIRLING_PDF_DESKTOP_UI: true
 
