@@ -7,6 +7,9 @@ on:
       - main
     paths:
       - "build.gradle"
+      - "app/common/build.gradle"
+      - "app/core/build.gradle"
+      - "app/proprietary/build.gradle"
       - "README.md"
       - "frontend/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
