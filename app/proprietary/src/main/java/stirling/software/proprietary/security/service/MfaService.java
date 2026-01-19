@@ -1,10 +1,12 @@
 package stirling.software.proprietary.security.service;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,13 +63,22 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
+    @Transactional
     public void setSecret(User user, String secret)
             throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
-        settings.put(MFA_SECRET_KEY, secret);
-        settings.put(MFA_ENABLED_KEY, "false");
+        // Clear any existing secret/step to avoid duplicate inserts in the element collection.
+        settings.remove(MFA_SECRET_KEY);
         settings.remove(MFA_LAST_USED_STEP_KEY);
+        // Also delete persisted rows eagerly to satisfy the unique (user_id, setting_key)
+        // constraint before re-inserting.
+        if (managedUser != null && managedUser.getId() != null) {
+            userRepository.deleteSettingsByUserIdAndKeys(
+                    managedUser.getId(), Arrays.asList(MFA_SECRET_KEY, MFA_LAST_USED_STEP_KEY));
+        }
+        settings.put(MFA_ENABLED_KEY, "false");
+        settings.put(MFA_SECRET_KEY, secret);
         persist(managedUser);
     }
 
