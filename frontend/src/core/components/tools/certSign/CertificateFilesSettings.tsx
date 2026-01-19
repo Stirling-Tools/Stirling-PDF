@@ -36,23 +36,17 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
         </Stack>
       )}
 
-      {parameters.certType === 'PKCS12' && (
+      {(parameters.certType === 'PKCS12' || parameters.certType === 'PFX') && (
         <FileUploadButton
           file={parameters.p12File}
           onChange={(file) => onParameterChange('p12File', file || undefined)}
-          accept=".p12"
+          accept=".p12,.pfx"
           disabled={disabled}
-          placeholder={t('certSign.chooseP12File', 'Choose PKCS12 File')}
-        />
-      )}
-
-      {parameters.certType === 'PFX' && (
-        <FileUploadButton
-          file={parameters.p12File}
-          onChange={(file) => onParameterChange('p12File', file || undefined)}
-          accept=".pfx"
-          disabled={disabled}
-          placeholder={t('certSign.choosePfxFile', 'Choose PFX File')}
+          placeholder={
+            parameters.certType === 'PFX'
+              ? t('certSign.choosePfxFile', 'Choose PFX File')
+              : t('certSign.chooseP12File', 'Choose PKCS12 File')
+          }
         />
       )}
 

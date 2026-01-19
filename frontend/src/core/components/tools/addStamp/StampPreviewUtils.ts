@@ -209,7 +209,7 @@ export function computeStampPreviewStyle(
       position: 'relative',
       width: '100%',
       aspectRatio: `${(pageSize?.widthPts ?? 595.28) / (pageSize?.heightPts ?? 841.89)} / 1`,
-      backgroundColor: hasPageThumbnail ? 'transparent' : 'rgba(255,255,255,0.03)',
+      backgroundColor: hasPageThumbnail ? 'white' : 'rgba(255,255,255,0.03)',
       border: '1px solid var(--border-default, #333)',
       overflow: 'hidden'
     },
