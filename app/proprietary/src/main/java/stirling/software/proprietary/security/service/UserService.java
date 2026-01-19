@@ -400,7 +400,7 @@ public class UserService implements UserServiceInterface {
         } else {
             settings.remove(MFA_LAST_USED_STEP_KEY);
         }
-        log.error(
+        log.info(
                 "MFA required set to true for user {} {}",
                 request.getUsername(),
                 user.getSettings().toString());
