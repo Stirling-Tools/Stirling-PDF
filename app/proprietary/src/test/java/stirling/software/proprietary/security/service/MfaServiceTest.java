@@ -118,4 +118,29 @@ class MfaServiceTest {
         assertEquals("true", user.getSettings().get(MfaService.MFA_REQUIRED_KEY));
         verify(databaseService).exportDatabase();
     }
+
+    @Test
+    void clearPendingSecretResetsValues() throws Exception {
+        User user = new User();
+        user.getSettings().put(MfaService.MFA_SECRET_KEY, "SECRET");
+        user.getSettings().put(MfaService.MFA_LAST_USED_STEP_KEY, "12");
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        mfaService.clearPendingSecret(user);
+
+        assertEquals("false", user.getSettings().get(MfaService.MFA_ENABLED_KEY));
+        assertNull(user.getSettings().get(MfaService.MFA_SECRET_KEY));
+        assertNull(user.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY));
+        verify(databaseService).exportDatabase();
+    }
+
+    @Test
+    void isMfaEnabledAndGetSecretReadSettings() {
+        User user = new User();
+        user.getSettings().put(MfaService.MFA_ENABLED_KEY, "true");
+        user.getSettings().put(MfaService.MFA_SECRET_KEY, "SECRET");
+
+        assertTrue(mfaService.isMfaEnabled(user));
+        assertEquals("SECRET", mfaService.getSecret(user));
+    }
 }

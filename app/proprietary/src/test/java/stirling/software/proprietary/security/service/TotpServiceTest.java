@@ -76,6 +76,16 @@ class TotpServiceTest {
         assertFalse(service.isValidCode("INVALID*", "123456"));
     }
 
+    @Test
+    void buildOtpAuthUriUsesDefaultIssuerWhenMissing() {
+        ApplicationProperties properties = new ApplicationProperties();
+        TotpService service = new TotpService(properties);
+
+        String uri = service.buildOtpAuthUri("user@example.com", "SECRET");
+
+        assertTrue(uri.contains("issuer=Stirling%20PDF"));
+    }
+
     private String generateCode(TotpService service, byte[] secretBytes, long timeStep)
             throws Exception {
         Method generateCode =

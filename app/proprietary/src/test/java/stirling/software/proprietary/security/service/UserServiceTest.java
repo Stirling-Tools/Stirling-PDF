@@ -149,4 +149,40 @@ class UserServiceTest {
         assertEquals("prov", captured.getSsoProvider());
         assertEquals(AuthenticationType.SAML2, captured.getAuthenticationType());
     }
+
+    @Test
+    void addApiKeyToUserGeneratesAndPersists() {
+        User user = new User();
+        user.setUsername("user");
+        when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
+        when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        User updated = userService.addApiKeyToUser("user");
+
+        assertNotNull(updated.getApiKey());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void getApiKeyForUserCreatesWhenMissing() {
+        User user = new User();
+        user.setUsername("user");
+        when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
+        when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        String apiKey = userService.getApiKeyForUser("user");
+
+        assertNotNull(apiKey);
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void isUsernameValidRejectsReservedAndAcceptsEmail() {
+        assertFalse(userService.isUsernameValid("ALL_USERS"));
+        assertTrue(userService.isUsernameValid("valid@example.com"));
+    }
 }

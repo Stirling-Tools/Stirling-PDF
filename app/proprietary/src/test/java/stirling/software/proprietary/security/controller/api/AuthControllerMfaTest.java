@@ -103,6 +103,20 @@ class AuthControllerMfaTest {
     }
 
     @Test
+    void setupMfaRejectsNonWebAuthenticationType() throws Exception {
+        user.setAuthenticationType(AuthenticationType.OAUTH2);
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
+                .thenReturn(Optional.of(user));
+
+        mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
+                .andExpect(status().isForbidden())
+                .andExpect(
+                        content()
+                                .json(
+                                        "{\"error\":\"MFA settings are only available for web accounts\"}"));
+    }
+
+    @Test
     void enableMfaRejectsMissingCode() throws Exception {
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
