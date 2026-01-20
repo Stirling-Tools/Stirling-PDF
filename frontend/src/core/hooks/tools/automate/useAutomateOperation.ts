@@ -38,7 +38,7 @@ export function useAutomateOperation() {
     console.log(`✅ Automation completed, returning ${finalResults.length} files`);
     return {
       files: finalResults,
-      consumedAllInputs: false,
+      consumedAllInputs: true,
     };
   }, [toolRegistry]);
 
@@ -46,5 +46,6 @@ export function useAutomateOperation() {
     toolType: ToolType.custom,
     operationType: 'automate',
     customProcessor,
+    consumesAllInputs: true,
   });
 }
