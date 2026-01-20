@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Accordion, TextInput, MultiSelect } from '@mantine/core';
 import { alert } from '@app/components/toast';
@@ -235,6 +235,8 @@ export default function AdminAdvancedSection() {
     }
   };
 
+  const safeLangRegex = useMemo(() => new RegExp('[^A-Za-z0-9_+\\-]', 'g'), []);
+
   const handleDownloadTessdataLanguages = async () => {
     if (!loginEnabled) return;
     if (selectedDownloadLanguages.length === 0) {
@@ -286,7 +288,7 @@ export default function AdminAdvancedSection() {
         setTessdataDirWritable(false);
         setManualDownloadLinks(
           selectedDownloadLanguages.map((lang) => {
-            const safeLang = lang.replace(/[^A-Za-z0-9_+\-]/g, '');
+            const safeLang = lang.replace(safeLangRegex, '');
             return `https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/${safeLang}.traineddata`;
           })
         );
