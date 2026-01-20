@@ -19,7 +19,7 @@ class GeneralUtilsAdditionalTest {
     @Test
     void testConvertSizeToBytesEdgeCases() {
         assertNull(GeneralUtils.convertSizeToBytes("-10MB"));
-        assertNull(GeneralUtils.convertSizeToBytes("9999TB")); // overflow beyond long
+        assertNull(GeneralUtils.convertSizeToBytes("10000000TB")); // overflow beyond long
         assertEquals(1099511627776L, GeneralUtils.convertSizeToBytes("1TB"));
         assertEquals(2684354560L, GeneralUtils.convertSizeToBytes("2.5GB"));
     }
