@@ -2,11 +2,6 @@ apply plugin: 'org.springframework.boot'
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-repositories {
-    maven { url = 'https://build.shibboleth.net/maven/releases' }
-    maven { url = 'https://maven.pkg.github.com/jcefmaven/jcefmaven' }
-}
-
 configurations {
     developmentOnly
     runtimeClasspath {
@@ -59,10 +54,11 @@ dependencies {
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'com.posthog.java:posthog:1.2.0'
+    implementation 'org.telegram:telegrambots:6.9.7.1'
     implementation 'commons-io:commons-io:2.21.0'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
-    implementation 'io.micrometer:micrometer-core:1.16.0'
+    implementation 'io.micrometer:micrometer-core:1.16.1'
     implementation 'com.google.zxing:core:3.5.4'
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
@@ -89,6 +85,9 @@ dependencies {
 
     // Batik
     implementation 'org.apache.xmlgraphics:batik-all:1.19'
+
+    // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
+    implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
@@ -207,6 +206,14 @@ tasks.register('npmInstall', Exec) {
             println "node_modules not found, will install..."
             return true
         }
+
+        // if required devDependency is missing, reinstall
+        def iconifyPkg = new File(frontendDir, 'node_modules/@iconify-json/material-symbols/package.json')
+        if (!iconifyPkg.exists()) {
+            println "@iconify-json/material-symbols missing, will reinstall..."
+            return true
+        }
+
         def packageJson = new File(frontendDir, 'package.json')
         def packageLock = new File(frontendDir, 'package-lock.json')
         def isOutdated = nodeModules.lastModified() < packageJson.lastModified() ||
