@@ -2,10 +2,13 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -13,8 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -190,6 +197,82 @@ public class UIDataController {
         return ResponseEntity.ok(data);
     }
 
+    @GetMapping("/tessdata-languages")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "List installed and remotely available tessdata languages")
+    public ResponseEntity<TessdataLanguagesResponse> getTessdataLanguages() {
+        TessdataLanguagesResponse response = new TessdataLanguagesResponse();
+        response.setInstalled(getAvailableTesseractLanguages());
+        response.setAvailable(getRemoteTessdataLanguages());
+        response.setWritable(isWritableDirectory(Paths.get(runtimePathConfig.getTessDataPath())));
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/tessdata/download")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Download selected tessdata languages from the official repository")
+    public ResponseEntity<Map<String, Object>> downloadTessdataLanguages(
+            @RequestBody TessdataDownloadRequest request) {
+        if (request.getLanguages() == null || request.getLanguages().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "No languages provided for download"));
+        }
+
+        Path tessdataDir = Paths.get(runtimePathConfig.getTessDataPath());
+        try {
+            Files.createDirectories(tessdataDir);
+        } catch (IOException e) {
+            log.error("Failed to create tessdata directory {}", tessdataDir, e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Failed to prepare tessdata directory"));
+        }
+
+        if (!isWritableDirectory(tessdataDir)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", tessdataDir.toString()));
+        }
+
+        List<String> downloaded = new ArrayList<>();
+        List<String> failed = new ArrayList<>();
+
+        for (String language : request.getLanguages()) {
+            if (language == null || language.isBlank()) {
+                failed.add(language);
+                continue;
+            }
+            String safeLang = language.replaceAll("[^A-Za-z0-9_+\\-]", "");
+            if (!safeLang.equals(language)) {
+                failed.add(language);
+                continue;
+            }
+
+            String downloadUrl =
+                    "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/"
+                            + safeLang
+                            + ".traineddata";
+            Path targetFile = tessdataDir.resolve(safeLang + ".traineddata");
+            try (InputStream is = new URL(downloadUrl).openStream()) {
+                Files.copy(is, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                downloaded.add(safeLang);
+                log.info("Downloaded tessdata language {} to {}", safeLang, targetFile);
+            } catch (IOException e) {
+                log.warn(
+                        "Failed to download tessdata language {} from {}",
+                        safeLang,
+                        downloadUrl,
+                        e);
+                failed.add(language);
+            }
+        }
+
+        Map<String, Object> response =
+                Map.of(
+                        "downloaded", downloaded,
+                        "failed", failed,
+                        "tessdataDir", tessdataDir.toString());
+        return ResponseEntity.ok(response);
+    }
+
     private List<String> getAvailableTesseractLanguages() {
         String tessdataDir = runtimePathConfig.getTessDataPath();
         java.io.File[] files = new java.io.File(tessdataDir).listFiles();
@@ -202,6 +285,81 @@ public class UIDataController {
                 .filter(lang -> !"osd".equalsIgnoreCase(lang))
                 .sorted()
                 .toList();
+    }
+
+    private boolean isWritableDirectory(Path dir) {
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            log.warn("Tessdata directory cannot be created: {}", dir, e);
+            return false;
+        }
+
+        if (!Files.isWritable(dir)) {
+            log.warn("Tessdata directory not writable (ACL check failed): {}", dir);
+            return false;
+        }
+
+        try {
+            Path probe = Files.createTempFile(dir, "tessdata-write-test", ".tmp");
+            Files.deleteIfExists(probe);
+            return true;
+        } catch (IOException e) {
+            log.warn("Tessdata directory not writable (temp file creation failed): {}", dir);
+            return false;
+        }
+    }
+
+    private List<String> getRemoteTessdataLanguages() {
+        String apiUrl = "https://api.github.com/repos/tesseract-ocr/tessdata/contents";
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(apiUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Accept", "application/vnd.github+json");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+
+            int status = connection.getResponseCode();
+            if (status != HttpURLConnection.HTTP_OK) {
+                log.warn("GitHub tessdata listing returned HTTP {}", status);
+                return Collections.emptyList();
+            }
+
+            try (InputStream is = connection.getInputStream()) {
+                ObjectMapper mapper = new ObjectMapper();
+                List<Map<String, Object>> items =
+                        mapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
+                return items.stream()
+                        .map(item -> (String) item.get("name"))
+                        .filter(Objects::nonNull)
+                        .filter(name -> name.endsWith(".traineddata"))
+                        .map(name -> name.replace(".traineddata", ""))
+                        .filter(lang -> !"osd".equalsIgnoreCase(lang))
+                        .sorted()
+                        .toList();
+            }
+        } catch (IOException e) {
+            log.warn("Failed to fetch tessdata languages from GitHub", e);
+            return Collections.emptyList();
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    @Data
+    private static class TessdataLanguagesResponse {
+        private List<String> installed;
+        private List<String> available;
+        private boolean writable;
+    }
+
+    @Data
+    private static class TessdataDownloadRequest {
+        private List<String> languages;
     }
 
     private List<FontResource> getFontNames() {

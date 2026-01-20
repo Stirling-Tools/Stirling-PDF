@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Accordion, TextInput } from '@mantine/core';
+import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Accordion, TextInput, MultiSelect } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -9,6 +9,7 @@ import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface AdvancedSettingsData {
   enableAlphaFunctionality?: boolean;
@@ -173,6 +174,103 @@ export default function AdminAdvancedSection() {
     }
   }, [loginEnabled]);
 
+  const [tessdataLanguages, setTessdataLanguages] = useState<string[]>([]);
+  const [remoteTessdataLanguages, setRemoteTessdataLanguages] = useState<string[]>([]);
+  const [tessdataDirWritable, setTessdataDirWritable] = useState<boolean>(true);
+  const [manualDownloadLinks, setManualDownloadLinks] = useState<string[]>([]);
+  const [tessdataLanguagesLoading, setTessdataLanguagesLoading] = useState(false);
+  const [downloadLanguagesLoading, setDownloadLanguagesLoading] = useState(false);
+  const [selectedDownloadLanguages, setSelectedDownloadLanguages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!loginEnabled) return;
+
+    const fetchTessdataLanguages = async () => {
+      setTessdataLanguagesLoading(true);
+      try {
+        const { data } = await apiClient.get<{ installed: string[]; available: string[]; writable?: boolean }>('/api/v1/ui-data/tessdata-languages', {
+          suppressErrorToast: true
+        });
+        const installed = data.installed || [];
+        const available = data.available || [];
+        setTessdataLanguages(installed);
+        setRemoteTessdataLanguages(available.filter((lang) => !installed.includes(lang)));
+        setTessdataDirWritable(data.writable !== false);
+        setManualDownloadLinks([]);
+      } catch (error) {
+        console.error('[AdminAdvancedSection] Failed to load tessdata languages', error);
+        setTessdataLanguages([]);
+        setRemoteTessdataLanguages([]);
+        setTessdataDirWritable(true);
+        setManualDownloadLinks([]);
+      } finally {
+        setTessdataLanguagesLoading(false);
+      }
+    };
+
+    fetchTessdataLanguages();
+  }, [loginEnabled]);
+
+  const handleDownloadTessdataLanguages = async () => {
+    if (!loginEnabled) return;
+    if (selectedDownloadLanguages.length === 0) {
+      alert({
+        alertType: 'warning',
+        title: t('admin.settings.advanced.tessdataDir.downloadMissingTitle', 'No language selected'),
+        body: t('admin.settings.advanced.tessdataDir.downloadMissingBody', 'Please select at least one language to download.'),
+        expandable: false,
+      });
+      return;
+    }
+    setDownloadLanguagesLoading(true);
+    try {
+      await apiClient.post('/api/v1/ui-data/tessdata/download', { languages: selectedDownloadLanguages });
+      alert({
+        alertType: 'success',
+        title: t('admin.settings.advanced.tessdataDir.downloadSuccessTitle', 'Languages downloaded'),
+        body: t('admin.settings.advanced.tessdataDir.downloadSuccessBody', 'The selected tessdata languages have been saved.'),
+      });
+      // Refresh installed list
+      const { data } = await apiClient.get<{ installed: string[]; available: string[]; writable?: boolean }>('/api/v1/ui-data/tessdata-languages');
+      const installed = data.installed || [];
+      const available = data.available || [];
+      setTessdataLanguages(installed);
+      setRemoteTessdataLanguages(available.filter((lang) => !installed.includes(lang)));
+      setTessdataDirWritable(data.writable !== false);
+      setSelectedDownloadLanguages([]);
+      setManualDownloadLinks([]);
+    } catch (error) {
+      console.error('[AdminAdvancedSection] Download tessdata languages failed', error);
+      const response = (error as any)?.response;
+      const status = response?.status;
+      const serverMessage = response?.data?.message;
+
+      if (status === 403) {
+        console.warn('[AdminAdvancedSection] Tessdata directory not writable, falling back to manual download:', serverMessage);
+        setTessdataDirWritable(false);
+        setManualDownloadLinks(
+          selectedDownloadLanguages.map((lang) => {
+            const safeLang = lang.replace(/[^A-Za-z0-9_+\\-]/g, '');
+            return `https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/${safeLang}.traineddata`;
+          })
+        );
+        return;
+      }
+      const message =
+        t('admin.settings.advanced.tessdataDir.downloadErrorBody', `Tessdata directory is not writable: ${serverMessage}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions.`, {
+          message: serverMessage ?? settings.tessdataDir ?? 'unknown location',
+        });
+      alert({
+        alertType: 'error',
+        title: t('admin.settings.advanced.tessdataDir.downloadErrorTitle', 'Download Failed'),
+        body: message,
+        expandable: false,
+      });
+    } finally {
+      setDownloadLanguagesLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
@@ -301,6 +399,7 @@ export default function AdminAdvancedSection() {
             />
           </div>
 
+          {/* Tessdata Directory */}
           <div>
             <TextInput
               label={
@@ -315,6 +414,63 @@ export default function AdminAdvancedSection() {
               placeholder="/usr/share/tessdata"
               disabled={!loginEnabled}
             />
+            {tessdataLanguagesLoading ? (
+              <Group gap="xs" mt={6}>
+                <Loader size="xs" />
+                <Text size="xs">
+                  {t('admin.settings.advanced.tessdataDir.loadingLanguages', 'Loading installed tessdata languages...')}
+                </Text>
+              </Group>
+            ) : (
+              <Text size="xs" c="dimmed" mt={6}>
+                {tessdataLanguages.length > 0
+                  ? `${t('admin.settings.advanced.tessdataDir.installedLanguages', 'Installed tessdata languages')}: ${tessdataLanguages.join(', ')}`
+                  : t('admin.settings.advanced.tessdataDir.noLanguages', 'No tessdata languages found in the configured directory')}
+              </Text>
+            )}
+            <Stack gap="xs" mt="sm">
+              <MultiSelect
+                label={t('admin.settings.advanced.tessdataDir.downloadLabel', 'Download additional tessdata languages')}
+                placeholder={t('admin.settings.advanced.tessdataDir.downloadPlaceholder', 'Select languages')}
+                data={remoteTessdataLanguages.map((lang) => ({ value: lang, label: lang }))}
+                searchable
+                disabled={!loginEnabled || remoteTessdataLanguages.length === 0}
+                value={selectedDownloadLanguages}
+                onChange={setSelectedDownloadLanguages}
+                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                nothingFoundMessage={t('admin.settings.advanced.tessdataDir.downloadNothingFound', 'No additional languages found')}
+              />
+              {!tessdataDirWritable && (
+                <Text size="xs" c="yellow.4">
+                  {t(
+                    'admin.settings.advanced.tessdataDir.permissionNotice',
+                    'The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder.'
+                  )}
+                </Text>
+              )}
+              {!tessdataDirWritable && manualDownloadLinks.length > 0 && (
+                <Stack gap="xs">
+                  <Text size="xs" c="dimmed">
+                    {t(
+                      'admin.settings.advanced.tessdataDir.manualLinks',
+                      'Manual downloads: click the links and place the files into the tessdata folder.'
+                    )}
+                  </Text>
+                  <Stack gap={4}>
+                    {manualDownloadLinks.map((link) => (
+                      <a key={link} href={link} target="_blank" rel="noreferrer" style={{ fontSize: '12px' }}>
+                        {link}
+                      </a>
+                    ))}
+                  </Stack>
+                </Stack>
+              )}
+              <Group justify="flex-end">
+                <Button size="xs" variant="light" onClick={handleDownloadTessdataLanguages} loading={downloadLanguagesLoading} disabled={!loginEnabled || remoteTessdataLanguages.length === 0}>
+                  {t('admin.settings.advanced.tessdataDir.downloadButton', 'Download selected languages')}
+                </Button>
+              </Group>
+            </Stack>
           </div>
         </Stack>
       </Paper>
