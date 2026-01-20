@@ -60,7 +60,7 @@ class UIDataTessdataControllerTest {
                         post("/api/v1/ui-data/tessdata/download")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"languages\":[\"../evil\"]}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isArray())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
                 .andExpect(jsonPath("$.failed[0]").value("../evil"));
@@ -88,7 +88,7 @@ class UIDataTessdataControllerTest {
                         post("/api/v1/ui-data/tessdata/download")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"languages\":[\"fra\"]}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
                 .andExpect(jsonPath("$.failed[0]").value("fra"));
     }
@@ -106,7 +106,8 @@ class UIDataTessdataControllerTest {
                     }
 
                     @Override
-                    protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
+                    protected boolean downloadLanguageFile(
+                            String safeLang, Path targetFile, String downloadUrl) {
                         if ("eng".equals(safeLang)) {
                             try {
                                 Files.writeString(targetFile, "dummy");
@@ -125,13 +126,14 @@ class UIDataTessdataControllerTest {
                         post("/api/v1/ui-data/tessdata/download")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"languages\":[\"eng\",\"fra\"]}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isMultiStatus())
                 .andExpect(jsonPath("$.downloaded[0]").value("eng"))
                 .andExpect(jsonPath("$.failed[0]").value("fra"));
     }
 
     @Test
-    void downloadTessdataLanguages_handlesInvalidSanitizedLanguage(@TempDir Path tempDir) throws Exception {
+    void downloadTessdataLanguages_handlesInvalidSanitizedLanguage(@TempDir Path tempDir)
+            throws Exception {
         RuntimePathConfig runtimePathConfig = Mockito.mock(RuntimePathConfig.class);
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
@@ -149,13 +151,14 @@ class UIDataTessdataControllerTest {
                         post("/api/v1/ui-data/tessdata/download")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"languages\":[\"eng/\"]}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
                 .andExpect(jsonPath("$.failed[0]").value("eng/"));
     }
 
     @Test
-    void downloadTessdataLanguages_returnsForbiddenWhenNotWritable(@TempDir Path tempDir) throws Exception {
+    void downloadTessdataLanguages_returnsForbiddenWhenNotWritable(@TempDir Path tempDir)
+            throws Exception {
         RuntimePathConfig runtimePathConfig = Mockito.mock(RuntimePathConfig.class);
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
@@ -189,7 +192,8 @@ class UIDataTessdataControllerTest {
                     }
 
                     @Override
-                    protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
+                    protected boolean downloadLanguageFile(
+                            String safeLang, Path targetFile, String downloadUrl) {
                         return false; // simulate network failure
                     }
                 };
@@ -200,14 +204,15 @@ class UIDataTessdataControllerTest {
                         post("/api/v1/ui-data/tessdata/download")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"languages\":[\"eng\"]}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isArray())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
                 .andExpect(jsonPath("$.failed[0]").value("eng"));
     }
 
     @Test
-    void tessdataLanguages_returnsInstalledAvailableAndWritable(@TempDir Path tempDir) throws Exception {
+    void tessdataLanguages_returnsInstalledAvailableAndWritable(@TempDir Path tempDir)
+            throws Exception {
         Files.createFile(tempDir.resolve("eng.traineddata"));
         Files.createFile(tempDir.resolve("deu.traineddata"));
         Files.createFile(tempDir.resolve("osd.traineddata")); // should be filtered

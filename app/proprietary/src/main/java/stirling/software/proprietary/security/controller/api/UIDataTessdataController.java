@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 
@@ -51,9 +51,6 @@ public class UIDataTessdataController {
         response.setWritable(isWritableDirectory(Paths.get(runtimePathConfig.getTessDataPath())));
         return ResponseEntity.ok(response);
     }
-    private static List<String> cachedRemoteTessdata = null;
-    private static long cachedRemoteTessdataExpiry = 0L;
-    private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
     @PostMapping("/tessdata/download")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -145,29 +142,6 @@ public class UIDataTessdataController {
         }
     }
 
-    private boolean isWritableDirectory(Path dir) {
-        try {
-            Files.createDirectories(dir);
-        } catch (IOException e) {
-            log.warn("Tessdata directory cannot be created: {}", dir, e);
-            return false;
-        }
-
-        if (!Files.isWritable(dir)) {
-            log.warn("Tessdata directory not writable (ACL check failed): {}", dir);
-            return false;
-        }
-
-        try {
-            Path probe = Files.createTempFile(dir, "tessdata-write-test", ".tmp");
-            Files.deleteIfExists(probe);
-            return true;
-        } catch (IOException e) {
-            log.warn("Tessdata directory not writable (temp file creation failed): {}", dir);
-            return false;
-        }
-    }
-
     /** Download the language file, returning true on success. Extracted for testability. */
     protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
         HttpURLConnection connection = null;
@@ -196,11 +170,7 @@ public class UIDataTessdataController {
                 return true;
             }
         } catch (IOException e) {
-            log.warn(
-                    "Failed to download tessdata language {} from {}",
-                    safeLang,
-                    downloadUrl,
-                    e);
+            log.warn("Failed to download tessdata language {} from {}", safeLang, downloadUrl, e);
             return false;
         } finally {
             if (connection != null) {
@@ -239,7 +209,9 @@ public class UIDataTessdataController {
                 } else {
                     log.warn("GitHub tessdata listing returned HTTP {}", status);
                 }
-                return cachedRemoteTessdata != null ? cachedRemoteTessdata : Collections.emptyList();
+                return cachedRemoteTessdata != null
+                        ? cachedRemoteTessdata
+                        : Collections.emptyList();
             }
 
             try (InputStream is = connection.getInputStream()) {
@@ -296,7 +268,7 @@ public class UIDataTessdataController {
                 .toList();
     }
 
-    private boolean isWritableDirectory(Path dir) {
+    protected boolean isWritableDirectory(Path dir) {
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
@@ -316,67 +288,6 @@ public class UIDataTessdataController {
         } catch (IOException e) {
             log.warn("Tessdata directory not writable (temp file creation failed): {}", dir);
             return false;
-        }
-    }
-
-    /** Fetch list of available remote tessdata languages (with simple caching). */
-    protected List<String> getRemoteTessdataLanguages() {
-        long now = System.currentTimeMillis();
-        if (cachedRemoteTessdata != null && now < cachedRemoteTessdataExpiry) {
-            return cachedRemoteTessdata;
-        }
-
-        String apiUrl = "https://api.github.com/repos/tesseract-ocr/tessdata/contents";
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(apiUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "Stirling-PDF-App");
-            connection.setRequestProperty("Accept", "application/vnd.github+json");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
-
-            int status = connection.getResponseCode();
-            if (status != HttpURLConnection.HTTP_OK) {
-                String remaining = connection.getHeaderField("X-RateLimit-Remaining");
-                String reset = connection.getHeaderField("X-RateLimit-Reset");
-                if (status == HttpURLConnection.HTTP_FORBIDDEN && remaining != null) {
-                    log.warn(
-                            "GitHub tessdata listing rate limited. Remaining={}, resetEpochSeconds={}",
-                            remaining,
-                            reset);
-                } else {
-                    log.warn("GitHub tessdata listing returned HTTP {}", status);
-                }
-                return cachedRemoteTessdata != null ? cachedRemoteTessdata : Collections.emptyList();
-            }
-
-            try (InputStream is = connection.getInputStream()) {
-                ObjectMapper mapper = new ObjectMapper();
-                List<Map<String, Object>> items =
-                        mapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
-                List<String> languages =
-                        items.stream()
-                                .map(item -> (String) item.get("name"))
-                                .filter(Objects::nonNull)
-                                .filter(name -> name.endsWith(".traineddata"))
-                                .map(name -> name.replace(".traineddata", ""))
-                                .filter(lang -> !"osd".equalsIgnoreCase(lang))
-                                .sorted()
-                                .toList();
-
-                cachedRemoteTessdata = languages;
-                cachedRemoteTessdataExpiry = System.currentTimeMillis() + REMOTE_TESSDATA_TTL_MS;
-                return languages;
-            }
-        } catch (IOException e) {
-            log.warn("Failed to fetch tessdata languages from GitHub", e);
-            return cachedRemoteTessdata != null ? cachedRemoteTessdata : Collections.emptyList();
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 }
