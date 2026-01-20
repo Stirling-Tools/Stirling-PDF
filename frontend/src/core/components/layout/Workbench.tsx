@@ -26,6 +26,8 @@ import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButto
 import { ViewerZoomTransition } from '@app/components/viewer/ViewerZoomTransition';
 import { PageEditorSpreadTransition } from '@app/components/pageEditor/PageEditorSpreadTransition';
 
+const MAX_PAGE_EDITOR_SCREENSHOT_PAGES = 24;
+
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
@@ -106,16 +108,9 @@ export default function Workbench() {
       rect.top <= rootRect.bottom + margin &&
       rect.left <= rootRect.right + margin;
 
-    const visiblePageIds = new Set<string>();
-    root.querySelectorAll<HTMLElement>('[data-page-id]').forEach((page) => {
-      const rect = page.getBoundingClientRect();
-      if (isRectVisible(rect)) {
-        const id = page.getAttribute('data-page-id');
-        if (id) {
-          visiblePageIds.add(id);
-        }
-      }
-    });
+    const pageElements = Array.from(root.querySelectorAll('[data-page-id]')) as HTMLElement[];
+    const visiblePages = pageElements.filter((page) => isRectVisible(page.getBoundingClientRect()));
+    const allowedPages = new Set(visiblePages.slice(0, MAX_PAGE_EDITOR_SCREENSHOT_PAGES));
 
     return (node: Node) => {
       if (node === root) return true;
@@ -123,15 +118,10 @@ export default function Workbench() {
 
       const pageElement = node.closest('[data-page-id]') as HTMLElement | null;
       if (pageElement) {
-        const pageId = pageElement.getAttribute('data-page-id');
-        const isVisible = pageId ? visiblePageIds.has(pageId) : true;
-        if (isVisible) {
-          return true;
-        }
-        return node === pageElement;
+        return allowedPages.has(pageElement);
       }
 
-      return true;
+      return isRectVisible(node.getBoundingClientRect());
     };
   }, []);
 
@@ -140,11 +130,18 @@ export default function Workbench() {
     const root = mainContentRef.current;
     if (!root) return null;
 
-    const filter = currentView === 'pageEditor'
-      ? buildPageEditorFilter(root)
-      : undefined;
+    if (currentView === 'pageEditor') {
+      const rect = root.getBoundingClientRect();
+      const filter = buildPageEditorFilter(root);
+      return captureElementScreenshot(root, {
+        filter,
+        width: Math.max(1, Math.round(rect.width)),
+        height: Math.max(1, Math.round(rect.height)),
+        restoreScrollPosition: false,
+      });
+    }
 
-    return captureElementScreenshot(root, { filter });
+    return captureElementScreenshot(root);
   }, [currentView, buildPageEditorFilter]);
 
   const capturePageEditorScreenshot = useCallback(async (): Promise<string | null> => {
@@ -156,6 +153,7 @@ export default function Workbench() {
       filter,
       width: Math.max(1, Math.round(rootRect.width)),
       height: Math.max(1, Math.round(rootRect.height)),
+      restoreScrollPosition: false,
     });
   }, [buildPageEditorFilter]);
 
@@ -199,6 +197,7 @@ export default function Workbench() {
     activeFileIndex,
     currentView,
     captureScreenshot: captureMainContentScreenshot,
+    getScreenshotRect: getMainContentRect,
   });
 
   // Get page editor transition handlers
@@ -249,14 +248,15 @@ export default function Workbench() {
       );
 
       // Screenshot fades out when zoom starts
+      const screenshotRect = viewerTransition.editorScreenshotRect;
       const screenshotOverlay = (
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: window.innerWidth,
-            height: window.innerHeight,
+            position: screenshotRect ? 'fixed' : 'absolute',
+            top: screenshotRect ? `${screenshotRect.top}px` : 0,
+            left: screenshotRect ? `${screenshotRect.left}px` : 0,
+            width: screenshotRect ? `${screenshotRect.width}px` : window.innerWidth,
+            height: screenshotRect ? `${screenshotRect.height}px` : window.innerHeight,
             opacity: viewerTransition.isZooming ? 0 : 1,
             transition: viewerTransition.isZooming
               ? `opacity ${VIEWER_TRANSITION.SCREENSHOT_FADE_DURATION}ms ease-out`

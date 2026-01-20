@@ -18,11 +18,17 @@ export const ViewerZoomTransition: React.FC = () => {
   const [animationPhase, setAnimationPhase] = useState<'idle' | 'searching' | 'zooming'>('idle');
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const isExitTransition = viewerTransition.transitionDirection === 'exit';
+  const shouldMaskLoading = Boolean(viewerTransition.editorScreenshotUrl);
+  const zoomDuration = shouldMaskLoading
+    ? VIEWER_TRANSITION.ZOOM_DURATION
+    : VIEWER_TRANSITION.ZOOM_DURATION_FAST;
   const getFallbackRect = () => getCenteredFallbackRect();
 
   useEffect(() => {
     let transitionTimer: number | null = null;
     let isMounted = true;
+    const shouldWaitForPdf = shouldMaskLoading;
+    const zoomDurationMs = zoomDuration;
 
     if (!viewerTransition.isAnimating) {
       setAnimationPhase('idle');
@@ -71,7 +77,7 @@ export const ViewerZoomTransition: React.FC = () => {
         transitionTimer = window.setTimeout(() => {
           if (!isMounted) return;
           actions.endViewerTransition();
-        }, VIEWER_TRANSITION.ZOOM_DURATION);
+        }, zoomDurationMs);
       });
     } else {
       const waitForPdfPage = async (): Promise<DOMRect> => {
@@ -139,28 +145,28 @@ export const ViewerZoomTransition: React.FC = () => {
         setTargetRect(pdfPageRect);
         setAnimationPhase('zooming');
 
-        const zoomDuration = VIEWER_TRANSITION.ZOOM_DURATION;
-
         // After zoom completes, wait for PDF to be fully rendered before removing thumbnail
         transitionTimer = window.setTimeout(async () => {
           if (!isMounted) return;
 
-          // Wait for PDF to be ready (check for rendered canvas or content)
-          for (let i = 0; i < 10; i++) {
-            const pageElement = document.querySelector('[data-page-index="0"]');
-            if (pageElement) {
-              // Check if page has actual content rendered (canvas or img)
-              const hasContent = pageElement.querySelector('canvas, img');
-              if (hasContent) {
-                break;
+          if (shouldWaitForPdf) {
+            // Wait for PDF to be ready (check for rendered canvas or content)
+            for (let i = 0; i < 10; i++) {
+              const pageElement = document.querySelector('[data-page-index="0"]');
+              if (pageElement) {
+                // Check if page has actual content rendered (canvas or img)
+                const hasContent = pageElement.querySelector('canvas, img');
+                if (hasContent) {
+                  break;
+                }
               }
+              await new Promise(resolve => setTimeout(resolve, 50));
             }
-            await new Promise(resolve => setTimeout(resolve, 50));
           }
 
-          // Remove thumbnail now that PDF is ready (or timeout reached)
+          // Remove thumbnail now that PDF is ready (or timeout reached/skipped)
           actions.endViewerTransition();
-        }, zoomDuration);
+        }, zoomDurationMs);
       });
     }
 
@@ -170,7 +176,15 @@ export const ViewerZoomTransition: React.FC = () => {
         clearTimeout(transitionTimer);
       }
     };
-  }, [viewerTransition.isAnimating, viewerTransition.exitFileId, viewerTransition.sourceRect, isExitTransition, actions]);
+  }, [
+    viewerTransition.isAnimating,
+    viewerTransition.exitFileId,
+    viewerTransition.sourceRect,
+    isExitTransition,
+    actions,
+    shouldMaskLoading,
+    zoomDuration
+  ]);
 
   // Don't render if not animating or missing thumbnail
   if (!viewerTransition.isAnimating || !viewerTransition.sourceThumbnailUrl) {
@@ -199,6 +213,7 @@ export const ViewerZoomTransition: React.FC = () => {
     zIndex: VIEWER_TRANSITION.OVERLAY_Z_INDEX,
     transform: 'translate3d(0px, 0px, 0) scale(1)',
     transformOrigin: 'top left',
+    ['--viewer-zoom-duration' as any]: `${zoomDuration}ms`,
   };
 
   const targetTransform = targetRect

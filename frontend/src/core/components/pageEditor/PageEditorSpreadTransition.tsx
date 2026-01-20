@@ -214,6 +214,10 @@ export const PageEditorSpreadTransition: React.FC = () => {
   const filePageCounts = pageEditorTransition?.filePageCounts ?? new Map();
   const pageThumbnails = pageEditorTransition?.pageThumbnails ?? new Map();
   const screenshotRect = pageEditorTransition?.editorScreenshotRect ?? null;
+  const shouldMaskLoading = Boolean(pageEditorTransition?.editorScreenshotUrl);
+  const spreadDuration = shouldMaskLoading
+    ? PAGE_EDITOR_TRANSITION.SPREAD_DURATION
+    : PAGE_EDITOR_TRANSITION.SPREAD_DURATION_FAST;
 
   useEffect(() => {
     const currentUrl = pageEditorTransition?.editorScreenshotUrl ?? null;
@@ -372,7 +376,7 @@ export const PageEditorSpreadTransition: React.FC = () => {
       if (transitionEl) {
         await waitForTransitionEnd(
           transitionEl,
-          { propertyName: 'transform', timeoutMs: PAGE_EDITOR_TRANSITION.SPREAD_DURATION + 150 },
+          { propertyName: 'transform', timeoutMs: spreadDuration + 150 },
           shouldAbort
         );
       }
@@ -397,7 +401,7 @@ export const PageEditorSpreadTransition: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [isActive, actions]);
+  }, [isActive, actions, spreadDuration]);
 
   if (!isActive) {
     return null;
@@ -475,6 +479,7 @@ export const PageEditorSpreadTransition: React.FC = () => {
             className={styles.spreadingPage}
             ref={idx === 0 ? transitionRef : undefined}
             style={{
+              ['--spread-duration' as any]: `${spreadDuration}ms`,
               ...initialStyle,
               ...glideStyle,
             }}

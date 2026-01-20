@@ -9,6 +9,7 @@ interface UseViewerTransitionParams {
   activeFileIndex: number;
   currentView: WorkbenchType;
   captureScreenshot: () => Promise<string | null>;
+  getScreenshotRect?: () => DOMRect | null;
 }
 
 interface ViewerTransitionHandlers {
@@ -24,6 +25,7 @@ export function useViewerTransition({
   activeFileIndex,
   currentView,
   captureScreenshot,
+  getScreenshotRect,
 }: UseViewerTransitionParams): ViewerTransitionHandlers {
   const { actions: navActions } = useNavigationActions();
   const { selectors } = useFileState();
@@ -41,6 +43,7 @@ export function useViewerTransition({
 
       // Capture screenshot for smooth fade during transition
       let screenshot: string | null = null;
+      const screenshotRect = currentView === 'pageEditor' ? getScreenshotRect?.() ?? null : null;
       if (currentView === 'fileEditor' || currentView === 'pageEditor') {
         try {
           screenshot = await captureScreenshot();
@@ -93,10 +96,11 @@ export function useViewerTransition({
         rect,
         thumbnailUrl,
         currentView,
-        screenshot || undefined
+        screenshot || undefined,
+        screenshotRect || undefined
       );
     },
-    [currentView, activeFileIndex, selectors, captureScreenshot, navActions]
+    [currentView, activeFileIndex, selectors, captureScreenshot, navActions, getScreenshotRect]
   );
 
   /**

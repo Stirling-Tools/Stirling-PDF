@@ -7,6 +7,9 @@ export const VIEWER_TRANSITION = {
   /** Duration of zoom animation in milliseconds */
   ZOOM_DURATION: 400,
 
+  /** Faster zoom when not masking loading */
+  ZOOM_DURATION_FAST: 250,
+
   /** Duration of screenshot fade in milliseconds */
   SCREENSHOT_FADE_DURATION: 200,
 
@@ -23,7 +26,10 @@ export const VIEWER_TRANSITION = {
  */
 export const PAGE_EDITOR_TRANSITION = {
   /** Duration of spreading animation in milliseconds */
-  SPREAD_DURATION: 400,
+  SPREAD_DURATION: 300,
+
+  /** Faster spread when not masking loading */
+  SPREAD_DURATION_FAST: 200,
 
   /** Stagger delay between individual page animations in milliseconds */
   PAGE_STAGGER_DELAY: 30,

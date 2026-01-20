@@ -18,6 +18,7 @@ export interface ViewerTransitionState {
   sourceThumbnailUrl: string | null;
   transitionType: 'fileEditor' | 'pageEditor' | null;
   editorScreenshotUrl: string | null;
+  editorScreenshotRect: DOMRect | null;
   isZooming: boolean;
   transitionDirection: 'enter' | 'exit' | null;
   exitTargetRect: DOMRect | null;
@@ -55,7 +56,7 @@ type NavigationAction =
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
   | { type: 'SET_PENDING_NAVIGATION'; payload: { navigationFn: (() => void) | null } }
   | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } }
-  | { type: 'START_VIEWER_TRANSITION'; payload: { sourceRect: DOMRect; sourceThumbnailUrl: string; transitionType: 'fileEditor' | 'pageEditor'; editorScreenshotUrl?: string } }
+  | { type: 'START_VIEWER_TRANSITION'; payload: { sourceRect: DOMRect; sourceThumbnailUrl: string; transitionType: 'fileEditor' | 'pageEditor'; editorScreenshotUrl?: string; editorScreenshotRect?: DOMRect } }
   | { type: 'END_VIEWER_TRANSITION' }
   | { type: 'START_ZOOM' }
   | { type: 'START_EXIT_TRANSITION'; payload: { exitTargetRect: DOMRect; sourceThumbnailUrl: string; exitFileId: string } }
@@ -98,6 +99,7 @@ const navigationReducer = (state: NavigationContextState, action: NavigationActi
           sourceThumbnailUrl: action.payload.sourceThumbnailUrl,
           transitionType: action.payload.transitionType,
           editorScreenshotUrl: action.payload.editorScreenshotUrl || null,
+          editorScreenshotRect: action.payload.editorScreenshotRect || null,
           isZooming: false,
           transitionDirection: 'enter',
           exitTargetRect: null,
@@ -129,6 +131,7 @@ const navigationReducer = (state: NavigationContextState, action: NavigationActi
           sourceThumbnailUrl: null,
           transitionType: null,
           editorScreenshotUrl: null,
+          editorScreenshotRect: null,
           isZooming: false,
           transitionDirection: null,
           exitTargetRect: null,
@@ -185,16 +188,17 @@ const initialState: NavigationContextState = {
   hasUnsavedChanges: false,
   pendingNavigation: null,
   showNavigationWarning: false,
-  viewerTransition: {
-    isAnimating: false,
-    sourceRect: null,
-    sourceThumbnailUrl: null,
-    transitionType: null,
-    editorScreenshotUrl: null,
-    isZooming: false,
-    transitionDirection: null,
-    exitTargetRect: null,
-    exitFileId: null
+    viewerTransition: {
+      isAnimating: false,
+      sourceRect: null,
+      sourceThumbnailUrl: null,
+      transitionType: null,
+      editorScreenshotUrl: null,
+      editorScreenshotRect: null,
+      isZooming: false,
+      transitionDirection: null,
+      exitTargetRect: null,
+      exitFileId: null
   },
   pageEditorTransition: null
 };
@@ -213,7 +217,13 @@ export interface NavigationContextActions {
   cancelNavigation: () => void;
   clearToolSelection: () => void;
   handleToolSelect: (toolId: string) => void;
-  startViewerTransition: (sourceRect: DOMRect, sourceThumbnailUrl: string, transitionType: 'fileEditor' | 'pageEditor', editorScreenshotUrl?: string) => void;
+  startViewerTransition: (
+    sourceRect: DOMRect,
+    sourceThumbnailUrl: string,
+    transitionType: 'fileEditor' | 'pageEditor',
+    editorScreenshotUrl?: string,
+    editorScreenshotRect?: DOMRect
+  ) => void;
   endViewerTransition: () => void;
   startZoom: () => void;
   startExitTransition: (exitTargetRect: DOMRect, sourceThumbnailUrl: string, exitFileId: string) => void;
@@ -403,10 +413,16 @@ export const NavigationProvider: React.FC<{
       }
     }, [toolRegistry, state.hasUnsavedChanges, state.selectedTool]);
 
-    const startViewerTransition = useCallback((sourceRect: DOMRect, sourceThumbnailUrl: string, transitionType: 'fileEditor' | 'pageEditor', editorScreenshotUrl?: string) => {
+    const startViewerTransition = useCallback((
+      sourceRect: DOMRect,
+      sourceThumbnailUrl: string,
+      transitionType: 'fileEditor' | 'pageEditor',
+      editorScreenshotUrl?: string,
+      editorScreenshotRect?: DOMRect
+    ) => {
       dispatch({
         type: 'START_VIEWER_TRANSITION',
-        payload: { sourceRect, sourceThumbnailUrl, transitionType, editorScreenshotUrl }
+        payload: { sourceRect, sourceThumbnailUrl, transitionType, editorScreenshotUrl, editorScreenshotRect }
       });
     }, []);
 
