@@ -34,6 +34,10 @@ export interface AppConfig {
   enableDesktopInstallSlide?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
+  storageEnabled?: boolean;
+  storageSharingEnabled?: boolean;
+  storageShareLinksEnabled?: boolean;
+  storageShareEmailEnabled?: boolean;
   termsAndConditions?: string;
   privacyPolicy?: string;
   cookiePolicy?: string;
