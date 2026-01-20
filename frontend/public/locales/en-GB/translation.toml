@@ -4855,6 +4855,8 @@ downloadInvalidTitle = "Invalid selection"
 downloadInvalidBody = "Some selected languages are not available to download. Please refresh and choose from the list."
 downloadErrorNetwork = "Download failed due to a network error. Please check your connection and try again."
 downloadErrorServer = "The server encountered an error while downloading tessdata languages. Please try again later."
+downloadErrorPermission = "Tessdata directory is not writable: {{message}}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions."
+downloadErrorGeneric = "Download failed: {{message}}. Please try again later."
 
 [admin.settings.advanced.disableSanitize]
 label = "Disable HTML Sanitization"

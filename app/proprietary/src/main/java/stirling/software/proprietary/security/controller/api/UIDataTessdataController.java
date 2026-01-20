@@ -37,8 +37,8 @@ import stirling.software.common.configuration.RuntimePathConfig;
 public class UIDataTessdataController {
 
     private final RuntimePathConfig runtimePathConfig;
-    private static List<String> cachedRemoteTessdata = null;
-    private static long cachedRemoteTessdataExpiry = 0L;
+    private static volatile List<String> cachedRemoteTessdata = null;
+    private static volatile long cachedRemoteTessdataExpiry = 0L;
     private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
     @GetMapping("/tessdata-languages")
@@ -152,7 +152,7 @@ public class UIDataTessdataController {
             connection.setRequestProperty("User-Agent", "Stirling-PDF-App");
             connection.setRequestProperty("Accept", "application/octet-stream");
             connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+            connection.setReadTimeout(30000);
 
             int status = connection.getResponseCode();
             if (status != HttpURLConnection.HTTP_OK) {
@@ -182,8 +182,9 @@ public class UIDataTessdataController {
     /** Fetch list of available remote tessdata languages (with simple caching). */
     protected List<String> getRemoteTessdataLanguages() {
         long now = System.currentTimeMillis();
-        if (cachedRemoteTessdata != null && now < cachedRemoteTessdataExpiry) {
-            return cachedRemoteTessdata;
+        List<String> localCache = cachedRemoteTessdata;
+        if (localCache != null && now < cachedRemoteTessdataExpiry) {
+            return localCache;
         }
 
         String apiUrl = "https://api.github.com/repos/tesseract-ocr/tessdata/contents";
@@ -195,7 +196,7 @@ public class UIDataTessdataController {
             connection.setRequestProperty("User-Agent", "Stirling-PDF-App");
             connection.setRequestProperty("Accept", "application/vnd.github+json");
             connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+            connection.setReadTimeout(30000);
 
             int status = connection.getResponseCode();
             if (status != HttpURLConnection.HTTP_OK) {
@@ -228,8 +229,11 @@ public class UIDataTessdataController {
                                 .sorted()
                                 .toList();
 
-                cachedRemoteTessdata = languages;
-                cachedRemoteTessdataExpiry = System.currentTimeMillis() + REMOTE_TESSDATA_TTL_MS;
+                synchronized (UIDataTessdataController.class) {
+                    cachedRemoteTessdata = languages;
+                    cachedRemoteTessdataExpiry =
+                            System.currentTimeMillis() + REMOTE_TESSDATA_TTL_MS;
+                }
                 return languages;
             }
         } catch (IOException e) {

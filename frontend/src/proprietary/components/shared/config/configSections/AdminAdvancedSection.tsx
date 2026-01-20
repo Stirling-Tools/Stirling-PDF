@@ -290,7 +290,7 @@ export default function AdminAdvancedSection() {
             return `https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/${safeLang}.traineddata`;
           })
         );
-        const message = t('admin.settings.advanced.tessdataDir.downloadErrorBody', {
+        const message = t('admin.settings.advanced.tessdataDir.downloadErrorPermission', {
           defaultValue:
             'Tessdata directory is not writable: {{message}}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions.',
           message: serverMessage ?? settings.tessdataDir ?? 'unknown location',
@@ -316,9 +316,8 @@ export default function AdminAdvancedSection() {
           'The server encountered an error while downloading tessdata languages. Please try again later.'
         );
       } else {
-        message = t('admin.settings.advanced.tessdataDir.downloadErrorBody', {
-          defaultValue:
-            'Tessdata directory is not writable: {{message}}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions.',
+        message = t('admin.settings.advanced.tessdataDir.downloadErrorGeneric', {
+          defaultValue: 'Download failed: {{message}}. Please try again later.',
           message: serverMessage ?? settings.tessdataDir ?? 'unknown location',
         });
       }
