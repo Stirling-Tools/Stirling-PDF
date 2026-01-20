@@ -286,7 +286,7 @@ export default function AdminAdvancedSection() {
         setTessdataDirWritable(false);
         setManualDownloadLinks(
           selectedDownloadLanguages.map((lang) => {
-            const safeLang = lang.replace(/[^A-Za-z0-9_+-]/g, '');
+            const safeLang = lang.replace(/[^A-Za-z0-9_+\-]/g, '');
             return `https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/${safeLang}.traineddata`;
           })
         );
@@ -527,7 +527,13 @@ export default function AdminAdvancedSection() {
                 </Stack>
               )}
               <Group justify="flex-end">
-                <Button size="xs" variant="light" onClick={handleDownloadTessdataLanguages} loading={downloadLanguagesLoading} disabled={!loginEnabled || remoteTessdataLanguages.length === 0}>
+                <Button
+                  size="xs"
+                  variant="light"
+                  onClick={handleDownloadTessdataLanguages}
+                  loading={downloadLanguagesLoading}
+                  disabled={!loginEnabled || remoteTessdataLanguages.length === 0}
+                >
                   {t('admin.settings.advanced.tessdataDir.downloadButton', 'Download selected languages')}
                 </Button>
               </Group>

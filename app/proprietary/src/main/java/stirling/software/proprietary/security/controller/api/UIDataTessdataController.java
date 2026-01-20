@@ -182,8 +182,13 @@ public class UIDataTessdataController {
     /** Fetch list of available remote tessdata languages (with simple caching). */
     protected List<String> getRemoteTessdataLanguages() {
         long now = System.currentTimeMillis();
-        List<String> localCache = cachedRemoteTessdata;
-        if (localCache != null && now < cachedRemoteTessdataExpiry) {
+        List<String> localCache;
+        long localExpiry;
+        synchronized (UIDataTessdataController.class) {
+            localCache = cachedRemoteTessdata;
+            localExpiry = cachedRemoteTessdataExpiry;
+        }
+        if (localCache != null && now < localExpiry) {
             return localCache;
         }
 
