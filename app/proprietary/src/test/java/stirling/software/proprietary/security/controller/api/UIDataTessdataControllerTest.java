@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -208,6 +209,42 @@ class UIDataTessdataControllerTest {
                 .andExpect(jsonPath("$.downloaded").isArray())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
                 .andExpect(jsonPath("$.failed[0]").value("eng"));
+    }
+
+    @Test
+    void downloadTessdataLanguages_allSuccess(@TempDir Path tempDir) throws Exception {
+        RuntimePathConfig runtimePathConfig = Mockito.mock(RuntimePathConfig.class);
+        Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
+
+        UIDataTessdataController controller =
+                new UIDataTessdataController(runtimePathConfig) {
+                    @Override
+                    protected List<String> getRemoteTessdataLanguages() {
+                        return List.of("eng");
+                    }
+
+                    @Override
+                    protected boolean downloadLanguageFile(
+                            String safeLang, Path targetFile, String downloadUrl) {
+                        try {
+                            Files.writeString(targetFile, "dummy");
+                            return true;
+                        } catch (IOException e) {
+                            return false;
+                        }
+                    }
+                };
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        mvc.perform(
+                        post("/api/v1/ui-data/tessdata/download")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"languages\":[\"eng\"]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.downloaded[0]").value("eng"))
+                .andExpect(jsonPath("$.failed").isArray())
+                .andExpect(jsonPath("$.failed").isEmpty());
     }
 
     @Test
