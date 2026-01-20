@@ -254,7 +254,7 @@ export default function AdminAdvancedSection() {
         setTessdataDirWritable(false);
         setManualDownloadLinks(
           selectedDownloadLanguages.map((lang) => {
-            const safeLang = lang.replace(/[^A-Za-z0-9_+\\-]/g, '');
+            const safeLang = lang.replace(/[^A-Za-z0-9_+-]/g, '');
             return `https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/${safeLang}.traineddata`;
           })
         );
