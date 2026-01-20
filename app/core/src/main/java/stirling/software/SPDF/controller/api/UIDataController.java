@@ -246,6 +246,7 @@ public class UIDataController {
             URL url = new URL(apiUrl);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Stirling-PDF-App");
             connection.setRequestProperty("Accept", "application/vnd.github+json");
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);

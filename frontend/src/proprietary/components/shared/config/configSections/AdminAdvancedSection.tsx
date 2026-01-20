@@ -224,14 +224,18 @@ export default function AdminAdvancedSection() {
     }
     setDownloadLanguagesLoading(true);
     try {
-      await apiClient.post('/api/v1/ui-data/tessdata/download', { languages: selectedDownloadLanguages });
+      await apiClient.post('/api/v1/ui-data/tessdata/download', { languages: selectedDownloadLanguages }, {
+        suppressErrorToast: true
+      });
       alert({
         alertType: 'success',
         title: t('admin.settings.advanced.tessdataDir.downloadSuccessTitle', 'Languages downloaded'),
         body: t('admin.settings.advanced.tessdataDir.downloadSuccessBody', 'The selected tessdata languages have been saved.'),
       });
       // Refresh installed list
-      const { data } = await apiClient.get<{ installed: string[]; available: string[]; writable?: boolean }>('/api/v1/ui-data/tessdata-languages');
+      const { data } = await apiClient.get<{ installed: string[]; available: string[]; writable?: boolean }>('/api/v1/ui-data/tessdata-languages', {
+        suppressErrorToast: true
+      });
       const installed = data.installed || [];
       const available = data.available || [];
       setTessdataLanguages(installed);
@@ -254,18 +258,19 @@ export default function AdminAdvancedSection() {
             return `https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/${safeLang}.traineddata`;
           })
         );
-        return;
-      }
-      const message =
-        t('admin.settings.advanced.tessdataDir.downloadErrorBody', `Tessdata directory is not writable: ${serverMessage}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions.`, {
+        const message = t('admin.settings.advanced.tessdataDir.downloadErrorBody', {
+          defaultValue:
+            'Tessdata directory is not writable: {{message}}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions.',
           message: serverMessage ?? settings.tessdataDir ?? 'unknown location',
         });
-      alert({
-        alertType: 'error',
-        title: t('admin.settings.advanced.tessdataDir.downloadErrorTitle', 'Download Failed'),
-        body: message,
-        expandable: false,
-      });
+        alert({
+          alertType: 'error',
+          title: t('admin.settings.advanced.tessdataDir.downloadErrorTitle', 'Download Failed'),
+          body: message,
+          expandable: false,
+        });
+        return;
+      }
     } finally {
       setDownloadLanguagesLoading(false);
     }
