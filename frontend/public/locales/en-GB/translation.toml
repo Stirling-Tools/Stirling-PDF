@@ -4851,6 +4851,10 @@ downloadNothingFound = "No additional languages found"
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 manualLinks = "Manual downloads: click the links and place the files into the tessdata folder."
 downloadButton = "Download selected languages"
+downloadInvalidTitle = "Invalid selection"
+downloadInvalidBody = "Some selected languages are not available to download. Please refresh and choose from the list."
+downloadErrorNetwork = "Download failed due to a network error. Please check your connection and try again."
+downloadErrorServer = "The server encountered an error while downloading tessdata languages. Please try again later."
 
 [admin.settings.advanced.disableSanitize]
 label = "Disable HTML Sanitization"
