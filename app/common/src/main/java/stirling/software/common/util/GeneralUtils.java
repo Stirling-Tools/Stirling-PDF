@@ -587,25 +587,20 @@ public class GeneralUtils {
         if (value == null) {
             return null;
         }
+        if (value.compareTo(BigDecimal.ZERO) < 0) {
+            log.warn("Size value cannot be negative: {}", value);
+            return null;
+        }
         if (powerOf1024 < 0 || powerOf1024 > 4) {
             throw new IllegalArgumentException("Invalid power for size conversion: " + powerOf1024);
         }
         BigDecimal multiplier = powerOf1024 == 0 ? BigDecimal.ONE : KIB.pow(powerOf1024);
         BigDecimal bytes = value.multiply(multiplier).setScale(0, RoundingMode.DOWN);
-        if (bytes.compareTo(BigDecimal.ZERO) < 0) {
-            log.warn("Size value cannot be negative: {}", value);
-            return null;
-        }
         if (bytes.compareTo(LONG_MAX_DECIMAL) > 0) {
             log.warn("Size value too large to fit in long: {}", bytes);
             return null;
         }
-        try {
-            return bytes.longValueExact();
-        } catch (ArithmeticException e) {
-            log.warn("Size value produced non-integer bytes: {}", bytes);
-            return null;
-        }
+        return bytes.longValue();
     }
 
     private BigDecimal parseSizeValue(String value) {
