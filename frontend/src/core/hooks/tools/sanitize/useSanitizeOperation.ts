@@ -9,12 +9,12 @@ export const buildSanitizeFormData = (parameters: SanitizeParameters, file: File
   formData.append('fileInput', file);
 
   // Add parameters
-  formData.append('removeJavaScript', parameters.removeJavaScript.toString());
-  formData.append('removeEmbeddedFiles', parameters.removeEmbeddedFiles.toString());
-  formData.append('removeXMPMetadata', parameters.removeXMPMetadata.toString());
-  formData.append('removeMetadata', parameters.removeMetadata.toString());
-  formData.append('removeLinks', parameters.removeLinks.toString());
-  formData.append('removeFonts', parameters.removeFonts.toString());
+  formData.append('removeJavaScript', (parameters.removeJavaScript ?? false).toString());
+  formData.append('removeEmbeddedFiles', (parameters.removeEmbeddedFiles ?? false).toString());
+  formData.append('removeXMPMetadata', (parameters.removeXMPMetadata ?? false).toString());
+  formData.append('removeMetadata', (parameters.removeMetadata ?? false).toString());
+  formData.append('removeLinks', (parameters.removeLinks ?? false).toString());
+  formData.append('removeFonts', (parameters.removeFonts ?? false).toString());
 
   return formData;
 };
