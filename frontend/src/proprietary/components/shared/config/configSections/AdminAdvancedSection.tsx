@@ -211,6 +211,30 @@ export default function AdminAdvancedSection() {
     fetchTessdataLanguages();
   }, [loginEnabled]);
 
+  const refreshTessdataWithRetry = async (retries = 3, delayMs = 400) => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const { data } = await apiClient.get<{ installed: string[]; available: string[]; writable?: boolean }>(
+          '/api/v1/ui-data/tessdata-languages',
+          { suppressErrorToast: true }
+        );
+        const installed = data.installed || [];
+        const available = data.available || [];
+        setTessdataLanguages(installed);
+        setRemoteTessdataLanguages(available.filter((lang) => !installed.includes(lang)));
+        setTessdataDirWritable(data.writable !== false);
+        setManualDownloadLinks([]);
+        return;
+      } catch (err) {
+        if (attempt === retries - 1) {
+          console.error('[AdminAdvancedSection] Retry refresh tessdata failed', err);
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  };
+
   const handleDownloadTessdataLanguages = async () => {
     if (!loginEnabled) return;
     if (selectedDownloadLanguages.length === 0) {
@@ -218,6 +242,21 @@ export default function AdminAdvancedSection() {
         alertType: 'warning',
         title: t('admin.settings.advanced.tessdataDir.downloadMissingTitle', 'No language selected'),
         body: t('admin.settings.advanced.tessdataDir.downloadMissingBody', 'Please select at least one language to download.'),
+        expandable: false,
+      });
+      return;
+    }
+    // Ensure selection is a subset of remote languages to prevent invalid requests
+    const remoteSet = new Set(remoteTessdataLanguages);
+    const invalidSelection = selectedDownloadLanguages.filter((lang) => !remoteSet.has(lang));
+    if (invalidSelection.length > 0) {
+      alert({
+        alertType: 'warning',
+        title: t('admin.settings.advanced.tessdataDir.downloadInvalidTitle', 'Invalid selection'),
+        body: t(
+          'admin.settings.advanced.tessdataDir.downloadInvalidBody',
+          'Some selected languages are not available to download. Please refresh and choose from the list.'
+        ),
         expandable: false,
       });
       return;
@@ -232,15 +271,8 @@ export default function AdminAdvancedSection() {
         title: t('admin.settings.advanced.tessdataDir.downloadSuccessTitle', 'Languages downloaded'),
         body: t('admin.settings.advanced.tessdataDir.downloadSuccessBody', 'The selected tessdata languages have been saved.'),
       });
-      // Refresh installed list
-      const { data } = await apiClient.get<{ installed: string[]; available: string[]; writable?: boolean }>('/api/v1/ui-data/tessdata-languages', {
-        suppressErrorToast: true
-      });
-      const installed = data.installed || [];
-      const available = data.available || [];
-      setTessdataLanguages(installed);
-      setRemoteTessdataLanguages(available.filter((lang) => !installed.includes(lang)));
-      setTessdataDirWritable(data.writable !== false);
+      // Refresh installed list with retry in case filesystem sync is delayed
+      await refreshTessdataWithRetry();
       setSelectedDownloadLanguages([]);
       setManualDownloadLinks([]);
     } catch (error) {
@@ -271,6 +303,31 @@ export default function AdminAdvancedSection() {
         });
         return;
       }
+
+      let message: string;
+      if (!response) {
+        message = t(
+          'admin.settings.advanced.tessdataDir.downloadErrorNetwork',
+          'Download failed due to a network error. Please check your connection and try again.'
+        );
+      } else if (status >= 500) {
+        message = t(
+          'admin.settings.advanced.tessdataDir.downloadErrorServer',
+          'The server encountered an error while downloading tessdata languages. Please try again later.'
+        );
+      } else {
+        message = t('admin.settings.advanced.tessdataDir.downloadErrorBody', {
+          defaultValue:
+            'Tessdata directory is not writable: {{message}}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions.',
+          message: serverMessage ?? settings.tessdataDir ?? 'unknown location',
+        });
+      }
+      alert({
+        alertType: 'error',
+        title: t('admin.settings.advanced.tessdataDir.downloadErrorTitle', 'Download Failed'),
+        body: message,
+        expandable: false,
+      });
     } finally {
       setDownloadLanguagesLoading(false);
     }
