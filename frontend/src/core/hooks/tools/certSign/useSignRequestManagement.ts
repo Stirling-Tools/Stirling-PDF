@@ -43,8 +43,9 @@ export const useSignRequestManagement = () => {
     setLoading(true);
     setError(null);
     try {
+      // Use the new /sign endpoint that supports both certificates and wet signatures
       const response = await apiClient.post(
-        `/api/v1/security/cert-sign/sessions/${sessionId}/participants/${userId}/certificate`,
+        `/api/v1/security/cert-sign/sessions/${sessionId}/sign`,
         certificateData,
         {
           headers: {

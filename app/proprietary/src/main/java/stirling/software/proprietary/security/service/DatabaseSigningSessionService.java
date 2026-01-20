@@ -522,6 +522,85 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
         sessionRepository.save(session);
     }
 
+    @Override
+    @Transactional
+    public void signDocument(String sessionId, String username, Object request) throws IOException {
+        if (!(request instanceof SignDocumentRequest)) {
+            throw new IllegalArgumentException("Invalid request type");
+        }
+
+        SignDocumentRequest signRequest = (SignDocumentRequest) request;
+        SigningSessionEntity session = getSessionEntityById(sessionId);
+
+        User user =
+                userService
+                        .findByUsernameIgnoreCase(username)
+                        .orElseThrow(
+                                () ->
+                                        ExceptionUtils.createIllegalArgumentException(
+                                                "error.notFound", "User {0} not found", username));
+
+        // Find participant matching user
+        SigningParticipantEntity participant =
+                session.getParticipants().stream()
+                        .filter(p -> p.getUser().getId().equals(user.getId()))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        ExceptionUtils.createIllegalArgumentException(
+                                                "error.unauthorized",
+                                                "User {0} is not a participant in session {1}",
+                                                username,
+                                                sessionId));
+
+        if (participant.getStatus() == ParticipantStatus.SIGNED) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidState", "Participant has already signed", sessionId);
+        }
+
+        if (participant.getStatus() == ParticipantStatus.DECLINED) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidState", "Cannot sign - participant has declined", sessionId);
+        }
+
+        // Store wet signature metadata if provided
+        if (signRequest.hasWetSignature()) {
+            WetSignatureMetadata wetSig = signRequest.extractWetSignatureMetadata();
+            participant.setWetSignatureType(wetSig.getType());
+            participant.setWetSignatureData(wetSig.getData());
+            participant.setWetSignaturePage(wetSig.getPage());
+            participant.setWetSignatureX(wetSig.getX());
+            participant.setWetSignatureY(wetSig.getY());
+            participant.setWetSignatureWidth(wetSig.getWidth());
+            participant.setWetSignatureHeight(wetSig.getHeight());
+        }
+
+        // Store certificate data (reuse existing attachCertificate logic)
+        ParticipantCertificateRequest certRequest = new ParticipantCertificateRequest();
+        certRequest.setCertType(signRequest.getCertType());
+        certRequest.setPassword(signRequest.getPassword());
+        certRequest.setP12File(signRequest.getP12File());
+        certRequest.setPrivateKeyFile(signRequest.getPrivateKeyFile());
+        certRequest.setCertFile(signRequest.getCertFile());
+
+        // Use participant's signature settings from session
+        certRequest.setShowSignature(participant.getShowSignature());
+        certRequest.setPageNumber(participant.getPageNumber());
+        certRequest.setReason(participant.getReason());
+        certRequest.setLocation(participant.getLocation());
+        certRequest.setShowLogo(participant.getShowLogo());
+
+        // Store certificate submission (same as attachCertificate method)
+        ParticipantCertificateSubmissionEntity submissionEntity =
+                toSubmissionEntity(certRequest, participant);
+        participant.setCertificateSubmission(submissionEntity);
+
+        // Mark as signed
+        participant.setStatus(ParticipantStatus.SIGNED);
+        session.touch();
+        sessionRepository.save(session);
+    }
+
     private void validateSessionOwnership(SigningSessionEntity session, String username) {
         if (!session.getUser().getUsername().equalsIgnoreCase(username)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -698,6 +777,64 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
                 .location(entity.getLocation())
                 .showLogo(entity.getShowLogo())
                 .build();
+    }
+
+    /**
+     * Gets all wet signature metadata for participants who have signed. Used during finalization to
+     * overlay wet signatures on the PDF.
+     *
+     * @param sessionId The session ID
+     * @return List of wet signature metadata for all signed participants
+     */
+    public List<WetSignatureMetadata> getAllWetSignatures(String sessionId) {
+        SigningSessionEntity session = getSessionEntityById(sessionId);
+
+        return session.getParticipants().stream()
+                .filter(p -> p.getStatus() == ParticipantStatus.SIGNED)
+                .filter(p -> p.getWetSignatureType() != null)
+                .map(
+                        p -> {
+                            WetSignatureMetadata meta = new WetSignatureMetadata();
+                            meta.setType(p.getWetSignatureType());
+                            meta.setData(p.getWetSignatureData());
+                            meta.setPage(p.getWetSignaturePage());
+                            meta.setX(p.getWetSignatureX());
+                            meta.setY(p.getWetSignatureY());
+                            meta.setWidth(p.getWetSignatureWidth());
+                            meta.setHeight(p.getWetSignatureHeight());
+                            return meta;
+                        })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Clears wet signature metadata from all participants after finalization. This is required for
+     * GDPR compliance and to avoid storing large base64 data.
+     *
+     * @param sessionId The session ID
+     */
+    @Transactional
+    public void clearWetSignatureMetadata(String sessionId) {
+        SigningSessionEntity session = getSessionEntityById(sessionId);
+
+        boolean anyCleared = false;
+        for (SigningParticipantEntity participant : session.getParticipants()) {
+            if (participant.getWetSignatureType() != null) {
+                participant.setWetSignatureType(null);
+                participant.setWetSignatureData(null);
+                participant.setWetSignaturePage(null);
+                participant.setWetSignatureX(null);
+                participant.setWetSignatureY(null);
+                participant.setWetSignatureWidth(null);
+                participant.setWetSignatureHeight(null);
+                anyCleared = true;
+            }
+        }
+
+        if (anyCleared) {
+            log.info("Cleared wet signature metadata for session: {}", sessionId);
+            sessionRepository.save(session);
+        }
     }
 
     @Override

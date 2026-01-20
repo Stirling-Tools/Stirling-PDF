@@ -74,6 +74,30 @@ public class SigningParticipantEntity implements Serializable {
     @Column(name = "show_logo")
     private Boolean showLogo;
 
+    // Wet signature metadata (visual signature placed by participant)
+    // This data is private to the participant and cleared after finalization
+    @Column(name = "wet_signature_type", length = 20)
+    private String wetSignatureType; // "canvas" | "image" | "text"
+
+    @Lob
+    @Column(name = "wet_signature_data", columnDefinition = "TEXT")
+    private String wetSignatureData; // Base64 image data or text
+
+    @Column(name = "wet_signature_page")
+    private Integer wetSignaturePage;
+
+    @Column(name = "wet_signature_x")
+    private Double wetSignatureX;
+
+    @Column(name = "wet_signature_y")
+    private Double wetSignatureY;
+
+    @Column(name = "wet_signature_width")
+    private Double wetSignatureWidth;
+
+    @Column(name = "wet_signature_height")
+    private Double wetSignatureHeight;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "participant_notifications",

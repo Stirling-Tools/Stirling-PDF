@@ -201,6 +201,13 @@ public class SigningSessionService implements SigningSessionServiceInterface {
     }
 
     @Override
+    public void signDocument(String sessionId, String username, Object request) throws IOException {
+        // In-memory implementation doesn't support user-based signing with wet signatures
+        throw new UnsupportedOperationException(
+                "User-based signing not supported in non-database mode");
+    }
+
+    @Override
     public boolean isDatabaseBacked() {
         return false;
     }

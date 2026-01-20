@@ -43,7 +43,6 @@ const SigningWorkflow = (props: BaseToolProps) => {
     unregisterCustomWorkbenchView,
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
-    customWorkbenchViews,
   } = useToolWorkflow();
 
   // Track loaded session PDFs to prevent duplicate fetches
@@ -202,7 +201,7 @@ const SigningWorkflow = (props: BaseToolProps) => {
     }
   };
 
-  const handleLoadPdf = useCallback(async (sessionId: string, documentName: string) => {
+  const _handleLoadPdf = useCallback(async (sessionId: string, documentName: string) => {
     // Check if we've already loaded this session's PDF
     if (loadedSessionsRef.current.has(sessionId)) {
       console.log('[SigningWorkflow] PDF already loaded for session:', sessionId);
@@ -240,7 +239,7 @@ const SigningWorkflow = (props: BaseToolProps) => {
     return pdfFile;
   }, [signRequestMgmt.fetchSessionPdf, addFiles, setSelectedFiles]);
 
-  const cleanupSessionPdf = useCallback((sessionId: string) => {
+  const _cleanupSessionPdf = useCallback((sessionId: string) => {
     console.log('[SigningWorkflow] cleanupSessionPdf called for session:', sessionId);
     console.log('[SigningWorkflow] Tracked sessions before cleanup:', Array.from(sessionFileIdsRef.current.keys()));
 

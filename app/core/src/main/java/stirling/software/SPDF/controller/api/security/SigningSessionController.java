@@ -28,6 +28,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.constraints.NotBlank;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.controller.api.security.CertSignController.CreateSignature;
 import stirling.software.SPDF.service.SigningSessionService;
@@ -39,6 +41,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
@@ -264,6 +267,20 @@ public class SigningSessionController {
         SigningSession session = (SigningSession) sessionServiceInterface.getSession(sessionId);
         byte[] pdf = session.getOriginalPdf();
 
+        // Step 1: Apply wet signatures (visual annotations) FIRST
+        if (sessionServiceInterface.isDatabaseBacked()) {
+            try {
+                pdf = applyWetSignatures(pdf, sessionId);
+            } catch (Exception e) {
+                log.error(
+                        "Failed to apply wet signatures for session {}: {}",
+                        sessionId,
+                        e.getMessage());
+                // Continue with certificate signing even if wet signatures fail
+            }
+        }
+
+        // Step 2: Apply digital certificates
         for (SigningParticipant participant : session.getParticipants()) {
             ParticipantCertificateSubmission submission = participant.getCertificateSubmission();
             if (submission == null || participant.getStatus() != ParticipantStatus.SIGNED) {
@@ -312,6 +329,19 @@ public class SigningSessionController {
 
         // Mark session as finalized in database if database service is available
         sessionServiceInterface.markSessionFinalized(sessionId, pdf);
+
+        // Step 3: Clean up wet signature metadata (GDPR compliance)
+        if (sessionServiceInterface.isDatabaseBacked()) {
+            try {
+                clearWetSignatureMetadata(sessionId);
+            } catch (Exception e) {
+                log.error(
+                        "Failed to clear wet signature metadata for session {}: {}",
+                        sessionId,
+                        e.getMessage());
+                // Don't fail the finalization if cleanup fails
+            }
+        }
 
         return WebResponseUtils.bytesToWebResponse(
                 pdf,
@@ -395,6 +425,122 @@ public class SigningSessionController {
         }
     }
 
+    /**
+     * Applies wet signatures (visual annotations) to the PDF. This must be done BEFORE applying
+     * digital certificates.
+     *
+     * @param pdfBytes Original PDF bytes
+     * @param sessionId Session ID
+     * @return PDF bytes with wet signatures overlaid
+     * @throws Exception if PDF processing fails
+     */
+    private byte[] applyWetSignatures(byte[] pdfBytes, String sessionId) throws Exception {
+        // Cast to database service to access wet signature methods
+        if (!(sessionServiceInterface
+                instanceof
+                stirling.software.proprietary.security.service.DatabaseSigningSessionService)) {
+            return pdfBytes; // Skip if not database service
+        }
+
+        stirling.software.proprietary.security.service.DatabaseSigningSessionService dbService =
+                (stirling.software.proprietary.security.service.DatabaseSigningSessionService)
+                        sessionServiceInterface;
+
+        List<WetSignatureMetadata> wetSignatures = dbService.getAllWetSignatures(sessionId);
+        if (wetSignatures.isEmpty()) {
+            return pdfBytes; // No wet signatures to apply
+        }
+
+        // Load PDF document
+        org.apache.pdfbox.pdmodel.PDDocument document =
+                pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes));
+
+        try {
+            for (WetSignatureMetadata wetSig : wetSignatures) {
+                applyWetSignatureToPage(document, wetSig);
+            }
+
+            // Save modified PDF
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            document.save(baos);
+            return baos.toByteArray();
+        } finally {
+            document.close();
+        }
+    }
+
+    /**
+     * Applies a single wet signature to the appropriate page of the PDF.
+     *
+     * @param document PDF document
+     * @param wetSig Wet signature metadata
+     * @throws Exception if image processing or PDF manipulation fails
+     */
+    private void applyWetSignatureToPage(
+            org.apache.pdfbox.pdmodel.PDDocument document, WetSignatureMetadata wetSig)
+            throws Exception {
+        if (wetSig.getPage() >= document.getNumberOfPages()) {
+            log.warn(
+                    "Wet signature page {} exceeds document pages {}, skipping",
+                    wetSig.getPage(),
+                    document.getNumberOfPages());
+            return;
+        }
+
+        org.apache.pdfbox.pdmodel.PDPage page = document.getPage(wetSig.getPage());
+        org.apache.pdfbox.pdmodel.PDPageContentStream contentStream =
+                new org.apache.pdfbox.pdmodel.PDPageContentStream(
+                        document,
+                        page,
+                        org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND,
+                        true,
+                        true);
+
+        try {
+            // Extract base64 data (remove data:image/png;base64, prefix if present)
+            String base64Data = wetSig.extractBase64Data();
+            byte[] imageBytes = java.util.Base64.getDecoder().decode(base64Data);
+
+            // Create PDImageXObject from bytes
+            org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject image =
+                    org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject.createFromByteArray(
+                            document, imageBytes, "signature");
+
+            // Convert Y coordinate from UI (top-left) to PDF (bottom-left) coordinate system
+            float pdfY =
+                    page.getMediaBox().getHeight()
+                            - wetSig.getY().floatValue()
+                            - wetSig.getHeight().floatValue();
+
+            // Draw image at specified position
+            contentStream.drawImage(
+                    image,
+                    wetSig.getX().floatValue(),
+                    pdfY,
+                    wetSig.getWidth().floatValue(),
+                    wetSig.getHeight().floatValue());
+        } finally {
+            contentStream.close();
+        }
+    }
+
+    /**
+     * Clears wet signature metadata from all participants. Called after successful finalization for
+     * GDPR compliance.
+     *
+     * @param sessionId Session ID
+     */
+    private void clearWetSignatureMetadata(String sessionId) {
+        if (sessionServiceInterface
+                instanceof
+                stirling.software.proprietary.security.service.DatabaseSigningSessionService) {
+            stirling.software.proprietary.security.service.DatabaseSigningSessionService dbService =
+                    (stirling.software.proprietary.security.service.DatabaseSigningSessionService)
+                            sessionServiceInterface;
+            dbService.clearWetSignatureMetadata(sessionId);
+        }
+    }
+
     @Operation(summary = "List sign requests for authenticated user")
     @GetMapping(value = "/cert-sign/sign-requests")
     public ResponseEntity<?> listSignRequests(Principal principal) {
@@ -438,6 +584,34 @@ public class SigningSessionController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Cannot decline sign request: " + e.getMessage());
+        }
+    }
+
+    @Operation(
+            summary = "Sign a document with optional wet signature",
+            description =
+                    "Submits certificate and optional wet signature annotation metadata for a signing session")
+    @PostMapping(
+            value = "/cert-sign/sessions/{sessionId}/sign",
+            consumes = {
+                MediaType.MULTIPART_FORM_DATA_VALUE,
+                MediaType.APPLICATION_FORM_URLENCODED_VALUE
+            })
+    public ResponseEntity<?> signDocument(
+            @PathVariable("sessionId") @NotBlank String sessionId,
+            @ModelAttribute SignDocumentRequest request,
+            Principal principal) {
+        if (principal == null || !sessionServiceInterface.isDatabaseBacked()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        }
+        try {
+            sessionServiceInterface.signDocument(sessionId, principal.getName(), request);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Cannot sign document: " + e.getMessage());
         }
     }
 }

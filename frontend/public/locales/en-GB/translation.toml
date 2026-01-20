@@ -862,6 +862,21 @@ noCertificate = "Please select a certificate file"
 noUser = "User not authenticated"
 alreadyProcessed = "You have already processed this sign request."
 incomplete = "Not all participants have submitted certificates yet"
+loading = "Loading sign request..."
+addSignature = "Add Your Signature"
+message = "Message"
+placeSignatureButton = "Place Signature on PDF"
+placementActive = "Click PDF to place"
+signaturePlaced = "Signature placed on page"
+drawSignature = "Draw your signature below"
+uploadSignature = "Upload your signature image"
+typeSignature = "Type your name to create a signature"
+signatureType = "Signature Type"
+placementError = "Failed to place signature"
+
+[certSign.collab.signRequest.placeSignature]
+title = "Place Signature"
+message = "Click on the PDF to place your signature"
 
 [home.repair]
 tags = "fix,restore"
@@ -4014,6 +4029,7 @@ singlePageView = "Single Page View"
 unknownFile = "Unknown file"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
+resetZoom = "Reset Zoom"
 
 [rightRail]
 closeSelected = "Close Selected Files"

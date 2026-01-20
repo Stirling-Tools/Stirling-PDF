@@ -137,6 +137,16 @@ public interface SigningSessionServiceInterface {
     void declineSignRequest(String sessionId, String username);
 
     /**
+     * Signs a document with optional wet signature metadata
+     *
+     * @param sessionId The session ID
+     * @param username The participant's username
+     * @param request The sign document request containing certificate and wet signature data
+     * @throws IOException if certificate processing fails
+     */
+    void signDocument(String sessionId, String username, Object request) throws IOException;
+
+    /**
      * Checks if this is the database-backed implementation
      *
      * @return true if database-backed, false if in-memory
