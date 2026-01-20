@@ -40,6 +40,7 @@ import stirling.software.common.service.SigningSessionServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.service.UserServerCertificateService;
 
 @Slf4j
 @RestController
@@ -51,6 +52,7 @@ public class SigningSessionController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ServerCertificateServiceInterface serverCertificateServiceInterface;
     private final SigningSessionServiceInterface sessionServiceInterface;
+    private final UserServerCertificateService userServerCertificateService;
 
     public SigningSessionController(
             SigningSessionService signingSessionService,
@@ -58,10 +60,13 @@ public class SigningSessionController {
             @Autowired(required = false)
                     ServerCertificateServiceInterface serverCertificateServiceInterface,
             @Autowired(required = false)
-                    List<SigningSessionServiceInterface> signingSessionServices) {
+                    List<SigningSessionServiceInterface> signingSessionServices,
+            @Autowired(required = false)
+                    UserServerCertificateService userServerCertificateService) {
         this.signingSessionService = signingSessionService;
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateServiceInterface = serverCertificateServiceInterface;
+        this.userServerCertificateService = userServerCertificateService;
         // Use database-backed service if available, otherwise fall back to in-memory
         this.sessionServiceInterface =
                 signingSessionServices != null && !signingSessionServices.isEmpty()
@@ -297,12 +302,28 @@ public class SigningSessionController {
                 }
             }
 
-            KeyStore keystore = buildKeystore(submission);
+            // Handle USER_CERT type - auto-generate if needed
+            if ("USER_CERT".equalsIgnoreCase(submission.getCertType())) {
+                if (userServerCertificateService == null
+                        || !sessionServiceInterface.isDatabaseBacked()) {
+                    log.warn(
+                            "USER_CERT requested but service not available, skipping participant: {}",
+                            participant.getEmail());
+                    continue;
+                }
+            }
+
+            KeyStore keystore = buildKeystore(submission, participant);
             boolean usingServer = "SERVER".equalsIgnoreCase(submission.getCertType());
-            String password =
-                    usingServer && serverCertificateServiceInterface != null
-                            ? serverCertificateServiceInterface.getServerCertificatePassword()
-                            : submission.getPassword();
+            boolean usingUserCert = "USER_CERT".equalsIgnoreCase(submission.getCertType());
+            String password;
+            if (usingServer && serverCertificateServiceInterface != null) {
+                password = serverCertificateServiceInterface.getServerCertificatePassword();
+            } else if (usingUserCert && userServerCertificateService != null) {
+                password = submission.getPassword(); // Password stored in submission for user cert
+            } else {
+                password = submission.getPassword();
+            }
             CreateSignature createSignature =
                     new CreateSignature(
                             keystore, password != null ? password.toCharArray() : new char[0]);
@@ -348,12 +369,41 @@ public class SigningSessionController {
                 GeneralUtils.generateFilename(session.getDocumentName(), "_shared_signed.pdf"));
     }
 
-    private KeyStore buildKeystore(ParticipantCertificateSubmission submission) throws Exception {
+    private KeyStore buildKeystore(
+            ParticipantCertificateSubmission submission, SigningParticipant participant)
+            throws Exception {
         CertSignController certSignController =
                 new CertSignController(pdfDocumentFactory, serverCertificateServiceInterface);
         String certType = submission.getCertType().toUpperCase(Locale.ROOT);
         String password = submission.getPassword();
         switch (certType) {
+            case "USER_CERT":
+                if (userServerCertificateService == null) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.userCertificateNotAvailable",
+                            "User certificate service is not available in this edition");
+                }
+                // Get user ID from participant
+                Long userId = getUserIdFromParticipant(participant);
+                if (userId == null) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.userNotFound", "Cannot determine user ID for participant");
+                }
+                // Auto-generate certificate if user doesn't have one
+                try {
+                    userServerCertificateService.getOrCreateUserCertificate(userId);
+                    KeyStore userKeyStore = userServerCertificateService.getUserKeyStore(userId);
+                    String userPassword =
+                            userServerCertificateService.getUserKeystorePassword(userId);
+                    // Store password in submission for later use
+                    submission.setPassword(userPassword);
+                    return userKeyStore;
+                } catch (Exception e) {
+                    log.error("Failed to get/create user certificate for user {}", userId, e);
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.userCertificateFailure",
+                            "Failed to get user certificate: " + e.getMessage());
+                }
             case "PEM":
                 KeyStore pemStore = KeyStore.getInstance("JKS");
                 pemStore.load(null);
@@ -539,6 +589,17 @@ public class SigningSessionController {
                             sessionServiceInterface;
             dbService.clearWetSignatureMetadata(sessionId);
         }
+    }
+
+    /**
+     * Helper method to get user ID from participant. Returns null if not available (e.g., in-memory
+     * sessions).
+     *
+     * @param participant The signing participant
+     * @return User ID or null
+     */
+    private Long getUserIdFromParticipant(SigningParticipant participant) {
+        return participant.getUserId();
     }
 
     @Operation(summary = "List sign requests for authenticated user")

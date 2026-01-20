@@ -15,7 +15,7 @@ import { TextInputWithFont } from '@app/components/annotation/shared/TextInputWi
 import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 
 type SignatureType = 'canvas' | 'image' | 'text';
-type CertificateType = 'SERVER' | 'UPLOAD';
+type CertificateType = 'SERVER' | 'USER_CERT' | 'UPLOAD';
 
 interface WetSignatureInputProps {
   onSignatureDataChange: (data: string | undefined) => void;
@@ -225,13 +225,21 @@ const WetSignatureInput = ({
         >
           <Stack gap="xs">
             <Radio
+              value="USER_CERT"
+              label={t('certSign.collab.signRequest.usePersonalCert', 'Use My Personal Certificate')}
+              description={t('certSign.collab.signRequest.usePersonalCertDesc', 'Auto-generated for your account')}
+              disabled={disabled}
+            />
+            <Radio
               value="SERVER"
-              label={t('certSign.collab.signRequest.useServerCert', 'Use My Server Certificate')}
+              label={t('certSign.collab.signRequest.useServerCert', 'Use Organization Certificate')}
+              description={t('certSign.collab.signRequest.useServerCertDesc', 'Shared organization certificate')}
               disabled={disabled}
             />
             <Radio
               value="UPLOAD"
               label={t('certSign.collab.signRequest.uploadCert', 'Upload Custom Certificate')}
+              description={t('certSign.collab.signRequest.uploadCertDesc', 'Use your own PKCS12 certificate')}
               disabled={disabled}
             />
           </Stack>

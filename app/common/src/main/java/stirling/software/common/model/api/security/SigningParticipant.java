@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 public class SigningParticipant {
 
+    private Long userId; // Database user ID (null for in-memory sessions)
     private String email;
     private String name;
     private ParticipantStatus status = ParticipantStatus.PENDING;

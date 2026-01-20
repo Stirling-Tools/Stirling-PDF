@@ -35,7 +35,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   const annotationApiRef = useRef<AnnotationAPI | null>(null);
 
   // State for certificate selection
-  const [certType, setCertType] = useState<'SERVER' | 'UPLOAD'>('SERVER');
+  const [certType, setCertType] = useState<'SERVER' | 'USER_CERT' | 'UPLOAD'>('USER_CERT');
   const [p12File, setP12File] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [signing, setSigning] = useState(false);

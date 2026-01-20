@@ -745,6 +745,7 @@ public class DatabaseSigningSessionService implements SigningSessionServiceInter
 
     private SigningParticipant toSigningParticipant(SigningParticipantEntity entity) {
         SigningParticipant participant = new SigningParticipant();
+        participant.setUserId(entity.getUser() != null ? entity.getUser().getId() : null);
         participant.setEmail(entity.getEmail());
         participant.setName(entity.getName());
         participant.setStatus(entity.getStatus());
