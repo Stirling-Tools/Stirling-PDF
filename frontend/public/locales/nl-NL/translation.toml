@@ -556,30 +556,6 @@ syncToAccount = "Synchroniseer account <- browser"
 changeUsernameDescription = "Update your username. You will be logged out after updating."
 newUsernamePlaceholder = "Enter your new username"
 
-[account.mfa]
-codeLabel = "Authentication code"
-codePlaceholder = "Enter 6-digit code"
-codeRequired = "Enter the authentication code to continue."
-confirmDisable = "Disable"
-confirmEnable = "Enable"
-description = "Add an extra layer of security to your account."
-disableButton = "Disable two-factor authentication"
-disableDescription = "Enter a valid authentication code to disable two-factor authentication."
-disableFailed = "Unable to disable two-factor authentication. Check the code and try again."
-disableTitle = "Disable two-factor authentication"
-disabled = "Two-factor authentication disabled."
-enableButton = "Enable two-factor authentication"
-enableFailed = "Unable to enable two-factor authentication. Check the code and try again."
-enabled = "Two-factor authentication enabled."
-manualKey = "Manual setup key"
-secretWarning = "Keep this key private. Anyone with access can generate valid authentication codes."
-setupDescription = "Scan the QR code with your authenticator app, then enter the 6-digit code to confirm."
-setupFailed = "Unable to start two-factor setup. Please try again."
-setupTitle = "Set up two-factor authentication"
-ssoDescription = "Two-factor authentication is managed by your identity provider for single sign-on accounts."
-ssoManaged = "Configure MFA through your identity provider."
-title = "Two-factor authentication"
-
 [adminUserSettings]
 title = "Gebruikersbeheer"
 header = "Gebruikers beheren"
@@ -3747,13 +3723,6 @@ passwordChangedSuccess = "Wachtwoord succesvol gewijzigd! Log in met uw nieuwe w
 credentialsUpdated = "Uw inloggegevens zijn bijgewerkt. Log opnieuw in."
 defaultCredentials = "Standaard inloggegevens"
 changePasswordWarning = "Wijzig uw wachtwoord nadat u voor het eerst bent ingelogd"
-enterMfaCode = "Enter 6-digit code"
-mfaCode = "Authentication Code"
-mfaPromptBody = "Enter the authentication code from your authenticator app to continue."
-mfaPromptTitle = "Two-factor authentication"
-mfaRequired = "Two-factor code required"
-verifyMfa = "Verify code"
-verifyingMfa = "Verifying..."
 
 [login.slides.overview]
 alt = "Stirling PDF-overzicht"
@@ -5787,7 +5756,6 @@ usernameRequired = "Gebruikersnaam en wachtwoord zijn vereist"
 passwordTooShort = "Wachtwoord moet minstens 6 tekens zijn"
 success = "Gebruiker succesvol aangemaakt"
 error = "Gebruiker aanmaken is mislukt"
-forceMFA = "Force MFA setup on next login"
 
 [workspace.people.editMember]
 title = "Lid bewerken"
@@ -5890,11 +5858,6 @@ fromLicense = "van licentie"
 slotsAvailable = "{{count}} gebruikersplaats(en) beschikbaar"
 noSlotsAvailable = "Geen plaatsen beschikbaar"
 currentUsage = "Momenteel {{current}} van {{max}} gebruikerslicenties in gebruik"
-
-[workspace.people.mfa]
-adminDisableError = "Failed to disable MFA for user"
-adminDisableSuccess = "MFA disabled successfully for user"
-disableByAdmin = "Disable MFA"
 
 [workspace.teams]
 title = "Teams"
