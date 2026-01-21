@@ -62,11 +62,15 @@ const DesktopLayout: React.FC = () => {
             </>
           )}
 
-          <div style={{ flex: 1, minHeight: 0 }}>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
             <FileListArea
-              scrollAreaHeight={`calc(${modalHeight} )`}
+              scrollAreaHeight={activeSource === 'recent' && recentFiles.length > 0
+                ? `calc(${modalHeight} - 7rem)`
+                : '100%'}
               scrollAreaStyle={{
-                height: activeSource === 'recent' && recentFiles.length > 0 ? modalHeight : '100%',
+                height: activeSource === 'recent' && recentFiles.length > 0
+                  ? `calc(${modalHeight} - 7rem)`
+                  : '100%',
                 backgroundColor: 'transparent',
                 border: 'none',
                 borderRadius: 0
