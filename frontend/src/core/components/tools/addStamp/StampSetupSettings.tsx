@@ -4,6 +4,7 @@ import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampPa
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface StampSetupSettingsProps {
   parameters: AddStampParameters;
@@ -66,6 +67,7 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false }:
               { value: 'thai', label: 'ไทย' },
             ]}
             disabled={disabled}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
           />
         </>
       )}

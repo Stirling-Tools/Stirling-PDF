@@ -11,6 +11,8 @@ export const Z_INDEX_FILE_MANAGER_MODAL = 1200;
 export const Z_INDEX_OVER_FILE_MANAGER_MODAL = 1300;
 
 export const Z_INDEX_AUTOMATE_MODAL = 1100;
+// Dropdowns/Popovers inside automation modals need to be above the modal
+export const Z_INDEX_AUTOMATE_DROPDOWN = 1200;
 
 // page editor Zindexes
 export const Z_INDEX_HOVER_ACTION_MENU = 100;

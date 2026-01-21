@@ -1,6 +1,7 @@
 import { Stack, Select, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ConvertToEpubSettingsProps {
   parameters: ConvertParameters;
@@ -83,6 +84,7 @@ const ConvertToEpubSettings = ({
             label: t("convert.epubOptions.kindleEink", "Kindle e-Ink (text optimized)") 
           }
         ]}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       <Select
@@ -95,6 +97,7 @@ const ConvertToEpubSettings = ({
           { value: 'EPUB', label: 'EPUB' },
           { value: 'AZW3', label: 'AZW3' }
         ]}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
     </Stack>
   );

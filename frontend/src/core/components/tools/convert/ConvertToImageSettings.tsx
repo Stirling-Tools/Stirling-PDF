@@ -2,6 +2,7 @@ import { Stack, Text, Select, NumberInput, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { COLOR_TYPES, OUTPUT_OPTIONS } from "@app/constants/convertConstants";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ConvertToImageSettingsProps {
   parameters: ConvertParameters;
@@ -34,6 +35,7 @@ const ConvertToImageSettings = ({
             { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
           ]}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
         <NumberInput
           data-testid="dpi-input"
@@ -62,6 +64,7 @@ const ConvertToImageSettings = ({
           { value: OUTPUT_OPTIONS.MULTIPLE, label: t("convert.multiple", "Multiple") },
         ]}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
     </Stack>
   );

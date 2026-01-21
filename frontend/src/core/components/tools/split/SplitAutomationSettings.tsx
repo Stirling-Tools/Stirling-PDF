@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { SplitParameters } from "@app/hooks/tools/split/useSplitParameters";
 import { METHOD_OPTIONS, SplitMethod } from "@app/constants/splitConstants";
 import SplitSettings from "@app/components/tools/split/SplitSettings";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface SplitAutomationSettingsProps {
   parameters: SplitParameters;
@@ -40,6 +41,7 @@ const SplitAutomationSettings = ({ parameters, onParameterChange, disabled = fal
         onChange={(value) => onParameterChange('method', value as (SplitMethod | '') || '')}
         data={methodSelectOptions}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       {/* Method-Specific Settings */}

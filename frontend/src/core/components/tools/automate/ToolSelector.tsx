@@ -7,6 +7,7 @@ import { renderToolButtons } from '@app/components/tools/shared/renderToolButton
 import ToolSearch from '@app/components/tools/toolPicker/ToolSearch';
 import ToolButton from '@app/components/tools/toolPicker/ToolButton';
 import { ToolId } from '@app/types/toolId';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from '@app/styles/zIndex';
 
 interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;
@@ -188,7 +189,7 @@ export default function ToolSelector({
             top: '100%',
             left: 0,
             right: 0,
-            zIndex: 1000,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
             backgroundColor: 'var(--mantine-color-body)',
             border: '1px solid var(--mantine-color-gray-3)',
             borderRadius: 'var(--mantine-radius-sm)',

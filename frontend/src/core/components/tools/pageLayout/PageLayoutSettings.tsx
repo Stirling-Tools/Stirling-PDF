@@ -2,6 +2,7 @@ import { Divider, Select, Stack, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
 import { getPagesPerSheetOptions } from '@app/components/tools/pageLayout/constants';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 export default function PageLayoutSettings({
   parameters,
@@ -28,6 +29,7 @@ export default function PageLayoutSettings({
         value={String(parameters.pagesPerSheet)}
         onChange={(v) => onParameterChange('pagesPerSheet', Number(v))}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       {selected && (

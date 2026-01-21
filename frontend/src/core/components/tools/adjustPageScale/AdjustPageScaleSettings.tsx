@@ -1,6 +1,7 @@
 import { Stack, NumberInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AdjustPageScaleParameters, PageSize } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface AdjustPageScaleSettingsProps {
   parameters: AdjustPageScaleParameters;
@@ -47,6 +48,7 @@ const AdjustPageScaleSettings = ({ parameters, onParameterChange, disabled = fal
         }}
         data={pageSizeOptions}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
     </Stack>
   );

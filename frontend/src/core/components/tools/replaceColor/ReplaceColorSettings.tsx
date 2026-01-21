@@ -1,6 +1,7 @@
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ReplaceColorParameters } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ReplaceColorSettingsProps {
   parameters: ReplaceColorParameters;
@@ -60,6 +61,7 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
           onChange={(value) => value && onParameterChange('replaceAndInvertOption', value as ReplaceColorParameters['replaceAndInvertOption'])}
           data={replaceAndInvertOptions}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       </Stack>
 
@@ -73,6 +75,7 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
             onChange={(value) => value && onParameterChange('highContrastColorCombination', value as ReplaceColorParameters['highContrastColorCombination'])}
             data={highContrastOptions}
             disabled={disabled}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
           />
         </Stack>
       )}
@@ -88,6 +91,7 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
               onChange={(value) => onParameterChange('textColor', value)}
               format="hex"
               disabled={disabled}
+              popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
             />
           </Stack>
 
@@ -100,6 +104,7 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
               onChange={(value) => onParameterChange('backGroundColor', value)}
               format="hex"
               disabled={disabled}
+              popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
             />
           </Stack>
         </>
