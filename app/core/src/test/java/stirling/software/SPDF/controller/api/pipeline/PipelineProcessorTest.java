@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -13,12 +15,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import jakarta.servlet.ServletContext;
 
@@ -124,6 +130,91 @@ class PipelineProcessorTest {
 
         // Clean up
         Files.deleteIfExists(tempPath);
+    }
+
+    @Test
+    void sendWebRequestDoesNotForceContentType() throws Exception {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add(
+                "fileInput",
+                new ByteArrayResource("data".getBytes(StandardCharsets.UTF_8)) {
+                    @Override
+                    public String getFilename() {
+                        return "input.pdf";
+                    }
+                });
+
+        Path tempPath = Files.createTempFile("pipeline-test", ".tmp");
+        var tempFile = mock(stirling.software.common.util.TempFile.class);
+        when(tempFile.getPath()).thenReturn(tempPath);
+        when(tempFile.getFile()).thenReturn(tempPath.toFile());
+        when(tempFileManager.createManagedTempFile("pipeline")).thenReturn(tempFile);
+
+        var capturedHeaders = new org.springframework.http.HttpHeaders[1];
+
+        try (MockedConstruction<org.springframework.web.client.RestTemplate> ignored =
+                mockConstruction(
+                        org.springframework.web.client.RestTemplate.class,
+                        (mock, context) -> {
+                            when(mock.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenAnswer(
+                                            invocation -> {
+                                                var entity = invocation.getArgument(0);
+                                                capturedHeaders[0] =
+                                                        ((org.springframework.http.HttpEntity<?>)
+                                                                        entity)
+                                                                .getHeaders();
+                                                return (org.springframework.web.client
+                                                                .RequestCallback)
+                                                        request -> {};
+                                            });
+
+                            when(mock.execute(
+                                            anyString(),
+                                            eq(org.springframework.http.HttpMethod.POST),
+                                            any(),
+                                            any()))
+                                    .thenAnswer(
+                                            invocation -> {
+                                                @SuppressWarnings("unchecked")
+                                                var extractor =
+                                                        (org.springframework.web.client
+                                                                                .ResponseExtractor<
+                                                                        ResponseEntity<Resource>>)
+                                                                invocation.getArgument(3);
+                                                ClientHttpResponse response =
+                                                        mock(ClientHttpResponse.class);
+                                                when(response.getBody())
+                                                        .thenReturn(
+                                                                new ByteArrayInputStream(
+                                                                        "ok"
+                                                                                .getBytes(
+                                                                                        StandardCharsets
+                                                                                                .UTF_8)));
+                                                var headers =
+                                                        new org.springframework.http.HttpHeaders();
+                                                headers.add(
+                                                        org.springframework.http.HttpHeaders
+                                                                .CONTENT_DISPOSITION,
+                                                        "attachment; filename=\"out.pdf\"");
+                                                when(response.getHeaders()).thenReturn(headers);
+                                                when(response.getStatusCode())
+                                                        .thenReturn(HttpStatus.OK);
+                                                when(response.getRawStatusCode())
+                                                        .thenReturn(HttpStatus.OK.value());
+                                                return extractor.extractData(response);
+                                            });
+                        })) {
+            ResponseEntity<Resource> response =
+                    pipelineProcessor.sendWebRequest("http://localhost/api", body);
+
+            assertNotNull(response);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertNull(capturedHeaders[0].getContentType());
+        } finally {
+            Files.deleteIfExists(tempPath);
+        }
     }
 
     private static class MyFileByteArrayResource extends ByteArrayResource {
