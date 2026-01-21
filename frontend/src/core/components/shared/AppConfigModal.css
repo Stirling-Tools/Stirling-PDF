@@ -57,12 +57,35 @@
   overflow-y: auto;
   padding: 1rem;
   padding-bottom: 2rem;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.modal-nav-scroll:hover {
+  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
 }
 
 .modal-nav-scroll::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+}
+
+.modal-nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-nav-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.modal-nav-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+}
+
+.modal-nav-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.7);
 }
 
 .modal-nav-section {
@@ -94,12 +117,35 @@
 .modal-content-scroll {
   flex: 1;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.modal-content-scroll:hover {
+  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
 }
 
 .modal-content-scroll::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+}
+
+.modal-content-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-content-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.modal-content-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+}
+
+.modal-content-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.7);
 }
 
 .modal-header {
