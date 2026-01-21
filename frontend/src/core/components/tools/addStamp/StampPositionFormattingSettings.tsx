@@ -4,6 +4,7 @@ import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampPa
 import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
   parameters: AddStampParameters;
@@ -176,6 +177,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
           onChange={(value) => onParameterChange('customColor', value)}
           format="hex"
           disabled={disabled}
+          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       )}
 
@@ -192,6 +194,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
             { value: 'x-large', label: t('margin.xLarge', 'Extra Large') },
           ]}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       )}
     </Stack>

@@ -3,6 +3,7 @@ import { Stack, Select, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LanguagePicker from '@app/components/tools/ocr/LanguagePicker';
 import { OCRParameters } from '@app/hooks/tools/ocr/useOCRParameters';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from '@app/styles/zIndex';
 
 interface OCRSettingsProps {
   parameters: OCRParameters;
@@ -30,6 +31,7 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
           { value: 'Normal', label: t('ocr.settings.ocrMode.strict', 'Strict (abort if text found)') },
         ]}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       <Divider />

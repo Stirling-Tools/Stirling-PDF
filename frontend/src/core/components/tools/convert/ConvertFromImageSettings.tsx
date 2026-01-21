@@ -2,6 +2,7 @@ import { Stack, Text, Select, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { COLOR_TYPES, FIT_OPTIONS } from "@app/constants/convertConstants";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ConvertFromImageSettingsProps {
   parameters: ConvertParameters;
@@ -33,6 +34,7 @@ const ConvertFromImageSettings = ({
           { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
         ]}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       <Select
@@ -49,6 +51,7 @@ const ConvertFromImageSettings = ({
           { value: FIT_OPTIONS.FILL_PAGE, label: t("convert.fillPage", "Fill Page") },
         ]}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       <Switch
