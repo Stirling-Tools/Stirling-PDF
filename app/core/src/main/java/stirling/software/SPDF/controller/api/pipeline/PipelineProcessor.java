@@ -18,10 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
-import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -287,17 +287,19 @@ public class PipelineProcessor {
         // Set up headers, including API key
         HttpHeaders headers = new HttpHeaders();
         String apiKey = getApiKeyForUser();
-        headers.add("X-API-KEY", apiKey);
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        if (apiKey != null && !apiKey.isEmpty()) {
+            headers.add("X-API-KEY", apiKey);
+        }
 
+        // Let the message converter set the multipart boundary/content type
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        RequestCallback requestCallback =
+                restTemplate.httpEntityCallback(entity, Resource.class /* response type hint */);
         return restTemplate.execute(
                 url,
                 HttpMethod.POST,
-                request -> {
-                    request.getHeaders().putAll(headers);
-                    new FormHttpMessageConverter()
-                            .write(body, MediaType.MULTIPART_FORM_DATA, request);
-                },
+                requestCallback,
                 response -> {
                     try {
                         TempFile tempFile = tempFileManager.createManagedTempFile("pipeline");
