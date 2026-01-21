@@ -198,10 +198,9 @@ class PipelineProcessorTest {
                                                                 .CONTENT_DISPOSITION,
                                                         "attachment; filename=\"out.pdf\"");
                                                 when(response.getHeaders()).thenReturn(headers);
-                                                when(response.getStatusCode())
+                                                lenient()
+                                                        .when(response.getStatusCode())
                                                         .thenReturn(HttpStatus.OK);
-                                                when(response.getRawStatusCode())
-                                                        .thenReturn(HttpStatus.OK.value());
                                                 return extractor.extractData(response);
                                             });
                         })) {
