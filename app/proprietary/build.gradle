@@ -1,5 +1,5 @@
 repositories {
-    maven { url = "https://build.shibboleth.net/maven/releases" }
+    maven { url "https://build.shibboleth.net/maven/releases" }
 }
 
 ext {
@@ -53,7 +53,7 @@ dependencies {
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.15.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
-    implementation 'org.bouncycastle:bcprov-jdk18on:1.83'
+    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
     api 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:4.1.0'
