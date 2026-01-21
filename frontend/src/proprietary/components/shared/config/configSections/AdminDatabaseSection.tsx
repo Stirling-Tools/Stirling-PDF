@@ -59,6 +59,7 @@ export default function AdminDatabaseSection() {
   const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [confirmImportOpen, setConfirmImportOpen] = useState(false);
+  const [deleteConfirmFile, setDeleteConfirmFile] = useState<string | null>(null);
   const [confirmCode, setConfirmCode] = useState("");
   const [confirmInput, setConfirmInput] = useState("");
 
@@ -152,7 +153,7 @@ export default function AdminDatabaseSection() {
 
   useEffect(() => {
     loadBackupData();
-  }, [loginEnabled, isEmbeddedH2]);
+  }, [loginEnabled, isEmbeddedH2, isCustomDatabase, datasourceType]);
 
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
@@ -210,16 +211,33 @@ export default function AdminDatabaseSection() {
     }
   };
 
+  const generateConfirmationCode = () => {
+    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      const randomNumber = array[0] % 10000; // 0-9999
+      return randomNumber.toString().padStart(4, "0");
+    }
+    // Fallback: non-cryptographic but avoids Math.random(); this is only a UX safeguard.
+    const fallbackNumber = Date.now() % 10000;
+    return fallbackNumber.toString().padStart(4, "0");
+  };
+
   const handleUploadImport = () => {
     if (!validateLoginEnabled()) return;
     if (!uploadFile) {
       alert({ alertType: "warning", title: t("admin.settings.database.selectFile", "Please select a .sql file to import") });
       return;
     }
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    const code = generateConfirmationCode();
     setConfirmCode(code);
     setConfirmInput("");
     setConfirmImportOpen(true);
+  };
+
+  const closeConfirmImportModal = () => {
+    setConfirmImportOpen(false);
+    setConfirmInput("");
   };
 
   const handleConfirmImport = async () => {
@@ -231,7 +249,7 @@ export default function AdminDatabaseSection() {
       });
       return;
     }
-    setConfirmImportOpen(false);
+    closeConfirmImportModal();
     await performUploadImport();
   };
 
@@ -256,8 +274,6 @@ export default function AdminDatabaseSection() {
 
   const handleDelete = async (fileName: string) => {
     if (!validateLoginEnabled()) return;
-    const confirmed = window.confirm(t("admin.settings.database.deleteConfirm", "Delete this backup? This cannot be undone."));
-    if (!confirmed) return;
     setDeletingFile(fileName);
     try {
       await databaseManagementService.deleteBackup(fileName);
@@ -272,22 +288,28 @@ export default function AdminDatabaseSection() {
       });
     } finally {
       setDeletingFile(null);
+      setDeleteConfirmFile(null);
     }
+  };
+
+  const handleDeleteClick = (fileName: string) => {
+    if (!validateLoginEnabled()) return;
+    setDeleteConfirmFile(fileName);
   };
 
   const handleDownload = async (fileName: string) => {
     if (!validateLoginEnabled()) return;
     setDownloadingFile(fileName);
+    let url: string | null = null;
+
+    const link = document.createElement("a");
     try {
       const blob = await databaseManagementService.downloadBackup(fileName);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      url = window.URL.createObjectURL(blob);
       link.href = url;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message;
       alert({
@@ -296,6 +318,12 @@ export default function AdminDatabaseSection() {
         body: message,
       });
     } finally {
+      if (link.isConnected) {
+        link.remove();
+      }
+      if (url) {
+        window.URL.revokeObjectURL(url);
+      }
       setDownloadingFile(null);
     }
   };
@@ -666,7 +694,7 @@ export default function AdminDatabaseSection() {
                               <ActionIcon
                                 variant="subtle"
                                 color="red"
-                                onClick={() => handleDelete(backup.fileName)}
+                                onClick={() => handleDeleteClick(backup.fileName)}
                                 disabled={!loginEnabled || !isEmbeddedH2}
                               >
                                 {deletingFile === backup.fileName ? (
@@ -693,7 +721,7 @@ export default function AdminDatabaseSection() {
 
       <Modal
         opened={confirmImportOpen}
-        onClose={() => setConfirmImportOpen(false)}
+        onClose={closeConfirmImportModal}
         title={t("admin.settings.database.confirmImportTitle", "Confirm database import")}
         centered
         withinPortal
@@ -728,11 +756,43 @@ export default function AdminDatabaseSection() {
             />
           </Stack>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={() => setConfirmImportOpen(false)} disabled={importingUpload}>
+            <Button variant="default" onClick={closeConfirmImportModal} disabled={importingUpload}>
               {t("cancel", "Cancel")}
             </Button>
             <Button color="red" onClick={handleConfirmImport} loading={importingUpload} disabled={confirmInput.length === 0}>
               {t("admin.settings.database.confirmImport", "Confirm import")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={deleteConfirmFile !== null}
+        onClose={() => setDeleteConfirmFile(null)}
+        title={t("admin.settings.database.deleteTitle", "Delete backup")}
+        centered
+        withinPortal
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+      >
+        <Stack gap="md">
+          <Alert color="red" variant="light" icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}>
+            <Text fw={600}>
+              {t("admin.settings.database.deleteConfirm", "Delete this backup? This cannot be undone.")}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {deleteConfirmFile}
+            </Text>
+          </Alert>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setDeleteConfirmFile(null)} disabled={deletingFile !== null}>
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button
+              color="red"
+              onClick={() => deleteConfirmFile && handleDelete(deleteConfirmFile)}
+              loading={deletingFile === deleteConfirmFile}
+            >
+              {t("admin.settings.database.deleteConfirmAction", "Delete backup")}
             </Button>
           </Group>
         </Stack>
