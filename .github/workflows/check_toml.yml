@@ -7,6 +7,8 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "frontend/public/locales/*/translation.toml"
+      - ".github/scripts/check_language_toml.py"
+      - ".github/workflows/check_toml.yml"
 
 # cancel in-progress jobs if a new job is triggered
 concurrency:

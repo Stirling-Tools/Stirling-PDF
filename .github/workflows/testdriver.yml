@@ -44,12 +44,15 @@ jobs:
           gradle-version: 8.14
 
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew build
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Get version number
         id: versionNumber

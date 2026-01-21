@@ -2,10 +2,6 @@ apply plugin: 'org.springframework.boot'
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-repositories {
-    maven { url = 'https://build.shibboleth.net/maven/releases' }
-}
-
 configurations {
     developmentOnly
     runtimeClasspath {
@@ -82,6 +78,9 @@ dependencies {
 
     // Batik
     implementation 'org.apache.xmlgraphics:batik-all:1.19'
+
+    // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
+    implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
@@ -189,6 +188,14 @@ tasks.register('npmInstall', Exec) {
             println "node_modules not found, will install..."
             return true
         }
+
+        // if required devDependency is missing, reinstall
+        def iconifyPkg = new File(frontendDir, 'node_modules/@iconify-json/material-symbols/package.json')
+        if (!iconifyPkg.exists()) {
+            println "@iconify-json/material-symbols missing, will reinstall..."
+            return true
+        }
+
         def packageJson = new File(frontendDir, 'package.json')
         def packageLock = new File(frontendDir, 'package-lock.json')
         def isOutdated = nodeModules.lastModified() < packageJson.lastModified() ||

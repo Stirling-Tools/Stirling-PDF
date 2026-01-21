@@ -52,7 +52,7 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
           operation: operation,
           name: getToolName(operation),
           configured: isConfigured,
-          parameters: typeof op === 'object' ? op.parameters || {} : {}
+          parameters: typeof op === 'object' ? { ...getToolDefaultParameters(operation), ...(op.parameters || {}) } : getToolDefaultParameters(operation)
         };
       });
 
@@ -68,7 +68,7 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
       }));
       setSelectedTools(defaultTools);
     }
-  }, [mode, existingAutomation, t, getToolName]);
+  }, [mode, existingAutomation, t, getToolName, getToolDefaultParameters]);
 
   const addTool = (operation: string) => {
     const toolEntry = toolRegistry[operation as ToolId];
