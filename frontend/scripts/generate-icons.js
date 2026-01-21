@@ -90,13 +90,13 @@ function scanForUsedIcons() {
         }
 
         // Match icon config usage: icon: 'icon-name' or icon: "icon-name"
-        const iconPropertyMatches = content.match(/icon:\s*['"]([a-z0-9-]+)['"]/g);
+        const iconPropertyMatches = content.match(/icon:\s*(['"])([a-z0-9-]+)\1/g);
         if (iconPropertyMatches) {
           iconPropertyMatches.forEach(match => {
-            const iconMatch = match.match(/icon:\s*['"]([a-z0-9-]+)['"]/);
+            const iconMatch = match.match(/icon:\s*(['"])([a-z0-9-]+)\1/);
             if (iconMatch) {
-              usedIcons.add(iconMatch[1]);
-              debug(`  Found (config): ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+              usedIcons.add(iconMatch[2]);
+              debug(`  Found (config): ${iconMatch[2]} in ${path.relative(srcDir, filePath)}`);
             }
           });
         }
