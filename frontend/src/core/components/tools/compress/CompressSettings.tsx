@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 import apiClient from "@app/services/apiClient";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;
@@ -96,6 +97,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
                 { value: 'MB', label: 'MB' }
               ]}
               style={{ width: '80px' }}
+              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
             />
           </div>
         </Stack>
