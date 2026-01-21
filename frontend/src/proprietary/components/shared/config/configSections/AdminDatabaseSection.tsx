@@ -21,7 +21,6 @@ import {
   Divider,
   Box,
   Modal,
-  useMantineTheme,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -48,7 +47,6 @@ interface DatabaseSettingsData {
 
 export default function AdminDatabaseSection() {
   const { t } = useTranslation();
-  const theme = useMantineTheme();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
   const [backupFiles, setBackupFiles] = useState<DatabaseBackupFile[]>([]);
@@ -555,11 +553,7 @@ export default function AdminDatabaseSection() {
           </Alert>
         )}
         {isEmbeddedH2 && (
-          <Paper
-            withBorder
-            p="md"
-            radius="md"
-          >
+          <Paper withBorder p="md" radius="md">
             <Stack gap="md">
               <Group justify="space-between" align="center">
                 <Group gap="xs">
@@ -591,22 +585,22 @@ export default function AdminDatabaseSection() {
                   {t("admin.settings.database.uploadTitle", "Upload & import")}
                 </Text>
                 <Group gap="sm" align="flex-end" wrap="wrap">
-                <FileInput
-                  value={uploadFile}
-                  onChange={setUploadFile}
-                  placeholder={t("admin.settings.database.chooseFile", "Choose a .sql backup file")}
-                  accept=".sql"
+                  <FileInput
+                    value={uploadFile}
+                    onChange={setUploadFile}
+                    placeholder={t("admin.settings.database.chooseFile", "Choose a .sql backup file")}
+                    accept=".sql"
                     disabled={!loginEnabled || !isEmbeddedH2}
                     styles={{ input: { minWidth: 280 } }}
-                />
-                <Button
-                  variant="outline"
-                  onClick={handleUploadImport}
-                  loading={importingUpload}
-                  disabled={!loginEnabled || !isEmbeddedH2}
-                  leftSection={<LocalIcon icon="play-circle" width="1rem" height="1rem" />}
-                >
-                  {t("admin.settings.database.importFromUpload", "Import upload")}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={handleUploadImport}
+                    loading={importingUpload}
+                    disabled={!loginEnabled || !isEmbeddedH2}
+                    leftSection={<LocalIcon icon="play-circle" width="1rem" height="1rem" />}
+                  >
+                    {t("admin.settings.database.importFromUpload", "Import upload")}
                   </Button>
                 </Group>
               </Box>
@@ -707,14 +701,23 @@ export default function AdminDatabaseSection() {
       >
         <Stack gap="md">
           <Alert color="red" variant="light" icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}>
-            <Text fw={600}>{t("admin.settings.database.overwriteWarning", "Warning: This will overwrite the current database.")}</Text>
+            <Text fw={600}>
+              {t("admin.settings.database.overwriteWarning", "Warning: This will overwrite the current database.")}
+            </Text>
             <Text size="sm" c="dimmed">
-              {t("admin.settings.database.overwriteWarningBody", "All existing data will be replaced by the uploaded backup. This action cannot be undone.")}
+              {t(
+                "admin.settings.database.overwriteWarningBody",
+                "All existing data will be replaced by the uploaded backup. This action cannot be undone.",
+              )}
             </Text>
           </Alert>
           <Stack gap={6}>
-            <Text size="sm" fw={600}>{t("admin.settings.database.confirmCodeLabel", "Enter the confirmation code to proceed")}</Text>
-            <Text size="lg" fw={700}>{confirmCode}</Text>
+            <Text size="sm" fw={600}>
+              {t("admin.settings.database.confirmCodeLabel", "Enter the confirmation code to proceed")}
+            </Text>
+            <Text size="lg" fw={700}>
+              {confirmCode}
+            </Text>
             <TextInput
               value={confirmInput}
               onChange={(e) => setConfirmInput(e.currentTarget.value)}
@@ -728,12 +731,7 @@ export default function AdminDatabaseSection() {
             <Button variant="default" onClick={() => setConfirmImportOpen(false)} disabled={importingUpload}>
               {t("cancel", "Cancel")}
             </Button>
-            <Button
-              color="red"
-              onClick={handleConfirmImport}
-              loading={importingUpload}
-              disabled={confirmInput.length === 0}
-            >
+            <Button color="red" onClick={handleConfirmImport} loading={importingUpload} disabled={confirmInput.length === 0}>
               {t("admin.settings.database.confirmImport", "Confirm import")}
             </Button>
           </Group>
