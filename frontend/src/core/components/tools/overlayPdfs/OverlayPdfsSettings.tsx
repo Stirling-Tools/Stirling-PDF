@@ -4,6 +4,7 @@ import { type OverlayPdfsParameters, type OverlayMode } from '@app/hooks/tools/o
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import styles from '@app/components/tools/overlayPdfs/OverlayPdfsSettings.module.css';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface OverlayPdfsSettingsProps {
   parameters: OverlayPdfsParameters;
@@ -56,6 +57,7 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
           value={parameters.overlayMode}
           onChange={(v) => handleModeChange((v || 'SequentialOverlay') as OverlayMode)}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       </Stack>
 
