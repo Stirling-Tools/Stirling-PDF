@@ -25,8 +25,7 @@ jobs:
         github.event.comment.user.login == 'frooodle' ||
         github.event.comment.user.login == 'sf298' ||
         github.event.comment.user.login == 'Ludy87' ||
-        github.event.comment.user.login == 'LaserKaspar' ||
-        github.event.comment.user.login == 'sbplat' ||
+        github.event.comment.user.login == 'balazs-szucs' ||
         github.event.comment.user.login == 'reecebrowne' ||
         github.event.comment.user.login == 'DarioGii' ||
         github.event.comment.user.login == 'EthanHealy01' ||
@@ -41,12 +40,12 @@ jobs:
       enable_enterprise: ${{ steps.check-pro-flag.outputs.enable_enterprise }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Checkout PR
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Setup GitHub App Bot
         if: github.actor != 'dependabot[bot]'
@@ -129,12 +128,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Checkout PR
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Setup GitHub App Bot
         if: github.actor != 'dependabot[bot]'
@@ -146,7 +145,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Checkout PR
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: refs/pull/${{ needs.check-comment.outputs.pr_number }}/merge
           token: ${{ steps.setup-bot.outputs.token }}
@@ -154,8 +153,13 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
 
       - name: Run Gradle Command
         run: |
@@ -164,12 +168,15 @@ jobs:
           else
             export DISABLE_ADDITIONAL_FEATURES=false
           fi
-          ./gradlew clean build
+          ./gradlew build
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Login to Docker Hub
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
@@ -190,7 +197,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
       - name: Deploy to VPS
@@ -252,9 +259,9 @@ jobs:
           EOF
 
           # Then copy the file and execute commands
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
 
@@ -336,7 +343,7 @@ jobs:
             const prNumber = ${{ needs.check-comment.outputs.pr_number }};
             const securityStatus = process.env.security_status || "Security Disabled";
 
-            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${prNumber}`;
+            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${prNumber}`;
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
                               `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n` +
@@ -363,12 +370,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Check out the repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Setup GitHub App Bot
         id: setup-bot
