@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -37,6 +39,10 @@ public class GeneralUtils {
      * Maximum number of resolved DNS addresses allowed for a host before it is considered unsafe.
      */
     private static final int MAX_DNS_ADDRESSES = 20;
+
+    // Constants for size conversion
+    private static final BigDecimal KIB = BigDecimal.valueOf(1024L);
+    private static final BigDecimal LONG_MAX_DECIMAL = BigDecimal.valueOf(Long.MAX_VALUE);
 
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
@@ -539,39 +545,26 @@ public class GeneralUtils {
 
         try {
             if (sizeStr.endsWith("TB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024L
-                                * 1024L
-                                * 1024L
-                                * 1024L);
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 4);
             } else if (sizeStr.endsWith("GB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024L
-                                * 1024L
-                                * 1024L);
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 3);
             } else if (sizeStr.endsWith("MB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024L
-                                * 1024L);
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 2);
             } else if (sizeStr.endsWith("KB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024L);
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 1);
             } else if (!sizeStr.isEmpty() && sizeStr.charAt(sizeStr.length() - 1) == 'B') {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 1)), 0);
             } else {
                 // Use provided default unit or fall back to MB
                 String unit = defaultUnit != null ? defaultUnit.toUpperCase(Locale.ROOT) : "MB";
-                double value = Double.parseDouble(sizeStr);
+                BigDecimal value = parseSizeValue(sizeStr);
                 return switch (unit) {
-                    case "TB" -> (long) (value * 1024L * 1024L * 1024L * 1024L);
-                    case "GB" -> (long) (value * 1024L * 1024L * 1024L);
-                    case "MB" -> (long) (value * 1024L * 1024L);
-                    case "KB" -> (long) (value * 1024L);
-                    case "B" -> (long) value;
-                    default -> (long) (value * 1024L * 1024L); // Default to MB
+                    case "TB" -> toBytes(value, 4);
+                    case "GB" -> toBytes(value, 3);
+                    case "MB" -> toBytes(value, 2);
+                    case "KB" -> toBytes(value, 1);
+                    case "B" -> toBytes(value, 0);
+                    default -> toBytes(value, 2); // Default to MB
                 };
             }
         } catch (NumberFormatException e) {
@@ -588,6 +581,30 @@ public class GeneralUtils {
      */
     public Long convertSizeToBytes(String sizeStr) {
         return convertSizeToBytes(sizeStr, "MB");
+    }
+
+    private Long toBytes(BigDecimal value, int powerOf1024) {
+        if (value == null) {
+            return null;
+        }
+        if (value.compareTo(BigDecimal.ZERO) < 0) {
+            log.warn("Size value cannot be negative: {}", value);
+            return null;
+        }
+        if (powerOf1024 < 0 || powerOf1024 > 4) {
+            throw new IllegalArgumentException("Invalid power for size conversion: " + powerOf1024);
+        }
+        BigDecimal multiplier = powerOf1024 == 0 ? BigDecimal.ONE : KIB.pow(powerOf1024);
+        BigDecimal bytes = value.multiply(multiplier).setScale(0, RoundingMode.DOWN);
+        if (bytes.compareTo(LONG_MAX_DECIMAL) > 0) {
+            log.warn("Size value too large to fit in long: {}", bytes);
+            return null;
+        }
+        return bytes.longValue();
+    }
+
+    private BigDecimal parseSizeValue(String value) {
+        return new BigDecimal(value);
     }
 
     /* Validates if a string represents a valid size unit. */
