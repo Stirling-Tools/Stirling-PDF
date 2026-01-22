@@ -37,7 +37,9 @@ public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(value = "/multi-page-layout", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/multi-page-layout",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =

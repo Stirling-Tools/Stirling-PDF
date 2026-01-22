@@ -37,7 +37,9 @@ public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-text")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-contains-text")
     @Operation(
             summary = "Checks if a PDF contains set text, returns true if does",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -66,7 +68,9 @@ public class FilterController {
         return ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-contains-image")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-contains-image")
     @Operation(
             summary = "Checks if a PDF contains an image",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -94,7 +98,9 @@ public class FilterController {
         return ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-count")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-count")
     @Operation(
             summary = "Checks if a PDF is greater, less or equal to a setPageCount",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -190,7 +196,9 @@ public class FilterController {
                 : ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-rotation")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-rotation")
     @Operation(
             summary = "Checks if a PDF is of a certain rotation",
             description = "Input:PDF Output:Boolean Type:SISO")
