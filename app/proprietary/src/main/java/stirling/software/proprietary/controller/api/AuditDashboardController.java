@@ -119,7 +119,7 @@ public class AuditDashboardController {
             @Schema(
                             description = "Number of days to look back for audit events",
                             example = "7",
-                            required = true)
+                            requiredMode = Schema.RequiredMode.REQUIRED)
                     @RequestParam(value = "days", defaultValue = "7")
                     int days) {
 

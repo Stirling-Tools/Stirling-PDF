@@ -1,9 +1,9 @@
 package stirling.software.proprietary.security.oauth2;
 
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
-import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
+import java.net.URI;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
@@ -114,10 +114,10 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
                 return;
             }
+            boolean isSsoUser = userService.isSsoAuthenticationTypeByUsername(username);
             if (userExists
                     && userService.hasPassword(username)
-                    && (!userService.isAuthenticationTypeByUsername(username, SSO)
-                            || !userService.isAuthenticationTypeByUsername(username, OAUTH2))
+                    && !isSsoUser
                     && oauth2Properties.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
@@ -259,19 +259,23 @@ public class CustomOAuth2AuthenticationSuccessHandler
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
-                java.net.URL refererUrl = new java.net.URL(referer);
-                String refererHost = refererUrl.getHost().toLowerCase();
+                URI refererUri = URI.create(referer);
+                String host = refererUri.getHost();
+                if (host == null) {
+                    return Optional.empty();
+                }
+
+                String refererHost = host.toLowerCase();
 
                 if (!isOAuthProviderDomain(refererHost)) {
-                    String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
-                    if (refererUrl.getPort() != -1
-                            && refererUrl.getPort() != 80
-                            && refererUrl.getPort() != 443) {
-                        origin += ":" + refererUrl.getPort();
+                    String origin = refererUri.getScheme() + "://" + host;
+                    int port = refererUri.getPort();
+                    if (port != -1 && port != 80 && port != 443) {
+                        origin += ":" + port;
                     }
                     return Optional.of(origin);
                 }
-            } catch (java.net.MalformedURLException e) {
+            } catch (IllegalArgumentException e) {
                 // ignore and fall back
             }
         }

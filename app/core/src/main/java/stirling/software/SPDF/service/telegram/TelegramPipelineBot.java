@@ -82,7 +82,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
     @PostConstruct
     public void register() {
-        if (StringUtils.isAnyBlank(getBotUsername(), getBotToken())) {
+        if (StringUtils.isAnyBlank(getBotUsername(), this.telegramProperties.getBotToken())) {
             log.warn("Telegram bot disabled because botToken or botUsername is not configured");
             return;
         }
@@ -392,7 +392,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
                     new URI(
                             "https",
                             "api.telegram.org",
-                            "/file/bot" + getBotToken() + "/" + filePath,
+                            "/file/bot" + this.telegramProperties.getBotToken() + "/" + filePath,
                             null);
             return uri.toURL();
         } catch (URISyntaxException e) {
@@ -515,10 +515,5 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     @Override
     public String getBotUsername() {
         return telegramProperties.getBotUsername();
-    }
-
-    @Override
-    public String getBotToken() {
-        return telegramProperties.getBotToken();
     }
 }

@@ -2,6 +2,7 @@ package stirling.software.SPDF.service;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -510,7 +511,7 @@ public class CertificateValidationService {
     private byte[] downloadTrustList(String urlStr) {
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(urlStr);
+            URL url = URI.create(urlStr).toURL();
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(10_000);
@@ -700,7 +701,7 @@ public class CertificateValidationService {
     private byte[] downloadXml(String urlStr) {
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(urlStr);
+            URL url = URI.create(urlStr).toURL();
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(10_000);

@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -390,9 +391,19 @@ public class UserController {
             }
         }
 
-        if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            userService.saveUser(username, AuthenticationType.SSO, effectiveTeamId, role);
+        AuthenticationType requestedAuthType;
+        if ("SSO".equalsIgnoreCase(authType)) {
+            requestedAuthType = AuthenticationType.OAUTH2;
         } else {
+            try {
+                requestedAuthType = AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid authentication type specified."));
+            }
+        }
+
+        if (requestedAuthType == AuthenticationType.WEB) {
             if (password == null || password.isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required."));
@@ -402,6 +413,8 @@ public class UserController {
                         .body(Map.of("error", "Password must be at least 6 characters."));
             }
             userService.saveUser(username, password, effectiveTeamId, role, forceChange);
+        } else {
+            userService.saveUser(username, requestedAuthType, effectiveTeamId, role);
         }
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
     }
