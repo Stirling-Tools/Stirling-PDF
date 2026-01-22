@@ -9,11 +9,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -31,14 +33,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.*;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempDirectory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
 @Slf4j
@@ -49,6 +57,7 @@ public class OCRController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
+    private final RuntimePathConfig runtimePathConfig;
 
     private boolean isOcrMyPdfEnabled() {
         return endpointConfiguration.isGroupEnabled("OCRmyPDF");
@@ -60,7 +69,7 @@ public class OCRController {
 
     /** Gets the list of available Tesseract languages from the tessdata directory */
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = applicationProperties.getSystem().getTessdataDir();
+        String tessdataDir = runtimePathConfig.getTessDataPath();
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
@@ -73,13 +82,13 @@ public class OCRController {
     }
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/ocr-pdf")
-    @StandardPdfResponse
     @Operation(
             summary = "Process a PDF file with OCR",
             description =
-                    "This endpoint processes a PDF file using OCR (Optical Character Recognition). "
-                            + "Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. "
-                            + "Uses OCRmyPDF if available, falls back to Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
+                    "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can"
+                            + " specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType,"
+                            + " and removeImagesAfter options. Uses OCRmyPDF if available, falls back to"
+                            + " Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
     public ResponseEntity<byte[]> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
@@ -98,7 +107,7 @@ public class OCRController {
         }
 
         if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
-            throw new IOException("ocrRenderType wrong");
+            throw ExceptionUtils.createOcrInvalidRenderTypeException();
         }
 
         // Get available Tesseract languages
@@ -214,7 +223,7 @@ public class OCRController {
         List<String> command =
                 new ArrayList<>(
                         Arrays.asList(
-                                "ocrmypdf",
+                                runtimePathConfig.getOcrMyPdfPath(),
                                 "--verbose",
                                 "2",
                                 "--output-type",
@@ -243,6 +252,7 @@ public class OCRController {
                 command.add("--force-ocr");
             }
         }
+        command.add("--invalidate-digital-signatures");
 
         command.addAll(
                 Arrays.asList(
@@ -267,7 +277,7 @@ public class OCRController {
         }
 
         if (result.getRc() != 0) {
-            throw new IOException("OCRmyPDF failed with return code: " + result.getRc());
+            throw ExceptionUtils.createOcrProcessingFailedException(result.getRc());
         }
 
         // Remove images from the OCR processed PDF if the flag is set to true
@@ -313,6 +323,8 @@ public class OCRController {
 
             try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(
+                        true); // Enable subsampling to reduce memory usage
                 int pageCount = document.getNumberOfPages();
 
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
@@ -334,7 +346,9 @@ public class OCRController {
                             };
 
                     File pageOutputPath =
-                            new File(tempOutputDir, String.format("page_%d.pdf", pageNum));
+                            new File(
+                                    tempOutputDir,
+                                    String.format(Locale.ROOT, "page_%d.pdf", pageNum));
 
                     if (shouldOcr) {
                         // Convert page to image
@@ -346,18 +360,18 @@ public class OCRController {
                                 && applicationProperties.getSystem() != null) {
                             renderDpi = applicationProperties.getSystem().getMaxDPI();
                         }
+                        final int dpi = renderDpi;
+                        final int currentPageNum = pageNum;
 
-                        try {
-                            image = pdfRenderer.renderImageWithDPI(pageNum, renderDpi);
-                        } catch (OutOfMemoryError e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageNum + 1, renderDpi, e);
-                        } catch (NegativeArraySizeException e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageNum + 1, renderDpi, e);
-                        }
+                        image =
+                                ExceptionUtils.handleOomRendering(
+                                        currentPageNum + 1,
+                                        dpi,
+                                        () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
                         File imagePath =
-                                new File(tempImagesDir, String.format("page_%d.png", pageNum));
+                                new File(
+                                        tempImagesDir,
+                                        String.format(Locale.ROOT, "page_%d.png", pageNum));
                         ImageIO.write(image, "png", imagePath);
 
                         // Build OCR command
@@ -365,7 +379,9 @@ public class OCRController {
                         command.add("tesseract");
                         command.add(imagePath.toString());
                         command.add(
-                                new File(tempOutputDir, String.format("page_%d", pageNum))
+                                new File(
+                                                tempOutputDir,
+                                                String.format(Locale.ROOT, "page_%d", pageNum))
                                         .toString());
                         command.add("-l");
                         command.add(String.join("+", selectedLanguages));
@@ -398,7 +414,7 @@ public class OCRController {
             }
 
             // Merge all pages into final PDF
-            merger.mergeDocuments(null);
+            merger.mergeDocuments(IOUtils.createTempFileOnlyStreamCache());
 
             // Copy final output to the expected location
             Files.copy(

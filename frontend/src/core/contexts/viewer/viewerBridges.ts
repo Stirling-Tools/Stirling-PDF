@@ -2,7 +2,7 @@ import { SpreadMode } from '@embedpdf/plugin-spread/react';
 import { PdfBookmarkObject } from '@embedpdf/models';
 
 export interface ScrollAPIWrapper {
-  scrollToPage: (params: { pageNumber: number }) => void;
+  scrollToPage: (params: { pageNumber: number; behavior?: ScrollBehavior }) => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
 }
@@ -47,6 +47,10 @@ export interface SearchAPIWrapper {
   next: () => void;
   previous: () => void;
   goToResult: (index: number) => void;
+}
+
+export interface PrintAPIWrapper {
+  print: () => void;
 }
 
 export interface ThumbnailAPIWrapper {
@@ -132,6 +136,7 @@ export interface BridgeStateMap {
   thumbnail: unknown;
   export: ExportState;
   bookmark: BookmarkState;
+  print: unknown;
 }
 
 export interface BridgeApiMap {
@@ -145,6 +150,7 @@ export interface BridgeApiMap {
   thumbnail: ThumbnailAPIWrapper;
   export: ExportAPIWrapper;
   bookmark: BookmarkAPIWrapper;
+  print: PrintAPIWrapper;
 }
 
 export type BridgeKey = keyof BridgeStateMap;
@@ -164,6 +170,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
   thumbnail: null,
   export: null,
   bookmark: null,
+  print: null,
 });
 
 export function registerBridge<K extends BridgeKey>(

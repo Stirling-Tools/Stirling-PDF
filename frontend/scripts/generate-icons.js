@@ -19,27 +19,27 @@ const debug = (message) => {
 function scanForUsedIcons() {
   const usedIcons = new Set();
   const srcDir = path.join(__dirname, '..', 'src');
-  
+
   info('🔍 Scanning codebase for LocalIcon usage...');
-  
+
   if (!fs.existsSync(srcDir)) {
     console.error('❌ Source directory not found:', srcDir);
     process.exit(1);
   }
-  
+
   // Recursively scan all .tsx and .ts files
   function scanDirectory(dir) {
     const files = fs.readdirSync(dir);
-    
+
     files.forEach(file => {
       const filePath = path.join(dir, file);
       const stat = fs.statSync(filePath);
-      
+
       if (stat.isDirectory()) {
         scanDirectory(filePath);
       } else if (file.endsWith('.tsx') || file.endsWith('.ts')) {
         const content = fs.readFileSync(filePath, 'utf8');
-        
+
         // Match LocalIcon usage: <LocalIcon icon="icon-name" ...>
         const localIconMatches = content.match(/<LocalIcon\s+[^>]*icon="([^"]+)"/g);
         if (localIconMatches) {
@@ -51,7 +51,19 @@ function scanForUsedIcons() {
             }
           });
         }
-        
+
+        // Match LocalIcon usage: <LocalIcon icon='icon-name' ...>
+        const localIconSingleQuoteMatches = content.match(/<LocalIcon\s+[^>]*icon='([^']+)'/g);
+        if (localIconSingleQuoteMatches) {
+          localIconSingleQuoteMatches.forEach(match => {
+            const iconMatch = match.match(/icon='([^']+)'/);
+            if (iconMatch) {
+              usedIcons.add(iconMatch[1]);
+              debug(`  Found: ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+            }
+          });
+        }
+
         // Match old material-symbols-rounded spans: <span className="material-symbols-rounded">icon-name</span>
         const spanMatches = content.match(/<span[^>]*className="[^"]*material-symbols-rounded[^"]*"[^>]*>([^<]+)<\/span>/g);
         if (spanMatches) {
@@ -64,7 +76,7 @@ function scanForUsedIcons() {
             }
           });
         }
-        
+
         // Match Icon component usage: <Icon icon="material-symbols:icon-name" ...>
         const iconMatches = content.match(/<Icon\s+[^>]*icon="material-symbols:([^"]+)"/g);
         if (iconMatches) {
@@ -76,15 +88,27 @@ function scanForUsedIcons() {
             }
           });
         }
+
+        // Match icon config usage: icon: 'icon-name' or icon: "icon-name"
+        const iconPropertyMatches = content.match(/icon:\s*(['"])([a-z0-9-]+)\1/g);
+        if (iconPropertyMatches) {
+          iconPropertyMatches.forEach(match => {
+            const iconMatch = match.match(/icon:\s*(['"])([a-z0-9-]+)\1/);
+            if (iconMatch) {
+              usedIcons.add(iconMatch[2]);
+              debug(`  Found (config): ${iconMatch[2]} in ${path.relative(srcDir, filePath)}`);
+            }
+          });
+        }
       }
     });
   }
-  
+
   scanDirectory(srcDir);
-  
+
   const iconArray = Array.from(usedIcons).sort();
   info(`📋 Found ${iconArray.length} unique icons across codebase`);
-  
+
   return iconArray;
 }
 
@@ -102,7 +126,7 @@ async function main() {
       const existingSet = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
       const existingIcons = Object.keys(existingSet.icons || {}).sort();
       const currentIcons = [...usedIcons].sort();
-      
+
       if (JSON.stringify(existingIcons) === JSON.stringify(currentIcons)) {
         needsRegeneration = false;
         info(`✅ Icon set already up-to-date (${usedIcons.length} icons, ${Math.round(fs.statSync(outputPath).size / 1024)}KB)`);
@@ -122,7 +146,7 @@ async function main() {
 
   // Dynamic import of ES module
   const { getIcons } = await import('@iconify/utils');
-  
+
   // Extract only our used icons from the full set
   const extractedIcons = getIcons(icons, usedIcons);
 

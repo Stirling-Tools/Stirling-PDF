@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Divider, Loader, Alert, Group, Text, Collapse, Button, TextInput, Stack, Paper } from '@mantine/core';
+import { Divider, Loader, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePlans } from '@app/hooks/usePlans';
 import licenseService, { PlanTierGroup, mapLicenseToTier } from '@app/services/licenseService';
@@ -7,28 +7,25 @@ import { useCheckout } from '@app/contexts/CheckoutContext';
 import { useLicense } from '@app/contexts/LicenseContext';
 import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
 import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
+import LicenseKeySection from '@app/components/shared/config/configSections/plan/LicenseKeySection';
 import { alert } from '@app/components/toast';
-import LocalIcon from '@app/components/shared/LocalIcon';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
-import { isSupabaseConfigured } from '@app/services/supabaseClient';
 import { getPreferredCurrency, setCachedCurrency } from '@app/utils/currencyDetection';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@core/components/shared/config/LoginRequiredBanner';
+import { isSupabaseConfigured } from '@app/services/supabaseClient';
 
 const AdminPlanSection: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { openCheckout } = useCheckout();
-  const { licenseInfo, refetchLicense } = useLicense();
+  const { licenseInfo } = useLicense();
   const [currency, setCurrency] = useState<string>(() => {
     // Initialize with auto-detected currency on first render
     return getPreferredCurrency(i18n.language);
   });
   const [useStaticVersion, setUseStaticVersion] = useState(false);
-  const [showLicenseKey, setShowLicenseKey] = useState(false);
-  const [licenseKeyInput, setLicenseKeyInput] = useState<string>('');
-  const [savingLicense, setSavingLicense] = useState(false);
   const { plans, loading, error, refetch } = usePlans(currency);
   const licenseAlert = useLicenseAlert();
 
@@ -40,48 +37,6 @@ const AdminPlanSection: React.FC = () => {
       setUseStaticVersion(true);
     }
   }, [error]);
-
-  const handleSaveLicense = async () => {
-    // Block save if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      setSavingLicense(true);
-      // Allow empty string to clear/remove license
-      const response = await licenseService.saveLicenseKey(licenseKeyInput.trim());
-
-      if (response.success) {
-        // Refresh license context to update all components
-        await refetchLicense();
-
-        alert({
-          alertType: 'success',
-          title: t('admin.settings.premium.key.success', 'License Key Saved'),
-          body: t('admin.settings.premium.key.successMessage', 'Your license key has been activated successfully. No restart required.'),
-        });
-
-        // Clear input
-        setLicenseKeyInput('');
-      } else {
-        alert({
-          alertType: 'error',
-          title: t('admin.error', 'Error'),
-          body: response.error || t('admin.settings.saveError', 'Failed to save license key'),
-        });
-      }
-    } catch (error) {
-      console.error('Failed to save license key:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save license key'),
-      });
-    } finally {
-      setSavingLicense(false);
-    }
-  };
 
   const currencyOptions = [
     { value: 'gbp', label: 'British pound (GBP, £)' },
@@ -257,71 +212,7 @@ const AdminPlanSection: React.FC = () => {
       <Divider />
 
       {/* License Key Section */}
-      <div>
-        <Button
-          variant="subtle"
-          leftSection={<LocalIcon icon={showLicenseKey ? "expand-less-rounded" : "expand-more-rounded"} width="1.25rem" height="1.25rem" />}
-          onClick={() => setShowLicenseKey(!showLicenseKey)}
-        >
-          {t('admin.settings.premium.licenseKey.toggle', 'Got a license key or certificate file?')}
-        </Button>
-
-        <Collapse in={showLicenseKey} mt="md">
-          <Stack gap="md">
-            <Alert
-              variant="light"
-              color="blue"
-              icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
-            >
-              <Text size="sm">
-                {t('admin.settings.premium.licenseKey.info', 'If you have a license key or certificate file from a direct purchase, you can enter it here to activate premium or enterprise features.')}
-              </Text>
-            </Alert>
-
-            {/* Severe warning if license already exists */}
-            {licenseInfo?.licenseKey && (
-              <Alert
-                variant="light"
-                color="red"
-                icon={<LocalIcon icon="warning-rounded" width="1rem" height="1rem" />}
-                title={t('admin.settings.premium.key.overwriteWarning.title', '⚠️ Warning: Existing License Detected')}
-              >
-                <Stack gap="xs">
-                  <Text size="sm" fw={600}>
-                    {t('admin.settings.premium.key.overwriteWarning.line1', 'Overwriting your current license key cannot be undone.')}
-                  </Text>
-                  <Text size="sm">
-                    {t('admin.settings.premium.key.overwriteWarning.line2', 'Your previous license will be permanently lost unless you have backed it up elsewhere.')}
-                  </Text>
-                  <Text size="sm" fw={500}>
-                    {t('admin.settings.premium.key.overwriteWarning.line3', 'Important: Keep license keys private and secure. Never share them publicly.')}
-                  </Text>
-                </Stack>
-              </Alert>
-            )}
-
-            <Paper withBorder p="md" radius="md">
-              <Stack gap="md">
-                <TextInput
-                  label={t('admin.settings.premium.key.label', 'License Key')}
-                  description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.')}
-                  value={licenseKeyInput}
-                  onChange={(e) => setLicenseKeyInput(e.target.value)}
-                  placeholder={licenseInfo?.licenseKey || '00000000-0000-0000-0000-000000000000'}
-                  type="password"
-                  disabled={!loginEnabled || savingLicense}
-                />
-
-                <Group justify="flex-end">
-                  <Button onClick={handleSaveLicense} loading={savingLicense} size="sm" disabled={!loginEnabled}>
-                    {t('admin.settings.save', 'Save Changes')}
-                  </Button>
-                </Group>
-              </Stack>
-            </Paper>
-          </Stack>
-        </Collapse>
-      </div>
+      <LicenseKeySection currentLicenseInfo={licenseInfo ?? undefined} />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
+import { devApiLink } from "@app/constants/links";
 import SplitPdfPanel from "@app/tools/Split";
 import CompressPdfPanel from "@app/tools/Compress";
 import OCRPanel from "@app/tools/OCR";
@@ -27,6 +28,7 @@ import AdjustContrastSingleStepSettings from "@app/components/tools/adjustContra
 import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
+import GetPdfInfo from "@app/tools/GetPdfInfo";
 import AddWatermark from "@app/tools/AddWatermark";
 import AddStamp from "@app/tools/AddStamp";
 import AddAttachments from "@app/tools/AddAttachments";
@@ -43,11 +45,13 @@ import CertSign from "@app/tools/CertSign";
 import BookletImposition from "@app/tools/BookletImposition";
 import Flatten from "@app/tools/Flatten";
 import Rotate from "@app/tools/Rotate";
+import PdfTextEditor from "@app/tools/pdfTextEditor/PdfTextEditor";
 import ChangeMetadata from "@app/tools/ChangeMetadata";
 import Crop from "@app/tools/Crop";
 import Sign from "@app/tools/Sign";
 import AddText from "@app/tools/AddText";
 import AddImage from "@app/tools/AddImage";
+import Annotate from "@app/tools/Annotate";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
@@ -150,6 +154,23 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Proprietary tools (if any)
       ...proprietaryTools,
       // Recommended Tools in order
+      pdfTextEditor: {
+        icon: <LocalIcon icon="edit-square-outline-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.pdfTextEditor.title", "PDF Text Editor"),
+        component: PdfTextEditor,
+        description: t(
+          "home.pdfTextEditor.desc",
+          "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
+        ),
+        categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 1,
+        endpoints: ["text-editor-pdf"],
+        synonyms: getSynonyms(t, "pdfTextEditor"),
+        supportsAutomate: false,
+        automationSettings: null,
+        versionStatus: "alpha",
+      },
       multiTool: {
         icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
@@ -203,7 +224,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false, //TODO make support Sign
       },
       addText: {
-        icon: <LocalIcon icon="material-symbols:text-fields-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="text-fields-rounded" width="1.5rem" height="1.5rem" />,
         name: t('home.addText.title', 'Add Text'),
         component: AddText,
         description: t('home.addText.desc', 'Add custom text anywhere in your PDF'),
@@ -224,6 +245,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: signOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, 'addImage'),
+        supportsAutomate: false,
+      },
+      annotate: {
+        icon: <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />,
+        name: t('home.annotate.title', 'Annotate'),
+        component: Annotate,
+        description: t('home.annotate.desc', 'Highlight, draw, add notes, and shapes directly in the viewer'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: 'viewer',
+        operationConfig: signOperationConfig,
+        automationSettings: null,
+        synonyms: getSynonyms(t, 'annotate'),
         supportsAutomate: false,
       },
 
@@ -323,14 +357,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       getPdfInfo: {
         icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
-        component: null,
+        component: GetPdfInfo,
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         endpoints: ["get-info-on-pdf"],
         synonyms: getSynonyms(t, "getPdfInfo"),
         supportsAutomate: false,
-        automationSettings: null
+        automationSettings: null,
+        maxFiles: 1,
       },
       validateSignature: {
         icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
@@ -764,7 +799,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devApi.desc", "Link to API documentation"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://stirlingpdf.io/swagger-ui/5.21.0/index.html",
+        link: devApiLink,
         synonyms: getSynonyms(t, "devApi"),
         supportsAutomate: false,
         automationSettings: null
@@ -800,7 +835,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Pro/#activation",
+        link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
         synonyms: getSynonyms(t, "devAirgapped"),
         supportsAutomate: false,
         automationSettings: null
@@ -857,6 +892,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "pdf-to-markdown",
           "pdf-to-pdfa",
           "eml-to-pdf",
+          "pdf-to-epub",
         ],
 
         operationConfig: convertOperationConfig,

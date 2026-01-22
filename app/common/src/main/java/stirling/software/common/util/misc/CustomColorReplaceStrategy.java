@@ -146,13 +146,18 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
             // Save the modified PDF to a ByteArrayOutputStream
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             document.save(byteArrayOutputStream);
-            document.close();
 
             // Prepare the modified PDF for download
             ByteArrayInputStream inputStream =
                     new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             InputStreamResource resource = new InputStreamResource(inputStream);
             return resource;
+        } finally {
+            try {
+                Files.deleteIfExists(file.toPath());
+            } catch (IOException e) {
+                log.warn("Failed to delete temporary file: {}", file.getAbsolutePath(), e);
+            }
         }
     }
 

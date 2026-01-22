@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -52,19 +53,25 @@ public class BlankPageController {
 
         // Convert to binary image based on the threshold
         int whitePixels = 0;
-        int totalPixels = image.getWidth() * image.getHeight();
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[] pixels = new int[width * height];
 
-        for (int i = 0; i < image.getHeight(); i++) {
-            for (int j = 0; j < image.getWidth(); j++) {
-                int color = image.getRGB(j, i) & 0xFF;
-                if (color >= 255 - threshold) {
-                    whitePixels++;
-                }
+        image.getRGB(0, 0, width, height, pixels, 0, width);
+
+        for (int pixel : pixels) {
+            int blue = pixel & 0xFF;
+            if (blue >= 255 - threshold) {
+                whitePixels++;
             }
         }
 
-        double whitePixelPercentage = (whitePixels / (double) totalPixels) * 100;
-        log.info(String.format("Page has white pixel percent of %.2f%%", whitePixelPercentage));
+        double whitePixelPercentage = (whitePixels / (double) (width * height)) * 100;
+        log.info(
+                String.format(
+                        Locale.ROOT,
+                        "Page has white pixel percent of %.2f%%",
+                        whitePixelPercentage));
 
         return whitePixelPercentage >= whitePercent;
     }
@@ -117,16 +124,16 @@ public class BlankPageController {
                         if (properties != null && properties.getSystem() != null) {
                             renderDpi = properties.getSystem().getMaxDPI();
                         }
+                        final int dpi = renderDpi;
+                        final int currentPageIndex = pageIndex;
 
-                        try {
-                            image = pdfRenderer.renderImageWithDPI(pageIndex, renderDpi);
-                        } catch (OutOfMemoryError e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageIndex + 1, renderDpi, e);
-                        } catch (NegativeArraySizeException e) {
-                            throw ExceptionUtils.createOutOfMemoryDpiException(
-                                    pageIndex + 1, renderDpi, e);
-                        }
+                        image =
+                                ExceptionUtils.handleOomRendering(
+                                        currentPageIndex + 1,
+                                        dpi,
+                                        () ->
+                                                pdfRenderer.renderImageWithDPI(
+                                                        currentPageIndex, dpi));
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
                     }
                 }
@@ -165,6 +172,8 @@ public class BlankPageController {
             return WebResponseUtils.baosToWebResponse(
                     baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
 
+        } catch (ExceptionUtils.OutOfMemoryDpiException e) {
+            throw e;
         } catch (IOException e) {
             log.error("exception", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -1,7 +1,6 @@
 package stirling.software.proprietary.security.configuration;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,14 +18,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -47,9 +45,9 @@ import stirling.software.proprietary.security.database.repository.PersistentLogi
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.proprietary.security.oauth2.TauriAuthorizationRequestResolver;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
@@ -86,6 +84,7 @@ public class SecurityConfiguration {
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -106,6 +105,7 @@ public class SecurityConfiguration {
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
                     OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
             stirling.software.proprietary.service.UserLicenseSettingsService
                     licenseSettingsService) {
         this.userDetailsService = userDetailsService;
@@ -124,6 +124,7 @@ public class SecurityConfiguration {
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+        this.clientRegistrationRepository = clientRegistrationRepository;
         this.licenseSettingsService = licenseSettingsService;
     }
 
@@ -198,74 +199,19 @@ public class SecurityConfiguration {
             http.cors(cors -> cors.disable());
         }
 
-        if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
-            http.csrf(CsrfConfigurer::disable);
-        }
+        http.csrf(CsrfConfigurer::disable);
 
         if (loginEnabledValue) {
-            boolean v2Enabled = appConfig.v2Enabled();
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
-            if (!securityProperties.getCsrfDisabled()) {
-                CookieCsrfTokenRepository cookieRepo =
-                        CookieCsrfTokenRepository.withHttpOnlyFalse();
-                CsrfTokenRequestAttributeHandler requestHandler =
-                        new CsrfTokenRequestAttributeHandler();
-                requestHandler.setCsrfRequestAttributeName(null);
-                http.csrf(
-                        csrf ->
-                                csrf.ignoringRequestMatchers(
-                                                request -> {
-                                                    String uri = request.getRequestURI();
-
-                                                    // Ignore CSRF for auth endpoints
-                                                    if (uri.startsWith("/api/v1/auth/")) {
-                                                        return true;
-                                                    }
-
-                                                    String apiKey = request.getHeader("X-API-KEY");
-                                                    // If there's no API key, don't ignore CSRF
-                                                    // (return false)
-                                                    if (apiKey == null || apiKey.trim().isEmpty()) {
-                                                        return false;
-                                                    }
-                                                    // Validate API key using existing UserService
-                                                    try {
-                                                        Optional<User> user =
-                                                                userService.getUserByApiKey(apiKey);
-                                                        // If API key is valid, ignore CSRF (return
-                                                        // true)
-                                                        // If API key is invalid, don't ignore CSRF
-                                                        // (return false)
-                                                        return user.isPresent();
-                                                    } catch (Exception e) {
-                                                        // If there's any error validating the API
-                                                        // key, don't ignore CSRF
-                                                        return false;
-                                                    }
-                                                })
-                                        .csrfTokenRepository(cookieRepo)
-                                        .csrfTokenRequestHandler(requestHandler));
-            }
-
             http.sessionManagement(
-                    sessionManagement -> {
-                        if (v2Enabled) {
+                    sessionManagement ->
                             sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS);
-                        } else {
-                            sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
-                                    .maxSessionsPreventsLogin(false)
-                                    .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true");
-                        }
-                    });
+                                    SessionCreationPolicy.STATELESS));
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
 
@@ -324,10 +270,16 @@ public class SecurityConfiguration {
                                     .authenticated());
             // Handle User/Password Logins
             if (securityProperties.isUserPass()) {
+                // v2: Authentication is handled via API (/api/v1/auth/login), not form login
+                // We configure form login to handle Spring Security redirects,
+                // but use /perform_login as the processing URL so /login remains a React route
                 http.formLogin(
                         formLogin ->
                                 formLogin
-                                        .loginPage("/login")
+                                        .loginPage("/login") // Redirect here when unauthenticated
+                                        .loginProcessingUrl(
+                                                "/perform_login") // Process form posts here (not
+                                        // /login)
                                         .successHandler(
                                                 new CustomAuthenticationSuccessHandler(
                                                         loginAttemptService,
@@ -342,18 +294,16 @@ public class SecurityConfiguration {
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 -> {
-                            // v1: Use /oauth2 as login page for Thymeleaf templates
-                            if (!v2Enabled) {
-                                oauth2.loginPage("/oauth2");
-                            }
-
-                            // v2: Don't set loginPage, let default OAuth2 flow handle it
-                            oauth2
-                                    /*
-                                       This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                       If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                                       is set as true, else login fails with an error message advising the same.
-                                    */
+                            oauth2.loginPage("/login")
+                                    .authorizationEndpoint(
+                                            authorizationEndpoint -> {
+                                                if (clientRegistrationRepository != null) {
+                                                    authorizationEndpoint
+                                                            .authorizationRequestResolver(
+                                                                    new TauriAuthorizationRequestResolver(
+                                                                            clientRegistrationRepository));
+                                                }
+                                            })
                                     .successHandler(
                                             new CustomOAuth2AuthenticationSuccessHandler(
                                                     loginAttemptService,
@@ -387,12 +337,8 @@ public class SecurityConfiguration {
                         .saml2Login(
                                 saml2 -> {
                                     try {
-                                        // Only set login page for v1/Thymeleaf mode
-                                        if (!v2Enabled) {
-                                            saml2.loginPage("/saml2");
-                                        }
-
-                                        saml2.relyingPartyRegistrationRepository(
+                                        saml2.loginPage("/login")
+                                                .relyingPartyRegistrationRepository(
                                                         saml2RelyingPartyRegistrations)
                                                 .authenticationManager(
                                                         new ProviderManager(authenticationProvider))
@@ -402,7 +348,8 @@ public class SecurityConfiguration {
                                                                 securityProperties.getSaml2(),
                                                                 userService,
                                                                 jwtService,
-                                                                licenseSettingsService))
+                                                                licenseSettingsService,
+                                                                applicationProperties))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(
@@ -411,7 +358,8 @@ public class SecurityConfiguration {
                                         log.error("Error configuring SAML 2 login", e);
                                         throw new RuntimeException(e);
                                     }
-                                });
+                                })
+                        .saml2Metadata(metadata -> {});
             }
         } else {
             log.debug("Login is not enabled.");

@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -27,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -57,31 +57,49 @@ public class MergeController {
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
-        for (PDDocument doc : documents) {
-            for (PDPage page : doc.getPages()) {
-                mergedDoc.addPage(page);
+        boolean success = false;
+        try {
+            for (PDDocument doc : documents) {
+                for (PDPage page : doc.getPages()) {
+                    mergedDoc.addPage(page);
+                }
+            }
+            success = true;
+            return mergedDoc;
+        } finally {
+            if (!success) {
+                mergedDoc.close();
             }
         }
-        return mergedDoc;
     }
 
     // Re-order files to match the explicit order provided by the front-end.
     // fileOrder is newline-delimited original filenames in the desired order.
     private static MultipartFile[] reorderFilesByProvidedOrder(
             MultipartFile[] files, String fileOrder) {
-        String[] desired = fileOrder.split("\n", -1);
+        // Split by various line endings and trim each entry
+        String[] desired =
+                stirling.software.common.util.RegexPatternUtils.getInstance()
+                        .getNewlineSplitPattern()
+                        .split(fileOrder);
+
         List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
         List<MultipartFile> ordered = new ArrayList<>(files.length);
 
         for (String name : desired) {
-            if (name == null || name.isEmpty()) continue;
+            name = name.trim();
+            if (name.isEmpty()) {
+                log.debug("Skipping empty entry");
+                continue;
+            }
             int idx = indexOfByOriginalFilename(remaining, name);
             if (idx >= 0) {
                 ordered.add(remaining.remove(idx));
+            } else {
+                log.debug("Filename from order list not found in uploaded files: {}", name);
             }
         }
 
-        // Append any files not explicitly listed, preserving their relative order
         ordered.addAll(remaining);
         return ordered.toArray(new MultipartFile[0]);
     }
@@ -259,7 +277,7 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<StreamingResponseBody> mergePdfs(
+    public ResponseEntity<byte[]> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
@@ -276,15 +294,15 @@ public class MergeController {
 
         // If front-end provided explicit visible order, honor it and override backend sorting
         if (fileOrder != null && !fileOrder.isBlank()) {
+            log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
+            log.info("Sorting files based on sortType: {}", request.getSortType());
             Arrays.sort(
                     files,
                     getSortComparator(
                             request.getSortType())); // Sort files based on requested sort type
         }
-
-        ResponseEntity<StreamingResponseBody> response;
 
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
@@ -351,9 +369,18 @@ public class MergeController {
 
                 // Save the modified document to a temporary file
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
-                mergedDocument.save(outputTempFile.getFile());
+                try {
+                    mergedDocument.save(outputTempFile.getFile());
+                } catch (Exception e) {
+                    outputTempFile.close();
+                    outputTempFile = null;
+                    throw e;
+                }
             }
         } catch (Exception ex) {
+            if (outputTempFile != null) {
+                outputTempFile.close();
+            }
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
             } else {
@@ -370,7 +397,7 @@ public class MergeController {
         String mergedFileName =
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
-        response = WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
-        return response;
+        byte[] pdfBytes = Files.readAllBytes(outputTempFile.getPath());
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, mergedFileName);
     }
 }

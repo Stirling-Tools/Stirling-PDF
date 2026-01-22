@@ -43,6 +43,8 @@ app/core/src/main/resources/static/og_images/
 app/core/src/main/resources/static/samples/
 app/core/src/main/resources/static/manifest-classic.json
 app/core/src/main/resources/static/robots.txt
+app/core/src/main/resources/static/pdfium/
+app/core/src/main/resources/static/vendor/
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
 # Gradle
@@ -211,7 +213,7 @@ id_ed25519.pub
 .mypy_cache
 .pytest_cache
 .ipynb_checkpoints
-
+.build-cache
 
 
 **/jcef-bundle/

@@ -28,11 +28,12 @@ tauri = { version = "2.9.0", features = [ "devtools"] }
 tauri-plugin-log = "2.0.0-rc"
 tauri-plugin-shell = "2.1.0"
 tauri-plugin-fs = "2.4.4"
-tauri-plugin-http = "2.4.4"
-tauri-plugin-single-instance = "2.0.1"
+tauri-plugin-http = { version = "2.4.4", features = ["dangerous-settings"] }
+tauri-plugin-single-instance = { version = "2.3.6", features = ["deep-link"] }
 tauri-plugin-store = "2.1.0"
 tauri-plugin-opener = "2.0.0"
-keyring = "3.6.1"
+tauri-plugin-deep-link = "2.4.5"
+keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.0", features = ["time", "sync"] }
 reqwest = { version = "0.11", features = ["json"] }
 tiny_http = "0.12"

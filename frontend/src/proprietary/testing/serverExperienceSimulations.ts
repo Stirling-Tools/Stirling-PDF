@@ -48,9 +48,10 @@ const FREE_LICENSE_INFO: LicenseInfo = {
 
 const BASE_NO_LOGIN_CONFIG: AppConfig = {
   enableAnalytics: true,
-  appVersion: '2.0.0',
+  appVersion: '2.3.1',
   serverCertificateEnabled: false,
   enableAlphaFunctionality: false,
+  enableDesktopInstallSlide: true,
   serverPort: 8080,
   premiumEnabled: false,
   runningProOrHigher: false,
@@ -129,8 +130,12 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
       ...BASE_LOGIN_CONFIG,
       isAdmin: false,
     },
-    adminUsage: {
-      totalUsers: 3,
+    // Non-admin users use WAU estimate (not adminUsage)
+    wau: {
+      trackingSince: '2025-11-18T23:20:12.520884200Z',
+      daysOnline: 0,
+      totalUniqueBrowsers: 3,
+      weeklyActiveUsers: 3,
     },
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
@@ -151,8 +156,12 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
       ...BASE_LOGIN_CONFIG,
       isAdmin: false,
     },
-    adminUsage: {
-      totalUsers: 12,
+    // Non-admin users use WAU estimate (not adminUsage)
+    wau: {
+      trackingSince: '2025-09-01T00:00:00Z',
+      daysOnline: 30,
+      totalUniqueBrowsers: 12,
+      weeklyActiveUsers: 9,
     },
     licenseInfo: { ...FREE_LICENSE_INFO },
   },

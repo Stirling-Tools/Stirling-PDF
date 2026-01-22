@@ -10,6 +10,8 @@ import AuthLayout from '@app/routes/authShared/AuthLayout';
 import { useBackendProbe } from '@app/hooks/useBackendProbe';
 import apiClient from '@app/services/apiClient';
 import { BASE_PATH } from '@app/constants/app';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { updateSupportedLanguages } from '@app/i18n';
 
 // Import login components
 import LoginHeader from '@app/routes/login/LoginHeader';
@@ -31,9 +33,10 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
-  const [enabledProviders, setEnabledProviders] = useState<string[]>([]);
+  const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
+  const [loginMethod, setLoginMethod] = useState<string>('all');
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
@@ -102,12 +105,18 @@ export default function Login() {
         setIsFirstTimeSetup(data.firstTimeSetup ?? false);
         setShowDefaultCredentials(data.showDefaultCredentials ?? false);
 
-        // Extract provider IDs from the providerList map
-        // The keys are like "/oauth2/authorization/google" - extract the last part
-        const providerIds = Object.keys(data.providerList || {})
-          .map(key => key.split('/').pop())
-          .filter((id): id is string => id !== undefined);
-        setEnabledProviders(providerIds);
+        // Apply language configuration from server
+        if (data.languages || data.defaultLocale) {
+          updateSupportedLanguages(data.languages, data.defaultLocale);
+        }
+
+        // Use the full paths from providerList as provider identifiers
+        // The backend provides paths like "/oauth2/authorization/google" or "/saml2/authenticate/stirling"
+        // We'll use these full paths so the auth client knows where to redirect
+        const providerPaths = Object.keys(data.providerList || {});
+
+        setEnabledProviders(providerPaths);
+        setLoginMethod(data.loginMethod || 'all');
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
@@ -118,18 +127,25 @@ export default function Login() {
     }
   }, [navigate, backendProbe.status, backendProbe.loginDisabled]);
 
-  // Update hasSSOProviders and showEmailForm when enabledProviders changes
+  // Update hasSSOProviders and showEmailForm when enabledProviders or loginMethod changes
   useEffect(() => {
     // In debug mode, check if any providers exist in the config
     const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
       ? Object.keys(oauthProviderConfig).length > 0
       : enabledProviders.length > 0;
     setHasSSOProviders(hasProviders);
-    // If no SSO providers, show email form by default
-    if (!hasProviders) {
+
+    // Check if username/password authentication is allowed
+    const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
+
+    // Show email form if no SSO providers exist AND username/password is allowed
+    if (!hasProviders && isUserPassAllowed) {
       setShowEmailForm(true);
+    } else if (!isUserPassAllowed) {
+      // Hide email form if username/password auth is not allowed
+      setShowEmailForm(false);
     }
-  }, [enabledProviders]);
+  }, [enabledProviders, loginMethod]);
 
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
@@ -225,16 +241,17 @@ export default function Login() {
     );
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc') => {
+  const signInWithProvider = async (provider: OAuthProvider) => {
     try {
       setIsSigningIn(true);
       setError(null);
 
-      console.log(`[Login] Signing in with ${provider}`);
+      console.log(`[Login] Signing in with provider: ${provider}`);
 
-      // Redirect to Spring OAuth2 endpoint
+      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
+      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
       const { error } = await springAuth.signInWithOAuth({
-        provider,
+        provider: provider,
         options: { redirectTo: `${BASE_PATH}/auth/callback` }
       });
 
@@ -318,13 +335,13 @@ export default function Login() {
         enabledProviders={enabledProviders}
       />
 
-      {/* Divider between OAuth and Email - only show if SSO is available */}
-      {hasSSOProviders && (
+      {/* Divider between OAuth and Email - only show if SSO is available and username/password is allowed */}
+      {hasSSOProviders && (loginMethod === 'all' || loginMethod === 'normal') && (
         <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
       )}
 
-      {/* Sign in with email button - only show if SSO providers exist */}
-      {hasSSOProviders && !showEmailForm && (
+      {/* Sign in with email button - only show if SSO providers exist and username/password is allowed */}
+      {hasSSOProviders && !showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
         <div className="auth-section">
           <button
             type="button"
@@ -337,8 +354,8 @@ export default function Login() {
         </div>
       )}
 
-      {/* Email form - show by default if no SSO, or when button clicked */}
-      {showEmailForm && (
+      {/* Email form - show by default if no SSO, or when button clicked, but ONLY if username/password is allowed */}
+      {showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
         <div style={{ marginTop: hasSSOProviders ? '1rem' : '0' }}>
           <EmailPasswordForm
             email={email}
@@ -352,8 +369,8 @@ export default function Login() {
         </div>
       )}
 
-      {/* Help section - only show on first-time setup with default credentials */}
-      {isFirstTimeSetup && showDefaultCredentials && (
+      {/* Help section - only show on first-time setup with default credentials and username/password auth allowed */}
+      {isFirstTimeSetup && showDefaultCredentials && (loginMethod === 'all' || loginMethod === 'normal') && (
         <Alert
           color="blue"
           variant="light"

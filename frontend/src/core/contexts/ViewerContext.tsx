@@ -18,6 +18,7 @@ import {
   SearchActions,
   ExportActions,
   BookmarkActions,
+  PrintActions,
 } from '@app/contexts/viewer/viewerActions';
 import {
   BridgeRef,
@@ -79,6 +80,14 @@ interface ViewerContextType {
   isBookmarkSidebarVisible: boolean;
   toggleBookmarkSidebar: () => void;
 
+  // Search interface visibility
+  isSearchInterfaceVisible: boolean;
+  searchInterfaceActions: {
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
+  };
+
   // Annotation visibility toggle
   isAnnotationsVisible: boolean;
   toggleAnnotationsVisibility: () => void;
@@ -86,7 +95,6 @@ interface ViewerContextType {
   // Annotation/drawing mode for viewer
   isAnnotationMode: boolean;
   setAnnotationMode: (enabled: boolean) => void;
-  toggleAnnotationMode: () => void;
 
   // Active file index for multi-file viewing
   activeFileIndex: number;
@@ -109,11 +117,13 @@ interface ViewerContextType {
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => () => void;
   registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => () => void;
   registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => () => void;
+  registerImmediatePanUpdate: (callback: (isPanning: boolean) => void) => () => void;
 
   // Internal - for bridges to trigger immediate updates
   triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
   triggerImmediateZoomUpdate: (zoomPercent: number) => void;
   triggerImmediateSpreadUpdate: (mode: SpreadMode, isDualPage?: boolean) => void;
+  triggerImmediatePanUpdate: (isPanning: boolean) => void;
 
   // Action handlers - call EmbedPDF APIs directly
   scrollActions: ScrollActions;
@@ -125,12 +135,17 @@ interface ViewerContextType {
   searchActions: SearchActions;
   exportActions: ExportActions;
   bookmarkActions: BookmarkActions;
+  printActions: PrintActions;
 
   // Bridge registration - internal use by bridges  
   registerBridge: <K extends BridgeKey>(
     type: K,
     ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
   ) => void;
+
+  // Save changes function - registered by EmbedPdfViewer
+  applyChanges: (() => Promise<void>) | null;
+  setApplyChanges: (fn: (() => Promise<void>) | null) => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);
@@ -143,6 +158,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
   const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
+  const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
@@ -152,6 +168,19 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // Bridge registry - bridges register their state and APIs here
   const bridgeRefs = useRef<ViewerBridgeRegistry>(createBridgeRegistry());
+
+  // Apply changes function - registered by EmbedPdfViewer
+  const applyChangesRef = useRef<(() => Promise<void>) | null>(null);
+  
+  const setApplyChanges = useCallback((fn: (() => Promise<void>) | null) => {
+    applyChangesRef.current = fn;
+  }, []);
+  
+  const applyChanges = useCallback(async () => {
+    if (applyChangesRef.current) {
+      await applyChangesRef.current();
+    }
+  }, []);
 
   const {
     register: registerImmediateZoomUpdate,
@@ -165,6 +194,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     register: registerImmediateSpreadUpdate,
     trigger: triggerImmediateSpreadInternal,
   } = useImmediateNotifier<[SpreadMode, boolean]>();
+  const {
+    register: registerImmediatePanUpdate,
+    trigger: triggerImmediatePanInternal,
+  } = useImmediateNotifier<[boolean]>();
 
   const triggerImmediateZoomUpdate = useCallback(
     (percent: number) => {
@@ -187,6 +220,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     [triggerImmediateSpreadInternal]
   );
 
+  const triggerImmediatePanUpdate = useCallback(
+    (isPanning: boolean) => {
+      triggerImmediatePanInternal(isPanning);
+    },
+    [triggerImmediatePanInternal]
+  );
+
   const registerBridge = useCallback(
     <K extends BridgeKey>(
       type: K,
@@ -205,16 +245,18 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     setIsBookmarkSidebarVisible(prev => !prev);
   };
 
+  const searchInterfaceActions = {
+    open: () => setSearchInterfaceVisible(true),
+    close: () => setSearchInterfaceVisible(false),
+    toggle: () => setSearchInterfaceVisible(prev => !prev),
+  };
+
   const toggleAnnotationsVisibility = () => {
     setIsAnnotationsVisible(prev => !prev);
   };
 
   const setAnnotationMode = (enabled: boolean) => {
     setIsAnnotationModeState(enabled);
-  };
-
-  const toggleAnnotationMode = () => {
-    setIsAnnotationModeState(prev => !prev);
   };
 
   // State getters - read from bridge refs
@@ -277,6 +319,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    printActions,
   } = createViewerActions({
     registry: bridgeRefs,
     getScrollState,
@@ -291,12 +334,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     isBookmarkSidebarVisible,
     toggleBookmarkSidebar,
 
+    // Search interface
+    isSearchInterfaceVisible,
+    searchInterfaceActions,
+
     // Annotation controls
     isAnnotationsVisible,
     toggleAnnotationsVisibility,
     isAnnotationMode,
     setAnnotationMode,
-    toggleAnnotationMode,
 
     // Active file index
     activeFileIndex,
@@ -319,9 +365,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
     registerImmediateSpreadUpdate,
+    registerImmediatePanUpdate,
     triggerImmediateScrollUpdate,
     triggerImmediateZoomUpdate,
     triggerImmediateSpreadUpdate,
+    triggerImmediatePanUpdate,
 
     // Actions
     scrollActions,
@@ -333,9 +381,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    printActions,
 
     // Bridge registration
     registerBridge,
+
+    // Apply changes
+    applyChanges,
+    setApplyChanges,
   };
 
   return (

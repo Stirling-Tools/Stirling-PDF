@@ -1,8 +1,11 @@
 unsavedChanges = "Máte neuložené zmeny v PDF."
+pendingRedactionsTitle = "Nepoužité začiernenia"
+pendingRedactions = "Máte nepoužité začiernenia, ktoré sa stratia."
 areYouSure = "Naozaj chcete odísť?"
 unsavedChangesTitle = "Neuložené zmeny"
 keepWorking = "Pokračovať v práci"
 discardChanges = "Zahodiť a odísť"
+discardRedactions = "Zahodiť a odísť"
 applyAndContinue = "Uložiť a odísť"
 exportAndContinue = "Exportovať a pokračovať"
 cancel = "Zrušiť"
@@ -162,6 +165,11 @@ unfavorite = "Odstrániť z obľúbených"
 [toolPanel.toggle]
 fullscreen = "Prepnúť na režim celej obrazovky"
 sidebar = "Prepnúť na režim bočného panela"
+
+[backendStartup]
+notFoundTitle = "Backend sa nenašiel"
+retry = "Skúsiť znova"
+unreachable = "Aplikácia sa momentálne nedokáže pripojiť k backendu. Overte stav backendu a sieťové pripojenie, potom to skúste znova."
 
 [zipWarning]
 title = "Veľký ZIP súbor"
@@ -335,6 +343,10 @@ advance = "Pokročilé"
 edit = "Zobraziť a upraviť"
 popular = "Populárne"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Predvoľby"
 
@@ -355,6 +367,7 @@ advanced = "Pokročilé"
 title = "Zabezpečenie a autentifikácia"
 security = "Zabezpečenie"
 connections = "Pripojenia"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licencovanie a analytika"
@@ -429,6 +442,32 @@ currentVersion = "Aktuálna verzia"
 latestVersion = "Najnovšia verzia"
 checkForUpdates = "Skontrolovať aktualizácie"
 viewDetails = "Zobraziť podrobnosti"
+serverNeedsUpdate = "Server musí aktualizovať administrátor"
+
+[settings.general.versionInfo]
+title = "Informácie o verzii"
+description = "Podrobnosti o verzii desktopu a servera"
+desktop = "Desktopová verzia"
+server = "Verzia servera"
+
+[settings.security]
+title = "Zabezpečenie"
+description = "Aktualizujte svoje heslo, aby bol váš účet v bezpečí."
+
+[settings.security.password]
+subtitle = "Zmeňte si heslo. Po aktualizácii budete odhlásení."
+required = "Všetky polia sú povinné."
+mismatch = "Nové heslá sa nezhodujú."
+error = "Heslo sa nepodarilo aktualizovať. Overte svoje aktuálne heslo a skúste znova."
+success = "Heslo bolo úspešne aktualizované. Prihláste sa prosím znova."
+ssoDisabled = "Zmeny hesla spravuje váš poskytovateľ identity."
+current = "Aktuálne heslo"
+currentPlaceholder = "Zadajte svoje aktuálne heslo"
+new = "Nové heslo"
+newPlaceholder = "Zadajte nové heslo"
+confirm = "Potvrďte nové heslo"
+confirmPlaceholder = "Zadajte znova svoje nové heslo"
+update = "Aktualizovať heslo"
 
 [settings.hotkeys]
 title = "Klávesové skratky"
@@ -483,11 +522,16 @@ low = "Nízka"
 title = "Zmeniť údaje"
 header = "Aktualizujte údaje svojho účtu"
 changePassword = "Používate predvolené prihlasovacie údaje. Prosím, zadajte nové heslo"
+ssoManaged = "Váš účet spravuje váš poskytovateľ identity."
 newUsername = "Nové používateľské meno"
 oldPassword = "Aktuálne heslo"
 newPassword = "Nové heslo"
 confirmNewPassword = "Potvrďte nové heslo"
 submit = "Odoslať zmeny"
+credsUpdated = "Účet aktualizovaný"
+description = "Zmeny boli uložené. Prihláste sa prosím znova."
+error = "Používateľské meno sa nepodarilo aktualizovať. Overte svoje heslo a skúste znova."
+changeUsername = "Aktualizujte svoje používateľské meno. Po aktualizácii budete odhlásení."
 
 [account]
 title = "Nastavenia účtu"
@@ -495,6 +539,8 @@ accountSettings = "Nastavenia účtu"
 adminSettings = "Admin nastavenia - Zobraziť a pridať používateľov"
 userControlSettings = "Nastavenia kontroly používateľov"
 changeUsername = "Zmeniť používateľské meno"
+changeUsernameDescription = "Aktualizujte svoje používateľské meno. Po aktualizácii budete odhlásení."
+newUsernamePlaceholder = "Zadajte svoje nové používateľské meno"
 newUsername = "Nové používateľské meno"
 password = "Potvrdzovacie heslo"
 oldPassword = "Staré heslo"
@@ -702,6 +748,11 @@ desc = "Detegovať a rozdeliť skenované fotky na samostatné strany"
 tags = "podpis,podpísať"
 title = "Podpísať"
 desc = "Pridáva podpis do PDF kreslením, textom alebo obrázkom"
+
+[home.annotate]
+tags = "anotovať,zvýrazniť,kresliť"
+title = "Anotovať"
+desc = "Zvýrazňujte, kreslite, pridávajte poznámky a tvary vo videní"
 
 [home.flatten]
 tags = "zjednodušiť,odstrániť,interaktívne"
@@ -925,6 +976,7 @@ desc = "Pridajte vlastný text kdekoľvek do svojho PDF"
 addFiles = "Pridať súbory"
 uploadFromComputer = "Nahrať z počítača"
 openFromComputer = "Otvoriť z počítača"
+mobileUpload = "Nahratie z mobilu"
 
 [viewPdf]
 tags = "zobraziť,čítať,anotovať,text,obrázok"
@@ -1240,6 +1292,37 @@ cbzOptions = "Možnosti CBZ na PDF"
 optimizeForEbook = "Optimalizovať PDF pre čítačky e‑kníh (používa Ghostscript)"
 cbzOutputOptions = "Možnosti PDF na CBZ"
 cbzDpi = "DPI pre vykresľovanie obrázkov"
+cbrOptions = "Možnosti CBR"
+cbrOutputOptions = "Možnosti PDF na CBR"
+cbrDpi = "DPI pre vykresľovanie obrázkov"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "Možnosti eBook na PDF"
+ebookOptionsDesc = "Možnosti prevodu eBook na PDF"
+embedAllFonts = "Vložiť všetky písma"
+embedAllFontsDesc = "Vložiť všetky písma z eBook do generovaného PDF"
+includeTableOfContents = "Zahrnúť obsah"
+includeTableOfContentsDesc = "Pridať vygenerovaný obsah do výsledného PDF"
+includePageNumbers = "Zahrnúť čísla strán"
+includePageNumbersDesc = "Pridať čísla strán do generovaného PDF"
+optimizeForEbookPdf = "Optimalizovať pre čítačky eBookov"
+optimizeForEbookPdfDesc = "Optimalizovať PDF na čítanie eBookov (menšia veľkosť, lepšie vykresľovanie na eInk zariadeniach)"
+
+[convert.epubOptions]
+epubOptions = "Možnosti PDF na eBook"
+epubOptionsDesc = "Možnosti prevodu PDF do EPUB/AZW3"
+detectChapters = "Rozpoznať kapitoly"
+detectChaptersDesc = "Rozpoznať nadpisy, ktoré vyzerajú ako kapitoly, a vložiť zalomenia strán EPUB"
+targetDevice = "Cieľové zariadenie"
+targetDeviceDesc = "Vyberte výstupný profil optimalizovaný pre čítačku"
+outputFormat = "Výstupný formát"
+outputFormatDesc = "Vyberte výstupný formát pre eBook"
+tabletPhone = "Tablet/Telefón (s obrázkami)"
+kindleEink = "Kindle e-Ink (optimalizované pre text)"
 
 [imageToPdf]
 tags = "konverzia,img,jpg,obrázok,fotografia"
@@ -1317,6 +1400,7 @@ applySignatures = "Použiť obrázky"
 name = "Obrázok"
 placeholder = "Nahrajte obrázok"
 label = "Súbor obrázka"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Nastaviť obrázok"
@@ -1356,6 +1440,11 @@ header = "Add attachments"
 add = "Pridať prílohu"
 remove = "Odstrániť prílohu"
 embed = "Vložiť prílohu"
+convertToPdfA3b = "Konvertovať na PDF/A-3b"
+convertToPdfA3bDescription = "Vytvorí archívne PDF s vloženými prílohami"
+convertToPdfA3bTooltip = "PDF/A-3b je archívny formát zabezpečujúci dlhodobé uchovanie. Umožňuje vkladať ľubovoľné formáty súborov ako prílohy. Konverzia vyžaduje Ghostscript a pri veľkých súboroch môže trvať dlhšie."
+convertToPdfA3bTooltipHeader = "O konverzii PDF/A-3b"
+convertToPdfA3bTooltipTitle = "Čo to robí"
 submit = "Add attachments"
 
 [watermark]
@@ -2262,8 +2351,16 @@ defaultCanvasLabel = "Kreslený podpis"
 defaultImageLabel = "Nahraný podpis"
 defaultTextLabel = "Napísaný podpis"
 saveButton = "Uložiť podpis"
+savePersonal = "Uložiť osobné"
+saveShared = "Uložiť zdieľané"
 saveUnavailable = "Najprv vytvorte podpis, aby ste ho mohli uložiť."
 noChanges = "Aktuálny podpis je už uložený."
+tempStorageTitle = "Dočasné úložisko prehliadača"
+tempStorageDescription = "Podpisy sú uložené iba vo vašom prehliadači. Pri vymazaní údajov prehliadača alebo pri zmene prehliadača sa stratia."
+personalHeading = "Osobné podpisy"
+sharedHeading = "Zdieľané podpisy"
+personalDescription = "Tieto podpisy vidíte iba vy."
+sharedDescription = "Všetci používatelia môžu tieto podpisy vidieť a používať."
 
 [sign.saved.type]
 canvas = "Kresba"
@@ -2293,6 +2390,10 @@ saved = "Uložené"
 label = "Nahrať obrázok podpisu"
 placeholder = "Vyberte súbor obrázka"
 hint = "Nahrajte obrázok vášho podpisu vo formáte PNG alebo JPG"
+removeBackground = "Odstrániť biele pozadie (spriehľadniť)"
+processing = "Spracovanie obrázka..."
+backgroundRemovalFailedTitle = "Odstránenie pozadia zlyhalo"
+backgroundRemovalFailedMessage = "Pozadie z obrázka sa nepodarilo odstrániť. Namiesto toho sa použije pôvodný obrázok."
 
 [sign.instructions]
 title = "Ako pridať podpis"
@@ -2337,6 +2438,11 @@ note = "Sploštenie odstráni interaktívne prvky z PDF, čím ich spraví needi
 [flatten.options.flattenOnlyForms]
 label = "Zploštiť iba formuláre"
 desc = "Sploštiť len polia formulára, ostatné interaktívne prvky ponechať"
+
+[flatten.renderDpi]
+label = "DPI vykresľovania (voliteľné, odporúčané 150 DPI)"
+help = "Nechajte prázdne pre systémové predvolené. Vyššie DPI zostrí výstup, ale zvýši čas spracovania a veľkosť súboru."
+placeholder = "napr. 150"
 
 [flatten.results]
 title = "Výsledky sploštenia"
@@ -2912,6 +3018,7 @@ header = "Orezať PDF"
 submit = "Odoslať"
 noFileSelected = "Vyberte súbor PDF a začnite orezávať"
 reset = "Obnoviť na celé PDF"
+autoCrop = "Automaticky orezať biele okraje"
 
 [crop.preview]
 title = "Výber oblasti orezania"
@@ -3023,6 +3130,91 @@ title = "Získať informácie o PDF"
 header = "Získať informácie o PDF"
 submit = "Získať info"
 downloadJson = "Stiahnuť JSON"
+processing = "Extrahujú sa informácie..."
+results = "Výsledky"
+noResults = "Spustite nástroj na vygenerovanie prehľadu."
+downloads = "Sťahovania"
+noneDetected = "Nič nebolo zistené"
+indexTitle = "Index"
+
+[getPdfInfo.report]
+entryLabel = "Úplné zhrnutie informácií"
+shortTitle = "Informácie o PDF"
+
+[getPdfInfo.sections]
+metadata = "Metadáta"
+formFields = "Polia formulára"
+basicInfo = "Základné informácie"
+documentInfo = "Informácie o dokumente"
+compliance = "Súlad"
+encryption = "Šifrovanie"
+permissions = "Oprávnenia"
+other = "Iné"
+perPageInfo = "Informácie pre strany"
+tableOfContents = "Obsah"
+
+[getPdfInfo.other]
+attachments = "Prílohy"
+embeddedFiles = "Vložené súbory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Veľkosť"
+annotations = "Anotácie"
+images = "Obrázky"
+links = "Odkazy"
+fonts = "Písma"
+xobjects = "Počty XObjectov"
+multimedia = "Multimédiá"
+
+[getPdfInfo.summary]
+pages = "Strany"
+fileSize = "Veľkosť súboru"
+pdfVersion = "Verzia PDF"
+language = "Jazyk"
+title = "Súhrn PDF"
+author = "Autor"
+created = "Vytvorené"
+modified = "Upravené"
+permsAll = "Všetky oprávnenia povolené"
+permsRestricted = "{{count}} obmedzení"
+permsMixed = "Niektoré oprávnenia obmedzené"
+hasCompliance = "Spĺňa štandardy súladu"
+noCompliance = "Žiadne štandardy súladu"
+basic = "Základné informácie"
+documentInfo = "Informácie o dokumente"
+securityTitle = "Stav zabezpečenia"
+technical = "Technické"
+overviewTitle = "Prehľad PDF"
+
+[getPdfInfo.summary.security]
+encrypted = "Šifrované PDF - prítomná ochrana heslom"
+unencrypted = "Nešifrované PDF - Bez ochrany heslom"
+
+[getPdfInfo.summary.tech]
+images = "Obrázky"
+fonts = "Písma"
+formFields = "Polia formulára"
+embeddedFiles = "Vložené súbory"
+javaScript = "JavaScript"
+layers = "Vrstvy"
+bookmarks = "Záložky"
+multimedia = "Multimédiá"
+
+[getPdfInfo.summary.overview]
+untitled = "nepomenovaný dokument"
+unknown = "Neznámy autor"
+text = "Toto je {{pages}}-stranové PDF s názvom {{title}} od autora {{author}} (verzia PDF {{version}})."
+
+[getPdfInfo.error]
+partial = "Niektoré súbory sa nepodarilo spracovať."
+unexpected = "Počas extrahovania došlo k neočakávanej chybe."
+
+[getPdfInfo.status]
+complete = "Extrahovanie dokončené"
 
 [extractPage]
 tags = "extrahovať"
@@ -3057,6 +3249,7 @@ title = "Metóda redigovania"
 mode = "Režim"
 automatic = "Automaticky"
 automaticDesc = "Redigovať text na základe hľadaných výrazov"
+automaticDisabledTooltip = "Vyberte súbory v správcovi súborov, aby ste začiernili viacero súborov naraz"
 manual = "Manuálne"
 manualDesc = "Kliknite a ťahajte na redigovanie konkrétnych oblastí"
 manualComingSoon = "Manuálne redigovanie už čoskoro"
@@ -3127,8 +3320,35 @@ text = "Zhoduje iba celé slová, nie čiastkové zhody. 'John' sa nezhodí s 'J
 title = "Konvertovať na PDF-Image"
 text = "Po redigovaní konvertuje PDF na obrazové PDF. Zabezpečí, že text za rámčekmi redigovania je úplne odstránený a neobnoviteľný."
 
+[redact.tooltip.manual.header]
+title = "Manuálne ovládanie začiernenia"
+
+[redact.tooltip.manual.markText]
+title = "Nástroj na označenie textu"
+text = "Vyberte text priamo v PDF a označte ho na začiernenie. Kliknite a ťahajte pre zvýraznenie konkrétneho textu, ktorý chcete začierniť."
+
+[redact.tooltip.manual.markArea]
+title = "Nástroj na označenie oblasti"
+text = "Kreslite obdĺžnikové oblasti v PDF a označte regióny na začiernenie. Užitočné na začiernenie obrázkov, podpisov alebo nepravidelných tvarov."
+
+[redact.tooltip.manual.apply]
+title = "Použiť začiernenia"
+text = "Po označení obsahu kliknite na 'Použiť' a natrvalo začiernime všetky označené oblasti. Počet čakajúcich ukazuje, koľko začiernení je pripravených na použitie."
+bullet1 = "Označte toľko oblastí, koľko potrebujete, pred použitím"
+bullet2 = "Všetky čakajúce začiernenia sa použijú naraz"
+bullet3 = "Začiernenia nemožno po použití vrátiť späť"
+
 [redact.manual]
+title = "Nástroje na začiernenie"
+instructions = "Vyberte text alebo nakreslite oblasti v PDF a označte obsah na začiernenie."
+markText = "Označiť text"
+markArea = "Označiť oblasť"
+pendingLabel = "Čaká:"
+applyWarning = "⚠️ Trvalé použitie, nedá sa vrátiť späť a údaje pod tým budú odstránené"
+apply = "Použiť"
+noMarks = "Žiadne značky na začiernenie. Použite nástroje vyššie a označte obsah na začiernenie."
 header = "Manuálne redigovanie"
+controlsTitle = "Manuálne ovládanie začiernenia"
 textBasedRedaction = "Redigovanie podľa textu"
 pageBasedRedaction = "Redigovanie podľa strán"
 convertPDFToImageLabel = "Konvertovať PDF na PDF-Image (Používa sa na odstránenie textu za rámčekom)"
@@ -3243,6 +3463,19 @@ placeholder = "Zadajte počet horizontálnych delení"
 [split-by-sections.vertical]
 label = "Vertikálne delenia"
 placeholder = "Zadajte počet vertikálnych delení"
+
+[split-by-sections.splitMode]
+label = "Režim rozdelenia"
+description = "Vyberte, ako rozdeliť strany"
+splitAll = "Rozdeliť všetky strany"
+splitAllExceptFirst = "Rozdeliť všetko okrem prvej"
+splitAllExceptLast = "Rozdeliť všetko okrem poslednej"
+splitAllExceptFirstAndLast = "Rozdeliť všetko okrem prvej a poslednej"
+custom = "Vlastné strany"
+
+[split-by-sections.customPages]
+label = "Vlastné čísla strán"
+placeholder = "napr. 2,4,6"
 
 [AddStampRequest]
 tags = "pečiatka, pridať obrázok, stred obrázka, vodotlač, PDF, vložiť, prispôsobiť"
@@ -3441,6 +3674,9 @@ signinTitle = "Prosím, prihláste sa"
 ssoSignIn = "Prihlásiť sa cez Single Sign-on"
 oAuth2AutoCreateDisabled = "Vytváranie používateľa cez OAUTH2 je zakázané"
 oAuth2AdminBlockedUser = "Registrácia alebo prihlasovanie neregistrovaných používateľov je momentálne blokované. Kontaktujte administrátora."
+oAuth2RequiresLicense = "Prihlásenie cez OAuth/SSO vyžaduje platenú licenciu (Server alebo Enterprise). Obráťte sa na administrátora, aby aktualizoval váš plán."
+saml2RequiresLicense = "Prihlásenie cez SAML vyžaduje platenú licenciu (Server alebo Enterprise). Obráťte sa na administrátora, aby aktualizoval váš plán."
+maxUsersReached = "Bol dosiahnutý maximálny počet používateľov pre vašu aktuálnu licenciu. Obráťte sa na administrátora, aby aktualizoval váš plán alebo pridal ďalšie miesta."
 oauth2RequestNotFound = "Požiadavka na autorizáciu sa nenašla"
 oauth2InvalidUserInfoResponse = "Neplatná odpoveď User Info"
 oauth2invalidRequest = "Neplatná požiadavka"
@@ -3602,6 +3838,19 @@ filesize = "Veľkosť súboru"
 [compress.grayscale]
 label = "Použiť odtiene šedej na kompresiu"
 
+[compress.linearize]
+label = "Linearizovať PDF pre rýchle zobrazenie na webe"
+
+[compress.lineArt]
+label = "Konvertovať obrázky na kresbu čiarami"
+description = "Používa ImageMagick na redukciu strán na vysokokontrastnú čiernobielu pre maximálne zmenšenie veľkosti."
+unavailable = "ImageMagick nie je nainštalovaný alebo povolený na tomto serveri"
+detailLevel = "Úroveň detailov"
+edgeEmphasis = "Zvýraznenie hrán"
+edgeLow = "Jemné"
+edgeMedium = "Vyvážené"
+edgeHigh = "Silné"
+
 [compress.tooltip.header]
 title = "Prehľad nastavení kompresie"
 
@@ -3619,6 +3868,10 @@ bullet2 = "Vyššie hodnoty znižujú veľkosť súboru"
 title = "Odtiene sivej"
 text = "Vyberte túto možnosť na prevod všetkých obrázkov na čiernobiele, čo môže výrazne zmenšiť veľkosť súboru, najmä pri skenovaných PDF alebo dokumentoch s množstvom obrázkov."
 
+[compress.tooltip.lineArt]
+title = "Kresba čiarami"
+text = "Konvertujte strany na vysokokontrastnú čiernobielu pomocou ImageMagick. Úroveň detailov riadi, koľko obsahu bude čierne, a zvýraznenie hrán určuje, ako agresívne sa majú detegovať okraje."
+
 [compress.error]
 failed = "Pri komprimovaní PDF došlo k chybe."
 
@@ -3630,6 +3883,11 @@ failed = "Pri komprimovaní PDF došlo k chybe."
 [compress.selectText.1]
 _value = "Nastavenia kompresie"
 1 = "1–3 kompresia PDF,</br> 4–6 mierna kompresia obrázkov,</br> 7–9 silná kompresia obrázkov výrazne zníži kvalitu obrázkov"
+
+[compress.compressionLevel]
+range1to3 = "Nižšie hodnoty zachovávajú kvalitu, ale vedú k väčším súborom"
+range4to6 = "Stredná kompresia s miernym znížením kvality"
+range7to9 = "Vyššie hodnoty výrazne znižujú veľkosť súboru, ale môžu znížiť ostrosť obrazu"
 
 [decrypt]
 passwordPrompt = "Tento súbor je chránený heslom. Zadajte heslo:"
@@ -3849,14 +4107,17 @@ fitToWidth = "Prispôsobiť šírke"
 actualSize = "Skutočná veľkosť"
 
 [viewer]
+cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
+dualPageView = "Dvojstranové zobrazenie"
 firstPage = "Prvá strana"
 lastPage = "Posledná strana"
-previousPage = "Predchádzajúca strana"
 nextPage = "Nasledujúca strana"
+onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
+previousPage = "Predchádzajúca strana"
+singlePageView = "Zobrazenie jednej strany"
+unknownFile = "Neznámy súbor"
 zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
-singlePageView = "Zobrazenie jednej strany"
-dualPageView = "Dvojstranové zobrazenie"
 
 [rightRail]
 closeSelected = "Zavrieť vybrané súbory"
@@ -3867,21 +4128,97 @@ deleteSelected = "Odstrániť vybrané strany"
 closePdf = "Zavrieť PDF"
 exportAll = "Exportovať PDF"
 downloadSelected = "Stiahnuť vybrané súbory"
-downloadAll = "Stiahnuť všetko"
-saveAll = "Uložiť všetko"
+annotations = "Anotácie"
+exportSelected = "Exportovať vybrané strany"
+saveChanges = "Uložiť zmeny"
 toggleTheme = "Prepnúť tému"
-toggleBookmarks = "Prepnúť záložky"
 language = "Jazyk"
+toggleAnnotations = "Prepnúť zobrazenie anotácií"
 search = "Hľadať v PDF"
 panMode = "Režim posunu"
+applyRedactionsFirst = "Najprv použite začiernenia"
 rotateLeft = "Otočiť doľava"
 rotateRight = "Otočiť doprava"
 toggleSidebar = "Prepnúť bočný panel"
-exportSelected = "Exportovať vybrané strany"
-toggleAnnotations = "Prepnúť zobrazenie anotácií"
-annotationMode = "Prepnúť režim anotácií"
+toggleBookmarks = "Prepnúť záložky"
+print = "Vytlačiť PDF"
 draw = "Kresliť"
+redact = "Začierniť"
+exitRedaction = "Ukončiť režim začiernenia"
 save = "Uložiť"
+downloadAll = "Stiahnuť všetko"
+saveAll = "Uložiť všetko"
+
+[textAlign]
+left = "Vľavo"
+center = "Na stred"
+right = "Vpravo"
+
+[annotation]
+title = "Anotovať"
+desc = "Použite zvýrazňovanie, pero, text a poznámky. Zmeny zostávajú aktívne — zploštenie nie je potrebné."
+highlight = "Zvýrazniť"
+pen = "Pero"
+text = "Textové pole"
+note = "Poznámka"
+rectangle = "Obdĺžnik"
+ellipse = "Elipsa"
+select = "Vybrať"
+exit = "Ukončiť režim anotácií"
+strokeWidth = "Šírka"
+opacity = "Nepriehľadnosť"
+strokeOpacity = "Nepriehľadnosť obrysu"
+fillOpacity = "Nepriehľadnosť výplne"
+fontSize = "Veľkosť písma"
+chooseColor = "Vyberte farbu"
+color = "Farba"
+strokeColor = "Farba obrysu"
+fillColor = "Farba výplne"
+underline = "Podčiarknutie"
+strikeout = "Prečiarknutie"
+squiggly = "Vlnovka"
+inkHighlighter = "Zvýrazňovač voľnou rukou"
+freehandHighlighter = "Zvýrazňovač voľnou rukou"
+square = "Štvorec"
+circle = "Kruh"
+polygon = "Mnohouholník"
+line = "Čiara"
+stamp = "Pridať obrázok"
+textMarkup = "Značenie textu"
+drawing = "Kreslenie"
+shapes = "Tvary"
+notesStamps = "Poznámky a pečiatky"
+settings = "Nastavenia"
+borderOn = "Okraj: Zapnuté"
+borderOff = "Okraj: Vypnuté"
+editInk = "Upraviť pero"
+editLine = "Upraviť čiaru"
+editNote = "Upraviť poznámku"
+editText = "Upraviť textové pole"
+editTextMarkup = "Upraviť značenie textu"
+editSelected = "Upraviť anotáciu"
+editSquare = "Upraviť štvorec"
+editCircle = "Upraviť kruh"
+editPolygon = "Upraviť mnohouholník"
+unsupportedType = "Tento typ anotácie nie je plne podporovaný na úpravu."
+textAlignment = "Zarovnanie textu"
+noteIcon = "Ikona poznámky"
+imagePreview = "Náhľad"
+contents = "Text"
+backgroundColor = "Farba pozadia"
+clearBackground = "Odstrániť pozadie"
+noBackground = "Bez pozadia"
+stampSettings = "Nastavenia pečiatky"
+savingCopy = "Príprava sťahovania..."
+saveFailed = "Kópiu sa nepodarilo uložiť"
+saveReady = "Sťahovanie pripravené"
+selectAndMove = "Vybrať a upraviť"
+editSelectDescription = "Kliknite na existujúcu anotáciu a upravte jej farbu, nepriehľadnosť, text alebo veľkosť."
+editStampHint = "Ak chcete zmeniť obrázok, odstráňte túto pečiatku a pridajte novú."
+editSwitchToSelect = "Prepnite na Vybrať a upraviť, aby ste upravili túto anotáciu."
+undo = "Späť"
+redo = "Znova"
+applyChanges = "Použiť zmeny"
 saveChanges = "Uložiť zmeny"
 
 [search]
@@ -3933,12 +4270,20 @@ settings = "Nast."
 adminSettings = "Admin nast."
 allTools = "All Tools"
 reader = "Čítačka"
+tours = "Prehliadky"
+showMeAround = "Previesť ma"
+
+[quickAccess.toursTooltip]
+admin = "Pozrite si návody tu: prehliadka Nástrojov, prehliadka nového rozloženia V2 a Administrátorská prehliadka."
+user = "Pozrite si návody tu: prehliadka Nástrojov a prehliadka nového rozloženia V2."
 
 [quickAccess.helpMenu]
 toolsTour = "Prehliadka nástrojov"
 toolsTourDesc = "Zistite, čo nástroje dokážu"
 adminTour = "Prehliadka administrácie"
 adminTourDesc = "Preskúmajte administrátorské nastavenia a funkcie"
+whatsNewTour = "Pozrite, čo je nové vo V2"
+whatsNewTourDesc = "Prehliadka aktualizovaného rozloženia"
 
 [admin]
 error = "Chyba"
@@ -3957,6 +4302,8 @@ fetchError = "Nepodarilo sa načítať nastavenia"
 saveError = "Nepodarilo sa uložiť nastavenia"
 saved = "Nastavenia boli úspešne uložené"
 saveSuccess = "Nastavenia boli úspešne uložené"
+success = "Nastavenia boli úspešne uložené"
+error = "Nepodarilo sa uložiť nastavenia"
 save = "Uložiť zmeny"
 discard = "Zahodiť"
 restartRequired = "Vyžaduje sa reštart"
@@ -4079,6 +4426,13 @@ description = "Cesta k spustiteľnému súboru WeasyPrint na konverziu HTML do P
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Spustiteľný súbor Unoconvert"
 description = "Cesta k LibreOffice unoconvert pre konverzie dokumentov (ponechajte prázdne pre predvolené: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Základná URL pre frontend (napr. https://pdf.example.com). Používa sa pre odkazy v e-mailových pozvánkach a mobilné nahrávanie cez QR kód. Nechajte prázdne, aby sa použila URL backendu."
+
+[admin.settings.badge]
+clickToUpgrade = "Kliknite pre zobrazenie podrobností plánu"
 
 [admin.settings.security]
 title = "Zabezpečenie"
@@ -4216,6 +4570,19 @@ connect = "Pripojiť"
 disconnect = "Odpojiť"
 disconnected = "Poskytovateľ bol úspešne odpojený"
 disconnectError = "Poskytovateľa sa nepodarilo odpojiť"
+mobileScannerConvertToPdf = "Konvertovať obrázky na PDF"
+mobileScannerConvertToPdfDesc = "Automaticky konvertovať nahrané obrázky do formátu PDF. Ak je vypnuté, obrázky zostanú nezmenené."
+mobileScannerImageResolution = "Rozlíšenie obrázkov"
+mobileScannerImageResolutionDesc = "Rozlíšenie nahraných obrázkov. „Znížené“ zmenší obrázky na max. 1200 px pre zníženie veľkosti súboru."
+imageResolutionFull = "Plné (pôvodná veľkosť)"
+imageResolutionReduced = "Znížené (max. 1200 px)"
+mobileScannerPageFormat = "Formát strany"
+mobileScannerPageFormatDesc = "Veľkosť stránky PDF pre konvertované obrázky. „Ponechať“ použije pôvodné rozmery obrázka."
+pageFormatKeep = "Ponechať (pôvodné rozmery)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Roztiahnuť na celú stránku"
+mobileScannerStretchToFitDesc = "Roztiahnuť obrázky tak, aby vyplnili celú stranu. Ak je vypnuté, obrázky budú vystredené so zachovaním pomeru strán."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Automatické prihlásenie SSO"
@@ -4283,6 +4650,122 @@ description = "Automaticky vytvoriť používateľské účty pri prvom prihlás
 [admin.settings.connections.saml2.blockRegistration]
 label = "Blokovať registráciu"
 description = "Zabrániť registrácii nových používateľov cez SAML2"
+
+[admin.settings.connections.mobileScanner]
+label = "Nahrávanie z mobilu"
+enable = "Povoliť nahrávanie cez QR kód"
+description = "Umožnite používateľom nahrávať súbory z mobilných zariadení naskenovaním QR kódu"
+note = "Poznámka: Vyžaduje nastavený Frontend URL. "
+link = "Nastaviť v systémových nastaveniach"
+mobileScannerConvertToPdf = "Konvertovať obrázky na PDF"
+mobileScannerConvertToPdfDesc = "Automaticky konvertovať nahrané obrázky do formátu PDF. Ak je vypnuté, obrázky zostanú nezmenené."
+mobileScannerImageResolution = "Rozlíšenie obrázkov"
+mobileScannerImageResolutionDesc = "Rozlíšenie nahraných obrázkov. „Znížené“ zmenší obrázky na max. 1200 px pre zníženie veľkosti súboru."
+imageResolutionFull = "Plné (pôvodná veľkosť)"
+imageResolutionReduced = "Znížené (max. 1200 px)"
+mobileScannerPageFormat = "Formát strany"
+mobileScannerPageFormatDesc = "Veľkosť stránky PDF pre konvertované obrázky. „Ponechať“ použije pôvodné rozmery obrázka."
+pageFormatKeep = "Ponechať (pôvodné rozmery)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Roztiahnuť na celú stránku"
+mobileScannerStretchToFitDesc = "Roztiahnuť obrázky tak, aby vyplnili celú stranu. Ak je vypnuté, obrázky budú vystredené so zachovaním pomeru strán."
+
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Nakonfigurujte pripojenie Telegram bota, riadenie prístupu a správanie spätnej väzby."
+
+[admin.settings.telegram.enabled]
+label = "Povoliť Telegram bota"
+description = "Umožniť používateľom pracovať so Stirling PDF cez váš nakonfigurovaný Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Používateľské meno bota"
+description = "Verejné používateľské meno vášho Telegram bota."
+
+[admin.settings.telegram.botToken]
+label = "Token bota"
+description = "API token poskytnutý BotFather pre váš Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Priečinok Doručená pošta"
+description = "Priečinok v adresári pipeline, kde sa ukladajú prichádzajúce súbory z Telegramu."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Použiť vlastnú príponu priečinka"
+description = "Pripojiť ID chatu k priečinkom s prichádzajúcimi súbormi na izolovanie nahrávaní podľa chatu."
+
+[admin.settings.telegram.accessControl]
+title = "Riadenie prístupu"
+description = "Obmedzte, ktorí používatelia alebo kanály môžu komunikovať s botom."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Povoliť konkrétne ID používateľov"
+description = "Ak je zapnuté, bot môžu používať len uvedené používateľské ID."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Povolené ID používateľov"
+description = "Zadajte Telegram ID používateľov, ktorí môžu komunikovať s botom."
+placeholder = "Pridajte ID používateľa a stlačte Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Povoliť konkrétne ID kanálov"
+description = "Ak je zapnuté, bot môžu používať len uvedené ID kanálov."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Povolené ID kanálov"
+description = "Zadajte Telegram ID kanálov, ktoré môžu komunikovať s botom."
+placeholder = "Pridajte ID kanála a stlačte Enter"
+
+[admin.settings.telegram.processing]
+title = "Spracovanie"
+description = "Nastavte intervaly dotazovania a časové limity spracovania pre nahrávky z Telegramu."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Časový limit spracovania (sekundy)"
+description = "Maximálny čas čakania na spracovanie úlohy pred nahlásením chyby."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Interval dotazovania (ms)"
+description = "Interval medzi kontrolami nových aktualizácií z Telegramu."
+
+[admin.settings.telegram.feedback]
+title = "Správy spätnej väzby"
+description = "Vyberte, kedy má bot posielať spätnú väzbu používateľom a kanálom."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Povoliť spätnú väzbu"
+description = "Určuje, či bot vôbec posiela správy spätnej väzby."
+
+[admin.settings.telegram.feedback.channel]
+title = "Pravidlá spätnej väzby pre kanály"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Zobraziť „Žiadny platný dokument“ (Kanál)"
+description = "Potlačiť odpoveď „Žiadny platný dokument“ pri nahrávaní do kanálov."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Zobraziť chyby spracovania (Kanál)"
+description = "Posielať správy o chybách spracovania do kanálov."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Zobraziť chybové správy (Kanál)"
+description = "Zobraziť podrobné chybové správy pre kanály."
+
+[admin.settings.telegram.feedback.user]
+title = "Pravidlá spätnej väzby pre používateľov"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Zobraziť „Žiadny platný dokument“ (Používateľ)"
+description = "Potlačiť odpoveď „Žiadny platný dokument“ pri nahrávaní od používateľov."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Zobraziť chyby spracovania (Používateľ)"
+description = "Posielať správy o chybách spracovania používateľom."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Zobraziť chybové správy (Používateľ)"
+description = "Zobraziť podrobné chybové správy pre používateľov."
 
 [admin.settings.database]
 title = "Databáza"
@@ -4465,6 +4948,10 @@ description = "Umožniť správcom pozývať používateľov e-mailom s automati
 label = "Frontend URL"
 description = "Základná URL pre frontend (napr. https://pdf.example.com). Používa sa na generovanie odkazov na pozvánky v e-mailoch. Ponechajte prázdne pre použitie backend URL."
 
+[admin.settings.mail.frontendUrlNote]
+note = "Poznámka: Vyžaduje nastavený Frontend URL. "
+link = "Nastaviť v systémových nastaveniach"
+
 [admin.settings.legal]
 title = "Právne dokumenty"
 description = "Nakonfigurujte odkazy na právne dokumenty a zásady."
@@ -4497,6 +4984,7 @@ description = "URL alebo názov súboru k Impressu (požadované v niektorých j
 title = "Premium a Enterprise"
 description = "Nakonfigurujte svoj Premium alebo Enterprise licenčný kľúč."
 license = "Konfigurácia licencie"
+noInput = "Zadajte licenčný kľúč alebo súbor"
 
 [admin.settings.premium.licenseKey]
 toggle = "Máte licenčný kľúč alebo súbor certifikátu?"
@@ -4513,6 +5001,25 @@ title = "⚠️ Upozornenie: Zistená existujúca licencia"
 line1 = "Prepísanie aktuálneho licenčného kľúča nemožno vrátiť späť."
 line2 = "Vaša predchádzajúca licencia bude natrvalo stratená, pokiaľ ju nemáte zálohovanú inde."
 line3 = "Dôležité: Licenčné kľúče uchovávajte súkromné a v bezpečí. Nikdy ich nezdieľajte verejne."
+
+[admin.settings.premium.inputMethod]
+text = "Licenčný kľúč"
+file = "Súbor certifikátu"
+
+[admin.settings.premium.file]
+label = "Súbor licenčného certifikátu"
+description = "Nahrajte svoj licenčný súbor .lic alebo .cert z offline nákupu"
+choose = "Vybrať licenčný súbor"
+selected = "Vybrané: {{filename}} ({{size}})"
+successMessage = "Licenčný súbor bol úspešne nahraný a aktivovaný. Reštart nie je potrebný."
+
+[admin.settings.premium.currentLicense]
+title = "Aktívna licencia"
+file = "Zdroj: Licenčný súbor ({{path}})"
+key = "Zdroj: Licenčný kľúč"
+type = "Typ: {{type}}"
+noInput = "Zadajte licenčný kľúč alebo nahrajte súbor certifikátu"
+success = "Úspech"
 
 [admin.settings.premium.enabled]
 label = "Povoliť Premium funkcie"
@@ -4629,6 +5136,9 @@ googleDriveShort = "Drive"
 myFiles = "Moje súbory"
 noRecentFiles = "Nenašli sa žiadne nedávne súbory"
 googleDriveNotAvailable = "Integrácia Google Drive nie je dostupná"
+mobileUpload = "Nahrávanie z mobilu"
+mobileShort = "Mobil"
+mobileUploadNotAvailable = "Nahrávanie z mobilu nie je povolené"
 downloadSelected = "Stiahnuť vybrané"
 saveSelected = "Uložiť vybrané"
 openFiles = "Otvoriť súbory"
@@ -4647,7 +5157,9 @@ selectedCount = "{{count}} vybraných"
 download = "Stiahnuť"
 delete = "Vymazať"
 unsupported = "Nepodporované"
+active = "Aktívne"
 addToUpload = "Pridať na nahratie"
+closeFile = "Zatvoriť súbor"
 deleteAll = "Odstrániť všetko"
 loadingFiles = "Načítavajú sa súbory..."
 noFiles = "Nie sú dostupné žiadne súbory"
@@ -4942,6 +5454,7 @@ loading = "Načítava sa..."
 back = "Späť"
 continue = "Pokračovať"
 error = "Chyba"
+save = "Uložiť"
 
 [config.overview]
 title = "Konfigurácia aplikácie"
@@ -5003,6 +5516,15 @@ warning = "⚠️ Upozornenie: Táto akcia vygeneruje nové API kľúče a vaše
 impact = "Všetky aplikácie alebo služby, ktoré tieto kľúče aktuálne používajú, prestanú fungovať, kým ich neaktualizujete novými kľúčmi."
 confirmPrompt = "Naozaj chcete pokračovať?"
 confirmCta = "Obnoviť kľúče"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Chyba API kľúča"
+failedToCreateApiKey = "Nepodarilo sa vytvoriť API kľúč."
+failedToRetrieveApiKey = "Nepodarilo sa získať API kľúč z odpovede."
+failedToFetchApiKey = "Nepodarilo sa načítať API kľúč."
+apiKeyRefreshed = "API kľúč obnovený"
+apiKeyRefreshedBody = "Váš API kľúč bol úspešne obnovený."
+failedToRefreshApiKey = "Nepodarilo sa obnoviť API kľúč."
 
 [AddAttachmentsRequest]
 attachments = "Vyberte prílohy"
@@ -5108,6 +5630,16 @@ finish = "Dokončiť"
 startTour = "Spustiť prehliadku"
 startTourDescription = "Prejdite si sprievodcu kľúčovými funkciami Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Začnite na lište <strong>Rýchly prístup</strong> a prepnite sa medzi Prehliadačom, Automatizáciou, vašimi súbormi a všetkými prehliadkami."
+leftPanel = "Ľavý panel <strong>Nástroje</strong> obsahuje všetko, čo môžete robiť. Prezrite si kategórie alebo hľadajte nástroj rýchlo."
+fileUpload = "Použite tlačidlo <strong>Súbory</strong> na nahratie alebo výber nedávneho PDF. Na ukážku načítame vzor, aby ste videli pracovné prostredie."
+rightRail = "<strong>Pravý panel</strong> obsahuje rýchle akcie na výber súborov, zmenu témy alebo jazyka a stiahnutie výsledkov."
+topBar = "Horná lišta umožňuje prepínať medzi <strong>Prehliadač</strong>, <strong>Editor strán</strong> a <strong>Aktívne súbory</strong>."
+pageEditorView = "Prepnite do Editora strán na zmenu poradia, otáčanie alebo odstránenie strán."
+activeFilesView = "Použite Aktívne súbory na zobrazenie všetkého, čo máte otvorené, a vyberte si, na čom pracovať."
+wrapUp = "To je všetko nové vo V2. Otvorte menu <strong>Prehliadky</strong> kedykoľvek a prehrajte si znova toto, prehliadku Nástrojov alebo Administrátorskú prehliadku."
+
 [onboarding.welcomeModal]
 title = "Vitajte v Stirling PDF!"
 description = "Chceli by ste si prejsť rýchlu 1‑minútovú prehliadku kľúčových funkcií a ako začať?"
@@ -5127,6 +5659,10 @@ skipForNow = "Preskočiť zatiaľ"
 download = "Stiahnuť →"
 showMeAround = "Ukážte mi to"
 skipTheTour = "Preskočiť prehliadku"
+
+[onboarding.tourOverview]
+title = "Prehľad prehliadky"
+body = "Stirling PDF V2 prichádza s desiatkami nástrojov a obnoveným rozložením. Dajte si rýchlu prehliadku, aby ste zistili, čo sa zmenilo a kde nájdete potrebné funkcie."
 
 [onboarding.serverLicense]
 skip = "Preskočiť zatiaľ"
@@ -5240,6 +5776,31 @@ error = "Nepodarilo sa aktualizovať stav používateľa"
 success = "Používateľ bol úspešne odstránený"
 error = "Nepodarilo sa odstrániť používateľa"
 
+[workspace.people.changePassword]
+action = "Zmeniť heslo"
+title = "Zmeniť heslo"
+subtitle = "Aktualizovať heslo pre"
+newPassword = "Nové heslo"
+confirmPassword = "Potvrdiť heslo"
+placeholder = "Zadajte nové heslo"
+confirmPlaceholder = "Zadajte nové heslo ešte raz"
+passwordRequired = "Zadajte nové heslo"
+passwordMismatch = "Heslá sa nezhodujú"
+generateRandom = "Vygenerovať bezpečné heslo"
+generatedPreview = "Vygenerované heslo:"
+copyTooltip = "Kopírovať do schránky"
+copiedToClipboard = "Heslo skopírované do schránky"
+copyFailed = "Heslo sa nepodarilo skopírovať"
+sendEmail = "Odoslať používateľovi e-mail o tejto zmene"
+includePassword = "Zahrnúť nové heslo do e-mailu"
+forcePasswordChange = "Vynútiť zmenu hesla pri najbližšom prihlásení"
+emailUnavailable = "E-mailová adresa tohto používateľa nie je platná. Upozornenia sú vypnuté."
+smtpDisabled = "E-mailové upozornenia vyžadujú, aby bolo v nastaveniach povolené SMTP."
+notifyOnly = "Odošle sa e-mail bez hesla, ktorý používateľa informuje, že ho zmenil administrátor."
+submit = "Aktualizovať heslo"
+success = "Heslo bolo úspešne aktualizované"
+error = "Heslo sa nepodarilo aktualizovať"
+
 [workspace.people.emailInvite]
 tab = "Pozvánka e-mailom"
 description = "Nižšie napíšte alebo vložte e-mailové adresy oddelené čiarkami. Používatelia dostanú prihlasovacie údaje e-mailom."
@@ -5248,7 +5809,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Vyžaduje sa aspoň jedna e-mailová adresa"
 submit = "Odoslať pozvánky"
 success = "Používatelia boli úspešne pozvaní"
-partialSuccess = "Niektoré pozvánky zlyhali"
+partialFailure = "Niektoré pozvánky zlyhali"
 allFailed = "Nepodarilo sa pozvať používateľov"
 error = "Nepodarilo sa odoslať pozvánky"
 
@@ -5416,6 +5977,28 @@ contactSales = "Kontaktovať obchod"
 contactToUpgrade = "Kontaktujte nás na inovovanie alebo prispôsobenie vášho plánu"
 maxUsers = "Max. počet používateľov"
 upTo = "Až do"
+getLicense = "Získať serverovú licenciu"
+upgradeToEnterprise = "Prejsť na Enterprise"
+selectPeriod = "Vyberte fakturačné obdobie"
+monthlyBilling = "Mesačné fakturovanie"
+yearlyBilling = "Ročné fakturovanie"
+checkoutOpened = "Pokladňa otvorená"
+checkoutInstructions = "Dokončite nákup na karte Stripe. Po platbe sa sem vráťte a obnovte stránku, aby ste aktivovali licenciu. E‑mailom tiež dostanete licenčný kľúč."
+activateLicense = "Aktivujte svoju licenciu"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Pokladňa otvorená v novej karte"
+instructions = "Dokončite nákup na karte Stripe. Po dokončení platby dostanete e‑mail s licenčným kľúčom."
+enterKey = "Nižšie zadajte licenčný kľúč na aktiváciu plánu:"
+keyDescription = "Vložte licenčný kľúč z e‑mailu"
+activate = "Aktivovať licenciu"
+doLater = "Urobím to neskôr"
+success = "Licencia aktivovaná!"
+successMessage = "Vaša licencia bola úspešne aktivovaná. Teraz môžete toto okno zatvoriť."
+
+[plan.static.billingPortal]
+title = "Vyžaduje sa overenie e‑mailu"
+message = "V portáli platieb Stripe budete musieť overiť svoju e‑mailovú adresu. Skontrolujte e‑mail pre prihlasovací odkaz."
 
 [plan.period]
 month = "mesiac"
@@ -5619,6 +6202,8 @@ notAvailable = "Auditný systém nie je k dispozícii"
 notAvailableMessage = "Auditný systém nie je nakonfigurovaný alebo nie je k dispozícii."
 disabled = "Auditné protokolovanie je vypnuté"
 disabledMessage = "Povolením auditného protokolovania v konfigurácii aplikácie môžete sledovať udalosti systému."
+enterpriseRequired = "Vyžaduje sa licencia Enterprise"
+enterpriseRequiredMessage = "Systém auditných záznamov je funkcia Enterprise. Ak chcete získať prístup k auditným záznamom a analytike, prejdite na licenciu Enterprise."
 
 [audit.error]
 title = "Chyba pri načítaní auditného systému"
@@ -5773,6 +6358,7 @@ subtitle = "Prihláste sa pomocou svojho účtu Stirling"
 [setup.selfhosted]
 title = "Prihlásiť sa na server"
 subtitle = "Zadajte prihlasovacie údaje k serveru"
+link = "alebo sa pripojte k self-hosted účtu"
 
 [setup.server]
 title = "Pripojiť sa na server"
@@ -5789,8 +6375,17 @@ description = "Zadajte úplnú URL svojho self-hostovaného servera Stirling PDF
 
 [setup.server.error]
 emptyUrl = "Zadajte URL servera"
+invalidUrl = "Neplatný formát URL. Zadajte platnú URL ako https://your-server.com"
 unreachable = "Nedá sa pripojiť k serveru"
 testFailed = "Test pripojenia zlyhal"
+configFetch = "Nepodarilo sa načítať konfiguráciu servera. Skontrolujte URL a skúste to znova."
+
+[setup.server.error.securityDisabled]
+title = "Prihlásenie nie je povolené"
+body = "Na tomto serveri nie je povolené prihlásenie. Ak sa chcete pripojiť k tomuto serveru, musíte povoliť overenie:"
+step1 = "Nastavte DOCKER_ENABLE_SECURITY=true vo svojom prostredí"
+step2 = "Alebo nastavte security.enableLogin=true v súbore settings.yml"
+step3 = "Reštartujte server"
 
 [setup.login]
 title = "Prihlásiť sa"
@@ -5799,7 +6394,15 @@ connectingTo = "Pripája sa k:"
 submit = "Prihlásiť sa"
 signInWith = "Prihlásiť sa cez"
 oauthPending = "Otvára sa prehliadač na overenie..."
+sso = "Jednotné prihlásenie"
 orContinueWith = "Alebo pokračujte emailom"
+serverRequirement = "Poznámka: Na serveri musí byť povolené prihlásenie."
+showInstructions = "Ako povoliť?"
+hideInstructions = "Skryť pokyny"
+instructions = "Na povolenie prihlásenia na vašom serveri Stirling PDF:"
+instructionsEnvVar = "Nastavte premennú prostredia:"
+instructionsOrYml = "Alebo v súbore settings.yml:"
+instructionsRestart = "Potom reštartujte server, aby sa zmeny prejavili."
 
 [setup.login.username]
 label = "Používateľské meno"
@@ -5856,6 +6459,9 @@ earlyAccess = "Skorý prístup"
 reset = "Resetovať zmeny"
 downloadJson = "Stiahnuť JSON"
 generatePdf = "Vygenerovať PDF"
+saveChanges = "Uložiť zmeny"
+applyChanges = "Použiť zmeny"
+downloadCopy = "Stiahnuť kópiu"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Automaticky prispôsobiť text do boxov"
@@ -5873,6 +6479,24 @@ descriptionInline = "Tip: Podržte Ctrl (Cmd) alebo Shift na viacnásobný výbe
 [pdfTextEditor.options.forceSingleElement]
 title = "Uzamknúť upravovaný text na jeden PDF prvok"
 description = "Keď je zapnuté, editor exportuje každý upravený textový box ako jeden PDF textový prvok, aby sa predišlo prekrývaniu glyfov alebo miešaniu písiem."
+
+[pdfTextEditor.options.advanced]
+title = "Pokročilé nastavenia"
+
+[pdfTextEditor.tooltip.header]
+title = "Obmedzenia náhľadu"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Zameranie na text a obrázky"
+text = "Tento pracovný priestor sa zameriava na úpravu textu a premiestňovanie vložených obrázkov. Zložitá grafika strán, formulárové widgety a vrstvená grafika sú zachované na export, ale nie sú tu plne upraviteľné."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Odchýlky náhľadu"
+text = "Niektoré vizuály (ako okraje tabuliek, tvary alebo vzhľady anotácií) sa nemusia v náhľade zobraziť úplne presne. Exportované PDF si zachová pôvodné kresliace príkazy, kde je to možné."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alfa prehliadač"
+text = "Tento alfa prehliadač sa stále vyvíja—niektoré písma, farby, efekty priehľadnosti a detaily rozloženia sa môžu mierne zmeniť. Pred zdieľaním si, prosím, vygenerované PDF skontrolujte."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Zlúčiť vybrané boxy"
@@ -5893,6 +6517,8 @@ alpha = "Tento alfa prehliadač sa stále vyvíja—niektoré písma, farby, efe
 [pdfTextEditor.empty]
 title = "Žiadny dokument nie je načítaný"
 subtitle = "Načítajte súbor PDF alebo JSON a začnite upravovať textový obsah."
+dropzone = "Pretiahnite sem súbor PDF alebo JSON, alebo kliknite pre prehľadanie"
+dropzoneWithFiles = "Vyberte súbor na karte Súbory, alebo sem presuňte súbor PDF alebo JSON, prípadne kliknite pre prehľadanie"
 
 [pdfTextEditor.welcomeBanner]
 title = "Vitajte v PDF Text Editore (Early Access)"
@@ -5993,3 +6619,58 @@ title = "Výsledky pridania textu"
 
 [addText.error]
 failed = "Pri pridávaní textu do PDF sa vyskytla chyba."
+
+[mobileUpload]
+title = "Nahratie z mobilu"
+description = "Naskenujte na nahratie fotiek. Obrázky sa automaticky konvertujú na PDF."
+descriptionNoConvert = "Naskenujte na nahratie fotiek z mobilného zariadenia."
+error = "Chyba pripojenia"
+pollingError = "Chyba pri kontrole súborov"
+sessionId = "ID relácie"
+sessionCreateError = "Nepodarilo sa vytvoriť reláciu"
+expiryWarning = "Relácia čoskoro vyprší"
+expiryWarningMessage = "Tento QR kód vyprší o {{seconds}} sekúnd. Nový kód sa vygeneruje automaticky."
+filesReceived = "{{count}} prijatých súborov"
+connected = "Mobilné zariadenie pripojené"
+instructions = "Naskenujte fotoaparátom telefónu. Obrázky sa automaticky konvertujú na PDF."
+instructionsNoConvert = "Naskenujte fotoaparátom telefónu a nahrajte súbory."
+
+[mobileScanner]
+title = "Mobilný skener"
+noSession = "Neplatná relácia"
+noSessionMessage = "Naskenujte platný QR kód pre prístup na túto stránku."
+validating = "Overuje sa relácia..."
+sessionInvalid = "Chyba relácie"
+sessionExpired = "Táto relácia vypršala. Obnovte stránku a skúste znova."
+sessionNotFound = "Relácia sa nenašla. Obnovte stránku a skúste znova."
+sessionValidationError = "Reláciu sa nepodarilo overiť. Skúste znova."
+uploadSuccess = "Nahrávanie úspešné!"
+uploadSuccessMessage = "Vaše obrázky boli prenesené."
+httpsRequired = "Prístup ku kamere vyžaduje HTTPS alebo localhost. Použite HTTPS alebo pristupujte cez localhost."
+uploadFailed = "Nahrávanie zlyhalo. Skúste znova."
+uploading = "Nahráva sa..."
+connected = "Pripojené"
+connecting = "Pripája sa..."
+chooseMethod = "Vyberte metódu nahrávania"
+chooseMethodDescription = "Vyberte, ako chcete skenovať a nahrávať dokumenty"
+camera = "Kamera"
+cameraDescription = "Skenujte dokumenty pomocou kamery zariadenia s automatickou detekciou okrajov"
+fileUpload = "Nahrávanie súborov"
+fileDescription = "Nahrajte existujúce fotografie alebo dokumenty zo svojho zariadenia"
+cameraAccessDenied = "Prístup ku kamere bol zamietnutý. Povoľte prístup ku kamere."
+back = "Späť"
+settings = "Nastavenia"
+edgeDetection = "Detekcia okrajov"
+flashlight = "Svetlo"
+flash = "Blesk"
+processing = "Spracováva sa..."
+capture = "Odfotiť"
+selectFilesPrompt = "Vyberte súbory na nahratie"
+selectImage = "Vybrať obrázok"
+preview = "Náhľad"
+retake = "Odfotiť znova"
+addToBatch = "Pridať do dávky"
+upload = "Nahrať"
+batchImages = "Dávka"
+clearBatch = "Vymazať"
+uploadAll = "Nahrať všetko"

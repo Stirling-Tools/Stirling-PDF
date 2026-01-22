@@ -1,8 +1,11 @@
 unsavedChanges = "PDF에 저장되지 않은 변경 사항이 있습니다."
+pendingRedactionsTitle = "미적용 가리기"
+pendingRedactions = "적용되지 않은 가리기가 있으며, 손실됩니다."
 areYouSure = "정말 떠나시겠습니까?"
 unsavedChangesTitle = "저장되지 않은 변경 사항"
 keepWorking = "계속 작업"
 discardChanges = "폐기하고 나가기"
+discardRedactions = "삭제하고 나가기"
 applyAndContinue = "저장하고 나가기"
 exportAndContinue = "내보내고 계속"
 cancel = "취소"
@@ -162,6 +165,11 @@ unfavorite = "즐겨찾기에서 제거"
 [toolPanel.toggle]
 fullscreen = "전체 화면 모드로 전환"
 sidebar = "사이드바 모드로 전환"
+
+[backendStartup]
+notFoundTitle = "백엔드를 찾을 수 없음"
+retry = "재시도"
+unreachable = "현재 애플리케이션이 백엔드에 연결할 수 없습니다. 백엔드 상태와 네트워크 연결을 확인한 후 다시 시도하세요."
 
 [zipWarning]
 title = "큰 ZIP 파일"
@@ -335,6 +343,10 @@ advance = "고급"
 edit = "보기 & 편집"
 popular = "인기"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "환경설정"
 
@@ -355,6 +367,7 @@ advanced = "고급"
 title = "보안 및 인증"
 security = "보안"
 connections = "연결"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "라이선스 및 분석"
@@ -429,6 +442,32 @@ currentVersion = "현재 버전"
 latestVersion = "최신 버전"
 checkForUpdates = "업데이트 확인"
 viewDetails = "자세히 보기"
+serverNeedsUpdate = "관리자가 서버를 업데이트해야 합니다"
+
+[settings.general.versionInfo]
+title = "버전 정보"
+description = "데스크톱 및 서버 버전 세부정보"
+desktop = "데스크톱 버전"
+server = "서버 버전"
+
+[settings.security]
+title = "보안"
+description = "계정을 안전하게 유지하려면 비밀번호를 업데이트하세요."
+
+[settings.security.password]
+subtitle = "비밀번호를 변경합니다. 업데이트 후 로그아웃됩니다."
+required = "모든 항목은 필수입니다."
+mismatch = "새 비밀번호가 일치하지 않습니다."
+error = "비밀번호를 업데이트할 수 없습니다. 현재 비밀번호를 확인한 뒤 다시 시도하세요."
+success = "비밀번호가 성공적으로 업데이트되었습니다. 다시 로그인하세요."
+ssoDisabled = "비밀번호 변경은 ID 공급자에서 관리합니다."
+current = "현재 비밀번호"
+currentPlaceholder = "현재 비밀번호 입력"
+new = "새 비밀번호"
+newPlaceholder = "새 비밀번호 입력"
+confirm = "새 비밀번호 확인"
+confirmPlaceholder = "새 비밀번호 다시 입력"
+update = "비밀번호 업데이트"
 
 [settings.hotkeys]
 title = "키보드 단축키"
@@ -483,11 +522,16 @@ low = "낮음"
 title = "자격 증명 변경"
 header = "계정 정보 업데이트"
 changePassword = "기본 로그인 자격 증명을 사용 중입니다. 새 비밀번호를 입력하세요"
+ssoManaged = "귀하의 계정은 ID 공급자에서 관리됩니다."
 newUsername = "새 사용자 이름"
 oldPassword = "현재 비밀번호"
 newPassword = "새 비밀번호"
 confirmNewPassword = "새 비밀번호 확인"
 submit = "변경 사항 제출"
+credsUpdated = "계정이 업데이트되었습니다"
+description = "변경 사항이 저장되었습니다. 다시 로그인하세요."
+error = "사용자 이름을 업데이트할 수 없습니다. 비밀번호를 확인한 뒤 다시 시도하세요."
+changeUsername = "사용자 이름을 업데이트합니다. 업데이트 후 로그아웃됩니다."
 
 [account]
 title = "계정 설정"
@@ -495,6 +539,8 @@ accountSettings = "계정 설정"
 adminSettings = "관리자 설정 - 사용자 보기 및 추가"
 userControlSettings = "사용자 제어 설정"
 changeUsername = "사용자 이름 변경"
+changeUsernameDescription = "사용자 이름을 업데이트합니다. 업데이트 후 로그아웃됩니다."
+newUsernamePlaceholder = "새 사용자 이름 입력"
 newUsername = "새 사용자 이름"
 password = "확인 비밀번호"
 oldPassword = "이전 비밀번호"
@@ -702,6 +748,11 @@ desc = "스캔한 사진을 감지하여 개별 페이지로 분할"
 tags = "서명,사인"
 title = "서명"
 desc = "그리기, 텍스트 또는 이미지로 PDF에 서명 추가"
+
+[home.annotate]
+tags = "주석,강조,그리기"
+title = "주석"
+desc = "뷰어에서 강조 표시, 그리기, 메모와 도형 추가"
 
 [home.flatten]
 tags = "단순화,제거,대화형"
@@ -925,6 +976,7 @@ desc = "PDF 어디에나 사용자 텍스트를 추가합니다"
 addFiles = "파일 추가"
 uploadFromComputer = "컴퓨터에서 업로드"
 openFromComputer = "컴퓨터에서 열기"
+mobileUpload = "모바일에서 업로드"
 
 [viewPdf]
 tags = "보기,읽기,주석,텍스트,이미지"
@@ -1240,6 +1292,37 @@ cbzOptions = "CBZ → PDF 옵션"
 optimizeForEbook = "전자책 리더기에 맞게 PDF 최적화(Ghostscript 사용)"
 cbzOutputOptions = "PDF → CBZ 옵션"
 cbzDpi = "이미지 렌더링용 DPI"
+cbrOptions = "CBR 옵션"
+cbrOutputOptions = "PDF에서 CBR로 옵션"
+cbrDpi = "이미지 렌더링용 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "eBook에서 PDF로 옵션"
+ebookOptionsDesc = "eBook을 PDF로 변환하는 옵션"
+embedAllFonts = "모든 글꼴 포함"
+embedAllFontsDesc = "eBook의 모든 글꼴을 생성된 PDF에 포함"
+includeTableOfContents = "목차 포함"
+includeTableOfContentsDesc = "결과 PDF에 생성된 목차 추가"
+includePageNumbers = "페이지 번호 포함"
+includePageNumbersDesc = "생성된 PDF에 페이지 번호 추가"
+optimizeForEbookPdf = "전자책 리더 최적화"
+optimizeForEbookPdfDesc = "eBook 읽기에 맞게 PDF 최적화(파일 크기 축소, eInk 기기에서 더 나은 렌더링)"
+
+[convert.epubOptions]
+epubOptions = "PDF에서 eBook으로 옵션"
+epubOptionsDesc = "PDF를 EPUB/AZW3로 변환하는 옵션"
+detectChapters = "챕터 감지"
+detectChaptersDesc = "챕터처럼 보이는 제목을 감지하여 EPUB 페이지 나누기 삽입"
+targetDevice = "대상 기기"
+targetDeviceDesc = "리더 기기에 최적화된 출력 프로필 선택"
+outputFormat = "출력 형식"
+outputFormatDesc = "eBook의 출력 형식 선택"
+tabletPhone = "태블릿/휴대폰(이미지 포함)"
+kindleEink = "Kindle e-Ink(텍스트 최적화)"
 
 [imageToPdf]
 tags = "변환,이미지,jpg,사진"
@@ -1317,6 +1400,7 @@ applySignatures = "이미지 적용"
 name = "이미지"
 placeholder = "이미지 업로드"
 label = "이미지 파일"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "이미지 구성"
@@ -1356,6 +1440,11 @@ header = "Add attachments"
 add = "첨부 파일 추가"
 remove = "첨부 파일 제거"
 embed = "첨부 파일 내장"
+convertToPdfA3b = "PDF/A-3b로 변환"
+convertToPdfA3bDescription = "첨부 파일이 포함된 보관용 PDF를 생성합니다"
+convertToPdfA3bTooltip = "PDF/A-3b는 장기 보존을 보장하는 보관 형식입니다. 임의의 파일 형식을 첨부 파일로 포함할 수 있습니다. 변환에는 Ghostscript가 필요하며 큰 파일은 시간이 더 걸릴 수 있습니다."
+convertToPdfA3bTooltipHeader = "PDF/A-3b 변환 정보"
+convertToPdfA3bTooltipTitle = "기능"
 submit = "Add attachments"
 
 [watermark]
@@ -2262,8 +2351,16 @@ defaultCanvasLabel = "그린 서명"
 defaultImageLabel = "업로드된 서명"
 defaultTextLabel = "입력한 서명"
 saveButton = "서명 저장"
+savePersonal = "개인용으로 저장"
+saveShared = "공유용으로 저장"
 saveUnavailable = "먼저 서명을 만든 후 저장하세요."
 noChanges = "현재 서명이 이미 저장되어 있습니다."
+tempStorageTitle = "임시 브라우저 저장소"
+tempStorageDescription = "서명은 브라우저에만 저장됩니다. 브라우저 데이터를 삭제하거나 브라우저를 변경하면 사라집니다."
+personalHeading = "개인 서명"
+sharedHeading = "공유 서명"
+personalDescription = "이 서명은 본인만 볼 수 있습니다."
+sharedDescription = "모든 사용자가 이 서명을 보고 사용할 수 있습니다."
 
 [sign.saved.type]
 canvas = "그리기"
@@ -2293,6 +2390,10 @@ saved = "저장됨"
 label = "서명 이미지 업로드"
 placeholder = "이미지 파일 선택"
 hint = "서명 PNG 또는 JPG 이미지를 업로드하세요"
+removeBackground = "흰색 배경 제거(투명 처리)"
+processing = "이미지 처리 중..."
+backgroundRemovalFailedTitle = "배경 제거 실패"
+backgroundRemovalFailedMessage = "이미지에서 배경을 제거할 수 없습니다. 원본 이미지를 사용합니다."
 
 [sign.instructions]
 title = "서명 추가 방법"
@@ -2337,6 +2438,11 @@ note = "평탄화는 PDF의 대화형 요소를 제거하여 편집할 수 없�
 [flatten.options.flattenOnlyForms]
 label = "양식만 평면화"
 desc = "양식 필드만 평탄화하고 다른 대화형 요소는 그대로 둡니다"
+
+[flatten.renderDpi]
+label = "렌더링 DPI(선택 사항, 권장 150 DPI)"
+help = "비워 두면 시스템 기본값을 사용합니다. DPI가 높을수록 출력이 선명하지만 처리 시간과 파일 크기가 증가합니다."
+placeholder = "예: 150"
 
 [flatten.results]
 title = "평탄화 결과"
@@ -2912,6 +3018,7 @@ header = "PDF 자르기"
 submit = "제출"
 noFileSelected = "자르기를 시작하려면 PDF 파일을 선택하세요"
 reset = "전체 PDF로 재설정"
+autoCrop = "여백 자동 자르기"
 
 [crop.preview]
 title = "자르기 영역 선택"
@@ -3023,6 +3130,91 @@ title = "PDF 정보 가져오기"
 header = "PDF 정보 가져오기"
 submit = "정보 가져오기"
 downloadJson = "JSON 다운로드"
+processing = "정보를 추출하는 중..."
+results = "결과"
+noResults = "보고서를 생성하려면 도구를 실행하세요."
+downloads = "다운로드"
+noneDetected = "감지되지 않음"
+indexTitle = "색인"
+
+[getPdfInfo.report]
+entryLabel = "전체 정보 요약"
+shortTitle = "PDF 정보"
+
+[getPdfInfo.sections]
+metadata = "메타데이터"
+formFields = "양식 필드"
+basicInfo = "기본 정보"
+documentInfo = "문서 정보"
+compliance = "규격 준수"
+encryption = "암호화"
+permissions = "권한"
+other = "기타"
+perPageInfo = "페이지별 정보"
+tableOfContents = "목차"
+
+[getPdfInfo.other]
+attachments = "첨부 파일"
+embeddedFiles = "내장 파일"
+javaScript = "JavaScript"
+layers = "레이어"
+structureTree = "StructureTree"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "크기"
+annotations = "주석"
+images = "이미지"
+links = "링크"
+fonts = "글꼴"
+xobjects = "XObject 개수"
+multimedia = "멀티미디어"
+
+[getPdfInfo.summary]
+pages = "페이지 수"
+fileSize = "파일 크기"
+pdfVersion = "PDF 버전"
+language = "언어"
+title = "PDF 요약"
+author = "작성자"
+created = "생성됨"
+modified = "수정됨"
+permsAll = "모든 권한 허용"
+permsRestricted = "{{count}}개의 제한"
+permsMixed = "일부 권한이 제한됨"
+hasCompliance = "규격 준수 기준 있음"
+noCompliance = "규격 준수 기준 없음"
+basic = "기본 정보"
+documentInfo = "문서 정보"
+securityTitle = "보안 상태"
+technical = "기술 정보"
+overviewTitle = "PDF 개요"
+
+[getPdfInfo.summary.security]
+encrypted = "암호화된 PDF - 암호 보호 적용"
+unencrypted = "암호화되지 않은 PDF - 암호 보호 없음"
+
+[getPdfInfo.summary.tech]
+images = "이미지"
+fonts = "글꼴"
+formFields = "양식 필드"
+embeddedFiles = "내장 파일"
+javaScript = "JavaScript"
+layers = "레이어"
+bookmarks = "북마크"
+multimedia = "멀티미디어"
+
+[getPdfInfo.summary.overview]
+untitled = "제목 없는 문서"
+unknown = "알 수 없는 작성자"
+text = "이 문서는 {{pages}}페이지 분량의 PDF로, 제목은 {{title}}이며 작성자는 {{author}}입니다(PDF 버전 {{version}})."
+
+[getPdfInfo.error]
+partial = "일부 파일을 처리하지 못했습니다."
+unexpected = "추출 중 예기치 않은 오류가 발생했습니다."
+
+[getPdfInfo.status]
+complete = "추출 완료"
 
 [extractPage]
 tags = "추출"
@@ -3057,6 +3249,7 @@ title = "가리기 방법"
 mode = "모드"
 automatic = "자동"
 automaticDesc = "검색어 기준으로 텍스트 가리기"
+automaticDisabledTooltip = "한 번에 여러 파일을 가리려면 파일 관리자에서 파일을 선택하세요"
 manual = "수동"
 manualDesc = "드래그하여 특정 영역을 가리기"
 manualComingSoon = "수동 가리기 곧 제공"
@@ -3127,8 +3320,35 @@ text = "완전한 단어만 일치시키며, 부분 일치는 제외합니다. �
 title = "PDF-Image로 변환"
 text = "가리기 후 PDF를 이미지 기반 PDF로 변환합니다. 가리기 박스 뒤의 텍스트가 완전히 제거되어 복구할 수 없도록 보장합니다."
 
+[redact.tooltip.manual.header]
+title = "수동 가리기 컨트롤"
+
+[redact.tooltip.manual.markText]
+title = "텍스트 표시 도구"
+text = "PDF에서 텍스트를 직접 선택해 가리기로 표시하세요. 가릴 특정 텍스트를 강조하려면 클릭 후 드래그하세요."
+
+[redact.tooltip.manual.markArea]
+title = "영역 표시 도구"
+text = "PDF에 사각 영역을 그려 가릴 영역을 표시합니다. 이미지, 서명 또는 불규칙한 모양을 가릴 때 유용합니다."
+
+[redact.tooltip.manual.apply]
+title = "가리기 적용"
+text = "표시가 끝나면 '적용'을 클릭해 표시된 모든 영역을 영구적으로 가립니다. 대기 수는 적용할 가리기 개수를 나타냅니다."
+bullet1 = "적용 전 필요한 만큼 많은 영역을 표시하세요"
+bullet2 = "모든 대기 중인 가리기는 한 번에 적용됩니다"
+bullet3 = "적용 후에는 되돌릴 수 없습니다"
+
 [redact.manual]
+title = "가리기 도구"
+instructions = "PDF에서 텍스트를 선택하거나 영역을 그려 가릴 콘텐츠를 표시하세요."
+markText = "텍스트 표시"
+markArea = "영역 표시"
+pendingLabel = "대기 중:"
+applyWarning = "⚠️ 영구 적용되며 되돌릴 수 없고, 아래 데이터는 삭제됩니다"
+apply = "적용"
+noMarks = "가리기 표시가 없습니다. 위 도구로 가릴 내용을 표시하세요."
 header = "수동 가리기"
+controlsTitle = "수동 가리기 컨트롤"
 textBasedRedaction = "텍스트 기반 가리기"
 pageBasedRedaction = "페이지 기반 가리기"
 convertPDFToImageLabel = "PDF를 PDF-Image로 변환(박스 뒤 텍스트 제거용)"
@@ -3243,6 +3463,19 @@ placeholder = "수평 분할 수 입력"
 [split-by-sections.vertical]
 label = "수직 분할"
 placeholder = "수직 분할 수 입력"
+
+[split-by-sections.splitMode]
+label = "분할 모드"
+description = "페이지를 분할하는 방법을 선택하세요"
+splitAll = "모든 페이지 분할"
+splitAllExceptFirst = "첫 페이지 제외 모두 분할"
+splitAllExceptLast = "마지막 페이지 제외 모두 분할"
+splitAllExceptFirstAndLast = "첫·마지막 페이지 제외 모두 분할"
+custom = "사용자 지정 페이지"
+
+[split-by-sections.customPages]
+label = "사용자 지정 페이지 번호"
+placeholder = "예: 2,4,6"
 
 [AddStampRequest]
 tags = "스탬프,이미지 추가,중앙 이미지,워터마크,PDF,삽입,사용자 지정"
@@ -3441,6 +3674,9 @@ signinTitle = "로그인해 주세요"
 ssoSignIn = "단일 로그인으로 로그인"
 oAuth2AutoCreateDisabled = "OAuth2 사용자 자동 생성이 비활성화되었습니다"
 oAuth2AdminBlockedUser = "현재 미등록 사용자의 등록 또는 로그인이 차단되어 있습니다. 관리자에게 문의하세요."
+oAuth2RequiresLicense = "OAuth/SSO 로그인은 유료 라이선스(서버 또는 엔터프라이즈)가 필요합니다. 플랜 업그레이드를 위해 관리자에게 문의하세요."
+saml2RequiresLicense = "SAML 로그인은 유료 라이선스(서버 또는 엔터프라이즈)가 필요합니다. 플랜 업그레이드를 위해 관리자에게 문의하세요."
+maxUsersReached = "현재 라이선스에서 허용된 최대 사용자 수에 도달했습니다. 플랜 업그레이드 또는 시트 추가를 위해 관리자에게 문의하세요."
 oauth2RequestNotFound = "인증 요청을 찾을 수 없습니다"
 oauth2InvalidUserInfoResponse = "잘못된 사용자 정보 응답"
 oauth2invalidRequest = "잘못된 요청"
@@ -3602,6 +3838,19 @@ filesize = "파일 크기"
 [compress.grayscale]
 label = "압축을 위해 그레이스케일 적용"
 
+[compress.linearize]
+label = "빠른 웹 보기를 위해 PDF 선형화"
+
+[compress.lineArt]
+label = "이미지를 선화로 변환"
+description = "ImageMagick을 사용해 페이지를 고대비 흑백으로 변환하여 파일 크기를 최대한 줄입니다."
+unavailable = "이 서버에 ImageMagick이 설치되지 않았거나 활성화되어 있지 않습니다"
+detailLevel = "세부 수준"
+edgeEmphasis = "가장자리 강조"
+edgeLow = "부드럽게"
+edgeMedium = "균형"
+edgeHigh = "강하게"
+
 [compress.tooltip.header]
 title = "압축 설정 개요"
 
@@ -3619,6 +3868,10 @@ bullet2 = "높은 값은 파일 크기 감소"
 title = "그레이스케일"
 text = "이 옵션을 선택하면 모든 이미지를 흑백으로 변환합니다. 특히 스캔한 PDF나 이미지가 많은 문서의 파일 크기를 크게 줄일 수 있습니다."
 
+[compress.tooltip.lineArt]
+title = "선화"
+text = "ImageMagick을 사용해 페이지를 고대비 흑백으로 변환합니다. 세부 수준은 얼마나 많은 콘텐츠를 검은색으로 만들지, 가장자리 강조는 가장자리를 얼마나 적극적으로 감지할지 제어합니다."
+
 [compress.error]
 failed = "PDF를 압축하는 중 오류가 발생했습니다."
 
@@ -3630,6 +3883,11 @@ failed = "PDF를 압축하는 중 오류가 발생했습니다."
 [compress.selectText.1]
 _value = "압축 설정"
 1 = "1-3 PDF 압축,</br> 4-6 약한 이미지 압축,</br> 7-9 강한 이미지 압축은 이미지 품질을 크게 낮춥니다"
+
+[compress.compressionLevel]
+range1to3 = "값이 낮을수록 품질은 유지되지만 파일 크기는 커집니다"
+range4to6 = "중간 압축으로 품질이 어느 정도 감소합니다"
+range7to9 = "값이 높을수록 파일 크기는 크게 줄지만 이미지 선명도가 낮아질 수 있습니다"
 
 [decrypt]
 passwordPrompt = "이 파일은 비밀번호로 보호되어 있습니다. 비밀번호를 입력하세요:"
@@ -3849,14 +4107,17 @@ fitToWidth = "너비에 맞추기"
 actualSize = "실제 크기"
 
 [viewer]
+cannotPreviewFile = "파일을 미리보기할 수 없습니다"
+dualPageView = "두 페이지 보기"
 firstPage = "첫 페이지"
 lastPage = "마지막 페이지"
-previousPage = "이전 페이지"
 nextPage = "다음 페이지"
+onlyPdfSupported = "뷰어는 PDF 파일만 지원합니다. 이 파일은 다른 형식인 것으로 보입니다."
+previousPage = "이전 페이지"
+singlePageView = "단일 페이지 보기"
+unknownFile = "알 수 없는 파일"
 zoomIn = "확대"
 zoomOut = "축소"
-singlePageView = "단일 페이지 보기"
-dualPageView = "두 페이지 보기"
 
 [rightRail]
 closeSelected = "선택한 파일 닫기"
@@ -3867,22 +4128,98 @@ deleteSelected = "선택한 페이지 삭제"
 closePdf = "PDF 닫기"
 exportAll = "PDF 내보내기"
 downloadSelected = "선택한 파일 다운로드"
-downloadAll = "전체 다운로드"
-saveAll = "모두 저장"
+annotations = "주석"
+exportSelected = "선택한 페이지 내보내기"
+saveChanges = "변경 내용 저장"
 toggleTheme = "테마 전환"
-toggleBookmarks = "북마크 표시/숨기기"
 language = "언어"
+toggleAnnotations = "주석 가시성 전환"
 search = "PDF 검색"
 panMode = "이동 모드"
+applyRedactionsFirst = "먼저 가리기 적용"
 rotateLeft = "왼쪽으로 회전"
 rotateRight = "오른쪽으로 회전"
 toggleSidebar = "사이드바 전환"
-exportSelected = "선택한 페이지 내보내기"
-toggleAnnotations = "주석 가시성 전환"
-annotationMode = "주석 모드 전환"
+toggleBookmarks = "북마크 표시/숨기기"
+print = "PDF 인쇄"
 draw = "그리기"
+redact = "가리기"
+exitRedaction = "가리기 모드 종료"
 save = "저장"
-saveChanges = "변경 내용 저장"
+downloadAll = "전체 다운로드"
+saveAll = "모두 저장"
+
+[textAlign]
+left = "왼쪽"
+center = "가운데"
+right = "오른쪽"
+
+[annotation]
+title = "주석"
+desc = "강조, 펜, 텍스트, 메모를 사용하세요. 변경 사항은 실시간으로 유지되며 평탄화가 필요 없습니다."
+highlight = "강조 표시"
+pen = "펜"
+text = "텍스트 상자"
+note = "메모"
+rectangle = "사각형"
+ellipse = "타원"
+select = "선택"
+exit = "주석 모드 종료"
+strokeWidth = "너비"
+opacity = "불투명도"
+strokeOpacity = "선 불투명도"
+fillOpacity = "채우기 불투명도"
+fontSize = "글꼴 크기"
+chooseColor = "색상 선택"
+color = "색상"
+strokeColor = "선 색상"
+fillColor = "채우기 색상"
+underline = "밑줄"
+strikeout = "취소선"
+squiggly = "물결 밑줄"
+inkHighlighter = "자유형 형광펜"
+freehandHighlighter = "자유형 형광펜"
+square = "정사각형"
+circle = "원"
+polygon = "다각형"
+line = "선"
+stamp = "이미지 추가"
+textMarkup = "텍스트 마크업"
+drawing = "그리기"
+shapes = "도형"
+notesStamps = "메모 및 스탬프"
+settings = "설정"
+borderOn = "테두리: 켜짐"
+borderOff = "테두리: 꺼짐"
+editInk = "펜 편집"
+editLine = "선 편집"
+editNote = "메모 편집"
+editText = "텍스트 상자 편집"
+editTextMarkup = "텍스트 마크업 편집"
+editSelected = "주석 편집"
+editSquare = "사각형 편집"
+editCircle = "원 편집"
+editPolygon = "다각형 편집"
+unsupportedType = "이 주석 유형은 편집을 완전히 지원하지 않습니다."
+textAlignment = "텍스트 정렬"
+noteIcon = "메모 아이콘"
+imagePreview = "미리보기"
+contents = "텍스트"
+backgroundColor = "배경색"
+clearBackground = "배경 제거"
+noBackground = "배경 없음"
+stampSettings = "스탬프 설정"
+savingCopy = "다운로드 준비 중..."
+saveFailed = "사본을 저장할 수 없습니다"
+saveReady = "다운로드 준비됨"
+selectAndMove = "선택 및 편집"
+editSelectDescription = "기존 주석을 클릭해 색상, 불투명도, 텍스트, 크기를 편집하세요."
+editStampHint = "이미지를 변경하려면 이 스탬프를 삭제하고 새로 추가하세요."
+editSwitchToSelect = "이 주석을 편집하려면 선택 및 편집으로 전환하세요."
+undo = "실행 취소"
+redo = "다시 실행"
+applyChanges = "변경 사항 적용"
+saveChanges = "변경 사항 저장"
 
 [search]
 title = "PDF 검색"
@@ -3933,12 +4270,20 @@ settings = "설정"
 adminSettings = "관리자 설정"
 allTools = "All Tools"
 reader = "리더"
+tours = "둘러보기"
+showMeAround = "둘러보기 시작"
+
+[quickAccess.toursTooltip]
+admin = "여기에서 둘러보기를 시청하세요: 도구 둘러보기, 새 V2 레이아웃 둘러보기, 관리자 둘러보기."
+user = "여기에서 둘러보기를 시청하세요: 도구 둘러보기와 새 V2 레이아웃 둘러보기."
 
 [quickAccess.helpMenu]
 toolsTour = "도구 둘러보기"
 toolsTourDesc = "도구로 할 수 있는 일을 알아보세요"
 adminTour = "관리자 둘러보기"
 adminTourDesc = "관리자 설정 및 기능을 살펴보세요"
+whatsNewTour = "V2의 새로운 기능 보기"
+whatsNewTourDesc = "업데이트된 레이아웃 둘러보기"
 
 [admin]
 error = "오류"
@@ -3957,6 +4302,8 @@ fetchError = "설정을 불러오지 못했습니다"
 saveError = "설정을 저장하지 못했습니다"
 saved = "설정이 성공적으로 저장되었습니다"
 saveSuccess = "설정이 성공적으로 저장되었습니다"
+success = "설정을 성공적으로 저장했습니다"
+error = "설정을 저장하지 못했습니다"
 save = "변경 사항 저장"
 discard = "버리기"
 restartRequired = "재시작 필요"
@@ -4079,6 +4426,13 @@ description = "HTML to PDF 변환을 위한 WeasyPrint 실행 파일 경로(기�
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert 실행 파일"
 description = "문서 변환을 위한 LibreOffice unoconvert 경로(기본값 사용 시 비워두세요: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "프런트엔드 URL"
+description = "프런트엔드의 기본 URL(예: https://pdf.example.com). 이메일 초대 링크와 모바일 QR 코드 업로드에 사용됩니다. 비워 두면 백엔드 URL을 사용합니다."
+
+[admin.settings.badge]
+clickToUpgrade = "클릭하여 플랜 상세 보기"
 
 [admin.settings.security]
 title = "보안"
@@ -4216,6 +4570,19 @@ connect = "연결"
 disconnect = "연결 해제"
 disconnected = "제공자가 성공적으로 연결 해제되었습니다"
 disconnectError = "제공자 연결 해제에 실패했습니다"
+mobileScannerConvertToPdf = "이미지를 PDF로 변환"
+mobileScannerConvertToPdfDesc = "업로드된 이미지를 자동으로 PDF 형식으로 변환합니다. 비활성화하면 이미지는 원본 그대로 유지됩니다."
+mobileScannerImageResolution = "이미지 해상도"
+mobileScannerImageResolutionDesc = "업로드 이미지의 해상도입니다. \"축소\"는 최대 1200px로 축소해 파일 크기를 줄입니다."
+imageResolutionFull = "전체(원본 크기)"
+imageResolutionReduced = "축소(최대 1200px)"
+mobileScannerPageFormat = "페이지 형식"
+mobileScannerPageFormatDesc = "변환된 이미지의 PDF 페이지 크기입니다. \"유지\"는 원본 이미지 크기를 사용합니다."
+pageFormatKeep = "유지(원본 크기)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11인치)"
+mobileScannerStretchToFit = "맞춤 확대/축소"
+mobileScannerStretchToFitDesc = "이미지를 페이지 전체에 맞도록 늘립니다. 비활성화하면 종횡비를 유지한 채 가운데 정렬됩니다."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO 자동 로그인"
@@ -4283,6 +4650,122 @@ description = "첫 SAML2 로그인 시 사용자 계정을 자동으로 생성"
 [admin.settings.connections.saml2.blockRegistration]
 label = "등록 차단"
 description = "SAML2를 통한 신규 사용자 등록 방지"
+
+[admin.settings.connections.mobileScanner]
+label = "모바일 업로드"
+enable = "QR 코드 업로드 활성화"
+description = "사용자가 QR 코드를 스캔해 모바일 기기에서 파일을 업로드하도록 허용"
+note = "참고: 프런트엔드 URL 구성이 필요합니다. "
+link = "시스템 설정에서 구성"
+mobileScannerConvertToPdf = "이미지를 PDF로 변환"
+mobileScannerConvertToPdfDesc = "업로드된 이미지를 자동으로 PDF 형식으로 변환합니다. 비활성화하면 이미지는 원본 그대로 유지됩니다."
+mobileScannerImageResolution = "이미지 해상도"
+mobileScannerImageResolutionDesc = "업로드 이미지의 해상도입니다. \"축소\"는 최대 1200px로 축소해 파일 크기를 줄입니다."
+imageResolutionFull = "전체(원본 크기)"
+imageResolutionReduced = "축소(최대 1200px)"
+mobileScannerPageFormat = "페이지 형식"
+mobileScannerPageFormatDesc = "변환된 이미지의 PDF 페이지 크기입니다. \"유지\"는 원본 이미지 크기를 사용합니다."
+pageFormatKeep = "유지(원본 크기)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11인치)"
+mobileScannerStretchToFit = "맞춤 확대/축소"
+mobileScannerStretchToFitDesc = "이미지를 페이지 전체에 맞도록 늘립니다. 비활성화하면 종횡비를 유지한 채 가운데 정렬됩니다."
+
+[admin.settings.telegram]
+title = "Telegram 봇"
+description = "Telegram 봇 연결, 접근 제어, 피드백 동작을 구성합니다."
+
+[admin.settings.telegram.enabled]
+label = "Telegram 봇 활성화"
+description = "구성한 Telegram 봇을 통해 사용자가 Stirling PDF와 상호작용하도록 허용합니다."
+
+[admin.settings.telegram.botUsername]
+label = "봇 사용자 이름"
+description = "Telegram 봇의 공개 사용자 이름입니다."
+
+[admin.settings.telegram.botToken]
+label = "봇 토큰"
+description = "Telegram 봇을 위한 BotFather 제공 API 토큰입니다."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "수신함 폴더"
+description = "수신되는 Telegram 파일이 저장될 파이프라인 디렉터리 아래의 폴더입니다."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "커스텀 폴더 접미사 사용"
+description = "채팅 ID를 수신 파일 폴더에 추가해 채팅별 업로드를 분리합니다."
+
+[admin.settings.telegram.accessControl]
+title = "접근 제어"
+description = "봇과 상호작용할 수 있는 사용자 또는 채널을 제한합니다."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "특정 사용자 ID 허용"
+description = "활성화 시, 목록에 있는 사용자 ID만 봇을 사용할 수 있습니다."
+
+[admin.settings.telegram.allowUserIDs]
+label = "허용된 사용자 ID"
+description = "봇과 상호작용을 허용할 Telegram 사용자 ID를 입력하세요."
+placeholder = "사용자 ID를 추가하고 Enter 키를 누르세요"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "특정 채널 ID 허용"
+description = "활성화 시, 목록에 있는 채널 ID만 봇을 사용할 수 있습니다."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "허용된 채널 ID"
+description = "봇과 상호작용을 허용할 Telegram 채널 ID를 입력하세요."
+placeholder = "채널 ID를 추가하고 Enter 키를 누르세요"
+
+[admin.settings.telegram.processing]
+title = "처리"
+description = "Telegram 업로드의 폴링 간격과 처리 시간 제한을 제어합니다."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "처리 시간 제한(초)"
+description = "오류를 보고하기 전 처리 작업을 대기할 최대 시간입니다."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "폴링 간격(ms)"
+description = "새로운 Telegram 업데이트 확인 간격입니다."
+
+[admin.settings.telegram.feedback]
+title = "피드백 메시지"
+description = "봇이 사용자 및 채널에 피드백을 보낼 시점을 선택합니다."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "피드백 활성화"
+description = "봇이 피드백 메시지를 보낼지 여부를 제어합니다."
+
+[admin.settings.telegram.feedback.channel]
+title = "채널 피드백 규칙"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "\"유효한 문서 없음\" 표시(채널)"
+description = "채널 업로드에 대해 유효한 문서 없음 응답을 표시하지 않습니다."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "처리 오류 표시(채널)"
+description = "채널에 처리 오류 메시지를 보냅니다."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "오류 메시지 표시(채널)"
+description = "채널에 상세 오류 메시지를 표시합니다."
+
+[admin.settings.telegram.feedback.user]
+title = "사용자 피드백 규칙"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "\"유효한 문서 없음\" 표시(사용자)"
+description = "사용자 업로드에 대해 유효한 문서 없음 응답을 표시하지 않습니다."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "처리 오류 표시(사용자)"
+description = "사용자에게 처리 오류 메시지를 보냅니다."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "오류 메시지 표시(사용자)"
+description = "사용자에게 상세 오류 메시지를 표시합니다."
 
 [admin.settings.database]
 title = "데이터베이스"
@@ -4465,6 +4948,10 @@ description = "관리자가 자동 생성 비밀번호로 이메일을 통해 �
 label = "프런트엔드 URL"
 description = "프런트엔드의 기본 URL(예: https://pdf.example.com). 이메일의 초대 링크 생성에 사용됩니다. 비워두면 백엔드 URL을 사용합니다."
 
+[admin.settings.mail.frontendUrlNote]
+note = "참고: 프런트엔드 URL 구성이 필요합니다. "
+link = "시스템 설정에서 구성"
+
 [admin.settings.legal]
 title = "법적 문서"
 description = "법적 문서 및 정책에 대한 링크를 구성합니다."
@@ -4497,6 +4984,7 @@ description = "Impressum의 URL 또는 파일 이름(일부 관할권에서 필�
 title = "프리미엄 및 엔터프라이즈"
 description = "프리미엄 또는 엔터프라이즈 라이선스 키를 구성합니다."
 license = "라이선스 구성"
+noInput = "라이선스 키 또는 파일을 입력해 주세요"
 
 [admin.settings.premium.licenseKey]
 toggle = "라이선스 키나 인증서 파일이 있나요?"
@@ -4513,6 +5001,25 @@ title = "⚠️ 경고: 기존 라이선스 감지됨"
 line1 = "현재 라이선스 키를 덮어쓰면 되돌릴 수 없습니다."
 line2 = "다른 곳에 백업하지 않았다면 이전 라이선스는 영구적으로 손실됩니다."
 line3 = "중요: 라이선스 키는 개인적으로 안전하게 보관하세요. 공개적으로 공유하지 마세요."
+
+[admin.settings.premium.inputMethod]
+text = "라이선스 키"
+file = "인증서 파일"
+
+[admin.settings.premium.file]
+label = "라이선스 인증서 파일"
+description = "오프라인 구매 시 받은 .lic 또는 .cert 라이선스 파일을 업로드하세요"
+choose = "라이선스 파일 선택"
+selected = "선택됨: {{filename}} ({{size}})"
+successMessage = "라이선스 파일이 업로드되어 성공적으로 활성화되었습니다. 재시작은 필요하지 않습니다."
+
+[admin.settings.premium.currentLicense]
+title = "활성 라이선스"
+file = "소스: 라이선스 파일 ({{path}})"
+key = "소스: 라이선스 키"
+type = "유형: {{type}}"
+noInput = "라이선스 키를 입력하거나 인증서 파일을 업로드해 주세요"
+success = "성공"
 
 [admin.settings.premium.enabled]
 label = "프리미엄 기능 활성화"
@@ -4629,6 +5136,9 @@ googleDriveShort = "드라이브"
 myFiles = "내 파일"
 noRecentFiles = "최근 파일이 없습니다"
 googleDriveNotAvailable = "Google Drive 통합을 사용할 수 없습니다"
+mobileUpload = "모바일 업로드"
+mobileShort = "모바일"
+mobileUploadNotAvailable = "모바일 업로드가 활성화되어 있지 않습니다"
 downloadSelected = "선택 항목 다운로드"
 saveSelected = "선택 항목 저장"
 openFiles = "파일 열기"
@@ -4647,7 +5157,9 @@ selectedCount = "{{count}}개 선택됨"
 download = "다운로드"
 delete = "삭제"
 unsupported = "지원되지 않음"
+active = "활성"
 addToUpload = "업로드에 추가"
+closeFile = "파일 닫기"
 deleteAll = "모두 삭제"
 loadingFiles = "파일 불러오는 중..."
 noFiles = "사용 가능한 파일이 없습니다"
@@ -4942,6 +5454,7 @@ loading = "불러오는 중..."
 back = "뒤로"
 continue = "계속"
 error = "오류"
+save = "저장"
 
 [config.overview]
 title = "애플리케이션 구성"
@@ -5003,6 +5516,15 @@ warning = "⚠️ 경고: 이 작업은 새 API 키를 생성하며 이전 키�
 impact = "현재 이 키를 사용하는 애플리케이션이나 서비스는 새 키로 업데이트할 때까지 작동하지 않습니다."
 confirmPrompt = "계속하시겠습니까?"
 confirmCta = "키 새로고침"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API 키 오류"
+failedToCreateApiKey = "API 키를 생성하지 못했습니다."
+failedToRetrieveApiKey = "응답에서 API 키를 가져오지 못했습니다."
+failedToFetchApiKey = "API 키를 가져오지 못했습니다."
+apiKeyRefreshed = "API 키 새로 고침"
+apiKeyRefreshedBody = "API 키가 성공적으로 새로 고쳐졌습니다."
+failedToRefreshApiKey = "API 키를 새로 고치지 못했습니다."
 
 [AddAttachmentsRequest]
 attachments = "첨부 파일 선택"
@@ -5108,6 +5630,16 @@ finish = "완료"
 startTour = "투어 시작"
 startTourDescription = "Stirling PDF의 주요 기능을 둘러보는 가이드 투어"
 
+[onboarding.whatsNew]
+quickAccess = "Reader, Automate, 내 파일, 모든 둘러보기로 이동하려면 <strong>빠른 실행</strong> 레일에서 시작하세요."
+leftPanel = "왼쪽 <strong>도구</strong> 패널에 가능한 작업이 모두 나열됩니다. 카테고리를 탐색하거나 검색해 빠르게 도구를 찾으세요."
+fileUpload = "<strong>파일</strong> 버튼으로 PDF를 업로드하거나 최근 파일을 선택하세요. 작업 공간을 확인할 수 있도록 샘플을 불러옵니다."
+rightRail = "<strong>오른쪽 레일</strong>에는 파일 선택, 테마/언어 변경, 결과 다운로드 등 빠른 작업이 있습니다."
+topBar = "상단 바에서 <strong>뷰어</strong>, <strong>페이지 편집기</strong>, <strong>활성 파일</strong> 간 전환할 수 있습니다."
+pageEditorView = "페이지 편집기로 전환해 페이지를 재정렬, 회전 또는 삭제하세요."
+activeFilesView = "활성 파일에서 열려 있는 모든 항목을 보고 작업할 대상을 선택하세요."
+wrapUp = "이것이 V2의 새로운 점입니다. 언제든지 <strong>둘러보기</strong> 메뉴를 열어 이 둘러보기, 도구 둘러보기, 관리자 둘러보기를 다시 시청하세요."
+
 [onboarding.welcomeModal]
 title = "Stirling PDF에 오신 것을 환영합니다!"
 description = "주요 기능과 시작 방법을 1분 만에 알아보는 간단한 투어를 진행할까요?"
@@ -5127,6 +5659,10 @@ skipForNow = "나중에 건너뛰기"
 download = "다운로드 →"
 showMeAround = "둘러보기"
 skipTheTour = "투어 건너뛰기"
+
+[onboarding.tourOverview]
+title = "둘러보기 개요"
+body = "Stirling PDF V2는 수십 가지 도구와 새로워진 레이아웃을 제공합니다. 변경된 점과 필요한 기능을 어디서 찾는지 빠르게 둘러보세요."
 
 [onboarding.serverLicense]
 skip = "나중에 건너뛰기"
@@ -5240,6 +5776,31 @@ error = "사용자 상태 업데이트에 실패했습니다"
 success = "사용자를 성공적으로 삭제했습니다"
 error = "사용자 삭제에 실패했습니다"
 
+[workspace.people.changePassword]
+action = "비밀번호 변경"
+title = "비밀번호 변경"
+subtitle = "다음 사용자의 비밀번호 업데이트"
+newPassword = "새 비밀번호"
+confirmPassword = "비밀번호 확인"
+placeholder = "새 비밀번호를 입력하세요"
+confirmPlaceholder = "새 비밀번호를 다시 입력하세요"
+passwordRequired = "새 비밀번호를 입력해 주세요"
+passwordMismatch = "비밀번호가 일치하지 않습니다"
+generateRandom = "안전한 비밀번호 생성"
+generatedPreview = "생성된 비밀번호:"
+copyTooltip = "클립보드에 복사"
+copiedToClipboard = "비밀번호를 클립보드에 복사했습니다"
+copyFailed = "비밀번호 복사 실패"
+sendEmail = "이 변경 사항을 사용자에게 이메일로 알리기"
+includePassword = "이메일에 새 비밀번호 포함"
+forcePasswordChange = "다음 로그인 시 비밀번호 변경 강제"
+emailUnavailable = "이 사용자의 이메일이 올바른 주소가 아니므로 알림이 비활성화되었습니다."
+smtpDisabled = "이메일 알림을 사용하려면 설정에서 SMTP를 활성화해야 합니다."
+notifyOnly = "비밀번호 없이 이메일이 발송되며, 관리자가 변경했음을 사용자에게 알려 줍니다."
+submit = "비밀번호 업데이트"
+success = "비밀번호가 성공적으로 업데이트되었습니다"
+error = "비밀번호 업데이트에 실패했습니다"
+
 [workspace.people.emailInvite]
 tab = "이메일 초대"
 description = "아래에 이메일을 쉼표로 구분해 입력하거나 붙여넣으세요. 사용자는 이메일로 로그인 자격 증명을 받습니다."
@@ -5248,7 +5809,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "이메일 주소를 최소 한 개 이상 입력해야 합니다"
 submit = "초대장 보내기"
 success = "사용자 초대가 완료되었습니다"
-partialSuccess = "일부 초대가 실패했습니다"
+partialFailure = "일부 초대가 실패했습니다"
 allFailed = "사용자 초대에 실패했습니다"
 error = "초대장 전송에 실패했습니다"
 
@@ -5416,6 +5977,28 @@ contactSales = "영업팀 문의"
 contactToUpgrade = "요금제 업그레이드 또는 맞춤 설정은 문의해 주세요"
 maxUsers = "최대 사용자 수"
 upTo = "최대"
+getLicense = "서버 라이선스 받기"
+upgradeToEnterprise = "엔터프라이즈로 업그레이드"
+selectPeriod = "결제 주기 선택"
+monthlyBilling = "월별 결제"
+yearlyBilling = "연간 결제"
+checkoutOpened = "결제 창 열림"
+checkoutInstructions = "Stripe 탭에서 결제를 완료하세요. 결제 후 이곳으로 돌아와 페이지를 새로고침하면 라이선스가 활성화됩니다. 라이선스 키가 포함된 이메일도 발송됩니다."
+activateLicense = "라이선스 활성화"
+
+[plan.static.licenseActivation]
+checkoutOpened = "새 탭에서 결제 창 열림"
+instructions = "Stripe 탭에서 결제를 완료하세요. 결제가 완료되면 라이선스 키가 이메일로 전송됩니다."
+enterKey = "플랜을 활성화하려면 아래에 라이선스 키를 입력하세요:"
+keyDescription = "이메일의 라이선스 키를 붙여넣으세요"
+activate = "라이선스 활성화"
+doLater = "나중에 진행"
+success = "라이선스 활성화됨!"
+successMessage = "라이선스가 성공적으로 활성화되었습니다. 이제 이 창을 닫아도 됩니다."
+
+[plan.static.billingPortal]
+title = "이메일 인증 필요"
+message = "Stripe 청구 포털에서 이메일 주소를 인증해야 합니다. 이메일의 로그인 링크를 확인하세요."
 
 [plan.period]
 month = "월"
@@ -5619,6 +6202,8 @@ notAvailable = "감사 시스템을 사용할 수 없습니다"
 notAvailableMessage = "감사 시스템이 구성되어 있지 않거나 사용할 수 없습니다."
 disabled = "감사 로깅이 비활성화되었습니다"
 disabledMessage = "시스템 이벤트를 추적하려면 애플리케이션 구성에서 감사 로깅을 활성화하세요."
+enterpriseRequired = "엔터프라이즈 라이선스 필요"
+enterpriseRequiredMessage = "감사 로깅 시스템은 엔터프라이즈 기능입니다. 감사 로그와 분석에 접근하려면 엔터프라이즈 라이선스로 업그레이드하세요."
 
 [audit.error]
 title = "감사 시스템을 불러오는 중 오류"
@@ -5773,6 +6358,7 @@ subtitle = "Stirling 계정으로 로그인"
 [setup.selfhosted]
 title = "서버에 로그인"
 subtitle = "서버 자격 증명을 입력하세요"
+link = "또는 셀프 호스팅 계정에 연결"
 
 [setup.server]
 title = "서버에 연결"
@@ -5789,8 +6375,17 @@ description = "자가 호스팅 Stirling PDF 서버의 전체 URL을 입력하�
 
 [setup.server.error]
 emptyUrl = "서버 URL을 입력하세요"
+invalidUrl = "잘못된 URL 형식입니다. https://your-server.com 같은 올바른 URL을 입력하세요"
 unreachable = "서버에 연결할 수 없습니다"
 testFailed = "연결 테스트에 실패했습니다"
+configFetch = "서버 구성을 가져오지 못했습니다. URL을 확인하고 다시 시도하세요."
+
+[setup.server.error.securityDisabled]
+title = "로그인이 활성화되어 있지 않음"
+body = "이 서버에는 로그인이 활성화되어 있지 않습니다. 이 서버에 연결하려면 인증을 활성화해야 합니다:"
+step1 = "환경에서 DOCKER_ENABLE_SECURITY=true를 설정하세요"
+step2 = "또는 settings.yml에서 security.enableLogin=true를 설정하세요"
+step3 = "서버를 재시작하세요"
 
 [setup.login]
 title = "로그인"
@@ -5799,7 +6394,15 @@ connectingTo = "연결 대상:"
 submit = "로그인"
 signInWith = "다음으로 로그인"
 oauthPending = "인증을 위해 브라우저를 여는 중..."
+sso = "Single Sign-On"
 orContinueWith = "또는 이메일로 계속"
+serverRequirement = "참고: 서버에서 로그인 기능이 활성화되어 있어야 합니다."
+showInstructions = "활성화 방법"
+hideInstructions = "지침 숨기기"
+instructions = "Stirling PDF 서버에서 로그인 기능을 활성화하려면:"
+instructionsEnvVar = "다음 환경 변수를 설정하세요:"
+instructionsOrYml = "또는 settings.yml에서:"
+instructionsRestart = "그런 다음 변경 사항을 적용하려면 서버를 재시작하세요."
 
 [setup.login.username]
 label = "사용자 이름"
@@ -5856,6 +6459,9 @@ earlyAccess = "얼리 액세스"
 reset = "변경 사항 초기화"
 downloadJson = "JSON 다운로드"
 generatePdf = "PDF 생성"
+saveChanges = "변경 사항 저장"
+applyChanges = "변경 사항 적용"
+downloadCopy = "사본 다운로드"
 
 [pdfTextEditor.options.autoScaleText]
 title = "텍스트 자동 크기 조정"
@@ -5873,6 +6479,24 @@ descriptionInline = "팁: Ctrl(Cmd) 또는 Shift를 눌러 텍스트 상자를 �
 [pdfTextEditor.options.forceSingleElement]
 title = "편집된 텍스트를 단일 PDF 요소로 고정"
 description = "활성화하면 겹치는 글리프나 혼합 폰트를 피하기 위해 편집된 각 텍스트 상자를 하나의 PDF 텍스트 요소로 내보냅니다."
+
+[pdfTextEditor.options.advanced]
+title = "고급 설정"
+
+[pdfTextEditor.tooltip.header]
+title = "미리보기 제한사항"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "텍스트 및 이미지 중심"
+text = "이 작업 공간은 텍스트 편집과 포함된 이미지 재배치에 중점을 둡니다. 복잡한 페이지 아트워크, 양식 위젯, 레이어드 그래픽은 내보내기를 위해 보존되지만 여기서는 완전히 편집할 수 없습니다."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "미리보기 차이"
+text = "표 테두리, 도형, 주석 표시 등 일부 시각 요소는 미리보기에서 정확히 표시되지 않을 수 있습니다. 내보낸 PDF는 가능하면 원래 그리기 명령을 유지합니다."
+
+[pdfTextEditor.tooltip.alpha]
+title = "알파 뷰어"
+text = "이 알파 뷰어는 아직 발전 중입니다. 일부 글꼴, 색상, 투명 효과, 레이아웃 세부사항이 약간 달라질 수 있습니다. 공유 전 생성된 PDF를 꼭 다시 확인하세요."
 
 [pdfTextEditor.manual]
 mergeTooltip = "선택 항목 병합"
@@ -5893,6 +6517,8 @@ alpha = "이 알파 뷰어는 아직 발전 중입니다—일부 글꼴, 색상
 [pdfTextEditor.empty]
 title = "로드된 문서 없음"
 subtitle = "텍스트 편집을 시작하려면 PDF 또는 JSON 파일을 로드하세요."
+dropzone = "여기에 PDF 또는 JSON 파일을 끌어다 놓거나 클릭하여 찾아보세요"
+dropzoneWithFiles = "파일 탭에서 파일을 선택하거나, 여기에 PDF 또는 JSON 파일을 끌어다 놓거나 클릭하여 찾아보세요"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF 텍스트 편집기(얼리 액세스)에 오신 것을 환영합니다"
@@ -5993,3 +6619,58 @@ title = "텍스트 추가 결과"
 
 [addText.error]
 failed = "PDF에 텍스트를 추가하는 중 오류가 발생했습니다."
+
+[mobileUpload]
+title = "모바일에서 업로드"
+description = "스캔하여 사진을 업로드하세요. 이미지는 자동으로 PDF로 변환됩니다."
+descriptionNoConvert = "모바일 기기에서 사진을 스캔해 업로드하세요."
+error = "연결 오류"
+pollingError = "파일 확인 중 오류"
+sessionId = "세션 ID"
+sessionCreateError = "세션을 생성하지 못했습니다"
+expiryWarning = "세션 만료 임박"
+expiryWarningMessage = "이 QR 코드는 {{seconds}}초 후 만료됩니다. 새 코드가 자동으로 생성됩니다."
+filesReceived = "파일 {{count}}개 수신됨"
+connected = "모바일 기기 연결됨"
+instructions = "휴대폰 카메라로 스캔하세요. 이미지는 자동으로 PDF로 변환됩니다."
+instructionsNoConvert = "휴대폰 카메라로 스캔해 파일을 업로드하세요."
+
+[mobileScanner]
+title = "모바일 스캐너"
+noSession = "잘못된 세션"
+noSessionMessage = "이 페이지에 접근하려면 유효한 QR 코드를 스캔하세요."
+validating = "세션 검증 중..."
+sessionInvalid = "세션 오류"
+sessionExpired = "이 세션은 만료되었습니다. 새로고침 후 다시 시도하세요."
+sessionNotFound = "세션을 찾을 수 없습니다. 새로고침 후 다시 시도하세요."
+sessionValidationError = "세션을 확인할 수 없습니다. 다시 시도하세요."
+uploadSuccess = "업로드 성공!"
+uploadSuccessMessage = "이미지가 전송되었습니다."
+httpsRequired = "카메라 접근에는 HTTPS 또는 localhost가 필요합니다. HTTPS를 사용하거나 localhost로 접근하세요."
+uploadFailed = "업로드에 실패했습니다. 다시 시도하세요."
+uploading = "업로드 중..."
+connected = "연결됨"
+connecting = "연결 중..."
+chooseMethod = "업로드 방법 선택"
+chooseMethodDescription = "문서를 스캔하고 업로드할 방법을 선택하세요"
+camera = "카메라"
+cameraDescription = "기기 카메라로 자동 가장자리 감지와 함께 문서를 스캔"
+fileUpload = "파일 업로드"
+fileDescription = "기기의 기존 사진 또는 문서를 업로드"
+cameraAccessDenied = "카메라 접근이 거부되었습니다. 카메라 접근을 허용하세요."
+back = "뒤로"
+settings = "설정"
+edgeDetection = "가장자리 감지"
+flashlight = "손전등"
+flash = "플래시"
+processing = "처리 중..."
+capture = "사진 촬영"
+selectFilesPrompt = "업로드할 파일 선택"
+selectImage = "이미지 선택"
+preview = "미리보기"
+retake = "다시 찍기"
+addToBatch = "배치에 추가"
+upload = "업로드"
+batchImages = "배치"
+clearBatch = "지우기"
+uploadAll = "모두 업로드"

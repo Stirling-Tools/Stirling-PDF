@@ -138,13 +138,13 @@ public class SPDFApplication {
 
     @PostConstruct
     public void init() {
-        String baseUrl = appConfig.getBaseUrl();
+        String backendUrl = appConfig.getBackendUrl();
         String contextPath = appConfig.getContextPath();
         String serverPort = appConfig.getServerPort();
-        baseUrlStatic = baseUrl;
+        baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = baseUrl + ":" + getStaticPort() + contextPath;
+        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
@@ -210,7 +210,7 @@ public class SPDFApplication {
 
     private static void printStartupLogs() {
         log.info("Stirling-PDF Started.");
-        String url = baseUrlStatic + ":" + getStaticPort() + contextPathStatic;
+        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
         log.info("Navigate to {}", url);
     }
 
@@ -257,5 +257,80 @@ public class SPDFApplication {
 
     public static String getStaticContextPath() {
         return contextPathStatic;
+    }
+
+    private static String buildFullUrl(String backendUrl, String port, String contextPath) {
+        String normalizedBase = normalizeBackendUrl(backendUrl, port);
+
+        String normalizedContextPath =
+                (contextPath == null || contextPath.isBlank() || "/".equals(contextPath))
+                        ? "/"
+                        : (contextPath.startsWith("/") ? contextPath : "/" + contextPath);
+
+        return normalizedBase + normalizedContextPath;
+    }
+
+    private static String normalizeBackendUrl(String backendUrl, String port) {
+        String trimmedBase =
+                (backendUrl == null || backendUrl.isBlank())
+                        ? "http://localhost"
+                        : backendUrl.trim().replaceAll("/+$", "");
+        boolean hasScheme = trimmedBase.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+        String baseForParsing = hasScheme ? trimmedBase : "http://" + trimmedBase;
+        Integer parsedPort = parsePort(port);
+
+        try {
+            java.net.URI uri = new java.net.URI(baseForParsing);
+            String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
+            String host = uri.getHost();
+            if (host == null) {
+                return appendPortFallback(trimmedBase, parsedPort);
+            }
+
+            boolean defaultHttp =
+                    "http".equalsIgnoreCase(scheme) && Integer.valueOf(80).equals(parsedPort);
+            boolean defaultHttps =
+                    "https".equalsIgnoreCase(scheme) && Integer.valueOf(443).equals(parsedPort);
+
+            int effectivePort = uri.getPort();
+            if (effectivePort == -1 && parsedPort != null && !defaultHttp && !defaultHttps) {
+                effectivePort = parsedPort;
+            }
+
+            java.net.URI rebuilt =
+                    new java.net.URI(
+                            scheme,
+                            uri.getUserInfo(),
+                            host,
+                            effectivePort,
+                            uri.getPath(),
+                            uri.getQuery(),
+                            uri.getFragment());
+            return rebuilt.toString();
+        } catch (java.net.URISyntaxException e) {
+            return appendPortFallback(trimmedBase, parsedPort);
+        }
+    }
+
+    private static Integer parsePort(String port) {
+        if (port == null || port.isBlank()) {
+            return null;
+        }
+        try {
+            int parsed = Integer.parseInt(port);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static String appendPortFallback(String trimmedBase, Integer port) {
+        if (port == null) {
+            return trimmedBase;
+        }
+        if (trimmedBase.matches(".+:\\d+$")) {
+            return trimmedBase;
+        }
+        return trimmedBase + ":" + port;
     }
 }

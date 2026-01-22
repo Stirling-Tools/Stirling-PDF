@@ -1,8 +1,11 @@
 unsavedChanges = "PDF'inizde kaydedilmemiş değişiklikler var."
+pendingRedactionsTitle = "Uygulanmamış Karartmalar"
+pendingRedactions = "Uygulanmamış karartmalarınız var; kaybolacak."
 areYouSure = "Ayrılmak istediğinizden emin misiniz?"
 unsavedChangesTitle = "Kaydedilmemiş Değişiklikler"
 keepWorking = "Çalışmaya Devam Et"
 discardChanges = "At ve Çık"
+discardRedactions = "Vazgeç ve Çık"
 applyAndContinue = "Kaydet ve Çık"
 exportAndContinue = "Dışa aktar ve Devam et"
 cancel = "İptal"
@@ -162,6 +165,11 @@ unfavorite = "Favorilerden kaldır"
 [toolPanel.toggle]
 fullscreen = "Tam ekran moduna geç"
 sidebar = "Kenar çubuğu moduna geç"
+
+[backendStartup]
+notFoundTitle = "Arka uç bulunamadı"
+retry = "Yeniden dene"
+unreachable = "Uygulama şu anda arka uca bağlanamıyor. Lütfen arka uç durumunu ve ağ bağlantısını doğrulayın, ardından tekrar deneyin."
 
 [zipWarning]
 title = "Büyük ZIP Dosyası"
@@ -335,6 +343,10 @@ advance = "Gelişmiş"
 edit = "Görüntüle ve Düzenle"
 popular = "Popüler"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Tercihler"
 
@@ -355,6 +367,7 @@ advanced = "Gelişmiş"
 title = "Güvenlik ve Kimlik Doğrulama"
 security = "Güvenlik"
 connections = "Bağlantılar"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Lisanslama ve Analitik"
@@ -429,6 +442,32 @@ currentVersion = "Geçerli Sürüm"
 latestVersion = "En Son Sürüm"
 checkForUpdates = "Güncellemeleri Kontrol Et"
 viewDetails = "Ayrıntıları Görüntüle"
+serverNeedsUpdate = "Sunucunun yönetici tarafından güncellenmesi gerekiyor"
+
+[settings.general.versionInfo]
+title = "Sürüm Bilgileri"
+description = "Masaüstü ve sunucu sürüm ayrıntıları"
+desktop = "Masaüstü Sürümü"
+server = "Sunucu Sürümü"
+
+[settings.security]
+title = "Güvenlik"
+description = "Hesabınızı güvende tutmak için şifrenizi güncelleyin."
+
+[settings.security.password]
+subtitle = "Şifrenizi değiştirin. Güncellemeden sonra oturumunuz kapatılacak."
+required = "Tüm alanlar zorunludur."
+mismatch = "Yeni şifreler eşleşmiyor."
+error = "Şifre güncellenemiyor. Lütfen mevcut şifrenizi doğrulayıp tekrar deneyin."
+success = "Şifre başarıyla güncellendi. Lütfen yeniden oturum açın."
+ssoDisabled = "Şifre değişiklikleri kimlik sağlayıcınız tarafından yönetilir."
+current = "Mevcut şifre"
+currentPlaceholder = "Mevcut şifrenizi girin"
+new = "Yeni şifre"
+newPlaceholder = "Yeni bir şifre girin"
+confirm = "Yeni şifreyi onaylayın"
+confirmPlaceholder = "Yeni şifrenizi tekrar girin"
+update = "Şifreyi güncelle"
 
 [settings.hotkeys]
 title = "Klavye Kısayolları"
@@ -483,11 +522,16 @@ low = "Düşük"
 title = "Giriş Bilgilerini Değiştir"
 header = "Hesap Detaylarınızı Güncelleyin"
 changePassword = "Varsayılan giriş bilgilerini kullanıyorsunuz. Lütfen yeni bir şifre girin."
+ssoManaged = "Hesabınız kimlik sağlayıcınız tarafından yönetiliyor."
 newUsername = "Yeni Kullanıcı Adı"
 oldPassword = "Mevcut Şifre"
 newPassword = "Yeni Şifre"
 confirmNewPassword = "Yeni Şifreyi Onayla"
 submit = "Değişiklikleri Gönder"
+credsUpdated = "Hesap güncellendi"
+description = "Değişiklikler kaydedildi. Lütfen tekrar giriş yapın."
+error = "Kullanıcı adı güncellenemiyor. Lütfen şifrenizi doğrulayıp tekrar deneyin."
+changeUsername = "Kullanıcı adınızı güncelleyin. Güncellemeden sonra oturumunuz kapatılacak."
 
 [account]
 title = "Hesap Ayarları"
@@ -495,6 +539,8 @@ accountSettings = "Hesap Ayarları"
 adminSettings = "Yönetici Ayarları - Kullanıcıları Görüntüle ve Ekle"
 userControlSettings = "Kullanıcı Kontrol Ayarları"
 changeUsername = "Kullanıcı Adını Değiştir"
+changeUsernameDescription = "Kullanıcı adınızı güncelleyin. Güncellemeden sonra oturumunuz kapatılacak."
+newUsernamePlaceholder = "Yeni kullanıcı adınızı girin"
 newUsername = "Yeni kullanıcı adı"
 password = "Onay Şifresi"
 oldPassword = "Eski Şifre"
@@ -702,6 +748,11 @@ desc = "Taranan fotoğrafları algılayıp ayrı sayfalara bölün"
 tags = "imza,imzala"
 title = "İmzala"
 desc = "Çizim, metin veya resim ile PDF'e imza ekler"
+
+[home.annotate]
+tags = "açıklama,vurgula,çiz"
+title = "Açıklama Ekle"
+desc = "Görüntüleyicide vurgulayın, çizin, not ve şekil ekleyin"
 
 [home.flatten]
 tags = "basitleştir,kaldır,etkileşimli"
@@ -925,6 +976,7 @@ desc = "PDF'inize istediğiniz yere özel metin ekleyin"
 addFiles = "Dosya Ekle"
 uploadFromComputer = "Bilgisayardan yükle"
 openFromComputer = "Bilgisayardan aç"
+mobileUpload = "Mobil Cihazdan Yükle"
 
 [viewPdf]
 tags = "görüntüle,oku,açıklama ekle,metin,görüntü"
@@ -1240,6 +1292,37 @@ cbzOptions = "CBZ'den PDF'e Seçenekleri"
 optimizeForEbook = "PDF'yi e-kitap okuyucular için optimize et (Ghostscript kullanır)"
 cbzOutputOptions = "PDF'den CBZ'ye Seçenekleri"
 cbzDpi = "Görüntü oluşturma için DPI"
+cbrOptions = "CBR Seçenekleri"
+cbrOutputOptions = "PDF'den CBR'ye Dönüştürme Seçenekleri"
+cbrDpi = "Görüntü oluşturma için DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "eBook'tan PDF'ye Dönüştürme Seçenekleri"
+ebookOptionsDesc = "eBook'ları PDF'ye dönüştürme seçenekleri"
+embedAllFonts = "Tüm yazı tiplerini göm"
+embedAllFontsDesc = "eBook'taki tüm yazı tiplerini oluşturulan PDF'ye göm"
+includeTableOfContents = "İçindekiler tablosunu ekle"
+includeTableOfContentsDesc = "Ortaya çıkan PDF'ye oluşturulmuş bir içindekiler tablosu ekle"
+includePageNumbers = "Sayfa numaralarını ekle"
+includePageNumbersDesc = "Oluşturulan PDF'ye sayfa numaraları ekle"
+optimizeForEbookPdf = "eBook okuyucular için optimize et"
+optimizeForEbookPdfDesc = "PDF'yi eBook okumaya göre optimize et (daha küçük dosya boyutu, eInk cihazlarda daha iyi işleme)"
+
+[convert.epubOptions]
+epubOptions = "PDF'den eBook'a Dönüştürme Seçenekleri"
+epubOptionsDesc = "PDF'yi EPUB/AZW3'e dönüştürme seçenekleri"
+detectChapters = "Bölümleri algıla"
+detectChaptersDesc = "Bölüm gibi görünen başlıkları algıla ve EPUB sayfa sonları ekle"
+targetDevice = "Hedef cihaz"
+targetDeviceDesc = "Okuyucu cihaz için optimize edilmiş bir çıktı profili seçin"
+outputFormat = "Çıktı biçimi"
+outputFormatDesc = "eBook için çıktı biçimini seçin"
+tabletPhone = "Tablet/Telefon (görsellerle)"
+kindleEink = "Kindle e-Ink (metin için optimize edilmiş)"
 
 [imageToPdf]
 tags = "dönüşüm,img,jpg,fotoğraf,resim"
@@ -1317,6 +1400,7 @@ applySignatures = "Resimleri Uygula"
 name = "Resim"
 placeholder = "Bir resim yükleyin"
 label = "Resim dosyası"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Resmi Yapılandır"
@@ -1356,6 +1440,11 @@ header = "Add attachments"
 add = "Ek Ekle"
 remove = "Eki Kaldır"
 embed = "Eki Göm"
+convertToPdfA3b = "PDF/A-3b'ye dönüştür"
+convertToPdfA3bDescription = "Gömülü eklerle arşivlik bir PDF oluşturur"
+convertToPdfA3bTooltip = "PDF/A-3b, uzun süreli saklama sağlayan bir arşivleme biçimidir. Ek olarak rastgele dosya biçimlerinin gömülmesine izin verir. Dönüştürme için Ghostscript gerekir ve büyük dosyalarda daha uzun sürebilir."
+convertToPdfA3bTooltipHeader = "PDF/A-3b Dönüştürme Hakkında"
+convertToPdfA3bTooltipTitle = "Ne yapar"
 submit = "Add attachments"
 
 [watermark]
@@ -2262,8 +2351,16 @@ defaultCanvasLabel = "Çizim imzası"
 defaultImageLabel = "Yüklenen imza"
 defaultTextLabel = "Yazılmış imza"
 saveButton = "İmzayı kaydet"
+savePersonal = "Kişisel Olarak Kaydet"
+saveShared = "Paylaşılan Olarak Kaydet"
 saveUnavailable = "Kaydetmek için önce bir imza oluşturun."
 noChanges = "Geçerli imza zaten kaydedildi."
+tempStorageTitle = "Geçici tarayıcı depolaması"
+tempStorageDescription = "İmzalar yalnızca tarayıcınızda saklanır. Tarayıcı verilerini temizlerseniz veya tarayıcı değiştirirseniz kaybolurlar."
+personalHeading = "Kişisel İmzalar"
+sharedHeading = "Paylaşılan İmzalar"
+personalDescription = "Bu imzaları yalnızca siz görebilirsiniz."
+sharedDescription = "Tüm kullanıcılar bu imzaları görebilir ve kullanabilir."
 
 [sign.saved.type]
 canvas = "Çizim"
@@ -2293,6 +2390,10 @@ saved = "Kaydedildi"
 label = "İmza görseli yükle"
 placeholder = "Görsel dosyası seç"
 hint = "İmzanızın PNG veya JPG görselini yükleyin"
+removeBackground = "Beyaz arka planı kaldır (şeffaf yap)"
+processing = "Görsel işleniyor..."
+backgroundRemovalFailedTitle = "Arka plan kaldırılamadı"
+backgroundRemovalFailedMessage = "Görselin arka planı kaldırılamadı. Bunun yerine orijinal görsel kullanılacak."
 
 [sign.instructions]
 title = "İmza nasıl eklenir"
@@ -2337,6 +2438,11 @@ note = "Düzleştirme, PDF'den etkileşimli öğeleri kaldırır ve düzenleneme
 [flatten.options.flattenOnlyForms]
 label = "Yalnızca formları düzleştir"
 desc = "Yalnızca form alanlarını düzleştir, diğer etkileşimli öğeleri olduğu gibi bırak"
+
+[flatten.renderDpi]
+label = "Oluşturma DPI'ı (isteğe bağlı, önerilen 150 DPI)"
+help = "Sistem varsayılanını kullanmak için boş bırakın. Daha yüksek DPI çıktıyı keskinleştirir ancak işlem süresini ve dosya boyutunu artırır."
+placeholder = "örn. 150"
 
 [flatten.results]
 title = "Düzleştirme Sonuçları"
@@ -2912,6 +3018,7 @@ header = "PDF'i Kırp"
 submit = "Gönder"
 noFileSelected = "Kırpmaya başlamak için bir PDF seçin"
 reset = "Tam PDF'ye sıfırla"
+autoCrop = "Boşlukları otomatik kırp"
 
 [crop.preview]
 title = "Kırpma Alanı Seçimi"
@@ -3023,6 +3130,91 @@ title = "PDF Hakkında Bilgi Al"
 header = "PDF Hakkında Bilgi Al"
 submit = "Bilgi Al"
 downloadJson = "JSON İndir"
+processing = "Bilgi çıkarılıyor..."
+results = "Sonuçlar"
+noResults = "Bir rapor oluşturmak için aracı çalıştırın."
+downloads = "İndirmeler"
+noneDetected = "Hiçbiri tespit edilmedi"
+indexTitle = "Dizin"
+
+[getPdfInfo.report]
+entryLabel = "Tam bilgi özeti"
+shortTitle = "PDF Bilgileri"
+
+[getPdfInfo.sections]
+metadata = "Meta veriler"
+formFields = "Form Alanları"
+basicInfo = "Temel Bilgiler"
+documentInfo = "Belge Bilgileri"
+compliance = "Uyumluluk"
+encryption = "Şifreleme"
+permissions = "İzinler"
+other = "Diğer"
+perPageInfo = "Sayfa Başına Bilgi"
+tableOfContents = "İçindekiler"
+
+[getPdfInfo.other]
+attachments = "Ekler"
+embeddedFiles = "Gömülü Dosyalar"
+javaScript = "JavaScript"
+layers = "Katmanlar"
+structureTree = "Yapı Ağacı"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "Boyut"
+annotations = "Açıklamalar"
+images = "Görüntüler"
+links = "Bağlantılar"
+fonts = "Yazı Tipleri"
+xobjects = "XObject Sayıları"
+multimedia = "Multimedya"
+
+[getPdfInfo.summary]
+pages = "Sayfalar"
+fileSize = "Dosya Boyutu"
+pdfVersion = "PDF Sürümü"
+language = "Dil"
+title = "PDF Özeti"
+author = "Yazar"
+created = "Oluşturulma"
+modified = "Değiştirilme"
+permsAll = "Tüm izinlere izin verildi"
+permsRestricted = "{{count}} kısıtlama"
+permsMixed = "Bazı izinler kısıtlandı"
+hasCompliance = "Uyumluluk standartlarına sahip"
+noCompliance = "Uyumluluk standardı yok"
+basic = "Temel Bilgiler"
+documentInfo = "Belge Bilgileri"
+securityTitle = "Güvenlik Durumu"
+technical = "Teknik"
+overviewTitle = "PDF Genel Bakış"
+
+[getPdfInfo.summary.security]
+encrypted = "Şifrelenmiş PDF - Parola koruması var"
+unencrypted = "Şifrelenmemiş PDF - Parola koruması yok"
+
+[getPdfInfo.summary.tech]
+images = "Görüntüler"
+fonts = "Yazı Tipleri"
+formFields = "Form Alanları"
+embeddedFiles = "Gömülü Dosyalar"
+javaScript = "JavaScript"
+layers = "Katmanlar"
+bookmarks = "Yer İmleri"
+multimedia = "Multimedya"
+
+[getPdfInfo.summary.overview]
+untitled = "başlıksız bir belge"
+unknown = "Bilinmeyen Yazar"
+text = "Bu, {{author}} tarafından oluşturulan, {{title}} başlıklı {{pages}} sayfalık bir PDF'dir (PDF sürümü {{version}})."
+
+[getPdfInfo.error]
+partial = "Bazı dosyalar işlenemedi."
+unexpected = "Çıkarma sırasında beklenmeyen bir hata oluştu."
+
+[getPdfInfo.status]
+complete = "Çıkarma tamamlandı"
 
 [extractPage]
 tags = "çıkar"
@@ -3057,6 +3249,7 @@ title = "Sansürleme Yöntemi"
 mode = "Mod"
 automatic = "Otomatik"
 automaticDesc = "Arama terimlerine göre metni sansürle"
+automaticDisabledTooltip = "Birden fazla dosyayı aynı anda karartmak için dosya yöneticisinde dosyaları seçin"
 manual = "Manuel"
 manualDesc = "Belirli alanları sansürlemek için tıklayıp sürükleyin"
 manualComingSoon = "Manuel sansürleme yakında"
@@ -3127,8 +3320,35 @@ text = "Yalnızca tam kelimeleri eşleştirir, kısmi eşleşmeleri değil. Etki
 title = "PDF-Image'a Dönüştür"
 text = "Sansürlemeden sonra PDF'yi görsel tabanlı bir PDF'ye dönüştürür. Bu, sansür kutularının arkasındaki metnin tamamen kaldırılmasını ve geri getirilememesini sağlar."
 
+[redact.tooltip.manual.header]
+title = "Manuel Karartma Kontrolleri"
+
+[redact.tooltip.manual.markText]
+title = "Metin İşaretleme Aracı"
+text = "PDF üzerinde metni doğrudan seçerek karartma için işaretleyin. Karartmak istediğiniz metni vurgulamak için tıklayıp sürükleyin."
+
+[redact.tooltip.manual.markArea]
+title = "Alan İşaretleme Aracı"
+text = "Karartılacak bölgeleri işaretlemek için PDF üzerinde dikdörtgen alanlar çizin. Görseller, imzalar veya düzensiz şekilleri karartmak için kullanışlıdır."
+
+[redact.tooltip.manual.apply]
+title = "Karartmaları Uygula"
+text = "İçeriği işaretledikten sonra 'Uygula'ya tıklayarak işaretlenen tüm alanları kalıcı olarak karartın. Bekleyen sayı, uygulanmaya hazır karartma sayısını gösterir."
+bullet1 = "Uygulamadan önce gerektiği kadar alan işaretleyin"
+bullet2 = "Tüm bekleyen karartmalar tek seferde uygulanır"
+bullet3 = "Karartmalar uygulandıktan sonra geri alınamaz"
+
 [redact.manual]
+title = "Karartma Araçları"
+instructions = "Karartılacak içeriği işaretlemek için PDF üzerinde metin seçin veya alan çizin."
+markText = "Metni İşaretle"
+markArea = "Alan İşaretle"
+pendingLabel = "Bekleyen:"
+applyWarning = "⚠️ Kalıcı uygulama, geri alınamaz ve altındaki veriler silinir"
+apply = "Uygula"
+noMarks = "Karartma işareti yok. Karartma için içerik işaretlemek üzere yukarıdaki araçları kullanın."
 header = "Manuel Sansürleme"
+controlsTitle = "Manuel Karartma Kontrolleri"
 textBasedRedaction = "Metin tabanlı Sansürleme"
 pageBasedRedaction = "Sayfa tabanlı Sansürleme"
 convertPDFToImageLabel = "PDF'yi PDF-Image'a dönüştür (Kutunun arkasındaki metni kaldırmak için kullanılır)"
@@ -3243,6 +3463,19 @@ placeholder = "Yatay bölme sayısını girin"
 [split-by-sections.vertical]
 label = "Dikey Bölümler"
 placeholder = "Dikey bölme sayısını girin"
+
+[split-by-sections.splitMode]
+label = "Bölme Modu"
+description = "Sayfaların nasıl bölüneceğini seçin"
+splitAll = "Tüm sayfaları böl"
+splitAllExceptFirst = "İlk hariç tümünü böl"
+splitAllExceptLast = "Son hariç tümünü böl"
+splitAllExceptFirstAndLast = "İlk ve son hariç tümünü böl"
+custom = "Özel sayfalar"
+
+[split-by-sections.customPages]
+label = "Özel Sayfa Numaraları"
+placeholder = "örn. 2,4,6"
 
 [AddStampRequest]
 tags = "Damga, Görüntü ekle, Görüntüyü ortala, Filigran, PDF, Göm, Özelleştir"
@@ -3441,6 +3674,9 @@ signinTitle = "Lütfen giriş yapınız."
 ssoSignIn = "Tek Oturum Açma ile Giriş Yap"
 oAuth2AutoCreateDisabled = "OAUTH2 Otomatik Oluşturma Kullanıcı Devre Dışı Bırakıldı"
 oAuth2AdminBlockedUser = "Kayıtlı olmayan kullanıcıların kayıt veya giriş yapması şu anda engellenmiştir. Lütfen yöneticiyle iletişime geçin."
+oAuth2RequiresLicense = "OAuth/SSO ile oturum açma ücretli bir lisans (Server veya Enterprise) gerektirir. Planınızı yükseltmek için lütfen yöneticiyle iletişime geçin."
+saml2RequiresLicense = "SAML ile oturum açma ücretli bir lisans (Server veya Enterprise) gerektirir. Planınızı yükseltmek için lütfen yöneticiyle iletişime geçin."
+maxUsersReached = "Mevcut lisansınız için azami kullanıcı sayısına ulaşıldı. Planınızı yükseltmek veya daha fazla koltuk eklemek için lütfen yöneticiyle iletişime geçin."
 oauth2RequestNotFound = "Yetkilendirme isteği bulunamadı"
 oauth2InvalidUserInfoResponse = "Geçersiz Kullanıcı Bilgisi Yanıtı"
 oauth2invalidRequest = "Geçersiz İstek"
@@ -3602,6 +3838,19 @@ filesize = "Dosya Boyutu"
 [compress.grayscale]
 label = "Sıkıştırma için Gri Ton Uygula"
 
+[compress.linearize]
+label = "Hızlı web görüntüleme için PDF'yi doğrusal hale getir"
+
+[compress.lineArt]
+label = "Görselleri çizgi sanatına dönüştür"
+description = "Sayfaları maksimum boyut küçültme için yüksek kontrastlı siyah beyaza indirgemek üzere ImageMagick kullanır."
+unavailable = "Bu sunucuda ImageMagick yüklü veya etkin değil"
+detailLevel = "Detay seviyesi"
+edgeEmphasis = "Kenar vurgusu"
+edgeLow = "Hafif"
+edgeMedium = "Dengeli"
+edgeHigh = "Güçlü"
+
 [compress.tooltip.header]
 title = "Sıkıştırma Ayarlarına Genel Bakış"
 
@@ -3619,6 +3868,10 @@ bullet2 = "Yüksek değerler dosya boyutunu azaltır"
 title = "Gri Tonlama"
 text = "Tüm görselleri siyah beyaza dönüştürmek için bu seçeneği belirleyin; özellikle taranmış PDF'ler veya görsel ağırlıklı belgeler için dosya boyutunu önemli ölçüde azaltabilir."
 
+[compress.tooltip.lineArt]
+title = "Çizgi Sanatı"
+text = "Sayfaları ImageMagick kullanarak yüksek kontrastlı siyah beyaza dönüştürün. İçeriğin ne kadarının siyaha dönüşeceğini 'detay seviyesi' ile, kenarların ne kadar agresif algılanacağını 'kenar vurgusu' ile kontrol edin."
+
 [compress.error]
 failed = "PDF sıkıştırılırken bir hata oluştu."
 
@@ -3630,6 +3883,11 @@ failed = "PDF sıkıştırılırken bir hata oluştu."
 [compress.selectText.1]
 _value = "Sıkıştırma Ayarları"
 1 = "1-3 PDF sıkıştırma,</br> 4-6 hafif görüntü sıkıştırma,</br> 7-9 yoğun görüntü sıkıştırma görüntü kalitesini ciddi ölçüde düşürür"
+
+[compress.compressionLevel]
+range1to3 = "Daha düşük değerler kaliteyi korur ancak daha büyük dosyalar üretir"
+range4to6 = "Orta sıkıştırma, orta düzey kalite düşüşüyle"
+range7to9 = "Daha yüksek değerler dosya boyutunu önemli ölçüde düşürür ancak görüntü netliğini azaltabilir"
 
 [decrypt]
 passwordPrompt = "Bu dosya parola korumalı. Lütfen parolayı girin:"
@@ -3849,14 +4107,17 @@ fitToWidth = "Genişliğe Sığdır"
 actualSize = "Gerçek Boyut"
 
 [viewer]
+cannotPreviewFile = "Dosya önizlenemiyor"
+dualPageView = "Çift Sayfa Görünümü"
 firstPage = "İlk Sayfa"
 lastPage = "Son Sayfa"
-previousPage = "Önceki Sayfa"
 nextPage = "Sonraki Sayfa"
+onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
+previousPage = "Önceki Sayfa"
+singlePageView = "Tek Sayfa Görünümü"
+unknownFile = "Bilinmeyen dosya"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
-singlePageView = "Tek Sayfa Görünümü"
-dualPageView = "Çift Sayfa Görünümü"
 
 [rightRail]
 closeSelected = "Seçilen Dosyaları Kapat"
@@ -3867,21 +4128,97 @@ deleteSelected = "Seçilen Sayfaları Sil"
 closePdf = "PDF'yi Kapat"
 exportAll = "PDF'yi Dışa Aktar"
 downloadSelected = "Seçilen Dosyaları İndir"
-downloadAll = "Tümünü İndir"
-saveAll = "Tümünü Kaydet"
+annotations = "Açıklamalar"
+exportSelected = "Seçilen Sayfaları Dışa Aktar"
+saveChanges = "Değişiklikleri Kaydet"
 toggleTheme = "Temayı Değiştir"
-toggleBookmarks = "Yer imlerini aç/kapat"
 language = "Dil"
+toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
 search = "PDF Ara"
 panMode = "Kaydırma Modu"
+applyRedactionsFirst = "Önce karartmaları uygula"
 rotateLeft = "Sola Döndür"
 rotateRight = "Sağa Döndür"
 toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
-exportSelected = "Seçilen Sayfaları Dışa Aktar"
-toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
-annotationMode = "Açıklama Modunu Değiştir"
+toggleBookmarks = "Yer imlerini aç/kapat"
+print = "PDF'yi Yazdır"
 draw = "Çiz"
+redact = "Karart"
+exitRedaction = "Karartma Modundan Çık"
 save = "Kaydet"
+downloadAll = "Tümünü İndir"
+saveAll = "Tümünü Kaydet"
+
+[textAlign]
+left = "Sol"
+center = "Orta"
+right = "Sağ"
+
+[annotation]
+title = "Açıklama Ekle"
+desc = "Vurgu, kalem, metin ve notları kullanın. Değişiklikler canlı kalır—düzleştirme gerekmez."
+highlight = "Vurgula"
+pen = "Kalem"
+text = "Metin kutusu"
+note = "Not"
+rectangle = "Dikdörtgen"
+ellipse = "Elips"
+select = "Seç"
+exit = "Açıklama modundan çık"
+strokeWidth = "Genişlik"
+opacity = "Opaklık"
+strokeOpacity = "Çizgi Opaklığı"
+fillOpacity = "Dolgu Opaklığı"
+fontSize = "Yazı tipi boyutu"
+chooseColor = "Renk seç"
+color = "Renk"
+strokeColor = "Çizgi Rengi"
+fillColor = "Dolgu Rengi"
+underline = "Altını çiz"
+strikeout = "Üstünü çiz"
+squiggly = "Dalgalı"
+inkHighlighter = "Serbest Vurgu Kalemi"
+freehandHighlighter = "Serbest Vurgu Kalemi"
+square = "Kare"
+circle = "Daire"
+polygon = "Çokgen"
+line = "Çizgi"
+stamp = "Görsel Ekle"
+textMarkup = "Metin İşaretleme"
+drawing = "Çizim"
+shapes = "Şekiller"
+notesStamps = "Notlar ve Damgalar"
+settings = "Ayarlar"
+borderOn = "Kenarlık: Açık"
+borderOff = "Kenarlık: Kapalı"
+editInk = "Kalemi Düzenle"
+editLine = "Çizgiyi Düzenle"
+editNote = "Notu Düzenle"
+editText = "Metin Kutusunu Düzenle"
+editTextMarkup = "Metin İşaretlemeyi Düzenle"
+editSelected = "Açıklamayı Düzenle"
+editSquare = "Kareyi Düzenle"
+editCircle = "Daireyi Düzenle"
+editPolygon = "Çokgeni Düzenle"
+unsupportedType = "Bu açıklama türü düzenleme için tam olarak desteklenmiyor."
+textAlignment = "Metin Hizalama"
+noteIcon = "Not Simgesi"
+imagePreview = "Önizleme"
+contents = "Metin"
+backgroundColor = "Arka plan rengi"
+clearBackground = "Arka planı kaldır"
+noBackground = "Arka plan yok"
+stampSettings = "Damga Ayarları"
+savingCopy = "İndirmeye hazırlanıyor..."
+saveFailed = "Kopya kaydedilemiyor"
+saveReady = "İndirmeye hazır"
+selectAndMove = "Seç ve Düzenle"
+editSelectDescription = "Bir açıklamanın renk, opaklık, metin veya boyutunu düzenlemek için mevcut açıklamaya tıklayın."
+editStampHint = "Görseli değiştirmek için bu damgayı silip yenisini ekleyin."
+editSwitchToSelect = "Bu açıklamayı düzenlemek için Seç ve Düzenle moduna geçin."
+undo = "Geri al"
+redo = "Yinele"
+applyChanges = "Değişiklikleri Uygula"
 saveChanges = "Değişiklikleri Kaydet"
 
 [search]
@@ -3933,12 +4270,20 @@ settings = "Ayarlar"
 adminSettings = "Admin Ayarları"
 allTools = "All Tools"
 reader = "Okuyucu"
+tours = "Turlar"
+showMeAround = "Bana etrafı göster"
+
+[quickAccess.toursTooltip]
+admin = "Buradan tanıtımları izleyin: Araçlar turu, Yeni V2 düzen turu ve Yönetici turu."
+user = "Buradan tanıtımları izleyin: Araçlar turu ve Yeni V2 düzen turu."
 
 [quickAccess.helpMenu]
 toolsTour = "Araç Turu"
 toolsTourDesc = "Araçların neler yapabildiğini öğrenin"
 adminTour = "Yönetici Turu"
 adminTourDesc = "Yönetici ayarlarını ve özelliklerini keşfedin"
+whatsNewTour = "V2'de neler yeni görün"
+whatsNewTourDesc = "Güncellenmiş düzeni keşfedin"
 
 [admin]
 error = "Hata"
@@ -3957,6 +4302,8 @@ fetchError = "Ayarlar yüklenemedi"
 saveError = "Ayarlar kaydedilemedi"
 saved = "Ayarlar başarıyla kaydedildi"
 saveSuccess = "Ayarlar başarıyla kaydedildi"
+success = "Ayarlar başarıyla kaydedildi"
+error = "Ayarlar kaydedilemedi"
 save = "Değişiklikleri Kaydet"
 discard = "Vazgeç"
 restartRequired = "Yeniden Başlatma Gerekiyor"
@@ -4079,6 +4426,13 @@ description = "HTML’den PDF’ye dönüştürme için WeasyPrint çalıştır�
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert Çalıştırılabilir Dosyası"
 description = "Belge dönüştürmeleri için LibreOffice unoconvert yolunu belirtin (varsayılan için boş bırakın: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Ön Uç URL'si"
+description = "Ön uç için temel URL (örn. https://pdf.example.com). E-posta davet bağlantıları ve mobil QR kod yüklemeleri için kullanılır. Arka uç URL'sini kullanmak için boş bırakın."
+
+[admin.settings.badge]
+clickToUpgrade = "Plan ayrıntılarını görmek için tıklayın"
 
 [admin.settings.security]
 title = "Güvenlik"
@@ -4216,6 +4570,19 @@ connect = "Bağlan"
 disconnect = "Bağlantıyı Kes"
 disconnected = "Sağlayıcının bağlantısı başarıyla kesildi"
 disconnectError = "Sağlayıcı bağlantısı kesilemedi"
+mobileScannerConvertToPdf = "Görselleri PDF'ye Dönüştür"
+mobileScannerConvertToPdfDesc = "Yüklenen görselleri otomatik olarak PDF biçimine dönüştürür. Devre dışı bırakılırsa görseller olduğu gibi tutulur."
+mobileScannerImageResolution = "Görsel Çözünürlüğü"
+mobileScannerImageResolutionDesc = "Yüklenen görsellerin çözünürlüğü. \"Azaltılmış\", dosya boyutunu küçültmek için görselleri en fazla 1200px'e ölçekler."
+imageResolutionFull = "Tam (Orijinal Boyut)"
+imageResolutionReduced = "Azaltılmış (Maks 1200px)"
+mobileScannerPageFormat = "Sayfa Biçimi"
+mobileScannerPageFormatDesc = "Dönüştürülen görseller için PDF sayfa boyutu. \"Koru\", görselin orijinal boyutlarını kullanır."
+pageFormatKeep = "Koru (Orijinal Boyutlar)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Sığdırmak için esnet"
+mobileScannerStretchToFitDesc = "Görselleri tüm sayfayı dolduracak şekilde esnetir. Devre dışıysa görseller, en-boy oranı korunarak ortalanır."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO Otomatik Giriş"
@@ -4283,6 +4650,122 @@ description = "İlk SAML2 girişinde kullanıcı hesaplarını otomatik olarak o
 [admin.settings.connections.saml2.blockRegistration]
 label = "Kaydı Engelle"
 description = "SAML2 üzerinden yeni kullanıcı kaydını engelle"
+
+[admin.settings.connections.mobileScanner]
+label = "Mobil Telefon Yükleme"
+enable = "QR Kod Yüklemeyi Etkinleştir"
+description = "Kullanıcıların bir QR kodunu tarayarak mobil cihazlardan dosya yüklemesine izin verin"
+note = "Not: Ön Uç URL'sinin yapılandırılması gerekir. "
+link = "Sistem Ayarlarında Yapılandır"
+mobileScannerConvertToPdf = "Görselleri PDF'ye Dönüştür"
+mobileScannerConvertToPdfDesc = "Yüklenen görselleri otomatik olarak PDF biçimine dönüştürür. Devre dışı bırakılırsa görseller olduğu gibi tutulur."
+mobileScannerImageResolution = "Görsel Çözünürlüğü"
+mobileScannerImageResolutionDesc = "Yüklenen görsellerin çözünürlüğü. \"Azaltılmış\", dosya boyutunu küçültmek için görselleri en fazla 1200px'e ölçekler."
+imageResolutionFull = "Tam (Orijinal Boyut)"
+imageResolutionReduced = "Azaltılmış (Maks 1200px)"
+mobileScannerPageFormat = "Sayfa Biçimi"
+mobileScannerPageFormatDesc = "Dönüştürülen görseller için PDF sayfa boyutu. \"Koru\", görselin orijinal boyutlarını kullanır."
+pageFormatKeep = "Koru (Orijinal Boyutlar)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Sığdırmak için esnet"
+mobileScannerStretchToFitDesc = "Görselleri tüm sayfayı dolduracak şekilde esnetir. Devre dışıysa görseller, en-boy oranı korunarak ortalanır."
+
+[admin.settings.telegram]
+title = "Telegram Botu"
+description = "Telegram bot bağlantısını, erişim kontrollerini ve geri bildirim davranışını yapılandırın."
+
+[admin.settings.telegram.enabled]
+label = "Telegram Botunu Etkinleştir"
+description = "Kullanıcıların yapılandırdığınız Telegram botu üzerinden Stirling PDF ile etkileşim kurmasına izin verin."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Kullanıcı Adı"
+description = "Telegram botunuzun herkese açık kullanıcı adı."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "Telegram botunuz için BotFather tarafından sağlanan API token'ı."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Gelen Kutusu Klasörü"
+description = "Gelen Telegram dosyalarının saklandığı, pipeline dizini altındaki klasör."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Özel Klasör Soneki Kullan"
+description = "Gelen dosya klasörlerine sohbet kimliğini ekleyerek yüklemeleri sohbet başına ayırın."
+
+[admin.settings.telegram.accessControl]
+title = "Erişim Kontrolü"
+description = "Botla hangi kullanıcı veya kanalların etkileşime girebileceğini kısıtlayın."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Belirli Kullanıcı Kimliklerine İzin Ver"
+description = "Etkinleştirildiğinde yalnızca listelenen kullanıcı kimlikleri botu kullanabilir."
+
+[admin.settings.telegram.allowUserIDs]
+label = "İzin Verilen Kullanıcı Kimlikleri"
+description = "Botla etkileşime izin verilen Telegram kullanıcı kimliklerini girin."
+placeholder = "Kullanıcı kimliği ekleyin ve enter'a basın"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Belirli Kanal Kimliklerine İzin Ver"
+description = "Etkinleştirildiğinde yalnızca listelenen kanal kimlikleri botu kullanabilir."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "İzin Verilen Kanal Kimlikleri"
+description = "Botla etkileşime izin verilen Telegram kanal kimliklerini girin."
+placeholder = "Kanal kimliği ekleyin ve enter'a basın"
+
+[admin.settings.telegram.processing]
+title = "İşleme"
+description = "Telegram yüklemeleri için yoklama aralıklarını ve işleme zaman aşımlarını kontrol edin."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "İşleme Zaman Aşımı (saniye)"
+description = "Hata bildirmeden önce bir işin işlenmesi için beklenecek azami süre."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Yoklama Aralığı (ms)"
+description = "Yeni Telegram güncellemelerini kontrol etme aralığı."
+
+[admin.settings.telegram.feedback]
+title = "Geri Bildirim Mesajları"
+description = "Botun kullanıcılara ve kanallara ne zaman geri bildirim göndereceğini seçin."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Geri Bildirimi Etkinleştir"
+description = "Botun geri bildirim mesajları gönderip göndermeyeceğini kontrol edin."
+
+[admin.settings.telegram.feedback.channel]
+title = "Kanal Geri Bildirim Kuralları"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "\"Geçerli belge yok\" mesajını göster (Kanal)"
+description = "Kanal yüklemeleri için 'geçerli belge yok' yanıtını bastırın."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "İşleme hatalarını göster (Kanal)"
+description = "Kanallara işleme hata mesajları gönderin."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Hata mesajlarını göster (Kanal)"
+description = "Kanallar için ayrıntılı hata mesajlarını gösterin."
+
+[admin.settings.telegram.feedback.user]
+title = "Kullanıcı Geri Bildirim Kuralları"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "\"Geçerli belge yok\" mesajını göster (Kullanıcı)"
+description = "Kullanıcı yüklemeleri için 'geçerli belge yok' yanıtını bastırın."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "İşleme hatalarını göster (Kullanıcı)"
+description = "Kullanıcılara işleme hata mesajları gönderin."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Hata mesajlarını göster (Kullanıcı)"
+description = "Kullanıcılar için ayrıntılı hata mesajlarını gösterin."
 
 [admin.settings.database]
 title = "Veritabanı"
@@ -4465,6 +4948,10 @@ description = "Yöneticilerin kullanıcılara otomatik oluşturulan parolalarla 
 label = "Ön Uç URL’si"
 description = "Ön uç için temel URL (örn. https://pdf.example.com). E-postalardaki davet bağlantılarını üretmek için kullanılır. Boş bırakılırsa arka uç URL’si kullanılır."
 
+[admin.settings.mail.frontendUrlNote]
+note = "Not: Ön Uç URL'sinin yapılandırılması gerekir. "
+link = "Sistem Ayarlarında Yapılandır"
+
 [admin.settings.legal]
 title = "Hukuki Belgeler"
 description = "Hukuki belgelere ve politikalara bağlantıları yapılandırın."
@@ -4497,6 +4984,7 @@ description = "Impressum için URL veya dosya adı (bazı yargı bölgelerinde g
 title = "Premium ve Kurumsal"
 description = "Premium veya kurumsal lisans anahtarınızı yapılandırın."
 license = "Lisans Yapılandırması"
+noInput = "Lütfen bir lisans anahtarı veya dosyası sağlayın"
 
 [admin.settings.premium.licenseKey]
 toggle = "Lisans anahtarınız veya sertifika dosyanız mı var?"
@@ -4513,6 +5001,25 @@ title = "⚠️ Uyarı: Mevcut Lisans Tespit Edildi"
 line1 = "Mevcut lisans anahtarınızın üzerine yazma işlemi geri alınamaz."
 line2 = "Başka yerde yedeğiniz yoksa önceki lisansınız kalıcı olarak kaybolacaktır."
 line3 = "Önemli: Lisans anahtarlarını gizli ve güvenli tutun. Asla herkese açık şekilde paylaşmayın."
+
+[admin.settings.premium.inputMethod]
+text = "Lisans Anahtarı"
+file = "Sertifika Dosyası"
+
+[admin.settings.premium.file]
+label = "Lisans Sertifika Dosyası"
+description = "Çevrimdışı satın alımlardan aldığınız .lic veya .cert lisans dosyanızı yükleyin"
+choose = "Lisans Dosyası Seç"
+selected = "Seçildi: {{filename}} ({{size}})"
+successMessage = "Lisans dosyası başarıyla yüklendi ve etkinleştirildi. Yeniden başlatma gerekmez."
+
+[admin.settings.premium.currentLicense]
+title = "Etkin Lisans"
+file = "Kaynak: Lisans dosyası ({{path}})"
+key = "Kaynak: Lisans anahtarı"
+type = "Tür: {{type}}"
+noInput = "Lütfen bir lisans anahtarı girin veya bir sertifika dosyası yükleyin"
+success = "Başarılı"
 
 [admin.settings.premium.enabled]
 label = "Premium Özellikleri Etkinleştir"
@@ -4629,6 +5136,9 @@ googleDriveShort = "Drive"
 myFiles = "Dosyalarım"
 noRecentFiles = "Son dosya bulunamadı"
 googleDriveNotAvailable = "Google Drive entegrasyonu kullanılamıyor"
+mobileUpload = "Mobil Yükleme"
+mobileShort = "Mobil"
+mobileUploadNotAvailable = "Mobil yükleme etkin değil"
 downloadSelected = "Seçilenleri İndir"
 saveSelected = "Seçilenleri Kaydet"
 openFiles = "Dosyaları Aç"
@@ -4647,7 +5157,9 @@ selectedCount = "{{count}} seçildi"
 download = "İndir"
 delete = "Sil"
 unsupported = "Desteklenmiyor"
+active = "Aktif"
 addToUpload = "Yüklemeye Ekle"
+closeFile = "Dosyayı Kapat"
 deleteAll = "Tümünü Sil"
 loadingFiles = "Dosyalar yükleniyor..."
 noFiles = "Kullanılabilir dosya yok"
@@ -4942,6 +5454,7 @@ loading = "Yükleniyor..."
 back = "Geri"
 continue = "Devam et"
 error = "Hata"
+save = "Kaydet"
 
 [config.overview]
 title = "Uygulama Yapılandırması"
@@ -5003,6 +5516,15 @@ warning = "⚠️ Uyarı: Bu işlem yeni API anahtarları oluşturur ve önceki 
 impact = "Bu anahtarları kullanan tüm uygulamalar veya hizmetler, onları yeni anahtarlarla güncelleyene kadar çalışmayı durduracaktır."
 confirmPrompt = "Devam etmek istediğinizden emin misiniz?"
 confirmCta = "Anahtarları Yenile"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Anahtarı Hatası"
+failedToCreateApiKey = "API anahtarı oluşturulamadı."
+failedToRetrieveApiKey = "Yanıttan API anahtarı alınamadı."
+failedToFetchApiKey = "API anahtarı getirilemedi."
+apiKeyRefreshed = "API Anahtarı Yenilendi"
+apiKeyRefreshedBody = "API anahtarınız başarıyla yenilendi."
+failedToRefreshApiKey = "API anahtarı yenilenemedi."
 
 [AddAttachmentsRequest]
 attachments = "Ekleri Seçin"
@@ -5108,6 +5630,16 @@ finish = "Bitir"
 startTour = "Turu Başlat"
 startTourDescription = "Stirling PDF'in temel özelliklerinde rehberli bir tura çıkın"
 
+[onboarding.whatsNew]
+quickAccess = "Okuyucu, Otomasyon, dosyalarınız ve tüm turlar arasında geçiş yapmak için <strong>Hızlı Erişim</strong> panelinden başlayın."
+leftPanel = "Soldaki <strong>Araçlar</strong> paneli yapabileceklerinizin tümünü listeler. Kategorilere göz atın veya hızlıca bir araç bulmak için arayın."
+fileUpload = "<strong>Dosyalar</strong> düğmesini kullanarak bir PDF yükleyin veya yakın zamanda açılanı seçin. Çalışma alanını görebilmeniz için bir örnek yükleyeceğiz."
+rightRail = "<strong>Sağ Panel</strong>, dosya seçme, tema veya dil değiştirme ve sonuçları indirme için hızlı işlemler barındırır."
+topBar = "Üst çubuk, <strong>Görüntüleyici</strong>, <strong>Sayfa Düzenleyici</strong> ve <strong>Aktif Dosyalar</strong> arasında geçiş yapmanızı sağlar."
+pageEditorView = "Sayfaları yeniden sıralamak, döndürmek veya silmek için Sayfa Düzenleyiciye geçin."
+activeFilesView = "Açık olan her şeyi görmek ve üzerinde çalışılacak dosyayı seçmek için Aktif Dosyaları kullanın."
+wrapUp = "V2'deki yenilikler bunlar. Bunu, Araçlar turunu veya Yönetici turunu yeniden izlemek için <strong>Turlar</strong> menüsünü istediğiniz zaman açın."
+
 [onboarding.welcomeModal]
 title = "Stirling PDF'ye Hoş Geldiniz!"
 description = "Ana özellikleri ve nasıl başlayacağınızı öğrenmek için 1 dakikalık hızlı bir tura çıkmak ister misiniz?"
@@ -5127,6 +5659,10 @@ skipForNow = "Şimdilik atla"
 download = "İndir →"
 showMeAround = "Bana etrafı göster"
 skipTheTour = "Turu atla"
+
+[onboarding.tourOverview]
+title = "Tur Genel Bakış"
+body = "Stirling PDF V2 onlarca araç ve yenilenmiş bir düzenle gelir. Nelerin değiştiğini ve ihtiyaç duyduğunuz özellikleri nerede bulacağınızı görmek için kısa bir tura çıkın."
 
 [onboarding.serverLicense]
 skip = "Şimdilik atla"
@@ -5240,6 +5776,31 @@ error = "Kullanıcı durumu güncellenemedi"
 success = "Kullanıcı başarıyla silindi"
 error = "Kullanıcı silinemedi"
 
+[workspace.people.changePassword]
+action = "Parolayı değiştir"
+title = "Parolayı değiştir"
+subtitle = "Şunun için parolayı güncelle"
+newPassword = "Yeni parola"
+confirmPassword = "Parolayı onayla"
+placeholder = "Yeni bir parola girin"
+confirmPlaceholder = "Yeni parolayı tekrar girin"
+passwordRequired = "Lütfen yeni bir parola girin"
+passwordMismatch = "Parolalar eşleşmiyor"
+generateRandom = "Güvenli parola oluştur"
+generatedPreview = "Oluşturulan parola:"
+copyTooltip = "Panoya kopyala"
+copiedToClipboard = "Parola panoya kopyalandı"
+copyFailed = "Parola kopyalanamadı"
+sendEmail = "Kullanıcıya bu değişiklik hakkında e-posta gönder"
+includePassword = "E-postaya yeni parolayı dahil et"
+forcePasswordChange = "Kullanıcının bir sonraki girişte parolasını değiştirmesini zorunlu kıl"
+emailUnavailable = "Bu kullanıcının e-posta adresi geçerli değil. Bildirimler devre dışı."
+smtpDisabled = "E-posta bildirimleri için ayarlarda SMTP'nin etkinleştirilmesi gerekir."
+notifyOnly = "Parola olmadan bir e-posta gönderilecek ve kullanıcıya bir yöneticinin parolayı değiştirdiği bildirilecek."
+submit = "Parolayı güncelle"
+success = "Parola başarıyla güncellendi"
+error = "Parola güncellenemedi"
+
 [workspace.people.emailInvite]
 tab = "E-posta Daveti"
 description = "Aşağıya e-postaları virgülle ayırarak yazın veya yapıştırın. Kullanıcılar giriş bilgilerini e-posta ile alacaktır."
@@ -5248,7 +5809,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "En az bir e-posta adresi gereklidir"
 submit = "Davetleri Gönder"
 success = "kullanıcı(lar) başarıyla davet edildi"
-partialSuccess = "Bazı davetler başarısız oldu"
+partialFailure = "Bazı davetler başarısız oldu"
 allFailed = "Kullanıcılar davet edilemedi"
 error = "Davetler gönderilemedi"
 
@@ -5416,6 +5977,28 @@ contactSales = "Satış ile İletişime Geçin"
 contactToUpgrade = "Planınızı yükseltmek veya özelleştirmek için bizimle iletişime geçin"
 maxUsers = "Maksimum Kullanıcı"
 upTo = "En fazla"
+getLicense = "Sunucu Lisansı Al"
+upgradeToEnterprise = "Enterprise'a Yükselt"
+selectPeriod = "Faturalandırma Dönemini Seçin"
+monthlyBilling = "Aylık Faturalandırma"
+yearlyBilling = "Yıllık Faturalandırma"
+checkoutOpened = "Ödeme Sayfası Açıldı"
+checkoutInstructions = "Satın almayı Stripe sekmesinde tamamlayın. Ödemeden sonra lisansınızı etkinleştirmek için buraya dönüp sayfayı yenileyin. Ayrıca lisans anahtarınız e-postayla gönderilecektir."
+activateLicense = "Lisansınızı Etkinleştirin"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Ödeme Sayfası Yeni Sekmede Açıldı"
+instructions = "Satın almayı Stripe sekmesinde tamamlayın. Ödeme tamamlandığında lisans anahtarınız e-postayla gönderilecektir."
+enterKey = "Planınızı etkinleştirmek için lisans anahtarınızı aşağıya girin:"
+keyDescription = "E-postanızdaki lisans anahtarını yapıştırın"
+activate = "Lisansı Etkinleştir"
+doLater = "Bunu sonra yapacağım"
+success = "Lisans Etkinleştirildi!"
+successMessage = "Lisansınız başarıyla etkinleştirildi. Bu pencereyi şimdi kapatabilirsiniz."
+
+[plan.static.billingPortal]
+title = "E-posta Doğrulaması Gerekli"
+message = "Stripe faturalandırma portalında e-posta adresinizi doğrulamanız gerekecek. Giriş bağlantısı için e-postanızı kontrol edin."
 
 [plan.period]
 month = "ay"
@@ -5619,6 +6202,8 @@ notAvailable = "Denetim sistemi kullanılamıyor"
 notAvailableMessage = "Denetim sistemi yapılandırılmamış veya kullanılamıyor."
 disabled = "Denetim günlüğü devre dışı"
 disabledMessage = "Sistem olaylarını takip etmek için uygulama yapılandırmanızda denetim günlüğünü etkinleştirin."
+enterpriseRequired = "Enterprise Lisansı Gerekli"
+enterpriseRequiredMessage = "Denetim günlükleme sistemi bir Enterprise özelliğidir. Denetim günlüklerine ve analizlerine erişmek için lütfen Enterprise lisansına yükseltin."
 
 [audit.error]
 title = "Denetim sistemi yüklenirken hata"
@@ -5773,6 +6358,7 @@ subtitle = "Stirling hesabınızla oturum açın"
 [setup.selfhosted]
 title = "Sunucuda Oturum Açın"
 subtitle = "Sunucu kimlik bilgilerinizi girin"
+link = "veya kendi barındırdığınız bir hesaba bağlanın"
 
 [setup.server]
 title = "Sunucuya Bağlan"
@@ -5789,8 +6375,17 @@ description = "Öz barındırılan Stirling PDF sunucunuzun tam URL'sini girin"
 
 [setup.server.error]
 emptyUrl = "Lütfen bir sunucu URL'si girin"
+invalidUrl = "Geçersiz URL biçimi. Lütfen https://your-server.com gibi geçerli bir URL girin"
 unreachable = "Sunucuya bağlanılamadı"
 testFailed = "Bağlantı testi başarısız"
+configFetch = "Sunucu yapılandırması alınamadı. Lütfen URL'yi kontrol edip tekrar deneyin."
+
+[setup.server.error.securityDisabled]
+title = "Giriş Etkin Değil"
+body = "Bu sunucuda giriş etkin değil. Bu sunucuya bağlanmak için kimlik doğrulamayı etkinleştirmelisiniz:"
+step1 = "Ortamınızda DOCKER_ENABLE_SECURITY=true olarak ayarlayın"
+step2 = "Ya da settings.yml içinde security.enableLogin=true olarak ayarlayın"
+step3 = "Sunucuyu yeniden başlatın"
 
 [setup.login]
 title = "Oturum Aç"
@@ -5799,7 +6394,15 @@ connectingTo = "Bağlanılıyor:"
 submit = "Oturum Aç"
 signInWith = "Şununla oturum aç"
 oauthPending = "Kimlik doğrulama için tarayıcı açılıyor..."
+sso = "Tek Oturum Açma"
 orContinueWith = "Veya e-postayla devam edin"
+serverRequirement = "Not: Sunucuda oturum açma etkin olmalıdır."
+showInstructions = "Nasıl etkinleştirilir?"
+hideInstructions = "Yönergeleri gizle"
+instructions = "Stirling PDF sunucunuzda oturum açmayı etkinleştirmek için:"
+instructionsEnvVar = "Ortam değişkenini ayarlayın:"
+instructionsOrYml = "Veya settings.yml içinde:"
+instructionsRestart = "Ardından değişikliklerin etkili olması için sunucunuzu yeniden başlatın."
 
 [setup.login.username]
 label = "Kullanıcı adı"
@@ -5856,6 +6459,9 @@ earlyAccess = "Erken Erişim"
 reset = "Değişiklikleri Sıfırla"
 downloadJson = "JSON'u İndir"
 generatePdf = "PDF Oluştur"
+saveChanges = "Değişiklikleri Kaydet"
+applyChanges = "Değişiklikleri Uygula"
+downloadCopy = "Kopyayı İndir"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Metni kutulara otomatik sığdır"
@@ -5873,6 +6479,24 @@ descriptionInline = "İpucu: Birden çok metin kutusu seçmek için Ctrl (Cmd) v
 [pdfTextEditor.options.forceSingleElement]
 title = "Düzenlenen metni tek bir PDF öğesine kilitle"
 description = "Etkinleştirildiğinde, düzenlenmiş her metin kutusu, üst üste binen glifler veya karışık yazı tiplerini önlemek için tek bir PDF metin öğesi olarak dışa aktarılır."
+
+[pdfTextEditor.options.advanced]
+title = "Gelişmiş Ayarlar"
+
+[pdfTextEditor.tooltip.header]
+title = "Önizleme Sınırlamaları"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Metin ve Görsel Odak"
+text = "Bu çalışma alanı, metin düzenlemeye ve gömülü görselleri yeniden konumlandırmaya odaklanır. Karmaşık sayfa illüstrasyonları, form bileşenleri ve katmanlı grafikler dışa aktarım için korunur ancak burada tam olarak düzenlenemez."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Önizleme Farklılıkları"
+text = "Bazı görseller (tablo kenarlıkları, şekiller veya açıklama görünümleri gibi) önizlemede tam olarak görüntülenmeyebilir. Dışa aktarılan PDF, mümkün olduğunda orijinal çizim komutlarını korur."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alfa Görüntüleyici"
+text = "Bu alfa görüntüleyici hâlâ gelişmektedir—bazı yazı tipleri, renkler, saydamlık efektleri ve yerleşim ayrıntıları biraz değişebilir. Lütfen paylaşmadan önce oluşturulan PDF'yi tekrar kontrol edin."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Seçili kutuları birleştir"
@@ -5893,6 +6517,8 @@ alpha = "Bu alfa görüntüleyici hâlâ gelişiyor—bazı yazı tipleri, renkl
 [pdfTextEditor.empty]
 title = "Belge yüklenmedi"
 subtitle = "Metin içeriğini düzenlemeye başlamak için bir PDF veya JSON dosyası yükleyin."
+dropzone = "Buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
+dropzoneWithFiles = "Dosyalar sekmesinden bir dosya seçin veya buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Metin Düzenleyiciye Hoş Geldiniz (Erken Erişim)"
@@ -5993,3 +6619,58 @@ title = "Metin Ekleme Sonuçları"
 
 [addText.error]
 failed = "PDF'ye metin eklenirken bir hata oluştu."
+
+[mobileUpload]
+title = "Mobil Cihazdan Yükle"
+description = "Fotoğrafları yüklemek için tarayın. Görseller otomatik olarak PDF'ye dönüştürülür."
+descriptionNoConvert = "Mobil cihazınızdan fotoğrafları yüklemek için tarayın."
+error = "Bağlantı Hatası"
+pollingError = "Dosyalar kontrol edilirken hata oluştu"
+sessionId = "Oturum Kimliği"
+sessionCreateError = "Oturum oluşturulamadı"
+expiryWarning = "Oturum Yakında Sona Eriyor"
+expiryWarningMessage = "Bu QR kodunun süresi {{seconds}} saniye içinde dolacak. Yeni bir kod otomatik olarak oluşturulacak."
+filesReceived = "{{count}} dosya alındı"
+connected = "Mobil cihaz bağlandı"
+instructions = "Telefonunuzun kamerasıyla tarayın. Görseller otomatik olarak PDF'ye dönüştürülür."
+instructionsNoConvert = "Dosyaları yüklemek için telefon kameranızla tarayın."
+
+[mobileScanner]
+title = "Mobil Tarayıcı"
+noSession = "Geçersiz Oturum"
+noSessionMessage = "Bu sayfaya erişmek için lütfen geçerli bir QR kodu tarayın."
+validating = "Oturum doğrulanıyor..."
+sessionInvalid = "Oturum Hatası"
+sessionExpired = "Bu oturumun süresi doldu. Lütfen yenileyip tekrar deneyin."
+sessionNotFound = "Oturum bulunamadı. Lütfen yenileyip tekrar deneyin."
+sessionValidationError = "Oturum doğrulanamıyor. Lütfen tekrar deneyin."
+uploadSuccess = "Yükleme Başarılı!"
+uploadSuccessMessage = "Görselleriniz aktarıldı."
+httpsRequired = "Kameraya erişim HTTPS veya localhost gerektirir. Lütfen HTTPS kullanın veya localhost üzerinden erişin."
+uploadFailed = "Yükleme başarısız. Lütfen tekrar deneyin."
+uploading = "Yükleniyor..."
+connected = "Bağlandı"
+connecting = "Bağlanıyor..."
+chooseMethod = "Yükleme Yöntemi Seçin"
+chooseMethodDescription = "Belgeleri nasıl tarayıp yüklemek istediğinizi seçin"
+camera = "Kamera"
+cameraDescription = "Cihazınızın kamerasını otomatik kenar algılama ile kullanarak belgeleri tarayın"
+fileUpload = "Dosya Yükleme"
+fileDescription = "Cihazınızdaki mevcut fotoğrafları veya belgeleri yükleyin"
+cameraAccessDenied = "Kameraya erişim reddedildi. Lütfen kamera erişimini etkinleştirin."
+back = "Geri"
+settings = "Ayarlar"
+edgeDetection = "Kenar Algılama"
+flashlight = "El Feneri"
+flash = "Flaş"
+processing = "İşleniyor..."
+capture = "Fotoğraf Çek"
+selectFilesPrompt = "Yüklenecek dosyaları seçin"
+selectImage = "Görsel Seç"
+preview = "Önizleme"
+retake = "Yeniden çek"
+addToBatch = "Topluya Ekle"
+upload = "Yükle"
+batchImages = "Toplu"
+clearBatch = "Temizle"
+uploadAll = "Tümünü Yükle"

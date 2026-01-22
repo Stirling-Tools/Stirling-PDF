@@ -22,25 +22,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         name = "Pipeline",
         description =
                 """
-                Automated document processing workflows for complex multi-stage business operations.
+                Run several PDF operations in one configured pipeline instead of calling multiple endpoints yourself.
+                Useful when you always do the same steps in sequence (for example: convert → OCR → compress → watermark).
 
-                This endpoint group enables organizations to create sophisticated document processing
-                workflows that combine multiple operations into streamlined, repeatable processes.
-
-                Common use cases:
-                • Invoice processing, legal document review, and healthcare records standardization
-                • Government processing, educational content preparation, and publishing automation
-                • Contract lifecycle management and approval processes
-
-                Business applications:
-                • Automated compliance reporting, large-scale migration, and quality assurance
-                • Archive preparation, content delivery, and document approval workflows
-
-                Operational scenarios:
-                • Scheduled batch processing and event-driven document processing
-                • Multi-department coordination and business system integration
-
-                Target users: Business process managers, IT automation specialists, and organizations
-                requiring consistent, repeatable document processing workflows.
+                Typical uses:
+                • Process incoming invoices in one go (clean, OCR, compress, stamp, etc.)
+                • Normalise documents before they enter an archive
+                • Wrap a complex document flow behind a single API call for your own apps
                 """)
 public @interface PipelineApi {}

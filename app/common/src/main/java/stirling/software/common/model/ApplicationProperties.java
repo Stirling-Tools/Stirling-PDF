@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -60,6 +61,7 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
+    private Telegram telegram = new Telegram();
 
     private Premium premium = new Premium();
 
@@ -68,6 +70,7 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
+    private PdfEditor pdfEditor = new PdfEditor();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -101,6 +104,46 @@ public class ApplicationProperties {
     }
 
     @Data
+    public static class PdfEditor {
+        private Cache cache = new Cache();
+        private FontNormalization fontNormalization = new FontNormalization();
+        private CffConverter cffConverter = new CffConverter();
+        private Type3 type3 = new Type3();
+        private String fallbackFont = "classpath:/static/fonts/NotoSans-Regular.ttf";
+
+        @Data
+        public static class Cache {
+            private long maxBytes = -1;
+            private int maxPercent = 20;
+        }
+
+        @Data
+        public static class FontNormalization {
+            private boolean enabled = false;
+        }
+
+        @Data
+        public static class CffConverter {
+            private boolean enabled = true;
+            private String method = "python";
+            private String pythonCommand = "/opt/venv/bin/python3";
+            private String pythonScript = "/scripts/convert_cff_to_ttf.py";
+            private String fontforgeCommand = "fontforge";
+        }
+
+        @Data
+        public static class Type3 {
+            private Library library = new Library();
+
+            @Data
+            public static class Library {
+                private boolean enabled = true;
+                private String index = "classpath:/type3/library/index.json";
+            }
+        }
+    }
+
+    @Data
     public static class Legal {
         private String termsAndConditions;
         private String privacyPolicy;
@@ -111,8 +154,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Security {
-        private Boolean enableLogin;
-        private Boolean csrfDisabled;
+        private boolean enableLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -287,7 +329,7 @@ public class ApplicationProperties {
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
-                    return switch (registrationId.toLowerCase()) {
+                    return switch (registrationId.toLowerCase(Locale.ROOT)) {
                         case "google" -> getGoogle();
                         case "github" -> getGithub();
                         case "keycloak" -> getKeycloak();
@@ -295,8 +337,8 @@ public class ApplicationProperties {
                                 throw new UnsupportedProviderException(
                                         "Logout from the provider "
                                                 + registrationId
-                                                + " is not supported. "
-                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                                                + " is not supported. Report it at"
+                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -349,29 +391,43 @@ public class ApplicationProperties {
     @Data
     public static class System {
         private String defaultLocale;
-        private Boolean googlevisibility;
+        private boolean googlevisibility;
         private boolean showUpdate;
-        private Boolean showUpdateOnlyAdmin;
+        private boolean showUpdateOnlyAdmin;
+        private boolean showSettingsWhenNoLogin = true;
         private boolean customHTMLFiles;
         private String tessdataDir;
-        private Boolean enableAlphaFunctionality;
+        private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
         private Boolean enablePosthog;
         private Boolean enableScarf;
+        private Boolean enableDesktopInstallSlide;
         private Datasource datasource;
-        private Boolean disableSanitize;
+        private boolean disableSanitize;
         private int maxDPI;
-        private Boolean enableUrlToPDF;
+        private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
         private DatabaseBackup databaseBackup = new DatabaseBackup();
         private List<String> corsAllowedOrigins = new ArrayList<>();
-        private String
-                frontendUrl; // Base URL for frontend (used for invite links, etc.). If not set,
+        private String backendUrl; // Backend base URL for SAML/OAuth/API callbacks (e.g.
+        // 'http://localhost:8080', 'https://api.example.com'). Required for
+        // SSO.
+        private String frontendUrl; // Frontend URL for invite email links (e.g.
 
-        // falls back to backend URL.
+        // 'https://app.example.com'). If not set, falls back to backendUrl.
+        private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
+        private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
+
+        @Data
+        public static class MobileScannerSettings {
+            private boolean convertToPdf = true; // Whether to automatically convert images to PDF
+            private String imageResolution = "full"; // Options: "full", "reduced"
+            private String pageFormat = "A4"; // Options: "keep", "A4", "letter"
+            private boolean stretchToFit = false; // Whether to stretch image to fill page
+        }
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -411,6 +467,9 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
+            private String calibre;
+            private String ocrmypdf;
+            private String soffice;
         }
     }
 
@@ -493,10 +552,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                Driver {
-                  driverName='%s'
-                }
-                """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
@@ -528,7 +587,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private Boolean enabled;
+        private boolean enabled;
     }
 
     @Data
@@ -536,6 +595,7 @@ public class ApplicationProperties {
         @ToString.Exclude private String key;
         private String UUID;
         private String appVersion;
+        private Boolean isNewServer;
     }
 
     // TODO: Remove post migration
@@ -548,6 +608,7 @@ public class ApplicationProperties {
         private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
+        @Deprecated
         @Data
         public static class CustomMetadata {
             private boolean autoUpdateMetadata;
@@ -555,16 +616,23 @@ public class ApplicationProperties {
             private String creator;
             private String producer;
 
+            @Deprecated
             public String getCreator() {
                 return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
             }
 
+            @Deprecated
             public String getProducer() {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
             }
         }
     }
 
+    /**
+     * Mail server configuration properties.
+     *
+     * @since 0.46.1
+     */
     @Data
     public static class Mail {
         private boolean enabled;
@@ -575,6 +643,112 @@ public class ApplicationProperties {
         private String username;
         @ToString.Exclude private String password;
         private String from;
+        // STARTTLS upgrades a plain SMTP connection to TLS after connecting (RFC 3207)
+        private Boolean startTlsEnable = true;
+        private Boolean startTlsRequired;
+        // SSL/TLS wrapper for implicit TLS (typically port 465)
+        private Boolean sslEnable;
+        // Hostnames or patterns (e.g., "smtp.example.com" or "*") to trust for TLS certificates;
+        // defaults to "*" (trust all) when not set
+        private String sslTrust;
+        // Enables hostname verification for TLS connections
+        private Boolean sslCheckServerIdentity;
+    }
+
+    /**
+     * Telegram bot configuration properties.
+     *
+     * @since 2.2.x
+     */
+    @Data
+    public static class Telegram {
+        private Boolean enabled = false;
+        @ToString.Exclude private String botToken;
+        private String botUsername;
+        private String pipelineInboxFolder = "telegram";
+        private Boolean customFolderSuffix = false;
+        private Boolean enableAllowUserIDs = false;
+        private List<Long> allowUserIDs = new ArrayList<>();
+        private Boolean enableAllowChannelIDs = false;
+        private List<Long> allowChannelIDs = new ArrayList<>();
+        private long processingTimeoutSeconds = 180;
+        private long pollingIntervalMillis = 2000;
+        private Feedback feedback = new Feedback();
+
+        /**
+         * Configuration for feedback messages sent by the Telegram bot.
+         *
+         * @since 2.2.x
+         */
+        @Data
+        public static class Feedback {
+            private Channel channel = new Channel();
+            private User user = new User();
+
+            /**
+             * Channel-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class Channel {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * the channel (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+
+            /**
+             * User-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class User {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * users (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to users (to
+                 * avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+        }
     }
 
     @Data
@@ -614,6 +788,25 @@ public class ApplicationProperties {
         public static class EnterpriseFeatures {
             private PersistentMetrics persistentMetrics = new PersistentMetrics();
             private Audit audit = new Audit();
+            private DatabaseNotifications databaseNotifications = new DatabaseNotifications();
+
+            @Data
+            public static class DatabaseNotifications {
+                private Backup backups = new Backup();
+                private Imports imports = new Imports();
+
+                @Data
+                public static class Backup {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+
+                @Data
+                public static class Imports {
+                    private boolean successful = false;
+                    private boolean failed = false;
+                }
+            }
 
             @Data
             public static class Audit {
@@ -634,6 +827,16 @@ public class ApplicationProperties {
     public static class ProcessExecutor {
         private SessionLimit sessionLimit = new SessionLimit();
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+        private boolean autoUnoServer = true;
+        private List<UnoServerEndpoint> unoServerEndpoints = new ArrayList<>();
+
+        @Data
+        public static class UnoServerEndpoint {
+            private String host = "127.0.0.1";
+            private int port = 2003;
+            private String hostLocation = "auto"; // auto|local|remote
+            private String protocol = "http"; // http|https
+        }
 
         @Data
         public static class SessionLimit {
@@ -643,10 +846,12 @@ public class ApplicationProperties {
             private int weasyPrintSessionLimit;
             private int installAppSessionLimit;
             private int calibreSessionLimit;
+            private int imageMagickSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
+            private int ffmpegSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -680,12 +885,20 @@ public class ApplicationProperties {
                 return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
             }
 
+            public int getImageMagickSessionLimit() {
+                return imageMagickSessionLimit > 0 ? imageMagickSessionLimit : 4;
+            }
+
             public int getGhostscriptSessionLimit() {
                 return ghostscriptSessionLimit > 0 ? ghostscriptSessionLimit : 8;
             }
 
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
+            }
+
+            public int getFfmpegSessionLimit() {
+                return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
             }
         }
 
@@ -709,10 +922,13 @@ public class ApplicationProperties {
             @JsonProperty("calibretimeoutMinutes")
             private long calibreTimeoutMinutes;
 
+            private long imageMagickTimeoutMinutes;
+
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
+            private long ffmpegTimeoutMinutes;
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -746,12 +962,20 @@ public class ApplicationProperties {
                 return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
             }
 
+            public long getImageMagickTimeoutMinutes() {
+                return imageMagickTimeoutMinutes > 0 ? imageMagickTimeoutMinutes : 30;
+            }
+
             public long getGhostscriptTimeoutMinutes() {
                 return ghostscriptTimeoutMinutes > 0 ? ghostscriptTimeoutMinutes : 30;
             }
 
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
+            }
+
+            public long getFfmpegTimeoutMinutes() {
+                return ffmpegTimeoutMinutes > 0 ? ffmpegTimeoutMinutes : 30;
             }
         }
     }

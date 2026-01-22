@@ -18,7 +18,13 @@ export const buildCompressFormData = (parameters: CompressParameters, file: File
     }
   }
 
-  formData.append("grayscale", parameters.grayscale.toString());
+  formData.append("grayscale", (parameters.grayscale ?? false).toString());
+  formData.append("lineArt", parameters.lineArt.toString());
+  formData.append("linearize", parameters.linearize.toString());
+  if (parameters.lineArt) {
+    formData.append("lineArtThreshold", parameters.lineArtThreshold.toString());
+    formData.append("lineArtEdgeLevel", parameters.lineArtEdgeLevel.toString());
+  }
   return formData;
 };
 

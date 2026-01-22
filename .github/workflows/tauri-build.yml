@@ -14,20 +14,21 @@ on:
           - macos
           - linux
   pull_request:
-    branches: [main, V2, V2-tauri-windows]
+    branches: [main, V2-tauri-windows]
     paths:
-      - 'frontend/src-tauri/**'
-      - 'frontend/src/desktop/**'
-      - 'frontend/tsconfig.desktop.json'
-      - '.github/workflows/tauri-build.yml'
+      - "frontend/src-tauri/**"
+      - "frontend/src/desktop/**"
+      - "frontend/tsconfig.desktop.json"
+      - ".github/workflows/tauri-build.yml"
   push:
-    branches: [main, V2]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   determine-matrix:
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -66,12 +67,12 @@ jobs:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -82,8 +83,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
@@ -98,27 +99,32 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
       - name: Build Java backend with JLink
         working-directory: ./
         shell: bash
         run: |
           chmod +x ./gradlew
           echo "🔧 Building Stirling-PDF JAR..."
-          # STIRLING_PDF_DESKTOP_UI=false ./gradlew clean bootJar --no-daemon
-          ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+          # STIRLING_PDF_DESKTOP_UI=false ./gradlew bootJar --no-daemon
+          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
           # Find the built JAR
           STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
           echo "✅ Built JAR: $STIRLING_JAR"
-          
+
           # Create Tauri directories
           mkdir -p ./frontend/src-tauri/libs
           mkdir -p ./frontend/src-tauri/runtime
-          
+
           # Copy JAR to Tauri libs
           cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
           echo "✅ JAR copied to Tauri libs"
-          
+
           # Analyze JAR dependencies for jlink modules
           echo "🔍 Analyzing JAR dependencies..."
           if command -v jdeps &> /dev/null; then
@@ -134,14 +140,14 @@ jobs:
             echo "⚠️ jdeps not available, using predefined modules"
             MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
           fi
-          
+
           # Create custom JRE with jlink (always rebuild)
           echo "🔧 Creating custom JRE with jlink..."
           echo "📋 Using modules: $MODULES"
-          
+
           # Remove any existing JRE
           rm -rf ./frontend/src-tauri/runtime/jre
-          
+
           # Create the custom JRE
           jlink \
             --add-modules "$MODULES" \
@@ -150,12 +156,12 @@ jobs:
             --no-header-files \
             --no-man-pages \
             --output ./frontend/src-tauri/runtime/jre
-          
+
           if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
             echo "❌ Failed to create JLink runtime"
             exit 1
           fi
-          
+
           # Test the bundled runtime
           if [ -f "./frontend/src-tauri/runtime/jre/bin/java" ]; then
             RUNTIME_VERSION=$(./frontend/src-tauri/runtime/jre/bin/java --version 2>&1 | head -n 1)
@@ -164,16 +170,19 @@ jobs:
             echo "❌ Custom JRE executable not found"
             exit 1
           fi
-          
+
           # Calculate runtime size
           RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
           echo "📊 Custom JRE size: $RUNTIME_SIZE"
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -506,7 +515,6 @@ jobs:
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
-            find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
@@ -578,7 +586,7 @@ jobs:
           name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*
           retention-days: 7
- 
+
       - name: Verify build artifacts
         shell: bash
         run: |
@@ -594,8 +602,8 @@ jobs:
             fi
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             echo "Checking for macOS artifacts..."
-            find . -name "*.dmg" -o -name "*.app" | head -5
-            if [ $(find . -name "*.dmg" -o -name "*.app" | wc -l) -eq 0 ]; then
+            find . -name "*.dmg" | head -5
+            if [ $(find . -name "*.dmg" | wc -l) -eq 0 ]; then
               echo "❌ No macOS artifacts found"
               exit 1
             fi
@@ -636,6 +644,8 @@ jobs:
           if [ "${{ needs.build.result }}" = "success" ]; then
             echo "✅ All Tauri builds completed successfully!"
             echo "Artifacts are ready for distribution."
+          elif [ "${{ needs.build.result }}" = "skipped" ]; then
+            echo "⏭️  Tauri builds skipped (CI lite mode enabled)"
           else
             echo "❌ Some Tauri builds failed."
             echo "Please check the logs and fix any issues."

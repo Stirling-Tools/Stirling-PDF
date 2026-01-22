@@ -25,9 +25,6 @@ export default function Footer({
   const { t } = useTranslation();
   const { footerInfo } = useFooterInfo();
 
-  console.log('[Footer] Props analyticsEnabled:', analyticsEnabled);
-  console.log('[Footer] Fetched footerInfo:', footerInfo);
-
   // Use props if provided, otherwise fall back to fetched footer info
   const finalAnalyticsEnabled = analyticsEnabled ?? footerInfo?.analyticsEnabled ?? false;
   const finalPrivacyPolicy = privacyPolicy ?? footerInfo?.privacyPolicy;
@@ -35,8 +32,6 @@ export default function Footer({
   const finalAccessibilityStatement = accessibilityStatement ?? footerInfo?.accessibilityStatement;
   const finalCookiePolicy = cookiePolicy ?? footerInfo?.cookiePolicy;
   const finalImpressum = impressum ?? footerInfo?.impressum;
-
-  console.log('[Footer] Final analyticsEnabled:', finalAnalyticsEnabled);
 
   const { showCookiePreferences } = useCookieConsent({ analyticsEnabled: finalAnalyticsEnabled, forceLightMode });
 
@@ -94,6 +89,22 @@ export default function Footer({
             href={finalTermsUrl}
           >
             {t('legal.terms', 'Terms and Conditions')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://discord.gg/Cn8pWhQRxZ"
+          >
+            {t('footer.discord', 'Discord')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/Stirling-Tools/Stirling-PDF"
+          >
+            {t('footer.issues', 'GitHub')}
           </a>
           <a
             className="footer-link px-3"

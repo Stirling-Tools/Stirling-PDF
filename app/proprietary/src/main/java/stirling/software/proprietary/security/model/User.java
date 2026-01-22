@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,6 +59,9 @@ public class User implements UserDetails, Serializable {
 
     @Column(name = "hasCompletedInitialSetup")
     private Boolean hasCompletedInitialSetup = false;
+
+    @Column(name = "forcePasswordChange")
+    private Boolean forcePasswordChange = false;
 
     @Column(name = "roleName")
     private String roleName;
@@ -117,8 +121,16 @@ public class User implements UserDetails, Serializable {
         this.hasCompletedInitialSetup = hasCompletedInitialSetup;
     }
 
+    public boolean isForcePasswordChange() {
+        return forcePasswordChange != null && forcePasswordChange;
+    }
+
+    public void setForcePasswordChange(boolean forcePasswordChange) {
+        this.forcePasswordChange = forcePasswordChange;
+    }
+
     public void setAuthenticationType(AuthenticationType authenticationType) {
-        this.authenticationType = authenticationType.toString().toLowerCase();
+        this.authenticationType = authenticationType.toString().toLowerCase(Locale.ROOT);
     }
 
     public void addAuthorities(Set<Authority> authorities) {

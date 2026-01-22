@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build a Type3 font catalogue from sample PDFs."""
+
 import argparse
 import json
 import subprocess

@@ -3,8 +3,8 @@ import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { getEndpointUrl, isImageFormat, isWebFormat } from '@app/utils/convertUtils';
+import { useToolOperation, ToolType, CustomProcessorResult } from '@app/hooks/tools/shared/useToolOperation';
+import { getEndpointUrl, isImageFormat, isWebFormat, isOfficeFormat } from '@app/utils/convertUtils';
 
 // Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (
@@ -15,15 +15,27 @@ export const shouldProcessFilesSeparately = (
     // Image to PDF with combineImages = false
     ((isImageFormat(parameters.fromExtension) || parameters.fromExtension === 'image') &&
      parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
+    // SVG to PDF with combineIntoSinglePdf = false
+    (parameters.fromExtension === 'svg' && parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
     // PDF to image conversions (each PDF should generate its own image file)
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
     // PDF to PDF/A conversions (each PDF should be processed separately)
     (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
     // PDF to text-like formats should be one output per input
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
+  // PDF to CBR conversions (each PDF should generate its own archive)
+  (parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr') ||
+    // PDF to EPUB/AZW3 conversions (each PDF should generate its own ebook)
+    (parameters.fromExtension === 'pdf' && ['epub', 'azw3'].includes(parameters.toExtension)) ||
+    // PDF to office format conversions (each PDF should generate its own office file)
+    (parameters.fromExtension === 'pdf' && isOfficeFormat(parameters.toExtension)) ||
+    // Office files to PDF conversions (each file should be processed separately via LibreOffice)
+    (isOfficeFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
     // Web files to PDF conversions (each web file should generate its own PDF)
     ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') &&
      parameters.toExtension === 'pdf') ||
+    // eBook files to PDF conversions (each file should be processed separately via Calibre)
+    (['epub', 'mobi', 'azw3', 'fb2'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
     // Web files smart detection
     (parameters.isSmartDetection && parameters.smartDetectionType === 'web') ||
     // Mixed file types (smart detection)
@@ -34,12 +46,12 @@ export const shouldProcessFilesSeparately = (
 // Static function that can be used by both the hook and automation executor
 export const buildConvertFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions, epubOptions } = parameters;
 
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
   });
 
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbzOptions, cbzOutputOptions } = parameters;
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);
@@ -56,9 +68,11 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fitOption", imageOptions.fitOption);
     formData.append("colorType", imageOptions.colorType);
     formData.append("autoRotate", imageOptions.autoRotate.toString());
+  } else if (fromExtension === 'svg' && toExtension === 'pdf') {
+    formData.append("combineIntoSinglePdf", imageOptions.combineImages.toString());
   } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
     formData.append("zoom", htmlOptions.zoomLevel.toString());
-  } else if (fromExtension === 'eml' && toExtension === 'pdf') {
+  } else if ((fromExtension === 'eml' || fromExtension === 'msg') && toExtension === 'pdf') {
     formData.append("includeAttachments", emailOptions.includeAttachments.toString());
     formData.append("maxAttachmentSizeMB", emailOptions.maxAttachmentSizeMB.toString());
     formData.append("downloadHtml", emailOptions.downloadHtml.toString());
@@ -67,10 +81,23 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("outputFormat", pdfaOptions.outputFormat);
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
+  } else if (fromExtension === 'cbr' && toExtension === 'pdf') {
+    formData.append("optimizeForEbook", cbrOptions.optimizeForEbook.toString());
+  } else if (fromExtension === 'pdf' && toExtension === 'cbr') {
+    formData.append("dpi", pdfToCbrOptions.dpi.toString());
   } else if (fromExtension === 'cbz' && toExtension === 'pdf') {
     formData.append("optimizeForEbook", (cbzOptions?.optimizeForEbook ?? false).toString());
   } else if (fromExtension === 'pdf' && toExtension === 'cbz') {
     formData.append("dpi", (cbzOutputOptions?.dpi ?? 150).toString());
+  } else if (['epub', 'mobi', 'azw3', 'fb2'].includes(fromExtension) && toExtension === 'pdf') {
+    formData.append("embedAllFonts", (ebookOptions?.embedAllFonts ?? false).toString());
+    formData.append("includeTableOfContents", (ebookOptions?.includeTableOfContents ?? false).toString());
+    formData.append("includePageNumbers", (ebookOptions?.includePageNumbers ?? false).toString());
+    formData.append("optimizeForEbook", (ebookOptions?.optimizeForEbook ?? false).toString());
+  } else if (fromExtension === 'pdf' && ['epub', 'azw3'].includes(toExtension)) {
+    formData.append("detectChapters", (epubOptions?.detectChapters ?? true).toString());
+    formData.append("targetDevice", epubOptions?.targetDevice ?? 'TABLET_PHONE_IMAGES');
+    formData.append("outputFormat", epubOptions?.outputFormat ?? (toExtension === 'azw3' ? 'AZW3' : 'EPUB'));
   }
 
   return formData;
@@ -98,7 +125,7 @@ export const createFileFromResponse = (
 export const convertProcessor = async (
   parameters: ConvertParameters,
   selectedFiles: File[]
-): Promise<File[]> => {
+): Promise<CustomProcessorResult> => {
   const processedFiles: File[] = [];
   const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
 
@@ -107,7 +134,9 @@ export const convertProcessor = async (
   }
 
   // Convert-specific routing logic: decide batch vs individual processing
-  if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
+  const isSeparateProcessing = shouldProcessFilesSeparately(selectedFiles, parameters);
+
+  if (isSeparateProcessing) {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
     for (const file of selectedFiles) {
       try {
@@ -134,7 +163,14 @@ export const convertProcessor = async (
     processedFiles.push(convertedFile);
   }
 
-  return processedFiles;
+  // When batch processing multiple files into one output (e.g., 3 images → 1 PDF),
+  // mark all inputs as consumed even though there's only 1 output file
+  const isCombiningMultiple = !isSeparateProcessing && selectedFiles.length > 1;
+
+  return {
+    files: processedFiles,
+    consumedAllInputs: isCombiningMultiple,
+  };
 };
 
 // Static configuration object
@@ -151,7 +187,7 @@ export const useConvertOperation = () => {
   const customConvertProcessor = useCallback(async (
     parameters: ConvertParameters,
     selectedFiles: File[]
-  ): Promise<File[]> => {
+  ): Promise<CustomProcessorResult> => {
     return convertProcessor(parameters, selectedFiles);
   }, []);
 

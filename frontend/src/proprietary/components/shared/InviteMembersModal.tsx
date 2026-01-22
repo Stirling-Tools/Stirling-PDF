@@ -27,9 +27,10 @@ import { useNavigate } from 'react-router-dom';
 interface InviteMembersModalProps {
   opened: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function InviteMembersModal({ opened, onClose }: InviteMembersModalProps) {
+export default function InviteMembersModal({ opened, onClose, onSuccess }: InviteMembersModalProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const navigate = useNavigate();
@@ -143,6 +144,7 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
       });
       alert({ alertType: 'success', title: t('workspace.people.addMember.success') });
       onClose();
+      onSuccess?.();
       // Reset form
       setInviteForm({
         username: '',
@@ -176,11 +178,23 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
       });
 
       if (response.successCount > 0) {
+        // Show success message
         alert({
           alertType: 'success',
           title: t('workspace.people.emailInvite.success', { count: response.successCount, defaultValue: `Successfully invited ${response.successCount} user(s)` })
         });
+
+        // Show warning if there were partial failures
+        if (response.failureCount > 0 && response.errors) {
+          alert({
+            alertType: 'warning',
+            title: t('workspace.people.emailInvite.partialFailure', 'Some invites failed'),
+            body: response.errors
+          });
+        }
+
         onClose();
+        onSuccess?.();
         setEmailInviteForm({
           emails: '',
           role: 'ROLE_USER',
@@ -216,6 +230,7 @@ export default function InviteMembersModal({ opened, onClose }: InviteMembersMod
         sendEmail: inviteLinkForm.sendEmail,
       });
       setGeneratedInviteLink(response.inviteUrl);
+      onSuccess?.();
       if (inviteLinkForm.sendEmail && inviteLinkForm.email) {
         alert({ alertType: 'success', title: t('workspace.people.inviteLink.emailSent', 'Invite link generated and sent via email') });
       }

@@ -1,6 +1,22 @@
 import type { StepType } from '@reactour/tour';
 import type { TFunction } from 'i18next';
-import { TourStep } from '@app/components/onboarding/tourSteps';
+
+export enum TourStep {
+  ALL_TOOLS,
+  SELECT_CROP_TOOL,
+  TOOL_INTERFACE,
+  FILES_BUTTON,
+  FILE_SOURCES,
+  WORKBENCH,
+  ACTIVE_FILES,
+  FILE_CHECKBOX,
+  CROP_SETTINGS,
+  RUN_BUTTON,
+  RESULTS,
+  FILE_REPLACEMENT,
+  PIN_BUTTON,
+  WRAP_UP,
+}
 
 interface UserStepActions {
   saveWorkbenchState: () => void;
@@ -8,10 +24,7 @@ interface UserStepActions {
   backToAllTools: () => void;
   selectCropTool: () => void;
   loadSampleFile: () => void;
-  switchToViewer: () => void;
-  switchToPageEditor: () => void;
   switchToActiveFiles: () => void;
-  selectFirstFile: () => void;
   pinFile: () => void;
   modifyCropSettings: () => void;
   executeTool: () => void;
@@ -30,10 +43,7 @@ export function createUserStepsConfig({ t, actions }: CreateUserStepsConfigArgs)
     backToAllTools,
     selectCropTool,
     loadSampleFile,
-    switchToViewer,
-    switchToPageEditor,
     switchToActiveFiles,
-    selectFirstFile,
     pinFile,
     modifyCropSettings,
     executeTool,
@@ -88,26 +98,6 @@ export function createUserStepsConfig({ t, actions }: CreateUserStepsConfigArgs)
       position: 'center',
       padding: 0,
     },
-    [TourStep.VIEW_SWITCHER]: {
-      selector: '[data-tour="view-switcher"]',
-      content: t('onboarding.viewSwitcher', 'Use these controls to select how you want to view your PDFs.'),
-      position: 'bottom',
-      padding: 0,
-    },
-    [TourStep.VIEWER]: {
-      selector: '[data-tour="workbench"]',
-      content: t('onboarding.viewer', "The <strong>Viewer</strong> lets you read and annotate your PDFs."),
-      position: 'center',
-      padding: 0,
-      action: () => switchToViewer(),
-    },
-    [TourStep.PAGE_EDITOR]: {
-      selector: '[data-tour="workbench"]',
-      content: t('onboarding.pageEditor', "The <strong>Page Editor</strong> allows you to do various operations on the pages within your PDFs, such as reordering, rotating and deleting."),
-      position: 'center',
-      padding: 0,
-      action: () => switchToPageEditor(),
-    },
     [TourStep.ACTIVE_FILES]: {
       selector: '[data-tour="workbench"]',
       content: t('onboarding.activeFiles', "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."),
@@ -120,14 +110,6 @@ export function createUserStepsConfig({ t, actions }: CreateUserStepsConfigArgs)
       content: t('onboarding.fileCheckbox', "Clicking one of the files selects it for processing. You can select multiple files for batch operations."),
       position: 'top',
       padding: 10,
-    },
-    [TourStep.SELECT_CONTROLS]: {
-      selector: '[data-tour="right-rail-controls"]',
-      highlightedSelectors: ['[data-tour="right-rail-controls"]', '[data-tour="right-rail-settings"]'],
-      content: t('onboarding.selectControls', "The <strong>Right Rail</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language."),
-      position: 'left',
-      padding: 5,
-      action: () => selectFirstFile(),
     },
     [TourStep.CROP_SETTINGS]: {
       selector: '[data-tour="crop-settings"]',

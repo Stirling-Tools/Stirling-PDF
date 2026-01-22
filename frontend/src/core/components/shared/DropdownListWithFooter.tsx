@@ -2,6 +2,7 @@ import React, { ReactNode, useState, useMemo } from 'react';
 import { Stack, Text, Popover, Box, Checkbox, Group, TextInput } from '@mantine/core';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import SearchIcon from '@mui/icons-material/Search';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from '@app/styles/zIndex';
 
 export interface DropdownItem {
   value: string;
@@ -38,6 +39,8 @@ export interface DropdownListWithFooterProps {
   position?: 'top' | 'bottom' | 'left' | 'right';
   withArrow?: boolean;
   width?: 'target' | number;
+  withinPortal?: boolean;
+  zIndex?: number;
 }
 
 const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
@@ -56,7 +59,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   dropdownClassName = '',
   position = 'bottom',
   withArrow = false,
-  width = 'target'
+  width = 'target',
+  withinPortal = true,
+  zIndex = Z_INDEX_AUTOMATE_DROPDOWN
 }) => {
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -114,6 +119,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
         withArrow={withArrow} 
         shadow="md"
         onClose={() => searchable && setSearchTerm('')}
+        withinPortal={withinPortal}
+        zIndex={zIndex}
       >
         <Popover.Target>
           <Box

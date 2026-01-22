@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -145,6 +146,7 @@ public class UserService implements UserServiceInterface {
         return addApiKeyToUser(username);
     }
 
+    @Override
     public String getApiKeyForUser(String username) {
         User user =
                 findByUsernameIgnoreCase(username)
@@ -581,9 +583,10 @@ public class UserService implements UserServiceInterface {
                         .matches();
 
         List<String> notAllowedUserList = new ArrayList<>();
-        notAllowedUserList.add("ALL_USERS".toLowerCase());
+        notAllowedUserList.add("ALL_USERS".toLowerCase(Locale.ROOT));
         notAllowedUserList.add("anonymoususer");
-        boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase());
+        String normalizedUsername = username.toLowerCase(Locale.ROOT);
+        boolean notAllowedUser = notAllowedUserList.contains(normalizedUsername);
         return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
     }
 
@@ -595,6 +598,32 @@ public class UserService implements UserServiceInterface {
     public boolean hasPassword(String username) {
         Optional<User> user = findByUsernameIgnoreCase(username);
         return user.isPresent() && user.get().hasPassword();
+    }
+
+    public boolean isSsoAuthenticationTypeByUsername(String username) {
+        Optional<User> user = findByUsernameIgnoreCase(username);
+        if (user.isEmpty()) {
+            return false;
+        }
+
+        String authType = user.get().getAuthenticationType();
+        if (authType == null) {
+            return false;
+        }
+
+        try {
+            AuthenticationType authenticationType =
+                    AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
+            if (authenticationType == AuthenticationType.OAUTH2
+                    || authenticationType == AuthenticationType.SAML2) {
+                return true;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Fall through to legacy string comparison below
+        }
+
+        // Backward compatibility for legacy "SSO" value without relying on the deprecated enum
+        return "SSO".equalsIgnoreCase(authType);
     }
 
     public boolean isAuthenticationTypeByUsername(
@@ -631,6 +660,7 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Override
     public String getCurrentUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -717,6 +747,7 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Override
     public long getTotalUsersCount() {
         // Count all users in the database
         long userCount = userRepository.count();
@@ -774,6 +805,32 @@ public class UserService implements UserServiceInterface {
 
         if (updated > 0) {
             userRepository.saveAll(ssoUsers);
+        }
+
+        return updated;
+    }
+
+    /**
+     * Grandfathers SSO users who have never created a session (invited/pending accounts). These
+     * users would otherwise be blocked when SSO requires a paid license despite existing before the
+     * policy change.
+     *
+     * @return Number of pending users updated
+     */
+    @Transactional
+    public int grandfatherPendingSsoUsersWithoutSession() {
+        List<User> pendingUsers = userRepository.findPendingSsoUsersWithoutSession();
+        int updated = 0;
+
+        for (User user : pendingUsers) {
+            if (!user.isOauthGrandfathered()) {
+                user.setOauthGrandfathered(true);
+                updated++;
+            }
+        }
+
+        if (updated > 0) {
+            userRepository.saveAll(pendingUsers);
         }
 
         return updated;

@@ -7,6 +7,7 @@ import static stirling.software.common.util.ValidationUtils.isStringEmpty;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -67,9 +68,14 @@ public class OAuth2Configuration {
         keycloakClientRegistration().ifPresent(registrations::add);
 
         if (registrations.isEmpty()) {
-            log.error("No OAuth2 provider registered");
+            log.error("No OAuth2 provider registered - check your OAuth2 configuration");
             throw new NoProviderFoundException("At least one OAuth2 provider must be configured.");
         }
+
+        log.info(
+                "OAuth2 ClientRegistrationRepository created with {} provider(s): {}",
+                registrations.size(),
+                registrations.stream().map(ClientRegistration::getRegistrationId).toList());
 
         return new InMemoryClientRegistrationRepository(registrations);
     }
@@ -165,7 +171,6 @@ public class OAuth2Configuration {
                         githubClient.getUseAsUsername());
 
         boolean isValid = validateProvider(github);
-        log.info("Initialised GitHub OAuth2 provider");
 
         return isValid
                 ? Optional.of(
@@ -193,7 +198,7 @@ public class OAuth2Configuration {
 
         String name = oauth.getProvider();
         String firstChar = String.valueOf(name.charAt(0));
-        String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase());
+        String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase(Locale.ROOT));
 
         Provider oidcProvider =
                 new Provider(
@@ -203,12 +208,25 @@ public class OAuth2Configuration {
                         oauth.getClientId(),
                         oauth.getClientSecret(),
                         oauth.getScopes(),
-                        UsernameAttribute.valueOf(oauth.getUseAsUsername().toUpperCase()),
+                        UsernameAttribute.valueOf(
+                                oauth.getUseAsUsername().toUpperCase(Locale.ROOT)),
                         null,
                         null,
                         null);
 
-        return !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider)
+        boolean isValid =
+                !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider);
+        if (isValid) {
+            log.info(
+                    "Initialised OIDC OAuth2 provider: registrationId='{}', issuer='{}', redirectUri='{}'",
+                    name,
+                    oauth.getIssuer(),
+                    REDIRECT_URI_PATH + name);
+        } else {
+            log.warn("OIDC OAuth2 provider validation failed - provider will not be registered");
+        }
+
+        return isValid
                 ? Optional.of(
                         ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
                                 .registrationId(name)
@@ -217,7 +235,7 @@ public class OAuth2Configuration {
                                 .scope(oidcProvider.getScopes())
                                 .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
                                 .clientName(clientName)
-                                .redirectUri(REDIRECT_URI_PATH + "oidc")
+                                .redirectUri(REDIRECT_URI_PATH + name)
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
