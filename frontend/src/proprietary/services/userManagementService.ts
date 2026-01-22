@@ -45,7 +45,7 @@ export interface CreateUserRequest {
   password?: string;
   role: string;
   teamId?: number;
-  authType: 'password' | 'SSO';
+  authType: 'WEB' | 'OAUTH2' | 'SAML2';
   forceChange?: boolean;
 }
 
