@@ -71,6 +71,13 @@ interface BaseToolOperationConfig<TParams> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * For custom tools: if true, success implies all input files were successfully processed.
+   * Use this for tools like Automate or Merge where Many-to-One relationships exist
+   * and exact input-output mapping is difficult.
+   */
+  consumesAllInputs?: boolean;
 }
 
 export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {

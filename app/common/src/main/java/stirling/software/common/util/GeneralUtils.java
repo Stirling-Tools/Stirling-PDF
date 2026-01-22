@@ -40,6 +40,10 @@ public class GeneralUtils {
      */
     private static final int MAX_DNS_ADDRESSES = 20;
 
+    // Constants for size conversion
+    private static final BigDecimal KIB = BigDecimal.valueOf(1024L);
+    private static final BigDecimal LONG_MAX_DECIMAL = BigDecimal.valueOf(Long.MAX_VALUE);
+
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
@@ -567,9 +571,28 @@ public class GeneralUtils {
         sizeStr = sizeStr.replace(",", ".").replace(" ", "");
 
         try {
-            Long bytes = parseSizeToBytes(sizeStr, defaultUnit);
-            if (bytes == null) {
-                log.warn("Failed to parse size string '{}': value out of range or invalid", sizeStr);
+            if (sizeStr.endsWith("TB")) {
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 4);
+            } else if (sizeStr.endsWith("GB")) {
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 3);
+            } else if (sizeStr.endsWith("MB")) {
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 2);
+            } else if (sizeStr.endsWith("KB")) {
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 2)), 1);
+            } else if (!sizeStr.isEmpty() && sizeStr.charAt(sizeStr.length() - 1) == 'B') {
+                return toBytes(parseSizeValue(sizeStr.substring(0, sizeStr.length() - 1)), 0);
+            } else {
+                // Use provided default unit or fall back to MB
+                String unit = defaultUnit != null ? defaultUnit.toUpperCase(Locale.ROOT) : "MB";
+                BigDecimal value = parseSizeValue(sizeStr);
+                return switch (unit) {
+                    case "TB" -> toBytes(value, 4);
+                    case "GB" -> toBytes(value, 3);
+                    case "MB" -> toBytes(value, 2);
+                    case "KB" -> toBytes(value, 1);
+                    case "B" -> toBytes(value, 0);
+                    default -> toBytes(value, 2); // Default to MB
+                };
             }
             return bytes;
         } catch (NumberFormatException e) {
@@ -586,6 +609,30 @@ public class GeneralUtils {
      */
     public Long convertSizeToBytes(String sizeStr) {
         return convertSizeToBytes(sizeStr, "MB");
+    }
+
+    private Long toBytes(BigDecimal value, int powerOf1024) {
+        if (value == null) {
+            return null;
+        }
+        if (value.compareTo(BigDecimal.ZERO) < 0) {
+            log.warn("Size value cannot be negative: {}", value);
+            return null;
+        }
+        if (powerOf1024 < 0 || powerOf1024 > 4) {
+            throw new IllegalArgumentException("Invalid power for size conversion: " + powerOf1024);
+        }
+        BigDecimal multiplier = powerOf1024 == 0 ? BigDecimal.ONE : KIB.pow(powerOf1024);
+        BigDecimal bytes = value.multiply(multiplier).setScale(0, RoundingMode.DOWN);
+        if (bytes.compareTo(LONG_MAX_DECIMAL) > 0) {
+            log.warn("Size value too large to fit in long: {}", bytes);
+            return null;
+        }
+        return bytes.longValue();
+    }
+
+    private BigDecimal parseSizeValue(String value) {
+        return new BigDecimal(value);
     }
 
     /* Validates if a string represents a valid size unit. */

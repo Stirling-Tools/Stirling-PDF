@@ -1,11 +1,9 @@
 package stirling.software.proprietary.security.oauth2;
 
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
-import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +19,6 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.savedrequest.SavedRequest;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -44,9 +41,6 @@ import stirling.software.proprietary.security.service.UserService;
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
-
-    private static final String SPA_REDIRECT_COOKIE = "stirling_redirect_path";
-    private static final String DEFAULT_CALLBACK_PATH = "/auth/callback";
 
     private final LoginAttemptService loginAttemptService;
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
@@ -120,10 +114,10 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
                 return;
             }
+            boolean isSsoUser = userService.isSsoAuthenticationTypeByUsername(username);
             if (userExists
                     && userService.hasPassword(username)
-                    && (!userService.isAuthenticationTypeByUsername(username, SSO)
-                            || !userService.isAuthenticationTypeByUsername(username, OAUTH2))
+                    && !isSsoUser
                     && oauth2Properties.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
@@ -210,39 +204,28 @@ public class CustomOAuth2AuthenticationSuccessHandler
                                         resolveOriginFromReferer(request)
                                                 .orElseGet(() -> buildOriginFromRequest(request)));
         clearRedirectCookie(response);
-        return origin + redirectPath + "#access_token=" + jwt;
+
+        // Extract nonce from state for CSRF validation in callback
+        String nonce = TauriOAuthUtils.extractNonceFromRequest(request);
+        String url = origin + redirectPath + "#access_token=" + jwt;
+        if (nonce != null) {
+            url +=
+                    "&nonce="
+                            + java.net.URLEncoder.encode(
+                                    nonce, java.nio.charset.StandardCharsets.UTF_8);
+        }
+        return url;
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
-        return extractRedirectPathFromCookie(request)
-                .filter(path -> path.startsWith("/"))
-                .orElseGet(() -> defaultCallbackPath(contextPath));
-    }
-
-    private Optional<String> extractRedirectPathFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return Optional.empty();
+        if (TauriOAuthUtils.isTauriState(request)) {
+            return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
         }
-        for (Cookie cookie : cookies) {
-            if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
-                String value = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8).trim();
-                if (!value.isEmpty()) {
-                    return Optional.of(value);
-                }
-            }
+        String cookiePath = TauriOAuthUtils.extractRedirectPathFromCookie(request);
+        if (cookiePath != null && cookiePath.startsWith("/")) {
+            return cookiePath;
         }
-        return Optional.empty();
-    }
-
-    private String defaultCallbackPath(String contextPath) {
-        if (contextPath == null
-                || contextPath.isBlank()
-                || "/".equals(contextPath)
-                || "\\".equals(contextPath)) {
-            return DEFAULT_CALLBACK_PATH;
-        }
-        return contextPath + DEFAULT_CALLBACK_PATH;
+        return TauriOAuthUtils.defaultCallbackPath(contextPath);
     }
 
     private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
@@ -276,19 +259,23 @@ public class CustomOAuth2AuthenticationSuccessHandler
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
-                java.net.URL refererUrl = new java.net.URL(referer);
-                String refererHost = refererUrl.getHost().toLowerCase();
+                URI refererUri = URI.create(referer);
+                String host = refererUri.getHost();
+                if (host == null) {
+                    return Optional.empty();
+                }
+
+                String refererHost = host.toLowerCase();
 
                 if (!isOAuthProviderDomain(refererHost)) {
-                    String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
-                    if (refererUrl.getPort() != -1
-                            && refererUrl.getPort() != 80
-                            && refererUrl.getPort() != 443) {
-                        origin += ":" + refererUrl.getPort();
+                    String origin = refererUri.getScheme() + "://" + host;
+                    int port = refererUri.getPort();
+                    if (port != -1 && port != 80 && port != 443) {
+                        origin += ":" + port;
                     }
                     return Optional.of(origin);
                 }
-            } catch (java.net.MalformedURLException e) {
+            } catch (IllegalArgumentException e) {
                 // ignore and fall back
             }
         }
@@ -326,7 +313,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
     private void clearRedirectCookie(HttpServletResponse response) {
         ResponseCookie cookie =
-                ResponseCookie.from(SPA_REDIRECT_COOKIE, "")
+                ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
                         .path("/")
                         .sameSite("Lax")
                         .maxAge(0)

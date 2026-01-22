@@ -2,7 +2,7 @@
 # Single JAR contains both frontend and backend with extra fonts for air-gapped environments
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:8.14-jdk21 AS build
+FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
 
 # Install Node.js and npm for frontend build
 RUN apt-get update && apt-get install -y \
@@ -37,10 +37,13 @@ RUN DISABLE_ADDITIONAL_FEATURES=false \
 
 # Stage 2: Runtime image based on Debian stable-slim
 # Contains Java runtime + LibreOffice + Calibre + all PDF tools + extra fonts for air-gapped environments
-FROM debian:stable-slim@sha256:1c25564b03942d874bf6a2b71f2062b71af8bc1475aa873c523e6f7c8fa29e60
+FROM debian:stable-slim@sha256:ed542b2d269ff08139fc5ab8c762efe8c8986b564a423d5241a5ce9fb09b6c08
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
 
 ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
@@ -49,15 +52,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
     openjdk-21-jre-headless \
     ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
-    libreoffice-nogui libreoffice-java-common \
+    fonts-dejavu \
+    fonts-liberation fonts-liberation2 \
+    fonts-crosextra-caladea fonts-crosextra-carlito \
+    fonts-linuxlibertine \
+    fonts-noto-core fonts-noto-cjk fonts-noto-mono fonts-noto-ui-core \
+    fonts-noto-color-emoji \
+    ttf-wqy-zenhei \
+    fonts-arphic-ukai fonts-arphic-uming \
+    fonts-freefont-ttf fonts-terminus \
     python3 python3-venv python3-uno \
     tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
     tesseract-ocr-por tesseract-ocr-chi-sim \
     libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
-    gosu unpaper \
-    # Extra fonts for fat/air-gapped version
-    fonts-dejavu fonts-liberation fonts-noto fonts-noto-cjk fonts-noto-color-emoji \
-    fonts-freefont-ttf fonts-terminus fonts-linuxlibertine \
+    gosu unpaper qpdf \
     # AWT headless support (required for some Java graphics operations)
     libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
     libxinerama1 libxkbcommon0 libxkbfile1 libsm6 libice6 \
@@ -77,6 +85,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get purge -y xz-utils gpgv xdg-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    . /etc/os-release; \
+    echo "deb http://deb.debian.org/debian ${VERSION_CODENAME}-backports main" > /etc/apt/sources.list.d/backports.list; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -t ${VERSION_CODENAME}-backports \
+        libreoffice libreoffice-java-common; \
+    rm -rf /var/lib/apt/lists/*; \
+    libreoffice --version
 
 # Make ebook-convert available in PATH
 RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
@@ -136,7 +153,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, fat, air-gapped, API
 # Runtime environment variables
 # ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -Djava.awt.headless=true" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
@@ -145,6 +162,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     FAT_DOCKER=true \
     INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
     UNO_PATH=/usr/lib/libreoffice/program \
+    LIBREOFFICE_BIN_PATH=/usr/lib/libreoffice/program/soffice.bin \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
@@ -158,8 +176,9 @@ RUN python3 -m venv /opt/venv --system-site-packages \
     && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
 
 # Separate venv for unoserver (keeps it isolated)
+ARG UNOSERVER_VERSION=3.6
 RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir unoserver
+    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}"
 
 # Make unoserver tools available in main venv PATH
 RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
@@ -173,7 +192,7 @@ ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 # ==============================================================================
 RUN set -eux; \
     chmod +x /scripts/*; \
-    mkdir -p /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
+    mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
     /home/stirlingpdfuser /configs /logs /customFiles /pipeline /tmp/stirling-pdf \
     /app.jar /restart-helper.jar /usr/share/fonts/truetype /scripts; \
