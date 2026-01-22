@@ -100,15 +100,6 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </MantineProvider>
 );
 
-// Helper to create mock API responses with full response structure
-const _createMockResponse = <T,>(data: T, status = 200, statusText = 'OK') => ({
-  data,
-  status,
-  statusText,
-  headers: {},
-  config: {},
-});
-
 describe('Convert Tool Integration Tests', () => {
 
   beforeEach(() => {

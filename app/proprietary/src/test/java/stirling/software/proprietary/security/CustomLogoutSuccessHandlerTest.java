@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -71,7 +70,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testSuccessfulLogoutViaOAuth2() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -80,6 +78,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getScheme()).thenReturn("http");
@@ -95,7 +96,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testUserIsDisabledRedirect() throws IOException {
         String error = "userIsDisabled";
         String url = "http://localhost:8080";
@@ -106,6 +106,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
@@ -127,7 +130,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testUserAlreadyExistsWebRedirect() throws IOException {
         String error = "oAuth2AuthenticationErrorWeb";
         String errorPath = "userAlreadyExistsWeb";
@@ -139,6 +141,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter(error)).thenReturn("true");
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
@@ -153,7 +158,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testErrorOAuthRedirect() throws IOException {
         String error = "testError";
         String url = "http://localhost:8080";
@@ -164,6 +168,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn("!!!" + error + "!!!");
         when(request.getScheme()).thenReturn("http");
@@ -179,7 +186,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testOAuth2AutoCreateDisabled() throws IOException {
         String error = "oAuth2AutoCreateDisabled";
         String url = "http://localhost:8080";
@@ -190,10 +196,12 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter(error)).thenReturn("true");
-        when(request.getContextPath()).thenReturn(url);
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
@@ -207,7 +215,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testOAuth2Error() throws IOException {
         String error = "test";
         String url = "http://localhost:8080";
@@ -218,6 +225,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
@@ -240,7 +250,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testOAuth2BadCredentialsError() throws IOException {
         String error = "badCredentials";
         String url = "http://localhost:8080";
@@ -251,6 +260,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
@@ -274,7 +286,6 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    @Disabled("TODO: Fix OAuth2 logout tests - need to properly mock UrlUtils.getOrigin")
     void testOAuth2AdminBlockedUser() throws IOException {
         String error = "oAuth2AdminBlockedUser";
         String url = "http://localhost:8080";
@@ -285,6 +296,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
