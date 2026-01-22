@@ -226,35 +226,35 @@ public class ApplicationProperties {
             private SP sp = new SP();
 
             // Legacy field mappings for backward compatibility
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String idpMetadataUri;
 
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String idpSingleLogoutUrl;
 
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String idpSingleLoginUrl;
 
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String idpIssuer;
 
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String idpEntityId;
 
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String idpCert;
 
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String privateKey;
 
-            @Deprecated(since = "2.1.5", forRemoval = true)
+            @Deprecated(since = "2.3.1", forRemoval = true)
             @JsonIgnore
             private String spCert;
 
