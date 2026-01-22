@@ -3,21 +3,7 @@
         {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.20",
-            "moduleLicense": "GNU Lesser General Public License",
-            "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
-        },
-        {
-            "moduleName": "ch.qos.logback:logback-classic",
-            "moduleUrl": "http://www.qos.ch",
             "moduleVersion": "1.5.23",
-            "moduleLicense": "GNU Lesser General Public License",
-            "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
-        },
-        {
-            "moduleName": "ch.qos.logback:logback-core",
-            "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.20",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -373,23 +359,9 @@
             "moduleLicenseUrl": "http://glassfish.java.net/public/CDDL+GPL_1_1.html"
         },
         {
-            "moduleName": "com.sun.xml.bind:jaxb-core",
-            "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.6",
-            "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
-            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
-        },
-        {
             "moduleName": "com.sun.xml.bind:jaxb-impl",
             "moduleUrl": "https://www.eclipse.org",
             "moduleVersion": "2.3.9",
-            "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
-            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
-        },
-        {
-            "moduleName": "com.sun.xml.bind:jaxb-impl",
-            "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.6",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
@@ -654,6 +626,12 @@
             "moduleVersion": "2.21.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "de.rototor.pdfbox:graphics2d",
+            "moduleVersion": "3.0.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.dropwizard.metrics:metrics-core",
@@ -942,13 +920,6 @@
             "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL+GPL-1.1"
         },
         {
-            "moduleName": "javax.xml.bind:jaxb-api",
-            "moduleUrl": "http://www.oracle.com/",
-            "moduleVersion": "2.4.0-b180830.0359",
-            "moduleLicense": "GPL2 w/ CPE",
-            "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL+GPL-1.1"
-        },
-        {
             "moduleName": "net.bytebuddy:byte-buddy",
             "moduleVersion": "1.17.8",
             "moduleLicense": "Apache License, Version 2.0",
@@ -1172,13 +1143,6 @@
             "moduleVersion": "1.9.24",
             "moduleLicense": "Eclipse Public License - v 2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.txt"
-        },
-        {
-            "moduleName": "org.attoparser:attoparser",
-            "moduleUrl": "https://www.attoparser.org",
-            "moduleVersion": "2.0.7.RELEASE",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
@@ -2155,31 +2119,6 @@
             "moduleVersion": "6.9.7.1",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "http://www.opensource.org/licenses/mit-license.php"
-        },
-        {
-            "moduleName": "org.thymeleaf.extras:thymeleaf-extras-springsecurity5",
-            "moduleVersion": "3.1.3.RELEASE",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.thymeleaf:thymeleaf",
-            "moduleVersion": "3.1.3.RELEASE",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.thymeleaf:thymeleaf-spring5",
-            "moduleVersion": "3.1.3.RELEASE",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.unbescape:unbescape",
-            "moduleUrl": "http://www.unbescape.org",
-            "moduleVersion": "1.1.6.RELEASE",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.verapdf:core",
