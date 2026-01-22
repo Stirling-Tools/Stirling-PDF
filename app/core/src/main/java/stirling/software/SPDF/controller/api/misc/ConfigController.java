@@ -66,9 +66,34 @@ public class ConfigController {
             AppConfig appConfig = applicationContext.getBean(AppConfig.class);
 
             // Extract key configuration values from AppConfig
-            configData.put("baseUrl", appConfig.getBaseUrl());
+            // Note: Frontend expects "baseUrl" field name for compatibility
+            configData.put("baseUrl", appConfig.getBackendUrl());
             configData.put("contextPath", appConfig.getContextPath());
             configData.put("serverPort", appConfig.getServerPort());
+
+            // Add frontendUrl for mobile scanner QR codes
+            String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
+            configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
+
+            // Add mobile scanner settings
+            configData.put(
+                    "enableMobileScanner",
+                    applicationProperties.getSystem().isEnableMobileScanner());
+            configData.put(
+                    "mobileScannerConvertToPdf",
+                    applicationProperties.getSystem().getMobileScannerSettings().isConvertToPdf());
+            configData.put(
+                    "mobileScannerImageResolution",
+                    applicationProperties
+                            .getSystem()
+                            .getMobileScannerSettings()
+                            .getImageResolution());
+            configData.put(
+                    "mobileScannerPageFormat",
+                    applicationProperties.getSystem().getMobileScannerSettings().getPageFormat());
+            configData.put(
+                    "mobileScannerStretchToFit",
+                    applicationProperties.getSystem().getMobileScannerSettings().isStretchToFit());
 
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
@@ -81,8 +106,11 @@ public class ConfigController {
             // If userService is null, proprietary module isn't loaded
             // (DISABLE_ADDITIONAL_FEATURES=true or DOCKER_ENABLE_SECURITY=false)
             boolean enableLogin =
-                    applicationProperties.getSecurity().getEnableLogin() && userService != null;
+                    applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+            configData.put(
+                    "showSettingsWhenNoLogin",
+                    applicationProperties.getSystem().isShowSettingsWhenNoLogin());
 
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();
@@ -119,7 +147,7 @@ public class ConfigController {
             // System settings
             configData.put(
                     "enableAlphaFunctionality",
-                    applicationProperties.getSystem().getEnableAlphaFunctionality());
+                    applicationProperties.getSystem().isEnableAlphaFunctionality());
             configData.put(
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
@@ -229,5 +257,11 @@ public class ConfigController {
                     endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/group-enabled")
+    public ResponseEntity<Boolean> isGroupEnabled(@RequestParam(name = "group") String group) {
+        boolean enabled = endpointConfiguration.isGroupEnabled(group);
+        return ResponseEntity.ok(enabled);
     }
 }

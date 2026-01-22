@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -26,11 +29,15 @@ public class ProcessExecutor {
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
+    private static volatile UnoServerPool unoServerPool;
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
+    private final Processes processType;
 
-    private ProcessExecutor(int semaphoreLimit, boolean liveUpdates, long timeout) {
+    private ProcessExecutor(
+            Processes processType, int semaphoreLimit, boolean liveUpdates, long timeout) {
+        this.processType = processType;
         this.semaphore = new Semaphore(semaphoreLimit);
         this.liveUpdates = liveUpdates;
         this.timeoutDuration = timeout;
@@ -86,6 +93,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getCalibreSessionLimit();
+                                case IMAGEMAGICK ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getImageMagickSessionLimit();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -97,6 +109,11 @@ public class ProcessExecutor {
                                                 .getSessionLimit()
                                                 .getOcrMyPdfSessionLimit();
                                 case CFF_CONVERTER -> 1;
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getFfmpegSessionLimit();
                             };
 
                     long timeoutMinutes =
@@ -141,6 +158,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getCalibreTimeoutMinutes();
+                                case IMAGEMAGICK ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getImageMagickTimeoutMinutes();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -152,9 +174,19 @@ public class ProcessExecutor {
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
                                 case CFF_CONVERTER -> 5L;
+                                case FFMPEG ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getFfmpegTimeoutMinutes();
                             };
-                    return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
+                    return new ProcessExecutor(
+                            processType, semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
+    }
+
+    public static void setUnoServerPool(UnoServerPool pool) {
+        unoServerPool = pool;
     }
 
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
@@ -166,11 +198,22 @@ public class ProcessExecutor {
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
         String messages = "";
         int exitCode = 1;
-        semaphore.acquire();
+        UnoServerPool.UnoServerLease unoLease = null;
+        boolean useSemaphore = true;
+        List<String> commandToRun = command;
+        if (shouldUseUnoServerPool(command)) {
+            unoLease = unoServerPool.acquireEndpoint();
+            commandToRun = applyUnoServerEndpoint(command, unoLease.getEndpoint());
+            useSemaphore = false;
+        }
+        if (useSemaphore) {
+            semaphore.acquire();
+        }
         try {
 
-            log.info("Running command: {}", String.join(" ", command));
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            validateCommand(commandToRun);
+            log.info("Running command: {}", String.join(" ", commandToRun));
+            ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
 
             // Use the working directory if it's set
             if (workingDirectory != null) {
@@ -248,7 +291,9 @@ public class ProcessExecutor {
             outputReaderThread.join();
 
             boolean isQpdf =
-                    command != null && !command.isEmpty() && command.get(0).contains("qpdf");
+                    commandToRun != null
+                            && !commandToRun.isEmpty()
+                            && commandToRun.get(0).contains("qpdf");
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
@@ -289,9 +334,193 @@ public class ProcessExecutor {
                 }
             }
         } finally {
-            semaphore.release();
+            if (useSemaphore) {
+                semaphore.release();
+            }
+            if (unoLease != null) {
+                unoLease.close();
+            }
         }
         return new ProcessExecutorResult(exitCode, messages);
+    }
+
+    private boolean shouldUseUnoServerPool(List<String> command) {
+        if (processType != Processes.LIBRE_OFFICE || unoServerPool == null) {
+            return false;
+        }
+        if (unoServerPool.isEmpty()) {
+            return false;
+        }
+        if (command == null || command.isEmpty()) {
+            return false;
+        }
+
+        // Check if this is a UNO conversion by looking for unoconvert executable
+        String executable = command.get(0);
+        if (executable != null) {
+            // Extract basename from path for matching
+            String basename = executable;
+            int lastSlash = Math.max(executable.lastIndexOf('/'), executable.lastIndexOf('\\'));
+            if (lastSlash >= 0) {
+                basename = executable.substring(lastSlash + 1);
+            }
+            // Strip .exe extension on Windows
+            if (basename.toLowerCase(java.util.Locale.ROOT).endsWith(".exe")) {
+                basename = basename.substring(0, basename.length() - 4);
+            }
+            // Match common unoconvert variants (but NOT soffice)
+            String lowerBasename = basename.toLowerCase(java.util.Locale.ROOT);
+            if (lowerBasename.contains("unoconvert") || lowerBasename.equals("unoconv")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<String> applyUnoServerEndpoint(
+            List<String> command,
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint) {
+        if (endpoint == null || command == null || command.isEmpty()) {
+            return command;
+        }
+        List<String> updated = stripUnoEndpointArgs(command);
+        String host = endpoint.getHost();
+        int port = endpoint.getPort();
+        String hostLocation = endpoint.getHostLocation();
+        String protocol = endpoint.getProtocol();
+
+        // Normalize and validate host
+        if (host == null || host.isBlank()) {
+            host = "127.0.0.1";
+        }
+
+        // Normalize and validate port
+        if (port <= 0) {
+            port = 2003;
+        }
+
+        // Normalize and validate hostLocation (only auto|local|remote allowed)
+        if (hostLocation == null) {
+            hostLocation = "auto";
+        } else {
+            hostLocation = hostLocation.trim().toLowerCase(java.util.Locale.ROOT);
+            if (!Set.of("auto", "local", "remote").contains(hostLocation)) {
+                log.warn(
+                        "Invalid hostLocation '{}' for endpoint {}:{}, defaulting to 'auto'",
+                        hostLocation,
+                        host,
+                        port);
+                hostLocation = "auto";
+            }
+        }
+
+        // Normalize and validate protocol (only http|https allowed)
+        if (protocol == null) {
+            protocol = "http";
+        } else {
+            protocol = protocol.trim().toLowerCase(java.util.Locale.ROOT);
+            if (!Set.of("http", "https").contains(protocol)) {
+                log.warn(
+                        "Invalid protocol '{}' for endpoint {}:{}, defaulting to 'http'",
+                        protocol,
+                        host,
+                        port);
+                protocol = "http";
+            }
+        }
+
+        int insertIndex = Math.min(1, updated.size());
+        updated.add(insertIndex++, "--host");
+        updated.add(insertIndex++, host);
+        updated.add(insertIndex++, "--port");
+        updated.add(insertIndex++, String.valueOf(port));
+
+        // Only inject --host-location if non-default (for compatibility with older unoconvert)
+        if (!"auto".equals(hostLocation)) {
+            updated.add(insertIndex++, "--host-location");
+            updated.add(insertIndex++, hostLocation);
+        }
+
+        // Only inject --protocol if non-default (for compatibility with older unoconvert)
+        if (!"http".equals(protocol)) {
+            updated.add(insertIndex++, "--protocol");
+            updated.add(insertIndex, protocol);
+        }
+
+        return updated;
+    }
+
+    private List<String> stripUnoEndpointArgs(List<String> command) {
+        List<String> stripped = new ArrayList<>(command.size());
+        for (int i = 0; i < command.size(); i++) {
+            String arg = command.get(i);
+            if ("--host".equals(arg)
+                    || "--port".equals(arg)
+                    || "--host-location".equals(arg)
+                    || "--protocol".equals(arg)) {
+                i++;
+                continue;
+            }
+            if (arg != null
+                    && (arg.startsWith("--host=")
+                            || arg.startsWith("--port=")
+                            || arg.startsWith("--host-location=")
+                            || arg.startsWith("--protocol="))) {
+                continue;
+            }
+            stripped.add(arg);
+        }
+        return stripped;
+    }
+
+    private void validateCommand(List<String> command) {
+        if (command == null || command.isEmpty()) {
+            throw new IllegalArgumentException("Command must not be empty");
+        }
+
+        // Validate all arguments for null bytes and newlines (actual security concerns)
+        for (String arg : command) {
+            if (arg == null) {
+                throw new IllegalArgumentException("Command contains null argument");
+            }
+            if (arg.indexOf('\0') >= 0 || arg.indexOf('\n') >= 0 || arg.indexOf('\r') >= 0) {
+                throw new IllegalArgumentException("Command contains invalid characters");
+            }
+        }
+
+        // Validate executable (first argument)
+        String executable = command.get(0);
+        if (executable == null || executable.isBlank()) {
+            throw new IllegalArgumentException("Command executable must not be empty");
+        }
+
+        // Check for path traversal in executable
+        if (executable.contains("..")) {
+            throw new IllegalArgumentException(
+                    "Command executable contains path traversal: " + executable);
+        }
+
+        // For absolute paths, verify the file exists and is executable
+        if (executable.contains("/") || executable.contains("\\")) {
+            Path execPath;
+            try {
+                execPath = Path.of(executable);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid executable path: " + executable, e);
+            }
+
+            if (!Files.exists(execPath)) {
+                throw new IllegalArgumentException(
+                        "Command executable does not exist: " + executable);
+            }
+
+            if (!Files.isRegularFile(execPath)) {
+                throw new IllegalArgumentException(
+                        "Command executable is not a regular file: " + executable);
+            }
+        }
+        // For relative paths, trust that PATH resolution will work or fail appropriately
     }
 
     public enum Processes {
@@ -301,11 +530,13 @@ public class ProcessExecutor {
         WEASYPRINT,
         INSTALL_APP,
         CALIBRE,
+        IMAGEMAGICK,
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,
         OCR_MY_PDF,
-        CFF_CONVERTER
+        CFF_CONVERTER,
+        FFMPEG
     }
 
     @Setter

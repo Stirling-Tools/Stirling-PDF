@@ -1,9 +1,6 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,23 +37,50 @@ public class ProcessExecutorTest {
 
     @Test
     public void testRunCommandWithOutputHandling_Error() {
-        // Mock the command to execute
+        // Test with a command that will fail to execute (non-existent command)
         List<String> command = new ArrayList<>();
-        command.add("nonexistent-command");
+        command.add("nonexistent-command-that-does-not-exist");
 
-        // Execute the command and expect an IOException
-        IOException thrown =
+        // Execute the command and expect an IOException (command not found)
+        assertThrows(
+                IOException.class, () -> processExecutor.runCommandWithOutputHandling(command));
+    }
+
+    @Test
+    public void testRunCommandWithOutputHandling_PathTraversal() {
+        // Test that path traversal is blocked
+        List<String> command = new ArrayList<>();
+        command.add("../../../etc/passwd");
+
+        // Execute the command and expect an IllegalArgumentException
+        IllegalArgumentException thrown =
                 assertThrows(
-                        IOException.class,
-                        () -> {
-                            processExecutor.runCommandWithOutputHandling(command);
-                        });
+                        IllegalArgumentException.class,
+                        () -> processExecutor.runCommandWithOutputHandling(command));
 
-        // Check the exception message to ensure it indicates the command was not found
+        // Check the exception message
         String errorMessage = thrown.getMessage();
         assertTrue(
-                errorMessage.contains("error=2")
-                        || errorMessage.contains("No such file or directory"),
+                errorMessage.contains("path traversal"),
+                "Unexpected error message: " + errorMessage);
+    }
+
+    @Test
+    public void testRunCommandWithOutputHandling_NullByte() {
+        // Test that null bytes are blocked
+        List<String> command = new ArrayList<>();
+        command.add("test\0command");
+
+        // Execute the command and expect an IllegalArgumentException
+        IllegalArgumentException thrown =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> processExecutor.runCommandWithOutputHandling(command));
+
+        // Check the exception message
+        String errorMessage = thrown.getMessage();
+        assertTrue(
+                errorMessage.contains("invalid characters"),
                 "Unexpected error message: " + errorMessage);
     }
 }

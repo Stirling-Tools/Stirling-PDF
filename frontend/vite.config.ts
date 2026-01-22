@@ -27,6 +27,11 @@ export default defineConfig(({ mode }) => {
             //provides static pdfium so embedpdf can run without cdn
             src: 'node_modules/@embedpdf/pdfium/dist/pdfium.wasm',
             dest: 'pdfium'
+          },
+          {
+            // Copy jscanify vendor files to dist
+            src: 'public/vendor/jscanify/*',
+            dest: 'vendor/jscanify'
           }
         ]
       })
@@ -55,7 +60,19 @@ export default defineConfig(({ mode }) => {
           secure: false,
           xfwd: true,
         },
+        '/saml2': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
         '/login/oauth2': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+        },
+        '/login/saml2': {
           target: 'http://localhost:8080',
           changeOrigin: true,
           secure: false,

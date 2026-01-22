@@ -91,8 +91,7 @@ public class UIDataController {
         LicensesData data = new LicensesData();
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
 
-        try {
-            InputStream is = resource.getInputStream();
+        try (InputStream is = resource.getInputStream()) {
             String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Dependency>> licenseData =
@@ -192,7 +191,7 @@ public class UIDataController {
     }
 
     private List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = applicationProperties.getSystem().getTessdataDir();
+        String tessdataDir = runtimePathConfig.getTessDataPath();
         java.io.File[] files = new java.io.File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();

@@ -1,5 +1,21 @@
 import { useTranslation } from 'react-i18next';
 import '@app/routes/authShared/auth.css';
+import { TextInput, PasswordInput, Button } from '@mantine/core';
+
+// Force light mode styles for auth inputs
+const authInputStyles = {
+  input: {
+    backgroundColor: 'var(--auth-input-bg-light-only)',
+    color: 'var(--auth-input-text-light-only)',
+    borderColor: 'var(--auth-input-border-light-only)',
+    '&:focus': {
+      borderColor: 'var(--auth-border-focus-light-only)',
+    },
+  },
+  label: {
+    color: 'var(--auth-label-text-light-only)',
+  },
+};
 
 interface EmailPasswordFormProps {
   email: string
@@ -38,49 +54,48 @@ export default function EmailPasswordForm({
     <form onSubmit={handleSubmit}>
       <div className="auth-fields">
         <div className="auth-field">
-          <label htmlFor="email" className="auth-label">{t('login.username', 'Username')}</label>
-          <input
+          <TextInput
             id="email"
+            label={t('login.username', 'Username')}
             type="text"
             name="username"
             autoComplete="username"
             placeholder={t('login.enterUsername', 'Enter username')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`auth-input ${fieldErrors.email ? 'auth-input-error' : ''}`}
+            error={fieldErrors.email}
+            classNames={{ label: 'auth-label' }}
+            styles={authInputStyles}
           />
-          {fieldErrors.email && (
-            <div className="auth-field-error">{fieldErrors.email}</div>
-          )}
         </div>
 
         {showPasswordField && (
           <div className="auth-field">
-            <label htmlFor="password" className="auth-label">{t('login.password')}</label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
+              label={t('login.password')}
               name="current-password"
               autoComplete="current-password"
               placeholder={t('login.enterPassword')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`auth-input ${fieldErrors.password ? 'auth-input-error' : ''}`}
+              error={fieldErrors.password}
+              classNames={{ label: 'auth-label' }}
+              styles={authInputStyles}
             />
-            {fieldErrors.password && (
-              <div className="auth-field-error">{fieldErrors.password}</div>
-            )}
           </div>
         )}
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={isSubmitting || !email || (showPasswordField && !password)}
         className="auth-button"
+        fullWidth
+        loading={isSubmitting}
       >
         {submitButtonText}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -46,7 +46,7 @@ public class ChecksumUtilsTest {
     @Test
     void crc32_unsignedFormatting_highBitSet() throws Exception {
         // CRC32 of single zero byte (0x00) is 0xD202EF8D (>= 0x8000_0000)
-        byte[] data = new byte[] {0x00};
+        byte[] data = {0x00};
 
         // Hex (unsigned, 8 chars, lowercase)
         try (InputStream is = new ByteArrayInputStream(data)) {

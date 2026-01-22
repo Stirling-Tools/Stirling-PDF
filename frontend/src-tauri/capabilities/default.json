@@ -13,12 +13,34 @@
       "allow": [
         { "url": "http://*" },
         { "url": "http://*:*" },
-        { "url": "https://*" }
+        { "url": "https://*" },
+        { "url": "https://*:*" },
+        { "url": "http://192.168.*.*" },
+        { "url": "http://192.168.*.*:*" },
+        { "url": "https://192.168.*.*" },
+        { "url": "https://192.168.*.*:*" },
+        { "url": "http://10.*.*.*" },
+        { "url": "http://10.*.*.*:*" },
+        { "url": "https://10.*.*.*" },
+        { "url": "https://10.*.*.*:*" },
+        { "url": "http://172.16.*.*" },
+        { "url": "http://172.16.*.*:*" },
+        { "url": "https://172.16.*.*" },
+        { "url": "https://172.16.*.*:*" },
+        { "url": "http://localhost:*" },
+        { "url": "https://localhost:*" },
+        { "url": "http://127.0.0.1:*" },
+        { "url": "https://127.0.0.1:*" }
       ]
     },
+    "http:allow-fetch-cancel",
+    "http:allow-fetch-read-body",
+    "http:allow-fetch-send",
     {
       "identifier": "fs:allow-read-file",
       "allow": [{ "path": "**" }]
-    }
+    },
+    "opener:default",
+    "shell:allow-open"
   ]
 }

@@ -41,25 +41,92 @@ public class Saml2Configuration {
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
-        X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getIdpCert());
+
+        log.info(
+                "Initializing SAML2 configuration with registration ID: {}",
+                samlConf.getRegistrationId());
+
+        // Load IdP certificate
+        X509Certificate idpCert;
+        try {
+            Resource idpCertResource = samlConf.getIdpCert();
+            log.info("Loading IdP certificate from: {}", idpCertResource.getDescription());
+            if (!idpCertResource.exists()) {
+                log.error(
+                        "SAML2 IdP certificate not found at: {}", idpCertResource.getDescription());
+                throw new IllegalStateException(
+                        "SAML2 IdP certificate file does not exist: "
+                                + idpCertResource.getDescription());
+            }
+            idpCert = CertificateUtils.readCertificate(idpCertResource);
+            log.info(
+                    "Successfully loaded IdP certificate. Subject: {}",
+                    idpCert.getSubjectX500Principal().getName());
+        } catch (Exception e) {
+            log.error("Failed to load SAML2 IdP certificate: {}", e.getMessage(), e);
+            throw new IllegalStateException("Failed to load SAML2 IdP certificate", e);
+        }
+
         Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
+
+        // Load SP private key and certificate
         Resource privateKeyResource = samlConf.getPrivateKey();
         Resource certificateResource = samlConf.getSpCert();
-        Saml2X509Credential signingCredential =
-                new Saml2X509Credential(
-                        CertificateUtils.readPrivateKey(privateKeyResource),
-                        CertificateUtils.readCertificate(certificateResource),
-                        Saml2X509CredentialType.SIGNING);
+
+        log.info("Loading SP private key from: {}", privateKeyResource.getDescription());
+        if (!privateKeyResource.exists()) {
+            log.error("SAML2 SP private key not found at: {}", privateKeyResource.getDescription());
+            throw new IllegalStateException(
+                    "SAML2 SP private key file does not exist: "
+                            + privateKeyResource.getDescription());
+        }
+
+        log.info("Loading SP certificate from: {}", certificateResource.getDescription());
+        if (!certificateResource.exists()) {
+            log.error(
+                    "SAML2 SP certificate not found at: {}", certificateResource.getDescription());
+            throw new IllegalStateException(
+                    "SAML2 SP certificate file does not exist: "
+                            + certificateResource.getDescription());
+        }
+
+        Saml2X509Credential signingCredential;
+        try {
+            signingCredential =
+                    new Saml2X509Credential(
+                            CertificateUtils.readPrivateKey(privateKeyResource),
+                            CertificateUtils.readCertificate(certificateResource),
+                            Saml2X509CredentialType.SIGNING);
+            log.info("Successfully loaded SP credentials");
+        } catch (Exception e) {
+            log.error("Failed to load SAML2 SP credentials: {}", e.getMessage(), e);
+            throw new IllegalStateException("Failed to load SAML2 SP credentials", e);
+        }
+
+        // Get backend URL from configuration (for SAML endpoints)
+        String backendUrl = applicationProperties.getSystem().getBackendUrl();
+        if (backendUrl == null || backendUrl.isBlank()) {
+            backendUrl = "{baseUrl}"; // Fallback to Spring's auto-resolution
+            log.warn(
+                    "system.backendUrl not configured - SAML metadata will use request-based URLs. Set system.backendUrl for production use.");
+        } else {
+            log.info("Using configured backend URL for SAML: {}", backendUrl);
+        }
+
+        String entityId =
+                backendUrl + "/saml2/service-provider-metadata/" + samlConf.getRegistrationId();
+        String acsLocation = backendUrl + "/login/saml2/sso/{registrationId}";
+        String sloResponseLocation = backendUrl + "/login";
+
         RelyingPartyRegistration rp =
                 RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
                         .signingX509Credentials(c -> c.add(signingCredential))
-                        .entityId(samlConf.getIdpIssuer())
+                        .entityId(entityId)
                         .singleLogoutServiceBinding(Saml2MessageBinding.POST)
                         .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
-                        .singleLogoutServiceResponseLocation("http://localhost:8080/login")
+                        .singleLogoutServiceResponseLocation(sloResponseLocation)
                         .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
-                        .assertionConsumerServiceLocation(
-                                "{baseUrl}/login/saml2/sso/{registrationId}")
+                        .assertionConsumerServiceLocation(acsLocation)
                         .authnRequestsSigned(true)
                         .assertingPartyMetadata(
                                 metadata ->
@@ -75,9 +142,14 @@ public class Saml2Configuration {
                                                 .singleLogoutServiceLocation(
                                                         samlConf.getIdpSingleLogoutUrl())
                                                 .singleLogoutServiceResponseLocation(
-                                                        "http://localhost:8080/login")
+                                                        sloResponseLocation)
                                                 .wantAuthnRequestsSigned(true))
                         .build();
+
+        log.info(
+                "SAML2 configuration initialized successfully. Registration ID: {}, IdP: {}",
+                samlConf.getRegistrationId(),
+                samlConf.getIdpIssuer());
         return new InMemoryRelyingPartyRegistrationRepository(rp);
     }
 

@@ -173,6 +173,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   //  onClick: () => setActiveButton('activity')
   //},
 
+  // Determine if settings button should be hidden
+  // Hide when login is disabled AND showSettingsWhenNoLogin is false
+  const shouldHideSettingsButton =
+    config?.enableLogin === false &&
+    config?.showSettingsWhenNoLogin === false;
+
   const bottomButtons: ButtonConfig[] = [
     {
       id: 'help',
@@ -185,17 +191,17 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         // This will be overridden by the wrapper logic
       },
     },
-    {
+    ...(shouldHideSettingsButton ? [] : [{
       id: 'config',
       name: t("quickAccess.settings", "Settings"),
       icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
-      size: 'md',
-      type: 'modal',
+      size: 'md' as const,
+      type: 'modal' as const,
       onClick: () => {
         navigate('/settings/overview');
         setConfigModalOpen(true);
       }
-    }
+    } as ButtonConfig])
   ];
 
   return (
@@ -320,20 +326,22 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 );
 
                 return (
-                  <Tooltip
-                    position="right"
-                    arrow
-                    offset={8}
-                    open={tooltipOpen}
-                    manualCloseOnly={manualCloseOnly}
-                    showCloseButton={showCloseButton}
-                    closeOnOutside={false}
-                    openOnFocus={false}
-                    content={toursTooltipContent}
-                    onOpenChange={handleTooltipOpenChange}
-                  >
-                    {helpButtonNode}
-                  </Tooltip>
+                  <React.Fragment key={buttonConfig.id}>
+                    <Tooltip
+                      position="right"
+                      arrow
+                      offset={8}
+                      open={tooltipOpen}
+                      manualCloseOnly={manualCloseOnly}
+                      showCloseButton={showCloseButton}
+                      closeOnOutside={false}
+                      openOnFocus={false}
+                      content={toursTooltipContent}
+                      onOpenChange={handleTooltipOpenChange}
+                    >
+                      {helpButtonNode}
+                    </Tooltip>
+                  </React.Fragment>
                 );
               }
 

@@ -370,7 +370,7 @@ const SignSettings = ({
       isReady,
       onClick,
       'personal',
-      'material-symbols:person-rounded',
+      'person-rounded',
       translate('saved.savePersonal', 'Save Personal')
     );
 
@@ -379,7 +379,7 @@ const SignSettings = ({
       isReady,
       onClick,
       'shared',
-      'material-symbols:groups-rounded',
+      'groups-rounded',
       translate('saved.saveShared', 'Save Shared')
     );
 
@@ -461,23 +461,13 @@ const SignSettings = ({
   const handleImageChange = async (file: File | null) => {
     if (file && !disabled) {
       try {
-        const result = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              resolve(e.target.result as string);
-            } else {
-              reject(new Error('Failed to read file'));
-            }
-          };
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
-
         // Reset pause state and directly activate placement
         setPlacementManuallyPaused(false);
         lastAppliedPlacementKey.current = null;
-        setImageSignatureData(result);
+
+        // Image data will be set by onProcessedImageData callback in ImageUploader
+        // This avoids the race condition where both handleImageChange and onProcessedImageData
+        // try to set the image data, potentially with the wrong version
 
         // Directly activate placement on image upload
         if (typeof window !== 'undefined') {
@@ -491,8 +481,6 @@ const SignSettings = ({
     } else if (!file) {
       setImageSignatureData(undefined);
       onDeactivateSignature?.();
-      setImageSignatureData(undefined);
-      onDeactivateSignature?.();
     }
   };
 
@@ -500,7 +488,7 @@ const SignSettings = ({
   const handleCanvasSignatureChange = useCallback((data: string | null) => {
     const nextValue = data ?? undefined;
     setCanvasSignatureData(prevData => {
-      // Reset pause state and trigger placement for signature changes
+      // Reset pause-rounded state and trigger placement for signature changes
       // (onDrawingComplete handles initial activation)
       if (prevData && prevData !== nextValue && nextValue) {
         setPlacementManuallyPaused(false);
@@ -835,6 +823,12 @@ const SignSettings = ({
           <ImageUploader
             onImageChange={handleImageChange}
             disabled={disabled}
+            allowBackgroundRemoval={true}
+            onProcessedImageData={(dataUrl) => {
+              if (dataUrl) {
+                setImageSignatureData(dataUrl);
+              }
+            }}
           />
           {renderSaveButtonRow('image', hasImageSignature, handleSaveImageSignature)}
         </Stack>
@@ -905,7 +899,7 @@ const SignSettings = ({
         color: isPlacementMode ? 'blue' : 'teal',
         title: isPlacementMode
           ? translate('instructions.title', 'How to add your signature')
-          : translate('instructions.paused', 'Placement paused'),
+          : translate('instructions.pause-roundedd', 'Placement pause-roundedd'),
         message: isPlacementMode
           ? placementInstructions()
           : translate('instructions.resumeHint', 'Resume placement to click and add your signature.'),
@@ -926,7 +920,7 @@ const SignSettings = ({
     onActivateSignaturePlacement?.();
   };
 
-  // Handle Escape key to toggle pause/resume
+  // Handle Escape key to toggle pause-rounded/resume
   useEffect(() => {
     if (!isCurrentTypeReady) return;
 
@@ -949,11 +943,11 @@ const SignSettings = ({
     onActivateSignaturePlacement || onDeactivateSignature
       ? isPlacementMode
         ? (
-            <Tooltip label={translate('mode.pause', 'Pause placement')}>
+            <Tooltip label={translate('mode.pause-rounded', 'Pause placement')}>
               <ActionIcon
                 variant="default"
                 size="lg"
-                aria-label={translate('mode.pause', 'Pause placement')}
+                aria-label={translate('mode.pause-rounded', 'Pause placement')}
                 onClick={handlePausePlacement}
                 disabled={disabled || !onDeactivateSignature}
                 style={{
@@ -964,9 +958,9 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
+                <LocalIcon icon="pause-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
-                  {translate('mode.pause', 'Pause placement')}
+                  {translate('mode.pause-rounded', 'Pause placement')}
                 </Text>
               </ActionIcon>
             </Tooltip>
@@ -987,7 +981,7 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
+                <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
                   {translate('mode.resume', 'Resume placement')}
                 </Text>
