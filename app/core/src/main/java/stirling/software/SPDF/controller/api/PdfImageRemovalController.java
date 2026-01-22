@@ -1,14 +1,20 @@
 package stirling.software.SPDF.controller.api;
 
+import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +24,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -33,6 +41,24 @@ public class PdfImageRemovalController {
     private final PdfImageRemovalService pdfImageRemovalService;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final FileStorage fileStorage;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     /**
      * Endpoint to remove images from a PDF file.
@@ -52,9 +78,17 @@ public class PdfImageRemovalController {
             description =
                     "This endpoint remove images from file to reduce the file size.Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
+    public ResponseEntity<byte[]> removeImages(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
+        // Validate input
+        MultipartFile inputFile = request.resolveFile(fileStorage);
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
         // Load the PDF document with proper resource management
-        try (PDDocument document = pdfDocumentFactory.load(file)) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
             // Remove images from the PDF document using the service
             try (PDDocument modifiedDocument =
@@ -69,7 +103,7 @@ public class PdfImageRemovalController {
                 // Generate a new filename for the modified PDF
                 String mergedFileName =
                         GeneralUtils.generateFilename(
-                                file.getFileInput().getOriginalFilename(), "_images_removed.pdf");
+                                inputFile.getOriginalFilename(), "_images_removed.pdf");
 
                 // Convert the byte array to a web response and return it
                 return WebResponseUtils.bytesToWebResponse(

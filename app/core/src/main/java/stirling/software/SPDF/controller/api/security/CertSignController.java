@@ -41,6 +41,7 @@ import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -75,6 +76,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -104,13 +106,15 @@ public class CertSignController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ServerCertificateServiceInterface serverCertificateService;
+    private final FileStorage fileStorage;
 
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
-            @Autowired(required = false)
-                    ServerCertificateServiceInterface serverCertificateService) {
+            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
+            FileStorage fileStorage) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
+        this.fileStorage = fileStorage;
     }
 
     private static void sign(
@@ -165,12 +169,26 @@ public class CertSignController {
                             + " file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
-        MultipartFile pdf = request.getFileInput();
+        // Validate input
+        MultipartFile inputFile = request.resolveFile(fileStorage, request.getFileInput());
+        if (inputFile == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pdfRequired", "PDF file is required");
+        }
+        request.validatePdfFile(inputFile);
+
         String certType = request.getCertType();
+
+        // PEM
         MultipartFile privateKeyFile = request.getPrivateKeyFile();
         MultipartFile certFile = request.getCertFile();
+
+        // PKCS12 / PFX
         MultipartFile p12File = request.getP12File();
-        MultipartFile jksfile = request.getJksFile();
+
+        // JKS
+        MultipartFile jksFile = request.getJksFile();
+
         String password = request.getPassword();
         Boolean showSignature = request.getShowSignature();
         String reason = request.getReason();
@@ -214,11 +232,11 @@ public class CertSignController {
                 ks.load(p12File.getInputStream(), password.toCharArray());
                 break;
             case "JKS":
-                jksfile =
+                jksFile =
                         validateFilePresent(
-                                jksfile, "JKS keystore", "JKS keystore file is required");
+                                jksFile, "JKS keystore", "JKS keystore file is required");
                 ks = KeyStore.getInstance("JKS");
-                ks.load(jksfile.getInputStream(), password.toCharArray());
+                ks.load(jksFile.getInputStream(), password.toCharArray());
                 break;
             case "SERVER":
                 if (serverCertificateService == null) {
@@ -249,7 +267,7 @@ public class CertSignController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(
                 pdfDocumentFactory,
-                pdf,
+                inputFile,
                 baos,
                 createSignature,
                 showSignature,
@@ -261,7 +279,7 @@ public class CertSignController {
         // Return the signed PDF
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
+                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_signed.pdf"));
     }
 
     private MultipartFile validateFilePresent(
@@ -280,18 +298,45 @@ public class CertSignController {
         try (PEMParser pemParser =
                 new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
             Object pemObject = pemParser.readObject();
+            if (pemObject == null) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM private key file is empty");
+            }
+            if (pemObject instanceof X509CertificateHolder) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM private key file contains a certificate, not a private key");
+            }
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
             PrivateKeyInfo pkInfo;
             if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo pkcs8EncryptedPrivateKeyInfo) {
-                InputDecryptorProvider decProv =
-                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                try {
+                    InputDecryptorProvider decProv =
+                            new JceOpenSSLPKCS8DecryptorProviderBuilder()
+                                    .build(password.toCharArray());
+                    pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                } catch (PKCSException e) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidArgument",
+                            "Invalid argument: {0}",
+                            "PEM private key password is incorrect or key is corrupted");
+                }
+            } else if (pemObject instanceof PrivateKeyInfo privateKeyInfo) {
+                pkInfo = privateKeyInfo;
             } else if (pemObject instanceof PEMEncryptedKeyPair pemEncryptedKeyPair) {
                 PEMDecryptorProvider decProv =
                         new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
                 pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+            } else if (pemObject instanceof PEMKeyPair pemKeyPair) {
+                pkInfo = pemKeyPair.getPrivateKeyInfo();
             } else {
-                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "Unsupported PEM private key format");
             }
             return converter.getPrivateKey(pkInfo);
         }
@@ -300,7 +345,14 @@ public class CertSignController {
     private Certificate getCertificateFromPEM(byte[] pemBytes)
             throws IOException, CertificateException {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(pemBytes)) {
-            return CertificateFactory.getInstance("X.509").generateCertificate(bis);
+            try {
+                return CertificateFactory.getInstance("X.509").generateCertificate(bis);
+            } catch (CertificateException e) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM certificate file is invalid or does not contain a certificate");
+            }
         }
     }
 

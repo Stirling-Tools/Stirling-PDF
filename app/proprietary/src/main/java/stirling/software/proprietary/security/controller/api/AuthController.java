@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,6 +57,10 @@ public class AuthController {
      * @return User and session information
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "401", description = "Invalid username or password")
+            })
     @PostMapping("/login")
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public ResponseEntity<?> login(
@@ -156,6 +162,14 @@ public class AuthController {
      * @return Current authenticated user information
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Current user information retrieved successfully"),
+                @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+                @ApiResponse(responseCode = "500", description = "Internal server error")
+            })
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
@@ -163,7 +177,7 @@ public class AuthController {
 
             if (auth == null
                     || !auth.isAuthenticated()
-                    || auth.getPrincipal().equals("anonymousUser")) {
+                    || "anonymousUser".equals(auth.getPrincipal())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Not authenticated"));
             }
@@ -212,6 +226,12 @@ public class AuthController {
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/refresh")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
+                @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+                @ApiResponse(responseCode = "500", description = "Internal server error")
+            })
     public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
         try {
             String token = jwtService.extractToken(request);

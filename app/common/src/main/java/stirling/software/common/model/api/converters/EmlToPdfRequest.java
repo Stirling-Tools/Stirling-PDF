@@ -5,13 +5,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.api.GeneralFile;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class EmlToPdfRequest extends PDFFile {
+public class EmlToPdfRequest extends GeneralFile {
 
-    // fileInput is inherited from PDFFile
+    // fileInput is inherited from GeneralFile
 
     @Schema(
             description = "Include email attachments in the PDF output",

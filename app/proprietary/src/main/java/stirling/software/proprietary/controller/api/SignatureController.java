@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -118,6 +121,11 @@ public class SignatureController {
      * signatures. Admins can also delete shared signatures.
      */
     @DeleteMapping("/{signatureId}")
+    @ApiResponses(
+            value = {
+                @ApiResponse(responseCode = "401", description = "User not authenticated"),
+                @ApiResponse(responseCode = "404", description = "Signature not found")
+            })
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
         try {

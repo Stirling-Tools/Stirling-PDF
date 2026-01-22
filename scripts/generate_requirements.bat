@@ -49,5 +49,10 @@ pip-compile --generate-hashes --upgrade --strip-extras ^
   --output-file="testing\cucumber\requirements.txt" ^
   "testing\cucumber\requirements.in"
 
+echo Generating .github\scripts\requirements_swagger.txt
+pip-compile --generate-hashes --upgrade --strip-extras ^
+  --output-file=".github\scripts\requirements_swagger.txt" ^
+  ".github\scripts\requirements_swagger.in"
+
 echo All done!
 pause

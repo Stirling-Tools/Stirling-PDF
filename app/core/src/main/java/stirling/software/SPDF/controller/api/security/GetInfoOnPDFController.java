@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -57,6 +58,8 @@ import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,11 +73,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -84,7 +91,7 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @Tag(name = "Security", description = "Security APIs")
 @RequiredArgsConstructor
-public class GetInfoOnPDF {
+public class GetInfoOnPDFController {
 
     private static final int DEFAULT_PPI = 72;
     private static final float SIZE_TOLERANCE = 1.0f;
@@ -95,6 +102,24 @@ public class GetInfoOnPDF {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final FileStorage fileStorage;
+
+    /**
+     * Initialize data binder for multipart file uploads. This method registers a custom editor for
+     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
+     * is empty. This is necessary to avoid binding errors when the file is not present.
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
         if (outline == null) return;
@@ -491,25 +516,6 @@ public class GetInfoOnPDF {
             return zonedDateTime.format(formatter);
         } else {
             return null;
-        }
-    }
-
-    private static void validatePdfFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("PDF file is required");
-        }
-
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileSizeLimit",
-                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
-                    file.getSize(),
-                    MAX_FILE_SIZE);
-        }
-
-        String contentType = file.getContentType();
-        if (contentType != null && !"application/pdf".equals(contentType)) {
-            log.warn("File content type is {}, expected application/pdf", contentType);
         }
     }
 
@@ -1216,71 +1222,78 @@ public class GetInfoOnPDF {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
+    @JsonDataResponse
     @Operation(
             summary = "Get comprehensive PDF information",
             description =
                     "Extracts all available information from a PDF file. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
-        MultipartFile inputFile = request.getFileInput();
-
-        // Validate input
+    public ResponseEntity<byte[]> getPdfInfo(@Valid @ModelAttribute PDFFile request)
+            throws IOException {
         try {
-            validatePdfFile(inputFile);
+            // Validate input
+            MultipartFile inputFile = request.resolveFile(fileStorage);
+            if (inputFile == null) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.pdfRequired", "PDF file is required");
+            }
+            request.validatePdfFile(inputFile);
+            long fileSizeInBytes = request.resolveFileSize(fileStorage);
+
+            try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, true)) {
+                ObjectNode jsonOutput = objectMapper.createObjectNode();
+
+                ObjectNode metadata = extractMetadata(pdfBoxDoc);
+                ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, fileSizeInBytes);
+                ObjectNode docInfoNode = extractDocumentInfo(pdfBoxDoc);
+                ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc);
+                ObjectNode encryption = extractEncryptionInfo(pdfBoxDoc);
+                ObjectNode permissionsNode = extractPermissions(pdfBoxDoc);
+                ObjectNode other = extractOtherInfo(pdfBoxDoc);
+                ObjectNode formFieldsNode = extractFormFields(pdfBoxDoc);
+
+                // Generate summary data
+                String pdfaConformanceLevel = getPdfAConformanceLevel(pdfBoxDoc);
+                Boolean pdfaValidationPassed = null;
+                if (pdfaConformanceLevel != null) {
+                    pdfaValidationPassed =
+                            validatePdfAWithPreflight(pdfBoxDoc, pdfaConformanceLevel);
+                }
+                ObjectNode summaryData =
+                        generatePDFSummaryData(
+                                pdfBoxDoc, pdfaConformanceLevel, pdfaValidationPassed);
+
+                // Extract per-page information
+                ObjectNode pageInfoParent = extractPerPageInfo(pdfBoxDoc);
+
+                // Assemble final JSON output
+                jsonOutput.set("Metadata", metadata);
+                jsonOutput.set("BasicInfo", basicInfo);
+                jsonOutput.set("DocumentInfo", docInfoNode);
+                jsonOutput.set("Compliancy", compliancy);
+                jsonOutput.set("Encryption", encryption);
+                jsonOutput.set("Permissions", permissionsNode);
+                jsonOutput.set("FormFields", formFieldsNode);
+                jsonOutput.set("Other", other);
+                jsonOutput.set("PerPageInfo", pageInfoParent);
+
+                if (summaryData != null && !summaryData.isEmpty()) {
+                    jsonOutput.set("SummaryData", summaryData);
+                }
+
+                // Convert to JSON string
+                String jsonString =
+                        objectMapper
+                                .writerWithDefaultPrettyPrinter()
+                                .writeValueAsString(jsonOutput);
+
+                return WebResponseUtils.bytesToWebResponse(
+                        jsonString.getBytes(StandardCharsets.UTF_8),
+                        "response.json",
+                        MediaType.APPLICATION_JSON);
+            }
         } catch (IllegalArgumentException e) {
-            log.error("Invalid PDF file: {}", e.getMessage());
-            return createErrorResponse("Invalid PDF file: " + e.getMessage());
-        }
-
-        boolean readonly = true;
-
-        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly)) {
-            ObjectNode jsonOutput = objectMapper.createObjectNode();
-
-            ObjectNode metadata = extractMetadata(pdfBoxDoc);
-            ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, inputFile.getSize());
-            ObjectNode docInfoNode = extractDocumentInfo(pdfBoxDoc);
-            ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc);
-            ObjectNode encryption = extractEncryptionInfo(pdfBoxDoc);
-            ObjectNode permissionsNode = extractPermissions(pdfBoxDoc);
-            ObjectNode other = extractOtherInfo(pdfBoxDoc);
-            ObjectNode formFieldsNode = extractFormFields(pdfBoxDoc);
-
-            // Generate summary data
-            String pdfaConformanceLevel = getPdfAConformanceLevel(pdfBoxDoc);
-            Boolean pdfaValidationPassed = null;
-            if (pdfaConformanceLevel != null) {
-                pdfaValidationPassed = validatePdfAWithPreflight(pdfBoxDoc, pdfaConformanceLevel);
-            }
-            ObjectNode summaryData =
-                    generatePDFSummaryData(pdfBoxDoc, pdfaConformanceLevel, pdfaValidationPassed);
-
-            // Extract per-page information
-            ObjectNode pageInfoParent = extractPerPageInfo(pdfBoxDoc);
-
-            // Assemble final JSON output
-            jsonOutput.set("Metadata", metadata);
-            jsonOutput.set("BasicInfo", basicInfo);
-            jsonOutput.set("DocumentInfo", docInfoNode);
-            jsonOutput.set("Compliancy", compliancy);
-            jsonOutput.set("Encryption", encryption);
-            jsonOutput.set("Permissions", permissionsNode);
-            jsonOutput.set("FormFields", formFieldsNode);
-            jsonOutput.set("Other", other);
-            jsonOutput.set("PerPageInfo", pageInfoParent);
-
-            if (summaryData != null && !summaryData.isEmpty()) {
-                jsonOutput.set("SummaryData", summaryData);
-            }
-
-            // Convert to JSON string
-            String jsonString =
-                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonOutput);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    jsonString.getBytes(StandardCharsets.UTF_8),
-                    "response.json",
-                    MediaType.APPLICATION_JSON);
-
+            log.error("Validation error while processing PDF: {}", e.getMessage());
+            return createErrorResponse("Validation error: " + e.getMessage());
         } catch (IOException e) {
             log.error("IO error while processing PDF: {}", e.getMessage(), e);
             return createErrorResponse("Error reading PDF file: " + e.getMessage());

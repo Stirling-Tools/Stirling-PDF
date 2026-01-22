@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.service.SharedSignatureService;
@@ -47,6 +50,7 @@ public class SignatureImageController {
      * community: tries shared only
      */
     @GetMapping("/signatures/{fileName}")
+    @ApiResponses(value = {@ApiResponse(responseCode = "404", description = "Signature not found")})
     public ResponseEntity<byte[]> getSignature(@PathVariable(name = "fileName") String fileName) {
         try {
             byte[] imageBytes = null;
