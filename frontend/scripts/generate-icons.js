@@ -52,6 +52,18 @@ function scanForUsedIcons() {
           });
         }
 
+        // Match LocalIcon usage: <LocalIcon icon='icon-name' ...>
+        const localIconSingleQuoteMatches = content.match(/<LocalIcon\s+[^>]*icon='([^']+)'/g);
+        if (localIconSingleQuoteMatches) {
+          localIconSingleQuoteMatches.forEach(match => {
+            const iconMatch = match.match(/icon='([^']+)'/);
+            if (iconMatch) {
+              usedIcons.add(iconMatch[1]);
+              debug(`  Found: ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+            }
+          });
+        }
+
         // Match old material-symbols-rounded spans: <span className="material-symbols-rounded">icon-name</span>
         const spanMatches = content.match(/<span[^>]*className="[^"]*material-symbols-rounded[^"]*"[^>]*>([^<]+)<\/span>/g);
         if (spanMatches) {
@@ -73,6 +85,18 @@ function scanForUsedIcons() {
             if (iconMatch) {
               usedIcons.add(iconMatch[1]);
               debug(`  Found (Icon): ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+            }
+          });
+        }
+
+        // Match icon config usage: icon: 'icon-name' or icon: "icon-name"
+        const iconPropertyMatches = content.match(/icon:\s*(['"])([a-z0-9-]+)\1/g);
+        if (iconPropertyMatches) {
+          iconPropertyMatches.forEach(match => {
+            const iconMatch = match.match(/icon:\s*(['"])([a-z0-9-]+)\1/);
+            if (iconMatch) {
+              usedIcons.add(iconMatch[2]);
+              debug(`  Found (config): ${iconMatch[2]} in ${path.relative(srcDir, filePath)}`);
             }
           });
         }
