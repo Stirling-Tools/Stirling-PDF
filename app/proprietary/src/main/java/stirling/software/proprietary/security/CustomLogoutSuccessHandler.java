@@ -95,13 +95,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private boolean handleSamlLogout(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
-        // Check if this is a SAML LogoutResponse from the IdP (prevents logout loop)
-        // If IdP sent SAMLResponse to /logout instead of /logout/saml2/slo, complete locally
+        // Logout locally if this is a SAMLResponse from to /logout instead of /logout/saml2/slo
         String samlResponse = request.getParameter("SAMLResponse");
         if (samlResponse != null && !samlResponse.isBlank()) {
-            log.info("Received SAML LogoutResponse at /logout endpoint, completing logout locally");
-            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-            return true;
+            if (samlResponse.contains("/saml2/slo")) {
+                log.info("Received SAML LogoutResponse at /logout endpoint, completing logout locally");
+                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                return true;
+            }
         }
 
         if (securityProperties.getSaml2().getEnableSingleLogout()) {
