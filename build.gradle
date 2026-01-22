@@ -27,7 +27,7 @@ ext {
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
-    logback = "1.5.23"
+    logback = "1.5.25"
     junitPlatformVersion = "1.12.2"
 }
 
