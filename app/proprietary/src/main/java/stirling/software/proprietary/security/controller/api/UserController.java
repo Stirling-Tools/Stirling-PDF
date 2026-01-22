@@ -741,31 +741,35 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")
-    public ResponseEntity<String> getApiKey(Principal principal) {
+    public ResponseEntity<Map<String, String>> getApiKey(Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "User not authenticated."));
         }
         String username = principal.getName();
         String apiKey = userService.getApiKeyForUser(username);
         if (apiKey == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("API key not found for user.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "API key not found for user."));
         }
-        return ResponseEntity.ok(apiKey);
+        return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/update-api-key")
-    public ResponseEntity<String> updateApiKey(Principal principal) {
+    public ResponseEntity<Map<String, String>> updateApiKey(Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "User not authenticated."));
         }
         String username = principal.getName();
         User user = userService.refreshApiKeyForUser(username);
         String apiKey = user.getApiKey();
         if (apiKey == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("API key not found for user.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "API key not found for user."));
         }
-        return ResponseEntity.ok(apiKey);
+        return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
 
     /**

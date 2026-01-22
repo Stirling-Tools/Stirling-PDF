@@ -38,6 +38,16 @@ ext.isSecurityDisabled = { ->
      System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')
 }
 
+ext.mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
+ext.username = System.getenv('MAVEN_USER') ?: ""
+ext.password = System.getenv('MAVEN_PASSWORD') ?: ""
+
+if (rootProject.ext.mavenUrl.isEmpty()) {
+    println "No custom MAVEN_PUBLIC_URL set, defaulting to Maven Central"
+} else {
+    println "MAVEN_PUBLIC_URL set"
+}
+
 jar {
     enabled = false
     manifest {
@@ -55,14 +65,9 @@ springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
 }
 
-repositories {
-    mavenCentral()
-    maven { url = 'https://build.shibboleth.net/maven/releases' }
-}
-
 allprojects {
     group = 'stirling.software'
-    version = '2.2.1'
+    version = '2.3.1'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
@@ -135,13 +140,27 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_17
     }
 
-     if (project.name != "stirling-pdf") {
+    if (project.name != "stirling-pdf") {
         bootJar {
             enabled = false
         }
-     }
+    }
 
     repositories {
+        if (!rootProject.ext.mavenUrl.isEmpty()) {
+            maven {
+                url rootProject.ext.mavenUrl + '/releases'
+                credentials(PasswordCredentials) {
+                    username rootProject.ext.username
+                    password rootProject.ext.password
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
+                allowInsecureProtocol true
+            }
+        }
+        maven { url "https://build.shibboleth.net/maven/releases" }
         mavenCentral()
     }
 
