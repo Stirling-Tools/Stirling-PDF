@@ -110,6 +110,7 @@ export const FROM_FORMAT_OPTIONS = [
 export const TO_FORMAT_OPTIONS = [
   { value: 'pdf', label: 'PDF', group: 'Document' },
   { value: 'pdfa', label: 'PDF/A', group: 'Document' },
+  { value: 'pdfx', label: 'PDF/X', group: 'Document' },
   { value: 'docx', label: 'DOCX', group: 'Document' },
   { value: 'odt', label: 'ODT', group: 'Document' },
   { value: 'cbz', label: 'CBZ', group: 'Archive' },
@@ -136,7 +137,7 @@ export const TO_FORMAT_OPTIONS = [
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'cbz', 'cbr', 'epub', 'azw3'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'pdfx', 'cbz', 'cbr', 'epub', 'azw3'],
   'cbz': ['pdf'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
@@ -164,6 +165,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',
+    'pdfx': 'pdf-to-pdfa',  // PDF/X uses the same endpoint as PDF/A
     'cbr': 'pdf-to-cbr',
     'cbz': 'pdf-to-cbz',
     'epub': 'pdf-to-epub', 'azw3': 'pdf-to-epub'
