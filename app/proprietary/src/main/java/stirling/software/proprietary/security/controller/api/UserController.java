@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -390,9 +391,19 @@ public class UserController {
             }
         }
 
-        if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            userService.saveUser(username, AuthenticationType.SSO, effectiveTeamId, role);
+        AuthenticationType requestedAuthType;
+        if ("SSO".equalsIgnoreCase(authType)) {
+            requestedAuthType = AuthenticationType.OAUTH2;
         } else {
+            try {
+                requestedAuthType = AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid authentication type specified."));
+            }
+        }
+
+        if (requestedAuthType == AuthenticationType.WEB) {
             if (password == null || password.isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required."));
@@ -402,6 +413,8 @@ public class UserController {
                         .body(Map.of("error", "Password must be at least 6 characters."));
             }
             userService.saveUser(username, password, effectiveTeamId, role, forceChange);
+        } else {
+            userService.saveUser(username, requestedAuthType, effectiveTeamId, role);
         }
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
     }
@@ -741,31 +754,35 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")
-    public ResponseEntity<String> getApiKey(Principal principal) {
+    public ResponseEntity<Map<String, String>> getApiKey(Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "User not authenticated."));
         }
         String username = principal.getName();
         String apiKey = userService.getApiKeyForUser(username);
         if (apiKey == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("API key not found for user.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "API key not found for user."));
         }
-        return ResponseEntity.ok(apiKey);
+        return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/update-api-key")
-    public ResponseEntity<String> updateApiKey(Principal principal) {
+    public ResponseEntity<Map<String, String>> updateApiKey(Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "User not authenticated."));
         }
         String username = principal.getName();
         User user = userService.refreshApiKeyForUser(username);
         String apiKey = user.getApiKey();
         if (apiKey == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("API key not found for user.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "API key not found for user."));
         }
-        return ResponseEntity.ok(apiKey);
+        return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
 
     /**

@@ -18,6 +18,7 @@ export interface AppConfig {
   baseUrl?: string;
   contextPath?: string;
   serverPort?: number;
+  frontendUrl?: string;
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
@@ -25,6 +26,8 @@ export interface AppConfig {
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
+  enableOAuth?: boolean;
+  enableSaml?: boolean;
   isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
@@ -43,6 +46,11 @@ export interface AppConfig {
   license?: string;
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
+  enableMobileScanner?: boolean;
+  mobileScannerConvertToPdf?: boolean;
+  mobileScannerImageResolution?: string;
+  mobileScannerPageFormat?: string;
+  mobileScannerStretchToFit?: boolean;
   appVersion?: string;
   machineType?: string;
   activeSecurity?: boolean;

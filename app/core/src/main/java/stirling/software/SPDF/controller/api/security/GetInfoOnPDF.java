@@ -3,6 +3,8 @@ package stirling.software.SPDF.controller.api.security;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -14,7 +16,8 @@ import java.util.regex.Pattern;
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.io.RandomAccessReadBuffer;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -55,9 +58,6 @@ import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,21 +65,20 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/security")
+@SecurityApi
 @Slf4j
-@Tag(name = "Security", description = "Security APIs")
 @RequiredArgsConstructor
 public class GetInfoOnPDF {
 
@@ -198,10 +197,20 @@ public class GetInfoOnPDF {
             return false;
         }
 
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            document.save(baos);
+        // Use Stream-to-File pattern: save to temp file instead of loading into memory
+        // This prevents OutOfMemoryError on large PDFs
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("preflight-", ".pdf");
 
-            try (RandomAccessReadBuffer source = new RandomAccessReadBuffer(baos.toByteArray())) {
+            // Save document to temp file (avoids loading entire document into memory)
+            try (var outputStream = Files.newOutputStream(tempFile)) {
+                document.save(outputStream);
+            }
+
+            // Use RandomAccessReadBufferedFile for efficient file-based reading
+            // This avoids Windows file locking issues that occur with memory-mapped files
+            try (RandomAccessRead source = new RandomAccessReadBufferedFile(tempFile.toFile())) {
                 PreflightParser parser = new PreflightParser(source);
 
                 try (PDDocument parsedDocument = parser.parse()) {
@@ -243,6 +252,19 @@ public class GetInfoOnPDF {
             log.debug("IOException during PDF/A validation: {}", e.getMessage());
         } catch (Exception e) {
             log.debug("Unexpected error during PDF/A validation: {}", e.getMessage());
+        } finally {
+            // Explicitly clean up temp file to prevent disk exhaustion
+            // This must be in finally block to ensure cleanup even on exceptions
+            if (tempFile != null) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException e) {
+                    log.warn(
+                            "Failed to delete temp file during PDF/A validation cleanup: {}",
+                            tempFile,
+                            e);
+                }
+            }
         }
 
         return false;
@@ -1189,7 +1211,7 @@ public class GetInfoOnPDF {
         return stats;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
     @Operation(
             summary = "Get comprehensive PDF information",
             description =

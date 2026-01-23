@@ -3,8 +3,6 @@ package stirling.software.proprietary.security.session;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -182,15 +180,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
         }
 
         // Sort sessions by lastRequest in descending order
-        Collections.sort(
-                allSessions,
-                new Comparator<SessionEntity>() {
-                    @Override
-                    public int compare(SessionEntity s1, SessionEntity s2) {
-                        // Sort by lastRequest in descending order
-                        return s2.getLastRequest().compareTo(s1.getLastRequest());
-                    }
-                });
+        allSessions.sort((s1, s2) -> s2.getLastRequest().compareTo(s1.getLastRequest()));
 
         // The first session in the list is the latest session for the given principal name
         return Optional.of(allSessions.get(0));

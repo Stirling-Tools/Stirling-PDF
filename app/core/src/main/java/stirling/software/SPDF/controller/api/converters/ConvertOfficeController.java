@@ -97,8 +97,6 @@ public class ConvertOfficeController {
                 // Unoconvert: schreibe direkt in outputPath innerhalb des workDir
                 List<String> command = new ArrayList<>();
                 command.add(runtimePathConfig.getUnoConvertPath());
-                command.add("--port");
-                command.add("2003");
                 command.add("--convert-to");
                 command.add("pdf");
                 command.add(inputPath.toString());
@@ -196,11 +194,12 @@ public class ConvertOfficeController {
         try {
             file = convertToPdf(inputFile);
 
-            PDDocument doc = pdfDocumentFactory.load(file);
-            return WebResponseUtils.pdfDocToWebResponse(
-                    doc,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+            try (PDDocument doc = pdfDocumentFactory.load(file)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        doc,
+                        GeneralUtils.generateFilename(
+                                inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+            }
         } finally {
             if (file != null && file.getParent() != null) {
                 FileUtils.deleteDirectory(file.getParentFile());

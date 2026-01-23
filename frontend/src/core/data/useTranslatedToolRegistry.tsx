@@ -224,7 +224,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false, //TODO make support Sign
       },
       addText: {
-        icon: <LocalIcon icon="material-symbols:text-fields-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="text-fields-rounded" width="1.5rem" height="1.5rem" />,
         name: t('home.addText.title', 'Add Text'),
         component: AddText,
         description: t('home.addText.desc', 'Add custom text anywhere in your PDF'),
@@ -835,7 +835,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devAirgapped.desc", "Link to air-gapped setup guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Pro/#activation",
+        link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
         synonyms: getSynonyms(t, "devAirgapped"),
         supportsAutomate: false,
         automationSettings: null
@@ -892,6 +892,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "pdf-to-markdown",
           "pdf-to-pdfa",
           "eml-to-pdf",
+          "pdf-to-epub",
         ],
 
         operationConfig: convertOperationConfig,

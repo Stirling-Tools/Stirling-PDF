@@ -1250,7 +1250,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               gap: '0.4rem',
             }}
           >
-            <LocalIcon icon="material-symbols:touch-app-rounded" width={20} height={20} />
+            <LocalIcon icon="touch-app-rounded" width={20} height={20} />
             <Text component="span" size="sm" fw={500}>
               {t('annotation.selectAndMove', 'Select and Edit')}
             </Text>
@@ -1305,7 +1305,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         disabled={applyDisabled}
         onClick={onApplyChanges}
       >
-        {t('annotation.applyChanges', 'Apply Changes')}
+        {t('annotation.saveChanges', 'Save Changes')}
       </Button>
 
       <SuggestedToolsSection />

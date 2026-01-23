@@ -21,6 +21,7 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
@@ -51,7 +52,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationTextMarkup;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
@@ -73,30 +74,26 @@ import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/convert")
+@ConvertApi
 @Slf4j
-@Tag(name = "Convert", description = "Convert APIs")
 @RequiredArgsConstructor
 public class ConvertPDFToPDFA {
 
@@ -378,7 +375,6 @@ public class ConvertPDFToPDFA {
         command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
-        command.add("-sDefaultCMYKProfile=" + colorProfiles.rgb().toAbsolutePath());
 
         // Font handling optimized for PDF/A CIDSet compliance
         command.add("-dEmbedAllFonts=true");
@@ -562,7 +558,7 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/pdfa")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/pdfa")
     @Operation(
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
@@ -673,25 +669,55 @@ public class ConvertPDFToPDFA {
                     if (descriptor == null) continue;
 
                     // Check if this is a Type1 font
-                    if (fontNameStr.contains("Type1")
-                            || descriptor.getFontFile() != null
-                            || (descriptor.getFontFile2() == null
-                                    && descriptor.getFontFile3() == null)) {
+                    boolean isType1 =
+                            isType1Font(font)
+                                    || descriptor.getFontFile() != null
+                                    || (descriptor.getFontFile2() == null
+                                            && descriptor.getFontFile3() == null);
 
-                        String existingCharSet =
-                                descriptor.getCOSObject().getString(COSName.CHAR_SET);
+                    if (isType1) {
+                        COSDictionary descDict = descriptor.getCOSObject();
+                        String existingCharSet = descDict.getString(COSName.CHAR_SET);
 
-                        String glyphSet = buildStandardType1GlyphSet();
-                        if (!glyphSet.isEmpty()) {
-                            if (existingCharSet == null
-                                    || existingCharSet.trim().isEmpty()
-                                    || countGlyphs(existingCharSet) < countGlyphs(glyphSet)) {
-                                descriptor.getCOSObject().setString(COSName.CHAR_SET, glyphSet);
+                        // Check if font is embedded and if CharSet might be invalid
+                        boolean fontEmbedded = font.isEmbedded();
+                        boolean hasFontFile =
+                                descriptor.getFontFile() != null
+                                        || descriptor.getFontFile2() != null
+                                        || descriptor.getFontFile3() != null;
+
+                        // For PDF/A compliance: if CharSet exists but font is subsetted or
+                        // we can't verify it matches the font file, remove it to avoid validation
+                        // errors
+                        if (existingCharSet != null && !existingCharSet.trim().isEmpty()) {
+                            // If the font appears to be subsetted (indicated by subset prefix in
+                            // name)
+                            // or if we can't verify the CharSet is correct, remove it
+                            if (fontNameStr.contains("+") || fontNameStr.contains("Subset")) {
+                                descDict.removeItem(COSName.CHAR_SET);
                                 log.debug(
-                                        "Fixed CharSet for Type1 font {} with {} glyphs (was: {})",
-                                        fontNameStr,
-                                        countGlyphs(glyphSet),
-                                        existingCharSet != null ? countGlyphs(existingCharSet) : 0);
+                                        "Removed potentially invalid CharSet from subsetted Type1 font: {}",
+                                        fontNameStr);
+                            } else if (!hasFontFile && fontEmbedded) {
+                                // Font is embedded but we can't verify CharSet, remove it
+                                descDict.removeItem(COSName.CHAR_SET);
+                                log.debug(
+                                        "Removed unverifiable CharSet from embedded Type1 font: {}",
+                                        fontNameStr);
+                            }
+                        } else if (existingCharSet == null || existingCharSet.trim().isEmpty()) {
+                            // Only add CharSet if font is not subsetted and we can verify it
+                            if (!fontNameStr.contains("+")
+                                    && !fontNameStr.contains("Subset")
+                                    && hasFontFile) {
+                                String glyphSet = buildStandardType1GlyphSet();
+                                if (!glyphSet.isEmpty()) {
+                                    descDict.setString(COSName.CHAR_SET, glyphSet);
+                                    log.debug(
+                                            "Added missing CharSet for Type1 font {} with {} glyphs",
+                                            fontNameStr,
+                                            countGlyphs(glyphSet));
+                                }
                             }
                         }
                     }
@@ -1211,7 +1237,7 @@ public class ConvertPDFToPDFA {
                 List<PDAnnotation> annotations = page.getAnnotations();
                 for (PDAnnotation annot : annotations) {
                     if (ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())
-                            && annot instanceof PDAnnotationTextMarkup highlight) {
+                            && annot instanceof PDAnnotationHighlight highlight) {
                         float[] colorComponents =
                                 highlight.getColor() != null
                                         ? highlight.getColor().getComponents()
@@ -1349,12 +1375,21 @@ public class ConvertPDFToPDFA {
 
             for (COSBase base : ocgArray) {
                 if (base instanceof COSDictionary ocgDict) {
-                    if (!ocgDict.containsKey(COSName.NAME)) {
+                    // Ensure Name entry exists and is not empty
+                    String nameValue = ocgDict.getString(COSName.NAME);
+                    if (nameValue == null || nameValue.trim().isEmpty()) {
                         String newName = "Layer " + unnamedCount++;
                         ocgDict.setString(COSName.NAME, newName);
-                        log.debug("Fixed OCG missing name, set to: {}", newName);
+                        log.debug("Fixed OCG missing or empty name, set to: {}", newName);
                     }
                 }
+            }
+        } else if (ocgs instanceof COSDictionary ocgDict) {
+            // Handle case where OCGS is a single dictionary instead of array
+            String nameValue = ocgDict.getString(COSName.NAME);
+            if (nameValue == null || nameValue.trim().isEmpty()) {
+                ocgDict.setString(COSName.NAME, "Layer 1");
+                log.debug("Fixed single OCG missing or empty name");
             }
         }
     }
@@ -1479,7 +1514,9 @@ public class ConvertPDFToPDFA {
         Path pdfaDefFile = createPdfaDefFile(workingDir, colorProfiles, profile);
 
         // Preprocess PDF for PDF/A compliance using the sanitizer
-        Path sanitizedInputPdf = sanitizePdfWithPdfBox(inputPdf);
+        // We add a white background to ensure transparency is flattened correctly against white
+        // instead of black, addressing common PDF/A conversion issues.
+        Path sanitizedInputPdf = sanitizePdfWithPdfBox(inputPdf, true);
         Path preprocessedPdf = sanitizedInputPdf != null ? sanitizedInputPdf : inputPdf;
 
         // For PDF/A-1, clean CIDSet issues that may cause validation failures
@@ -1500,11 +1537,14 @@ public class ConvertPDFToPDFA {
                     buildGhostscriptCommand(
                             inputForGs, outputPdf, colorProfiles, workingDir, profile, pdfaDefFile);
 
+            log.info("Running Ghostscript command: {}", String.join(" ", command));
+
             ProcessExecutorResult result =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                             .runCommandWithOutputHandling(command);
 
             if (result.getRc() != 0) {
+                log.error("Ghostscript failed with output: {}", result.getMessages());
                 throw new IOException("Ghostscript exited with code " + result.getRc());
             }
 
@@ -1665,6 +1705,7 @@ public class ConvertPDFToPDFA {
     }
 
     private byte[] convertWithPdfBoxMethod(Path inputPath, PdfaProfile profile) throws Exception {
+        log.info("Starting PDFBox/LibreOffice conversion for PDF/A-{}", profile.getPart());
         Path tempInputFile = null;
         byte[] fileBytes;
         Path loPdfPath = null;
@@ -1720,17 +1761,20 @@ public class ConvertPDFToPDFA {
         ColorProfiles colorProfiles = prepareColorProfiles(workingDir);
 
         // Sanitize the PDF before PDF/X conversion for better Ghostscript compatibility
-        Path sanitizedInputPdf = sanitizePdfWithPdfBox(inputPdf);
+        Path sanitizedInputPdf = sanitizePdfWithPdfBox(inputPdf, true);
         Path inputForGs = sanitizedInputPdf != null ? sanitizedInputPdf : inputPdf;
 
         List<String> command =
                 buildGhostscriptCommandX(inputForGs, outputPdf, colorProfiles, workingDir, profile);
+
+        log.info("Running Ghostscript PDF/X command: {}", String.join(" ", command));
 
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                         .runCommandWithOutputHandling(command);
 
         if (result.getRc() != 0) {
+            log.error("Ghostscript PDF/X failed with output: {}", result.getMessages());
             throw new IOException("Ghostscript exited with code " + result.getRc());
         }
 
@@ -1796,12 +1840,12 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private Path sanitizePdfWithPdfBox(Path inputPdf) {
+    private Path sanitizePdfWithPdfBox(Path inputPdf, boolean addWhiteBackground) {
         try {
             Path sanitizedPath =
                     inputPdf.getParent().resolve("sanitized_" + inputPdf.getFileName().toString());
 
-            sanitizeDocument(inputPdf, sanitizedPath);
+            sanitizeDocument(inputPdf, sanitizedPath, addWhiteBackground);
 
             log.info("PDF sanitized with PDFBox for better Ghostscript compatibility");
             return sanitizedPath;
@@ -1813,7 +1857,8 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private void sanitizeDocument(Path inputPath, Path outputPath) throws IOException {
+    private void sanitizeDocument(Path inputPath, Path outputPath, boolean addWhiteBackground)
+            throws IOException {
         try (PDDocument doc = Loader.loadPDF(inputPath.toFile())) {
             Map<String, DocumentSanitizer> sanitizers = new LinkedHashMap<>();
             sanitizers.put("Flatten highlight annotations", this::flattenHighlightsToContent);
@@ -1824,6 +1869,11 @@ public class ConvertPDFToPDFA {
             sanitizers.put("Ensure embedded file compliance", this::ensureEmbeddedFileCompliance);
             sanitizers.put(
                     "Fix optional content groups", ConvertPDFToPDFA::fixOptionalContentGroups);
+            sanitizers.put("Fix separation color spaces", this::fixSeparationColorSpaces);
+
+            if (addWhiteBackground) {
+                sanitizers.put("Add white background", this::addWhiteBackground);
+            }
 
             for (Map.Entry<String, DocumentSanitizer> entry : sanitizers.entrySet()) {
                 try {
@@ -1841,6 +1891,191 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    private void fixSeparationColorSpaces(PDDocument doc) throws IOException {
+        Map<String, COSBase> knownTintTransforms = new HashMap<>();
+        Set<COSBase> visitedResources = new HashSet<>();
+
+        // Process all pages first to collect all separation color spaces
+        for (PDPage page : doc.getPages()) {
+            PDResources resources = page.getResources();
+            processResourcesForSeparation(resources, knownTintTransforms, visitedResources);
+        }
+
+        // Process document-level resources if they exist
+        PDDocumentCatalog catalog = doc.getDocumentCatalog();
+        if (catalog != null) {
+            PDResources docResources =
+                    catalog.getAcroForm() != null
+                            ? catalog.getAcroForm().getDefaultResources()
+                            : null;
+            if (docResources != null) {
+                processResourcesForSeparation(docResources, knownTintTransforms, visitedResources);
+            }
+        }
+
+        // Second pass: ensure all separations with the same name use the same tintTransform
+        visitedResources.clear();
+        for (PDPage page : doc.getPages()) {
+            PDResources resources = page.getResources();
+            enforceSeparationConsistency(resources, knownTintTransforms, visitedResources);
+        }
+    }
+
+    private void processResourcesForSeparation(
+            PDResources resources,
+            Map<String, COSBase> knownTintTransforms,
+            Set<COSBase> visitedResources) {
+        if (resources == null) return;
+
+        // Prevent infinite recursion if resources are shared or cyclic
+        if (!visitedResources.add(resources.getCOSObject())) {
+            return;
+        }
+
+        // Check defined ColorSpaces
+        COSDictionary csDict =
+                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.COLORSPACE);
+        if (csDict != null) {
+            for (COSName name : csDict.keySet()) {
+                COSBase csVal = csDict.getDictionaryObject(name);
+                checkAndFixSeparation(csVal, knownTintTransforms);
+            }
+        }
+
+        // Recursively check XObjects (Forms)
+        COSDictionary xObjDict =
+                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
+        if (xObjDict != null) {
+            for (COSName name : xObjDict.keySet()) {
+                COSBase xObj = xObjDict.getDictionaryObject(name);
+                if (xObj instanceof COSStream stream) {
+                    COSName type = (COSName) stream.getDictionaryObject(COSName.SUBTYPE);
+                    if (COSName.FORM.equals(type)) {
+                        COSBase formRes = stream.getDictionaryObject(COSName.RESOURCES);
+                        if (formRes instanceof COSDictionary formResDict) {
+                            processResourcesForSeparation(
+                                    new PDResources(formResDict),
+                                    knownTintTransforms,
+                                    visitedResources);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void checkAndFixSeparation(COSBase cs, Map<String, COSBase> knownTintTransforms) {
+        if (cs instanceof COSArray arr && arr.size() >= 4) {
+            COSBase type = arr.getObject(0);
+            if (COSName.SEPARATION.equals(type)) {
+                // Separation: [/Separation name altSpace tintTransform]
+                COSBase nameBase = arr.getObject(1);
+                if (nameBase instanceof COSName colorName) {
+                    String name = colorName.getName();
+                    COSBase tintTransform = arr.getObject(3);
+
+                    if (knownTintTransforms.containsKey(name)) {
+                        COSBase known = knownTintTransforms.get(name);
+                        // If objects are not identical (same reference), unify them
+                        if (known != tintTransform) {
+                            arr.set(3, known);
+                            log.debug("Unified TintTransform for Separation color: {}", name);
+                        }
+                    } else {
+                        // Store the first encountered tintTransform for this color name
+                        knownTintTransforms.put(name, tintTransform);
+                    }
+                }
+            }
+        }
+    }
+
+    private void enforceSeparationConsistency(
+            PDResources resources,
+            Map<String, COSBase> knownTintTransforms,
+            Set<COSBase> visitedResources) {
+        if (resources == null) return;
+
+        // Prevent infinite recursion
+        if (!visitedResources.add(resources.getCOSObject())) {
+            return;
+        }
+
+        // Check defined ColorSpaces
+        COSDictionary csDict =
+                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.COLORSPACE);
+        if (csDict != null) {
+            for (COSName name : csDict.keySet()) {
+                COSBase csVal = csDict.getDictionaryObject(name);
+                enforceSeparationTintTransform(csVal, knownTintTransforms);
+            }
+        }
+
+        // Recursively check XObjects (Forms)
+        COSDictionary xObjDict =
+                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
+        if (xObjDict != null) {
+            for (COSName name : xObjDict.keySet()) {
+                COSBase xObj = xObjDict.getDictionaryObject(name);
+                if (xObj instanceof COSStream stream) {
+                    COSName type = (COSName) stream.getDictionaryObject(COSName.SUBTYPE);
+                    if (COSName.FORM.equals(type)) {
+                        COSBase formRes = stream.getDictionaryObject(COSName.RESOURCES);
+                        if (formRes instanceof COSDictionary formResDict) {
+                            enforceSeparationConsistency(
+                                    new PDResources(formResDict),
+                                    knownTintTransforms,
+                                    visitedResources);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void enforceSeparationTintTransform(
+            COSBase cs, Map<String, COSBase> knownTintTransforms) {
+        if (cs instanceof COSArray arr && arr.size() >= 4) {
+            COSBase type = arr.getObject(0);
+            if (COSName.SEPARATION.equals(type)) {
+                COSBase nameBase = arr.getObject(1);
+                if (nameBase instanceof COSName colorName) {
+                    String name = colorName.getName();
+                    COSBase tintTransform = arr.getObject(3);
+
+                    // Ensure all separations with the same name use the same tintTransform
+                    // reference
+                    if (knownTintTransforms.containsKey(name)) {
+                        COSBase known = knownTintTransforms.get(name);
+                        if (known != tintTransform) {
+                            arr.set(3, known);
+                            log.debug(
+                                    "Enforced consistent TintTransform for Separation color: {}",
+                                    name);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void addWhiteBackground(PDDocument doc) throws IOException {
+        for (PDPage page : doc.getPages()) {
+            PDRectangle mediaBox = page.getMediaBox();
+            try (PDPageContentStream cs =
+                    new PDPageContentStream(
+                            doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
+                cs.setNonStrokingColor(Color.WHITE);
+                cs.addRect(
+                        mediaBox.getLowerLeftX(),
+                        mediaBox.getLowerLeftY(),
+                        mediaBox.getWidth(),
+                        mediaBox.getHeight());
+                cs.fill();
+            }
+        }
+    }
+
     private void flattenHighlightsToContent(PDDocument doc) throws IOException {
         for (PDPage page : doc.getPages()) {
             List<PDAnnotation> annotations = new ArrayList<>(page.getAnnotations());
@@ -1851,7 +2086,7 @@ public class ConvertPDFToPDFA {
                             doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
 
                 for (PDAnnotation annot : annotations) {
-                    if (annot instanceof PDAnnotationTextMarkup highlight
+                    if (annot instanceof PDAnnotationHighlight highlight
                             && ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())) {
 
                         PDColor color = highlight.getColor();
@@ -1973,7 +2208,7 @@ public class ConvertPDFToPDFA {
                 return annot.getAppearance() != null;
             }
 
-            if (annot instanceof PDAnnotationTextMarkup) {
+            if (annot instanceof PDAnnotationHighlight) {
                 return false; // Will be handled by flattening
             }
 

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { TrappedStatus } from "@app/types/metadata";
 import CustomMetadataStep from "@app/components/tools/changeMetadata/steps/CustomMetadataStep";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface AdvancedOptionsStepProps {
   parameters: ChangeMetadataParameters;
@@ -40,6 +41,7 @@ const AdvancedOptionsStep = ({
           { value: TrappedStatus.TRUE, label: t('changeMetadata.trapped.true', 'True') },
           { value: TrappedStatus.FALSE, label: t('changeMetadata.trapped.false', 'False') }
         ]}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       <Divider />

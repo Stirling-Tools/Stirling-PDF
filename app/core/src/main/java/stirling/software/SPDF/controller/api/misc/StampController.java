@@ -34,17 +34,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -53,9 +51,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@MiscApi
 @RequiredArgsConstructor
 public class StampController {
 
@@ -79,7 +75,7 @@ public class StampController {
                 });
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
@@ -134,60 +130,65 @@ public class StampController {
                 };
 
         // Load the input PDF
-        PDDocument document = pdfDocumentFactory.load(pdfFile);
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-        List<Integer> pageNumbers = request.getPageNumbersList(document, true);
+            List<Integer> pageNumbers = request.getPageNumbersList(document, true);
 
-        for (int pageIndex : pageNumbers) {
-            int zeroBasedIndex = pageIndex - 1;
-            if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
-                PDPage page = document.getPage(zeroBasedIndex);
-                PDRectangle pageSize = page.getMediaBox();
-                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+            for (int pageIndex : pageNumbers) {
+                int zeroBasedIndex = pageIndex - 1;
+                if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
+                    PDPage page = document.getPage(zeroBasedIndex);
+                    PDRectangle pageSize = page.getMediaBox();
+                    float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
 
-                PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+                    PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    document,
+                                    page,
+                                    PDPageContentStream.AppendMode.APPEND,
+                                    true,
+                                    true);
 
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setNonStrokingAlphaConstant(opacity);
-                contentStream.setGraphicsStateParameters(graphicsState);
+                    PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                    graphicsState.setNonStrokingAlphaConstant(opacity);
+                    contentStream.setGraphicsStateParameters(graphicsState);
 
-                if ("text".equalsIgnoreCase(stampType)) {
-                    addTextStamp(
-                            contentStream,
-                            stampText,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            alphabet,
-                            overrideX,
-                            overrideY,
-                            margin,
-                            customColor);
-                } else if ("image".equalsIgnoreCase(stampType)) {
-                    addImageStamp(
-                            contentStream,
-                            stampImage,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            overrideX,
-                            overrideY,
-                            margin);
+                    if ("text".equalsIgnoreCase(stampType)) {
+                        addTextStamp(
+                                contentStream,
+                                stampText,
+                                document,
+                                page,
+                                rotation,
+                                position,
+                                fontSize,
+                                alphabet,
+                                overrideX,
+                                overrideY,
+                                margin,
+                                customColor);
+                    } else if ("image".equalsIgnoreCase(stampType)) {
+                        addImageStamp(
+                                contentStream,
+                                stampImage,
+                                document,
+                                page,
+                                rotation,
+                                position,
+                                fontSize,
+                                overrideX,
+                                overrideY,
+                                margin);
+                    }
+
+                    contentStream.close();
                 }
-
-                contentStream.close();
             }
+            // Return the stamped PDF as a response
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
         }
-        // Return the stamped PDF as a response
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
     }
 
     private void addTextStamp(
@@ -272,7 +273,7 @@ public class StampController {
 
         // Split the stampText into multiple lines
         String[] lines =
-                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
+                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(processedStampText);
 
         // Calculate dynamic line height based on font ascent and descent
         float ascent = font.getFontDescriptor().getAscent();

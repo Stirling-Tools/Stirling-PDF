@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 env:
-  SERVER_IP: ${{ secrets.VPS_IP }} # Add this to your GitHub secrets
+  SERVER_IP: ${{ secrets.NEW_VPS_IP }} # Add this to your GitHub secrets
   CLEANUP_PERFORMED: "false" # Add flag to track if cleanup occurred
 
 jobs:
@@ -21,12 +21,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Checkout PR
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Setup GitHub App Bot
         if: github.actor != 'dependabot[bot]'
@@ -96,19 +96,18 @@ jobs:
             const hasDeploymentComment = deploymentComments.length > 0;
             core.setOutput('present', (hasLabel || hasDeploymentComment) ? 'true' : 'false');
 
-
       - name: Set up SSH
         if: steps.remove-label-comment.outputs.present == 'true'
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
 
       - name: Cleanup PR deployment
         if: steps.remove-label-comment.outputs.present == 'true'
         id: cleanup
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << 'ENDSSH'
             if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found PR directory, proceeding with cleanup..."
 

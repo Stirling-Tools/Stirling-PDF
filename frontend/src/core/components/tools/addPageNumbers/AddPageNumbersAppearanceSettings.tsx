@@ -6,6 +6,7 @@ import { Stack, Select, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface AddPageNumbersAppearanceSettingsProps {
   parameters: AddPageNumbersParameters;
@@ -34,6 +35,7 @@ const AddPageNumbersAppearanceSettings = ({
             { value: 'x-large', label: t('sizes.x-large', 'Extra Large') },
           ]}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       </Tooltip>
 
@@ -58,6 +60,7 @@ const AddPageNumbersAppearanceSettings = ({
             { value: 'Courier', label: 'Courier New' },
           ]}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       </Tooltip>
 

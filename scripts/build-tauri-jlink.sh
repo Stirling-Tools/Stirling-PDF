@@ -159,7 +159,6 @@ fi
 "$JRE_DIR/bin/java" \
     -Xmx2g \
     -DBROWSER_OPEN=true \
-    -DSTIRLING_PDF_DESKTOP_UI=false \
     -jar "$STIRLING_JAR" \
     "$@"
 EOF
@@ -188,7 +187,6 @@ REM Launch with bundled JRE
 "%JRE_DIR%\bin\java.exe" ^
     -Xmx2g ^
     -DBROWSER_OPEN=true ^
-    -DSTIRLING_PDF_DESKTOP_UI=false ^
     -jar "%STIRLING_JAR%" ^
     %*
 EOF

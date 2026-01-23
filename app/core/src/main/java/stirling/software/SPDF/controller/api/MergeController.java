@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -27,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -57,12 +57,20 @@ public class MergeController {
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
-        for (PDDocument doc : documents) {
-            for (PDPage page : doc.getPages()) {
-                mergedDoc.addPage(page);
+        boolean success = false;
+        try {
+            for (PDDocument doc : documents) {
+                for (PDPage page : doc.getPages()) {
+                    mergedDoc.addPage(page);
+                }
+            }
+            success = true;
+            return mergedDoc;
+        } finally {
+            if (!success) {
+                mergedDoc.close();
             }
         }
-        return mergedDoc;
     }
 
     // Re-order files to match the explicit order provided by the front-end.
@@ -269,7 +277,7 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<StreamingResponseBody> mergePdfs(
+    public ResponseEntity<byte[]> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
@@ -295,8 +303,6 @@ public class MergeController {
                     getSortComparator(
                             request.getSortType())); // Sort files based on requested sort type
         }
-
-        ResponseEntity<StreamingResponseBody> response;
 
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
@@ -363,9 +369,18 @@ public class MergeController {
 
                 // Save the modified document to a temporary file
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
-                mergedDocument.save(outputTempFile.getFile());
+                try {
+                    mergedDocument.save(outputTempFile.getFile());
+                } catch (Exception e) {
+                    outputTempFile.close();
+                    outputTempFile = null;
+                    throw e;
+                }
             }
         } catch (Exception ex) {
+            if (outputTempFile != null) {
+                outputTempFile.close();
+            }
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
             } else {
@@ -382,7 +397,7 @@ public class MergeController {
         String mergedFileName =
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
-        response = WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
-        return response;
+        byte[] pdfBytes = Files.readAllBytes(outputTempFile.getPath());
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, mergedFileName);
     }
 }
