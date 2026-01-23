@@ -4337,6 +4337,10 @@ title = "Login Mode Required"
 message = "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server."
 readOnly = "The settings below show example values for reference. Enable login mode to view and edit actual configuration."
 
+[admin.settings.enterpriseRequired]
+title = "Enterprise License Required"
+message = "An Enterprise license is required to access {{featureName}}. You are viewing demo data for reference."
+
 [admin.settings.restart]
 title = "Restart Required"
 message = "Settings have been saved successfully. A server restart is required for the changes to take effect."
@@ -6373,6 +6377,7 @@ endpoint = "Endpoint"
 visits = "Visits"
 percentage = "Percentage"
 noData = "No data available"
+unknownEndpoint = "Unknown endpoint"
 
 [backendHealth]
 checking = "Checking backend status..."
