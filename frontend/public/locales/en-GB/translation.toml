@@ -306,6 +306,7 @@ selectOperation = "Select Operation"
 addOperationButton = "Add operation"
 pipelineHeader = "Pipeline:"
 saveButton = "Download"
+saveForFolderScanning = "Save for Folder Scanning"
 validateButton = "Validate"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Property"
 webBrowserSettings = "Web Browser Setting"
 syncToBrowser = "Sync Account -> Browser"
 syncToAccount = "Sync Account <- Browser"
+
+[account.mfa]
+title = "Two-factor authentication"
+setupFailed = "Unable to start two-factor setup. Please try again."
+codeRequired = "Enter the authentication code to continue."
+enabled = "Two-factor authentication enabled."
+enableFailed = "Unable to enable two-factor authentication. Check the code and try again."
+disabled = "Two-factor authentication disabled."
+disableFailed = "Unable to disable two-factor authentication. Check the code and try again."
+description = "Add an extra layer of security to your account."
+enableButton = "Enable two-factor authentication"
+disableButton = "Disable two-factor authentication"
+setupTitle = "Set up two-factor authentication"
+setupDescription = "Scan the QR code with your authenticator app, then enter the 6-digit code to confirm."
+manualKey = "Manual setup key"
+secretWarning = "Keep this key private. Anyone with access can generate valid authentication codes."
+codePlaceholder = "Enter 6-digit code"
+confirmEnable = "Enable"
+disableTitle = "Disable two-factor authentication"
+disableDescription = "Enter a valid authentication code to disable two-factor authentication."
+codeLabel = "Authentication code"
+confirmDisable = "Disable"
+ssoDescription = "Two-factor authentication is managed by your identity provider for single sign-on accounts."
+ssoManaged = "Configure MFA through your identity provider."
 
 [adminUserSettings]
 title = "User Control Settings"
@@ -1264,7 +1289,10 @@ downloadHtml = "Download HTML intermediate file instead of PDF"
 pdfaOptions = "PDF/A Options"
 outputFormat = "Output Format"
 pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
+pdfaFormat = "PDF/A Format"
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
+pdfxDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
+pdfxDescription = "PDF/X is an ISO standard PDF subset for reliable printing and graphics exchange."
 fileFormat = "File Format"
 wordDoc = "Word Document"
 wordDocExt = "Word Document (.docx)"
@@ -2192,6 +2220,16 @@ tags = "archive,long-term,standard,conversion,storage,preservation"
 title = "PDF To PDF/A"
 header = "PDF To PDF/A"
 credit = "This service uses libreoffice for PDF/A conversion"
+submit = "Convert"
+tip = "Currently does not work for multiple inputs at once"
+outputFormat = "Output format"
+pdfWithDigitalSignature = "The PDF contains a digital signature. This will be removed in the next step."
+
+[pdfToPDFX]
+tags = "print,standard,conversion,production,prepress,archive"
+title = "PDF To PDF/X"
+header = "PDF To PDF/X"
+credit = "This service uses Ghostscript for PDF/X conversion"
 submit = "Convert"
 tip = "Currently does not work for multiple inputs at once"
 outputFormat = "Output format"
@@ -3153,6 +3191,18 @@ other = "Other"
 perPageInfo = "Per Page Info"
 tableOfContents = "Table of Contents"
 
+[getPdfInfo.compliance]
+notDetected = "Not Detected"
+passed = "Passed"
+failed = "Failed"
+compliant = "Compliant"
+nonCompliant = "Non-Compliant"
+none = "No standards detected"
+passedCount = "passed"
+failedCount = "failed"
+noVerification = "No Verification Performed"
+noVerificationDesc = "PDF standards compliance was not verified for this document."
+
 [getPdfInfo.other]
 attachments = "Attachments"
 embeddedFiles = "Embedded Files"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} restrictions"
 permsMixed = "Some permissions restricted"
 hasCompliance = "Has compliance standards"
 noCompliance = "No Compliance Standards"
+compliancePassed = "{{standards}} compliant"
+complianceChecked = "Standards verified ({{failed}} failed)"
 basic = "Basic Information"
 documentInfo = "Document Information"
 securityTitle = "Security Status"
@@ -3723,6 +3775,14 @@ passwordChangedSuccess = "Password changed successfully! Please sign in with you
 credentialsUpdated = "Your credentials have been updated. Please sign in again."
 defaultCredentials = "Default Login Credentials"
 changePasswordWarning = "Please change your password after logging in for the first time"
+mfaRequired = "Two-factor code required"
+mfaCode = "Authentication Code"
+enterMfaCode = "Enter 6-digit code"
+mfaPromptTitle = "Two-factor authentication"
+mfaPromptBody = "Enter the authentication code from your authenticator app to continue."
+verifyingMfa = "Verifying..."
+verifyMfa = "Verify code"
+
 
 [login.slides.overview]
 alt = "Stirling PDF overview"
@@ -4323,6 +4383,10 @@ hint = "You have unsaved changes"
 title = "Login Mode Required"
 message = "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server."
 readOnly = "The settings below show example values for reference. Enable login mode to view and edit actual configuration."
+
+[admin.settings.enterpriseRequired]
+title = "Enterprise License Required"
+message = "An Enterprise license is required to access {{featureName}}. You are viewing demo data for reference."
 
 [admin.settings.restart]
 title = "Restart Required"
@@ -5402,6 +5466,7 @@ desc = "Build multi-step workflows by chaining together PDF actions. Ideal for r
 invalidStep = "Invalid step"
 reviewTitle = "Automation Results"
 copyToSaved = "Copy to Saved"
+exportForFolderScanning = "Export for Folder Scanning"
 
 [automate.files]
 placeholder = "Select files to process with this automation"
@@ -5423,6 +5488,7 @@ createTitle = "Create Automation"
 editTitle = "Edit Automation"
 intro = "Automations run tools sequentially. To get started, add tools in the order you want them to run."
 save = "Save Automation"
+exportForFolderScanning = "Export for Folder Scanning"
 
 [automate.creation.name]
 label = "Automation Name"
@@ -5809,6 +5875,7 @@ usernameRequired = "Username and password are required"
 passwordTooShort = "Password must be at least 6 characters"
 success = "User created successfully"
 error = "Failed to create user"
+forceMFA = "Force MFA setup on next login"
 
 [workspace.people.authType]
 password = "Password"
@@ -5917,6 +5984,11 @@ fromLicense = "from license"
 slotsAvailable = "{{count}} user slot(s) available"
 noSlotsAvailable = "No slots available"
 currentUsage = "Currently using {{current}} of {{max}} user licences"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA disabled successfully for user"
+adminDisableError = "Failed to disable MFA for user"
+disableByAdmin = "Disable MFA"
 
 [workspace.teams]
 title = "Teams"
@@ -6360,6 +6432,7 @@ endpoint = "Endpoint"
 visits = "Visits"
 percentage = "Percentage"
 noData = "No data available"
+unknownEndpoint = "Unknown endpoint"
 
 [backendHealth]
 checking = "Checking backend status..."

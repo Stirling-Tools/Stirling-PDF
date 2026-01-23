@@ -26,6 +26,7 @@ export interface TauriHttpRequestConfig {
   // Custom properties for desktop
   operationName?: string;
   skipBackendReadyCheck?: boolean;
+  skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
   cancelToken?: any;

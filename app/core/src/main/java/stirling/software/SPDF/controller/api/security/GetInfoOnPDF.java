@@ -3,21 +3,15 @@ package stirling.software.SPDF.controller.api.security;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.io.RandomAccessRead;
-import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -35,8 +29,7 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.action.*;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
@@ -44,14 +37,8 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.apache.pdfbox.preflight.PreflightDocument;
-import org.apache.pdfbox.preflight.ValidationResult;
-import org.apache.pdfbox.preflight.exception.SyntaxValidationException;
-import org.apache.pdfbox.preflight.exception.ValidationException;
-import org.apache.pdfbox.preflight.parser.PreflightParser;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
@@ -69,6 +56,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.model.api.security.PDFVerificationResult;
+import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.api.PDFFile;
@@ -91,6 +80,7 @@ public class GetInfoOnPDF {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final VeraPDFService veraPDFService;
 
     private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
         if (outline == null) return;
@@ -107,214 +97,8 @@ public class GetInfoOnPDF {
         }
     }
 
-    public static boolean checkForStandard(PDDocument document, String standardKeyword) {
-        if ("PDF/A".equalsIgnoreCase(standardKeyword)) {
-            return getPdfAConformanceLevel(document) != null;
-        }
-
-        return checkStandardInMetadata(document, standardKeyword);
-    }
-
-    public static String getPdfAConformanceLevel(PDDocument document) {
-        if (document == null || document.isEncrypted()) {
-            return null;
-        }
-
-        return getPdfAVersionFromMetadata(document);
-    }
-
-    private static String getPdfAVersionFromMetadata(PDDocument document) {
-        try {
-            PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
-            if (pdMetadata != null) {
-                try (COSInputStream metaStream = pdMetadata.createInputStream()) {
-                    DomXmpParser domXmpParser = new DomXmpParser();
-                    XMPMetadata xmpMeta = domXmpParser.parse(metaStream);
-
-                    PDFAIdentificationSchema pdfId = xmpMeta.getPDFAIdentificationSchema();
-                    if (pdfId != null) {
-                        Integer part = pdfId.getPart();
-                        String conformance = pdfId.getConformance();
-
-                        if (part != null && conformance != null) {
-                            return part + conformance.toUpperCase(Locale.ROOT);
-                        }
-                    } else {
-                        try (COSInputStream rawStream = pdMetadata.createInputStream()) {
-                            byte[] metadataBytes = rawStream.readAllBytes();
-                            String rawMetadata = new String(metadataBytes, StandardCharsets.UTF_8);
-                            String extracted = extractPdfAVersionFromRawXml(rawMetadata);
-                            if (extracted != null) {
-                                return extracted;
-                            }
-                        }
-                    }
-                } catch (XmpParsingException e) {
-                    log.debug("XMP parsing failed, trying raw metadata search: {}", e.getMessage());
-                    try (COSInputStream metaStream = pdMetadata.createInputStream()) {
-                        byte[] metadataBytes = metaStream.readAllBytes();
-                        String rawMetadata = new String(metadataBytes, StandardCharsets.UTF_8);
-                        String extracted = extractPdfAVersionFromRawXml(rawMetadata);
-                        if (extracted != null) {
-                            return extracted;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.debug("Error reading PDF/A metadata: {}", e.getMessage());
-        }
-
-        return null;
-    }
-
-    private static String extractPdfAVersionFromRawXml(String rawXml) {
-        if (rawXml == null || rawXml.isEmpty()) {
-            return null;
-        }
-
-        try {
-            Pattern partPattern = RegexPatternUtils.getInstance().getPdfAidPartPattern();
-            Pattern confPattern = RegexPatternUtils.getInstance().getPdfAidConformancePattern();
-
-            Matcher partMatcher = partPattern.matcher(rawXml);
-            Matcher confMatcher = confPattern.matcher(rawXml);
-
-            if (partMatcher.find() && confMatcher.find()) {
-                String part = partMatcher.group(1);
-                String conformance = confMatcher.group(1).toUpperCase(Locale.ROOT);
-                return part + conformance;
-            }
-        } catch (Exception e) {
-            log.debug("Error parsing raw XMP for PDF/A version: {}", e.getMessage());
-        }
-
-        return null;
-    }
-
-    private static boolean validatePdfAWithPreflight(PDDocument document, String version) {
-        if (document == null || document.isEncrypted()) {
-            return false;
-        }
-
-        // Use Stream-to-File pattern: save to temp file instead of loading into memory
-        // This prevents OutOfMemoryError on large PDFs
-        Path tempFile = null;
-        try {
-            tempFile = Files.createTempFile("preflight-", ".pdf");
-
-            // Save document to temp file (avoids loading entire document into memory)
-            try (var outputStream = Files.newOutputStream(tempFile)) {
-                document.save(outputStream);
-            }
-
-            // Use RandomAccessReadBufferedFile for efficient file-based reading
-            // This avoids Windows file locking issues that occur with memory-mapped files
-            try (RandomAccessRead source = new RandomAccessReadBufferedFile(tempFile.toFile())) {
-                PreflightParser parser = new PreflightParser(source);
-
-                try (PDDocument parsedDocument = parser.parse()) {
-                    if (!(parsedDocument instanceof PreflightDocument preflightDocument)) {
-                        log.debug(
-                                "Parsed document is not a PreflightDocument; unable to validate claimed PDF/A {}",
-                                version);
-                        return false;
-                    }
-
-                    try {
-                        ValidationResult result = preflightDocument.validate();
-                        if (!result.isValid() && log.isDebugEnabled()) {
-                            log.debug(
-                                    "PDF/A validation found {} errors for claimed version {}",
-                                    result.getErrorsList().size(),
-                                    version);
-                            int logged = 0;
-                            for (ValidationResult.ValidationError error : result.getErrorsList()) {
-                                log.debug(
-                                        "  Error {}: {}", error.getErrorCode(), error.getDetails());
-                                if (++logged >= MAX_LOGGED_ERRORS) {
-                                    break;
-                                }
-                            }
-                        }
-                        return result.isValid();
-                    } catch (ValidationException e) {
-                        log.debug(
-                                "Validation exception during PDF/A validation: {}", e.getMessage());
-                    }
-                } catch (SyntaxValidationException e) {
-                    log.debug(
-                            "Syntax validation failed during PDF/A validation: {}", e.getMessage());
-                    return false;
-                }
-            }
-        } catch (IOException e) {
-            log.debug("IOException during PDF/A validation: {}", e.getMessage());
-        } catch (Exception e) {
-            log.debug("Unexpected error during PDF/A validation: {}", e.getMessage());
-        } finally {
-            // Explicitly clean up temp file to prevent disk exhaustion
-            // This must be in finally block to ensure cleanup even on exceptions
-            if (tempFile != null) {
-                try {
-                    Files.deleteIfExists(tempFile);
-                } catch (IOException e) {
-                    log.warn(
-                            "Failed to delete temp file during PDF/A validation cleanup: {}",
-                            tempFile,
-                            e);
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static boolean checkStandardInMetadata(PDDocument document, String standardKeyword) {
-        // Check XMP Metadata
-        try {
-            PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
-            if (pdMetadata != null) {
-                try (COSInputStream metaStream = pdMetadata.createInputStream()) {
-                    // First try to read raw metadata as string to check for standard keywords
-                    byte[] metadataBytes = metaStream.readAllBytes();
-                    String rawMetadata = new String(metadataBytes, StandardCharsets.UTF_8);
-
-                    if (rawMetadata.contains(standardKeyword)) {
-                        return true;
-                    }
-                }
-
-                // If raw check doesn't find it, try parsing with XMP parser
-                try (COSInputStream metaStream = pdMetadata.createInputStream()) {
-                    try {
-                        DomXmpParser domXmpParser = new DomXmpParser();
-                        XMPMetadata xmpMeta = domXmpParser.parse(metaStream);
-
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        new XmpSerializer().serialize(xmpMeta, baos, true);
-                        String xmpString = baos.toString(StandardCharsets.UTF_8);
-
-                        if (xmpString.contains(standardKeyword)) {
-                            return true;
-                        }
-                    } catch (XmpParsingException e) {
-                        // XMP parsing failed, but we already checked raw metadata above
-                        log.debug(
-                                "XMP parsing failed for standard check, but raw metadata was already checked: {}",
-                                e.getMessage());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            ExceptionUtils.logException("PDF standard checking", e);
-        }
-
-        return false;
-    }
-
     private static ObjectNode generatePDFSummaryData(
-            PDDocument document, String pdfaConformanceLevel, Boolean pdfaValidationPassed) {
+            PDDocument document, List<PDFVerificationResult> verificationResults) {
         ObjectNode summaryData = objectMapper.createObjectNode();
 
         // Check if encrypted
@@ -342,24 +126,16 @@ public class GetInfoOnPDF {
         }
 
         // Check standard compliance
-        if (pdfaConformanceLevel != null) {
-            summaryData.put("standardCompliance", "PDF/A-" + pdfaConformanceLevel);
-            summaryData.put("standardPurpose", "long-term archiving");
-            if (pdfaValidationPassed != null) {
-                summaryData.put("standardValidationPassed", pdfaValidationPassed);
+        if (verificationResults != null && !verificationResults.isEmpty()) {
+            ArrayNode complianceArray = objectMapper.createArrayNode();
+            for (PDFVerificationResult result : verificationResults) {
+                ObjectNode complianceNode = objectMapper.createObjectNode();
+                complianceNode.put("Standard", result.getStandard());
+                complianceNode.put("Compliant", result.isCompliant());
+                complianceNode.put("Summary", result.getComplianceSummary());
+                complianceArray.add(complianceNode);
             }
-        } else if (checkForStandard(document, "PDF/X")) {
-            summaryData.put("standardCompliance", "PDF/X");
-            summaryData.put("standardPurpose", "graphic exchange");
-        } else if (checkForStandard(document, "PDF/UA")) {
-            summaryData.put("standardCompliance", "PDF/UA");
-            summaryData.put("standardPurpose", "universal accessibility");
-        } else if (checkForStandard(document, "PDF/E")) {
-            summaryData.put("standardCompliance", "PDF/E");
-            summaryData.put("standardPurpose", "engineering workflows");
-        } else if (checkForStandard(document, "PDF/VT")) {
-            summaryData.put("standardCompliance", "PDF/VT");
-            summaryData.put("standardPurpose", "variable and transactional printing");
+            summaryData.set("Compliance", complianceArray);
         }
 
         return summaryData;
@@ -587,38 +363,111 @@ public class GetInfoOnPDF {
         return docInfoNode;
     }
 
-    private static ObjectNode extractComplianceInfo(PDDocument document) {
+    private static ObjectNode extractComplianceInfo(
+            PDDocument doc, List<PDFVerificationResult> verificationResults) {
         ObjectNode compliancy = objectMapper.createObjectNode();
 
-        try {
-            String pdfaConformanceLevel = getPdfAConformanceLevel(document);
-            boolean isPdfACompliant = pdfaConformanceLevel != null;
-            boolean isPdfXCompliant = checkForStandard(document, "PDF/X");
-            boolean isPdfECompliant = checkForStandard(document, "PDF/E");
-            boolean isPdfVTCompliant = checkForStandard(document, "PDF/VT");
-            boolean isPdfUACompliant = checkForStandard(document, "PDF/UA");
-            boolean isPdfBCompliant = checkForStandard(document, "PDF/B");
-            boolean isPdfSECCompliant = checkForStandard(document, "PDF/SEC");
+        boolean isPdfA = false;
+        boolean isPdfUA = false;
+        boolean isPdfX = false;
+        boolean isPdfE = false;
+        boolean isPdfB = false;
+        String pdfAConformanceLevel = null;
 
-            compliancy.put("IsPDF/ACompliant", isPdfACompliant);
-            if (pdfaConformanceLevel != null) {
-                compliancy.put("PDF/AConformanceLevel", pdfaConformanceLevel);
-                Boolean pdfaValidationPassed =
-                        validatePdfAWithPreflight(document, pdfaConformanceLevel);
-                compliancy.put("IsPDF/AValidated", pdfaValidationPassed);
+        if (verificationResults != null) {
+            for (PDFVerificationResult result : verificationResults) {
+                if (result == null) continue;
+                if (result.isCompliant()) {
+                    String std = result.getStandard().toLowerCase();
+                    if (std.contains("pdf_a") || std.contains("pdfa")) {
+                        isPdfA = true;
+                        String profile = result.getValidationProfile();
+                        if (profile != null) {
+                            if (profile.contains("1b")
+                                    || profile.contains("2b")
+                                    || profile.contains("3b")) {
+                                isPdfB = true;
+                            }
+                            // Simple extraction: remove "pdfa-" prefix
+                            pdfAConformanceLevel = profile.replace("pdfa-", "");
+                        }
+                    }
+                    if (std.contains("pdf_ua") || std.contains("pdfua")) isPdfUA = true;
+                    if (std.contains("pdf_x") || std.contains("pdfx")) isPdfX = true;
+                    if (std.contains("pdf_e") || std.contains("pdfe")) isPdfE = true;
+                }
             }
-            compliancy.put("IsPDF/XCompliant", isPdfXCompliant);
-            compliancy.put("IsPDF/ECompliant", isPdfECompliant);
-            compliancy.put("IsPDF/VTCompliant", isPdfVTCompliant);
-            compliancy.put("IsPDF/UACompliant", isPdfUACompliant);
-            compliancy.put("IsPDF/BCompliant", isPdfBCompliant);
-            compliancy.put("IsPDF/SECCompliant", isPdfSECCompliant);
+        }
 
-        } catch (Exception e) {
-            log.error("Error extracting compliance info: {}", e.getMessage());
+        compliancy.put("IsPDF/ACompliant", isPdfA);
+        compliancy.put("IsPDF/UACompliant", isPdfUA);
+        compliancy.put("IsPDF/ECompliant", isPdfE);
+        compliancy.put("IsPDF/VTCompliant", false); // Not currently implemented
+        compliancy.put("IsPDF/BCompliant", isPdfB);
+        if (pdfAConformanceLevel != null) {
+            compliancy.put("PDF/AConformanceLevel", pdfAConformanceLevel);
+        }
+
+        compliancy.put("IsPDF/SECCompliant", isSECCompliant(doc));
+
+        if (verificationResults != null && !verificationResults.isEmpty()) {
+            // Keep original simple structure as backup or extra info
+            for (PDFVerificationResult result : verificationResults) {
+                if (result == null) continue;
+                String standard = result.getStandard();
+                boolean isCompliant = result.isCompliant();
+
+                if (standard != null) {
+                    // Avoid overwriting specific keys if collision, but here keys are distinct
+                    // enough
+                    compliancy.put(standard, isCompliant);
+                }
+            }
         }
 
         return compliancy;
+    }
+
+    private static boolean isSECCompliant(PDDocument doc) {
+        try {
+            // 1. Check Encryption
+            if (doc.isEncrypted()) return false;
+
+            PDDocumentCatalog catalog = doc.getDocumentCatalog();
+
+            // 2. Check for JavaScript (Active Content)
+            if (catalog.getOpenAction() instanceof PDActionJavaScript) return false;
+            if (catalog.getNames() != null && catalog.getNames().getJavaScript() != null)
+                return false;
+
+            // Check for AcroForm
+            if (catalog.getAcroForm() != null) return false;
+
+            // 3. Check for Embedded Files
+            if (catalog.getNames() != null && catalog.getNames().getEmbeddedFiles() != null)
+                return false;
+
+            // 4. Check for External Links or Navigation Actions
+            for (PDPage page : doc.getPages()) {
+                for (PDAnnotation annotation : page.getAnnotations()) {
+                    if (annotation instanceof PDAnnotationLink) {
+                        PDAnnotationLink link = (PDAnnotationLink) annotation;
+                        PDAction action = link.getAction();
+                        if (action instanceof PDActionURI
+                                || action instanceof PDActionLaunch
+                                || action instanceof PDActionRemoteGoTo
+                                || action instanceof PDActionSubmitForm) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Error checking SEC compliance: {}", e.getMessage());
+            return false;
+        }
     }
 
     private static ObjectNode extractEncryptionInfo(PDDocument document) {
@@ -1227,6 +1076,13 @@ public class GetInfoOnPDF {
             return createErrorResponse("Invalid PDF file: " + e.getMessage());
         }
 
+        List<PDFVerificationResult> verificationResults = null;
+        try {
+            verificationResults = veraPDFService.validatePDF(inputFile.getInputStream());
+        } catch (Exception e) {
+            log.error("VeraPDF validation failed", e);
+        }
+
         boolean readonly = true;
 
         try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly)) {
@@ -1235,20 +1091,13 @@ public class GetInfoOnPDF {
             ObjectNode metadata = extractMetadata(pdfBoxDoc);
             ObjectNode basicInfo = extractBasicInfo(pdfBoxDoc, inputFile.getSize());
             ObjectNode docInfoNode = extractDocumentInfo(pdfBoxDoc);
-            ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc);
+            ObjectNode compliancy = extractComplianceInfo(pdfBoxDoc, verificationResults);
             ObjectNode encryption = extractEncryptionInfo(pdfBoxDoc);
             ObjectNode permissionsNode = extractPermissions(pdfBoxDoc);
             ObjectNode other = extractOtherInfo(pdfBoxDoc);
             ObjectNode formFieldsNode = extractFormFields(pdfBoxDoc);
 
-            // Generate summary data
-            String pdfaConformanceLevel = getPdfAConformanceLevel(pdfBoxDoc);
-            Boolean pdfaValidationPassed = null;
-            if (pdfaConformanceLevel != null) {
-                pdfaValidationPassed = validatePdfAWithPreflight(pdfBoxDoc, pdfaConformanceLevel);
-            }
-            ObjectNode summaryData =
-                    generatePDFSummaryData(pdfBoxDoc, pdfaConformanceLevel, pdfaValidationPassed);
+            ObjectNode summaryData = generatePDFSummaryData(pdfBoxDoc, verificationResults);
 
             // Extract per-page information
             ObjectNode pageInfoParent = extractPerPageInfo(pdfBoxDoc);

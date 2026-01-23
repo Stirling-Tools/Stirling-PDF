@@ -1,22 +1,30 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.ProtectionPolicy;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionLaunch;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,6 +43,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import stirling.software.SPDF.model.api.security.PDFVerificationResult;
+import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -43,6 +53,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 class GetInfoOnPDFTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private VeraPDFService veraPDFService;
 
     @InjectMocks private GetInfoOnPDF getInfoOnPDF;
 
@@ -661,41 +672,6 @@ class GetInfoOnPDFTest {
         void testGetPageSize(float width, float height, String expected) {
             Assertions.assertEquals(expected, GetInfoOnPDF.getPageSize(width, height));
         }
-
-        @Test
-        @DisplayName("Should check for PDF/A standard")
-        void testCheckForStandard_PdfA() throws IOException {
-            // This would require a real PDF/A document or mocking
-            PDDocument document = createSimplePdfWithText("Test");
-            boolean result = GetInfoOnPDF.checkForStandard(document, "PDF/A");
-            Assertions.assertFalse(result); // Simple PDF is not PDF/A compliant
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should handle null document in checkForStandard")
-        void testCheckForStandard_NullDocument() {
-            boolean result = GetInfoOnPDF.checkForStandard(null, "PDF/A");
-            Assertions.assertFalse(result);
-        }
-
-        @Test
-        @DisplayName("Should get PDF/A conformance level")
-        void testGetPdfAConformanceLevel() throws IOException {
-            PDDocument document = createSimplePdfWithText("Test");
-            String level = GetInfoOnPDF.getPdfAConformanceLevel(document);
-            Assertions.assertNull(level);
-            document.close();
-        }
-
-        @Test
-        @DisplayName("Should handle encrypted document in getPdfAConformanceLevel")
-        void testGetPdfAConformanceLevel_EncryptedDocument() throws IOException {
-            PDDocument document = createEncryptedPdf();
-            String level = GetInfoOnPDF.getPdfAConformanceLevel(document);
-            Assertions.assertNull(level); // Encrypted documents return null
-            document.close();
-        }
     }
 
     @Nested
@@ -776,8 +752,8 @@ class GetInfoOnPDFTest {
     class ComplianceTests {
 
         @Test
-        @DisplayName("Should check PDF/A compliance")
-        void testCompliance_PdfA() throws IOException {
+        @DisplayName("Should extract compliance info using VeraPDF")
+        void testCompliance_PdfA() throws Exception {
             PDDocument document = createSimplePdfWithText("Test PDF/A");
             MockMultipartFile mockFile = documentToMultipartFile(document, "pdfa.pdf");
 
@@ -791,16 +767,22 @@ class GetInfoOnPDFTest {
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
+            // Mock VeraPDFService
+            PDFVerificationResult result = new PDFVerificationResult();
+            result.setStandard("pdfa-1b");
+            result.setCompliant(true);
+            result.setComplianceSummary("PDF/A-1b compliant");
+            Mockito.when(veraPDFService.validatePDF(ArgumentMatchers.any(InputStream.class)))
+                    .thenReturn(List.of(result));
+
             ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
 
             String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode compliancy = jsonNode.get("Compliancy");
 
-            Assertions.assertTrue(compliancy.has("IsPDF/ACompliant"));
-            Assertions.assertTrue(compliancy.has("IsPDF/XCompliant"));
-            Assertions.assertTrue(compliancy.has("IsPDF/ECompliant"));
-            Assertions.assertTrue(compliancy.has("IsPDF/UACompliant"));
+            Assertions.assertTrue(compliancy.has("pdfa-1b"));
+            Assertions.assertTrue(compliancy.get("pdfa-1b").asBoolean());
 
             loadedDoc.close();
         }
@@ -838,6 +820,106 @@ class GetInfoOnPDFTest {
             Assertions.assertEquals(0, basicInfo.get("UniqueImages").asInt());
 
             loadedDoc.close();
+        }
+    }
+
+    @Test
+    @DisplayName("SEC Compliance: Clean document should pass")
+    void testSecCompliance_Clean() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            checkSecCompliance(doc, true);
+        }
+    }
+
+    @Test
+    @DisplayName("SEC Compliance: JavaScript action should fail")
+    void testSecCompliance_JavaScript() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            PDActionJavaScript jsAction = new PDActionJavaScript("app.alert('Hi')");
+            doc.getDocumentCatalog().setOpenAction(jsAction);
+            checkSecCompliance(doc, false);
+        }
+    }
+
+    @Test
+    @DisplayName("SEC Compliance: External URI Link should fail")
+    void testSecCompliance_ExternalLink() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+
+            PDAnnotationLink link = new PDAnnotationLink();
+            PDActionURI action = new PDActionURI();
+            action.setURI("http://google.com");
+            link.setAction(action);
+
+            page.getAnnotations().add(link);
+            checkSecCompliance(doc, false);
+        }
+    }
+
+    @Test
+    @DisplayName("SEC Compliance: Launch Action should fail")
+    void testSecCompliance_LaunchAction() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+
+            PDAnnotationLink link = new PDAnnotationLink();
+            PDActionLaunch action = new PDActionLaunch();
+            link.setAction(action);
+
+            page.getAnnotations().add(link);
+            checkSecCompliance(doc, false);
+        }
+    }
+
+    @Test
+    @DisplayName("SEC Compliance: Embedded File should fail")
+    void testSecCompliance_EmbeddedFile() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+
+            PDComplexFileSpecification fs = new PDComplexFileSpecification();
+            fs.setFile("test.txt");
+            PDEmbeddedFile ef =
+                    new PDEmbeddedFile(doc, new ByteArrayInputStream("test".getBytes()));
+            fs.setEmbeddedFile(ef);
+
+            PDEmbeddedFilesNameTreeNode efTree = new PDEmbeddedFilesNameTreeNode();
+            efTree.setNames(Collections.singletonMap("test", fs));
+
+            PDDocumentNameDictionary names = new PDDocumentNameDictionary(doc.getDocumentCatalog());
+            names.setEmbeddedFiles(efTree);
+            doc.getDocumentCatalog().setNames(names);
+
+            checkSecCompliance(doc, false);
+        }
+    }
+
+    private void checkSecCompliance(PDDocument doc, boolean expected) throws Exception {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            doc.save(baos);
+            byte[] bytes = baos.toByteArray();
+
+            Mockito.when(
+                            pdfDocumentFactory.load(
+                                    ArgumentMatchers.any(MultipartFile.class),
+                                    ArgumentMatchers.anyBoolean()))
+                    .thenReturn(Loader.loadPDF(bytes));
+
+            PDFFile request = new PDFFile();
+            request.setFileInput(
+                    new MockMultipartFile("file", "test.pdf", "application/pdf", bytes));
+            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+
+            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
+            boolean actual = jsonNode.get("Compliancy").get("IsPDF/SECCompliant").asBoolean();
+
+            Assertions.assertEquals(expected, actual, "SEC Compliance check failed");
         }
     }
 }
