@@ -21,7 +21,7 @@ import EnterpriseRequiredBanner from '@app/components/shared/config/EnterpriseRe
 
 const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
+  const { loginEnabled } = useLoginRequired();
   const { config } = useAppConfig();
   const licenseType = config?.license ?? 'NORMAL';
   const hasEnterpriseLicense = licenseType === 'ENTERPRISE';
@@ -72,10 +72,6 @@ const AdminUsageSection: React.FC = () => {
   }, [displayMode]);
 
   const fetchData = useCallback(async () => {
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
@@ -89,7 +85,7 @@ const AdminUsageSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [dataType, displayMode, validateLoginEnabled]);
+  }, [dataType, displayMode]);
 
   useEffect(() => {
     if (!showDemoData) {
@@ -104,9 +100,6 @@ const AdminUsageSection: React.FC = () => {
   }, [buildDemoUsageData, fetchData, showDemoData]);
 
   const handleRefresh = () => {
-    if (!validateLoginEnabled()) {
-      return;
-    }
     if (showDemoData) {
       setData(buildDemoUsageData());
       return;
