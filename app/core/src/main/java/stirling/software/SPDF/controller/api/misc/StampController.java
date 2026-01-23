@@ -34,17 +34,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -53,9 +51,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@MiscApi
 @RequiredArgsConstructor
 public class StampController {
 
@@ -79,7 +75,7 @@ public class StampController {
                 });
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
@@ -277,7 +273,7 @@ public class StampController {
 
         // Split the stampText into multiple lines
         String[] lines =
-                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(stampText);
+                RegexPatternUtils.getInstance().getEscapedNewlinePattern().split(processedStampText);
 
         // Calculate dynamic line height based on font ascent and descent
         float ascent = font.getFontDescriptor().getAscent();

@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -435,9 +436,20 @@ public class UserController {
         SaveUserRequest.Builder builder =
                 SaveUserRequest.builder().username(username).teamId(effectiveTeamId).role(role);
 
-        if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            builder.authenticationType(AuthenticationType.SSO);
+        AuthenticationType requestedAuthType;
+        if ("SSO".equalsIgnoreCase(authType)) {
+            requestedAuthType = AuthenticationType.OAUTH2;
         } else {
+            try {
+                requestedAuthType = AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid authentication type specified."));
+            }
+        }
+        builder.authenticationType(requestedAuthType);
+
+        if (requestedAuthType == AuthenticationType.WEB) {
             if (password == null || password.isBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required."));

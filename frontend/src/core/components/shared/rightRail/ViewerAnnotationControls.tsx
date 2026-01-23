@@ -55,11 +55,6 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const isAnnotateActive = selectedTool === 'annotate';
   const annotationsHidden = viewerContext ? !viewerContext.isAnnotationsVisible : false;
 
-  // Don't show any annotation controls in sign mode
-  if (isSignMode) {
-    return null;
-  }
-
   // Persist annotations to file if there are unsaved changes
   const saveAnnotationsIfNeeded = async () => {
     if (!viewerContext?.exportActions?.saveAsCopy || currentView !== 'viewer' || !historyApiRef?.current?.canUndo()) return;
@@ -135,6 +130,11 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
     }
   };
 
+  // Don't show any annotation controls in sign mode
+  // NOTE: This early return is placed AFTER all hooks to satisfy React's rules of hooks
+  if (isSignMode) {
+    return null;
+  }
 
   return (
     <>

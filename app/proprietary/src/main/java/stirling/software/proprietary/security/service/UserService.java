@@ -459,6 +459,32 @@ public class UserService implements UserServiceInterface {
         return user.isPresent() && user.get().hasPassword();
     }
 
+    public boolean isSsoAuthenticationTypeByUsername(String username) {
+        Optional<User> user = findByUsernameIgnoreCase(username);
+        if (user.isEmpty()) {
+            return false;
+        }
+
+        String authType = user.get().getAuthenticationType();
+        if (authType == null) {
+            return false;
+        }
+
+        try {
+            AuthenticationType authenticationType =
+                    AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
+            if (authenticationType == AuthenticationType.OAUTH2
+                    || authenticationType == AuthenticationType.SAML2) {
+                return true;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Fall through to legacy string comparison below
+        }
+
+        // Backward compatibility for legacy "SSO" value without relying on the deprecated enum
+        return "SSO".equalsIgnoreCase(authType);
+    }
+
     public boolean isAuthenticationTypeByUsername(
             String username, AuthenticationType authenticationType) {
         Optional<User> user = findByUsernameIgnoreCase(username);
