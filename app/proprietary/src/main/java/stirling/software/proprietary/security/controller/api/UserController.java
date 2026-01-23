@@ -18,7 +18,10 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +46,7 @@ import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -66,26 +70,24 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UsernameAndPass usernameAndPass)
             throws SQLException, UnsupportedProviderException {
+        String username = usernameAndPass.getUsername();
+        String password = usernameAndPass.getPassword();
         try {
-            log.debug("Registration attempt for user: {}", usernameAndPass.getUsername());
+            log.debug("Registration attempt for user: {}", username);
 
-            if (userService.usernameExistsIgnoreCase(usernameAndPass.getUsername())) {
-                log.warn(
-                        "Registration failed: username already exists: {}",
-                        usernameAndPass.getUsername());
+            if (userService.usernameExistsIgnoreCase(username)) {
+                log.warn("Registration failed: username already exists: {}", username);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "User already exists"));
             }
 
-            if (!userService.isUsernameValid(usernameAndPass.getUsername())) {
-                log.warn(
-                        "Registration failed: invalid username format: {}",
-                        usernameAndPass.getUsername());
+            if (!userService.isUsernameValid(username)) {
+                log.warn("Registration failed: invalid username format: {}", username);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Invalid username format"));
             }
 
-            if (usernameAndPass.getPassword() == null || usernameAndPass.getPassword().isEmpty()) {
+            if (password == null || password.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password is required"));
             }
@@ -102,17 +104,16 @@ public class UserController {
                                                 + ", Available slots: "
                                                 + availableSlots));
             }
-
             Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
-            User user =
-                    userService.saveUser(
-                            usernameAndPass.getUsername(),
-                            usernameAndPass.getPassword(),
-                            team,
-                            Role.USER.getRoleId(),
-                            false);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(username)
+                            .password(password)
+                            .team(team)
+                            .enabled(false);
+            User user = userService.saveUserCore(builder.build());
 
-            log.info("User registered successfully: {}", usernameAndPass.getUsername());
+            log.info("User registered successfully: {}", username);
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
@@ -127,7 +128,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("Registration error for user: {}", usernameAndPass.getUsername(), e);
+            log.error("Registration error for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Registration failed: " + e.getMessage()));
         }
@@ -222,6 +223,7 @@ public class UserController {
             Principal principal,
             @RequestParam(name = "currentPassword") String currentPassword,
             @RequestParam(name = "newPassword") String newPassword,
+            @RequestParam(name = "confirmPassword") String confirmPassword,
             HttpServletRequest request,
             HttpServletResponse response)
             throws SQLException, UnsupportedProviderException {
@@ -234,6 +236,43 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "userNotFound", "message", "User not found"));
         }
+
+        if (currentPassword == null
+                || currentPassword.isEmpty()
+                || newPassword == null
+                || newPassword.isEmpty()
+                || confirmPassword == null
+                || confirmPassword.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "missingParameters",
+                                    "message",
+                                    "Current password, new password, and confirmation are"
+                                            + " required"));
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "passwordMismatch",
+                                    "message",
+                                    "New password and confirmation do not match"));
+        }
+
+        if (newPassword.equals(currentPassword)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "passwordUnchanged",
+                                    "message",
+                                    "New password must be different from the current password"));
+        }
+
         User user = userOpt.get();
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -326,7 +365,9 @@ public class UserController {
             @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
-                    boolean forceChange)
+                    boolean forceChange,
+            @RequestParam(name = "forceMFA", required = false, defaultValue = "false")
+                    boolean forceMFA)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(username)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -348,8 +389,9 @@ public class UserController {
                                             + availableSlots));
         }
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+        User user = null;
         if (userOpt.isPresent()) {
-            User user = userOpt.get();
+            user = userOpt.get();
             if (user.getUsername().equalsIgnoreCase(username)) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(Map.of("error", "Username already exists."));
@@ -391,6 +433,9 @@ public class UserController {
             }
         }
 
+        SaveUserRequest.Builder builder =
+                SaveUserRequest.builder().username(username).teamId(effectiveTeamId).role(role);
+
         AuthenticationType requestedAuthType;
         if ("SSO".equalsIgnoreCase(authType)) {
             requestedAuthType = AuthenticationType.OAUTH2;
@@ -402,6 +447,7 @@ public class UserController {
                         .body(Map.of("error", "Invalid authentication type specified."));
             }
         }
+        builder.authenticationType(requestedAuthType);
 
         if (requestedAuthType == AuthenticationType.WEB) {
             if (password == null || password.isBlank()) {
@@ -412,10 +458,9 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password must be at least 6 characters."));
             }
-            userService.saveUser(username, password, effectiveTeamId, role, forceChange);
-        } else {
-            userService.saveUser(username, requestedAuthType, effectiveTeamId, role);
+            builder.password(password).firstLogin(forceChange).requireMfa(forceMFA);
         }
+        userService.saveUserCore(builder.build());
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
     }
 
@@ -440,7 +485,8 @@ public class UserController {
                     .body(
                             Map.of(
                                     "error",
-                                    "Email service is not configured. Please configure SMTP settings."));
+                                    "Email service is not configured. Please configure SMTP"
+                                            + " settings."));
         }
 
         // Parse comma-separated email addresses
@@ -658,7 +704,8 @@ public class UserController {
                         .body(
                                 Map.of(
                                         "error",
-                                        "User's email is not a valid email address. Notifications are disabled."));
+                                        "User's email is not a valid email address. Notifications"
+                                                + " are disabled."));
             }
 
             String loginUrl = buildLoginUrl(request);
@@ -839,7 +886,14 @@ public class UserController {
             String temporaryPassword = java.util.UUID.randomUUID().toString().substring(0, 12);
 
             // Create user with forceChange=true
-            userService.saveUser(email, temporaryPassword, teamId, role, true);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(email)
+                            .password(temporaryPassword)
+                            .teamId(teamId)
+                            .role(role)
+                            .firstLogin(true);
+            userService.saveUserCore(builder.build());
 
             // Send invite email
             try {

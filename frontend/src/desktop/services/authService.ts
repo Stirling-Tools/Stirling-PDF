@@ -11,6 +11,15 @@ export interface UserInfo {
   email?: string;
 }
 
+export class AuthServiceError extends Error {
+  code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 interface LoginResponse {
   token: string;
   username: string;
@@ -82,7 +91,6 @@ export class AuthService {
     // Try Tauri store first
     try {
       const token = await invoke<string | null>('get_auth_token');
-
       if (token) {
         console.log(`[Desktop AuthService] ✅ Token found in Tauri store (length: ${token.length})`);
         return token;
@@ -222,7 +230,7 @@ export class AuthService {
     }
   }
 
-  async login(serverUrl: string, username: string, password: string): Promise<UserInfo> {
+  async login(serverUrl: string, username: string, password: string, mfaCode?: string): Promise<UserInfo> {
     console.log(`[Desktop AuthService] 🔐 Starting login to: ${serverUrl}`);
     console.log(`[Desktop AuthService] Username: ${username}`);
 
@@ -246,6 +254,7 @@ export class AuthService {
         serverUrl,
         username,
         password,
+        mfaCode,
         supabaseKey: SUPABASE_KEY,
         saasServerUrl: STIRLING_SAAS_URL,
       });
@@ -286,8 +295,21 @@ export class AuthService {
       console.error('[Desktop AuthService] ❌ Login failed:', error);
 
       // Provide more detailed error messages based on the error type
-      if (error instanceof Error) {
-        const errMsg = error.message.toLowerCase();
+      if (error instanceof Error || typeof error === 'string') {
+        const rawMessage = typeof error === 'string' ? error : error.message;
+        const errMsg = rawMessage.toLowerCase();
+
+        if (errMsg.includes('mfa_required')) {
+          this.setAuthStatus('unauthenticated', null);
+          console.error('[Desktop AuthService] Two-factor authentication required');
+          throw new AuthServiceError('Two-factor code required.', 'mfa_required');
+        }
+
+        if (errMsg.includes('invalid_mfa_code')) {
+          this.setAuthStatus('unauthenticated', null);
+          console.error('[Desktop AuthService] Invalid two-factor code provided');
+          throw new AuthServiceError('Invalid two-factor code.', 'invalid_mfa_code');
+        }
 
         // Authentication errors
         if (errMsg.includes('401') || errMsg.includes('unauthorized') || errMsg.includes('invalid credentials')) {
@@ -412,7 +434,6 @@ export class AuthService {
         this.cachedToken = token;
         console.log('[Desktop AuthService] ✅ Token cached in memory after retrieval');
       }
-
       return token;
     } catch (error) {
       console.error('[Desktop AuthService] Failed to get auth token:', error);
@@ -449,7 +470,7 @@ export class AuthService {
 
   async refreshToken(serverUrl: string): Promise<boolean> {
     try {
-      console.log('Refreshing auth token');
+      console.log('[Desktop AuthService] Refreshing auth token');
       this.setAuthStatus('refreshing', this.userInfo);
 
       const currentToken = await this.getAuthToken();
@@ -477,10 +498,10 @@ export class AuthService {
       const userInfo = await this.getUserInfo();
       this.setAuthStatus('authenticated', userInfo);
 
-      console.log('Token refreshed successfully');
+      console.log('[Desktop AuthService] Token refreshed successfully');
       return true;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error('[Desktop AuthService] Token refresh failed:', error);
       this.setAuthStatus('unauthenticated', null);
 
       // Clear stored credentials on refresh failure
@@ -533,7 +554,7 @@ export class AuthService {
    */
   async loginWithOAuth(provider: string, authServerUrl: string, successHtml: string, errorHtml: string): Promise<UserInfo> {
     try {
-      console.log('Starting OAuth login with provider:', provider);
+      console.log('[Desktop AuthService] Starting OAuth login with provider:', provider);
       this.setAuthStatus('oauth_pending', null);
 
       // Validate Supabase key is configured for OAuth
@@ -554,7 +575,7 @@ export class AuthService {
         errorHtml,
       });
 
-      console.log('OAuth authentication successful, storing tokens');
+      console.log('[Desktop AuthService] OAuth authentication successful, storing tokens');
 
       // Save token to all storage locations
       await this.saveTokenEverywhere(result.access_token);
@@ -569,11 +590,11 @@ export class AuthService {
       });
 
       this.setAuthStatus('authenticated', userInfo);
-      console.log('OAuth login successful');
+      console.log('[Desktop AuthService] OAuth login successful');
 
       return userInfo;
     } catch (error) {
-      console.error('Failed to complete OAuth login:', error);
+      console.error('[Desktop AuthService] Failed to complete OAuth login:', error);
       this.setAuthStatus('unauthenticated', null);
       throw error;
     }

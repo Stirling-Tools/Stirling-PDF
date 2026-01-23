@@ -556,6 +556,30 @@ webBrowserSettings = "Web Browser Setting"
 syncToBrowser = "Sync Account -> Browser"
 syncToAccount = "Sync Account <- Browser"
 
+[account.mfa]
+title = "Two-factor authentication"
+setupFailed = "Unable to start two-factor setup. Please try again."
+codeRequired = "Enter the authentication code to continue."
+enabled = "Two-factor authentication enabled."
+enableFailed = "Unable to enable two-factor authentication. Check the code and try again."
+disabled = "Two-factor authentication disabled."
+disableFailed = "Unable to disable two-factor authentication. Check the code and try again."
+description = "Add an extra layer of security to your account."
+enableButton = "Enable two-factor authentication"
+disableButton = "Disable two-factor authentication"
+setupTitle = "Set up two-factor authentication"
+setupDescription = "Scan the QR code with your authenticator app, then enter the 6-digit code to confirm."
+manualKey = "Manual setup key"
+secretWarning = "Keep this key private. Anyone with access can generate valid authentication codes."
+codePlaceholder = "Enter 6-digit code"
+confirmEnable = "Enable"
+disableTitle = "Disable two-factor authentication"
+disableDescription = "Enter a valid authentication code to disable two-factor authentication."
+codeLabel = "Authentication code"
+confirmDisable = "Disable"
+ssoDescription = "Two-factor authentication is managed by your identity provider for single sign-on accounts."
+ssoManaged = "Configure MFA through your identity provider."
+
 [adminUserSettings]
 title = "User Control Settings"
 header = "Admin User Control Settings"
@@ -3736,6 +3760,14 @@ passwordChangedSuccess = "Password changed successfully! Please sign in with you
 credentialsUpdated = "Your credentials have been updated. Please sign in again."
 defaultCredentials = "Default Login Credentials"
 changePasswordWarning = "Please change your password after logging in for the first time"
+mfaRequired = "Two-factor code required"
+mfaCode = "Authentication Code"
+enterMfaCode = "Enter 6-digit code"
+mfaPromptTitle = "Two-factor authentication"
+mfaPromptBody = "Enter the authentication code from your authenticator app to continue."
+verifyingMfa = "Verifying..."
+verifyMfa = "Verify code"
+
 
 [login.slides.overview]
 alt = "Stirling PDF overview"
@@ -5826,6 +5858,7 @@ usernameRequired = "Username and password are required"
 passwordTooShort = "Password must be at least 6 characters"
 success = "User created successfully"
 error = "Failed to create user"
+forceMFA = "Force MFA setup on next login"
 
 [workspace.people.authType]
 password = "Password"
@@ -5934,6 +5967,11 @@ fromLicense = "from license"
 slotsAvailable = "{{count}} user slot(s) available"
 noSlotsAvailable = "No slots available"
 currentUsage = "Currently using {{current}} of {{max}} user licences"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA disabled successfully for user"
+adminDisableError = "Failed to disable MFA for user"
+disableByAdmin = "Disable MFA"
 
 [workspace.teams]
 title = "Teams"

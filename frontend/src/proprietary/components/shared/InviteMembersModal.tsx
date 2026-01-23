@@ -58,6 +58,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
     teamId: undefined as number | undefined,
     authType: 'WEB' as 'WEB' | 'OAUTH2' | 'SAML2',
     forceChange: false,
+    forceMFA: false,
   });
 
   // Form state for email invite
@@ -141,6 +142,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         teamId: inviteForm.teamId,
         authType: inviteForm.authType,
         forceChange: inviteForm.forceChange,
+        forceMFA: inviteForm.forceMFA,
       });
       alert({ alertType: 'success', title: t('workspace.people.addMember.success') });
       onClose();
@@ -153,6 +155,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         teamId: undefined,
         authType: 'WEB',
         forceChange: false,
+        forceMFA: false,
       });
     } catch (error: any) {
       console.error('Failed to invite user:', error);
@@ -253,6 +256,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       teamId: undefined,
       authType: 'WEB',
       forceChange: false,
+      forceMFA: false,
     });
     setEmailInviteForm({
       emails: '',
@@ -283,7 +287,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       handleInviteUser();
     }
   };
-  
+
   return (
     <Modal
       opened={opened}
@@ -542,6 +546,11 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                     label={t('workspace.people.addMember.forcePasswordChange', 'Force password change on first login')}
                     checked={inviteForm.forceChange}
                     onChange={(e) => setInviteForm({ ...inviteForm, forceChange: e.currentTarget.checked })}
+                  />
+                  <Checkbox
+                    label={t('workspace.people.addMember.forceMFA', 'Force MFA setup on next login')}
+                    checked={inviteForm.forceMFA}
+                    onChange={(e) => setInviteForm({ ...inviteForm, forceMFA: e.currentTarget.checked })}
                   />
                 </>
               )}

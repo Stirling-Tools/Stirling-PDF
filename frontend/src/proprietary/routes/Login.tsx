@@ -33,6 +33,8 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [requiresMfa, setRequiresMfa] = useState(false);
   const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
@@ -273,6 +275,11 @@ export default function Login() {
       return;
     }
 
+    if (requiresMfa && !mfaCode.trim()) {
+      setError(t('login.mfaRequired', 'Two-factor code required'));
+      return;
+    }
+
     try {
       setIsSigningIn(true);
       setError(null);
@@ -281,14 +288,20 @@ export default function Login() {
 
       const { user, session, error } = await springAuth.signInWithPassword({
         email: email.trim(),
-        password: password
+        password: password,
+        mfaCode: requiresMfa ? mfaCode.trim() : undefined,
       });
 
       if (error) {
         console.error('[Login] Email sign in error:', error);
         setError(error.message);
+        if (error.mfaRequired || error.code === 'invalid_mfa_code') {
+          setRequiresMfa(true);
+        }
       } else if (user && session) {
         console.log('[Login] Email sign in successful');
+        setRequiresMfa(false);
+        setMfaCode('');
         // Auth state will update automatically and Landing will redirect to home
         // No need to navigate manually here
       }
@@ -362,6 +375,10 @@ export default function Login() {
             password={password}
             setEmail={setEmail}
             setPassword={setPassword}
+            mfaCode={mfaCode}
+            setMfaCode={setMfaCode}
+            showMfaField={requiresMfa || Boolean(mfaCode)}
+            requiresMfa={requiresMfa}
             onSubmit={signInWithEmail}
             isSubmitting={isSigningIn}
             submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}

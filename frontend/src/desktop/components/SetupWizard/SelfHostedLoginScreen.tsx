@@ -15,6 +15,9 @@ interface SelfHostedLoginScreenProps {
   enabledOAuthProviders?: SSOProviderConfig[];
   onLogin: (username: string, password: string) => Promise<void>;
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
+  mfaCode: string;
+  setMfaCode: (value: string) => void;
+  requiresMfa: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -24,6 +27,9 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   enabledOAuthProviders,
   onLogin,
   onOAuthSuccess,
+  mfaCode,
+  setMfaCode,
+  requiresMfa,
   loading,
   error,
 }) => {
@@ -41,6 +47,11 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
 
     if (!password) {
       setValidationError(t('setup.login.error.emptyPassword', 'Please enter your password'));
+      return;
+    }
+
+    if (requiresMfa && !mfaCode.trim()) {
+      setValidationError(t('login.mfaRequired', 'Two-factor code required'));
       return;
     }
 
@@ -98,6 +109,13 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
           setPassword(value);
           setValidationError(null);
         }}
+        mfaCode={mfaCode}
+        setMfaCode={(value) => {
+          setMfaCode(value);
+          setValidationError(null);
+        }}
+        showMfaField={requiresMfa || Boolean(mfaCode)}
+        requiresMfa={requiresMfa}
         onSubmit={handleSubmit}
         isSubmitting={loading}
         submitButtonText={t('setup.login.submit', 'Login')}

@@ -112,6 +112,7 @@ export default function PeopleSection() {
           ...user,
           isActive: adminData.userSessions[user.username] || false,
           lastRequest: adminData.userLastRequest[user.username] || undefined,
+          mfaEnabled: adminData.userSettings?.[user.username]?.mfaEnabled === 'true',
         }));
 
         setUsers(enrichedUsers);
@@ -200,7 +201,7 @@ export default function PeopleSection() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch people data:', error);
+      console.error('[PeopleSection] Failed to fetch people data:', error);
       alert({ alertType: 'error', title: 'Failed to load people data' });
     } finally {
       setLoading(false);
@@ -221,7 +222,7 @@ export default function PeopleSection() {
       closeEditModal();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to update user:', error);
+      console.error('[PeopleSection] Failed to update user:', error);
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
                           error.message ||
@@ -238,7 +239,7 @@ export default function PeopleSection() {
       alert({ alertType: 'success', title: t('workspace.people.toggleEnabled.success') });
       fetchData();
     } catch (error: any) {
-      console.error('Failed to toggle user status:', error);
+      console.error('[PeopleSection] Failed to toggle user status:', error);
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
                           error.message ||
@@ -258,7 +259,7 @@ export default function PeopleSection() {
       alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
       fetchData();
     } catch (error: any) {
-      console.error('Failed to delete user:', error);
+      console.error('[PeopleSection] Failed to delete user:', error);
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
                           error.message ||
@@ -576,6 +577,7 @@ export default function PeopleSection() {
                       </Tooltip>
 
                       {/* Actions menu */}
+                      {!isCurrentUser(user) && (
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
                           <ActionIcon variant="subtle"  disabled={!loginEnabled}>
@@ -589,9 +591,10 @@ export default function PeopleSection() {
                               onClick={() => openEditModal(user)}
                               disabled={!loginEnabled}
                             >
-                              {t('workspace.people.editRole')}
+                              {t('workspace.people.editRole', 'Edit Role & Team')}
                             </Menu.Item>
                           )}
+                          {!isCurrentUser(user) && (
                           <Menu.Item
                             leftSection={<LocalIcon icon="lock" width="1rem" height="1rem" />}
                             onClick={() => openChangePasswordModal(user)}
@@ -599,6 +602,7 @@ export default function PeopleSection() {
                           >
                             {t('workspace.people.changePassword.action', 'Change password')}
                           </Menu.Item>
+                          )}
                           {!isCurrentUser(user) && (
                             <Menu.Item
                               leftSection={user.enabled ? <LocalIcon icon="person-off" width="1rem" height="1rem" /> : <LocalIcon icon="person-check" width="1rem" height="1rem" />}
@@ -607,6 +611,31 @@ export default function PeopleSection() {
                             >
                               {user.enabled ? t('workspace.people.disable') : t('workspace.people.enable')}
                             </Menu.Item>
+                          )}
+                          {!isCurrentUser(user) && user.mfaEnabled && (
+                            <>
+                              <Menu.Divider />
+                              <Menu.Item
+                                color="red"
+                                leftSection={<LocalIcon icon="key" width="1rem" height="1rem" />}
+                                onClick={async () => {
+                                  try {
+                                    await userManagementService.disableMfaByAdmin(user.username);
+                                    alert({ alertType: 'success', title: t('workspace.people.mfa.adminDisableSuccess', 'MFA disabled successfully for user') });
+                                  } catch (error: any) {
+                                    console.error('[PeopleSection] Failed to disable MFA for user:', error);
+                                    const errorMessage = error.response?.data?.message ||
+                                                        error.response?.data?.error ||
+                                                        error.message ||
+                                                        t('workspace.people.mfa.adminDisableError', 'Failed to disable MFA for user');
+                                    alert({ alertType: 'error', title: errorMessage });
+                                  }
+                                }}
+                                disabled={!loginEnabled}
+                              >
+                                {t('workspace.people.mfa.disableByAdmin', 'Disable MFA')}
+                              </Menu.Item>
+                            </>
                           )}
                           {!isCurrentUser(user) && (
                             <>
@@ -618,6 +647,7 @@ export default function PeopleSection() {
                           )}
                         </Menu.Dropdown>
                       </Menu>
+                      )}
                     </Group>
                   </Table.Td>
                 </Table.Tr>
