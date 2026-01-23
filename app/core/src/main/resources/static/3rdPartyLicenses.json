@@ -3,14 +3,14 @@
         {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.23",
+            "moduleVersion": "1.5.25",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
         {
             "moduleName": "ch.qos.logback:logback-core",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.23",
+            "moduleVersion": "1.5.25",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -684,7 +684,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.16.1",
+            "moduleVersion": "1.16.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
