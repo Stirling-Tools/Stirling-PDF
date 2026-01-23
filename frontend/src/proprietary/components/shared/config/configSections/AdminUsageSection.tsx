@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Stack,
   Group,
@@ -16,21 +16,62 @@ import UsageAnalyticsTable from '@app/components/shared/config/configSections/us
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import EnterpriseRequiredBanner from '@app/components/shared/config/EnterpriseRequiredBanner';
 
 const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
+  const { loginEnabled } = useLoginRequired();
+  const { config } = useAppConfig();
+  const licenseType = config?.license ?? 'NORMAL';
+  const hasEnterpriseLicense = licenseType === 'ENTERPRISE';
+  const showDemoData = !loginEnabled || !hasEnterpriseLicense;
   const [data, setData] = useState<EndpointStatisticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<'top10' | 'top20' | 'all'>('top10');
   const [dataType, setDataType] = useState<'all' | 'api' | 'ui'>('all');
 
-  const fetchData = async () => {
-    if (!validateLoginEnabled()) {
-      return;
+  const buildDemoUsageData = useCallback((): EndpointStatisticsResponse => {
+    const totalVisits = 15847;
+    const allEndpoints = [
+      { endpoint: 'merge-pdfs', visits: 3245, percentage: (3245 / totalVisits) * 100 },
+      { endpoint: 'compress-pdf', visits: 2891, percentage: (2891 / totalVisits) * 100 },
+      { endpoint: 'pdf-to-img', visits: 2156, percentage: (2156 / totalVisits) * 100 },
+      { endpoint: 'split-pdf', visits: 1834, percentage: (1834 / totalVisits) * 100 },
+      { endpoint: 'rotate-pdf', visits: 1523, percentage: (1523 / totalVisits) * 100 },
+      { endpoint: 'ocr-pdf', visits: 1287, percentage: (1287 / totalVisits) * 100 },
+      { endpoint: 'add-watermark', visits: 945, percentage: (945 / totalVisits) * 100 },
+      { endpoint: 'extract-images', visits: 782, percentage: (782 / totalVisits) * 100 },
+      { endpoint: 'add-password', visits: 621, percentage: (621 / totalVisits) * 100 },
+      { endpoint: 'html-to-pdf', visits: 563, percentage: (563 / totalVisits) * 100 },
+      { endpoint: 'remove-password', visits: 487, percentage: (487 / totalVisits) * 100 },
+      { endpoint: 'pdf-to-pdfa', visits: 423, percentage: (423 / totalVisits) * 100 },
+      { endpoint: 'extract-pdf-metadata', visits: 356, percentage: (356 / totalVisits) * 100 },
+      { endpoint: 'add-page-numbers', visits: 298, percentage: (298 / totalVisits) * 100 },
+      { endpoint: 'crop', visits: 245, percentage: (245 / totalVisits) * 100 },
+      { endpoint: 'flatten', visits: 187, percentage: (187 / totalVisits) * 100 },
+      { endpoint: 'sanitize-pdf', visits: 134, percentage: (134 / totalVisits) * 100 },
+      { endpoint: 'auto-split-pdf', visits: 98, percentage: (98 / totalVisits) * 100 },
+      { endpoint: 'scale-pages', visits: 76, percentage: (76 / totalVisits) * 100 },
+      { endpoint: 'compare-pdfs', visits: 42, percentage: (42 / totalVisits) * 100 },
+    ];
+
+    let filteredEndpoints = allEndpoints;
+    if (displayMode === 'top10') {
+      filteredEndpoints = allEndpoints.slice(0, 10);
+    } else if (displayMode === 'top20') {
+      filteredEndpoints = allEndpoints.slice(0, 20);
     }
 
+    return {
+      totalVisits,
+      totalEndpoints: filteredEndpoints.length,
+      endpoints: filteredEndpoints,
+    };
+  }, [displayMode]);
+
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -44,58 +85,26 @@ const AdminUsageSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dataType, displayMode]);
 
   useEffect(() => {
-    if (loginEnabled) {
+    if (!showDemoData) {
       fetchData();
-    } else {
-      // Provide example usage analytics data when login is disabled
-      const totalVisits = 15847;
-      const allEndpoints = [
-        { endpoint: 'merge-pdfs', visits: 3245, percentage: (3245 / totalVisits) * 100 },
-        { endpoint: 'compress-pdf', visits: 2891, percentage: (2891 / totalVisits) * 100 },
-        { endpoint: 'pdf-to-img', visits: 2156, percentage: (2156 / totalVisits) * 100 },
-        { endpoint: 'split-pdf', visits: 1834, percentage: (1834 / totalVisits) * 100 },
-        { endpoint: 'rotate-pdf', visits: 1523, percentage: (1523 / totalVisits) * 100 },
-        { endpoint: 'ocr-pdf', visits: 1287, percentage: (1287 / totalVisits) * 100 },
-        { endpoint: 'add-watermark', visits: 945, percentage: (945 / totalVisits) * 100 },
-        { endpoint: 'extract-images', visits: 782, percentage: (782 / totalVisits) * 100 },
-        { endpoint: 'add-password', visits: 621, percentage: (621 / totalVisits) * 100 },
-        { endpoint: 'html-to-pdf', visits: 563, percentage: (563 / totalVisits) * 100 },
-        { endpoint: 'remove-password', visits: 487, percentage: (487 / totalVisits) * 100 },
-        { endpoint: 'pdf-to-pdfa', visits: 423, percentage: (423 / totalVisits) * 100 },
-        { endpoint: 'extract-pdf-metadata', visits: 356, percentage: (356 / totalVisits) * 100 },
-        { endpoint: 'add-page-numbers', visits: 298, percentage: (298 / totalVisits) * 100 },
-        { endpoint: 'crop', visits: 245, percentage: (245 / totalVisits) * 100 },
-        { endpoint: 'flatten', visits: 187, percentage: (187 / totalVisits) * 100 },
-        { endpoint: 'sanitize-pdf', visits: 134, percentage: (134 / totalVisits) * 100 },
-        { endpoint: 'auto-split-pdf', visits: 98, percentage: (98 / totalVisits) * 100 },
-        { endpoint: 'scale-pages', visits: 76, percentage: (76 / totalVisits) * 100 },
-        { endpoint: 'compare-pdfs', visits: 42, percentage: (42 / totalVisits) * 100 },
-      ];
-
-      // Filter based on display mode
-      let filteredEndpoints = allEndpoints;
-      if (displayMode === 'top10') {
-        filteredEndpoints = allEndpoints.slice(0, 10);
-      } else if (displayMode === 'top20') {
-        filteredEndpoints = allEndpoints.slice(0, 20);
-      }
-
-      setData({
-        totalVisits: totalVisits,
-        totalEndpoints: filteredEndpoints.length,
-        endpoints: filteredEndpoints,
-      });
-      setLoading(false);
-    }
-  }, [displayMode, dataType, loginEnabled]);
-
-  const handleRefresh = () => {
-    if (!validateLoginEnabled()) {
       return;
     }
+
+    // Provide example usage analytics data when running in demo mode
+    setError(null);
+    setData(buildDemoUsageData());
+    setLoading(false);
+  }, [buildDemoUsageData, fetchData, showDemoData]);
+
+  const handleRefresh = () => {
+    if (showDemoData) {
+      setData(buildDemoUsageData());
+      return;
+    }
+
     fetchData();
   };
 
@@ -112,8 +121,8 @@ const AdminUsageSection: React.FC = () => {
     }
   };
 
-  // Override loading state when login is disabled
-  const actualLoading = loginEnabled ? loading : false;
+  // Override loading state when showing demo data
+  const actualLoading = showDemoData ? false : loading;
 
   // Early returns for loading/error states
   if (actualLoading) {
@@ -140,12 +149,24 @@ const AdminUsageSection: React.FC = () => {
     );
   }
 
-  const endpoints = data?.endpoints ?? [];
-  const chartData = endpoints.map((e) => ({ label: e.endpoint, value: e.visits }));
+  const endpoints = (data?.endpoints ?? []).map((endpoint) => ({
+    endpoint: endpoint.endpoint ?? t('usage.table.unknownEndpoint', 'Unknown endpoint'),
+    visits: Number.isFinite(endpoint.visits) ? Math.max(0, endpoint.visits) : 0,
+    percentage: Number.isFinite(endpoint.percentage) ? Math.max(0, endpoint.percentage) : 0,
+  }));
+
+  const chartData = endpoints.map((e) => ({
+    label: e.endpoint,
+    value: Number.isFinite(e.visits) ? Math.max(0, e.visits) : 0,
+  }));
 
   const displayedVisits = endpoints.reduce((sum, e) => sum + e.visits, 0);
-  const totalVisits = data?.totalVisits ?? displayedVisits ?? 0;
-  const totalEndpoints = data?.totalEndpoints ?? endpoints.length ?? 0;
+  const totalVisits = Number.isFinite(data?.totalVisits)
+    ? Math.max(0, data?.totalVisits as number)
+    : displayedVisits;
+  const totalEndpoints = Number.isFinite(data?.totalEndpoints)
+    ? Math.max(0, data?.totalEndpoints as number)
+    : endpoints.length;
 
   const displayedPercentage = totalVisits > 0
     ? ((displayedVisits / (totalVisits || 1)) * 100).toFixed(1)
@@ -154,6 +175,10 @@ const AdminUsageSection: React.FC = () => {
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
+      <EnterpriseRequiredBanner
+        show={!hasEnterpriseLicense}
+        featureName={t('settings.licensingAnalytics.usageAnalytics', 'Usage Analytics')}
+      />
 
       {/* Controls */}
       <Card padding="lg" radius="md" withBorder>
@@ -163,7 +188,7 @@ const AdminUsageSection: React.FC = () => {
               <SegmentedControl
                 value={displayMode}
                 onChange={(value) => setDisplayMode(value as 'top10' | 'top20' | 'all')}
-                disabled={!loginEnabled}
+                disabled={showDemoData}
                 data={[
                   {
                     value: 'top10',
@@ -184,7 +209,7 @@ const AdminUsageSection: React.FC = () => {
                 leftSection={<LocalIcon icon="refresh" width="1rem" height="1rem" />}
                 onClick={handleRefresh}
                 loading={loading}
-                disabled={!loginEnabled}
+                disabled={showDemoData}
               >
                 {t('usage.controls.refresh', 'Refresh')}
               </Button>
@@ -198,7 +223,7 @@ const AdminUsageSection: React.FC = () => {
             <SegmentedControl
               value={dataType}
               onChange={(value) => setDataType(value as 'all' | 'api' | 'ui')}
-              disabled={!loginEnabled}
+              disabled={showDemoData}
               data={[
                 {
                   value: 'all',
