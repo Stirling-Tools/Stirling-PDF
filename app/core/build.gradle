@@ -38,13 +38,6 @@ spotless {
 }
 
 dependencies {
-    if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
-        || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
-        && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
-        implementation 'org.openjfx:javafx-controls:21'
-        implementation 'org.openjfx:javafx-swing:21'
-    }
-
     if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
         || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
         && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
@@ -115,19 +108,8 @@ sourceSets {
         resources {
             srcDirs += ['../configs']
         }
-        java {
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-
-        }
     }
     test {
-        java {
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-        }
     }
 
 }

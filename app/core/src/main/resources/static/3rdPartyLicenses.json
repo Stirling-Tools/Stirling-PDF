@@ -1597,30 +1597,6 @@
             "moduleLicenseUrl": "http://www.mozilla.org/MPL/2.0/index.txt"
         },
         {
-            "moduleName": "org.openjfx:javafx-base",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
-        },
-        {
-            "moduleName": "org.openjfx:javafx-controls",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
-        },
-        {
-            "moduleName": "org.openjfx:javafx-graphics",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
-        },
-        {
-            "moduleName": "org.openjfx:javafx-swing",
-            "moduleVersion": "21",
-            "moduleLicense": "GPLv2+CE",
-            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
-        },
-        {
             "moduleName": "org.opensaml:opensaml-core",
             "moduleVersion": "4.3.2",
             "moduleLicense": "The Apache Software License, Version 2.0",

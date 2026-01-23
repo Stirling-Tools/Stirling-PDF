@@ -1,7 +1,7 @@
 use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
 use std::sync::Mutex;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use crate::utils::add_log;
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 
@@ -126,6 +126,45 @@ fn normalize_path(path: &PathBuf) -> PathBuf {
     }
 }
 
+fn migrate_legacy_workspace(legacy_dir: &PathBuf, target_root: &PathBuf) -> std::io::Result<()> {
+    for entry in std::fs::read_dir(legacy_dir)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let src_path = entry.path();
+        let dest_path = target_root.join(entry.file_name());
+
+        if file_type.is_dir() {
+            copy_dir_recursive(&src_path, &dest_path)?;
+        } else if file_type.is_file() {
+            if let Some(parent) = dest_path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::copy(&src_path, &dest_path)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn copy_dir_recursive(src: &Path, dest: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(dest)?;
+
+    for entry in std::fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let src_path = entry.path();
+        let dest_path = dest.join(entry.file_name());
+
+        if file_type.is_dir() {
+            copy_dir_recursive(&src_path, &dest_path)?;
+        } else if file_type.is_file() {
+            std::fs::copy(&src_path, &dest_path)?;
+        }
+    }
+
+    Ok(())
+}
+
 // Create, configure and run the Java command to run Stirling-PDF JAR
 fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &PathBuf) -> Result<(), String> {
     // Get platform-specific application data directory for Tauri mode
@@ -143,13 +182,27 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Create subdirectories for different purposes
     let config_dir = app_data_dir.join("configs");
     let log_dir = app_data_dir.join("logs");
-    let work_dir = app_data_dir.join("workspace");
+    let work_dir = app_data_dir.clone();
+    let legacy_work_dir = app_data_dir.join("workspace");
 
     // Create all necessary directories
     std::fs::create_dir_all(&app_data_dir).ok();
     std::fs::create_dir_all(&log_dir).ok();
     std::fs::create_dir_all(&work_dir).ok();
     std::fs::create_dir_all(&config_dir).ok();
+
+    // Migrate legacy workspace content into the app data root before launch.
+    if legacy_work_dir.exists() {
+        add_log(format!("📦 Migrating legacy workspace from {}", legacy_work_dir.display()));
+        if let Err(err) = migrate_legacy_workspace(&legacy_work_dir, &app_data_dir) {
+            add_log(format!("⚠️ Failed to migrate legacy workspace: {}", err));
+        } else {
+            match std::fs::remove_dir_all(&legacy_work_dir) {
+                Ok(_) => add_log("✅ Removed legacy workspace directory after migration".to_string()),
+                Err(err) => add_log(format!("⚠️ Failed to remove legacy workspace: {}", err)),
+            }
+        }
+    }
 
     add_log(format!("📁 App data directory: {}", app_data_dir.display()));
     add_log(format!("📁 Log directory: {}", log_dir.display()));
@@ -162,7 +215,6 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     let java_options = vec![
         "-Xmx2g",
         "-DBROWSER_OPEN=false",
-        "-DSTIRLING_PDF_DESKTOP_UI=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
