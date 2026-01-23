@@ -117,21 +117,25 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             if (reconstructedAuth.isPresent()) {
                 Saml2Authentication samlAuth = reconstructedAuth.get();
 
-                    if (samlLogoutHandler != null) {
-                        try {
-                            samlLogoutHandler.onLogoutSuccess(request, response, samlAuth);
-                        } catch (Exception e) {
-                            log.error("SP-initiated SLO failed, falling back to local logout", e);
-                            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                        }
-                    } else {
-                        log.warn(
-                                "SAML SLO enabled but handler not configured, performing local logout only");
-                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                if (samlLogoutHandler != null) {
+                    try {
+                        samlLogoutHandler.onLogoutSuccess(request, response, samlAuth);
+                        return;
+                    } catch (Exception e) {
+                        log.error("SP-initiated SLO failed, falling back to local logout", e);
                     }
+                } else {
+                    log.warn(
+                            "SAML SLO enabled but handler not configured, performing local logout only");
                 }
             }
         }
+        // Fall through to local logout for all cases:
+        // - SLO disabled
+        // - SLO enabled but reconstruction failed
+        // - SLO enabled but handler not configured
+        // - SLO failed with exception
+        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
     }
 
     /**
