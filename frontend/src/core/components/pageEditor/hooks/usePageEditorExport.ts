@@ -9,6 +9,7 @@ import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
 import { FileId } from "@app/types/file";
 import { PDFDocument } from "@app/types/pageEditor";
+import { isTauri } from "@tauri-apps/api/core";
 
 type FileActions = ReturnType<typeof useFileActions>["actions"];
 type FileSelectors = ReturnType<typeof useFileState>["selectors"];
@@ -68,6 +69,23 @@ export const usePageEditorExport = ({
   setExportLoading,
   setSplitPositions,
 }: UsePageEditorExportParams) => {
+  const saveBlobToLocalPath = useCallback(async (blob: Blob, filePath?: string): Promise<boolean> => {
+    if (!filePath || !isTauri()) {
+      return false;
+    }
+
+    const { writeFile } = await import("@tauri-apps/plugin-fs");
+
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      await writeFile(filePath, new Uint8Array(arrayBuffer));
+      return true;
+    } catch (error) {
+      console.error("[PageEditor] Failed to save file to local path:", error);
+      return false;
+    }
+  }, []);
+
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
     const sourceFiles = new Map<FileId, File>();
 
@@ -144,7 +162,13 @@ export const usePageEditorExport = ({
             { selectedOnly: true, filename: exportFilename }
           );
 
-      pdfExportService.downloadFile(result.blob, result.filename);
+      const selectedFileId = selectedFileIds.length === 1 ? selectedFileIds[0] : null;
+      const selectedStub = selectedFileId ? selectors.getStirlingFileStub(selectedFileId) : null;
+      const savedToLocalPath = await saveBlobToLocalPath(result.blob, selectedStub?.localFilePath);
+
+      if (!savedToLocalPath) {
+        pdfExportService.downloadFile(result.blob, result.filename);
+      }
       setHasUnsavedChanges(false);
       setSplitPositions(new Set());
       setExportLoading(false);
@@ -158,6 +182,9 @@ export const usePageEditorExport = ({
     splitPositions,
     getSourceFiles,
     getExportFilename,
+    selectedFileIds,
+    selectors,
+    saveBlobToLocalPath,
     setHasUnsavedChanges,
     setExportLoading,
   ]);
@@ -207,7 +234,13 @@ export const usePageEditorExport = ({
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
         const file = files[0];
-        pdfExportService.downloadFile(file, file.name);
+        const selectedFileId = selectedFileIds.length === 1 ? selectedFileIds[0] : null;
+        const selectedStub = selectedFileId ? selectors.getStirlingFileStub(selectedFileId) : null;
+        const savedToLocalPath = await saveBlobToLocalPath(file, selectedStub?.localFilePath);
+
+        if (!savedToLocalPath) {
+          pdfExportService.downloadFile(file, file.name);
+        }
       }
 
       setHasUnsavedChanges(false);
@@ -222,6 +255,9 @@ export const usePageEditorExport = ({
     splitPositions,
     getSourceFiles,
     getExportFilename,
+    selectedFileIds,
+    selectors,
+    saveBlobToLocalPath,
     setHasUnsavedChanges,
     setExportLoading,
   ]);
