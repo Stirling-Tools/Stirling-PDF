@@ -165,10 +165,10 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',
-'pdfx': 'pdf-to-pdfa',  // PDF/X uses the same endpoint as PDF/A
-'cbr': 'pdf-to-cbr',
-'cbz': 'pdf-to-cbz',
-'epub': 'pdf-to-epub', 'azw3': 'pdf-to-epub'
+    'pdfx': 'pdf-to-pdfa',  // PDF/X uses the same endpoint as PDF/A
+    'cbr': 'pdf-to-cbr',
+    'cbz': 'pdf-to-cbz',
+    'epub': 'pdf-to-epub', 'azw3': 'pdf-to-epub'
   },
   'cbz': { 'pdf': 'cbz-to-pdf' },
   'docx': { 'pdf': 'file-to-pdf' }, 'doc': { 'pdf': 'file-to-pdf' }, 'odt': { 'pdf': 'file-to-pdf' },
