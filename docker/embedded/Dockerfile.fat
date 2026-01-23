@@ -32,7 +32,6 @@ COPY . .
 
 # Build JAR with embedded frontend (includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Stage 2: Runtime image based on Debian stable-slim
