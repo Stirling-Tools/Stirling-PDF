@@ -20,7 +20,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +27,6 @@ import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.UrlUtils;
 
 @Slf4j
 @EnableScheduling
@@ -59,19 +57,6 @@ public class SPDFApplication {
         SpringApplication app = new SpringApplication(SPDFApplication.class);
 
         Properties props = new Properties();
-
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            System.setProperty("java.awt.headless", "false");
-            app.setHeadless(false);
-            props.put("java.awt.headless", "false");
-            props.put("spring.main.web-application-type", "servlet");
-
-            int desiredPort = 8080;
-            String port = UrlUtils.findAvailablePort(desiredPort);
-            props.put("server.port", port);
-            System.setProperty("server.port", port);
-            log.info("Desktop UI mode: Using port {}", port);
-        }
 
         app.setAdditionalProfiles(getActiveProfile(args));
 
@@ -153,13 +138,6 @@ public class SPDFApplication {
                     "Running in Tauri mode. Parent process PID: {}",
                     parentPid != null ? parentPid : "not set");
         }
-        // Desktop UI initialization removed - webBrowser dependency eliminated
-        // Keep backwards compatibility for STIRLING_PDF_DESKTOP_UI system property
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            log.info("Desktop UI mode enabled, but WebBrowser functionality has been removed");
-            // webBrowser.initWebUI(url); // Removed - desktop UI eliminated
-        }
-
         // Standard browser opening logic
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
@@ -190,14 +168,6 @@ public class SPDFApplication {
         } else {
             SPDFApplication.serverPortStatic = port;
         }
-    }
-
-    @PreDestroy
-    public void cleanup() {
-        // webBrowser cleanup removed - desktop UI eliminated
-        // if (webBrowser != null) {
-        //     webBrowser.cleanup();
-        // }
     }
 
     @EventListener

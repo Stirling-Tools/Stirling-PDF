@@ -38,7 +38,7 @@ const FREE_LICENSE_INFO: LicenseInfo = {
 
 const BASE_NO_LOGIN_CONFIG: AppConfig = {
   enableAnalytics: true,
-  appVersion: '2.2.1',
+  appVersion: '2.3.1',
   serverCertificateEnabled: false,
   enableAlphaFunctionality: false,
   serverPort: 8080,

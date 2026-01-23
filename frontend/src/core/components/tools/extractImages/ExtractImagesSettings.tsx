@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Stack, Select, Checkbox } from '@mantine/core';
 import { ExtractImagesParameters } from '@app/hooks/tools/extractImages/useExtractImagesParameters';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ExtractImagesSettingsProps {
   parameters: ExtractImagesParameters;
@@ -31,6 +32,7 @@ const ExtractImagesSettings = ({
           { value: 'gif', label: 'GIF' },
         ]}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       <Checkbox

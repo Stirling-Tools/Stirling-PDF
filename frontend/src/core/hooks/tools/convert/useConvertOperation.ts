@@ -15,10 +15,12 @@ export const shouldProcessFilesSeparately = (
     // Image to PDF with combineImages = false
     ((isImageFormat(parameters.fromExtension) || parameters.fromExtension === 'image') &&
      parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
+    // SVG to PDF with combineIntoSinglePdf = false
+    (parameters.fromExtension === 'svg' && parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
     // PDF to image conversions (each PDF should generate its own image file)
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
-    // PDF to PDF/A conversions (each PDF should be processed separately)
-    (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
+    // PDF to PDF/A and PDF/X conversions (each PDF should be processed separately)
+    (parameters.fromExtension === 'pdf' && (parameters.toExtension === 'pdfa' || parameters.toExtension === 'pdfx')) ||
     // PDF to text-like formats should be one output per input
     (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
   // PDF to CBR conversions (each PDF should generate its own archive)
@@ -44,7 +46,7 @@ export const shouldProcessFilesSeparately = (
 // Static function that can be used by both the hook and automation executor
 export const buildConvertFormData = (parameters: ConvertParameters, selectedFiles: File[]): FormData => {
   const formData = new FormData();
-  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions, epubOptions } = parameters;
+  const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions, pdfxOptions, cbrOptions, pdfToCbrOptions, cbzOptions, cbzOutputOptions, ebookOptions, epubOptions } = parameters;
 
   selectedFiles.forEach(file => {
     formData.append("fileInput", file);
@@ -66,6 +68,8 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fitOption", imageOptions.fitOption);
     formData.append("colorType", imageOptions.colorType);
     formData.append("autoRotate", imageOptions.autoRotate.toString());
+  } else if (fromExtension === 'svg' && toExtension === 'pdf') {
+    formData.append("combineIntoSinglePdf", imageOptions.combineImages.toString());
   } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
     formData.append("zoom", htmlOptions.zoomLevel.toString());
   } else if ((fromExtension === 'eml' || fromExtension === 'msg') && toExtension === 'pdf') {
@@ -75,6 +79,9 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("includeAllRecipients", emailOptions.includeAllRecipients.toString());
   } else if (fromExtension === 'pdf' && toExtension === 'pdfa') {
     formData.append("outputFormat", pdfaOptions.outputFormat);
+  } else if (fromExtension === 'pdf' && toExtension === 'pdfx') {
+    // Use PDF/A endpoint with PDF/X format parameter
+    formData.append("outputFormat", pdfxOptions?.outputFormat || 'pdfx');
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
     formData.append("pageNumbers", "all");
   } else if (fromExtension === 'cbr' && toExtension === 'pdf') {
@@ -108,7 +115,8 @@ export const createFileFromResponse = (
 ): File => {
   const originalName = originalFileName.split('.')[0];
 
-  if (targetExtension == 'pdfa') {
+  // Map both pdfa and pdfx to pdf since they both result in PDF files
+  if (targetExtension == 'pdfa' || targetExtension == 'pdfx') {
     targetExtension = 'pdf';
   }
 
@@ -123,14 +131,21 @@ export const convertProcessor = async (
   selectedFiles: File[]
 ): Promise<CustomProcessorResult> => {
   const processedFiles: File[] = [];
-  const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
+
+  // Map PDF/X to use PDF/A endpoint
+  const actualToExtension = parameters.toExtension === 'pdfx' ? 'pdfa' : parameters.toExtension;
+  const endpoint = getEndpointUrl(parameters.fromExtension, actualToExtension);
 
   if (!endpoint) {
     throw new Error('Unsupported conversion format');
   }
 
   // Convert-specific routing logic: decide batch vs individual processing
-  const isSeparateProcessing = shouldProcessFilesSeparately(selectedFiles, parameters);
+  // For PDF/X, we want to treat it similar to PDF/A (separate processing)
+  const isSeparateProcessing = shouldProcessFilesSeparately(selectedFiles, {
+    ...parameters,
+    toExtension: actualToExtension  // Use the mapped extension for decision logic
+  });
 
   if (isSeparateProcessing) {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
@@ -139,7 +154,7 @@ export const convertProcessor = async (
         const formData = buildConvertFormData(parameters, [file]);
         const response = await apiClient.post(endpoint, formData, { responseType: 'blob' });
 
-        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, parameters.toExtension);
+        const convertedFile = createFileFromResponse(response.data, response.headers, file.name, actualToExtension === 'pdfa' ? 'pdfx' : parameters.toExtension);
 
         processedFiles.push(convertedFile);
       } catch (error) {
@@ -155,7 +170,7 @@ export const convertProcessor = async (
       ? selectedFiles[0].name
       : 'converted_files';
 
-    const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, parameters.toExtension);
+    const convertedFile = createFileFromResponse(response.data, response.headers, baseFilename, actualToExtension === 'pdfa' ? 'pdfx' : parameters.toExtension);
     processedFiles.push(convertedFile);
   }
 

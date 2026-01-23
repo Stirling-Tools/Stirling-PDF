@@ -17,9 +17,11 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
 import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
+import ConvertFromSvgSettings from "@app/components/tools/convert/ConvertFromSvgSettings";
 import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
@@ -146,6 +148,9 @@ const ConvertSettings = ({
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
     });
+    onParameterChange('pdfxOptions', {
+      outputFormat: 'pdfx',
+    });
     onParameterChange('cbrOptions', {
       optimizeForEbook: false,
     });
@@ -230,6 +235,9 @@ const ConvertSettings = ({
     });
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
+    });
+    onParameterChange('pdfxOptions', {
+      outputFormat: 'pdfx',
     });
     onParameterChange('cbrOptions', {
       optimizeForEbook: false,
@@ -331,6 +339,18 @@ const ConvertSettings = ({
         </>
       ) : null}
 
+      {/* SVG to PDF options */}
+      {parameters.fromExtension === 'svg' && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromSvgSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
       {/* Web to PDF options */}
       {((isWebFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
        (parameters.isSmartDetection && parameters.smartDetectionType === 'web')) ? (
@@ -385,6 +405,19 @@ const ConvertSettings = ({
         <>
           <Divider />
           <ConvertToPdfaSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            selectedFiles={selectedFiles}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to PDF/X options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfx' && (
+        <>
+          <Divider />
+          <ConvertToPdfxSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
             selectedFiles={selectedFiles}

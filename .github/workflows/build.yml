@@ -36,7 +36,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Check for file changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
@@ -60,7 +60,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
@@ -68,9 +68,17 @@ jobs:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build -PnoSpotless
+        run: ./gradlew build -PnoSpotless
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
       - name: Check Test Reports Exist
@@ -127,7 +135,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
@@ -135,9 +143,17 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Upload OpenAPI Documentation
@@ -156,7 +172,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Set up Node.js
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
@@ -180,6 +196,104 @@ jobs:
           path: frontend/dist/
           retention-days: 3
 
+  sync-versions:
+    if: needs.files-changed.outputs.build == 'true'
+    needs: [files-changed, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup GitHub App Bot
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
+      - name: Run version sync
+        run: ./gradlew syncAppVersion --build-cache
+
+      - name: Check if version files have changed
+        id: git-check
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post comment on PR
+        if: steps.git-check.outputs.changes == 'true' && github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { GITHUB_REPOSITORY } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const issueNumber = context.issue.number;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: issueNumber
+            });
+
+            const comment = comments.data.find(c => c.body.includes("## ⚠️ Version Differences"));
+
+            const commentBody = `## ⚠️ Version Differences
+
+            The versions in the following files do not match the version defined in \`build.gradle\`.
+
+            Running \`./gradlew syncAppVersion\` or \`./gradlew build\` will automatically update these files:
+
+            \`frontend/src-tauri/tauri.conf.json\`, \`frontend/src/proprietary/testing/serverExperienceSimulations.ts\`, \`frontend/src/core/testing/serverExperienceSimulations.ts\`
+
+            Please run \`./gradlew syncAppVersion\` or \`./gradlew build\`!`;
+
+            // Only update or create comments by the action user
+            const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
+
+            if (comment && comment.user.login === expectedActor) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: repoOwner,
+                repo: repoName,
+                comment_id: comment.id,
+                body: commentBody
+              });
+              console.log("Updated existing comment.");
+            } else if (!comment) {
+              // Create new comment if no existing comment is found
+              await github.rest.issues.createComment({
+                owner: repoOwner,
+                repo: repoName,
+                issue_number: issueNumber,
+                body: commentBody
+              });
+            } else {
+              console.log("Comment update attempt denied. Actor does not match.");
+            }
+
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
     needs: [files-changed, build]
@@ -191,7 +305,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
@@ -199,8 +313,17 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
       - name: check the licenses for compatibility
-        run: ./gradlew clean checkLicense
+        run: ./gradlew checkLicense
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: FAILED - check the licenses for compatibility
         if: failure()
@@ -236,13 +359,18 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           java-version: "21"
           distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
@@ -269,6 +397,10 @@ jobs:
           chmod +x ./testing/test.sh
           chmod +x ./testing/test_disabledEndpoints.sh
           ./testing/test.sh
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
@@ -291,7 +423,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Free disk space on runner
         run: |
@@ -306,9 +438,17 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
       - name: Build application
-        run: ./gradlew clean build
+        run: ./gradlew build
         env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
