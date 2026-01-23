@@ -7,6 +7,7 @@ import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedA
 import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
 import { iconMap } from '@app/components/tools/automate/iconMap';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import { downloadFolderScanningConfig } from '@app/utils/automationConverter';
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -58,6 +59,7 @@ export default function AutomationSelection({
             onClick={() => onRun(automation)}
             showMenu={true}
             onEdit={() => onEdit(automation)}
+            onExport={() => downloadFolderScanningConfig(automation)}
             onDelete={() => onDelete(automation)}
             toolRegistry={toolRegistry}
           />
