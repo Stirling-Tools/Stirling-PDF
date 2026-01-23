@@ -479,15 +479,22 @@ public class ConvertPDFToPDFA {
         command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
         command.add("-sDEVICE=pdfwrite");
         command.add("-sColorConversionStrategy=RGB");
-        command.add("-dProcessColorModel=/DeviceRGB");
         command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
         command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=false"); // Embed complete fonts to avoid incomplete glyphs
+        command.add("-dSubsetFonts=true");
         command.add("-dCompressFonts=true");
         command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
-        command.add("-dPDFSETTINGS=/prepress");
+
+        // Explicitly tune downsampling/compression for high-quality print
+        command.add("-dColorImageDownsampleType=/Bicubic");
+        command.add("-dColorImageResolution=300");
+        command.add("-dGrayImageDownsampleType=/Bicubic");
+        command.add("-dGrayImageResolution=300");
+        command.add("-dMonoImageDownsampleType=/Bicubic");
+        command.add("-dMonoImageResolution=1200");
+
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
         command.add("-dNOOUTERSAVE");
@@ -2445,9 +2452,7 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X_1("PDF/X-1", "_PDFX-1.pdf", "1.3", "2001", "pdfx-1", "pdfx"),
-        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", "1.3", "2003", "pdfx-3"),
-        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", "1.4", "2008", "pdfx-4");
+        PDF_X("PDF/X", "_PDFX.pdf", "1.6", "2008", "pdfx");
 
         private final String displayName;
         private final String suffix;
@@ -2473,7 +2478,7 @@ public class ConvertPDFToPDFA {
 
         static PdfXProfile fromRequest(String requestToken) {
             if (requestToken == null) {
-                return PDF_X_4;
+                return PDF_X;
             }
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfXProfile> match =
@@ -2481,7 +2486,7 @@ public class ConvertPDFToPDFA {
                             .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
-            return match.orElse(PDF_X_4);
+            return match.orElse(PDF_X);
         }
 
         String outputSuffix() {
