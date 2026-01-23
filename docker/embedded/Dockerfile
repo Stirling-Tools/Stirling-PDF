@@ -32,15 +32,17 @@ COPY . .
 
 # Build JAR with embedded frontend (includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Stage 2: Runtime image based on Debian stable-slim
 # Contains Java runtime + LibreOffice + Calibre + all PDF tools
-FROM debian:stable-slim@sha256:1c25564b03942d874bf6a2b71f2062b71af8bc1475aa873c523e6f7c8fa29e60
+FROM debian:stable-slim@sha256:ed542b2d269ff08139fc5ab8c762efe8c8986b564a423d5241a5ce9fb09b6c08
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
 
 ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
@@ -49,7 +51,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
     openjdk-21-jre-headless \
     ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
-    libreoffice-nogui libreoffice-java-common \
+    fonts-dejavu \
+    fonts-liberation fonts-liberation2 \
+    fonts-crosextra-caladea fonts-crosextra-carlito \
+    fonts-linuxlibertine \
+    fonts-noto-core fonts-noto-cjk fonts-noto-mono fonts-noto-ui-core \
+    fonts-noto-color-emoji \
+    ttf-wqy-zenhei \
+    fonts-arphic-ukai fonts-arphic-uming \
     python3 python3-venv python3-uno \
     tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
     tesseract-ocr-por tesseract-ocr-chi-sim \
@@ -74,6 +83,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get purge -y xz-utils gpgv xdg-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    . /etc/os-release; \
+    echo "deb http://deb.debian.org/debian ${VERSION_CODENAME}-backports main" > /etc/apt/sources.list.d/backports.list; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -t ${VERSION_CODENAME}-backports \
+        libreoffice libreoffice-java-common; \
+    rm -rf /var/lib/apt/lists/*; \
+    libreoffice --version
 
 # Make ebook-convert available in PATH
 RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
@@ -140,6 +158,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     PGID=${PGID} \
     UMASK=022 \
     UNO_PATH=/usr/lib/libreoffice/program \
+    LIBREOFFICE_BIN_PATH=/usr/lib/libreoffice/program/soffice.bin \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
@@ -153,8 +172,9 @@ RUN python3 -m venv /opt/venv --system-site-packages \
     && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
 
 # Separate venv for unoserver (keeps it isolated)
+ARG UNOSERVER_VERSION=3.6
 RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir unoserver
+    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}"
 
 # Make unoserver tools available in main venv PATH
 RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \

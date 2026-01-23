@@ -15,6 +15,8 @@ export const shouldProcessFilesSeparately = (
     // Image to PDF with combineImages = false
     ((isImageFormat(parameters.fromExtension) || parameters.fromExtension === 'image') &&
      parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
+    // SVG to PDF with combineIntoSinglePdf = false
+    (parameters.fromExtension === 'svg' && parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
     // PDF to image conversions (each PDF should generate its own image file)
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
     // PDF to PDF/A conversions (each PDF should be processed separately)
@@ -66,6 +68,8 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("fitOption", imageOptions.fitOption);
     formData.append("colorType", imageOptions.colorType);
     formData.append("autoRotate", imageOptions.autoRotate.toString());
+  } else if (fromExtension === 'svg' && toExtension === 'pdf') {
+    formData.append("combineIntoSinglePdf", imageOptions.combineImages.toString());
   } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
     formData.append("zoom", htmlOptions.zoomLevel.toString());
   } else if ((fromExtension === 'eml' || fromExtension === 'msg') && toExtension === 'pdf') {

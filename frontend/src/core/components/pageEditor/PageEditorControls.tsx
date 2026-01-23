@@ -102,7 +102,7 @@ const PageEditorControls = ({
   return (
     <div
       style={{
-        position: 'absolute',
+        position: 'sticky',
         left: 0,
         right: 0,
         bottom: 0,
