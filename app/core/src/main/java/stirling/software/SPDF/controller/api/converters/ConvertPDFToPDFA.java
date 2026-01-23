@@ -479,15 +479,22 @@ public class ConvertPDFToPDFA {
         command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
         command.add("-sDEVICE=pdfwrite");
         command.add("-sColorConversionStrategy=RGB");
-        command.add("-dProcessColorModel=/DeviceRGB");
         command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
         command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=false"); // Embed complete fonts to avoid incomplete glyphs
+        command.add("-dSubsetFonts=true");
         command.add("-dCompressFonts=true");
         command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
-        command.add("-dPDFSETTINGS=/prepress");
+
+        // Explicitly tune downsampling/compression for high-quality print
+        command.add("-dColorImageDownsampleType=/Bicubic");
+        command.add("-dColorImageResolution=300");
+        command.add("-dGrayImageDownsampleType=/Bicubic");
+        command.add("-dGrayImageResolution=300");
+        command.add("-dMonoImageDownsampleType=/Bicubic");
+        command.add("-dMonoImageResolution=1200");
+
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
         command.add("-dNOOUTERSAVE");
@@ -2445,7 +2452,7 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "_PDFX.pdf", "1.4", "2008", "pdfx");
+        PDF_X("PDF/X", "_PDFX.pdf", "1.6", "2008", "pdfx");
 
         private final String displayName;
         private final String suffix;
