@@ -1,12 +1,11 @@
-import React from 'react';
-import {Badge, Group, Stack, Text, ThemeIcon} from '@mantine/core';
+import React, { useMemo } from 'react';
+import { Badge, Group, Stack, Text, ThemeIcon, Paper, Tooltip, Divider } from '@mantine/core';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import WarningIcon from '@mui/icons-material/Warning';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
 import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
-import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
-import type {PdfCompliance, PdfComplianceSummary} from '@app/types/getPdfInfo';
-import {useTranslation} from 'react-i18next';
+import type { PdfCompliance, PdfComplianceSummary } from '@app/types/getPdfInfo';
+import { useTranslation } from 'react-i18next';
 
 interface ComplianceSectionProps {
   anchorId: string;
@@ -14,169 +13,285 @@ interface ComplianceSectionProps {
   legacyCompliance?: PdfCompliance | null;
 }
 
-// Helper to get the display label for a compliance key
-const getComplianceLabel = (key: string): string => {
-  switch (key) {
-    case 'IsPDF/SECCompliant':
-      return 'SEC (EDGAR)';
-    case 'IsPDF/UACompliant':
-      return 'PDF/UA (Accessibility)';
-    case 'IsPDF/BCompliant':
-      return 'PDF/A Level B';
-    default:
-      return key.replace('Is', '').replace('Compliant', '');
+interface ComplianceCheckResult {
+  /** Display name for the standard (e.g., "PDF/A-3B", "PDF/UA-1", "SEC (EDGAR)") */
+  displayName: string;
+  /** Category for grouping (e.g., "PDF/A", "PDF/UA", "SEC") */
+  category: string;
+  /** Whether the PDF is compliant with this standard */
+  isCompliant: boolean;
+  /** Human-readable summary from the verification */
+  summary: string;
+  /** Original standard identifier from backend */
+  standardId: string;
+  /** Sort order for display */
+  sortOrder: number;
+}
+
+const parseStandardDisplayName = (standardId: string): { displayName: string; category: string; sortOrder: number } => {
+  const id = standardId.toLowerCase().trim();
+
+  // PDF/A variants: pdfa-1a, pdfa-1b, pdfa-2a, pdfa-2b, pdfa-2u, pdfa-3a, pdfa-3b, pdfa-3u, pdfa-4, etc.
+  const pdfaMatch = id.match(/^pdf[_-]?a[_-]?(\d+)([abuf])?$/i);
+  if (pdfaMatch) {
+    const version = pdfaMatch[1];
+    const level = pdfaMatch[2]?.toUpperCase() || '';
+    return {
+      displayName: `PDF/A-${version}${level}`,
+      category: 'PDF/A',
+      sortOrder: 10 + parseInt(version) * 10 + (level === 'A' ? 1 : level === 'B' ? 2 : level === 'U' ? 3 : 0),
+    };
   }
+
+  // PDF/UA variants: pdfua-1, pdfua-2, etc.
+  const pdfuaMatch = id.match(/^pdf[_-]?ua[_-]?(\d+)?$/i);
+  if (pdfuaMatch) {
+    const version = pdfuaMatch[1] || '1';
+    return {
+      displayName: `PDF/UA-${version}`,
+      category: 'PDF/UA',
+      sortOrder: 200 + parseInt(version),
+    };
+  }
+
+  // PDF/X variants
+  const pdfxMatch = id.match(/^pdf[_-]?x[_-]?(.+)?$/i);
+  if (pdfxMatch) {
+    const version = pdfxMatch[1]?.toUpperCase() || '';
+    return {
+      displayName: `PDF/X${version ? `-${version}` : ''}`,
+      category: 'PDF/X',
+      sortOrder: 300,
+    };
+  }
+
+  // PDF/E variants
+  const pdfeMatch = id.match(/^pdf[_-]?e[_-]?(.+)?$/i);
+  if (pdfeMatch) {
+    const version = pdfeMatch[1]?.toUpperCase() || '';
+    return {
+      displayName: `PDF/E${version ? `-${version}` : ''}`,
+      category: 'PDF/E',
+      sortOrder: 400,
+    };
+  }
+
+  // PDF/VT
+  if (id.includes('pdfvt') || id.includes('pdf-vt') || id.includes('pdf_vt')) {
+    return { displayName: 'PDF/VT', category: 'PDF/VT', sortOrder: 500 };
+  }
+
+  // SEC (EDGAR) compliance
+  if (id.includes('sec') || id.includes('edgar')) {
+    return { displayName: 'SEC (EDGAR)', category: 'SEC', sortOrder: 600 };
+  }
+
+  // Not PDF/A indicator
+  if (id === 'not-pdfa' || id === 'not_pdfa') {
+    return { displayName: 'PDF/A Detection', category: 'Detection', sortOrder: 1 };
+  }
+
+  // Fallback: capitalize and format
+  return {
+    displayName: standardId.toUpperCase().replace(/[-_]/g, '/'),
+    category: 'Other',
+    sortOrder: 999,
+  };
 };
 
-// Helper to determine compliance status, with special logic for PDF/A Level B
-const isCompliant = (key: string, legacyCompliance: PdfCompliance, complianceSummary?: PdfComplianceSummary[] | null): boolean => {
-  const isPdfACompliantKey = key === 'IsPDF/ACompliant';
-  const isBCompliantKey = key === 'IsPDF/BCompliant';
-  const conformanceLevel = legacyCompliance['PDF/AConformanceLevel'] as string | undefined;
+const buildComplianceResults = (
+  complianceSummary?: PdfComplianceSummary[] | null,
+  legacyCompliance?: PdfCompliance | null
+): ComplianceCheckResult[] => {
+  const results: ComplianceCheckResult[] = [];
+  const processedCategories = new Set<string>();
 
-  // Check detailed verification reports for PDF/A compliance
-  const hasPdfACompliance = complianceSummary?.some(item =>
-    item.Compliant &&
-    (item.Standard.toLowerCase().includes('pdfa-') ||
-      item.Standard.toLowerCase().includes('pdf_a'))
-  );
+  if (complianceSummary && complianceSummary.length > 0) {
+    for (const item of complianceSummary) {
+      // Skip the "not-pdfa" detection marker - it's informational, not a compliance check
+      if (item.Standard.toLowerCase() === 'not-pdfa') {
+        continue;
+      }
 
-  // Check if any detailed report shows Level B compliance (e.g., "pdfa-3b")
-  const hasLevelBCompliance = complianceSummary?.some(item =>
-    item.Compliant &&
-    item.Standard.toLowerCase().match(/pdfa?[-_]?\d+b/)
-  );
+      const { displayName, category, sortOrder } = parseStandardDisplayName(item.Standard);
+      processedCategories.add(category);
 
-  // If PDF/A compliance is asked and we found it in detailed reports, mark as compliant
-  if (isPdfACompliantKey && hasPdfACompliance) {
-    return true;
+      results.push({
+        displayName,
+        category,
+        isCompliant: item.Compliant,
+        summary: item.Summary,
+        standardId: item.Standard,
+        sortOrder,
+      });
+    }
   }
 
-  // If Level B compliance is asked and we found it in detailed reports, mark as compliant
-  if (isBCompliantKey && hasLevelBCompliance) {
-    return true;
+  // Then, add SEC compliance from legacy data if not already present
+  // SEC compliance is checked separately by PDFBox, not VeraPDF
+  if (legacyCompliance && 'IsPDF/SECCompliant' in legacyCompliance && !processedCategories.has('SEC')) {
+    const isSecCompliant = legacyCompliance['IsPDF/SECCompliant'] as boolean;
+    results.push({
+      displayName: 'SEC (EDGAR)',
+      category: 'SEC',
+      isCompliant: isSecCompliant,
+      summary: isSecCompliant
+        ? 'Document meets SEC EDGAR filing requirements'
+        : 'Document does not meet SEC EDGAR filing requirements',
+      standardId: 'sec-edgar',
+      sortOrder: 600,
+    });
   }
 
-  // Legacy logic: check conformance level for Level B
-  if (isBCompliantKey && !legacyCompliance[key] && conformanceLevel) {
-    // PDF/A-1B, PDF/A-2B, etc., all count as "Level B".
-    return conformanceLevel.toUpperCase().endsWith('B');
-  }
+  // Sort by sortOrder for consistent display
+  results.sort((a, b) => a.sortOrder - b.sortOrder);
 
-  return legacyCompliance[key] as boolean;
+  return results;
 };
 
+const getConformanceLevel = (results: ComplianceCheckResult[]): string | null => {
+  const passingPdfA = results
+    .filter(r => r.category === 'PDF/A' && r.isCompliant)
+    .sort((a, b) => b.sortOrder - a.sortOrder);
 
-const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complianceSummary, legacyCompliance }) => {
+  if (passingPdfA.length > 0) {
+    return passingPdfA[0].displayName;
+  }
+
+  return null;
+};
+
+const ComplianceRow: React.FC<{
+  result: ComplianceCheckResult;
+}> = ({ result }) => {
+  const { t } = useTranslation();
+  const Icon = result.isCompliant ? CheckIcon : CloseIcon;
+  const color = result.isCompliant ? 'teal' : 'red';
+  const statusText = result.isCompliant
+    ? t('getPdfInfo.compliance.passed', 'Passed')
+    : t('getPdfInfo.compliance.failed', 'Failed');
+
+  return (
+    <Paper
+      p="sm"
+      radius="sm"
+      withBorder
+      style={{
+        borderColor: `var(--mantine-color-${color}-6)`,
+      }}
+    >
+      <Group justify="space-between" wrap="nowrap">
+        <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+          <ThemeIcon color={color} variant="light" size="lg" radius="xl">
+            <Icon style={{ fontSize: '1.2rem' }} />
+          </ThemeIcon>
+          <Stack gap={2} style={{ minWidth: 0 }}>
+            <Text size="sm" fw={600} truncate>
+              {result.displayName}
+            </Text>
+            <Tooltip label={result.summary} multiline maw={400} withArrow>
+              <Text size="xs" c="dimmed" lineClamp={1} style={{ cursor: 'help' }}>
+                {result.summary}
+              </Text>
+            </Tooltip>
+          </Stack>
+        </Group>
+        <Badge
+          color={color}
+          variant="light"
+          size="md"
+          leftSection={<Icon style={{ width: 12, height: 12 }} />}
+        >
+          {statusText}
+        </Badge>
+      </Group>
+    </Paper>
+  );
+};
+
+const EmptyComplianceState: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <Paper p="md" radius="sm" withBorder>
+      <Group gap="sm">
+        <ThemeIcon color="gray" variant="light" size="lg" radius="xl">
+          <InfoIcon style={{ fontSize: '1.2rem' }} />
+        </ThemeIcon>
+        <Stack gap={2}>
+          <Text size="sm" fw={500}>
+            {t('getPdfInfo.compliance.noVerification', 'No Verification Performed')}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t('getPdfInfo.compliance.noVerificationDesc', 'PDF standards compliance was not verified for this document.')}
+          </Text>
+        </Stack>
+      </Group>
+    </Paper>
+  );
+};
+
+const ComplianceSection: React.FC<ComplianceSectionProps> = ({
+  anchorId,
+  complianceSummary,
+  legacyCompliance,
+}) => {
   const { t } = useTranslation();
 
-  const getContent = () => {
-    // 1. Check for specific boolean flags (Classic/Detailed view)
-    const specificKeys = [
-      'IsPDF/ACompliant',
-      'IsPDF/UACompliant',
-      'IsPDF/BCompliant',
-      'IsPDF/SECCompliant'
-    ];
+  const complianceResults = useMemo(
+    () => buildComplianceResults(complianceSummary, legacyCompliance),
+    [complianceSummary, legacyCompliance]
+  );
 
-    const hasSpecificFlags = legacyCompliance && specificKeys.some(k => k in legacyCompliance);
+  const conformanceLevel = useMemo(
+    () => getConformanceLevel(complianceResults),
+    [complianceResults]
+  );
 
-    if (hasSpecificFlags && legacyCompliance) {
-         return (
-             <Stack gap="md">
-                 <Stack gap="xs">
-                     {specificKeys.map(key => {
-                         if (!(key in legacyCompliance!)) return null;
+  const passedCount = complianceResults.filter(r => r.isCompliant).length;
+  const failedCount = complianceResults.filter(r => !r.isCompliant).length;
 
-                         const label = getComplianceLabel(key);
-                       const compliant = isCompliant(key, legacyCompliance!, complianceSummary);
-                         const Icon = compliant ? CheckIcon : CloseIcon;
-                         const color = compliant ? 'teal' : 'orange';
-
-                         return (
-                             <Group key={key} justify="space-between" p="xs" style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
-                                 <Text size="sm" fw={500}>{label}</Text>
-                                 <Badge color={color} variant="light" leftSection={<Icon style={{ width: 14, height: 14, display: 'block' }} />}>
-                                     {compliant ? t('getPdfInfo.compliance.passed', 'Passed') : t('getPdfInfo.compliance.failed', 'Failed')}
-                                 </Badge>
-                             </Group>
-                         );
-                     })}
-                     {legacyCompliance['PDF/AConformanceLevel'] && (
-                         <Group justify="space-between" p="xs">
-                             <Text size="sm" fw={500}>PDF/A Level</Text>
-                             <Badge color="cyan" variant="light">{legacyCompliance['PDF/AConformanceLevel'] as string}</Badge>
-                         </Group>
-                     )}
-                 </Stack>
-
-                 {/* Show detailed VeraPDF summary if available as a sub-section */}
-                 {complianceSummary && complianceSummary.length > 0 && (
-                     <Stack gap="xs">
-                         <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Detailed Verification Reports</Text>
-                         {complianceSummary.map((item, index) => (
-                             <Group key={index} justify="space-between" p="xs" style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 'var(--mantine-radius-sm)' }}>
-                                 <Stack gap={0}>
-                                     <Text size="sm">{item.Standard.toUpperCase()}</Text>
-                                     <Text size="xs" c="dimmed">{item.Summary}</Text>
-                                 </Stack>
-                                 <Badge color={item.Compliant ? 'teal' : (item.Standard === 'not-pdfa' ? 'gray' : 'orange')} variant="light">
-                                     {item.Compliant ? t('getPdfInfo.compliance.compliant', 'Compliant') : t('getPdfInfo.compliance.nonCompliant', 'Non-Compliant')}
-                                 </Badge>
-                             </Group>
-                         ))}
-                     </Stack>
-                 )}
-             </Stack>
-         )
-    }
-
-    if (complianceSummary && complianceSummary.length > 0) {
-      return (
-        <Stack gap="sm">
-          {complianceSummary.map((item, index) => {
-            const isCompliant = item.Compliant;
-            // "not-pdfa" with false means it's not a PDF/A file, effectively.
-            // Or if text is "Not PDF/A", handling that visually.
-            const isNotPdfA = item.Standard === 'not-pdfa';
-
-            let color = isCompliant ? 'teal' : 'orange';
-            let Icon = isCompliant ? CheckIcon : CloseIcon;
-            if (isNotPdfA) {
-               color = 'gray';
-               Icon = WarningIcon;
-            }
-
-            return (
-                <Group key={index} justify="space-between" p="xs" style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 'var(--mantine-radius-sm)' }}>
-                  <Group>
-                    <ThemeIcon color={color} variant="light" size="md">
-                      <Icon style={{ fontSize: '1.1rem' }} />
-                    </ThemeIcon>
-                    <Stack gap={0}>
-                        <Text size="sm" fw={500}>{item.Standard.toUpperCase()}</Text>
-                        <Text size="xs" c="dimmed">{item.Summary}</Text>
-                    </Stack>
-                  </Group>
-                  <Badge color={color} variant="light">
-                    {isNotPdfA
-                        ? t('getPdfInfo.compliance.notDetected', 'Not Detected')
-                        : (isCompliant ? t('getPdfInfo.compliance.passed', 'Passed') : t('getPdfInfo.compliance.failed', 'Failed'))
-                    }
-                  </Badge>
-                </Group>
-            );
-          })}
-        </Stack>
-      );
-    }
-
-    return <KeyValueList obj={legacyCompliance} emptyLabel={t('getPdfInfo.compliance.none', 'No standards detected')} />;
-  };
+  const hasResults = complianceResults.length > 0;
 
   return (
     <SectionBlock title={t('getPdfInfo.sections.compliance', 'Compliance')} anchorId={anchorId}>
-      {getContent()}
+      <Stack gap="md">
+        {/* Summary header when there are results */}
+        {hasResults && (
+          <>
+            <Group justify="space-between" wrap="wrap" gap="xs">
+              <Group gap="xs">
+                {conformanceLevel && (
+                  <Badge color="cyan" variant="light" size="lg">
+                    {conformanceLevel}
+                  </Badge>
+                )}
+                {passedCount > 0 && (
+                  <Badge color="teal" variant="outline" size="sm">
+                    {passedCount} {t('getPdfInfo.compliance.passedCount', 'passed')}
+                  </Badge>
+                )}
+                {failedCount > 0 && (
+                  <Badge color="red" variant="outline" size="sm">
+                    {failedCount} {t('getPdfInfo.compliance.failedCount', 'failed')}
+                  </Badge>
+                )}
+              </Group>
+            </Group>
+            <Divider />
+          </>
+        )}
+
+        {/* Compliance results list */}
+        {hasResults ? (
+          <Stack gap="xs">
+            {complianceResults.map((result, index) => (
+              <ComplianceRow key={`${result.standardId}-${index}`} result={result} />
+            ))}
+          </Stack>
+        ) : (
+          <EmptyComplianceState />
+        )}
+      </Stack>
     </SectionBlock>
   );
 };
