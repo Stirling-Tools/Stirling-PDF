@@ -306,6 +306,7 @@ selectOperation = "Select Operation"
 addOperationButton = "Add operation"
 pipelineHeader = "Pipeline:"
 saveButton = "Download"
+saveForFolderScanning = "Save for Folder Scanning"
 validateButton = "Validate"
 
 [enterpriseEdition]
@@ -5419,6 +5420,7 @@ desc = "Build multi-step workflows by chaining together PDF actions. Ideal for r
 invalidStep = "Invalid step"
 reviewTitle = "Automation Results"
 copyToSaved = "Copy to Saved"
+exportForFolderScanning = "Export for Folder Scanning"
 
 [automate.files]
 placeholder = "Select files to process with this automation"
@@ -5440,6 +5442,7 @@ createTitle = "Create Automation"
 editTitle = "Edit Automation"
 intro = "Automations run tools sequentially. To get started, add tools in the order you want them to run."
 save = "Save Automation"
+exportForFolderScanning = "Export for Folder Scanning"
 
 [automate.creation.name]
 label = "Automation Name"
