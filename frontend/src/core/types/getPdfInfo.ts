@@ -55,16 +55,16 @@ export interface PdfPermissions {
 
 /** Compliance section */
 export interface PdfCompliance {
-  'IsPDF/ACompliant'?: boolean;
-  'PDF/AConformanceLevel'?: string;
-  'IsPDF/AValidated'?: boolean;
-  'IsPDF/XCompliant'?: boolean;
-  'IsPDF/ECompliant'?: boolean;
-  'IsPDF/VTCompliant'?: boolean;
-  'IsPDF/UACompliant'?: boolean;
-  'IsPDF/BCompliant'?: boolean;
-  'IsPDF/SECCompliant'?: boolean;
-  [key: string]: unknown;
+  "IsPDF/ACompliant"?: boolean;
+  "PDF/AConformanceLevel"?: string;
+  "IsPDF/UACompliant"?: boolean;
+  "IsPDF/XCompliant"?: boolean;
+  "IsPDF/ECompliant"?: boolean;
+  "IsPDF/VTCompliant"?: boolean;
+  "IsPDF/BCompliant"?: boolean;
+  "IsPDF/SECCompliant"?: boolean;
+  // VeraPDF verified content - keys will be standard IDs like "pdfa-2b", "pdfua-1"
+  [key: string]: boolean | string | unknown;
 }
 
 /** Font info within a page */
@@ -207,14 +207,19 @@ export interface PdfTocEntry {
   [key: string]: unknown;
 }
 
+/** Compliance summary entry */
+export interface PdfComplianceSummary {
+  Standard: string;
+  Compliant: boolean;
+  Summary: string;
+}
+
 /** Summary data section */
 export interface PdfSummaryData {
   encrypted?: boolean;
   restrictedPermissions?: string[];
   restrictedPermissionsCount?: number;
-  standardCompliance?: string;
-  standardPurpose?: string;
-  standardValidationPassed?: boolean;
+  Compliance?: PdfComplianceSummary[];
 }
 
 /** Form fields section */
