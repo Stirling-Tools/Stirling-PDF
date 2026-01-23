@@ -306,6 +306,7 @@ selectOperation = "Selectați Operația"
 addOperationButton = "Adaugă operație"
 pipelineHeader = "Flux:"
 saveButton = "Descarcă"
+saveForFolderScanning = "Salvează pentru scanarea folderelor"
 validateButton = "Validează"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Proprietate"
 webBrowserSettings = "Setare Browser Web"
 syncToBrowser = "Sincronizează Cont -> Browser"
 syncToAccount = "Sincronizează Cont <- Browser"
+
+[account.mfa]
+title = "Autentificare cu doi factori"
+setupFailed = "Nu se poate începe configurarea autentificării cu doi factori. Încercați din nou."
+codeRequired = "Introduceți codul de autentificare pentru a continua."
+enabled = "Autentificarea cu doi factori a fost activată."
+enableFailed = "Nu se poate activa autentificarea cu doi factori. Verificați codul și încercați din nou."
+disabled = "Autentificarea cu doi factori a fost dezactivată."
+disableFailed = "Nu se poate dezactiva autentificarea cu doi factori. Verificați codul și încercați din nou."
+description = "Adăugați un nivel suplimentar de securitate contului."
+enableButton = "Activați autentificarea cu doi factori"
+disableButton = "Dezactivați autentificarea cu doi factori"
+setupTitle = "Configurați autentificarea cu doi factori"
+setupDescription = "Scanați codul QR cu aplicația de autentificare, apoi introduceți codul din 6 cifre pentru confirmare."
+manualKey = "Cheie de configurare manuală"
+secretWarning = "Păstrați această cheie privată. Oricine are acces poate genera coduri de autentificare valide."
+codePlaceholder = "Introduceți codul din 6 cifre"
+confirmEnable = "Activați"
+disableTitle = "Dezactivați autentificarea cu doi factori"
+disableDescription = "Introduceți un cod de autentificare valid pentru a dezactiva autentificarea cu doi factori."
+codeLabel = "Cod de autentificare"
+confirmDisable = "Dezactivați"
+ssoDescription = "Autentificarea cu doi factori este gestionată de furnizorul dvs. de identitate pentru conturile cu autentificare unică."
+ssoManaged = "Configurați MFA prin furnizorul dvs. de identitate."
 
 [adminUserSettings]
 title = "Setări Control Utilizator"
@@ -1264,7 +1289,10 @@ downloadHtml = "Descărcați fișierul intermediar HTML în loc de PDF"
 pdfaOptions = "Opțiuni PDF/A"
 outputFormat = "Format de ieșire"
 pdfaNote = "PDF/A-1b este mai compatibil, PDF/A-2b acceptă mai multe funcții."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "PDF-ul conține o semnătură digitală. Aceasta va fi eliminată în pasul următor."
+pdfxDigitalSignatureWarning = "PDF-ul conține o semnătură digitală. Aceasta va fi eliminată în pasul următor."
+pdfxDescription = "PDF/X este un subset PDF standardizat ISO pentru tipărire fiabilă și schimb de grafică."
 fileFormat = "Format fișier"
 wordDoc = "Document Word"
 wordDocExt = "Document Word (.docx)"
@@ -2193,6 +2221,16 @@ title = "PDF către PDF/A"
 header = "PDF către PDF/A"
 credit = "Acest serviciu utilizează libreoffice pentru conversia în PDF/A"
 submit = "Convertește"
+tip = "În prezent nu funcționează pentru mai multe intrări simultan"
+outputFormat = "Format de ieșire"
+pdfWithDigitalSignature = "PDF-ul conține o semnătură digitală. Aceasta va fi eliminată în pasul următor."
+
+[pdfToPDFX]
+tags = "tipărire,standard,conversie,producție,pregătire pentru tipar,arhivă"
+title = "PDF în PDF/X"
+header = "PDF în PDF/X"
+credit = "Acest serviciu folosește Ghostscript pentru conversia PDF/X"
+submit = "Convertiți"
 tip = "În prezent nu funcționează pentru mai multe intrări simultan"
 outputFormat = "Format de ieșire"
 pdfWithDigitalSignature = "PDF-ul conține o semnătură digitală. Aceasta va fi eliminată în pasul următor."
@@ -3153,6 +3191,18 @@ other = "Altele"
 perPageInfo = "Informații pe pagină"
 tableOfContents = "Cuprins"
 
+[getPdfInfo.compliance]
+notDetected = "Nedetectat"
+passed = "Reușit"
+failed = "Eșuat"
+compliant = "Conform"
+nonCompliant = "Neconform"
+none = "Niciun standard detectat"
+passedCount = "reușite"
+failedCount = "eșuate"
+noVerification = "Nu s-a efectuat nicio verificare"
+noVerificationDesc = "Conformitatea cu standardele PDF nu a fost verificată pentru acest document."
+
 [getPdfInfo.other]
 attachments = "Atașamente"
 embeddedFiles = "Fișiere încorporate"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} restricții"
 permsMixed = "Unele permisiuni sunt restricționate"
 hasCompliance = "Are standarde de conformitate"
 noCompliance = "Fără standarde de conformitate"
+compliancePassed = "Conform cu {{standards}}"
+complianceChecked = "Standarde verificate ({{failed}} eșuate)"
 basic = "Informații de bază"
 documentInfo = "Informații despre document"
 securityTitle = "Starea securității"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Parola a fost schimbată cu succes! Autentificați-vă
 credentialsUpdated = "Datele de autentificare au fost actualizate. Vă rugăm să vă autentificați din nou."
 defaultCredentials = "Date de autentificare implicite"
 changePasswordWarning = "Vă rugăm să vă schimbați parola după prima autentificare"
+mfaRequired = "Este necesar codul de autentificare cu doi factori"
+mfaCode = "Cod de autentificare"
+enterMfaCode = "Introduceți codul din 6 cifre"
+mfaPromptTitle = "Autentificare cu doi factori"
+mfaPromptBody = "Introduceți codul de autentificare din aplicația de autentificare pentru a continua."
+verifyingMfa = "Se verifică..."
+verifyMfa = "Verificați codul"
 
 [login.slides.overview]
 alt = "Prezentare generală Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Aveți modificări nesalvate"
 title = "Este necesar modul de autentificare"
 message = "Modul de autentificare trebuie activat pentru a modifica setările de administrator. Setați SECURITY_ENABLELOGIN=true în mediul dvs. sau security.enableLogin: true în settings.yml, apoi reporniți serverul."
 readOnly = "Setările de mai jos afișează valori de exemplu pentru referință. Activați modul de autentificare pentru a vedea și edita configurația reală."
+
+[admin.settings.enterpriseRequired]
+title = "Necesită licență Enterprise"
+message = "Este necesară o licență Enterprise pentru a accesa {{featureName}}. Vizualizați date demonstrative pentru referință."
 
 [admin.settings.restart]
 title = "Este necesară repornirea"
@@ -5413,6 +5476,7 @@ desc = "Construiți fluxuri de lucru în mai mulți pași, înlănțuind acțiun
 invalidStep = "Pas nevalid"
 reviewTitle = "Rezultatele automatizării"
 copyToSaved = "Copiați în Salvate"
+exportForFolderScanning = "Exportă pentru scanarea folderelor"
 
 [automate.files]
 placeholder = "Selectați fișiere de procesat cu această automatizare"
@@ -5434,6 +5498,7 @@ createTitle = "Creați automatizare"
 editTitle = "Editați automatizarea"
 intro = "Automatizările rulează instrumentele secvențial. Pentru a începe, adăugați instrumente în ordinea în care doriți să ruleze."
 save = "Salvați automatizarea"
+exportForFolderScanning = "Exportă pentru scanarea folderelor"
 
 [automate.creation.name]
 label = "Numele automatizării"
@@ -5820,6 +5885,7 @@ usernameRequired = "Numele de utilizator și parola sunt obligatorii"
 passwordTooShort = "Parola trebuie să aibă cel puțin 6 caractere"
 success = "Utilizator creat cu succes"
 error = "Crearea utilizatorului a eșuat"
+forceMFA = "Impuneți configurarea MFA la următoarea autentificare"
 
 [workspace.people.authType]
 password = "Parolă"
@@ -5928,6 +5994,11 @@ fromLicense = "din licență"
 slotsAvailable = "{{count}} loc(uri) de utilizator disponibile"
 noSlotsAvailable = "Niciun loc disponibil"
 currentUsage = "În prezent se folosesc {{current}} din {{max}} licențe de utilizator"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA a fost dezactivată cu succes pentru utilizator"
+adminDisableError = "Dezactivarea MFA pentru utilizator a eșuat"
+disableByAdmin = "Dezactivați MFA"
 
 [workspace.teams]
 title = "Echipe"
@@ -6371,6 +6442,7 @@ endpoint = "Endpoint"
 visits = "Vizite"
 percentage = "Procentaj"
 noData = "Nu sunt date disponibile"
+unknownEndpoint = "Endpoint necunoscut"
 
 [backendHealth]
 checking = "Se verifică starea backend-ului..."

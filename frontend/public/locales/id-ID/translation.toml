@@ -306,6 +306,7 @@ selectOperation = "Pilih Operasi"
 addOperationButton = "Tambah operasi"
 pipelineHeader = "Pipeline:"
 saveButton = "Unduh"
+saveForFolderScanning = "Simpan untuk Pemindaian Folder"
 validateButton = "Validasi"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Properti"
 webBrowserSettings = "Pengaturan Peramban Web"
 syncToBrowser = "Sinkronisasi Akun -> Browser"
 syncToAccount = "Sinkronisasi Akun <- Browser"
+
+[account.mfa]
+title = "Autentikasi dua faktor"
+setupFailed = "Tidak dapat memulai penyiapan autentikasi dua faktor. Coba lagi."
+codeRequired = "Masukkan kode autentikasi untuk melanjutkan."
+enabled = "Autentikasi dua faktor diaktifkan."
+enableFailed = "Tidak dapat mengaktifkan autentikasi dua faktor. Periksa kode dan coba lagi."
+disabled = "Autentikasi dua faktor dinonaktifkan."
+disableFailed = "Tidak dapat menonaktifkan autentikasi dua faktor. Periksa kode dan coba lagi."
+description = "Tambahkan lapisan keamanan ekstra ke akun Anda."
+enableButton = "Aktifkan autentikasi dua faktor"
+disableButton = "Nonaktifkan autentikasi dua faktor"
+setupTitle = "Siapkan autentikasi dua faktor"
+setupDescription = "Pindai kode QR dengan aplikasi autentikator Anda, lalu masukkan kode 6 digit untuk mengonfirmasi."
+manualKey = "Kunci penyiapan manual"
+secretWarning = "Jaga kerahasiaan kunci ini. Siapa pun yang memiliki akses dapat menghasilkan kode autentikasi yang valid."
+codePlaceholder = "Masukkan kode 6 digit"
+confirmEnable = "Aktifkan"
+disableTitle = "Nonaktifkan autentikasi dua faktor"
+disableDescription = "Masukkan kode autentikasi yang valid untuk menonaktifkan autentikasi dua faktor."
+codeLabel = "Kode autentikasi"
+confirmDisable = "Nonaktifkan"
+ssoDescription = "Autentikasi dua faktor dikelola oleh penyedia identitas Anda untuk akun single sign-on."
+ssoManaged = "Konfigurasikan MFA melalui penyedia identitas Anda."
 
 [adminUserSettings]
 title = "Pengaturan Kontrol Pengguna"
@@ -1264,7 +1289,10 @@ downloadHtml = "Unduh file perantara HTML alih-alih PDF"
 pdfaOptions = "Opsi PDF/A"
 outputFormat = "Format Keluaran"
 pdfaNote = "PDF/A-1b lebih kompatibel, PDF/A-2b mendukung lebih banyak fitur."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
+pdfxDigitalSignatureWarning = "PDF berisi tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
+pdfxDescription = "PDF/X adalah subset standar ISO dari PDF untuk pencetakan yang andal dan pertukaran grafis."
 fileFormat = "Format File"
 wordDoc = "Dokumen Word"
 wordDocExt = "Dokumen Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Konversi"
 tip = "Saat ini tidak dapat digunakan untuk beberapa input sekaligus"
 outputFormat = "Format keluaran"
 pdfWithDigitalSignature = "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
+
+[pdfToPDFX]
+tags = "cetak,standar,konversi,produksi,pracetak,arsip"
+title = "PDF ke PDF/X"
+header = "PDF ke PDF/X"
+credit = "Layanan ini menggunakan Ghostscript untuk konversi PDF/X"
+submit = "Konversi"
+tip = "Saat ini tidak berfungsi untuk beberapa input sekaligus"
+outputFormat = "Format keluaran"
+pdfWithDigitalSignature = "PDF berisi tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
 
 [PDFToWord]
 tags = "doc, docx, odt, kata, transformasi, format, konversi, kantor, microsoft, docfile"
@@ -3153,6 +3191,18 @@ other = "Lainnya"
 perPageInfo = "Info per Halaman"
 tableOfContents = "Daftar Isi"
 
+[getPdfInfo.compliance]
+notDetected = "Tidak Terdeteksi"
+passed = "Lulus"
+failed = "Gagal"
+compliant = "Patuh"
+nonCompliant = "Tidak Patuh"
+none = "Tidak ada standar yang terdeteksi"
+passedCount = "lulus"
+failedCount = "gagal"
+noVerification = "Tidak Ada Verifikasi Dilakukan"
+noVerificationDesc = "Kepatuhan terhadap standar PDF tidak diverifikasi untuk dokumen ini."
+
 [getPdfInfo.other]
 attachments = "Lampiran"
 embeddedFiles = "File Tertanam"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} pembatasan"
 permsMixed = "Beberapa izin dibatasi"
 hasCompliance = "Memiliki standar kepatuhan"
 noCompliance = "Tidak ada standar kepatuhan"
+compliancePassed = "Sesuai {{standards}}"
+complianceChecked = "Standar diverifikasi ({{failed}} gagal)"
 basic = "Informasi Dasar"
 documentInfo = "Informasi Dokumen"
 securityTitle = "Status Keamanan"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Kata sandi berhasil diubah! Silakan masuk dengan kata 
 credentialsUpdated = "Kredensial Anda telah diperbarui. Silakan masuk lagi."
 defaultCredentials = "Kredensial Login Bawaan"
 changePasswordWarning = "Harap ganti kata sandi Anda setelah login untuk pertama kalinya"
+mfaRequired = "Kode autentikasi dua faktor diperlukan"
+mfaCode = "Kode Autentikasi"
+enterMfaCode = "Masukkan kode 6 digit"
+mfaPromptTitle = "Autentikasi dua faktor"
+mfaPromptBody = "Masukkan kode autentikasi dari aplikasi autentikator Anda untuk melanjutkan."
+verifyingMfa = "Memverifikasi..."
+verifyMfa = "Verifikasi kode"
 
 [login.slides.overview]
 alt = "Sekilas Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Anda memiliki perubahan yang belum disimpan"
 title = "Mode Login Diperlukan"
 message = "Mode login harus diaktifkan untuk mengubah pengaturan admin. Harap set SECURITY_ENABLELOGIN=true di lingkungan Anda atau security.enableLogin: true di settings.yml, lalu mulai ulang server."
 readOnly = "Pengaturan di bawah ini menampilkan nilai contoh sebagai referensi. Aktifkan mode login untuk melihat dan mengedit konfigurasi sebenarnya."
+
+[admin.settings.enterpriseRequired]
+title = "Lisensi Enterprise Diperlukan"
+message = "Lisensi Enterprise diperlukan untuk mengakses {{featureName}}. Anda sedang melihat data demo sebagai referensi."
 
 [admin.settings.restart]
 title = "Perlu Mulai Ulang"
@@ -5413,6 +5476,7 @@ desc = "Bangun alur kerja multi-langkah dengan merangkaikan aksi PDF. Ideal untu
 invalidStep = "Langkah tidak valid"
 reviewTitle = "Hasil Otomatisasi"
 copyToSaved = "Salin ke Tersimpan"
+exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
 
 [automate.files]
 placeholder = "Pilih file untuk diproses dengan otomatisasi ini"
@@ -5434,6 +5498,7 @@ createTitle = "Buat Otomatisasi"
 editTitle = "Edit Otomatisasi"
 intro = "Otomatisasi menjalankan alat secara berurutan. Untuk memulai, tambahkan alat sesuai urutan yang Anda inginkan."
 save = "Simpan Otomatisasi"
+exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
 
 [automate.creation.name]
 label = "Nama Otomatisasi"
@@ -5820,6 +5885,7 @@ usernameRequired = "Nama pengguna dan kata sandi wajib diisi"
 passwordTooShort = "Kata sandi harus minimal 6 karakter"
 success = "Pengguna berhasil dibuat"
 error = "Gagal membuat pengguna"
+forceMFA = "Wajibkan penyiapan MFA pada login berikutnya"
 
 [workspace.people.authType]
 password = "Kata sandi"
@@ -5928,6 +5994,11 @@ fromLicense = "dari lisensi"
 slotsAvailable = "{{count}} slot pengguna tersedia"
 noSlotsAvailable = "Tidak ada slot tersedia"
 currentUsage = "Saat ini menggunakan {{current}} dari {{max}} lisensi pengguna"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA berhasil dinonaktifkan untuk pengguna"
+adminDisableError = "Gagal menonaktifkan MFA untuk pengguna"
+disableByAdmin = "Nonaktifkan MFA"
 
 [workspace.teams]
 title = "Tim"
@@ -6371,6 +6442,7 @@ endpoint = "Endpoint"
 visits = "Kunjungan"
 percentage = "Persentase"
 noData = "Tidak ada data"
+unknownEndpoint = "Endpoint tidak dikenal"
 
 [backendHealth]
 checking = "Memeriksa status backend..."

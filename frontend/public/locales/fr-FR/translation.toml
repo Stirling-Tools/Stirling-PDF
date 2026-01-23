@@ -306,6 +306,7 @@ selectOperation = "Sélectionner une opération"
 addOperationButton = "Ajouter une opération"
 pipelineHeader = "Pipeline :"
 saveButton = "Télécharger"
+saveForFolderScanning = "Enregistrer pour l'analyse de dossier"
 validateButton = "Valider"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Propriété"
 webBrowserSettings = "Paramètres du navigateur"
 syncToBrowser = "Synchroniser : Compte → Navigateur"
 syncToAccount = "Synchroniser : Compte ← Navigateur"
+
+[account.mfa]
+title = "Authentification à deux facteurs"
+setupFailed = "Impossible de démarrer la configuration de l'authentification à deux facteurs. Veuillez réessayer."
+codeRequired = "Saisissez le code d'authentification pour continuer."
+enabled = "Authentification à deux facteurs activée."
+enableFailed = "Impossible d'activer l'authentification à deux facteurs. Vérifiez le code et réessayez."
+disabled = "Authentification à deux facteurs désactivée."
+disableFailed = "Impossible de désactiver l'authentification à deux facteurs. Vérifiez le code et réessayez."
+description = "Ajoutez une couche de sécurité supplémentaire à votre compte."
+enableButton = "Activer l'authentification à deux facteurs"
+disableButton = "Désactiver l'authentification à deux facteurs"
+setupTitle = "Configurer l'authentification à deux facteurs"
+setupDescription = "Scannez le code QR avec votre application d'authentification, puis saisissez le code à 6 chiffres pour confirmer."
+manualKey = "Clé de configuration manuelle"
+secretWarning = "Conservez cette clé privée. Toute personne y ayant accès peut générer des codes d'authentification valides."
+codePlaceholder = "Saisir le code à 6 chiffres"
+confirmEnable = "Activer"
+disableTitle = "Désactiver l'authentification à deux facteurs"
+disableDescription = "Saisissez un code d'authentification valide pour désactiver l'authentification à deux facteurs."
+codeLabel = "Code d'authentification"
+confirmDisable = "Désactiver"
+ssoDescription = "L'authentification à deux facteurs est gérée par votre fournisseur d'identité pour les comptes à authentification unique."
+ssoManaged = "Configurez la MFA via votre fournisseur d'identité."
 
 [adminUserSettings]
 title = "Administration des paramètres des utilisateurs"
@@ -1264,7 +1289,10 @@ downloadHtml = "Télécharger le fichier HTML intermédiaire au lieu du PDF"
 pdfaOptions = "Options PDF/A"
 outputFormat = "Format de sortie"
 pdfaNote = "PDF/A-1b est plus compatible, PDF/A-2b prend en charge davantage de fonctionnalités."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante."
+pdfxDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée à l'étape suivante."
+pdfxDescription = "PDF/X est un sous-ensemble PDF conforme à l'ISO pour une impression fiable et un échange graphique."
 fileFormat = "Format de fichier"
 wordDoc = "Document Word"
 wordDocExt = "Document Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Convertir"
 tip = "Ne fonctionne actuellement pas pour plusieurs entrées à la fois"
 outputFormat = "Format de sortie"
 pdfWithDigitalSignature = "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante."
+
+[pdfToPDFX]
+tags = "impression,standard,conversion,production,prépresse,archive"
+title = "PDF vers PDF/X"
+header = "PDF vers PDF/X"
+credit = "Ce service utilise Ghostscript pour la conversion PDF/X"
+submit = "Convertir"
+tip = "Ne fonctionne actuellement pas avec plusieurs entrées à la fois"
+outputFormat = "Format de sortie"
+pdfWithDigitalSignature = "Le PDF contient une signature numérique. Elle sera supprimée à l'étape suivante."
 
 [PDFToWord]
 tags = "doc, docx, odt, word, transformation, format, conversion, office, microsoft, docfile"
@@ -3153,6 +3191,18 @@ other = "Autre"
 perPageInfo = "Informations par page"
 tableOfContents = "Table des matières"
 
+[getPdfInfo.compliance]
+notDetected = "Non détecté"
+passed = "Réussi"
+failed = "Échec"
+compliant = "Conforme"
+nonCompliant = "Non conforme"
+none = "Aucune norme détectée"
+passedCount = "réussis"
+failedCount = "échoués"
+noVerification = "Aucune vérification effectuée"
+noVerificationDesc = "La conformité aux normes PDF n'a pas été vérifiée pour ce document."
+
 [getPdfInfo.other]
 attachments = "Pièces jointes"
 embeddedFiles = "Fichiers intégrés"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} restrictions"
 permsMixed = "Certaines autorisations sont restreintes"
 hasCompliance = "Respecte des normes de conformité"
 noCompliance = "Aucune norme de conformité"
+compliancePassed = "Conforme à {{standards}}"
+complianceChecked = "Normes vérifiées ({{failed}} échoués)"
 basic = "Informations de base"
 documentInfo = "Informations sur le document"
 securityTitle = "État de sécurité"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Mot de passe modifié avec succès ! Veuillez vous co
 credentialsUpdated = "Vos identifiants ont été mis à jour. Veuillez vous reconnecter."
 defaultCredentials = "Identifiants de connexion par défaut"
 changePasswordWarning = "Veuillez changer votre mot de passe après votre première connexion"
+mfaRequired = "Code à deux facteurs requis"
+mfaCode = "Code d'authentification"
+enterMfaCode = "Saisir le code à 6 chiffres"
+mfaPromptTitle = "Authentification à deux facteurs"
+mfaPromptBody = "Saisissez le code d'authentification provenant de votre application d'authentification pour continuer."
+verifyingMfa = "Vérification..."
+verifyMfa = "Vérifier le code"
 
 [login.slides.overview]
 alt = "Aperçu de Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Vous avez des modifications non enregistrées"
 title = "Mode de connexion requis"
 message = "Le mode de connexion doit être activé pour modifier les paramètres d’administration. Veuillez définir SECURITY_ENABLELOGIN=true dans votre environnement ou security.enableLogin: true dans settings.yml, puis redémarrer le serveur."
 readOnly = "Les paramètres ci-dessous affichent des valeurs d’exemple à titre de référence. Activez le mode de connexion pour afficher et modifier la configuration réelle."
+
+[admin.settings.enterpriseRequired]
+title = "Licence Entreprise requise"
+message = "Une licence Entreprise est requise pour accéder à {{featureName}}. Vous consultez des données de démonstration à titre de référence."
 
 [admin.settings.restart]
 title = "Redémarrage requis"
@@ -5413,6 +5476,7 @@ desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéa
 invalidStep = "Étape invalide"
 reviewTitle = "Résultats de l’automatisation"
 copyToSaved = "Copier vers Enregistré"
+exportForFolderScanning = "Exporter pour l'analyse de dossier"
 
 [automate.files]
 placeholder = "Sélectionnez des fichiers à traiter avec cette automatisation"
@@ -5434,6 +5498,7 @@ createTitle = "Créer une automatisation"
 editTitle = "Modifier l’automatisation"
 intro = "Les automatisations exécutent les outils séquentiellement. Pour commencer, ajoutez les outils dans l’ordre d’exécution souhaité."
 save = "Enregistrer l’automatisation"
+exportForFolderScanning = "Exporter pour l'analyse de dossier"
 
 [automate.creation.name]
 label = "Nom de l’automatisation"
@@ -5820,6 +5885,7 @@ usernameRequired = "Le nom d’utilisateur et le mot de passe sont obligatoires"
 passwordTooShort = "Le mot de passe doit comporter au moins 6 caractères"
 success = "Utilisateur créé avec succès"
 error = "Échec de la création de l’utilisateur"
+forceMFA = "Forcer la configuration MFA à la prochaine connexion"
 
 [workspace.people.authType]
 password = "Mot de passe"
@@ -5928,6 +5994,11 @@ fromLicense = "de la licence"
 slotsAvailable = "{{count}} place(s) utilisateur disponibles"
 noSlotsAvailable = "Aucune place disponible"
 currentUsage = "Utilise actuellement {{current}} sur {{max}} licences utilisateur"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA désactivée avec succès pour l'utilisateur"
+adminDisableError = "Échec de la désactivation de la MFA pour l'utilisateur"
+disableByAdmin = "Désactiver la MFA"
 
 [workspace.teams]
 title = "Équipes"
@@ -6371,6 +6442,7 @@ endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Pourcentage"
 noData = "Aucune donnée disponible"
+unknownEndpoint = "Point de terminaison inconnu"
 
 [backendHealth]
 checking = "Vérification de l’état du backend..."

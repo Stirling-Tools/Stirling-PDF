@@ -306,6 +306,7 @@ selectOperation = "選擇操作"
 addOperationButton = "新增操作"
 pipelineHeader = "管道："
 saveButton = "下載"
+saveForFolderScanning = "儲存供資料夾掃描"
 validateButton = "驗證"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "屬性"
 webBrowserSettings = "網頁瀏覽器設定"
 syncToBrowser = "同步帳號 → 瀏覽器"
 syncToAccount = "同步帳號 ← 瀏覽器"
+
+[account.mfa]
+title = "雙重驗證"
+setupFailed = "無法開始雙重驗證設定。請再試一次。"
+codeRequired = "請輸入驗證碼以繼續。"
+enabled = "已啟用雙重驗證。"
+enableFailed = "無法啟用雙重驗證。請檢查驗證碼並再試一次。"
+disabled = "已停用雙重驗證。"
+disableFailed = "無法停用雙重驗證。請檢查驗證碼並再試一次。"
+description = "為您的帳戶新增一層安全防護。"
+enableButton = "啟用雙重驗證"
+disableButton = "停用雙重驗證"
+setupTitle = "設定雙重驗證"
+setupDescription = "使用驗證器應用程式掃描 QR 碼，然後輸入 6 位數代碼以確認。"
+manualKey = "手動設定金鑰"
+secretWarning = "請妥善保管此金鑰。任何取得此金鑰的人都能產生有效的驗證碼。"
+codePlaceholder = "輸入 6 位數代碼"
+confirmEnable = "啟用"
+disableTitle = "停用雙重驗證"
+disableDescription = "請輸入有效的驗證碼以停用雙重驗證。"
+codeLabel = "驗證碼"
+confirmDisable = "停用"
+ssoDescription = "對於單一登入帳戶，雙重驗證由您的身分識別提供者管理。"
+ssoManaged = "請透過您的身分識別提供者設定 MFA。"
 
 [adminUserSettings]
 title = "使用者控制設定"
@@ -1264,7 +1289,10 @@ downloadHtml = "下載中介的 HTML 檔而非 PDF"
 pdfaOptions = "PDF/A 選項"
 outputFormat = "輸出格式"
 pdfaNote = "PDF/A-1b 相容性較佳，PDF/A-2b 支援更多功能。"
+pdfaFormat = "PDF/A 格式"
 pdfaDigitalSignatureWarning = "該 PDF 的憑證簽章將會在下一步被移除"
+pdfxDigitalSignatureWarning = "該 PDF 含有數位簽章。此簽章將在下一步移除。"
+pdfxDescription = "PDF/X 是 ISO 標準的 PDF 子集，用於可靠的列印與圖形交換。"
 fileFormat = "檔案格式"
 wordDoc = "Word 文件"
 wordDocExt = "Word 文件（.docx）"
@@ -2196,6 +2224,16 @@ submit = "轉換"
 tip = "目前不支援上傳多個"
 outputFormat = "輸出格式"
 pdfWithDigitalSignature = "該 PDF 的憑證簽章將會在下一步被移除"
+
+[pdfToPDFX]
+tags = "列印,標準,轉換,製作,印前,封存"
+title = "PDF 轉為 PDF/X"
+header = "PDF 轉為 PDF/X"
+credit = "本服務使用 Ghostscript 進行 PDF/X 轉換"
+submit = "轉換"
+tip = "目前不支援同時處理多個輸入"
+outputFormat = "輸出格式"
+pdfWithDigitalSignature = "該 PDF 含有數位簽章。此簽章將在下一步移除。"
 
 [PDFToWord]
 tags = "doc,docx,odt,word,轉換,格式,轉檔,office,微軟,docfile"
@@ -3153,6 +3191,18 @@ other = "其他"
 perPageInfo = "每頁資訊"
 tableOfContents = "目錄"
 
+[getPdfInfo.compliance]
+notDetected = "未偵測到"
+passed = "通過"
+failed = "失敗"
+compliant = "合規"
+nonCompliant = "不合規"
+none = "未偵測到標準"
+passedCount = "通過"
+failedCount = "失敗"
+noVerification = "未執行驗證"
+noVerificationDesc = "未針對此文件驗證其是否符合 PDF 標準。"
+
 [getPdfInfo.other]
 attachments = "附件"
 embeddedFiles = "內嵌檔案"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} 個限制"
 permsMixed = "部分權限受限"
 hasCompliance = "具有符合性標準"
 noCompliance = "無符合性標準"
+compliancePassed = "{{standards}} 合規"
+complianceChecked = "已驗證標準（{{failed}} 項失敗）"
 basic = "基本資訊"
 documentInfo = "文件資訊"
 securityTitle = "安全性狀態"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "密碼變更成功！請使用新密碼登入。"
 credentialsUpdated = "您的認證資訊已更新。請重新登入。"
 defaultCredentials = "預設登入憑證"
 changePasswordWarning = "首次登入後請更改您的密碼"
+mfaRequired = "需要雙重驗證碼"
+mfaCode = "驗證碼"
+enterMfaCode = "輸入 6 位數代碼"
+mfaPromptTitle = "雙重驗證"
+mfaPromptBody = "請輸入驗證器應用程式產生的驗證碼以繼續。"
+verifyingMfa = "驗證中..."
+verifyMfa = "驗證代碼"
 
 [login.slides.overview]
 alt = "Stirling PDF 概覽"
@@ -4323,6 +4382,10 @@ hint = "您有未儲存的變更"
 title = "需要登入模式"
 message = "必須啟用登入模式才能修改管理設定。請在環境中設定 SECURITY_ENABLELOGIN=true 或在 settings.yml 設定 security.enableLogin: true，然後重新啟動伺服器。"
 readOnly = "下列設定僅示範參考值。啟用登入模式即可檢視並編輯實際組態。"
+
+[admin.settings.enterpriseRequired]
+title = "需要企業版授權"
+message = "存取 {{featureName}} 需要企業版授權。您目前看到的是示範資料，供參考。"
 
 [admin.settings.restart]
 title = "需要重新啟動"
@@ -5413,6 +5476,7 @@ desc = "透過串接多個 PDF 操作來建立多步驟工作流程。非常適�
 invalidStep = "無效的步驟"
 reviewTitle = "自動化結果"
 copyToSaved = "複製到已儲存"
+exportForFolderScanning = "匯出供資料夾掃描"
 
 [automate.files]
 placeholder = "選取要由此自動化流程處理的檔案"
@@ -5434,6 +5498,7 @@ createTitle = "建立自動化"
 editTitle = "編輯自動化"
 intro = "自動化會依序執行工具。開始之前，請按您希望的順序加入工具。"
 save = "儲存自動化"
+exportForFolderScanning = "匯出供資料夾掃描"
 
 [automate.creation.name]
 label = "自動化名稱"
@@ -5820,6 +5885,7 @@ usernameRequired = "需要使用者名稱與密碼"
 passwordTooShort = "密碼至少需 6 個字元"
 success = "已成功建立使用者"
 error = "建立使用者失敗"
+forceMFA = "於下次登入強制設定 MFA"
 
 [workspace.people.authType]
 password = "密碼"
@@ -5928,6 +5994,11 @@ fromLicense = "來自授權"
 slotsAvailable = "尚有 {{count}} 個使用者名額"
 noSlotsAvailable = "沒有可用名額"
 currentUsage = "目前使用 {{current}} / {{max}} 個使用者授權"
+
+[workspace.people.mfa]
+adminDisableSuccess = "已成功為使用者停用 MFA"
+adminDisableError = "無法為使用者停用 MFA"
+disableByAdmin = "停用 MFA"
 
 [workspace.teams]
 title = "團隊"
@@ -6371,6 +6442,7 @@ endpoint = "端點"
 visits = "造訪數"
 percentage = "百分比"
 noData = "無可用資料"
+unknownEndpoint = "未知端點"
 
 [backendHealth]
 checking = "正在檢查後端狀態..."

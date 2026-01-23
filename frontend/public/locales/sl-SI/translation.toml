@@ -306,6 +306,7 @@ selectOperation = "Izberi operacijo"
 addOperationButton = "Dodaj operacijo"
 pipelineHeader = "Cevovod:"
 saveButton = "Prenos"
+saveForFolderScanning = "Shrani za skeniranje map"
 validateButton = "Potrdi"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Lastnina"
 webBrowserSettings = "Nastavitev spletnega brskalnika"
 syncToBrowser = "Sinhroniziraj račun -> Brskalnik"
 syncToAccount = "Sinhroniziraj račun <- Brskalnik"
+
+[account.mfa]
+title = "Dvofaktorsko preverjanje pristnosti"
+setupFailed = "Nastavitve dvofaktorskega preverjanja pristnosti ni mogoče začeti. Poskusite znova."
+codeRequired = "Za nadaljevanje vnesite kodo za preverjanje pristnosti."
+enabled = "Dvofaktorsko preverjanje pristnosti je omogočeno."
+enableFailed = "Dvofaktorskega preverjanja pristnosti ni mogoče omogočiti. Preverite kodo in poskusite znova."
+disabled = "Dvofaktorsko preverjanje pristnosti je onemogočeno."
+disableFailed = "Dvofaktorskega preverjanja pristnosti ni mogoče onemogočiti. Preverite kodo in poskusite znova."
+description = "Dodajte svojemu računu dodatno plast varnosti."
+enableButton = "Omogoči dvofaktorsko preverjanje pristnosti"
+disableButton = "Onemogoči dvofaktorsko preverjanje pristnosti"
+setupTitle = "Nastavite dvofaktorsko preverjanje pristnosti"
+setupDescription = "Skenirajte QR kodo z aplikacijo za preverjanje pristnosti in nato vnesite 6-mestno kodo za potrditev."
+manualKey = "Ključ za ročno nastavitev"
+secretWarning = "Ta ključ naj ostane zaseben. Kdor ima dostop, lahko ustvari veljavne kode za preverjanje pristnosti."
+codePlaceholder = "Vnesite 6-mestno kodo"
+confirmEnable = "Omogoči"
+disableTitle = "Onemogočite dvofaktorsko preverjanje pristnosti"
+disableDescription = "Za onemogočenje dvofaktorskega preverjanja pristnosti vnesite veljavno kodo za preverjanje pristnosti."
+codeLabel = "Koda za preverjanje pristnosti"
+confirmDisable = "Onemogoči"
+ssoDescription = "Dvofaktorsko preverjanje pristnosti za račune z enotno prijavo upravlja vaš ponudnik identitete."
+ssoManaged = "Nastavite MFA prek svojega ponudnika identitete."
 
 [adminUserSettings]
 title = "Nastavitve uporabniškega nadzora"
@@ -1264,7 +1289,10 @@ downloadHtml = "Prenesi vmesno datoteko HTML namesto PDF"
 pdfaOptions = "Možnosti PDF/A"
 outputFormat = "Izhodni format"
 pdfaNote = "PDF/A-1b je bolj združljiv, PDF/A-2b podpira več funkcij."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "PDF vsebuje digitalni podpis. To bo odstranjeno v naslednjem koraku."
+pdfxDigitalSignatureWarning = "PDF vsebuje digitalni podpis. Ta bo odstranjen v naslednjem koraku."
+pdfxDescription = "PDF/X je podmnožica PDF po standardu ISO za zanesljivo tiskanje in izmenjavo grafike."
 fileFormat = "Format datoteke"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Pretvori"
 tip = "Trenutno ne deluje za več vnosov hkrati"
 outputFormat = "Izhodna oblika"
 pdfWithDigitalSignature = "PDF vsebuje digitalni podpis. To bo odstranjeno v naslednjem koraku."
+
+[pdfToPDFX]
+tags = "tiskanje,standard,pretvorba,produkcija,predtisk,arhiv"
+title = "PDF v PDF/X"
+header = "PDF v PDF/X"
+credit = "Ta storitev za pretvorbo v PDF/X uporablja Ghostscript"
+submit = "Pretvori"
+tip = "Trenutno ne deluje z več vnosi hkrati"
+outputFormat = "Izhodni format"
+pdfWithDigitalSignature = "PDF vsebuje digitalni podpis. Ta bo odstranjen v naslednjem koraku."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformacija,format,pretvorba,office,microsoft,docfile"
@@ -3153,6 +3191,18 @@ other = "Drugo"
 perPageInfo = "Informacije po strani"
 tableOfContents = "Kazalo vsebine"
 
+[getPdfInfo.compliance]
+notDetected = "Ni zaznano"
+passed = "Uspešno"
+failed = "Neuspešno"
+compliant = "Skladno"
+nonCompliant = "Neskladno"
+none = "Ni zaznanih standardov"
+passedCount = "uspešnih"
+failedCount = "neuspešnih"
+noVerification = "Preverjanje ni bilo izvedeno"
+noVerificationDesc = "Skladnost s standardi PDF za ta dokument ni bila preverjena."
+
 [getPdfInfo.other]
 attachments = "Priloge"
 embeddedFiles = "Vdelane datoteke"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} omejitev"
 permsMixed = "Nekatera dovoljenja omejena"
 hasCompliance = "Ima standarde skladnosti"
 noCompliance = "Brez standardov skladnosti"
+compliancePassed = "Skladno z {{standards}}"
+complianceChecked = "Standardi preverjeni (neuspešnih: {{failed}})"
 basic = "Osnovne informacije"
 documentInfo = "Informacije o dokumentu"
 securityTitle = "Varnostno stanje"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Geslo je uspešno spremenjeno! Prijavite se z novim ge
 credentialsUpdated = "Vaše poverilnice so posodobljene. Prosimo, prijavite se znova."
 defaultCredentials = "Privzeti prijavni podatki"
 changePasswordWarning = "Prosimo, po prvi prijavi spremenite geslo"
+mfaRequired = "Zahtevana je koda za dvofaktorsko preverjanje pristnosti"
+mfaCode = "Koda za preverjanje pristnosti"
+enterMfaCode = "Vnesite 6-mestno kodo"
+mfaPromptTitle = "Dvofaktorsko preverjanje pristnosti"
+mfaPromptBody = "Za nadaljevanje vnesite kodo za preverjanje pristnosti iz aplikacije za preverjanje pristnosti."
+verifyingMfa = "Preverjanje..."
+verifyMfa = "Preveri kodo"
 
 [login.slides.overview]
 alt = "Pregled Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Imate neshranjene spremembe"
 title = "Zahtevan način prijave"
 message = "Za spreminjanje skrbniških nastavitev mora biti omogočen način prijave. Nastavite SECURITY_ENABLELOGIN=true v okolju ali security.enableLogin: true v settings.yml, nato znova zaženite strežnik."
 readOnly = "Spodnje nastavitve prikazujejo vzorčne vrednosti za referenco. Omogočite način prijave za ogled in urejanje dejanske konfiguracije."
+
+[admin.settings.enterpriseRequired]
+title = "Zahtevana je licenca Enterprise"
+message = "Za dostop do {{featureName}} je potrebna licenca Enterprise. Ogledate si predstavitvene podatke za referenco."
 
 [admin.settings.restart]
 title = "Potreben je ponovni zagon"
@@ -5413,6 +5476,7 @@ desc = "Sestavite večkorakovne poteke dela z veriženjem dejanj PDF. Idealno za
 invalidStep = "Neveljaven korak"
 reviewTitle = "Rezultati avtomatizacije"
 copyToSaved = "Kopiraj v shranjene"
+exportForFolderScanning = "Izvozi za skeniranje map"
 
 [automate.files]
 placeholder = "Izberite datoteke za obdelavo s to avtomatizacijo"
@@ -5434,6 +5498,7 @@ createTitle = "Ustvari avtomatizacijo"
 editTitle = "Uredi avtomatizacijo"
 intro = "Avtomatizacije poganjajo orodja zaporedno. Za začetek dodajte orodja v vrstnem redu, v katerem jih želite zagnati."
 save = "Shrani avtomatizacijo"
+exportForFolderScanning = "Izvozi za skeniranje map"
 
 [automate.creation.name]
 label = "Ime avtomatizacije"
@@ -5820,6 +5885,7 @@ usernameRequired = "Zahtevana sta uporabniško ime in geslo"
 passwordTooShort = "Geslo mora vsebovati vsaj 6 znakov"
 success = "Uporabnik uspešno ustvarjen"
 error = "Uporabnika ni bilo mogoče ustvariti"
+forceMFA = "Vsili nastavitev MFA ob naslednji prijavi"
 
 [workspace.people.authType]
 password = "Geslo"
@@ -5928,6 +5994,11 @@ fromLicense = "iz licence"
 slotsAvailable = "{{count}} prostih mest za uporabnike"
 noSlotsAvailable = "Ni prostih mest"
 currentUsage = "Trenutno uporabljate {{current}} od {{max}} uporabniških licenc"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA je bila za uporabnika uspešno onemogočena"
+adminDisableError = "MFA za uporabnika ni bilo mogoče onemogočiti"
+disableByAdmin = "Onemogoči MFA"
 
 [workspace.teams]
 title = "Skupine"
@@ -6371,6 +6442,7 @@ endpoint = "Končna točka"
 visits = "Obiski"
 percentage = "Odstotek"
 noData = "Podatkov ni na voljo"
+unknownEndpoint = "Neznana končna točka"
 
 [backendHealth]
 checking = "Preverjanje stanja zaledja..."

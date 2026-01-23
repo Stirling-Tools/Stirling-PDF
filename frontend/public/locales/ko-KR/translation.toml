@@ -306,6 +306,7 @@ selectOperation = "작업 선택"
 addOperationButton = "작업 추가"
 pipelineHeader = "파이프라인:"
 saveButton = "다운로드"
+saveForFolderScanning = "폴더 스캔용으로 저장"
 validateButton = "검증"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "속성"
 webBrowserSettings = "웹 브라우저 설정"
 syncToBrowser = "동기화 계정 -> 브라우저"
 syncToAccount = "동기화 계정 <- 브라우저"
+
+[account.mfa]
+title = "2단계 인증"
+setupFailed = "2단계 인증 설정을 시작할 수 없습니다. 다시 시도하세요."
+codeRequired = "계속하려면 인증 코드를 입력하세요."
+enabled = "2단계 인증이 활성화되었습니다."
+enableFailed = "2단계 인증을 활성화할 수 없습니다. 코드를 확인하고 다시 시도하세요."
+disabled = "2단계 인증이 비활성화되었습니다."
+disableFailed = "2단계 인증을 비활성화할 수 없습니다. 코드를 확인하고 다시 시도하세요."
+description = "계정에 보안 계층을 추가합니다."
+enableButton = "2단계 인증 활성화"
+disableButton = "2단계 인증 비활성화"
+setupTitle = "2단계 인증 설정"
+setupDescription = "인증 앱으로 QR 코드를 스캔한 뒤, 확인을 위해 6자리 코드를 입력하세요."
+manualKey = "수동 설정 키"
+secretWarning = "이 키는 비공개로 유지하세요. 접근 가능한 누구나 유효한 인증 코드를 생성할 수 있습니다."
+codePlaceholder = "6자리 코드를 입력하세요"
+confirmEnable = "활성화"
+disableTitle = "2단계 인증 비활성화"
+disableDescription = "2단계 인증을 비활성화하려면 유효한 인증 코드를 입력하세요."
+codeLabel = "인증 코드"
+confirmDisable = "비활성화"
+ssoDescription = "Single Sign-On 계정의 경우 2단계 인증은 ID 제공자에서 관리됩니다."
+ssoManaged = "ID 제공자를 통해 MFA를 구성하세요."
 
 [adminUserSettings]
 title = "사용자 제어 설정"
@@ -1264,7 +1289,10 @@ downloadHtml = "PDF 대신 중간 HTML 파일 다운로드"
 pdfaOptions = "PDF/A 옵션"
 outputFormat = "출력 형식"
 pdfaNote = "PDF/A-1b는 호환성이 더 높고, PDF/A-2b는 더 많은 기능을 지원합니다."
+pdfaFormat = "PDF/A 형식"
 pdfaDigitalSignatureWarning = "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+pdfxDigitalSignatureWarning = "해당 PDF에는 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+pdfxDescription = "PDF/X는 신뢰할 수 있는 인쇄와 그래픽 교환을 위한 ISO 표준 PDF 하위 집합입니다."
 fileFormat = "파일 형식"
 wordDoc = "Word 문서"
 wordDocExt = "Word 문서 (.docx)"
@@ -2196,6 +2224,16 @@ submit = "변환"
 tip = "현재 여러 입력을 한 번에 처리할 수 없습니다"
 outputFormat = "출력 형식"
 pdfWithDigitalSignature = "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+
+[pdfToPDFX]
+tags = "인쇄,표준,변환,제작,프리프레스,보관"
+title = "PDF를 PDF/X로"
+header = "PDF를 PDF/X로"
+credit = "이 서비스는 PDF/X 변환에 Ghostscript를 사용합니다"
+submit = "변환"
+tip = "현재 여러 입력을 동시에 지원하지 않습니다."
+outputFormat = "출력 형식"
+pdfWithDigitalSignature = "해당 PDF에는 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
 
 [PDFToWord]
 tags = "doc,docx,odt,워드,변환,형식,변환,오피스,마이크로소프트,docfile"
@@ -3153,6 +3191,18 @@ other = "기타"
 perPageInfo = "페이지별 정보"
 tableOfContents = "목차"
 
+[getPdfInfo.compliance]
+notDetected = "감지되지 않음"
+passed = "통과"
+failed = "실패"
+compliant = "준수"
+nonCompliant = "비준수"
+none = "표준이 감지되지 않음"
+passedCount = "통과"
+failedCount = "실패"
+noVerification = "검증이 수행되지 않음"
+noVerificationDesc = "이 문서에 대해 PDF 표준 준수 여부가 검증되지 않았습니다."
+
 [getPdfInfo.other]
 attachments = "첨부 파일"
 embeddedFiles = "내장 파일"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}}개의 제한"
 permsMixed = "일부 권한이 제한됨"
 hasCompliance = "규격 준수 기준 있음"
 noCompliance = "규격 준수 기준 없음"
+compliancePassed = "{{standards}} 준수"
+complianceChecked = "표준 검증 완료 (실패: {{failed}})"
 basic = "기본 정보"
 documentInfo = "문서 정보"
 securityTitle = "보안 상태"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "비밀번호가 성공적으로 변경되었습니다!
 credentialsUpdated = "자격 증명이 업데이트되었습니다. 다시 로그인하세요."
 defaultCredentials = "기본 로그인 정보"
 changePasswordWarning = "첫 로그인 후 비밀번호를 변경하세요"
+mfaRequired = "2단계 인증 코드가 필요합니다"
+mfaCode = "인증 코드"
+enterMfaCode = "6자리 코드를 입력하세요"
+mfaPromptTitle = "2단계 인증"
+mfaPromptBody = "진행하려면 인증 앱의 인증 코드를 입력하세요."
+verifyingMfa = "확인 중..."
+verifyMfa = "코드 확인"
 
 [login.slides.overview]
 alt = "Stirling PDF 개요"
@@ -4323,6 +4382,10 @@ hint = "저장되지 않은 변경 사항이 있습니다"
 title = "로그인 모드 필요"
 message = "관리자 설정을 변경하려면 로그인 모드를 활성화해야 합니다. 환경 변수에서 SECURITY_ENABLELOGIN=true 또는 settings.yml에서 security.enableLogin: true 로 설정한 다음 서버를 재시작하세요."
 readOnly = "아래 설정은 참고용 예시 값입니다. 로그인 모드를 활성화하면 실제 구성을 보고 편집할 수 있습니다."
+
+[admin.settings.enterpriseRequired]
+title = "Enterprise 라이선스 필요"
+message = "{{featureName}}에 액세스하려면 Enterprise 라이선스가 필요합니다. 참고용으로 데모 데이터를 보고 있습니다."
 
 [admin.settings.restart]
 title = "재시작 필요"
@@ -5413,6 +5476,7 @@ desc = "PDF 작업을 연결해 다단계 워크플로를 구성하세요. 반�
 invalidStep = "잘못된 단계"
 reviewTitle = "자동화 결과"
 copyToSaved = "저장됨으로 복사"
+exportForFolderScanning = "폴더 스캔용으로 내보내기"
 
 [automate.files]
 placeholder = "이 자동화로 처리할 파일을 선택하세요"
@@ -5434,6 +5498,7 @@ createTitle = "자동화 만들기"
 editTitle = "자동화 편집"
 intro = "자동화는 도구를 순차적으로 실행합니다. 시작하려면 실행 순서대로 도구를 추가하세요."
 save = "자동화 저장"
+exportForFolderScanning = "폴더 스캔용으로 내보내기"
 
 [automate.creation.name]
 label = "자동화 이름"
@@ -5820,6 +5885,7 @@ usernameRequired = "사용자 이름과 비밀번호가 필요합니다"
 passwordTooShort = "비밀번호는 6자 이상이어야 합니다"
 success = "사용자가 성공적으로 생성되었습니다"
 error = "사용자 생성에 실패했습니다"
+forceMFA = "다음 로그인 시 MFA 설정 강제"
 
 [workspace.people.authType]
 password = "비밀번호"
@@ -5928,6 +5994,11 @@ fromLicense = "라이선스 기준"
 slotsAvailable = "사용자 슬롯 {{count}}개 사용 가능"
 noSlotsAvailable = "가용 슬롯 없음"
 currentUsage = "현재 사용자 라이선스 {{max}}개 중 {{current}}개 사용 중"
+
+[workspace.people.mfa]
+adminDisableSuccess = "사용자에 대해 MFA가 성공적으로 비활성화되었습니다"
+adminDisableError = "사용자에 대해 MFA 비활성화에 실패했습니다"
+disableByAdmin = "MFA 비활성화"
 
 [workspace.teams]
 title = "팀"
@@ -6371,6 +6442,7 @@ endpoint = "엔드포인트"
 visits = "방문 수"
 percentage = "백분율"
 noData = "데이터가 없습니다"
+unknownEndpoint = "알 수 없는 엔드포인트"
 
 [backendHealth]
 checking = "백엔드 상태 확인 중..."

@@ -306,6 +306,7 @@ selectOperation = "اختر العملية"
 addOperationButton = "إضافة عملية"
 pipelineHeader = "خط الأنابيب:"
 saveButton = "تنزيل"
+saveForFolderScanning = "حفظ لمسح المجلد"
 validateButton = "تحقق"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "الخاصية"
 webBrowserSettings = "إعداد متصفح الويب"
 syncToBrowser = "مزامنة الحساب -> المتصفح"
 syncToAccount = "مزامنة الحساب <- المتصفح"
+
+[account.mfa]
+title = "المصادقة ذات العاملين"
+setupFailed = "تعذّر بدء إعداد المصادقة ذات العاملين. يُرجى المحاولة مجددًا."
+codeRequired = "أدخل رمز المصادقة للمتابعة."
+enabled = "تم تمكين المصادقة ذات العاملين."
+enableFailed = "تعذّر تمكين المصادقة ذات العاملين. تحقّق من الرمز وحاول مرة أخرى."
+disabled = "تم تعطيل المصادقة ذات العاملين."
+disableFailed = "تعذّر تعطيل المصادقة ذات العاملين. تحقّق من الرمز وحاول مرة أخرى."
+description = "أضِف طبقة أمان إضافية إلى حسابك."
+enableButton = "تمكين المصادقة ذات العاملين"
+disableButton = "تعطيل المصادقة ذات العاملين"
+setupTitle = "إعداد المصادقة ذات العاملين"
+setupDescription = "امسح رمز QR باستخدام تطبيق المصادِق لديك، ثم أدخل الرمز المكوَّن من 6 أرقام للتأكيد."
+manualKey = "مفتاح الإعداد اليدوي"
+secretWarning = "احفظ هذا المفتاح سريًا. أي شخص لديه وصول يستطيع إنشاء رموز مصادقة صالحة."
+codePlaceholder = "أدخل رمزًا مكوّنًا من 6 أرقام"
+confirmEnable = "تمكين"
+disableTitle = "تعطيل المصادقة ذات العاملين"
+disableDescription = "أدخل رمز مصادقة صالحًا لتعطيل المصادقة ذات العاملين."
+codeLabel = "رمز المصادقة"
+confirmDisable = "تعطيل"
+ssoDescription = "تدار المصادقة ذات العاملين من قِبل موفّر الهوية الخاص بك لحسابات تسجيل الدخول الموحّد."
+ssoManaged = "قم بإعداد MFA عبر موفّر هويتك."
 
 [adminUserSettings]
 title = "إعدادات التحكم في المستخدم"
@@ -1264,7 +1289,10 @@ downloadHtml = "تنزيل ملف HTML الوسيط بدلًا من PDF"
 pdfaOptions = "خيارات PDF/A"
 outputFormat = "صيغة الناتج"
 pdfaNote = "‏PDF/A-1b أكثر توافقًا، وPDF/A-2b يدعم مزيدًا من الميزات."
+pdfaFormat = "تنسيق PDF/A"
 pdfaDigitalSignatureWarning = "يحتوي PDF على توقيع رقمي. سيتم إزالة هذا في الخطوة التالية."
+pdfxDigitalSignatureWarning = "يحتوي ملف PDF على توقيع رقمي. سيتم إزالة ذلك في الخطوة التالية."
+pdfxDescription = "PDF/X هو مجموعة فرعية قياسية من PDF وفق ISO يوفّر طباعة موثوقة وتبادُل الرسومات."
 fileFormat = "صيغة الملف"
 wordDoc = "مستند Word"
 wordDocExt = "مستند Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "تحويل"
 tip = "لا يعمل حاليًا لمدخلات متعددة في وقت واحد"
 outputFormat = "تنسيق الإخراج"
 pdfWithDigitalSignature = "يحتوي PDF على توقيع رقمي. سيتم إزالة هذا في الخطوة التالية."
+
+[pdfToPDFX]
+tags = "طباعة,معيار,تحويل,إنتاج,ما قبل الطباعة,أرشفة"
+title = "PDF إلى PDF/X"
+header = "PDF إلى PDF/X"
+credit = "تستخدم هذه الخدمة Ghostscript لتحويل PDF/X"
+submit = "تحويل"
+tip = "لا يعمل حاليًا مع مدخلات متعددة دفعة واحدة"
+outputFormat = "تنسيق الإخراج"
+pdfWithDigitalSignature = "يحتوي ملف PDF على توقيع رقمي. سيتم إزالة ذلك في الخطوة التالية."
 
 [PDFToWord]
 tags = "doc,docx,odt,وورد,تحويل,تنسيق,تحويل,مكتب,مايكروسوفت,ملف المستند"
@@ -3153,6 +3191,18 @@ other = "أخرى"
 perPageInfo = "معلومات لكل صفحة"
 tableOfContents = "جدول المحتويات"
 
+[getPdfInfo.compliance]
+notDetected = "غير مُكتشف"
+passed = "تم الاجتياز"
+failed = "فشل"
+compliant = "متوافق"
+nonCompliant = "غير متوافق"
+none = "لم يتم اكتشاف أي معايير"
+passedCount = "ناجحة"
+failedCount = "فاشلة"
+noVerification = "لم يتم إجراء تحقق"
+noVerificationDesc = "لم يتم التحقق من التوافق مع معايير PDF لهذا المستند."
+
 [getPdfInfo.other]
 attachments = "المرفقات"
 embeddedFiles = "ملفات مضمنة"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} قيود"
 permsMixed = "بعض الأذونات مقيّدة"
 hasCompliance = "يتضمن معايير امتثال"
 noCompliance = "لا توجد معايير امتثال"
+compliancePassed = "{{standards}} متوافق"
+complianceChecked = "تم التحقق من المعايير ({{failed}} فاشلة)"
 basic = "معلومات أساسية"
 documentInfo = "معلومات المستند"
 securityTitle = "حالة الأمان"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "تم تغيير كلمة المرور بنجاح! ير
 credentialsUpdated = "تم تحديث بيانات الاعتماد الخاصة بك. يرجى تسجيل الدخول مجددًا."
 defaultCredentials = "بيانات اعتماد تسجيل الدخول الافتراضية"
 changePasswordWarning = "يرجى تغيير كلمة المرور بعد تسجيل الدخول لأول مرة"
+mfaRequired = "رمز المصادقة ذات العاملين مطلوب"
+mfaCode = "رمز المصادقة"
+enterMfaCode = "أدخل رمزًا مكوّنًا من 6 أرقام"
+mfaPromptTitle = "المصادقة ذات العاملين"
+mfaPromptBody = "أدخل رمز المصادقة من تطبيق المصادِق الخاص بك للمتابعة."
+verifyingMfa = "جارٍ التحقق..."
+verifyMfa = "تحقّق من الرمز"
 
 [login.slides.overview]
 alt = "نظرة عامة على Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "لديك تغييرات غير محفوظة"
 title = "مطلوب وضع تسجيل الدخول"
 message = "يجب تمكين وضع تسجيل الدخول لتعديل إعدادات المسؤول. يرجى ضبط SECURITY_ENABLELOGIN=true في بيئتك أو security.enableLogin: true في settings.yml، ثم أعد تشغيل الخادم."
 readOnly = "تعرض الإعدادات أدناه قيمًا نموذجية للمرجع. فعّل وضع تسجيل الدخول لعرض التهيئة الفعلية وتحريرها."
+
+[admin.settings.enterpriseRequired]
+title = "مطلوب ترخيص Enterprise"
+message = "يلزم توفر ترخيص Enterprise للوصول إلى {{featureName}}. أنت تشاهد بيانات تجريبية للمرجع."
 
 [admin.settings.restart]
 title = "مطلوب إعادة تشغيل"
@@ -5413,6 +5476,7 @@ desc = "ابنِ مهامًا متعددة الخطوات عبر ربط إجرا
 invalidStep = "خطوة غير صالحة"
 reviewTitle = "نتائج الأتمتة"
 copyToSaved = "نسخ إلى المحفوظ"
+exportForFolderScanning = "تصدير لمسح المجلد"
 
 [automate.files]
 placeholder = "اختر ملفات لمعالجتها بهذه الأتمتة"
@@ -5434,6 +5498,7 @@ createTitle = "إنشاء أتمتة"
 editTitle = "تحرير الأتمتة"
 intro = "تشغّل الأتمتات الأدوات بالتتابع. للبدء، أضف الأدوات بالترتيب الذي تريد تشغيلها."
 save = "حفظ الأتمتة"
+exportForFolderScanning = "تصدير لمسح المجلد"
 
 [automate.creation.name]
 label = "اسم الأتمتة"
@@ -5820,6 +5885,7 @@ usernameRequired = "اسم المستخدم وكلمة المرور مطلوبا
 passwordTooShort = "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل"
 success = "تم إنشاء المستخدم بنجاح"
 error = "فشل إنشاء المستخدم"
+forceMFA = "فرض إعداد MFA عند تسجيل الدخول التالي"
 
 [workspace.people.authType]
 password = "كلمة المرور"
@@ -5928,6 +5994,11 @@ fromLicense = "من الترخيص"
 slotsAvailable = "متاح {{count}} مقعد مستخدم"
 noSlotsAvailable = "لا توجد مقاعد متاحة"
 currentUsage = "تستخدم حالياً {{current}} من {{max}} تراخيص المستخدمين"
+
+[workspace.people.mfa]
+adminDisableSuccess = "تم تعطيل MFA بنجاح للمستخدم"
+adminDisableError = "فشل تعطيل MFA للمستخدم"
+disableByAdmin = "تعطيل MFA"
 
 [workspace.teams]
 title = "الفرق"
@@ -6371,6 +6442,7 @@ endpoint = "نقطة النهاية"
 visits = "الزيارات"
 percentage = "النسبة المئوية"
 noData = "لا توجد بيانات متاحة"
+unknownEndpoint = "نقطة نهاية غير معروفة"
 
 [backendHealth]
 checking = "جارٍ التحقق من حالة الواجهة الخلفية..."

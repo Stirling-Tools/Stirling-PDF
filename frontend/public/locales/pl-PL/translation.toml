@@ -306,6 +306,7 @@ selectOperation = "Wybierz operację"
 addOperationButton = "Dodaj operację"
 pipelineHeader = "Automatyzacja"
 saveButton = "Pobierz"
+saveForFolderScanning = "Zapisz do skanowania folderu"
 validateButton = "Waliduj"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Własność"
 webBrowserSettings = "Ustawienia przeglądarki"
 syncToBrowser = "Zapisz dane konta w przeglądarce"
 syncToAccount = "Wczytaj dane konta z przeglądarki"
+
+[account.mfa]
+title = "Uwierzytelnianie dwuskładnikowe"
+setupFailed = "Nie można rozpocząć konfiguracji uwierzytelniania dwuskładnikowego. Spróbuj ponownie."
+codeRequired = "Wprowadź kod uwierzytelniający, aby kontynuować."
+enabled = "Uwierzytelnianie dwuskładnikowe włączone."
+enableFailed = "Nie można włączyć uwierzytelniania dwuskładnikowego. Sprawdź kod i spróbuj ponownie."
+disabled = "Uwierzytelnianie dwuskładnikowe wyłączone."
+disableFailed = "Nie można wyłączyć uwierzytelniania dwuskładnikowego. Sprawdź kod i spróbuj ponownie."
+description = "Dodaj dodatkową warstwę zabezpieczeń do swojego konta."
+enableButton = "Włącz uwierzytelnianie dwuskładnikowe"
+disableButton = "Wyłącz uwierzytelnianie dwuskładnikowe"
+setupTitle = "Skonfiguruj uwierzytelnianie dwuskładnikowe"
+setupDescription = "Zeskanuj kod QR w aplikacji uwierzytelniającej, a następnie wprowadź 6-cyfrowy kod, aby potwierdzić."
+manualKey = "Klucz do ręcznej konfiguracji"
+secretWarning = "Zachowaj ten klucz w tajemnicy. Każdy, kto ma do niego dostęp, może generować prawidłowe kody uwierzytelniające."
+codePlaceholder = "Wprowadź 6-cyfrowy kod"
+confirmEnable = "Włącz"
+disableTitle = "Wyłącz uwierzytelnianie dwuskładnikowe"
+disableDescription = "Aby wyłączyć uwierzytelnianie dwuskładnikowe, wprowadź prawidłowy kod uwierzytelniający."
+codeLabel = "Kod uwierzytelniający"
+confirmDisable = "Wyłącz"
+ssoDescription = "Uwierzytelnianiem dwuskładnikowym zarządza Twój dostawca tożsamości dla kont Single Sign-On (SSO)."
+ssoManaged = "Skonfiguruj MFA poprzez swojego dostawcę tożsamości."
 
 [adminUserSettings]
 title = "Ustawienia konta użytkownika"
@@ -1264,7 +1289,10 @@ downloadHtml = "Pobierz pośredni plik HTML zamiast PDF"
 pdfaOptions = "Opcje PDF/A"
 outputFormat = "Format wyjściowy"
 pdfaNote = "PDF/A-1b jest bardziej kompatybilny, PDF/A-2b obsługuje więcej funkcji."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "Dokument zawiera podpis cyfrowy, nie zostanie on wczytany."
+pdfxDigitalSignatureWarning = "PDF zawiera podpis cyfrowy. Zostanie on usunięty w następnym kroku."
+pdfxDescription = "PDF/X to podzbiór PDF zgodny z normą ISO, przeznaczony do niezawodnego druku i wymiany grafiki."
 fileFormat = "Format pliku"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Konwertuj"
 tip = "Tylko jeden plik na raz"
 outputFormat = "Format wyjściowy:"
 pdfWithDigitalSignature = "Dokument zawiera podpis cyfrowy, nie zostanie on wczytany."
+
+[pdfToPDFX]
+tags = "druk,standard,konwersja,produkcja,prepress,archiwizacja"
+title = "PDF do PDF/X"
+header = "PDF do PDF/X"
+credit = "Ta usługa używa Ghostscript do konwersji PDF/X"
+submit = "Konwertuj"
+tip = "Obecnie nie działa dla wielu plików jednocześnie"
+outputFormat = "Format wyjściowy"
+pdfWithDigitalSignature = "PDF zawiera podpis cyfrowy. Zostanie on usunięty w następnym kroku."
 
 [PDFToWord]
 tags = "doc,docx,odt,word, przekształcenie, transformacja, konwersja, office, microsoft, plik doc"
@@ -3153,6 +3191,18 @@ other = "Inne"
 perPageInfo = "Informacje dla każdej strony"
 tableOfContents = "Spis treści"
 
+[getPdfInfo.compliance]
+notDetected = "Nie wykryto"
+passed = "Zaliczone"
+failed = "Niezaliczone"
+compliant = "Zgodny"
+nonCompliant = "Niezgodny"
+none = "Nie wykryto standardów"
+passedCount = "zaliczone"
+failedCount = "niezaliczone"
+noVerification = "Nie przeprowadzono weryfikacji"
+noVerificationDesc = "Zgodność ze standardami PDF nie została zweryfikowana dla tego dokumentu."
+
 [getPdfInfo.other]
 attachments = "Załączniki"
 embeddedFiles = "Osadzone pliki"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} ograniczeń"
 permsMixed = "Niektóre uprawnienia ograniczone"
 hasCompliance = "Spełnia standardy zgodności"
 noCompliance = "Brak standardów zgodności"
+compliancePassed = "Zgodny z {{standards}}"
+complianceChecked = "Zweryfikowano standardy ({{failed}} niezaliczonych)"
 basic = "Informacje podstawowe"
 documentInfo = "Informacje o dokumencie"
 securityTitle = "Stan zabezpieczeń"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Hasło zostało zmienione! Zaloguj się nowym hasłem.
 credentialsUpdated = "Dane logowania zostały zaktualizowane. Zaloguj się ponownie."
 defaultCredentials = "Domyślne dane logowania"
 changePasswordWarning = "Zmień hasło po pierwszym zalogowaniu."
+mfaRequired = "Wymagany kod dwuskładnikowy"
+mfaCode = "Kod uwierzytelniający"
+enterMfaCode = "Wprowadź 6-cyfrowy kod"
+mfaPromptTitle = "Uwierzytelnianie dwuskładnikowe"
+mfaPromptBody = "Wprowadź kod uwierzytelniający z aplikacji uwierzytelniającej, aby kontynuować."
+verifyingMfa = "Weryfikowanie..."
+verifyMfa = "Zweryfikuj kod"
 
 [login.slides.overview]
 alt = "Przegląd Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Masz niezapisane zmiany"
 title = "Wymagany tryb logowania"
 message = "Tryb logowania musi być włączony, aby modyfikować ustawienia administratora. Ustaw SECURITY_ENABLELOGIN=true w środowisku lub security.enableLogin: true w settings.yml, a następnie uruchom ponownie serwer."
 readOnly = "Poniższe ustawienia pokazują przykładowe wartości w celach poglądowych. Włącz tryb logowania, aby wyświetlać i edytować rzeczywistą konfigurację."
+
+[admin.settings.enterpriseRequired]
+title = "Wymagana licencja Enterprise"
+message = "Do uzyskania dostępu do {{featureName}} wymagana jest licencja Enterprise. Obecnie wyświetlasz dane demonstracyjne w celach poglądowych."
 
 [admin.settings.restart]
 title = "Wymagane ponowne uruchomienie"
@@ -5413,6 +5476,7 @@ desc = "Buduj wieloetapowe przepływy pracy, łącząc akcje PDF. Idealne dla za
 invalidStep = "Nieprawidłowy krok"
 reviewTitle = "Wyniki automatyzacji"
 copyToSaved = "Skopiuj do zapisanych"
+exportForFolderScanning = "Eksportuj do skanowania folderu"
 
 [automate.files]
 placeholder = "Wybierz pliki do przetworzenia w ramach tej automatyzacji"
@@ -5434,6 +5498,7 @@ createTitle = "Utwórz automatyzację"
 editTitle = "Edytuj automatyzację"
 intro = "Automatyzacje uruchamiają narzędzia sekwencyjnie. Aby zacząć, dodaj narzędzia w kolejności, w jakiej mają zostać uruchomione."
 save = "Zapisz automatyzację"
+exportForFolderScanning = "Eksportuj do skanowania folderu"
 
 [automate.creation.name]
 label = "Nazwa automatyzacji"
@@ -5820,6 +5885,7 @@ usernameRequired = "Wymagana jest nazwa użytkownika i hasło"
 passwordTooShort = "Hasło musi mieć co najmniej 6 znaków"
 success = "Użytkownik utworzony pomyślnie"
 error = "Nie udało się utworzyć użytkownika"
+forceMFA = "Wymuś konfigurację MFA przy następnym logowaniu"
 
 [workspace.people.authType]
 password = "Hasło"
@@ -5928,6 +5994,11 @@ fromLicense = "z licencji"
 slotsAvailable = "{{count}} wolnych miejsc dla użytkowników"
 noSlotsAvailable = "Brak wolnych miejsc"
 currentUsage = "Obecnie użyto {{current}} z {{max}} licencji użytkowników"
+
+[workspace.people.mfa]
+adminDisableSuccess = "Pomyślnie wyłączono MFA dla użytkownika"
+adminDisableError = "Nie udało się wyłączyć MFA dla użytkownika"
+disableByAdmin = "Wyłącz MFA"
 
 [workspace.teams]
 title = "Zespoły"
@@ -6371,6 +6442,7 @@ endpoint = "Endpoint"
 visits = "Wizyty"
 percentage = "Procent"
 noData = "Brak dostępnych danych"
+unknownEndpoint = "Nieznany endpoint"
 
 [backendHealth]
 checking = "Sprawdzanie statusu backendu..."

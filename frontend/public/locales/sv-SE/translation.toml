@@ -306,6 +306,7 @@ selectOperation = "Välj operation"
 addOperationButton = "Lägg till operation"
 pipelineHeader = "Pipeline:"
 saveButton = "Ladda ner"
+saveForFolderScanning = "Spara för mappskanning"
 validateButton = "Validera"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Egenskap"
 webBrowserSettings = "Webbläsarinställning"
 syncToBrowser = "Synkronisera konto -> webbläsare"
 syncToAccount = "Synkronisera konto <- webbläsare"
+
+[account.mfa]
+title = "Tvåfaktorsautentisering"
+setupFailed = "Det gick inte att starta konfiguration av tvåfaktorsautentisering. Försök igen."
+codeRequired = "Ange autentiseringskoden för att fortsätta."
+enabled = "Tvåfaktorsautentisering aktiverad."
+enableFailed = "Det gick inte att aktivera tvåfaktorsautentisering. Kontrollera koden och försök igen."
+disabled = "Tvåfaktorsautentisering inaktiverad."
+disableFailed = "Det gick inte att inaktivera tvåfaktorsautentisering. Kontrollera koden och försök igen."
+description = "Lägg till ett extra säkerhetslager till ditt konto."
+enableButton = "Aktivera tvåfaktorsautentisering"
+disableButton = "Inaktivera tvåfaktorsautentisering"
+setupTitle = "Konfigurera tvåfaktorsautentisering"
+setupDescription = "Skanna QR-koden med din autentiseringsapp och ange sedan den 6-siffriga koden för att bekräfta."
+manualKey = "Manuell konfigurationsnyckel"
+secretWarning = "Håll denna nyckel privat. Alla med åtkomst kan generera giltiga autentiseringskoder."
+codePlaceholder = "Ange 6-siffrig kod"
+confirmEnable = "Aktivera"
+disableTitle = "Inaktivera tvåfaktorsautentisering"
+disableDescription = "Ange en giltig autentiseringskod för att inaktivera tvåfaktorsautentisering."
+codeLabel = "Autentiseringskod"
+confirmDisable = "Inaktivera"
+ssoDescription = "Tvåfaktorsautentisering hanteras av din identitetsleverantör för single sign-on-konton."
+ssoManaged = "Konfigurera MFA via din identitetsleverantör."
 
 [adminUserSettings]
 title = "Användarhanteringsinställningar"
@@ -1264,7 +1289,10 @@ downloadHtml = "Ladda ner HTML‑mellanfil i stället för PDF"
 pdfaOptions = "PDF/A‑alternativ"
 outputFormat = "Utdataformat"
 pdfaNote = "PDF/A-1b är mer kompatibel, PDF/A-2b stöder fler funktioner."
+pdfaFormat = "PDF/A-format"
 pdfaDigitalSignatureWarning = "PDF:en innehåller en digital signatur. Denna kommer att tas bort i nästa steg."
+pdfxDigitalSignatureWarning = "PDF-filen innehåller en digital signatur. Detta kommer att tas bort i nästa steg."
+pdfxDescription = "PDF/X är en ISO-standardiserad PDF-delmängd för tillförlitlig tryckning och grafikutbyte."
 fileFormat = "Filformat"
 wordDoc = "Word‑dokument"
 wordDocExt = "Word‑dokument (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Konvertera"
 tip = "Fungerar för närvarande inte för flera inmatningar samtidigt"
 outputFormat = "Utdataformat"
 pdfWithDigitalSignature = "PDF:en innehåller en digital signatur. Denna kommer att tas bort i nästa steg."
+
+[pdfToPDFX]
+tags = "tryck,standard,konvertering,produktion,prepress,arkiv"
+title = "PDF till PDF/X"
+header = "PDF till PDF/X"
+credit = "Denna tjänst använder Ghostscript för PDF/X-konvertering"
+submit = "Konvertera"
+tip = "Fungerar för närvarande inte med flera indata samtidigt"
+outputFormat = "Utdataformat"
+pdfWithDigitalSignature = "PDF-filen innehåller en digital signatur. Detta kommer att tas bort i nästa steg."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformation,format,konvertering,kontor,microsoft,docfil"
@@ -3153,6 +3191,18 @@ other = "Övrigt"
 perPageInfo = "Information per sida"
 tableOfContents = "Innehållsförteckning"
 
+[getPdfInfo.compliance]
+notDetected = "Inte upptäckt"
+passed = "Godkänd"
+failed = "Underkänd"
+compliant = "Överensstämmande"
+nonCompliant = "Ej överensstämmande"
+none = "Inga standarder upptäckta"
+passedCount = "godkända"
+failedCount = "underkända"
+noVerification = "Ingen verifiering utförd"
+noVerificationDesc = "Efterlevnad av PDF-standarder verifierades inte för detta dokument."
+
 [getPdfInfo.other]
 attachments = "Bilagor"
 embeddedFiles = "Inbäddade filer"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} begränsningar"
 permsMixed = "Vissa behörigheter begränsade"
 hasCompliance = "Har efterlevnadsstandarder"
 noCompliance = "Inga efterlevnadsstandarder"
+compliancePassed = "Överensstämmer med {{standards}}"
+complianceChecked = "Standarder verifierade ({{failed}} underkända)"
 basic = "Grundläggande information"
 documentInfo = "Dokumentinformation"
 securityTitle = "Säkerhetsstatus"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Lösenordet har ändrats. Logga in med ditt nya lösen
 credentialsUpdated = "Dina uppgifter har uppdaterats. Logga in igen."
 defaultCredentials = "Standardinloggningsuppgifter"
 changePasswordWarning = "Byt ditt lösenord efter att du loggat in första gången"
+mfaRequired = "Tvåfaktorskod krävs"
+mfaCode = "Autentiseringskod"
+enterMfaCode = "Ange 6-siffrig kod"
+mfaPromptTitle = "Tvåfaktorsautentisering"
+mfaPromptBody = "Ange autentiseringskoden från din autentiseringsapp för att fortsätta."
+verifyingMfa = "Verifierar..."
+verifyMfa = "Verifiera kod"
 
 [login.slides.overview]
 alt = "Översikt över Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Du har osparade ändringar"
 title = "Inloggningsläge krävs"
 message = "Inloggningsläge måste vara aktiverat för att ändra admininställningar. Ställ in SECURITY_ENABLELOGIN=true i din miljö eller security.enableLogin: true i settings.yml och starta sedan om servern."
 readOnly = "Inställningarna nedan visar exempelvärden som referens. Aktivera inloggningsläge för att visa och redigera faktisk konfiguration."
+
+[admin.settings.enterpriseRequired]
+title = "Företagslicens krävs"
+message = "En företagslicens krävs för att få åtkomst till {{featureName}}. Du ser demodata som referens."
 
 [admin.settings.restart]
 title = "Omstart krävs"
@@ -5413,6 +5476,7 @@ desc = "Bygg arbetsflöden i flera steg genom att kedja samman PDF-verktyg. Idea
 invalidStep = "Ogiltigt steg"
 reviewTitle = "Resultat av automatisering"
 copyToSaved = "Kopiera till Sparade"
+exportForFolderScanning = "Exportera för mappskanning"
 
 [automate.files]
 placeholder = "Välj filer att bearbeta med denna automatisering"
@@ -5434,6 +5498,7 @@ createTitle = "Skapa automatisering"
 editTitle = "Redigera automatisering"
 intro = "Automatiseringar kör verktyg sekventiellt. Lägg till verktyg i den ordning du vill att de ska köras för att komma igång."
 save = "Spara automatisering"
+exportForFolderScanning = "Exportera för mappskanning"
 
 [automate.creation.name]
 label = "Namn på automatisering"
@@ -5820,6 +5885,7 @@ usernameRequired = "Användarnamn och lösenord krävs"
 passwordTooShort = "Lösenordet måste vara minst 6 tecken"
 success = "Användare skapad"
 error = "Misslyckades med att skapa användare"
+forceMFA = "Kräv att MFA konfigureras vid nästa inloggning"
 
 [workspace.people.authType]
 password = "Lösenord"
@@ -5928,6 +5994,11 @@ fromLicense = "från licens"
 slotsAvailable = "{{count}} användarplatser tillgängliga"
 noSlotsAvailable = "Inga platser tillgängliga"
 currentUsage = "Använder för närvarande {{current}} av {{max}} användarlicenser"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA inaktiverades för användaren"
+adminDisableError = "Det gick inte att inaktivera MFA för användaren"
+disableByAdmin = "Inaktivera MFA"
 
 [workspace.teams]
 title = "Team"
@@ -6371,6 +6442,7 @@ endpoint = "Slutpunkt"
 visits = "Besök"
 percentage = "Procent"
 noData = "Ingen data tillgänglig"
+unknownEndpoint = "Okänd slutpunkt"
 
 [backendHealth]
 checking = "Kontrollerar backendstatus..."

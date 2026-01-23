@@ -306,6 +306,7 @@ selectOperation = "Selecteer bewerking"
 addOperationButton = "Bewerking toevoegen"
 pipelineHeader = "Pijplijn:"
 saveButton = "Downloaden"
+saveForFolderScanning = "Opslaan voor mapscannen"
 validateButton = "Valideren"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Eigenschap"
 webBrowserSettings = "Webbrowser instelling"
 syncToBrowser = "Synchroniseer account -> browser"
 syncToAccount = "Synchroniseer account <- browser"
+
+[account.mfa]
+title = "Tweefactorauthenticatie"
+setupFailed = "Kan instellen van tweefactorauthenticatie niet starten. Probeer het opnieuw."
+codeRequired = "Voer de authenticatiecode in om door te gaan."
+enabled = "Tweefactorauthenticatie ingeschakeld."
+enableFailed = "Kan tweefactorauthenticatie niet inschakelen. Controleer de code en probeer het opnieuw."
+disabled = "Tweefactorauthenticatie uitgeschakeld."
+disableFailed = "Kan tweefactorauthenticatie niet uitschakelen. Controleer de code en probeer het opnieuw."
+description = "Voeg een extra beveiligingslaag toe aan uw account."
+enableButton = "Tweefactorauthenticatie inschakelen"
+disableButton = "Tweefactorauthenticatie uitschakelen"
+setupTitle = "Tweefactorauthenticatie instellen"
+setupDescription = "Scan de QR-code met uw authenticator-app en voer vervolgens de 6-cijferige code in ter bevestiging."
+manualKey = "Handmatige instelsleutel"
+secretWarning = "Bewaar deze sleutel privé. Iedereen met toegang kan geldige authenticatiecodes genereren."
+codePlaceholder = "Voer 6-cijferige code in"
+confirmEnable = "Inschakelen"
+disableTitle = "Tweefactorauthenticatie uitschakelen"
+disableDescription = "Voer een geldige authenticatiecode in om tweefactorauthenticatie uit te schakelen."
+codeLabel = "Authenticatiecode"
+confirmDisable = "Uitschakelen"
+ssoDescription = "Tweefactorauthenticatie wordt beheerd door uw identiteitsprovider voor single sign-on-accounts."
+ssoManaged = "Configureer MFA via uw identiteitsprovider."
 
 [adminUserSettings]
 title = "Gebruikersbeheer"
@@ -1264,7 +1289,10 @@ downloadHtml = "HTML-tussenbestand downloaden in plaats van PDF"
 pdfaOptions = "PDF/A-opties"
 outputFormat = "Uitvoerformaat"
 pdfaNote = "PDF/A-1b is compatibeler, PDF/A-2b ondersteunt meer functies."
+pdfaFormat = "PDF/A-formaat"
 pdfaDigitalSignatureWarning = "Dit PDF bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd."
+pdfxDigitalSignatureWarning = "Het PDF-bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd."
+pdfxDescription = "PDF/X is een ISO-standaard PDF-subset voor betrouwbaar afdrukken en grafische uitwisseling."
 fileFormat = "Bestandsformaat"
 wordDoc = "Word-document"
 wordDocExt = "Word-document (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Converteren"
 tip = "Werkt momenteel niet voor meerdere inputs tegelijkertijd."
 outputFormat = "Uitvoerindeling"
 pdfWithDigitalSignature = "Dit PDF bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd."
+
+[pdfToPDFX]
+tags = "print,standaard,conversie,productie,prepress,archief"
+title = "PDF naar PDF/X"
+header = "PDF naar PDF/X"
+credit = "Deze service gebruikt Ghostscript voor PDF/X-conversie"
+submit = "Converteren"
+tip = "Werkt momenteel niet met meerdere invoer tegelijk"
+outputFormat = "Uitvoerformaat"
+pdfWithDigitalSignature = "Het PDF-bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformatie,formaat,conversie,kantoor,microsoft,docfile"
@@ -3153,6 +3191,18 @@ other = "Overig"
 perPageInfo = "Informatie per pagina"
 tableOfContents = "Inhoudsopgave"
 
+[getPdfInfo.compliance]
+notDetected = "Niet gedetecteerd"
+passed = "Geslaagd"
+failed = "Mislukt"
+compliant = "Conform"
+nonCompliant = "Niet-conform"
+none = "Geen standaarden gedetecteerd"
+passedCount = "geslaagd"
+failedCount = "mislukt"
+noVerification = "Geen verificatie uitgevoerd"
+noVerificationDesc = "Naleving van PDF-standaarden is voor dit document niet geverifieerd."
+
 [getPdfInfo.other]
 attachments = "Bijlagen"
 embeddedFiles = "Ingesloten bestanden"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} beperkingen"
 permsMixed = "Sommige machtigingen beperkt"
 hasCompliance = "Voldoet aan compliancestandaarden"
 noCompliance = "Geen compliancestandaarden"
+compliancePassed = "{{standards}} conform"
+complianceChecked = "Standaarden geverifieerd ({{failed}} mislukt)"
 basic = "Basisinformatie"
 documentInfo = "Documentinformatie"
 securityTitle = "Beveiligingsstatus"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Wachtwoord succesvol gewijzigd! Log in met uw nieuwe w
 credentialsUpdated = "Uw inloggegevens zijn bijgewerkt. Log opnieuw in."
 defaultCredentials = "Standaard inloggegevens"
 changePasswordWarning = "Wijzig uw wachtwoord nadat u voor het eerst bent ingelogd"
+mfaRequired = "Tweefactorcode vereist"
+mfaCode = "Authenticatiecode"
+enterMfaCode = "Voer 6-cijferige code in"
+mfaPromptTitle = "Tweefactorauthenticatie"
+mfaPromptBody = "Voer de authenticatiecode uit uw authenticator-app in om door te gaan."
+verifyingMfa = "Verifiëren..."
+verifyMfa = "Code verifiëren"
 
 [login.slides.overview]
 alt = "Stirling PDF-overzicht"
@@ -4323,6 +4382,10 @@ hint = "Er zijn niet-opgeslagen wijzigingen"
 title = "Inlogmodus vereist"
 message = "Inlogmodus moet zijn ingeschakeld om beheerinstellingen te wijzigen. Stel SECURITY_ENABLELOGIN=true in uw omgeving of security.enableLogin: true in settings.yml in, start daarna de server opnieuw."
 readOnly = "De onderstaande instellingen tonen voorbeeldwaarden ter referentie. Schakel de inlogmodus in om de werkelijke configuratie te bekijken en te bewerken."
+
+[admin.settings.enterpriseRequired]
+title = "Enterprise-licentie vereist"
+message = "Voor toegang tot {{featureName}} is een Enterprise-licentie vereist. U bekijkt demogegevens ter referentie."
 
 [admin.settings.restart]
 title = "Herstart vereist"
@@ -5413,6 +5476,7 @@ desc = "Bouw meerstapsworkflows door PDF-acties te koppelen. Ideaal voor terugke
 invalidStep = "Ongeldige stap"
 reviewTitle = "Resultaten automatisering"
 copyToSaved = "Kopiëren naar Opgeslagen"
+exportForFolderScanning = "Exporteren voor mapscannen"
 
 [automate.files]
 placeholder = "Selecteer bestanden om met deze automatisering te verwerken"
@@ -5434,6 +5498,7 @@ createTitle = "Automatisering maken"
 editTitle = "Automatisering bewerken"
 intro = "Automatiseringen voeren tools opeenvolgend uit. Voeg tools toe in de volgorde waarin u ze wilt uitvoeren."
 save = "Automatisering opslaan"
+exportForFolderScanning = "Exporteren voor mapscannen"
 
 [automate.creation.name]
 label = "Naam automatisering"
@@ -5820,6 +5885,7 @@ usernameRequired = "Gebruikersnaam en wachtwoord zijn vereist"
 passwordTooShort = "Wachtwoord moet minstens 6 tekens zijn"
 success = "Gebruiker succesvol aangemaakt"
 error = "Gebruiker aanmaken is mislukt"
+forceMFA = "MFA-instelling forceren bij volgende aanmelding"
 
 [workspace.people.authType]
 password = "Wachtwoord"
@@ -5928,6 +5994,11 @@ fromLicense = "van licentie"
 slotsAvailable = "{{count}} gebruikersplaats(en) beschikbaar"
 noSlotsAvailable = "Geen plaatsen beschikbaar"
 currentUsage = "Momenteel {{current}} van {{max}} gebruikerslicenties in gebruik"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA succesvol uitgeschakeld voor gebruiker"
+adminDisableError = "MFA uitschakelen voor gebruiker mislukt"
+disableByAdmin = "MFA uitschakelen"
 
 [workspace.teams]
 title = "Teams"
@@ -6371,6 +6442,7 @@ endpoint = "Eindpunt"
 visits = "Bezoeken"
 percentage = "Percentage"
 noData = "Geen gegevens beschikbaar"
+unknownEndpoint = "Onbekend eindpunt"
 
 [backendHealth]
 checking = "Back-endstatus controleren..."

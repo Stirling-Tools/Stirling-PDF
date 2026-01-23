@@ -306,6 +306,7 @@ selectOperation = "Chọn thao tác"
 addOperationButton = "Thêm thao tác"
 pipelineHeader = "Pipeline:"
 saveButton = "Tải xuống"
+saveForFolderScanning = "Lưu cho quét thư mục"
 validateButton = "Xác thực"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Thuộc tính"
 webBrowserSettings = "Cài đặt trình duyệt web"
 syncToBrowser = "Đồng bộ hóa Tài khoản -> Trình duyệt"
 syncToAccount = "Đồng bộ hóa Tài khoản <- Trình duyệt"
+
+[account.mfa]
+title = "Xác thực hai yếu tố"
+setupFailed = "Không thể bắt đầu thiết lập xác thực hai yếu tố. Vui lòng thử lại."
+codeRequired = "Nhập mã xác thực để tiếp tục."
+enabled = "Đã bật xác thực hai yếu tố."
+enableFailed = "Không thể bật xác thực hai yếu tố. Hãy kiểm tra mã và thử lại."
+disabled = "Đã tắt xác thực hai yếu tố."
+disableFailed = "Không thể tắt xác thực hai yếu tố. Hãy kiểm tra mã và thử lại."
+description = "Thêm một lớp bảo mật bổ sung cho tài khoản của bạn."
+enableButton = "Bật xác thực hai yếu tố"
+disableButton = "Tắt xác thực hai yếu tố"
+setupTitle = "Thiết lập xác thực hai yếu tố"
+setupDescription = "Quét mã QR bằng ứng dụng xác thực của bạn, sau đó nhập mã 6 chữ số để xác nhận."
+manualKey = "Khóa thiết lập thủ công"
+secretWarning = "Giữ khóa này bí mật. Bất kỳ ai có quyền truy cập đều có thể tạo mã xác thực hợp lệ."
+codePlaceholder = "Nhập mã 6 chữ số"
+confirmEnable = "Bật"
+disableTitle = "Tắt xác thực hai yếu tố"
+disableDescription = "Nhập mã xác thực hợp lệ để tắt xác thực hai yếu tố."
+codeLabel = "Mã xác thực"
+confirmDisable = "Tắt"
+ssoDescription = "Xác thực hai yếu tố được quản lý bởi nhà cung cấp danh tính của bạn cho các tài khoản SSO."
+ssoManaged = "Cấu hình MFA thông qua nhà cung cấp danh tính của bạn."
 
 [adminUserSettings]
 title = "Cài đặt kiểm soát người dùng"
@@ -1264,7 +1289,10 @@ downloadHtml = "Tải xuống tệp HTML trung gian thay vì PDF"
 pdfaOptions = "Tùy chọn PDF/A"
 outputFormat = "Định dạng đầu ra"
 pdfaNote = "PDF/A-1b tương thích hơn, PDF/A-2b hỗ trợ nhiều tính năng hơn."
+pdfaFormat = "Định dạng PDF/A"
 pdfaDigitalSignatureWarning = "PDF chứa chữ ký số. Điều này sẽ bị xóa trong bước tiếp theo."
+pdfxDigitalSignatureWarning = "PDF chứa chữ ký số. Chữ ký này sẽ bị xóa ở bước tiếp theo."
+pdfxDescription = "PDF/X là một tập hợp con tiêu chuẩn ISO của PDF dành cho in ấn và trao đổi đồ họa đáng tin cậy."
 fileFormat = "Định dạng tệp"
 wordDoc = "Tài liệu Word"
 wordDocExt = "Tài liệu Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Chuyển đổi"
 tip = "Hiện tại không hoạt động với nhiều đầu vào cùng lúc"
 outputFormat = "Định dạng đầu ra"
 pdfWithDigitalSignature = "PDF chứa chữ ký số. Điều này sẽ bị xóa trong bước tiếp theo."
+
+[pdfToPDFX]
+tags = "in ấn,tiêu chuẩn,chuyển đổi,sản xuất,tiền in,lưu trữ"
+title = "PDF sang PDF/X"
+header = "PDF sang PDF/X"
+credit = "Dịch vụ này sử dụng Ghostscript để chuyển đổi PDF/X"
+submit = "Chuyển đổi"
+tip = "Hiện không hoạt động với nhiều đầu vào cùng lúc"
+outputFormat = "Định dạng đầu ra"
+pdfWithDigitalSignature = "PDF chứa chữ ký số. Chữ ký này sẽ bị xóa ở bước tiếp theo."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,chuyển đổi,định dạng,chuyển đổi,văn phòng,microsoft,tệp doc"
@@ -3153,6 +3191,18 @@ other = "Khác"
 perPageInfo = "Thông tin theo trang"
 tableOfContents = "Mục lục"
 
+[getPdfInfo.compliance]
+notDetected = "Không phát hiện"
+passed = "Đạt"
+failed = "Không đạt"
+compliant = "Tuân thủ"
+nonCompliant = "Không tuân thủ"
+none = "Không phát hiện tiêu chuẩn nào"
+passedCount = "đạt"
+failedCount = "không đạt"
+noVerification = "Không thực hiện xác minh"
+noVerificationDesc = "Tài liệu này chưa được xác minh tuân thủ các tiêu chuẩn PDF."
+
 [getPdfInfo.other]
 attachments = "Tệp đính kèm"
 embeddedFiles = "Tệp nhúng"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} giới hạn"
 permsMixed = "Một số quyền bị hạn chế"
 hasCompliance = "Có tiêu chuẩn tuân thủ"
 noCompliance = "Không có tiêu chuẩn tuân thủ"
+compliancePassed = "Tuân thủ {{standards}}"
+complianceChecked = "Đã xác minh tiêu chuẩn ({{failed}} không đạt)"
 basic = "Thông tin cơ bản"
 documentInfo = "Thông tin tài liệu"
 securityTitle = "Trạng thái bảo mật"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Đổi mật khẩu thành công! Vui lòng đăng nh�
 credentialsUpdated = "Thông tin xác thực của bạn đã được cập nhật. Vui lòng đăng nhập lại."
 defaultCredentials = "Thông tin đăng nhập mặc định"
 changePasswordWarning = "Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu"
+mfaRequired = "Yêu cầu mã hai yếu tố"
+mfaCode = "Mã xác thực"
+enterMfaCode = "Nhập mã 6 chữ số"
+mfaPromptTitle = "Xác thực hai yếu tố"
+mfaPromptBody = "Nhập mã xác thực từ ứng dụng xác thực của bạn để tiếp tục."
+verifyingMfa = "Đang xác minh..."
+verifyMfa = "Xác minh mã"
 
 [login.slides.overview]
 alt = "Tổng quan Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Bạn có thay đổi chưa lưu"
 title = "Yêu cầu chế độ đăng nhập"
 message = "Phải bật chế độ đăng nhập để chỉnh sửa cài đặt quản trị. Vui lòng đặt SECURITY_ENABLELOGIN=true trong môi trường của bạn hoặc security.enableLogin: true trong settings.yml, sau đó khởi động lại máy chủ."
 readOnly = "Các cài đặt bên dưới hiển thị giá trị ví dụ để tham khảo. Bật chế độ đăng nhập để xem và sửa cấu hình thực tế."
+
+[admin.settings.enterpriseRequired]
+title = "Yêu cầu giấy phép Enterprise"
+message = "Yêu cầu giấy phép Enterprise để truy cập {{featureName}}. Bạn đang xem dữ liệu demo để tham khảo."
 
 [admin.settings.restart]
 title = "Cần khởi động lại"
@@ -5413,6 +5476,7 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 invalidStep = "Bước không hợp lệ"
 reviewTitle = "Kết quả tự động hóa"
 copyToSaved = "Sao chép vào Đã lưu"
+exportForFolderScanning = "Xuất cho quét thư mục"
 
 [automate.files]
 placeholder = "Chọn tệp để xử lý với tự động hóa này"
@@ -5434,6 +5498,7 @@ createTitle = "Tạo tự động hóa"
 editTitle = "Chỉnh sửa tự động hóa"
 intro = "Tự động hóa chạy các công cụ tuần tự. Để bắt đầu, hãy thêm công cụ theo thứ tự bạn muốn chạy."
 save = "Lưu tự động hóa"
+exportForFolderScanning = "Xuất cho quét thư mục"
 
 [automate.creation.name]
 label = "Tên tự động hóa"
@@ -5820,11 +5885,13 @@ usernameRequired = "Yêu cầu tên đăng nhập và mật khẩu"
 passwordTooShort = "Mật khẩu phải có ít nhất 6 ký tự"
 success = "Tạo người dùng thành công"
 error = "Tạo người dùng thất bại"
+forceMFA = "Bắt buộc thiết lập MFA ở lần đăng nhập tiếp theo"
 
 [workspace.people.authType]
 password = "Mật khẩu"
 oauth = "OAuth2"
 saml = "SAML2"
+ssoDescription = "Người dùng sẽ xác thực thông qua nhà cung cấp SSO"
 
 [workspace.people.editMember]
 title = "Chỉnh sửa thành viên"
@@ -5927,6 +5994,11 @@ fromLicense = "từ giấy phép"
 slotsAvailable = "Còn {{count}} chỗ người dùng khả dụng"
 noSlotsAvailable = "Không còn chỗ khả dụng"
 currentUsage = "Đang dùng {{current}}/{{max}} giấy phép người dùng"
+
+[workspace.people.mfa]
+adminDisableSuccess = "Đã tắt MFA cho người dùng thành công"
+adminDisableError = "Tắt MFA cho người dùng không thành công"
+disableByAdmin = "Tắt MFA"
 
 [workspace.teams]
 title = "Nhóm"
@@ -6370,6 +6442,7 @@ endpoint = "Điểm cuối"
 visits = "Lượt truy cập"
 percentage = "Phần trăm"
 noData = "Không có dữ liệu"
+unknownEndpoint = "Điểm cuối không xác định"
 
 [backendHealth]
 checking = "Đang kiểm tra trạng thái backend..."

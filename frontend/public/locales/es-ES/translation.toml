@@ -306,6 +306,7 @@ selectOperation = "Seleccione la operación"
 addOperationButton = "Añadir operación"
 pipelineHeader = "Automatización:"
 saveButton = "Descargar"
+saveForFolderScanning = "Guardar para el escaneo de carpetas"
 validateButton = "Validar"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Propiedad"
 webBrowserSettings = "Configuración del navegador"
 syncToBrowser = "Sincronizar cuenta -> Navegador"
 syncToAccount = "Sincronizar cuenta <- Navegador"
+
+[account.mfa]
+title = "Autenticación de dos factores"
+setupFailed = "No se pudo iniciar la configuración de la autenticación de dos factores. Vuelve a intentarlo."
+codeRequired = "Introduce el código de autenticación para continuar."
+enabled = "Autenticación de dos factores habilitada."
+enableFailed = "No se pudo habilitar la autenticación de dos factores. Comprueba el código e inténtalo de nuevo."
+disabled = "Autenticación de dos factores deshabilitada."
+disableFailed = "No se pudo deshabilitar la autenticación de dos factores. Comprueba el código e inténtalo de nuevo."
+description = "Añade una capa adicional de seguridad a tu cuenta."
+enableButton = "Habilitar la autenticación de dos factores"
+disableButton = "Deshabilitar la autenticación de dos factores"
+setupTitle = "Configurar la autenticación de dos factores"
+setupDescription = "Escanea el código QR con tu aplicación de autenticación y luego introduce el código de 6 dígitos para confirmar."
+manualKey = "Clave de configuración manual"
+secretWarning = "Mantén esta clave privada. Cualquiera con acceso puede generar códigos de autenticación válidos."
+codePlaceholder = "Introduce el código de 6 dígitos"
+confirmEnable = "Habilitar"
+disableTitle = "Deshabilitar la autenticación de dos factores"
+disableDescription = "Introduce un código de autenticación válido para deshabilitar la autenticación de dos factores."
+codeLabel = "Código de autenticación"
+confirmDisable = "Deshabilitar"
+ssoDescription = "La autenticación de dos factores es gestionada por tu proveedor de identidad para cuentas con inicio de sesión único."
+ssoManaged = "Configura la MFA a través de tu proveedor de identidad."
 
 [adminUserSettings]
 title = "Configuración de control de usuario"
@@ -1264,7 +1289,10 @@ downloadHtml = "Descargar archivo intermedio HTML en lugar de PDF"
 pdfaOptions = "Opciones de PDF/A"
 outputFormat = "Formato de Salida"
 pdfaNote = "PDF/A-1b es más compatible, PDF/A-2b soporta más funciones."
+pdfaFormat = "Formato PDF/A"
 pdfaDigitalSignatureWarning = "El PDF contiene una firma digital. Ésta se eliminará en el siguiente paso."
+pdfxDigitalSignatureWarning = "El PDF contiene una firma digital. Se eliminará en el siguiente paso."
+pdfxDescription = "PDF/X es un subconjunto estándar ISO de PDF para impresión fiable e intercambio de gráficos."
 fileFormat = "Formato de Archivo"
 wordDoc = "Documento de Word"
 wordDocExt = "Documento de Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Convertir"
 tip = "Actualmente no funciona para múltiples entrada a la vez"
 outputFormat = "Formato de salida"
 pdfWithDigitalSignature = "El PDF contiene una firma digital. Ésta se eliminará en el siguiente paso."
+
+[pdfToPDFX]
+tags = "impresión,estándar,conversión,producción,preimpresión,archivo"
+title = "PDF a PDF/X"
+header = "PDF a PDF/X"
+credit = "Este servicio utiliza Ghostscript para la conversión a PDF/X"
+submit = "Convertir"
+tip = "Actualmente no funciona con varias entradas a la vez"
+outputFormat = "Formato de salida"
+pdfWithDigitalSignature = "El PDF contiene una firma digital. Se eliminará en el siguiente paso."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformación,formato,conversión,office,microsoft,archivo del documento"
@@ -3153,6 +3191,18 @@ other = "Otros"
 perPageInfo = "Información por página"
 tableOfContents = "Tabla de contenidos"
 
+[getPdfInfo.compliance]
+notDetected = "No detectado"
+passed = "Aprobado"
+failed = "Fallido"
+compliant = "Conforme"
+nonCompliant = "No conforme"
+none = "No se detectaron estándares"
+passedCount = "aprobadas"
+failedCount = "fallidas"
+noVerification = "No se realizó verificación"
+noVerificationDesc = "No se verificó el cumplimiento de estándares PDF para este documento."
+
 [getPdfInfo.other]
 attachments = "Adjuntos"
 embeddedFiles = "Archivos incrustados"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} restricciones"
 permsMixed = "Algunos permisos restringidos"
 hasCompliance = "Cumple con estándares"
 noCompliance = "Sin estándares de conformidad"
+compliancePassed = "{{standards}} conforme"
+complianceChecked = "Estándares verificados ({{failed}} fallidos)"
 basic = "Información básica"
 documentInfo = "Información del documento"
 securityTitle = "Estado de seguridad"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "¡Contraseña cambiada correctamente! Inicia sesión c
 credentialsUpdated = "Tus credenciales se han actualizado. Vuelve a iniciar sesión."
 defaultCredentials = "Credenciales de inicio de sesión predeterminadas"
 changePasswordWarning = "Cambie su contraseña tras iniciar sesión por primera vez"
+mfaRequired = "Se requiere código de dos factores"
+mfaCode = "Código de autenticación"
+enterMfaCode = "Introduce el código de 6 dígitos"
+mfaPromptTitle = "Autenticación de dos factores"
+mfaPromptBody = "Introduce el código de autenticación de tu aplicación de autenticación para continuar."
+verifyingMfa = "Verificando..."
+verifyMfa = "Verificar código"
 
 [login.slides.overview]
 alt = "Vista general de Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Tiene cambios sin guardar"
 title = "Se requiere modo de inicio de sesión"
 message = "El modo de inicio de sesión debe estar habilitado para modificar la configuración de administración. Establece SECURITY_ENABLELOGIN=true en tu entorno o security.enableLogin: true en settings.yml y reinicia el servidor."
 readOnly = "La configuración siguiente muestra valores de ejemplo como referencia. Habilita el modo de inicio de sesión para ver y editar la configuración real."
+
+[admin.settings.enterpriseRequired]
+title = "Se requiere una licencia Enterprise"
+message = "Se requiere una licencia Enterprise para acceder a {{featureName}}. Estás viendo datos de demostración como referencia."
 
 [admin.settings.restart]
 title = "Se requiere reiniciar"
@@ -5413,6 +5476,7 @@ desc = "Cree flujos de trabajo de varios pasos encadenando acciones de PDF. Idea
 invalidStep = "Paso inválido"
 reviewTitle = "Resultados de automatización"
 copyToSaved = "Copiar a guardados"
+exportForFolderScanning = "Exportar para el escaneo de carpetas"
 
 [automate.files]
 placeholder = "Seleccione archivos para procesar con esta automatización"
@@ -5434,6 +5498,7 @@ createTitle = "Crear automatización"
 editTitle = "Editar automatización"
 intro = "Las automatizaciones ejecutan herramientas de forma secuencial. Para comenzar, añada herramientas en el orden en que desea que se ejecuten."
 save = "Guardar automatización"
+exportForFolderScanning = "Exportar para el escaneo de carpetas"
 
 [automate.creation.name]
 label = "Nombre de automatización"
@@ -5820,6 +5885,7 @@ usernameRequired = "Se requieren nombre de usuario y contraseña"
 passwordTooShort = "La contraseña debe tener al menos 6 caracteres"
 success = "Usuario creado correctamente"
 error = "No se pudo crear el usuario"
+forceMFA = "Forzar la configuración de MFA en el próximo inicio de sesión"
 
 [workspace.people.authType]
 password = "Contraseña"
@@ -5928,6 +5994,11 @@ fromLicense = "de la licencia"
 slotsAvailable = "{{count}} plaza(s) de usuario disponible(s)"
 noSlotsAvailable = "No hay plazas disponibles"
 currentUsage = "Actualmente usando {{current}} de {{max}} licencias de usuario"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA deshabilitada correctamente para el usuario"
+adminDisableError = "No se pudo deshabilitar la MFA para el usuario"
+disableByAdmin = "Deshabilitar MFA"
 
 [workspace.teams]
 title = "Equipos"
@@ -6371,6 +6442,7 @@ endpoint = "Punto de conexión"
 visits = "Visitas"
 percentage = "Porcentaje"
 noData = "No hay datos disponibles"
+unknownEndpoint = "Endpoint desconocido"
 
 [backendHealth]
 checking = "Comprobando el estado del backend..."

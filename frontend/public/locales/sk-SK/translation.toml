@@ -306,6 +306,7 @@ selectOperation = "Vybrať operáciu"
 addOperationButton = "Pridať operáciu"
 pipelineHeader = "Pipeline:"
 saveButton = "Stiahnuť"
+saveForFolderScanning = "Uložiť pre skenovanie priečinka"
 validateButton = "Overiť"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Vlastnosť"
 webBrowserSettings = "Nastavenie webového prehliadača"
 syncToBrowser = "Synchronizovať účet -> Prehliadač"
 syncToAccount = "Synchronizovať účet <- Prehliadač"
+
+[account.mfa]
+title = "Dvojfaktorové overenie"
+setupFailed = "Nedá sa spustiť nastavenie dvojfaktorového overenia. Skúste to znova."
+codeRequired = "Zadajte overovací kód na pokračovanie."
+enabled = "Dvojfaktorové overenie povolené."
+enableFailed = "Nedá sa povoliť dvojfaktorové overenie. Skontrolujte kód a skúste to znova."
+disabled = "Dvojfaktorové overenie zakázané."
+disableFailed = "Nedá sa zakázať dvojfaktorové overenie. Skontrolujte kód a skúste to znova."
+description = "Pridajte do svojho účtu ďalšiu vrstvu zabezpečenia."
+enableButton = "Povoliť dvojfaktorové overenie"
+disableButton = "Zakázať dvojfaktorové overenie"
+setupTitle = "Nastavenie dvojfaktorového overenia"
+setupDescription = "Naskenujte QR kód vo svojej autentifikačnej aplikácii a potom zadajte 6-miestny kód na potvrdenie."
+manualKey = "Kľúč pre manuálne nastavenie"
+secretWarning = "Tento kľúč uchovajte v súkromí. Každý, kto k nemu bude mať prístup, môže generovať platné overovacie kódy."
+codePlaceholder = "Zadajte 6-miestny kód"
+confirmEnable = "Povoliť"
+disableTitle = "Zakázať dvojfaktorové overenie"
+disableDescription = "Zadajte platný overovací kód na zakázanie dvojfaktorového overenia."
+codeLabel = "Overovací kód"
+confirmDisable = "Zakázať"
+ssoDescription = "Dvojfaktorové overenie je spravované vaším poskytovateľom identity pre účty s jednotným prihlásením."
+ssoManaged = "Nastavte MFA cez svojho poskytovateľa identity."
 
 [adminUserSettings]
 title = "Nastavenia kontroly používateľov"
@@ -1264,7 +1289,10 @@ downloadHtml = "Stiahnuť medzivýstupný súbor HTML namiesto PDF"
 pdfaOptions = "Možnosti PDF/A"
 outputFormat = "Výstupný formát"
 pdfaNote = "PDF/A-1b je kompatibilnejší, PDF/A-2b podporuje viac funkcií."
+pdfaFormat = "Formát PDF/A"
 pdfaDigitalSignatureWarning = "PDF obsahuje digitálny podpis. V ďalšom kroku bude odstránený."
+pdfxDigitalSignatureWarning = "PDF obsahuje digitálny podpis. Ten sa v nasledujúcom kroku odstráni."
+pdfxDescription = "PDF/X je podmnožina PDF podľa štandardu ISO pre spoľahlivú tlač a výmenu grafiky."
 fileFormat = "Formát súboru"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Konvertovať"
 tip = "Momentálne nefunguje pre viacero vstupov naraz"
 outputFormat = "Výstupný formát"
 pdfWithDigitalSignature = "PDF obsahuje digitálny podpis. V ďalšom kroku bude odstránený."
+
+[pdfToPDFX]
+tags = "tlač,štandard,konverzia,produkcia,predtlačová príprava,archív"
+title = "PDF na PDF/X"
+header = "PDF na PDF/X"
+credit = "Táto služba používa Ghostscript na konverziu do PDF/X"
+submit = "Konvertovať"
+tip = "Momentálne nefunguje s viacerými vstupmi naraz"
+outputFormat = "Výstupný formát"
+pdfWithDigitalSignature = "PDF obsahuje digitálny podpis. Ten sa v nasledujúcom kroku odstráni."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformácia,formát,konverzia,kancelária,microsoft,dokument"
@@ -3153,6 +3191,18 @@ other = "Iné"
 perPageInfo = "Informácie pre strany"
 tableOfContents = "Obsah"
 
+[getPdfInfo.compliance]
+notDetected = "Nezistené"
+passed = "Vyhovelo"
+failed = "Nevyhovelo"
+compliant = "V súlade"
+nonCompliant = "Nie je v súlade"
+none = "Neboli zistené žiadne štandardy"
+passedCount = "vyhovelo"
+failedCount = "nevyhovelo"
+noVerification = "Overenie nebolo vykonané"
+noVerificationDesc = "Súlad so štandardmi PDF nebol pre tento dokument overený."
+
 [getPdfInfo.other]
 attachments = "Prílohy"
 embeddedFiles = "Vložené súbory"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} obmedzení"
 permsMixed = "Niektoré oprávnenia obmedzené"
 hasCompliance = "Spĺňa štandardy súladu"
 noCompliance = "Žiadne štandardy súladu"
+compliancePassed = "Spĺňa {{standards}}"
+complianceChecked = "Štandardy overené ({{failed}} nevyhovelo)"
 basic = "Základné informácie"
 documentInfo = "Informácie o dokumente"
 securityTitle = "Stav zabezpečenia"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Heslo bolo úspešne zmenené! Prihláste sa novým he
 credentialsUpdated = "Vaše prihlasovacie údaje boli aktualizované. Prihláste sa znova."
 defaultCredentials = "Predvolené prihlasovacie údaje"
 changePasswordWarning = "Zmeňte si heslo po prvom prihlásení"
+mfaRequired = "Vyžaduje sa dvojfaktorový kód"
+mfaCode = "Overovací kód"
+enterMfaCode = "Zadajte 6-miestny kód"
+mfaPromptTitle = "Dvojfaktorové overenie"
+mfaPromptBody = "Zadajte overovací kód z vašej autentifikačnej aplikácie na pokračovanie."
+verifyingMfa = "Overuje sa..."
+verifyMfa = "Overiť kód"
 
 [login.slides.overview]
 alt = "Prehľad Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Máte neuložené zmeny"
 title = "Vyžaduje sa režim prihlásenia"
 message = "Na úpravu administrátorských nastavení musí byť povolený režim prihlásenia. Nastavte SECURITY_ENABLELOGIN=true vo vašom prostredí alebo security.enableLogin: true v settings.yml, potom reštartujte server."
 readOnly = "Nižšie uvedené nastavenia zobrazujú ukážkové hodnoty na referenciu. Povoľte režim prihlásenia na zobrazenie a úpravu skutočnej konfigurácie."
+
+[admin.settings.enterpriseRequired]
+title = "Vyžaduje sa podniková licencia"
+message = "Na prístup k {{featureName}} sa vyžaduje podniková licencia. Prezeráte si ukážkové údaje."
 
 [admin.settings.restart]
 title = "Vyžaduje sa reštart"
@@ -5413,6 +5476,7 @@ desc = "Vytvárajte viacstupňové pracovné postupy spájaním akcií s PDF. Id
 invalidStep = "Neplatný krok"
 reviewTitle = "Výsledky automatizácie"
 copyToSaved = "Skopírovať do Uložených"
+exportForFolderScanning = "Exportovať pre skenovanie priečinka"
 
 [automate.files]
 placeholder = "Vyberte súbory na spracovanie touto automatizáciou"
@@ -5434,6 +5498,7 @@ createTitle = "Vytvoriť automatizáciu"
 editTitle = "Upraviť automatizáciu"
 intro = "Automatizácie spúšťajú nástroje postupne. Začnite pridaním nástrojov v poradí, v akom ich chcete spúšťať."
 save = "Uložiť automatizáciu"
+exportForFolderScanning = "Exportovať pre skenovanie priečinka"
 
 [automate.creation.name]
 label = "Názov automatizácie"
@@ -5820,6 +5885,7 @@ usernameRequired = "Používateľské meno a heslo sú povinné"
 passwordTooShort = "Heslo musí mať aspoň 6 znakov"
 success = "Používateľ úspešne vytvorený"
 error = "Používateľa sa nepodarilo vytvoriť"
+forceMFA = "Vynútiť nastavenie MFA pri ďalšom prihlásení"
 
 [workspace.people.authType]
 password = "Heslo"
@@ -5928,6 +5994,11 @@ fromLicense = "z licencie"
 slotsAvailable = "K dispozícii {{count}} miest pre používateľov"
 noSlotsAvailable = "Žiadne voľné miesta"
 currentUsage = "Aktuálne používaných {{current}} z {{max}} používateľských licencií"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA bolo úspešne zakázané pre používateľa"
+adminDisableError = "Nepodarilo sa zakázať MFA pre používateľa"
+disableByAdmin = "Zakázať MFA"
 
 [workspace.teams]
 title = "Tímy"
@@ -6371,6 +6442,7 @@ endpoint = "Koncový bod"
 visits = "Návštevy"
 percentage = "Percento"
 noData = "Údaje nie sú k dispozícii"
+unknownEndpoint = "Neznámy koncový bod"
 
 [backendHealth]
 checking = "Kontroluje sa stav backendu..."

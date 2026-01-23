@@ -306,6 +306,7 @@ selectOperation = "Seleziona operazione"
 addOperationButton = "Aggiungi operazione"
 pipelineHeader = "Pipeline:"
 saveButton = "Salva"
+saveForFolderScanning = "Salva per la scansione delle cartelle"
 validateButton = "Convalidare"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Proprietà"
 webBrowserSettings = "Impostazione del browser web"
 syncToBrowser = "Sincronizza account -> Browser"
 syncToAccount = "Sincronizza account <- Browser"
+
+[account.mfa]
+title = "Autenticazione a due fattori"
+setupFailed = "Impossibile avviare la configurazione dell'autenticazione a due fattori. Riprova."
+codeRequired = "Inserisci il codice di autenticazione per continuare."
+enabled = "Autenticazione a due fattori abilitata."
+enableFailed = "Impossibile abilitare l'autenticazione a due fattori. Controlla il codice e riprova."
+disabled = "Autenticazione a due fattori disabilitata."
+disableFailed = "Impossibile disabilitare l'autenticazione a due fattori. Controlla il codice e riprova."
+description = "Aggiungi un ulteriore livello di sicurezza al tuo account."
+enableButton = "Abilita l'autenticazione a due fattori"
+disableButton = "Disabilita l'autenticazione a due fattori"
+setupTitle = "Configura l'autenticazione a due fattori"
+setupDescription = "Scansiona il codice QR con la tua app di autenticazione, quindi inserisci il codice a 6 cifre per confermare."
+manualKey = "Chiave di configurazione manuale"
+secretWarning = "Mantieni privata questa chiave. Chiunque vi abbia accesso può generare codici di autenticazione validi."
+codePlaceholder = "Inserisci il codice a 6 cifre"
+confirmEnable = "Abilita"
+disableTitle = "Disabilita l'autenticazione a due fattori"
+disableDescription = "Inserisci un codice di autenticazione valido per disabilitare l'autenticazione a due fattori."
+codeLabel = "Codice di autenticazione"
+confirmDisable = "Disabilita"
+ssoDescription = "L'autenticazione a due fattori è gestita dal tuo provider di identità per gli account Single Sign-On."
+ssoManaged = "Configura la MFA tramite il tuo provider di identità."
 
 [adminUserSettings]
 title = "Impostazioni di controllo utente"
@@ -1264,7 +1289,10 @@ downloadHtml = "Scarica file HTML intermedio invece del PDF"
 pdfaOptions = "Opzioni PDF/A"
 outputFormat = "Formato di output"
 pdfaNote = "PDF/A-1b è più compatibile, PDF/A-2b supporta più funzionalità."
+pdfaFormat = "Formato PDF/A"
 pdfaDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questo verrà rimosso nel passaggio successivo."
+pdfxDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questa verrà rimossa nel passaggio successivo."
+pdfxDescription = "PDF/X è un sottoinsieme PDF standard ISO per una stampa affidabile e lo scambio di grafica."
 fileFormat = "Formato file"
 wordDoc = "Documento Word"
 wordDocExt = "Documento Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Converti"
 tip = "Attualmente non funziona per più input contemporaneamente"
 outputFormat = "Formato di output"
 pdfWithDigitalSignature = "Il PDF contiene una firma digitale. Questo verrà rimosso nel passaggio successivo."
+
+[pdfToPDFX]
+tags = "stampa,standard,conversione,produzione,prestampa,archiviazione"
+title = "PDF in PDF/X"
+header = "PDF in PDF/X"
+credit = "Questo servizio utilizza Ghostscript per la conversione PDF/X"
+submit = "Converti"
+tip = "Attualmente non funziona con più input contemporaneamente"
+outputFormat = "Formato di output"
+pdfWithDigitalSignature = "Il PDF contiene una firma digitale. Questa verrà rimossa nel passaggio successivo."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,trasformazione,formato,conversione,office,microsoft,filedoc"
@@ -3153,6 +3191,18 @@ other = "Altro"
 perPageInfo = "Info per pagina"
 tableOfContents = "Sommario"
 
+[getPdfInfo.compliance]
+notDetected = "Non rilevato"
+passed = "Superato"
+failed = "Fallito"
+compliant = "Conforme"
+nonCompliant = "Non conforme"
+none = "Nessuno standard rilevato"
+passedCount = "superati"
+failedCount = "falliti"
+noVerification = "Nessuna verifica eseguita"
+noVerificationDesc = "La conformità agli standard PDF non è stata verificata per questo documento."
+
 [getPdfInfo.other]
 attachments = "Allegati"
 embeddedFiles = "File incorporati"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} restrizioni"
 permsMixed = "Alcune autorizzazioni limitate"
 hasCompliance = "Conforme agli standard"
 noCompliance = "Nessuno standard di conformità"
+compliancePassed = "Conforme a {{standards}}"
+complianceChecked = "Standard verificati ({{failed}} falliti)"
 basic = "Informazioni di base"
 documentInfo = "Informazioni sul documento"
 securityTitle = "Stato della sicurezza"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Password modificata con successo! Accedi con la nuova 
 credentialsUpdated = "Le tue credenziali sono state aggiornate. Accedi di nuovo."
 defaultCredentials = "Credenziali di accesso predefinite"
 changePasswordWarning = "Modifica la password dopo il primo accesso"
+mfaRequired = "Codice a due fattori richiesto"
+mfaCode = "Codice di autenticazione"
+enterMfaCode = "Inserisci il codice a 6 cifre"
+mfaPromptTitle = "Autenticazione a due fattori"
+mfaPromptBody = "Inserisci il codice di autenticazione dalla tua app di autenticazione per continuare."
+verifyingMfa = "Verifica in corso..."
+verifyMfa = "Verifica codice"
 
 [login.slides.overview]
 alt = "Panoramica di Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Hai modifiche non salvate"
 title = "Modalità di accesso richiesta"
 message = "La modalità di accesso deve essere abilitata per modificare le impostazioni di amministrazione. Imposta SECURITY_ENABLELOGIN=true nel tuo ambiente o security.enableLogin: true in settings.yml, quindi riavvia il server."
 readOnly = "Le impostazioni seguenti mostrano valori di esempio a titolo di riferimento. Abilita la modalità di accesso per visualizzare e modificare la configurazione reale."
+
+[admin.settings.enterpriseRequired]
+title = "Licenza Enterprise richiesta"
+message = "È necessaria una licenza Enterprise per accedere a {{featureName}}. Stai visualizzando dati demo a scopo di riferimento."
 
 [admin.settings.restart]
 title = "Riavvio richiesto"
@@ -5413,6 +5476,7 @@ desc = "Crea flussi di lavoro multi‑step concatenando azioni PDF. Ideale per a
 invalidStep = "Passo non valido"
 reviewTitle = "Risultati Automazione"
 copyToSaved = "Copia in Salvati"
+exportForFolderScanning = "Esporta per la scansione delle cartelle"
 
 [automate.files]
 placeholder = "Seleziona i file da elaborare con questa automazione"
@@ -5434,6 +5498,7 @@ createTitle = "Crea Automazione"
 editTitle = "Modifica Automazione"
 intro = "Le automazioni eseguono gli strumenti in sequenza. Per iniziare, aggiungi gli strumenti nell’ordine in cui vuoi che vengano eseguiti."
 save = "Salva automazione"
+exportForFolderScanning = "Esporta per la scansione delle cartelle"
 
 [automate.creation.name]
 label = "Nome Automazione"
@@ -5820,6 +5885,7 @@ usernameRequired = "Nome utente e password sono obbligatori"
 passwordTooShort = "La password deve contenere almeno 6 caratteri"
 success = "Utente creato con successo"
 error = "Impossibile creare l'utente"
+forceMFA = "Forza la configurazione della MFA al prossimo accesso"
 
 [workspace.people.authType]
 password = "Password"
@@ -5928,6 +5994,11 @@ fromLicense = "dalla licenza"
 slotsAvailable = "{{count}} slot utente disponibili"
 noSlotsAvailable = "Nessuno slot disponibile"
 currentUsage = "Attualmente in uso {{current}} su {{max}} licenze utente"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA disabilitata correttamente per l'utente"
+adminDisableError = "Impossibile disabilitare la MFA per l'utente"
+disableByAdmin = "Disabilita MFA"
 
 [workspace.teams]
 title = "Team"
@@ -6371,6 +6442,7 @@ endpoint = "Endpoint"
 visits = "Visite"
 percentage = "Percentuale"
 noData = "Nessun dato disponibile"
+unknownEndpoint = "Endpoint sconosciuto"
 
 [backendHealth]
 checking = "Verifica dello stato del backend..."

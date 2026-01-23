@@ -306,6 +306,7 @@ selectOperation = "Selecciona Operació"
 addOperationButton = "Afegeix operació"
 pipelineHeader = "Procés:"
 saveButton = "Descarrega"
+saveForFolderScanning = "Desa per a l'escaneig de carpetes"
 validateButton = "Valida"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Propietat:"
 webBrowserSettings = "Opcions del Navegador"
 syncToBrowser = "Sincronitza Compte -> Navegador"
 syncToAccount = "Sincronitza Compte <- Navegador"
+
+[account.mfa]
+title = "Autenticació de dos factors"
+setupFailed = "No s'ha pogut iniciar la configuració de l'autenticació de dos factors. Torneu-ho a provar."
+codeRequired = "Introduïu el codi d'autenticació per continuar."
+enabled = "Autenticació de dos factors activada."
+enableFailed = "No s'ha pogut activar l'autenticació de dos factors. Comproveu el codi i torneu-ho a provar."
+disabled = "Autenticació de dos factors desactivada."
+disableFailed = "No s'ha pogut desactivar l'autenticació de dos factors. Comproveu el codi i torneu-ho a provar."
+description = "Afegiu una capa addicional de seguretat al vostre compte."
+enableButton = "Activa l'autenticació de dos factors"
+disableButton = "Desactiva l'autenticació de dos factors"
+setupTitle = "Configura l'autenticació de dos factors"
+setupDescription = "Escanegeu el codi QR amb la vostra aplicació d'autenticació i, a continuació, introduïu el codi de 6 dígits per confirmar."
+manualKey = "Clau de configuració manual"
+secretWarning = "Manteniu aquesta clau en secret. Qualsevol persona amb accés pot generar codis d'autenticació vàlids."
+codePlaceholder = "Introduïu el codi de 6 dígits"
+confirmEnable = "Activa"
+disableTitle = "Desactiva l'autenticació de dos factors"
+disableDescription = "Introduïu un codi d'autenticació vàlid per desactivar l'autenticació de dos factors."
+codeLabel = "Codi d'autenticació"
+confirmDisable = "Desactiva"
+ssoDescription = "L'autenticació de dos factors és gestionada pel vostre proveïdor d'identitat per als comptes d'inici de sessió únic."
+ssoManaged = "Configureu l'MFA a través del vostre proveïdor d'identitat."
 
 [adminUserSettings]
 title = "Opcions de Control d'Usuari"
@@ -1264,7 +1289,10 @@ downloadHtml = "Baixa el fitxer HTML intermedi en lloc del PDF"
 pdfaOptions = "Opcions de PDF/A"
 outputFormat = "Format de sortida"
 pdfaNote = "PDF/A-1b és més compatible; PDF/A-2b admet més funcions."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
+pdfxDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta se suprimirà en el pas següent."
+pdfxDescription = "PDF/X és un subconjunt de PDF estàndard ISO per a una impressió fiable i un intercanvi de gràfics fiable."
 fileFormat = "Format de fitxer"
 wordDoc = "Document de Word"
 wordDocExt = "Document de Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Converteix"
 tip = "Actualment no funciona per a múltiples entrades al mateix temps"
 outputFormat = "Format de sortida"
 pdfWithDigitalSignature = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
+
+[pdfToPDFX]
+tags = "impressió,estàndard,conversió,producció,preimpressió,arxiu"
+title = "PDF a PDF/X"
+header = "PDF a PDF/X"
+credit = "Aquest servei utilitza Ghostscript per a la conversió a PDF/X"
+submit = "Converteix"
+tip = "Actualment no funciona amb diverses entrades alhora"
+outputFormat = "Format de sortida"
+pdfWithDigitalSignature = "El PDF conté una signatura digital. Aquesta se suprimirà en el pas següent."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformació,format,conversió,oficina,microsoft,fitxer doc"
@@ -3153,6 +3191,18 @@ other = "Altres"
 perPageInfo = "Informació per pàgina"
 tableOfContents = "Taula de continguts"
 
+[getPdfInfo.compliance]
+notDetected = "No detectat"
+passed = "Superat"
+failed = "Fallat"
+compliant = "Conforme"
+nonCompliant = "No conforme"
+none = "No s'han detectat estàndards"
+passedCount = "superats"
+failedCount = "fallats"
+noVerification = "No s'ha realitzat cap verificació"
+noVerificationDesc = "El compliment dels estàndards PDF no s'ha verificat per a aquest document."
+
 [getPdfInfo.other]
 attachments = "Fitxers adjunts"
 embeddedFiles = "Fitxers incrustats"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} restriccions"
 permsMixed = "Alguns permisos restringits"
 hasCompliance = "Té estàndards de conformitat"
 noCompliance = "Sense estàndards de conformitat"
+compliancePassed = "{{standards}} conforme"
+complianceChecked = "Estàndards verificats ({{failed}} fallats)"
 basic = "Informació bàsica"
 documentInfo = "Informació del document"
 securityTitle = "Estat de seguretat"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Contrasenya canviada correctament! Inicieu sessió amb
 credentialsUpdated = "S'han actualitzat les vostres credencials. Torneu a iniciar sessió."
 defaultCredentials = "Credencials d'inici de sessió predeterminades"
 changePasswordWarning = "Canvia la contrasenya després d'iniciar sessió per primera vegada"
+mfaRequired = "Es requereix un codi de dos factors"
+mfaCode = "Codi d'autenticació"
+enterMfaCode = "Introduïu el codi de 6 dígits"
+mfaPromptTitle = "Autenticació de dos factors"
+mfaPromptBody = "Introduïu el codi d'autenticació de la vostra aplicació d'autenticació per continuar."
+verifyingMfa = "Verificant..."
+verifyMfa = "Verifica el codi"
 
 [login.slides.overview]
 alt = "Visió general de Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Tens canvis no desats"
 title = "Cal el mode d'inici de sessió"
 message = "S'ha d'activar el mode d'inici de sessió per modificar la configuració d'administració. Si us plau, establiu SECURITY_ENABLELOGIN=true al vostre entorn o security.enableLogin: true a settings.yml, i després reinicieu el servidor."
 readOnly = "Els paràmetres següents mostren valors d'exemple com a referència. Activeu el mode d'inici de sessió per veure i editar la configuració real."
+
+[admin.settings.enterpriseRequired]
+title = "Es requereix llicència Enterprise"
+message = "Es requereix una llicència Enterprise per accedir a {{featureName}}. Esteu veient dades de demostració com a referència."
 
 [admin.settings.restart]
 title = "Cal reiniciar"
@@ -5413,6 +5476,7 @@ desc = "Creeu fluxos de treball de diversos passos encadenant accions de PDF. Id
 invalidStep = "Pas no vàlid"
 reviewTitle = "Resultats de l’automatització"
 copyToSaved = "Copia a Desats"
+exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
 
 [automate.files]
 placeholder = "Seleccioneu fitxers per processar amb aquesta automatització"
@@ -5434,6 +5498,7 @@ createTitle = "Crea automatització"
 editTitle = "Edita automatització"
 intro = "Les automatitzacions executen les eines seqüencialment. Per començar, afegiu les eines en l’ordre que voleu que s’executin."
 save = "Desa l’automatització"
+exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
 
 [automate.creation.name]
 label = "Nom de l’automatització"
@@ -5820,11 +5885,13 @@ usernameRequired = "Cal nom d’usuari i contrasenya"
 passwordTooShort = "La contrasenya ha de tenir almenys 6 caràcters"
 success = "Usuari creat correctament"
 error = "No s’ha pogut crear l’usuari"
+forceMFA = "Força la configuració de l'MFA en el proper inici de sessió"
 
 [workspace.people.authType]
 password = "Contrasenya"
 oauth = "OAuth2"
 saml = "SAML2"
+ssoDescription = "L'usuari s'autenticarà a través del proveïdor SSO"
 
 [workspace.people.editMember]
 title = "Edita membre"
@@ -5927,6 +5994,11 @@ fromLicense = "de la llicència"
 slotsAvailable = "{{count}} plaça(es) d’usuari disponibles"
 noSlotsAvailable = "No hi ha places disponibles"
 currentUsage = "Actualment s’estan utilitzant {{current}} de {{max}} llicències d’usuari"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA desactivada correctament per a l'usuari"
+adminDisableError = "No s'ha pogut desactivar l'MFA per a l'usuari"
+disableByAdmin = "Desactiva l'MFA"
 
 [workspace.teams]
 title = "Equips"
@@ -6370,6 +6442,7 @@ endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Percentatge"
 noData = "No hi ha dades disponibles"
+unknownEndpoint = "Punt final desconegut"
 
 [backendHealth]
 checking = "Comprovant l'estat del backend..."

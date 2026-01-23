@@ -306,6 +306,7 @@ selectOperation = "Vybrat operaci"
 addOperationButton = "Přidat operaci"
 pipelineHeader = "Pipeline:"
 saveButton = "Stáhnout"
+saveForFolderScanning = "Uložit pro skenování složky"
 validateButton = "Ověřit"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Vlastnost"
 webBrowserSettings = "Nastavení webového prohlížeče"
 syncToBrowser = "Synchronizovat účet -> prohlížeč"
 syncToAccount = "Synchronizovat účet <- prohlížeč"
+
+[account.mfa]
+title = "Dvoufázové ověření"
+setupFailed = "Nelze zahájit nastavení dvoufázového ověření. Zkuste to prosím znovu."
+codeRequired = "Pro pokračování zadejte ověřovací kód."
+enabled = "Dvoufázové ověření povoleno."
+enableFailed = "Dvoufázové ověření se nepodařilo povolit. Zkontrolujte kód a zkuste to znovu."
+disabled = "Dvoufázové ověření zakázáno."
+disableFailed = "Dvoufázové ověření se nepodařilo zakázat. Zkontrolujte kód a zkuste to znovu."
+description = "Přidejte k účtu další vrstvu zabezpečení."
+enableButton = "Povolit dvoufázové ověření"
+disableButton = "Zakázat dvoufázové ověření"
+setupTitle = "Nastavit dvoufázové ověření"
+setupDescription = "Naskenujte QR kód ve své ověřovací aplikaci a poté pro potvrzení zadejte 6místný kód."
+manualKey = "Klíč pro ruční nastavení"
+secretWarning = "Tento klíč uchovávejte v soukromí. Kdokoli s přístupem může generovat platné ověřovací kódy."
+codePlaceholder = "Zadejte 6místný kód"
+confirmEnable = "Povolit"
+disableTitle = "Zakázat dvoufázové ověření"
+disableDescription = "Zadejte platný ověřovací kód pro zakázání dvoufázového ověření."
+codeLabel = "Ověřovací kód"
+confirmDisable = "Zakázat"
+ssoDescription = "U účtů s jednotným přihlášením je dvoufázové ověření spravováno vaším poskytovatelem identity."
+ssoManaged = "Nastavte MFA prostřednictvím svého poskytovatele identity."
 
 [adminUserSettings]
 title = "Nastavení správy uživatelů"
@@ -1264,7 +1289,10 @@ downloadHtml = "Stáhnout HTML mezisoubor místo PDF"
 pdfaOptions = "Možnosti PDF/A"
 outputFormat = "Výstupní formát"
 pdfaNote = "PDF/A-1b je kompatibilnější, PDF/A-2b podporuje více funkcí."
+pdfaFormat = "Formát PDF/A"
 pdfaDigitalSignatureWarning = "PDF obsahuje digitální podpis, který bude v dalším kroku odstraněn."
+pdfxDigitalSignatureWarning = "PDF obsahuje digitální podpis. Ten bude v dalším kroku odstraněn."
+pdfxDescription = "PDF/X je podmnožina PDF dle standardu ISO pro spolehlivý tisk a výměnu grafiky."
 fileFormat = "Formát souboru"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
@@ -2196,6 +2224,16 @@ submit = "Převést"
 tip = "Momentálně nefunguje pro více vstupů najednou"
 outputFormat = "Výstupní formát"
 pdfWithDigitalSignature = "PDF obsahuje digitální podpis, který bude v dalším kroku odstraněn."
+
+[pdfToPDFX]
+tags = "tisk,standard,konverze,produkce,předtisk,archiv"
+title = "PDF na PDF/X"
+header = "PDF na PDF/X"
+credit = "Tato služba používá Ghostscript pro převod na PDF/X"
+submit = "Převést"
+tip = "Aktuálně nefunguje pro více vstupů najednou"
+outputFormat = "Výstupní formát"
+pdfWithDigitalSignature = "PDF obsahuje digitální podpis. Ten bude v dalším kroku odstraněn."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformace,formát,převod,office,microsoft,docfile"
@@ -3153,6 +3191,18 @@ other = "Ostatní"
 perPageInfo = "Informace po stránkách"
 tableOfContents = "Obsah"
 
+[getPdfInfo.compliance]
+notDetected = "Nezjištěno"
+passed = "Prošlo"
+failed = "Neprošlo"
+compliant = "V souladu"
+nonCompliant = "Není v souladu"
+none = "Nezjištěny žádné standardy"
+passedCount = "prošlo"
+failedCount = "neprošlo"
+noVerification = "Ověření neproběhlo"
+noVerificationDesc = "Shoda se standardy PDF nebyla pro tento dokument ověřena."
+
 [getPdfInfo.other]
 attachments = "Přílohy"
 embeddedFiles = "Vložené soubory"
@@ -3184,6 +3234,8 @@ permsRestricted = "{{count}} omezení"
 permsMixed = "Některá oprávnění jsou omezena"
 hasCompliance = "Obsahuje standardy shody"
 noCompliance = "Žádné standardy shody"
+compliancePassed = "V souladu s {{standards}}"
+complianceChecked = "Standardy ověřeny ({{failed}} neprošlo)"
 basic = "Základní informace"
 documentInfo = "Informace o dokumentu"
 securityTitle = "Stav zabezpečení"
@@ -3723,6 +3775,13 @@ passwordChangedSuccess = "Heslo bylo úspěšně změněno! Přihlaste se novým
 credentialsUpdated = "Vaše přihlašovací údaje byly aktualizovány. Přihlaste se prosím znovu."
 defaultCredentials = "Výchozí přihlašovací údaje"
 changePasswordWarning = "Po prvním přihlášení si prosím změňte heslo"
+mfaRequired = "Je vyžadován kód pro dvoufázové ověření"
+mfaCode = "Ověřovací kód"
+enterMfaCode = "Zadejte 6místný kód"
+mfaPromptTitle = "Dvoufázové ověření"
+mfaPromptBody = "Pro pokračování zadejte ověřovací kód ze své ověřovací aplikace."
+verifyingMfa = "Ověřování..."
+verifyMfa = "Ověřit kód"
 
 [login.slides.overview]
 alt = "Přehled Stirling PDF"
@@ -4323,6 +4382,10 @@ hint = "Máte neuložené změny"
 title = "Vyžadován režim přihlášení"
 message = "Režim přihlášení musí být povolen, abyste mohli upravovat nastavení správce. Nastavte prosím SECURITY_ENABLELOGIN=true ve vašem prostředí nebo security.enableLogin: true v souboru settings.yml a poté restartujte server."
 readOnly = "Níže uvedená nastavení zobrazují vzorové hodnoty pro orientaci. Povolte režim přihlášení pro zobrazení a úpravu skutečné konfigurace."
+
+[admin.settings.enterpriseRequired]
+title = "Je vyžadována licence Enterprise"
+message = "Pro přístup k {{featureName}} je vyžadována licence Enterprise. Zobrazená data jsou pouze ukázková."
 
 [admin.settings.restart]
 title = "Vyžadován restart"
@@ -5413,6 +5476,7 @@ desc = "Vytvářejte vícekrokové pracovní postupy řetězením akcí PDF. Ide
 invalidStep = "Neplatný krok"
 reviewTitle = "Výsledky automatizace"
 copyToSaved = "Zkopírovat do uložených"
+exportForFolderScanning = "Export pro skenování složky"
 
 [automate.files]
 placeholder = "Vyberte soubory pro zpracování touto automatizací"
@@ -5434,6 +5498,7 @@ createTitle = "Vytvořit automatizaci"
 editTitle = "Upravit automatizaci"
 intro = "Automatizace spouštějí nástroje postupně. Začněte přidáním nástrojů v pořadí, v jakém je chcete spustit."
 save = "Uložit automatizaci"
+exportForFolderScanning = "Export pro skenování složky"
 
 [automate.creation.name]
 label = "Název automatizace"
@@ -5820,6 +5885,7 @@ usernameRequired = "Uživatelské jméno a heslo jsou povinné"
 passwordTooShort = "Heslo musí mít alespoň 6 znaků"
 success = "Uživatel úspěšně vytvořen"
 error = "Nepodařilo se vytvořit uživatele"
+forceMFA = "Vynutit nastavení MFA při příštím přihlášení"
 
 [workspace.people.authType]
 password = "Heslo"
@@ -5928,6 +5994,11 @@ fromLicense = "z licence"
 slotsAvailable = "{{count}} míst pro uživatele k dispozici"
 noSlotsAvailable = "Žádná volná místa"
 currentUsage = "Aktuálně používáte {{current}} z {{max}} uživatelských licencí"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA bylo u uživatele úspěšně zakázáno"
+adminDisableError = "Nepodařilo se zakázat MFA u uživatele"
+disableByAdmin = "Zakázat MFA"
 
 [workspace.teams]
 title = "Týmy"
@@ -6371,6 +6442,7 @@ endpoint = "Endpoint"
 visits = "Návštěvy"
 percentage = "Procenta"
 noData = "Žádná data nejsou k dispozici"
+unknownEndpoint = "Neznámý koncový bod"
 
 [backendHealth]
 checking = "Kontrola stavu backendu..."
