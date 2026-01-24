@@ -509,12 +509,12 @@ public class StampController {
     private float calculatePositionY(
             PDRectangle pageSize, int position, float height, float margin) {
         return switch ((position - 1) / 3) {
-            case 0: // Top
-                yield pageSize.getUpperRightY() - height - margin;
-            case 1: // Middle
-                yield (pageSize.getHeight() - height) / 2;
-            case 2: // Bottom
-                yield pageSize.getLowerLeftY() + margin;
+            case 0: // Top - first line near the top
+                yield pageSize.getUpperRightY() - margin;
+            case 1: // Middle - center of text block at page center
+                yield (pageSize.getHeight() + height) / 2;
+            case 2: // Bottom - first line positioned so last line is at bottom margin
+                yield pageSize.getLowerLeftY() + margin + height;
             default:
                 yield 0;
         };
