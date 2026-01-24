@@ -5,10 +5,6 @@ name: Check TOML Translation Files on PR
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
-    paths:
-      - "frontend/public/locales/*/translation.toml"
-      - ".github/scripts/check_language_toml.py"
-      - ".github/workflows/check_toml.yml"
 
 # cancel in-progress jobs if a new job is triggered
 concurrency:
@@ -19,8 +15,31 @@ permissions:
   contents: read # Allow read access to repository content
 
 jobs:
+  files-changed:
+    name: detect what files changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      language: ${{ steps.changes.outputs.language }}
+      build: ${{ steps.changes.outputs.build }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Check for file changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: changes
+        with:
+          filters: .github/config/.files.yaml
+
   check-files:
-    if: github.event_name == 'pull_request_target'
+    if: github.event_name == 'pull_request_target' && needs.files-changed.outputs.language == 'true'
+    name: Check TOML translation files
+    needs: files-changed
     runs-on: ubuntu-latest
     permissions:
       issues: write # Allow posting comments on issues/PRs
@@ -295,3 +314,102 @@ jobs:
           rm -f pr-branch-translation-en-GB.toml main-branch-translation-en-GB.toml changed_files.txt result.txt
           echo "Cleanup complete."
         continue-on-error: true # Ensure cleanup runs even if previous steps fail
+
+  sync-versions:
+    if: needs.files-changed.outputs.build == 'true' && github.event_name == 'pull_request_target'
+    name: Sync application version files
+    needs: files-changed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup GitHub App Bot
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          gradle-version: 8.14
+
+      - name: Run version sync
+        run: ./gradlew syncAppVersion --build-cache
+
+      - name: Check if version files have changed
+        id: git-check
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post comment on PR
+        if: steps.git-check.outputs.changes == 'true' && github.event_name != 'workflow_dispatch'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { GITHUB_REPOSITORY } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const issueNumber = context.issue.number;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: issueNumber
+            });
+
+            const comment = comments.data.find(c => c.body.includes("## ⚠️ Version Differences"));
+
+            const commentBody = `## ⚠️ Version Differences
+
+            The versions in the following files do not match the version defined in \`build.gradle\`.
+
+            Running \`./gradlew syncAppVersion\` or \`./gradlew build\` will automatically update these files:
+
+            \`frontend/src-tauri/tauri.conf.json\`, \`frontend/src/proprietary/testing/serverExperienceSimulations.ts\`, \`frontend/src/core/testing/serverExperienceSimulations.ts\`
+
+            Please run \`./gradlew syncAppVersion\` or \`./gradlew build\`!`;
+
+            // Only update or create comments by the action user
+            const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
+
+            if (comment && comment.user.login === expectedActor) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: repoOwner,
+                repo: repoName,
+                comment_id: comment.id,
+                body: commentBody
+              });
+              console.log("Updated existing comment.");
+            } else if (!comment) {
+              // Create new comment if no existing comment is found
+              await github.rest.issues.createComment({
+                owner: repoOwner,
+                repo: repoName,
+                issue_number: issueNumber,
+                body: commentBody
+              });
+            } else {
+              console.log("Comment update attempt denied. Actor does not match.");
+            }
