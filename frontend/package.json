@@ -35,7 +35,7 @@
     "@mantine/dates": "^8.3.1",
     "@mantine/dropzone": "^8.3.1",
     "@mantine/hooks": "^8.3.1",
-    "@mui/icons-material": "^7.3.2",
+    "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.2",
     "@reactour/tour": "^3.8.0",
     "@stripe/react-stripe-js": "^4.0.2",
