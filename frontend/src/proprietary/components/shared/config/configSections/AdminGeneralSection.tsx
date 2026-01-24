@@ -63,12 +63,17 @@ export default function AdminGeneralSection() {
       .sort((a, b) => a.label.localeCompare(b.label)),
     []
   );
-  const parseWatchedFoldersInput = useCallback((value: string) => (
-    value
+  const parseWatchedFoldersInput = useCallback((value: string) => {
+    const paths = value
       .split(/[\n,;]+/)
       .map((entry) => entry.trim())
-      .filter(Boolean)
-  ), []);
+      .filter(Boolean);
+
+    // Deduplicate paths (case-sensitive, exact match)
+    const uniquePaths = Array.from(new Set(paths));
+
+    return uniquePaths;
+  }, []);
   
   // Track original settings for dirty detection
   const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
@@ -198,6 +203,51 @@ export default function AdminGeneralSection() {
   const watchedFoldersInput = useMemo(() => (
     (settings.customPaths?.pipeline?.watchedFoldersDirs || []).join('\n')
   ), [settings.customPaths?.pipeline?.watchedFoldersDirs]);
+
+  const watchedFoldersValidation = useMemo(() => {
+    const paths = settings.customPaths?.pipeline?.watchedFoldersDirs || [];
+    const finishedPath = settings.customPaths?.pipeline?.finishedFoldersDir || '';
+    const warnings: string[] = [];
+
+    // Normalize paths for comparison (handle both Windows and Unix paths)
+    const normalizePath = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '');
+
+    // Check for overlapping watched folders
+    if (paths.length >= 2) {
+      for (let i = 0; i < paths.length; i++) {
+        for (let j = i + 1; j < paths.length; j++) {
+          const path1 = normalizePath(paths[i]);
+          const path2 = normalizePath(paths[j]);
+
+          if (path1 === path2) {
+            warnings.push(`Duplicate path detected: '${paths[i]}'`);
+          } else if (path1.startsWith(path2 + '/')) {
+            warnings.push(`'${paths[i]}' is nested inside '${paths[j]}' - may cause duplicate processing`);
+          } else if (path2.startsWith(path1 + '/')) {
+            warnings.push(`'${paths[j]}' is nested inside '${paths[i]}' - may cause duplicate processing`);
+          }
+        }
+      }
+    }
+
+    // Check for conflicts with finished folder
+    if (finishedPath && paths.length > 0) {
+      const normalizedFinished = normalizePath(finishedPath);
+      for (const watchedPath of paths) {
+        const normalizedWatched = normalizePath(watchedPath);
+
+        if (normalizedWatched === normalizedFinished) {
+          warnings.push(`CRITICAL: Watched folder '${watchedPath}' is the same as finished folder - will cause processing loops!`);
+        } else if (normalizedFinished.startsWith(normalizedWatched + '/')) {
+          warnings.push(`Finished folder is nested inside watched folder '${watchedPath}' - may cause issues`);
+        } else if (normalizedWatched.startsWith(normalizedFinished + '/')) {
+          warnings.push(`CRITICAL: Watched folder '${watchedPath}' is nested inside finished folder - will cause processing loops!`);
+        }
+      }
+    }
+
+    return warnings.length > 0 ? warnings : null;
+  }, [settings.customPaths?.pipeline?.watchedFoldersDirs, settings.customPaths?.pipeline?.finishedFoldersDir]);
 
   // Filter default locale options based on available languages setting
   const defaultLocaleOptions = useMemo(() => {
@@ -731,6 +781,19 @@ export default function AdminGeneralSection() {
               autosize
               disabled={!loginEnabled}
             />
+            {watchedFoldersValidation && (
+              <Stack gap="xs" mt="xs">
+                {watchedFoldersValidation.map((warning, idx) => (
+                  <Text
+                    key={idx}
+                    size="sm"
+                    c={warning.includes('CRITICAL') ? 'red' : 'yellow'}
+                  >
+                    {warning}
+                  </Text>
+                ))}
+              </Stack>
+            )}
           </div>
 
           <div>

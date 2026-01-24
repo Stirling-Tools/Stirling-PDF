@@ -47,10 +47,27 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
+
         List<String> watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
-        this.rootDirs = watchedFoldersDirs.stream().map(Path::of).toList();
-        for (Path rootDir : rootDirs) {
-            log.info("Monitoring directory: {}", rootDir);
+        List<Path> validRootDirs = new ArrayList<>();
+
+        for (String pathStr : watchedFoldersDirs) {
+            try {
+                Path path = Path.of(pathStr);
+                validRootDirs.add(path);
+                log.info("Monitoring directory: {}", path);
+            } catch (Exception e) {
+                log.error(
+                        "Failed to initialize monitoring for path '{}': {}",
+                        pathStr,
+                        e.getMessage());
+            }
+        }
+
+        this.rootDirs = Collections.unmodifiableList(validRootDirs);
+
+        if (this.rootDirs.isEmpty()) {
+            log.error("No valid directories to monitor - FileMonitor will not function");
         }
     }
 

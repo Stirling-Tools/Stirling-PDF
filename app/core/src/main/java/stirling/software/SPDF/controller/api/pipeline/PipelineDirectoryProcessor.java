@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.pipeline;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,6 +43,8 @@ import stirling.software.common.util.FileMonitor;
 @Slf4j
 public class PipelineDirectoryProcessor {
 
+    private static final int MAX_DIRECTORY_DEPTH = 50; // Prevent excessive recursion
+
     private final ObjectMapper objectMapper;
     private final ApiDocService apiDocService;
     private final PipelineProcessor processor;
@@ -48,6 +52,10 @@ public class PipelineDirectoryProcessor {
     private final PostHogService postHogService;
     private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
+
+    // Track processed directories in current scan to prevent duplicates
+    private final ThreadLocal<java.util.Set<Path>> processedDirsInScan =
+            ThreadLocal.withInitial(java.util.HashSet::new);
 
     public PipelineDirectoryProcessor(
             ObjectMapper objectMapper,
@@ -67,8 +75,16 @@ public class PipelineDirectoryProcessor {
 
     @Scheduled(fixedRate = 60000)
     public void scanFolders() {
-        for (String watchedFoldersDir : watchedFoldersDirs) {
-            scanWatchedFolder(Paths.get(watchedFoldersDir).toAbsolutePath());
+        // Clear the processed directories set for this scan cycle
+        processedDirsInScan.get().clear();
+
+        try {
+            for (String watchedFoldersDir : watchedFoldersDirs) {
+                scanWatchedFolder(Paths.get(watchedFoldersDir).toAbsolutePath());
+            }
+        } finally {
+            // Clean up ThreadLocal to prevent memory leaks
+            processedDirsInScan.remove();
         }
     }
 
@@ -83,9 +99,22 @@ public class PipelineDirectoryProcessor {
             }
         }
 
+        // Validate the path is a directory and readable
+        if (!Files.isDirectory(watchedFolderPath)) {
+            log.error("Path is not a directory: {}", watchedFolderPath);
+            return;
+        }
+        if (!Files.isReadable(watchedFolderPath)) {
+            log.error("Directory is not readable: {}", watchedFolderPath);
+            return;
+        }
+
         try {
+            // Use FOLLOW_LINKS to follow symlinks, with max depth to prevent infinite loops
             Files.walkFileTree(
                     watchedFolderPath,
+                    EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                    MAX_DIRECTORY_DEPTH,
                     new SimpleFileVisitor<>() {
                         @Override
                         public FileVisitResult preVisitDirectory(
@@ -108,8 +137,11 @@ public class PipelineDirectoryProcessor {
 
                         @Override
                         public FileVisitResult visitFileFailed(Path path, IOException exc) {
-                            // Handle broken symlinks or inaccessible directories
-                            log.error("Error accessing path: {}", path, exc);
+                            // Handle broken symlinks, permission issues, or inaccessible
+                            // directories
+                            if (exc != null) {
+                                log.debug("Cannot access path '{}': {}", path, exc.getMessage());
+                            }
                             return FileVisitResult.CONTINUE;
                         }
                     });
@@ -119,6 +151,17 @@ public class PipelineDirectoryProcessor {
     }
 
     public void handleDirectory(Path dir) throws IOException {
+        // Normalize path to absolute to prevent duplicate processing from different path
+        // representations
+        Path normalizedDir = dir.toAbsolutePath().normalize();
+
+        // Check if we've already processed this directory in this scan cycle
+        java.util.Set<Path> processedDirs = processedDirsInScan.get();
+        if (!processedDirs.add(normalizedDir)) {
+            log.debug("Directory already processed in this scan cycle: {}", normalizedDir);
+            return;
+        }
+
         log.info("Handling directory: {}", dir);
         Path processingDir = createProcessingDirectory(dir);
         Optional<Path> jsonFileOptional = findJsonFile(dir);
