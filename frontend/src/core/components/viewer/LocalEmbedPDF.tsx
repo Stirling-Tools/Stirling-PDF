@@ -6,8 +6,8 @@ import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 // Import the essential plugins
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
-import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/react';
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
+import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react';
+import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
@@ -51,6 +51,7 @@ import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/compon
 import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
 import { DocumentPermissionsAPIBridge } from '@app/components/viewer/DocumentPermissionsAPIBridge';
 import { absoluteWithBasePath } from '@app/constants/app';
+import { DEFAULT_DOCUMENT_ID as DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -91,22 +92,16 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
     const viewportGap = rootFontSize * 3.5;
 
     return [
-      createPluginRegistration(LoaderPluginPackage, {
-        loadingOptions: {
-          type: 'url',
-          pdfFile: {
-            id: 'stirling-pdf-viewer',
-            url: pdfUrl,
-          },
-        },
+      createPluginRegistration(DocumentManagerPluginPackage, {
+        initialDocuments: [{
+          url: pdfUrl,
+          name: DOCUMENT_ID,
+        }],
       }),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap,
       }),
-      createPluginRegistration(ScrollPluginPackage, {
-        strategy: ScrollStrategy.Vertical,
-        initialPage: 0,
-      }),
+      createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
         withForms: true,
         withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
@@ -651,8 +646,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
         <BookmarkAPIBridge />
         <PrintAPIBridge />
         <DocumentPermissionsAPIBridge />
-        <GlobalPointerProvider>
+        <GlobalPointerProvider documentId={DOCUMENT_ID}>
           <Viewport
+            documentId={DOCUMENT_ID}
             style={{
               backgroundColor: 'var(--bg-background)',
               height: '100%',
@@ -668,10 +664,11 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
             }}
           >
           <Scroller
-            renderPage={({ document, width, height, pageIndex, scale, rotation }) => {
+            documentId={DOCUMENT_ID}
+            renderPage={({ width, height, pageIndex }) => {
               return (
-                <Rotate key={document?.id} pageSize={{ width, height }}>
-                  <PagePointerProvider pageIndex={pageIndex} pageWidth={width} pageHeight={height} scale={scale} rotation={rotation}>
+                <Rotate key={`${DOCUMENT_ID}-${pageIndex}`} documentId={DOCUMENT_ID} pageIndex={pageIndex}>
+                  <PagePointerProvider documentId={DOCUMENT_ID} pageIndex={pageIndex}>
                     <div
                       data-page-index={pageIndex}
                       data-page-width={width}
@@ -691,36 +688,26 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                       onDrop={(e) => e.preventDefault()}
                       onDragOver={(e) => e.preventDefault()}
                     >
-                      {/* High-resolution tile layer */}
-                      <TilingLayer pageIndex={pageIndex} scale={scale} />
+                      <TilingLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
 
-                      {/* Search highlight layer */}
-                      <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                      <CustomSearchLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
 
-                      {/* Selection layer for text interaction */}
-                      <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                      <SelectionLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
 
-                      {/* Link layer for clickable PDF links */}
-                      <LinkLayer pageIndex={pageIndex} scale={scale} document={document} pdfFile={file} />
+                      <LinkLayer pageIndex={pageIndex} scale={1} pdfFile={file} />
 
-                      {/* Annotation layer for signatures (only when enabled) */}
                       {enableAnnotations && (
                         <AnnotationLayer
+                          documentId={DOCUMENT_ID}
                           pageIndex={pageIndex}
-                          scale={scale}
-                          pageWidth={width}
-                          pageHeight={height}
-                          rotation={rotation}
                           selectionOutlineColor="#007ACC"
                         />
                       )}
 
-                      {/* Redaction layer for marking areas to redact (only when enabled) */}
                       {enableRedaction && (
                         <RedactionLayer
+                          documentId={DOCUMENT_ID}
                           pageIndex={pageIndex}
-                          scale={scale}
-                          rotation={rotation}
                           selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
                         />
                       )}

@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
-/**
- * Component that runs inside EmbedPDF context and updates spread state in ViewerContext
- */
 export function SpreadAPIBridge() {
-  const { provides: spread, spreadMode } = useSpread();
+  const { provides: spread, spreadMode } = useSpread(DEFAULT_DOCUMENT_ID);
   const { registerBridge, triggerImmediateSpreadUpdate } = useViewer();
 
   useEffect(() => {

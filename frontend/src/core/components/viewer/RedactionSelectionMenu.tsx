@@ -1,4 +1,4 @@
-import { useRedaction as useEmbedPdfRedaction, SelectionMenuProps } from '@embedpdf/plugin-redaction/react';
+import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
 import { ActionIcon, Tooltip, Button, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
@@ -6,15 +6,17 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useRedaction } from '@app/contexts/RedactionContext';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
-/**
- * Custom menu component that appears when a pending redaction mark is selected.
- * Allows users to remove or apply individual pending marks.
- * Uses a portal to ensure it appears above all content, including next pages.
- */
-export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: SelectionMenuProps) {
+export interface RedactionSelectionContext {
+  item?: { id: string; page: number };
+  selected?: boolean;
+  menuWrapperProps?: React.HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> };
+}
+
+export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: RedactionSelectionContext) {
   const { t } = useTranslation();
-  const { provides } = useEmbedPdfRedaction();
+  const { provides } = useEmbedPdfRedaction(DEFAULT_DOCUMENT_ID);
   const { setRedactionsApplied } = useRedaction();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);

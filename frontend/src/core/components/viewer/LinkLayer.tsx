@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
 enum PDFActionType {
   GoTo = 0,
@@ -111,7 +112,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   onLinkClick
 }) => {
   const { provides: annotation } = useAnnotationCapability();
-  const { provides: scroll } = useScroll();
+  const { provides: scroll } = useScroll(DEFAULT_DOCUMENT_ID);
   const [links, setLinks] = useState<LinkAnnotation[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
 

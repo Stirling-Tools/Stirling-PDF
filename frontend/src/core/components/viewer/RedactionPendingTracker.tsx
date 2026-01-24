@@ -1,22 +1,15 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
 export interface RedactionPendingTrackerAPI {
   commitAllPending: () => void;
   getPendingCount: () => number;
 }
 
-/**
- * RedactionPendingTracker monitors pending redactions and exposes an API
- * for committing and checking pending redactions.
- * Must be rendered inside the EmbedPDF context.
- * 
- * Note: The unsaved changes checker is registered by EmbedPdfViewer, not here,
- * to avoid conflicts and allow the viewer to check both annotations and redactions.
- */
 export const RedactionPendingTracker = forwardRef<RedactionPendingTrackerAPI>(
   function RedactionPendingTracker(_, ref) {
-    const { state, provides } = useEmbedPdfRedaction();
+    const { state, provides } = useEmbedPdfRedaction(DEFAULT_DOCUMENT_ID);
     
     const pendingCountRef = useRef(0);
     

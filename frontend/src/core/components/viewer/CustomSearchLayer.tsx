@@ -2,10 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { SEARCH_CONSTANTS } from '@app/components/viewer/constants/search';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
 interface SearchLayerProps {
+  documentId?: string;
   pageIndex: number;
-  scale: number;
+  scale?: number;
   highlightColor?: string;
   activeHighlightColor?: string;
   opacity?: number;
@@ -25,15 +27,16 @@ interface SearchResultState {
 }
 
 export function CustomSearchLayer({
+  documentId = DEFAULT_DOCUMENT_ID,
   pageIndex,
-  scale,
+  scale = 1,
   highlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.BACKGROUND,
   activeHighlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.ACTIVE_BACKGROUND,
   opacity = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.OPACITY,
   padding = SEARCH_CONSTANTS.UI.HIGHLIGHT_PADDING,
   borderRadius = 4
 }: SearchLayerProps) {
-  const { provides: searchProvides } = useSearch();
+  const { provides: searchProvides } = useSearch(documentId);
   const { scrollActions } = useViewer();
   const [searchResultState, setSearchResultState] = useState<SearchResultState | null>(null);
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useZoom, ZoomMode } from '@embedpdf/plugin-zoom/react';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 import { useFileState } from '@app/contexts/FileContext';
 import {
   determineAutoZoom,
@@ -12,8 +13,8 @@ import {
 import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
 
 export function ZoomAPIBridge() {
-  const { provides: zoom, state: zoomState } = useZoom();
-  const { spreadMode } = useSpread();
+  const { provides: zoom, state: zoomState } = useZoom(DEFAULT_DOCUMENT_ID);
+  const { spreadMode } = useSpread(DEFAULT_DOCUMENT_ID);
   const { registerBridge, triggerImmediateZoomUpdate } = useViewer();
   const { selectors } = useFileState();
 

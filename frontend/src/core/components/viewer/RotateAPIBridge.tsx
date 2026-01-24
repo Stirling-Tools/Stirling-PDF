@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useRotate } from '@embedpdf/plugin-rotate/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
-/**
- * Component that runs inside EmbedPDF context and updates rotation state in ViewerContext
- */
 export function RotateAPIBridge() {
-  const { provides: rotate, rotation } = useRotate();
+  const { provides: rotate, rotation } = useRotate(DEFAULT_DOCUMENT_ID);
   const { registerBridge } = useViewer();
   
   // Store state locally

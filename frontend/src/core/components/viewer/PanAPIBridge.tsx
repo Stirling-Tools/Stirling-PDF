@@ -1,12 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePan } from '@embedpdf/plugin-pan/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
-/**
- * Component that runs inside EmbedPDF context and updates pan state in ViewerContext
- */
 export function PanAPIBridge() {
-  const { provides: pan, isPanning } = usePan();
+  const { provides: pan, isPanning } = usePan(DEFAULT_DOCUMENT_ID);
   const { registerBridge, triggerImmediatePanUpdate } = useViewer();
   
   // Store state locally
@@ -38,7 +36,14 @@ export function PanAPIBridge() {
           toggle: () => {
             pan.togglePan();
           },
-          makePanDefault: () => pan.makePanDefault(),
+          makePanDefault: () => {
+            // v2.3.0: makePanDefault may not exist, enable pan as fallback
+            if ('makePanDefault' in pan && typeof (pan as any).makePanDefault === 'function') {
+              (pan as any).makePanDefault();
+            } else {
+              pan.enablePan();
+            }
+          },
         }
       });
       
