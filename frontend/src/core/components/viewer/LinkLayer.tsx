@@ -1,14 +1,19 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
+import { PdfAnnotationSubtype } from '@embedpdf/models';
 
 enum PDFActionType {
   GoTo = 0,
   GoToR = 1,
   GoToE = 2,
   URI = 3,
-  // Add other types as needed
+  Launch = 4,
+  Named = 5,
+  JavaScript = 6,
 }
+
+type StrokeStyle = 'solid' | 'dashed' | 'beveled' | 'inset' | 'underline';
 
 interface PDFRect {
   origin: { x: number; y: number };
@@ -30,6 +35,12 @@ interface LinkAnnotation {
   id: string;
   type: number;
   rect: PDFRect;
+  strokeColor?: string;
+  strokeWidth?: number;
+  strokeStyle?: StrokeStyle;
+  strokeDashArray?: number[];
+  inReplyToId?: string;
+  replyType?: 'Reply' | 'Group';
   target?: {
     type: string;
     action?: PDFAction;
@@ -112,7 +123,12 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
         top: link.rect.origin.y * scale,
         width: link.rect.size.width * scale,
         height: link.rect.size.height * scale,
-      }
+      },
+      computedBorderStyle: link.strokeStyle === 'dashed' || (link.strokeDashArray && link.strokeDashArray.length > 0)
+        ? 'dashed'
+        : link.strokeStyle === 'underline'
+        ? 'none'
+        : 'solid',
     }));
   }, [links, scale]);
 
@@ -121,18 +137,27 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
       if (!annotation) return;
 
       try {
-        // Use the annotation API's built-in filtering if available
-        const pageAnnotations = await annotation
-          .getPageAnnotations({
-            pageIndex,
-            // Try to filter for link annotations (type 2) if the API supports it
-            ...(annotation.getPageAnnotations.length > 1 ? { types: [2] } : {})
-          })
-          .toPromise();
+        const pageAnnotationsResult = annotation.getPageAnnotations({
+          pageIndex,
+        });
 
-        // Filter for link annotations (type 2 is LINK in PDF spec) as fallback
+        const resolveAnnotations = async (result: unknown): Promise<any[]> => {
+          if (result && typeof (result as any).toPromise === 'function') {
+            return (result as any).toPromise();
+          }
+          if (result && typeof (result as any).then === 'function') {
+            return result as Promise<any[]>;
+          }
+          if (Array.isArray(result)) {
+            return result;
+          }
+          return [];
+        };
+
+        const pageAnnotations = await resolveAnnotations(pageAnnotationsResult);
+
         const linkAnnotations = pageAnnotations.filter(
-          (ann: any) => ann.type === 2
+          (ann: any) => ann.type === 2 || ann.type === PdfAnnotationSubtype.LINK
         ) as LinkAnnotation[];
 
         if (linkAnnotations.length > 0) {
@@ -140,39 +165,53 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           return;
         }
       } catch (error) {
-        console.error('[LinkLayer] Failed to fetch links from annotation API:', error);
+        console.error('[LinkLayer] Failed to fetch links from annotation API:', {
+          error,
+          pageIndex,
+        });
       }
 
       if (pdfDocument) {
         try {
-          // Try different methods to get link annotations
           let pdfLinks: any[] = [];
 
           if (pdfDocument.getPageAnnotations && typeof pdfDocument.getPageAnnotations === 'function') {
-            pdfLinks = await pdfDocument.getPageAnnotations(pageIndex);
+            const result = pdfDocument.getPageAnnotations(pageIndex);
+            const resolved = result && result.toPromise ? await result.toPromise() : await Promise.resolve(result);
+            pdfLinks = Array.isArray(resolved) ? resolved : [];
           } else if (pdfDocument.getAnnotations && typeof pdfDocument.getAnnotations === 'function') {
-            const allAnnotations = await pdfDocument.getAnnotations();
-            pdfLinks = allAnnotations.filter((ann: any) => ann.pageIndex === pageIndex && ann.type === 2);
+            const result = pdfDocument.getAnnotations();
+            const allAnnotations = result && result.toPromise ? await result.toPromise() : await Promise.resolve(result);
+            const annotationsArray = Array.isArray(allAnnotations) ? allAnnotations : [];
+            pdfLinks = annotationsArray.filter((ann: any) => ann.pageIndex === pageIndex && (ann.type === 2 || ann.type === PdfAnnotationSubtype.LINK));
           } else if (pdfDocument.pages && pdfDocument.pages[pageIndex]) {
             const page = pdfDocument.pages[pageIndex];
             if (page.getAnnotations && typeof page.getAnnotations === 'function') {
-              pdfLinks = await page.getAnnotations();
+              const result = page.getAnnotations();
+              const resolved = result && result.toPromise ? await result.toPromise() : await Promise.resolve(result);
+              pdfLinks = Array.isArray(resolved) ? resolved : [];
             }
           }
 
-          const convertedLinks = pdfLinks.map((ann: any) => ({
-            id: ann.id || `pdf-link-${pageIndex}-${Math.random()}`,
-            type: ann.type || 2,
-            rect: ann.rect || ann,
-            target: ann.target || ann.action
-          })) as LinkAnnotation[];
+          const convertedLinks = pdfLinks
+            .filter((ann: any) => ann.type === 2 || ann.type === PdfAnnotationSubtype.LINK)
+            .map((ann: any) => ({
+              id: ann.id || `pdf-link-${pageIndex}-${Math.random().toString(36).substr(2, 9)}`,
+              type: ann.type || 2,
+              rect: ann.rect || ann,
+              strokeColor: ann.strokeColor,
+              strokeWidth: ann.strokeWidth,
+              strokeStyle: ann.strokeStyle,
+              strokeDashArray: ann.strokeDashArray,
+              inReplyToId: ann.inReplyToId,
+              replyType: ann.replyType,
+              target: ann.target || ann.action || ann.dest
+            })) as LinkAnnotation[];
 
           setLinks(convertedLinks);
         } catch (error) {
           console.warn('[LinkLayer] Failed to get annotations from PDF document:', error);
         }
-      } else {
-        console.warn('[LinkLayer] No annotation API or PDF document available');
       }
     };
 
@@ -180,7 +219,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   }, [annotation, pageIndex, pdfDocument]);
 
   const handleLinkClick = useCallback(async (link: LinkAnnotation) => {
-    if (isNavigating) return; // Prevent multiple simultaneous navigations
+    if (isNavigating) return;
 
     try {
       setIsNavigating(true);
@@ -192,20 +231,34 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
 
       if (isInternalLink(link)) {
         const targetPage = link.target?.destination?.pageIndex ??
-                          link.target?.action?.destination?.pageIndex;
+                          link.target?.action?.destination?.pageIndex ??
+                          (link.target as any)?.dest?.pageIndex;
+        
         if (targetPage !== undefined && scroll) {
-          await scroll.scrollToPage({
-            pageNumber: targetPage + 1, // PDF pages are 1-indexed
+          scroll.scrollToPage({
+            pageNumber: targetPage + 1,
             behavior: 'smooth',
           });
         }
       } else if (isExternalLink(link)) {
-        const uri = link.target?.uri ?? link.target?.action?.uri;
+        const uri = link.target?.uri ?? 
+                    link.target?.action?.uri ??
+                    (link.target as any)?.url;
+        
         if (uri) {
-          window.open(uri, '_blank', 'noopener,noreferrer');
+          try {
+            const url = new URL(uri, window.location.href);
+            if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
+              window.open(uri, '_blank', 'noopener,noreferrer');
+            } else {
+              console.warn('[LinkLayer] Blocked potentially unsafe URL protocol:', url.protocol);
+            }
+          } catch {
+            window.open(uri, '_blank', 'noopener,noreferrer');
+          }
         }
       } else {
-        throw new Error(`Unsupported link type: ${link.target?.type}`);
+        console.warn(`[LinkLayer] Unsupported link type: ${link.target?.type}`);
       }
     } catch (error) {
       console.error('[LinkLayer] Navigation failed:', error);
@@ -217,7 +270,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   return (
     <div className="absolute inset-0 pointer-events-none">
       {processedLinks.map((link) => {
-        const { id } = link;
+        const { id, strokeColor, strokeWidth, computedBorderStyle } = link;
         const { left, top, width, height } = link.scaledRect;
 
         return (
@@ -225,7 +278,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
             key={id}
             onClick={() => handleLinkClick(link)}
             disabled={isNavigating}
-            className={`absolute opacity-0 hover:opacity-20 bg-blue-500 transition-opacity cursor-pointer pointer-events-auto border border-blue-400 hover:border-blue-600 ${isNavigating ? 'cursor-not-allowed opacity-50' : ''}`}
+            className={`absolute opacity-0 hover:opacity-20 bg-blue-500 transition-opacity cursor-pointer pointer-events-auto ${isNavigating ? 'cursor-not-allowed opacity-50' : ''}`}
             style={{
               left: `${left}px`,
               top: `${top}px`,
@@ -233,6 +286,9 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               height: `${height}px`,
               minWidth: '8px',
               minHeight: '8px',
+              borderColor: strokeColor || '#60a5fa',
+              borderWidth: strokeWidth ? `${strokeWidth}px` : '1px',
+              borderStyle: computedBorderStyle || 'solid',
             }}
             title={getLinkTitle(link)}
             aria-label={getLinkAriaLabel(link)}

@@ -17,12 +17,11 @@ import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
-import { Rotation } from '@embedpdf/models';
+import { Rotation, PdfAnnotationSubtype } from '@embedpdf/models';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
 
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
@@ -191,7 +190,8 @@ export function LocalEmbedPDFWithAnnotations({
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={async (registry) => {
+        onInitialized={async (registry: any) => {
+          // v2.0: Use registry.getPlugin() to access plugin APIs
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 

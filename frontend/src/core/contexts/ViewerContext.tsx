@@ -38,6 +38,8 @@ import {
   ExportState,
   ThumbnailAPIWrapper,
   BookmarkState,
+  DocumentPermissionsState,
+  PdfPermissionFlag,
 } from '@app/contexts/viewer/viewerBridges';
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 
@@ -112,6 +114,8 @@ interface ViewerContextType {
   getExportState: () => ExportState;
   getBookmarkState: () => BookmarkState;
   hasBookmarkSupport: () => boolean;
+  getDocumentPermissions: () => DocumentPermissionsState;
+  hasPermission: (flag: PdfPermissionFlag) => boolean;
 
   // Immediate update callbacks
   registerImmediateZoomUpdate: (callback: (percent: number) => void) => () => void;
@@ -308,6 +312,31 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const hasBookmarkSupport = () => Boolean(bridgeRefs.current.bookmark);
 
+  const getDocumentPermissions = (): DocumentPermissionsState => {
+    return bridgeRefs.current.permissions?.state || {
+      isEncrypted: false,
+      isOwnerUnlocked: false,
+      permissions: PdfPermissionFlag.AllowAll,
+      canPrint: true,
+      canModifyContents: true,
+      canCopyContents: true,
+      canModifyAnnotations: true,
+      canFillForms: true,
+      canExtractForAccessibility: true,
+      canAssembleDocument: true,
+      canPrintHighQuality: true,
+    };
+  };
+
+  const hasPermission = (flag: PdfPermissionFlag): boolean => {
+    const api = bridgeRefs.current.permissions?.api;
+    if (api?.hasPermission) {
+      return api.hasPermission(flag);
+    }
+    // Default: allow all permissions
+    return true;
+  };
+
   // Action handlers - call APIs directly
   const {
     scrollActions,
@@ -360,6 +389,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     getExportState,
     getBookmarkState,
     hasBookmarkSupport,
+    getDocumentPermissions,
+    hasPermission,
 
     // Immediate updates
     registerImmediateZoomUpdate,

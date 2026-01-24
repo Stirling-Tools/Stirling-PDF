@@ -19,7 +19,7 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
-import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark';
+import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark/react';
 import { PrintPluginPackage } from '@embedpdf/plugin-print/react';
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
@@ -49,6 +49,7 @@ import { LinkLayer } from '@app/components/viewer/LinkLayer';
 import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
 import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
+import { DocumentPermissionsAPIBridge } from '@app/components/viewer/DocumentPermissionsAPIBridge';
 import { absoluteWithBasePath } from '@app/constants/app';
 
 interface LocalEmbedPDFProps {
@@ -257,7 +258,8 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={async (registry) => {
+        onInitialized={async (registry: any) => {
+          // v2.0: Use registry.getPlugin() to access plugin APIs
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
@@ -279,6 +281,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
               matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.HIGHLIGHT,
+                strokeColor: '#ffd54f',
                 color: '#ffd54f',
                 opacity: 0.6,
               },
@@ -295,6 +298,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
               matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.UNDERLINE,
+                strokeColor: '#ffb300',
                 color: '#ffb300',
                 opacity: 1,
               },
@@ -311,6 +315,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
               matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.STRIKEOUT,
+                strokeColor: '#e53935',
                 color: '#e53935',
                 opacity: 1,
               },
@@ -327,6 +332,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
               matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.SQUIGGLY,
+                strokeColor: '#00acc1',
                 color: '#00acc1',
                 opacity: 1,
               },
@@ -343,6 +349,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
               matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.INK ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.INK,
+                strokeColor: '#1f2933',
                 color: '#1f2933',
                 opacity: 1,
                 borderWidth: 2,
@@ -359,9 +366,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
               id: 'inkHighlighter',
               name: 'Ink Highlighter',
               interaction: { exclusive: true, cursor: 'crosshair' },
-              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.INK && annotation.color === '#ffd54f' ? 8 : 0),
+              matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.INK && (annotation.strokeColor === '#ffd54f' || annotation.color === '#ffd54f') ? 8 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.INK,
+                strokeColor: '#ffd54f',
                 color: '#ffd54f',
                 opacity: 0.5,
                 borderWidth: 6,
@@ -590,6 +598,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
               matchScore: () => 0,
               defaults: {
                 type: PdfAnnotationSubtype.INK,
+                strokeColor: '#000000',
                 color: '#000000',
                 opacity: 1.0,
                 borderWidth: 2,
@@ -641,6 +650,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
         <ExportAPIBridge />
         <BookmarkAPIBridge />
         <PrintAPIBridge />
+        <DocumentPermissionsAPIBridge />
         <GlobalPointerProvider>
           <Viewport
             style={{
