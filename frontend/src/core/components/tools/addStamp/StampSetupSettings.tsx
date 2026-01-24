@@ -46,12 +46,17 @@ const STAMP_TEMPLATES = [
   },
 ];
 
-const resolveVariablesForPreview = (text: string): string => {
+const resolveVariablesForPreview = (text: string, filename?: string): string => {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
 
   const ESCAPED_AT_PLACEHOLDER = '\uE000ESCAPED_AT\uE000';
   let result = text.replace(/@@/g, ESCAPED_AT_PLACEHOLDER);
+
+  const actualFilename = filename || 'sample-document.pdf';
+  const filenameWithoutExt = actualFilename.includes('.')
+    ? actualFilename.substring(0, actualFilename.lastIndexOf('.'))
+    : actualFilename;
 
   const sampleData: Record<string, string> = {
     '@datetime': `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
@@ -62,13 +67,13 @@ const resolveVariablesForPreview = (text: string): string => {
     '@day': pad(now.getDate()),
     '@page_number': '1',
     '@page': '1',
-    '@total_pages': '10',
-    '@page_count': '10',
-    '@filename': 'sample-document',
-    '@filename_full': 'sample-document.pdf',
-    '@author': 'Document Author',
-    '@title': 'Document Title',
-    '@subject': 'Document Subject',
+    '@total_pages': '?',
+    '@page_count': '?',
+    '@filename': filenameWithoutExt,
+    '@filename_full': actualFilename,
+    '@author': filename ? '(from PDF)' : 'Document Author',
+    '@title': filename ? '(from PDF)' : 'Document Title',
+    '@subject': filename ? '(from PDF)' : 'Document Subject',
     '@uuid': 'a1b2c3d4',
   };
 
@@ -127,13 +132,13 @@ const ClickableCode = ({ children, onClick, block = false }: ClickableCodeProps)
   </Code>
 );
 
-const StampTextPreview = ({ stampText }: { stampText: string }) => {
+const StampTextPreview = ({ stampText, filename }: { stampText: string; filename?: string }) => {
   const { t } = useTranslation();
 
   const resolvedText = useMemo(() => {
     if (!stampText.trim()) return '';
-    return resolveVariablesForPreview(stampText);
-  }, [stampText]);
+    return resolveVariablesForPreview(stampText, filename);
+  }, [stampText, filename]);
 
   if (!stampText.trim()) return null;
 
@@ -151,9 +156,10 @@ interface StampSetupSettingsProps {
   parameters: AddStampParameters;
   onParameterChange: <K extends keyof AddStampParameters>(key: K, value: AddStampParameters[K]) => void;
   disabled?: boolean;
+  filename?: string;
 }
 
-const StampSetupSettings = ({ parameters, onParameterChange, disabled = false }: StampSetupSettingsProps) => {
+const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, filename }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -214,7 +220,7 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false }:
           />
 
           {/* Live Preview */}
-          <StampTextPreview stampText={parameters.stampText} />
+          <StampTextPreview stampText={parameters.stampText} filename={filename} />
 
           <Accordion variant="contained" radius="sm">
             <Accordion.Item value="variables">
