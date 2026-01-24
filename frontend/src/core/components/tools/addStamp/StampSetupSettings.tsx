@@ -65,16 +65,20 @@ const resolveVariablesForPreview = (text: string, filename?: string): string => 
     '@year': String(now.getFullYear()),
     '@month': pad(now.getMonth() + 1),
     '@day': pad(now.getDate()),
-    '@page_number': '1',
-    '@page': '1',
+    // Page info - cannot be previewed, show placeholder
+    '@page_number': '?',
+    '@page': '?',
     '@total_pages': '?',
     '@page_count': '?',
+    // Filename - use actual file if provided
     '@filename': filenameWithoutExt,
     '@filename_full': actualFilename,
-    '@author': filename ? '(from PDF)' : 'Document Author',
-    '@title': filename ? '(from PDF)' : 'Document Title',
-    '@subject': filename ? '(from PDF)' : 'Document Subject',
-    '@uuid': 'a1b2c3d4',
+    // Metadata - cannot be read from PDF in frontend, show placeholder
+    '@author': '?',
+    '@title': '?',
+    '@subject': '?',
+    // UUID - will be random each time
+    '@uuid': '????????',
   };
 
   result = result.replace(/@date\{([^}]+)\}/g, (match, format) => {
