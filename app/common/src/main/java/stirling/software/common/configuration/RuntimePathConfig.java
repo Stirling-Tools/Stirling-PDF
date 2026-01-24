@@ -41,6 +41,7 @@ public class RuntimePathConfig {
 
     // Pipeline paths
     private final String pipelineWatchedFoldersPath;
+    private final List<String> pipelineWatchedFoldersPaths;
     private final String pipelineFinishedFoldersPath;
     private final String pipelineDefaultWebUiConfigs;
     private final String pipelinePath;
@@ -49,20 +50,27 @@ public class RuntimePathConfig {
         this.properties = properties;
         this.basePath = InstallationPathConfig.getPath();
 
-        this.pipelinePath = Path.of(basePath, "pipeline").toString();
-        String defaultWatchedFolders = Path.of(this.pipelinePath, "watchedFolders").toString();
-        String defaultFinishedFolders = Path.of(this.pipelinePath, "finishedFolders").toString();
-        String defaultWebUIConfigs = Path.of(this.pipelinePath, "defaultWebUIConfigs").toString();
-
         System system = properties.getSystem();
         CustomPaths customPaths = system.getCustomPaths();
 
         Pipeline pipeline = customPaths.getPipeline();
 
-        this.pipelineWatchedFoldersPath =
+        this.pipelinePath =
                 resolvePath(
+                        Path.of(basePath, "pipeline").toString(),
+                        pipeline != null ? pipeline.getPipelineDir() : null);
+        String defaultWatchedFolders = Path.of(this.pipelinePath, "watchedFolders").toString();
+        String defaultFinishedFolders = Path.of(this.pipelinePath, "finishedFolders").toString();
+        String defaultWebUIConfigs = Path.of(this.pipelinePath, "defaultWebUIConfigs").toString();
+
+        List<String> watchedFoldersDirs =
+                sanitizePathList(pipeline != null ? pipeline.getWatchedFoldersDirs() : null);
+        this.pipelineWatchedFoldersPaths =
+                resolveWatchedFolderPaths(
                         defaultWatchedFolders,
+                        watchedFoldersDirs,
                         pipeline != null ? pipeline.getWatchedFoldersDir() : null);
+        this.pipelineWatchedFoldersPath = this.pipelineWatchedFoldersPaths.get(0);
         this.pipelineFinishedFoldersPath =
                 resolvePath(
                         defaultFinishedFolders,
@@ -127,6 +135,30 @@ public class RuntimePathConfig {
 
     private String resolvePath(String defaultPath, String customPath) {
         return StringUtils.isNotBlank(customPath) ? customPath : defaultPath;
+    }
+
+    private List<String> resolveWatchedFolderPaths(
+            String defaultPath, List<String> watchedFoldersDirs, String legacyWatchedFolder) {
+        if (watchedFoldersDirs != null && !watchedFoldersDirs.isEmpty()) {
+            return watchedFoldersDirs;
+        }
+        if (StringUtils.isNotBlank(legacyWatchedFolder)) {
+            return List.of(legacyWatchedFolder);
+        }
+        return List.of(defaultPath);
+    }
+
+    private List<String> sanitizePathList(List<String> paths) {
+        if (paths == null || paths.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> sanitized = new ArrayList<>();
+        for (String path : paths) {
+            if (StringUtils.isNotBlank(path)) {
+                sanitized.add(path.trim());
+            }
+        }
+        return sanitized;
     }
 
     private boolean isRunningInDocker() {

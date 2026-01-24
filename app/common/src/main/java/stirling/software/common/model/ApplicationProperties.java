@@ -458,7 +458,9 @@ public class ApplicationProperties {
 
         @Data
         public static class Pipeline {
+            private String pipelineDir;
             private String watchedFoldersDir;
+            private List<String> watchedFoldersDirs = new ArrayList<>();
             private String finishedFoldersDir;
             private String webUIConfigsDir;
         }

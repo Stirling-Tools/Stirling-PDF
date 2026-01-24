@@ -46,7 +46,7 @@ public class PipelineDirectoryProcessor {
     private final PipelineProcessor processor;
     private final FileMonitor fileMonitor;
     private final PostHogService postHogService;
-    private final String watchedFoldersDir;
+    private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
 
     public PipelineDirectoryProcessor(
@@ -61,13 +61,18 @@ public class PipelineDirectoryProcessor {
         this.processor = processor;
         this.fileMonitor = fileMonitor;
         this.postHogService = postHogService;
-        this.watchedFoldersDir = runtimePathConfig.getPipelineWatchedFoldersPath();
+        this.watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
 
     @Scheduled(fixedRate = 60000)
     public void scanFolders() {
-        Path watchedFolderPath = Paths.get(watchedFoldersDir).toAbsolutePath();
+        for (String watchedFoldersDir : watchedFoldersDirs) {
+            scanWatchedFolder(Paths.get(watchedFoldersDir).toAbsolutePath());
+        }
+    }
+
+    private void scanWatchedFolder(Path watchedFolderPath) {
         if (!Files.exists(watchedFolderPath)) {
             try {
                 Files.createDirectories(watchedFolderPath);
@@ -86,8 +91,13 @@ public class PipelineDirectoryProcessor {
                         public FileVisitResult preVisitDirectory(
                                 Path dir, BasicFileAttributes attrs) {
                             try {
+                                String dirName =
+                                        dir.getFileName() != null
+                                                ? dir.getFileName().toString()
+                                                : "";
                                 // Skip root directory and "processing" subdirectories
-                                if (!dir.equals(watchedFolderPath) && !dir.endsWith("processing")) {
+                                if (!dir.equals(watchedFolderPath)
+                                        && !"processing".equals(dirName)) {
                                     handleDirectory(dir);
                                 }
                             } catch (Exception e) {

@@ -202,7 +202,9 @@ system:
     name: postgres # set the name of your database. Should match the name of the database you create
   customPaths:
     pipeline:
+      pipelineDir: "" # Defaults to /pipeline
       watchedFoldersDir: "" # Defaults to /pipeline/watchedFolders
+      watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
       weasyprint: "" # Defaults to /opt/venv/bin/weasyprint

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl, Select } from '@mantine/core';
+import { TextInput, Textarea, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl, Select } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -31,7 +31,9 @@ interface GeneralSettingsData {
   };
   customPaths?: {
     pipeline?: {
+      pipelineDir?: string;
       watchedFoldersDir?: string;
+      watchedFoldersDirs?: string[];
       finishedFoldersDir?: string;
     };
     operations?: {
@@ -61,6 +63,12 @@ export default function AdminGeneralSection() {
       .sort((a, b) => a.label.localeCompare(b.label)),
     []
   );
+  const parseWatchedFoldersInput = useCallback((value: string) => (
+    value
+      .split(/[\n,;]+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+  ), []);
   
   // Track original settings for dirty detection
   const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
@@ -91,17 +99,31 @@ export default function AdminGeneralSection() {
 
       ui.languages = Array.isArray(ui.languages) ? toUnderscoreLanguages(ui.languages) : [];
 
+      const pipelinePaths = system.customPaths?.pipeline || {};
+      const watchedFoldersDirs = Array.isArray(pipelinePaths.watchedFoldersDirs)
+        ? pipelinePaths.watchedFoldersDirs
+        : [];
+      const normalizedWatchedFoldersDirs =
+        watchedFoldersDirs.length > 0
+          ? watchedFoldersDirs
+          : (pipelinePaths.watchedFoldersDir ? [pipelinePaths.watchedFoldersDir] : []);
+
       const result: any = {
         ui,
         system,
-        customPaths: system.customPaths || {
+        customPaths: {
+          ...(system.customPaths || {}),
           pipeline: {
-            watchedFoldersDir: '',
-            finishedFoldersDir: ''
+            ...pipelinePaths,
+            pipelineDir: pipelinePaths.pipelineDir || '',
+            watchedFoldersDir: pipelinePaths.watchedFoldersDir || '',
+            watchedFoldersDirs: normalizedWatchedFoldersDirs,
+            finishedFoldersDir: pipelinePaths.finishedFoldersDir || ''
           },
           operations: {
-            weasyprint: '',
-            unoconvert: ''
+            ...(system.customPaths?.operations || {}),
+            weasyprint: system.customPaths?.operations?.weasyprint || '',
+            unoconvert: system.customPaths?.operations?.unoconvert || ''
           }
         },
         customMetadata: premium.proFeatures?.customMetadata || {
@@ -154,7 +176,9 @@ export default function AdminGeneralSection() {
       };
 
       if (settings.customPaths) {
+        deltaSettings['system.customPaths.pipeline.pipelineDir'] = settings.customPaths?.pipeline?.pipelineDir;
         deltaSettings['system.customPaths.pipeline.watchedFoldersDir'] = settings.customPaths?.pipeline?.watchedFoldersDir;
+        deltaSettings['system.customPaths.pipeline.watchedFoldersDirs'] = settings.customPaths?.pipeline?.watchedFoldersDirs;
         deltaSettings['system.customPaths.pipeline.finishedFoldersDir'] = settings.customPaths?.pipeline?.finishedFoldersDir;
         deltaSettings['system.customPaths.operations.weasyprint'] = settings.customPaths?.operations?.weasyprint;
         deltaSettings['system.customPaths.operations.unoconvert'] = settings.customPaths?.operations?.unoconvert;
@@ -171,6 +195,9 @@ export default function AdminGeneralSection() {
     () => toUnderscoreLanguages(settings.ui?.languages || []),
     [settings.ui?.languages]
   );
+  const watchedFoldersInput = useMemo(() => (
+    (settings.customPaths?.pipeline?.watchedFoldersDirs || []).join('\n')
+  ), [settings.customPaths?.pipeline?.watchedFoldersDirs]);
 
   // Filter default locale options based on available languages setting
   const defaultLocaleOptions = useMemo(() => {
@@ -651,23 +678,57 @@ export default function AdminGeneralSection() {
             <TextInput
               label={
                 <Group gap="xs">
-                  <span>{t('admin.settings.general.customPaths.pipeline.watchedFoldersDir.label', 'Watched Folders Directory')}</span>
-                  <PendingBadge show={isFieldPending('customPaths.pipeline.watchedFoldersDir')} />
+                  <span>{t('admin.settings.general.customPaths.pipeline.pipelineDir.label', 'Pipeline Directory')}</span>
+                  <PendingBadge show={isFieldPending('customPaths.pipeline.pipelineDir')} />
                 </Group>
               }
-              description={t('admin.settings.general.customPaths.pipeline.watchedFoldersDir.description', 'Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)')}
-              value={settings.customPaths?.pipeline?.watchedFoldersDir || ''}
+              description={t('admin.settings.general.customPaths.pipeline.pipelineDir.description', 'Base directory for pipeline resources (leave empty for default: /pipeline)')}
+              value={settings.customPaths?.pipeline?.pipelineDir || ''}
               onChange={(e) => setSettings({
                 ...settings,
                 customPaths: {
                   ...settings.customPaths,
                   pipeline: {
                     ...settings.customPaths?.pipeline,
-                    watchedFoldersDir: e.target.value
+                    pipelineDir: e.target.value
                   }
                 }
               })}
+              placeholder="/pipeline"
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div>
+            <Textarea
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.customPaths.pipeline.watchedFoldersDirs.label', 'Watched Folders Directories')}</span>
+                  <PendingBadge show={
+                    isFieldPending('customPaths.pipeline.watchedFoldersDirs')
+                    || isFieldPending('customPaths.pipeline.watchedFoldersDir')
+                  } />
+                </Group>
+              }
+              description={t('admin.settings.general.customPaths.pipeline.watchedFoldersDirs.description', 'Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)')}
+              value={watchedFoldersInput}
+              onChange={(e) => {
+                const parsedDirs = parseWatchedFoldersInput(e.target.value);
+                setSettings({
+                  ...settings,
+                  customPaths: {
+                    ...settings.customPaths,
+                    pipeline: {
+                      ...settings.customPaths?.pipeline,
+                      watchedFoldersDir: parsedDirs[0] || '',
+                      watchedFoldersDirs: parsedDirs
+                    }
+                  }
+                });
+              }}
               placeholder="/pipeline/watchedFolders"
+              minRows={3}
+              autosize
               disabled={!loginEnabled}
             />
           </div>
