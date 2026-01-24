@@ -32,7 +32,6 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @Slf4j
 public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
@@ -41,20 +40,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private static final Map<String, String> endSessionEndpointCache = new ConcurrentHashMap<>();
 
     private final ApplicationProperties.Security securityProperties;
-    private final JwtServiceInterface jwtService;
     private final LogoutSuccessHandler samlLogoutHandler;
 
     public CustomLogoutSuccessHandler(
-            ApplicationProperties.Security securityProperties, JwtServiceInterface jwtService) {
-        this(securityProperties, jwtService, null);
-    }
-
-    public CustomLogoutSuccessHandler(
             ApplicationProperties.Security securityProperties,
-            JwtServiceInterface jwtService,
             LogoutSuccessHandler samlLogoutHandler) {
         this.securityProperties = securityProperties;
-        this.jwtService = jwtService;
         this.samlLogoutHandler = samlLogoutHandler;
     }
 
@@ -130,11 +121,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 }
             }
         }
-        // Fall through to local logout for all cases:
-        // - SLO disabled
-        // - SLO enabled but reconstruction failed
-        // - SLO enabled but handler not configured
-        // - SLO failed with exception
         getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
     }
 

@@ -246,9 +246,7 @@ public class SecurityConfiguration {
                                                     .matcher(HttpMethod.POST, "/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    securityProperties,
-                                                    jwtService,
-                                                    samlLogoutHandler))
+                                                    securityProperties, samlLogoutHandler))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies(

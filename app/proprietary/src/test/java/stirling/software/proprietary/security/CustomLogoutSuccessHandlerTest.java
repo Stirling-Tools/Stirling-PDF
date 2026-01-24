@@ -22,6 +22,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClient.RequestHeadersUriSpec;
 import org.springframework.web.client.RestClient.ResponseSpec;
@@ -30,7 +31,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 /**
  * Tests for CustomLogoutSuccessHandler.
@@ -44,15 +44,16 @@ class CustomLogoutSuccessHandlerTest {
 
     @Mock private ApplicationProperties.Security securityProperties;
 
-    @Mock private JwtServiceInterface jwtService;
-
     @Mock private ApplicationProperties.Security.SAML2 saml2;
+
+    @Mock private LogoutSuccessHandler logoutSuccessHandler;
 
     private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
     @BeforeEach
     void setUp() {
-        customLogoutSuccessHandler = new CustomLogoutSuccessHandler(securityProperties, jwtService);
+        customLogoutSuccessHandler =
+                new CustomLogoutSuccessHandler(securityProperties, logoutSuccessHandler);
     }
 
     @Test
@@ -302,13 +303,17 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
-    void testJwtLogout_Saml2AuthType_WithSloEnabled_NoHandler_LocalLogout() throws IOException {
+    void testJwtLogout_Saml2AuthType_WithSloEnabled_LocalLogout() throws IOException {
         // When SLO is enabled but no SAML logout handler is configured, falls back to local logout
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         JwtAuthenticationToken jwtAuth = mock(JwtAuthenticationToken.class);
         Jwt jwt = mock(Jwt.class);
         String logoutPath = "/login?logout=true";
+
+        // Create handler with null samlLogoutHandler to test fallback behavior
+        CustomLogoutSuccessHandler handlerWithoutSaml =
+                new CustomLogoutSuccessHandler(securityProperties, null);
 
         when(response.isCommitted()).thenReturn(false);
         when(request.getParameter("SAMLResponse")).thenReturn(null);
@@ -327,7 +332,7 @@ class CustomLogoutSuccessHandlerTest {
         when(securityProperties.getSaml2()).thenReturn(saml2);
         when(saml2.getEnableSingleLogout()).thenReturn(true);
 
-        customLogoutSuccessHandler.onLogoutSuccess(request, response, jwtAuth);
+        handlerWithoutSaml.onLogoutSuccess(request, response, jwtAuth);
 
         // Falls back to local logout since no SAML handler is configured
         verify(response).sendRedirect(logoutPath);
