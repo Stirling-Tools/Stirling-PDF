@@ -58,8 +58,3 @@ licenses-frontend: &licenses-frontend
 licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - *build
-
-language: &language
-  - frontend/public/locales/**
-  - .github/scripts/check_language_toml.py
-  - .github/workflows/check_toml.yml
