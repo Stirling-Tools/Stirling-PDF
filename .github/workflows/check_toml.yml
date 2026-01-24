@@ -320,15 +320,20 @@ jobs:
     name: Sync application version files
     needs: files-changed
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
 
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout PR head (fork branch)
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Setup GitHub App Bot
@@ -357,12 +362,14 @@ jobs:
         run: |
           if [[ -n $(git status --porcelain) ]]; then
             echo "changes=true" >> $GITHUB_OUTPUT
+            git diff --name-only >> changed_files.txt || true
+            echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
           else
             echo "changes=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Post comment on PR
-        if: steps.git-check.outputs.changes == 'true' && github.event_name != 'workflow_dispatch'
+      - name: Post comment on PR if changes needed
+        if: steps.git-check.outputs.changes == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
@@ -380,15 +387,15 @@ jobs:
 
             const comment = comments.data.find(c => c.body.includes("## ⚠️ Version Differences"));
 
-            const commentBody = `## ⚠️ Version Differences
+            const changed = `${{ steps.git-check.outputs.changed_files }}`.trim().split(/\s+/).filter(Boolean);
 
-            The versions in the following files do not match the version defined in \`build.gradle\`.
-
-            Running \`./gradlew syncAppVersion\` or \`./gradlew build\` will automatically update these files:
-
-            \`frontend/src-tauri/tauri.conf.json\`, \`frontend/src/proprietary/testing/serverExperienceSimulations.ts\`, \`frontend/src/core/testing/serverExperienceSimulations.ts\`
-
-            Please run \`./gradlew syncAppVersion\` or \`./gradlew build\`!`;
+            let commentBody = `## ⚠️ Version Differences Detected\n\n`;
+            commentBody += `The following files do not match the version defined in \`build.gradle.kts\`:\n\n`;
+            changed.forEach(file => {
+              commentBody += `- \`${file}\`\n`;
+            });
+            commentBody += `\nRunning \`./gradlew syncAppVersion --build-cache\` or \`./gradlew build\` will update them automatically.\n\n`;
+            commentBody += `Please commit the changes and push again.`;
 
             // Only update or create comments by the action user
             const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
@@ -410,6 +417,20 @@ jobs:
                 issue_number: issueNumber,
                 body: commentBody
               });
+              console.log("Created new comment.");
             } else {
               console.log("Comment update attempt denied. Actor does not match.");
             }
+
+      - name: Fail the job if versions are out of sync (optional)
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          echo "Failing job because version files are not in sync after syncAppVersion"
+          exit 1
+        continue-on-error: true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f changed_files.txt
+        continue-on-error: true
