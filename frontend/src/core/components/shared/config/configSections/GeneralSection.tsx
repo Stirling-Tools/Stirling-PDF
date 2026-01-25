@@ -189,7 +189,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
             {isTauriApp && (
             <Group justify="space-between" align="center">
               <div>
-                <Text size='sm' c="dimmed">
+                <Text size="sm" c="dimmed">
                   {t('settings.general.updates.currentVersionFrontend', 'Current Version Frontend')}:{' '}
                   <Text component="span" fw={500}>
                     {frontendVersionLabel}
