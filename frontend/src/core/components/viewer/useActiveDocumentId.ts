@@ -1,4 +1,4 @@
-import { useActiveDocument } from './ActiveDocumentContext';
+import { useActiveDocument } from '@app/components/viewer/ActiveDocumentContext';
 
 /**
  * Hook to get the currently active document ID.

@@ -252,7 +252,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               handleLinkClick(link);
             }}
             onMouseDown={(e) => e.stopPropagation()}
-            className={`absolute block transition-colors cursor-pointer ${isNavigating ? 'cursor-not-allowed' : ''}`}
+            className={`absolute block cursor-pointer ${isNavigating ? 'cursor-not-allowed' : ''}`}
             style={{
               left: `${left}px`,
               top: `${top}px`,
@@ -263,6 +263,17 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               pointerEvents: 'auto',
               backgroundColor: 'transparent',
               zIndex: 11,
+              border: '2px solid transparent',
+              borderRadius: '2px',
+              transition: 'background-color 0.15s ease-in-out, border-color 0.15s ease-in-out',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
+              e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = 'transparent';
             }}
             title={getLinkTitle(link)}
             aria-label={getLinkAriaLabel(link)}
