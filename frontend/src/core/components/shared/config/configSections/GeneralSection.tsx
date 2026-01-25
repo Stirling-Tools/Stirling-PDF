@@ -31,6 +31,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [mismatchVersion, setMismatchVersion] = useState(false);
   const isTauriApp = isTauri();
+  const [appVersion, setAppVersion] = useState<string | null>(null);
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -49,6 +50,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
       const version = await getVersion();
       const tauriVersion = config?.appVersion;
       console.log('[GeneralSection] Checking for updates, current version:', version, tauriVersion);
+      setAppVersion(version);
 
       if (version !== tauriVersion) {
         console.warn('[GeneralSection] Mismatch between Tauri version and AppConfig version:', {
@@ -184,7 +186,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
                 <Text size='sm' c="dimmed">
                   {t('settings.general.updates.currentVersionFrontend', 'Current Version Frontend')}:{' '}
                   <Text component="span" fw={500}>
-                    {getVersion()}
+                    {appVersion}
                   </Text>
                 </Text>
                 {mismatchVersion && (
