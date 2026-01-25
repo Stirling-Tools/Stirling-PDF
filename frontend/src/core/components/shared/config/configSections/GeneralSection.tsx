@@ -7,6 +7,8 @@ import type { ToolPanelMode } from '@app/constants/toolPanel';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { updateService, UpdateSummary } from '@app/services/updateService';
 import UpdateModal from '@app/components/shared/UpdateModal';
+import { getVersion } from '@tauri-apps/api/app';
+import { isTauri } from '@tauri-apps/api/core';
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = 'stirlingpdf_features_banner_dismissed';
@@ -27,6 +29,8 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
   const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [mismatchVersion, setMismatchVersion] = useState(false);
+  const isTauriApp = isTauri();
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -41,6 +45,20 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
   }, [config?.appVersion, config?.machineType]);
 
   const checkForUpdate = async () => {
+    if (isTauriApp) {
+      const version = await getVersion();
+      const tauriVersion = config?.appVersion;
+      console.log('[GeneralSection] Checking for updates, current version:', version, tauriVersion);
+
+      if (version !== tauriVersion) {
+        console.warn('[GeneralSection] Mismatch between Tauri version and AppConfig version:', {
+          tauriVersion: tauriVersion,
+          appConfigVersion: version,
+        });
+        setMismatchVersion(true);
+      }
+    }
+
     if (!config?.appVersion || !config?.machineType) {
       return;
     }
@@ -160,11 +178,27 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
                 )}
               </Group>
             </div>
-
+            {isTauriApp && (
+            <Group justify="space-between" align="center">
+              <div>
+                <Text size='sm' c="dimmed">
+                  {t('settings.general.updates.currentVersionFrontend', 'Current Version Frontend')}:{' '}
+                  <Text component="span" fw={500}>
+                    {getVersion()}
+                  </Text>
+                </Text>
+                {mismatchVersion && (
+                  <Text size="sm" c="red" mt={4}>
+                    {t('settings.general.updates.versionMismatch', 'Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version.')}
+                  </Text>
+                )}
+              </div>
+            </Group>
+            )}
             <Group justify="space-between" align="center">
               <div>
                 <Text size="sm" c="dimmed">
-                  {t('settings.general.updates.currentVersion', 'Current Version')}:{' '}
+                  {t('settings.general.updates.currentVersionBackend', 'Current Version Backend')}:{' '}
                   <Text component="span" fw={500}>
                     {config.appVersion}
                   </Text>
