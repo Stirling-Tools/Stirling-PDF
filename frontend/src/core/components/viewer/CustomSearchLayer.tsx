@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { SEARCH_CONSTANTS } from '@app/components/viewer/constants/search';
-import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
 interface SearchLayerProps {
   documentId?: string;
@@ -27,7 +26,7 @@ interface SearchResultState {
 }
 
 export function CustomSearchLayer({
-  documentId = DEFAULT_DOCUMENT_ID,
+  documentId = '',
   pageIndex,
   scale = 1,
   highlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.BACKGROUND,

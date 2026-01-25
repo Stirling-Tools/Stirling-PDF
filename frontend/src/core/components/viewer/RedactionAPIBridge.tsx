@@ -1,10 +1,21 @@
 import { useEffect, useImperativeHandle } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
 import { useRedaction } from '@app/contexts/RedactionContext';
-import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
 export function RedactionAPIBridge() {
-  const { state, provides } = useEmbedPdfRedaction(DEFAULT_DOCUMENT_ID);
+  const activeDocumentId = useActiveDocumentId();
+  
+  // Don't render the inner component until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return <RedactionAPIBridgeInner documentId={activeDocumentId} />;
+}
+
+function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
+  const { state, provides } = useEmbedPdfRedaction(documentId);
   const { 
     redactionApiRef, 
     setPendingCount, 

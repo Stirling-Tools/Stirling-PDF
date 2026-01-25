@@ -6,7 +6,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useRedaction } from '@app/contexts/RedactionContext';
-import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
 export interface RedactionSelectionContext {
   item?: { id: string; page: number };
@@ -15,8 +15,31 @@ export interface RedactionSelectionContext {
 }
 
 export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: RedactionSelectionContext) {
+  const activeDocumentId = useActiveDocumentId();
+  
+  // Don't render until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return (
+    <RedactionSelectionMenuInner 
+      documentId={activeDocumentId}
+      item={item}
+      selected={selected}
+      menuWrapperProps={menuWrapperProps}
+    />
+  );
+}
+
+function RedactionSelectionMenuInner({ 
+  documentId,
+  item, 
+  selected, 
+  menuWrapperProps 
+}: RedactionSelectionContext & { documentId: string }) {
   const { t } = useTranslation();
-  const { provides } = useEmbedPdfRedaction(DEFAULT_DOCUMENT_ID);
+  const { provides } = useEmbedPdfRedaction(documentId);
   const { setRedactionsApplied } = useRedaction();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);

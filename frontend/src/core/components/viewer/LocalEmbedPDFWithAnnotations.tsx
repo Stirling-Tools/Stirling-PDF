@@ -34,7 +34,9 @@ import { SpreadAPIBridge } from '@app/components/viewer/SpreadAPIBridge';
 import { SearchAPIBridge } from '@app/components/viewer/SearchAPIBridge';
 import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
 import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
-import { SIGNING_DOCUMENT_ID as DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
+import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
+
+const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
 
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
@@ -72,7 +74,7 @@ export function LocalEmbedPDFWithAnnotations({
       createPluginRegistration(DocumentManagerPluginPackage, {
         initialDocuments: [{
           url: pdfUrl,
-          name: DOCUMENT_ID,
+          name: DOCUMENT_NAME,
         }],
       }),
       createPluginRegistration(ViewportPluginPackage, {
@@ -239,61 +241,71 @@ export function LocalEmbedPDFWithAnnotations({
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
-        <GlobalPointerProvider documentId={DOCUMENT_ID}>
-          <Viewport
-            documentId={DOCUMENT_ID}
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              height: '100%',
-              width: '100%',
-              maxHeight: '100%',
-              maxWidth: '100%',
-              overflow: 'auto',
-              position: 'relative',
-              flex: 1,
-              minHeight: 0,
-              minWidth: 0,
-              contain: 'strict',
-            }}
-          >
-            <Scroller
-              documentId={DOCUMENT_ID}
-              renderPage={({ width, height, pageIndex }) => (
-                <Rotate key={`${DOCUMENT_ID}-${pageIndex}`} documentId={DOCUMENT_ID} pageIndex={pageIndex}>
-                  <PagePointerProvider documentId={DOCUMENT_ID} pageIndex={pageIndex}>
-                    <div
-                      style={{
-                        width,
-                        height,
-                        position: 'relative',
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        MozUserSelect: 'none',
-                        msUserSelect: 'none'
-                      }}
-                      draggable={false}
-                      onDragStart={(e) => e.preventDefault()}
-                      onDrop={(e) => e.preventDefault()}
-                      onDragOver={(e) => e.preventDefault()}
-                    >
-                      <TilingLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
+        <DocumentReadyWrapper
+          fallback={
+            <Center style={{ height: '100%', width: '100%' }}>
+              <ToolLoadingFallback />
+            </Center>
+          }
+        >
+          {(documentId) => (
+            <GlobalPointerProvider documentId={documentId}>
+              <Viewport
+                documentId={documentId}
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  height: '100%',
+                  width: '100%',
+                  maxHeight: '100%',
+                  maxWidth: '100%',
+                  overflow: 'auto',
+                  position: 'relative',
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  contain: 'strict',
+                }}
+              >
+                <Scroller
+                  documentId={documentId}
+                  renderPage={({ width, height, pageIndex }) => (
+                    <Rotate key={`${documentId}-${pageIndex}`} documentId={documentId} pageIndex={pageIndex}>
+                      <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
+                        <div
+                          style={{
+                            width,
+                            height,
+                            position: 'relative',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none',
+                            MozUserSelect: 'none',
+                            msUserSelect: 'none'
+                          }}
+                          draggable={false}
+                          onDragStart={(e) => e.preventDefault()}
+                          onDrop={(e) => e.preventDefault()}
+                          onDragOver={(e) => e.preventDefault()}
+                        >
+                          <TilingLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      <CustomSearchLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
+                          <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      <SelectionLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
+                          <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      <AnnotationLayer
-                        documentId={DOCUMENT_ID}
-                        pageIndex={pageIndex}
-                        selectionOutlineColor="#007ACC"
-                      />
-                    </div>
-                  </PagePointerProvider>
-                </Rotate>
-              )}
-            />
-          </Viewport>
-        </GlobalPointerProvider>
+                          <AnnotationLayer
+                            documentId={documentId}
+                            pageIndex={pageIndex}
+                            selectionOutlineColor="#007ACC"
+                          />
+                        </div>
+                      </PagePointerProvider>
+                    </Rotate>
+                  )}
+                />
+              </Viewport>
+            </GlobalPointerProvider>
+          )}
+        </DocumentReadyWrapper>
       </EmbedPDF>
     </div>
   );

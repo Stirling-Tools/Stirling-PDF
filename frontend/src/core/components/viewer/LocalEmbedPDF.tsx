@@ -50,8 +50,11 @@ import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectio
 import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
 import { DocumentPermissionsAPIBridge } from '@app/components/viewer/DocumentPermissionsAPIBridge';
+import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
+import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentContext';
 import { absoluteWithBasePath } from '@app/constants/app';
-import { DEFAULT_DOCUMENT_ID as DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
+
+const DOCUMENT_NAME = 'stirling-pdf-viewer';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -95,7 +98,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       createPluginRegistration(DocumentManagerPluginPackage, {
         initialDocuments: [{
           url: pdfUrl,
-          name: DOCUMENT_ID,
+          name: DOCUMENT_NAME,
         }],
       }),
       createPluginRegistration(ViewportPluginPackage, {
@@ -626,6 +629,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
           }
         }}
       >
+        <ActiveDocumentProvider>
         <ZoomAPIBridge />
         <ScrollAPIBridge />
         <SelectionAPIBridge />
@@ -646,79 +650,90 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
         <BookmarkAPIBridge />
         <PrintAPIBridge />
         <DocumentPermissionsAPIBridge />
-        <GlobalPointerProvider documentId={DOCUMENT_ID}>
-          <Viewport
-            documentId={DOCUMENT_ID}
-            style={{
-              backgroundColor: 'var(--bg-background)',
-              height: '100%',
-              width: '100%',
-              maxHeight: '100%',
-              maxWidth: '100%',
-              overflow: 'auto',
-              position: 'relative',
-              flex: 1,
-              minHeight: 0,
-              minWidth: 0,
-              contain: 'strict',
-            }}
-          >
-          <Scroller
-            documentId={DOCUMENT_ID}
-            renderPage={({ width, height, pageIndex }) => {
-              return (
-                <Rotate key={`${DOCUMENT_ID}-${pageIndex}`} documentId={DOCUMENT_ID} pageIndex={pageIndex}>
-                  <PagePointerProvider documentId={DOCUMENT_ID} pageIndex={pageIndex}>
-                    <div
-                      data-page-index={pageIndex}
-                      data-page-width={width}
-                      data-page-height={height}
-                      style={{
-                        width,
-                        height,
-                        position: 'relative',
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        MozUserSelect: 'none',
-                        msUserSelect: 'none',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-                      }}
-                      draggable={false}
-                      onDragStart={(e) => e.preventDefault()}
-                      onDrop={(e) => e.preventDefault()}
-                      onDragOver={(e) => e.preventDefault()}
-                    >
-                      <TilingLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
+        <DocumentReadyWrapper
+          fallback={
+            <Center style={{ height: '100%', width: '100%' }}>
+              <ToolLoadingFallback />
+            </Center>
+          }
+        >
+          {(documentId) => (
+            <GlobalPointerProvider documentId={documentId}>
+              <Viewport
+                documentId={documentId}
+                style={{
+                  backgroundColor: 'var(--bg-background)',
+                  height: '100%',
+                  width: '100%',
+                  maxHeight: '100%',
+                  maxWidth: '100%',
+                  overflow: 'auto',
+                  position: 'relative',
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  contain: 'strict',
+                }}
+              >
+              <Scroller
+                documentId={documentId}
+                renderPage={({ width, height, pageIndex }) => {
+                  return (
+                    <Rotate key={`${documentId}-${pageIndex}`} documentId={documentId} pageIndex={pageIndex}>
+                      <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
+                        <div
+                          data-page-index={pageIndex}
+                          data-page-width={width}
+                          data-page-height={height}
+                          style={{
+                            width,
+                            height,
+                            position: 'relative',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none',
+                            MozUserSelect: 'none',
+                            msUserSelect: 'none',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                          }}
+                          draggable={false}
+                          onDragStart={(e) => e.preventDefault()}
+                          onDrop={(e) => e.preventDefault()}
+                          onDragOver={(e) => e.preventDefault()}
+                        >
+                          <TilingLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      <CustomSearchLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
+                          <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      <SelectionLayer documentId={DOCUMENT_ID} pageIndex={pageIndex} />
+                          <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      <LinkLayer pageIndex={pageIndex} scale={1} pdfFile={file} />
+                          <LinkLayer documentId={documentId} pageIndex={pageIndex} pageWidth={width} pageHeight={height} pdfFile={file} />
 
-                      {enableAnnotations && (
-                        <AnnotationLayer
-                          documentId={DOCUMENT_ID}
-                          pageIndex={pageIndex}
-                          selectionOutlineColor="#007ACC"
-                        />
-                      )}
+                          {enableAnnotations && (
+                            <AnnotationLayer
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              selectionOutlineColor="#007ACC"
+                            />
+                          )}
 
-                      {enableRedaction && (
-                        <RedactionLayer
-                          documentId={DOCUMENT_ID}
-                          pageIndex={pageIndex}
-                          selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
-                        />
-                      )}
-                    </div>
-                  </PagePointerProvider>
-                </Rotate>
-              );
-            }}
-          />
-          </Viewport>
-        </GlobalPointerProvider>
+                          {enableRedaction && (
+                            <RedactionLayer
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+                            />
+                          )}
+                        </div>
+                      </PagePointerProvider>
+                    </Rotate>
+                  );
+                }}
+              />
+              </Viewport>
+            </GlobalPointerProvider>
+          )}
+        </DocumentReadyWrapper>
+        </ActiveDocumentProvider>
       </EmbedPDF>
       </div>
     </PrivateContent>

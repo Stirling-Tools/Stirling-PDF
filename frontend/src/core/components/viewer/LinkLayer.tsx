@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
-import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
 
 enum PDFActionType {
   GoTo = 0,
@@ -69,8 +68,10 @@ function isExternalLink(link: LinkAnnotation): boolean {
 }
 
 interface LinkLayerProps {
+  documentId: string;
   pageIndex: number;
-  scale: number;
+  pageWidth: number;
+  pageHeight: number;
   document?: any;
   pdfFile?: File | Blob;
   onLinkClick?: (target: any) => void;
@@ -106,32 +107,81 @@ const getLinkAriaLabel = (link: LinkAnnotation): string => {
 };
 
 export const LinkLayer: React.FC<LinkLayerProps> = ({
+  documentId,
   pageIndex,
-  scale,
+  pageWidth,
+  pageHeight,
   document: pdfDocument,
   onLinkClick
 }) => {
   const { provides: annotation } = useAnnotationCapability();
-  const { provides: scroll } = useScroll(DEFAULT_DOCUMENT_ID);
+  const { provides: scroll } = useScroll(documentId);
   const [links, setLinks] = useState<LinkAnnotation[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Track the PDF's original page dimensions to calculate scale
+  const [pdfPageDimensions, setPdfPageDimensions] = useState<{ width: number; height: number } | null>(null);
+
+  // Try to determine the original PDF page dimensions
+  // Standard US Letter is 612x792 points at 72 DPI
+  useEffect(() => {
+    // The annotation rect coordinates are typically in PDF points
+    // We need to figure out what the original page size is to calculate scale
+    // For now, try to infer from the first link's position relative to page
+    if (links.length > 0 && !pdfPageDimensions) {
+      // Try common page sizes
+      // US Letter: 612 x 792
+      // A4: 595.276 x 841.890
+      setPdfPageDimensions({ width: 612, height: 792 });
+    }
+  }, [links, pdfPageDimensions]);
+
+  // Process links with proper coordinate transformation
   const processedLinks = useMemo(() => {
-    return links.map(link => ({
-      ...link,
-      scaledRect: {
-        left: link.rect.origin.x * scale,
-        top: link.rect.origin.y * scale,
-        width: link.rect.size.width * scale,
-        height: link.rect.size.height * scale,
-      },
-      computedBorderStyle: link.strokeStyle === 'dashed' || (link.strokeDashArray && link.strokeDashArray.length > 0)
-        ? 'dashed'
-        : link.strokeStyle === 'underline'
-        ? 'none'
-        : 'solid',
-    }));
-  }, [links, scale]);
+    if (!pageWidth || !pageHeight) return [];
+    
+    // Calculate scale factor from PDF coordinates to rendered coordinates
+    // If we have PDF dimensions, use those; otherwise assume coordinates match
+    const scaleX = pdfPageDimensions ? pageWidth / pdfPageDimensions.width : 1;
+    const scaleY = pdfPageDimensions ? pageHeight / pdfPageDimensions.height : 1;
+    
+    return links.map(link => {
+      const { origin, size } = link.rect;
+      
+      // Debug logging to understand coordinate system
+      console.log('[LinkLayer] Link rect:', {
+        pageWidth,
+        pageHeight,
+        pdfPageDimensions,
+        scaleX,
+        scaleY,
+        origin,
+        size,
+        linkId: link.id
+      });
+      
+      // Scale the coordinates from PDF space to rendered space
+      const scaledLeft = origin.x * scaleX;
+      const scaledTop = origin.y * scaleY;
+      const scaledWidth = size.width * scaleX;
+      const scaledHeight = size.height * scaleY;
+      
+      return {
+        ...link,
+        scaledRect: {
+          left: scaledLeft,
+          top: scaledTop,
+          width: scaledWidth,
+          height: scaledHeight,
+        },
+        computedBorderStyle: link.strokeStyle === 'dashed' || (link.strokeDashArray && link.strokeDashArray.length > 0)
+          ? 'dashed'
+          : link.strokeStyle === 'underline'
+          ? 'none'
+          : 'solid',
+      };
+    });
+  }, [links, pageWidth, pageHeight, pdfPageDimensions]);
 
   useEffect(() => {
     const fetchLinks = async () => {

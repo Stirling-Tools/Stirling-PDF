@@ -1,6 +1,6 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
-import { DEFAULT_DOCUMENT_ID } from '@app/components/viewer/viewerConstants';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
 export interface RedactionPendingTrackerAPI {
   commitAllPending: () => void;
@@ -9,7 +9,20 @@ export interface RedactionPendingTrackerAPI {
 
 export const RedactionPendingTracker = forwardRef<RedactionPendingTrackerAPI>(
   function RedactionPendingTracker(_, ref) {
-    const { state, provides } = useEmbedPdfRedaction(DEFAULT_DOCUMENT_ID);
+    const activeDocumentId = useActiveDocumentId();
+    
+    // Don't render the inner component until we have a valid document ID
+    if (!activeDocumentId) {
+      return null;
+    }
+    
+    return <RedactionPendingTrackerInner documentId={activeDocumentId} ref={ref} />;
+  }
+);
+
+const RedactionPendingTrackerInner = forwardRef<RedactionPendingTrackerAPI, { documentId: string }>(
+  function RedactionPendingTrackerInner({ documentId }, ref) {
+    const { state, provides } = useEmbedPdfRedaction(documentId);
     
     const pendingCountRef = useRef(0);
     
