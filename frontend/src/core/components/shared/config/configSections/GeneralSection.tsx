@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl, Code, Group, Anchor, ActionIcon, Button, Badge, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { usePreferences } from '@app/contexts/PreferencesContext';
@@ -30,7 +30,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [mismatchVersion, setMismatchVersion] = useState(false);
-  const isTauriApp = isTauri();
+  const isTauriApp = useMemo(() => isTauri(), []);
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const frontendVersionLabel = appVersion ?? t('common.loading', 'Loading...');
 
