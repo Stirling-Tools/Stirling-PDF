@@ -50,12 +50,13 @@ function isURIAction(action: PDFAction): boolean {
   return action.type === 'URI' || action.type === PDFActionType.URI;
 }
 
-function isInternalLink(link: LinkAnnotation): boolean {
+// Utility functions for link type detection - prefixed to indicate future use
+function _isInternalLink(link: LinkAnnotation): boolean {
   return Boolean(link.target?.type === 'destination' ||
          (link.target?.type === 'action' && link.target.action && isGoToAction(link.target.action)));
 }
 
-function isExternalLink(link: LinkAnnotation): boolean {
+function _isExternalLink(link: LinkAnnotation): boolean {
   return Boolean(link.target?.type === 'uri' ||
          (link.target?.type === 'action' && link.target.action && isURIAction(link.target.action)));
 }
@@ -91,26 +92,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     // Use the document scale like EmbedPDF's AnnotationLayer does
     const scale = documentState?.scale ?? 1;
     
-    // Debug: log coordinate info for first link
-    if (links.length > 0) {
-      const firstLink = links[0];
-      console.log('[LinkLayer] Coordinate debug:', {
-        pageIndex,
-        renderedDimensions: { pageWidth, pageHeight },
-        pdfDimensions: { pdfPageWidth, pdfPageHeight },
-        documentScale: scale,
-        calculatedScale: { x: pageWidth / pdfPageWidth, y: pageHeight / pdfPageHeight },
-        firstLinkRect: firstLink.rect,
-        firstLinkScaledWithDocScale: {
-          left: firstLink.rect.origin.x * scale,
-          top: firstLink.rect.origin.y * scale,
-        },
-        firstLinkScaledWithCalculated: {
-          left: firstLink.rect.origin.x * (pageWidth / pdfPageWidth),
-          top: firstLink.rect.origin.y * (pageHeight / pdfPageHeight),
-        },
-      });
-    }
+
     
     return links.map(link => {
       const { origin, size } = link.rect;
@@ -178,8 +160,6 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   const handleLinkClick = useCallback(async (link: LinkAnnotation) => {
     if (isNavigating) return;
 
-    console.log('[LinkLayer] Link clicked:', JSON.stringify(link, null, 2));
-
     try {
       setIsNavigating(true);
 
@@ -223,17 +203,13 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
       } else if (linkData.action?.uri) {
         uri = linkData.action.uri;
       }
-      
-      console.log('[LinkLayer] Extracted:', { targetPage, uri });
 
       if (targetPage !== undefined && scroll) {
-        console.log('[LinkLayer] Navigating to page:', targetPage + 1);
         scroll.scrollToPage({
           pageNumber: targetPage + 1,
           behavior: 'smooth',
         });
       } else if (uri) {
-        console.log('[LinkLayer] Opening URI:', uri);
         try {
           const url = new URL(uri, window.location.href);
           if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {

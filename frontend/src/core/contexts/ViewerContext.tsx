@@ -333,7 +333,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     if (api?.hasPermission) {
       return api.hasPermission(flag);
     }
-    // Default: allow all permissions
+    // Default: allow all permissions - warn in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[ViewerContext] Permissions API not available, defaulting to allow');
+    }
     return true;
   };
 
