@@ -76,7 +76,8 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
 
   // Use configured frontendUrl if set, otherwise use current origin
   // Combine with base path and mobile-scanner route
-  const frontendUrl = config?.frontendUrl || window.location.origin;
+  const baseUrl = localStorage.getItem('server_url') || '';
+  const frontendUrl = baseUrl || config?.frontendUrl || window.location.origin;
   const mobileUrl = `${frontendUrl}${withBasePath('/mobile-scanner')}?session=${sessionId}`;
 
   // Create session on backend
