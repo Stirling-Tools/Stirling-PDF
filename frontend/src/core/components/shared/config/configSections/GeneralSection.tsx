@@ -47,17 +47,22 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
 
   const checkForUpdate = async () => {
     if (isTauriApp) {
-      const version = await getVersion();
-      const tauriVersion = config?.appVersion;
-      console.log('[GeneralSection] Checking for updates, current version:', version, tauriVersion);
-      setAppVersion(version);
-
-      if (version !== tauriVersion) {
+      const frontendVersion = await getVersion();
+      const backendVersion = config?.appVersion;
+      setAppVersion(frontendVersion);
         console.warn('[GeneralSection] Mismatch between Tauri version and AppConfig version:', {
-          tauriVersion: tauriVersion,
-          appConfigVersion: version,
+          backendVersion: backendVersion,
+          frontendVersion: frontendVersion,
+        });
+
+      if (frontendVersion !== backendVersion) {
+        console.warn('[GeneralSection] Mismatch between Tauri version and AppConfig version:', {
+          backendVersion: backendVersion,
+          frontendVersion: frontendVersion,
         });
         setMismatchVersion(true);
+      } else {
+        setMismatchVersion(false);
       }
     }
 
