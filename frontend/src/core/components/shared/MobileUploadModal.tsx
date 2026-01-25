@@ -204,7 +204,7 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
       apiClient.delete(`/api/v1/mobile-scanner/session/${sessionId}`)
         .catch(err => console.warn('[MobileUploadModal] Cleanup failed:', err));
     };
-  }, [opened, sessionId]);
+  }, [opened, sessionId, createSession]);
 
   // Start polling for files when modal opens
   useEffect(() => {
