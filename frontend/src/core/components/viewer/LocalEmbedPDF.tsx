@@ -706,14 +706,6 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
 
                           <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
 
-                          {/* LinkLayer handles link navigation (clicking to go to page or URL) */}
-                          <LinkLayer
-                            documentId={documentId}
-                            pageIndex={pageIndex}
-                            pageWidth={width}
-                            pageHeight={height}
-                          />
-
                           {/* AnnotationLayer for annotation editing (only when enabled) */}
                           {enableAnnotations && (
                             <AnnotationLayer
@@ -730,6 +722,14 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                               selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
                             />
                           )}
+
+                          {/* LinkLayer on top to handle link navigation - must be last for click priority */}
+                          <LinkLayer
+                            documentId={documentId}
+                            pageIndex={pageIndex}
+                            pageWidth={width}
+                            pageHeight={height}
+                          />
                         </div>
                       </PagePointerProvider>
                     </Rotate>

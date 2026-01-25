@@ -341,7 +341,11 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
           // `this`/state dependency (e.g. reading `selectedUid` from undefined).
           // If that happens, fail gracefully and treat it as "no selection"
           // instead of crashing the entire annotations tool.
-          console.error('[AnnotationAPIBridge] getSelectedAnnotation failed:', error);
+          // Only log unexpected errors - "No active document" is a common expected state during init
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (!errorMessage.includes('No active document')) {
+            console.error('[AnnotationAPIBridge] getSelectedAnnotation failed:', error);
+          }
           return null;
         }
       },

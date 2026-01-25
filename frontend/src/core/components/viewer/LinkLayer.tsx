@@ -88,19 +88,38 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   const processedLinks = useMemo(() => {
     if (!pageWidth || !pageHeight || !pdfPageWidth || !pdfPageHeight) return [];
     
-    // Calculate scale factor from PDF coordinates to rendered coordinates
-    const scaleX = pageWidth / pdfPageWidth;
-    const scaleY = pageHeight / pdfPageHeight;
+    // Use the document scale like EmbedPDF's AnnotationLayer does
+    const scale = documentState?.scale ?? 1;
+    
+    // Debug: log coordinate info for first link
+    if (links.length > 0) {
+      const firstLink = links[0];
+      console.log('[LinkLayer] Coordinate debug:', {
+        pageIndex,
+        renderedDimensions: { pageWidth, pageHeight },
+        pdfDimensions: { pdfPageWidth, pdfPageHeight },
+        documentScale: scale,
+        calculatedScale: { x: pageWidth / pdfPageWidth, y: pageHeight / pdfPageHeight },
+        firstLinkRect: firstLink.rect,
+        firstLinkScaledWithDocScale: {
+          left: firstLink.rect.origin.x * scale,
+          top: firstLink.rect.origin.y * scale,
+        },
+        firstLinkScaledWithCalculated: {
+          left: firstLink.rect.origin.x * (pageWidth / pdfPageWidth),
+          top: firstLink.rect.origin.y * (pageHeight / pdfPageHeight),
+        },
+      });
+    }
     
     return links.map(link => {
       const { origin, size } = link.rect;
       
-      // EmbedPDF returns coordinates already in top-left origin (CSS-compatible)
-      // Just need to scale from PDF units to rendered pixels
-      const scaledLeft = origin.x * scaleX;
-      const scaledTop = origin.y * scaleY;
-      const scaledWidth = size.width * scaleX;
-      const scaledHeight = size.height * scaleY;
+      // Use document scale like EmbedPDF does
+      const scaledLeft = origin.x * scale;
+      const scaledTop = origin.y * scale;
+      const scaledWidth = size.width * scale;
+      const scaledHeight = size.height * scale;
       
       return {
         ...link,
@@ -112,7 +131,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
         },
       };
     });
-  }, [links, pageWidth, pageHeight, pdfPageWidth, pdfPageHeight]);
+  }, [links, pageWidth, pageHeight, pdfPageWidth, pdfPageHeight, documentState?.scale, pageIndex]);
 
   useEffect(() => {
     const fetchLinks = async () => {
@@ -159,39 +178,74 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   const handleLinkClick = useCallback(async (link: LinkAnnotation) => {
     if (isNavigating) return;
 
+    console.log('[LinkLayer] Link clicked:', JSON.stringify(link, null, 2));
+
     try {
       setIsNavigating(true);
 
-      if (isInternalLink(link)) {
-        const targetPage = link.target?.destination?.pageIndex ??
-                          link.target?.action?.destination?.pageIndex ??
-                          (link.target as any)?.dest?.pageIndex;
-        
-        if (targetPage !== undefined && scroll) {
-          scroll.scrollToPage({
-            pageNumber: targetPage + 1,
-            behavior: 'smooth',
-          });
-        }
-      } else if (isExternalLink(link)) {
-        const uri = link.target?.uri ?? 
-                    link.target?.action?.uri ??
-                    (link.target as any)?.url;
-        
-        if (uri) {
-          try {
-            const url = new URL(uri, window.location.href);
-            if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
-              window.open(uri, '_blank', 'noopener,noreferrer');
-            } else {
-              console.warn('[LinkLayer] Blocked potentially unsafe URL protocol:', url.protocol);
-            }
-          } catch {
+      // Try to extract destination from various possible locations in the link object
+      const linkData = link as any;
+      
+      // Check for destination in various locations
+      let targetPage: number | undefined;
+      let uri: string | undefined;
+      
+      // Try target.destination first
+      if (link.target?.destination?.pageIndex !== undefined) {
+        targetPage = link.target.destination.pageIndex;
+      }
+      // Try target.action.destination
+      else if (link.target?.action?.destination?.pageIndex !== undefined) {
+        targetPage = link.target.action.destination.pageIndex;
+      }
+      // Try direct dest property (PDF.js style)
+      else if (linkData.dest?.pageIndex !== undefined) {
+        targetPage = linkData.dest.pageIndex;
+      }
+      // Try destination at root level
+      else if (linkData.destination?.pageIndex !== undefined) {
+        targetPage = linkData.destination.pageIndex;
+      }
+      // Try action at root level
+      else if (linkData.action?.destination?.pageIndex !== undefined) {
+        targetPage = linkData.action.destination.pageIndex;
+      }
+      
+      // Check for URI in various locations
+      if (link.target?.uri) {
+        uri = link.target.uri;
+      } else if (link.target?.action?.uri) {
+        uri = link.target.action.uri;
+      } else if (linkData.uri) {
+        uri = linkData.uri;
+      } else if (linkData.url) {
+        uri = linkData.url;
+      } else if (linkData.action?.uri) {
+        uri = linkData.action.uri;
+      }
+      
+      console.log('[LinkLayer] Extracted:', { targetPage, uri });
+
+      if (targetPage !== undefined && scroll) {
+        console.log('[LinkLayer] Navigating to page:', targetPage + 1);
+        scroll.scrollToPage({
+          pageNumber: targetPage + 1,
+          behavior: 'smooth',
+        });
+      } else if (uri) {
+        console.log('[LinkLayer] Opening URI:', uri);
+        try {
+          const url = new URL(uri, window.location.href);
+          if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
             window.open(uri, '_blank', 'noopener,noreferrer');
+          } else {
+            console.warn('[LinkLayer] Blocked potentially unsafe URL protocol:', url.protocol);
           }
+        } catch {
+          window.open(uri, '_blank', 'noopener,noreferrer');
         }
       } else {
-        console.warn(`[LinkLayer] Unsupported link type: ${link.target?.type}`);
+        console.warn('[LinkLayer] Could not extract destination or URI from link:', link);
       }
     } catch (error) {
       console.error('[LinkLayer] Navigation failed:', error);
@@ -201,17 +255,28 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   }, [isNavigating, scroll]);
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div 
+      className="absolute inset-0" 
+      style={{ 
+        pointerEvents: 'none',
+        zIndex: 10, // Above selection layer but below UI controls
+      }}
+    >
       {processedLinks.map((link) => {
         const { id } = link;
         const { left, top, width, height } = link.scaledRect;
 
         return (
-          <button
+          <a
             key={id}
-            onClick={() => handleLinkClick(link)}
-            disabled={isNavigating}
-            className={`absolute opacity-0 hover:opacity-20 bg-blue-500 transition-opacity cursor-pointer pointer-events-auto ${isNavigating ? 'cursor-not-allowed opacity-50' : ''}`}
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleLinkClick(link);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className={`absolute block transition-colors cursor-pointer ${isNavigating ? 'cursor-not-allowed' : ''}`}
             style={{
               left: `${left}px`,
               top: `${top}px`,
@@ -219,11 +284,15 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               height: `${height}px`,
               minWidth: '8px',
               minHeight: '8px',
-              border: '1px solid transparent',
+              pointerEvents: 'auto',
+              backgroundColor: 'transparent',
+              zIndex: 11,
             }}
             title={getLinkTitle(link)}
             aria-label={getLinkAriaLabel(link)}
-          />
+          >
+            {/* Invisible clickable area */}
+          </a>
         );
       })}
     </div>
