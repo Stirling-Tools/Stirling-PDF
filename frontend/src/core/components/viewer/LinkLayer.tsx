@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useDocumentState } from '@embedpdf/core/react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
@@ -12,8 +13,6 @@ enum PDFActionType {
   Named = 5,
   JavaScript = 6,
 }
-
-type StrokeStyle = 'solid' | 'dashed' | 'beveled' | 'inset' | 'underline';
 
 interface PDFRect {
   origin: { x: number; y: number };
@@ -35,12 +34,6 @@ interface LinkAnnotation {
   id: string;
   type: number;
   rect: PDFRect;
-  strokeColor?: string;
-  strokeWidth?: number;
-  strokeStyle?: StrokeStyle;
-  strokeDashArray?: number[];
-  inReplyToId?: string;
-  replyType?: 'Reply' | 'Group';
   target?: {
     type: string;
     action?: PDFAction;
@@ -72,95 +65,38 @@ interface LinkLayerProps {
   pageIndex: number;
   pageWidth: number;
   pageHeight: number;
-  document?: any;
-  pdfFile?: File | Blob;
-  onLinkClick?: (target: any) => void;
 }
-
-const getLinkTitle = (link: LinkAnnotation): string => {
-  if (link.target?.type === 'destination') {
-    return `Go to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
-    return `Go to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
-    return `Open link: ${link.target.action.uri}`;
-  }
-  if (link.target?.uri) {
-    return `Open link: ${link.target.uri}`;
-  }
-  return 'Link';
-};
-
-const getLinkAriaLabel = (link: LinkAnnotation): string => {
-  if (link.target?.type === 'destination') {
-    return `Navigate to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
-    return `Navigate to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
-    return 'Open external link';
-  }
-  return 'Open external link';
-};
 
 export const LinkLayer: React.FC<LinkLayerProps> = ({
   documentId,
   pageIndex,
   pageWidth,
   pageHeight,
-  document: pdfDocument,
-  onLinkClick
 }) => {
   const { provides: annotation } = useAnnotationCapability();
   const { provides: scroll } = useScroll(documentId);
+  const documentState = useDocumentState(documentId);
   const [links, setLinks] = useState<LinkAnnotation[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Track the PDF's original page dimensions to calculate scale
-  const [pdfPageDimensions, setPdfPageDimensions] = useState<{ width: number; height: number } | null>(null);
-
-  // Try to determine the original PDF page dimensions
-  // Standard US Letter is 612x792 points at 72 DPI
-  useEffect(() => {
-    // The annotation rect coordinates are typically in PDF points
-    // We need to figure out what the original page size is to calculate scale
-    // For now, try to infer from the first link's position relative to page
-    if (links.length > 0 && !pdfPageDimensions) {
-      // Try common page sizes
-      // US Letter: 612 x 792
-      // A4: 595.276 x 841.890
-      setPdfPageDimensions({ width: 612, height: 792 });
-    }
-  }, [links, pdfPageDimensions]);
+  // Get original PDF page dimensions from document state
+  const pdfPage = documentState?.document?.pages?.[pageIndex];
+  const pdfPageWidth = pdfPage?.size?.width ?? 0;
+  const pdfPageHeight = pdfPage?.size?.height ?? 0;
 
   // Process links with proper coordinate transformation
   const processedLinks = useMemo(() => {
-    if (!pageWidth || !pageHeight) return [];
+    if (!pageWidth || !pageHeight || !pdfPageWidth || !pdfPageHeight) return [];
     
     // Calculate scale factor from PDF coordinates to rendered coordinates
-    // If we have PDF dimensions, use those; otherwise assume coordinates match
-    const scaleX = pdfPageDimensions ? pageWidth / pdfPageDimensions.width : 1;
-    const scaleY = pdfPageDimensions ? pageHeight / pdfPageDimensions.height : 1;
+    const scaleX = pageWidth / pdfPageWidth;
+    const scaleY = pageHeight / pdfPageHeight;
     
     return links.map(link => {
       const { origin, size } = link.rect;
       
-      // Debug logging to understand coordinate system
-      console.log('[LinkLayer] Link rect:', {
-        pageWidth,
-        pageHeight,
-        pdfPageDimensions,
-        scaleX,
-        scaleY,
-        origin,
-        size,
-        linkId: link.id
-      });
-      
-      // Scale the coordinates from PDF space to rendered space
+      // EmbedPDF returns coordinates already in top-left origin (CSS-compatible)
+      // Just need to scale from PDF units to rendered pixels
       const scaledLeft = origin.x * scaleX;
       const scaledTop = origin.y * scaleY;
       const scaledWidth = size.width * scaleX;
@@ -174,14 +110,9 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           width: scaledWidth,
           height: scaledHeight,
         },
-        computedBorderStyle: link.strokeStyle === 'dashed' || (link.strokeDashArray && link.strokeDashArray.length > 0)
-          ? 'dashed'
-          : link.strokeStyle === 'underline'
-          ? 'none'
-          : 'solid',
       };
     });
-  }, [links, pageWidth, pageHeight, pdfPageDimensions]);
+  }, [links, pageWidth, pageHeight, pdfPageWidth, pdfPageHeight]);
 
   useEffect(() => {
     const fetchLinks = async () => {
@@ -213,7 +144,6 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
 
         if (linkAnnotations.length > 0) {
           setLinks(linkAnnotations);
-          return;
         }
       } catch (error) {
         console.error('[LinkLayer] Failed to fetch links from annotation API:', {
@@ -221,64 +151,16 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           pageIndex,
         });
       }
-
-      if (pdfDocument) {
-        try {
-          let pdfLinks: any[] = [];
-
-          if (pdfDocument.getPageAnnotations && typeof pdfDocument.getPageAnnotations === 'function') {
-            const result = pdfDocument.getPageAnnotations(pageIndex);
-            const resolved = result && result.toPromise ? await result.toPromise() : await Promise.resolve(result);
-            pdfLinks = Array.isArray(resolved) ? resolved : [];
-          } else if (pdfDocument.getAnnotations && typeof pdfDocument.getAnnotations === 'function') {
-            const result = pdfDocument.getAnnotations();
-            const allAnnotations = result && result.toPromise ? await result.toPromise() : await Promise.resolve(result);
-            const annotationsArray = Array.isArray(allAnnotations) ? allAnnotations : [];
-            pdfLinks = annotationsArray.filter((ann: any) => ann.pageIndex === pageIndex && (ann.type === 2 || ann.type === PdfAnnotationSubtype.LINK));
-          } else if (pdfDocument.pages && pdfDocument.pages[pageIndex]) {
-            const page = pdfDocument.pages[pageIndex];
-            if (page.getAnnotations && typeof page.getAnnotations === 'function') {
-              const result = page.getAnnotations();
-              const resolved = result && result.toPromise ? await result.toPromise() : await Promise.resolve(result);
-              pdfLinks = Array.isArray(resolved) ? resolved : [];
-            }
-          }
-
-          const convertedLinks = pdfLinks
-            .filter((ann: any) => ann.type === 2 || ann.type === PdfAnnotationSubtype.LINK)
-            .map((ann: any) => ({
-              id: ann.id || `pdf-link-${pageIndex}-${Math.random().toString(36).substr(2, 9)}`,
-              type: ann.type || 2,
-              rect: ann.rect || ann,
-              strokeColor: ann.strokeColor,
-              strokeWidth: ann.strokeWidth,
-              strokeStyle: ann.strokeStyle,
-              strokeDashArray: ann.strokeDashArray,
-              inReplyToId: ann.inReplyToId,
-              replyType: ann.replyType,
-              target: ann.target || ann.action || ann.dest
-            })) as LinkAnnotation[];
-
-          setLinks(convertedLinks);
-        } catch (error) {
-          console.warn('[LinkLayer] Failed to get annotations from PDF document:', error);
-        }
-      }
     };
 
     fetchLinks();
-  }, [annotation, pageIndex, pdfDocument]);
+  }, [annotation, pageIndex]);
 
   const handleLinkClick = useCallback(async (link: LinkAnnotation) => {
     if (isNavigating) return;
 
     try {
       setIsNavigating(true);
-
-      if (onLinkClick) {
-        onLinkClick(link.target);
-        return;
-      }
 
       if (isInternalLink(link)) {
         const targetPage = link.target?.destination?.pageIndex ??
@@ -316,12 +198,12 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     } finally {
       setIsNavigating(false);
     }
-  }, [isNavigating, onLinkClick, scroll]);
+  }, [isNavigating, scroll]);
 
   return (
     <div className="absolute inset-0 pointer-events-none">
       {processedLinks.map((link) => {
-        const { id, strokeColor, strokeWidth, computedBorderStyle } = link;
+        const { id } = link;
         const { left, top, width, height } = link.scaledRect;
 
         return (
@@ -337,9 +219,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               height: `${height}px`,
               minWidth: '8px',
               minHeight: '8px',
-              borderColor: strokeColor || '#60a5fa',
-              borderWidth: strokeWidth ? `${strokeWidth}px` : '1px',
-              borderStyle: computedBorderStyle || 'solid',
+              border: '1px solid transparent',
             }}
             title={getLinkTitle(link)}
             aria-label={getLinkAriaLabel(link)}
@@ -348,4 +228,33 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
       })}
     </div>
   );
+};
+
+const getLinkTitle = (link: LinkAnnotation): string => {
+  if (link.target?.type === 'destination') {
+    return `Go to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
+  }
+  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
+    return `Go to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
+  }
+  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
+    return `Open link: ${link.target.action.uri}`;
+  }
+  if (link.target?.uri) {
+    return `Open link: ${link.target.uri}`;
+  }
+  return 'Link';
+};
+
+const getLinkAriaLabel = (link: LinkAnnotation): string => {
+  if (link.target?.type === 'destination') {
+    return `Navigate to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
+  }
+  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
+    return `Navigate to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
+  }
+  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
+    return 'Open external link';
+  }
+  return 'Open external link';
 };

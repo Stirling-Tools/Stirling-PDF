@@ -706,8 +706,15 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
 
                           <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
 
-                          <LinkLayer documentId={documentId} pageIndex={pageIndex} pageWidth={width} pageHeight={height} pdfFile={file} />
+                          {/* LinkLayer handles link navigation (clicking to go to page or URL) */}
+                          <LinkLayer
+                            documentId={documentId}
+                            pageIndex={pageIndex}
+                            pageWidth={width}
+                            pageHeight={height}
+                          />
 
+                          {/* AnnotationLayer for annotation editing (only when enabled) */}
                           {enableAnnotations && (
                             <AnnotationLayer
                               documentId={documentId}
