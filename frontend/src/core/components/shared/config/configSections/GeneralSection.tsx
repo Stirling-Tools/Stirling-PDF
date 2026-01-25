@@ -32,6 +32,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
   const [mismatchVersion, setMismatchVersion] = useState(false);
   const isTauriApp = isTauri();
   const [appVersion, setAppVersion] = useState<string | null>(null);
+  const frontendVersionLabel = appVersion ?? t('common.loading', 'Loading...');
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -191,7 +192,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
                 <Text size='sm' c="dimmed">
                   {t('settings.general.updates.currentVersionFrontend', 'Current Version Frontend')}:{' '}
                   <Text component="span" fw={500}>
-                    {appVersion}
+                    {frontendVersionLabel}
                   </Text>
                 </Text>
                 {mismatchVersion && (
