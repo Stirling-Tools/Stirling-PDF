@@ -113,7 +113,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
         },
       };
     });
-  }, [links, pageWidth, pageHeight, pdfPageWidth, pdfPageHeight, documentState?.scale, pageIndex]);
+  }, [links, pageWidth, pageHeight, pdfPageWidth, pdfPageHeight, documentState?.scale]);
 
   useEffect(() => {
     const fetchLinks = async () => {
