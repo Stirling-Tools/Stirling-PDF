@@ -47,26 +47,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
   }, [config?.appVersion, config?.machineType]);
 
   const checkForUpdate = async () => {
-    if (isTauriApp) {
-      const frontendVersion = await getVersion();
-      const backendVersion = config?.appVersion;
-      setAppVersion(frontendVersion);
-        console.warn('[GeneralSection] Mismatch between Tauri version and AppConfig version:', {
-          backendVersion: backendVersion,
-          frontendVersion: frontendVersion,
-        });
-
-      if (frontendVersion !== backendVersion) {
-        console.warn('[GeneralSection] Mismatch between Tauri version and AppConfig version:', {
-          backendVersion: backendVersion,
-          frontendVersion: frontendVersion,
-        });
-        setMismatchVersion(true);
-      } else {
-        setMismatchVersion(false);
-      }
-    }
-
     if (!config?.appVersion || !config?.machineType) {
       return;
     }
@@ -93,6 +73,52 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
     }
     setCheckingUpdate(false);
   };
+
+  useEffect(() => {
+    if (!isTauriApp) {
+      setMismatchVersion(false);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchFrontendVersion = async () => {
+      try {
+        const frontendVersion = await getVersion();
+        if (!cancelled) {
+          setAppVersion(frontendVersion);
+        }
+      } catch (error) {
+        console.error('[GeneralSection] Failed to fetch frontend version:', error);
+      }
+    };
+
+    fetchFrontendVersion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isTauriApp]);
+
+  useEffect(() => {
+    if (!isTauriApp) {
+      return;
+    }
+
+    if (!appVersion || !config?.appVersion) {
+      setMismatchVersion(false);
+      return;
+    }
+
+    if (appVersion !== config.appVersion) {
+      console.warn('[GeneralSection] Mismatch between Tauri version and AppConfig version:', {
+        backendVersion: config.appVersion,
+        frontendVersion: appVersion,
+      });
+      setMismatchVersion(true);
+    } else {
+      setMismatchVersion(false);
+    }
+  }, [isTauriApp, appVersion, config?.appVersion]);
 
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
