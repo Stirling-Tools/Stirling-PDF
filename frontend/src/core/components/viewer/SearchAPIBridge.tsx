@@ -24,10 +24,13 @@ export function SearchAPIBridge() {
 
 function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
   const { provides: search } = useSearch(documentId);
-  const { registerBridge } = useViewer();
+  const { registerBridge, scrollActions } = useViewer();
   
   // Keep search ref updated to avoid re-running effects when object reference changes
   const searchRef = useRef(search);
+  const isSearchingRef = useRef(false);
+  const lastScrolledIndexRef = useRef<number | null>(null);
+  
   useEffect(() => {
     searchRef.current = search;
   }, [search]);
@@ -78,6 +81,27 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
   const localResults = localState.results;
   const localActiveIndex = localState.activeIndex;
 
+  // Scroll to active result when it changes (for next/previous navigation)
+  useEffect(() => {
+    if (!localResults || localResults.length === 0) {
+      lastScrolledIndexRef.current = null;
+      return;
+    }
+    
+    // Only scroll if the active index actually changed
+    const activeResultIndex = localActiveIndex - 1; // Convert back to 0-based
+    if (activeResultIndex >= 0 && 
+        activeResultIndex < localResults.length && 
+        lastScrolledIndexRef.current !== activeResultIndex) {
+      const activeResult = localResults[activeResultIndex];
+      if (activeResult) {
+        const pageNumber = activeResult.pageIndex + 1; // Convert to 1-based page number
+        scrollActions.scrollToPage(pageNumber);
+        lastScrolledIndexRef.current = activeResultIndex;
+      }
+    }
+  }, [localResults, localActiveIndex, scrollActions]);
+
   // Register bridge whenever state changes
   useEffect(() => {
     const currentSearch = searchRef.current;
@@ -86,9 +110,31 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
         state: { results: localResults, activeIndex: localActiveIndex },
         api: {
           search: async (query: string) => {
-            if (currentSearch?.startSearch && currentSearch?.searchAllPages) {
+            // Prevent overlapping searches
+            if (isSearchingRef.current) {
+              return null;
+            }
+            
+            if (!currentSearch?.startSearch || !currentSearch?.searchAllPages) {
+              return null;
+            }
+            
+            isSearchingRef.current = true;
+            
+            try {
               currentSearch.startSearch();
-              return currentSearch.searchAllPages(query);
+              const results = await currentSearch.searchAllPages(query);
+              return results;
+            } catch (error: any) {
+              // Handle abort errors gracefully - these occur when searches overlap
+              if (error?.type === 'abort' || error?.message?.includes('abort')) {
+                // Silently handle abort - this is expected when user types quickly
+                return null;
+              }
+              console.error('Search failed:', error);
+              return null;
+            } finally {
+              isSearchingRef.current = false;
             }
           },
           clear: () => {

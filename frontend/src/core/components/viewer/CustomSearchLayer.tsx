@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDocumentState } from '@embedpdf/core/react';
 import { useSearch } from '@embedpdf/plugin-search/react';
-import { useViewer } from '@app/contexts/ViewerContext';
 import { SEARCH_CONSTANTS } from '@app/components/viewer/constants/search';
 
 interface SearchLayerProps {
@@ -28,7 +28,7 @@ interface SearchResultState {
 export function CustomSearchLayer({
   documentId = '',
   pageIndex,
-  scale = 1,
+  scale: scaleProp,
   highlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.BACKGROUND,
   activeHighlightColor = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.ACTIVE_BACKGROUND,
   opacity = SEARCH_CONSTANTS.HIGHLIGHT_COLORS.OPACITY,
@@ -36,8 +36,11 @@ export function CustomSearchLayer({
   borderRadius = 4
 }: SearchLayerProps) {
   const { provides: searchProvides } = useSearch(documentId);
-  const { scrollActions } = useViewer();
+  const documentState = useDocumentState(documentId);
   const [searchResultState, setSearchResultState] = useState<SearchResultState | null>(null);
+
+  // Use document scale from EmbedPDF state, fallback to prop, then to 1
+  const scale = documentState?.scale ?? scaleProp ?? 1;
 
   // Subscribe to search result state changes
   useEffect(() => {
@@ -47,16 +50,8 @@ export function CustomSearchLayer({
 
     const unsubscribe = searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
       if (!state) return;
-
-      // Auto-scroll to active search result
-      if (state.results && state.activeResultIndex !== undefined && state.activeResultIndex >= 0) {
-        const activeResult = state.results[state.activeResultIndex];
-        if (activeResult) {
-          const pageNumber = activeResult.pageIndex + 1; // Convert to 1-based page number
-          scrollActions.scrollToPage(pageNumber);
-        }
-      }
-
+      // Only update state - do NOT auto-scroll here
+      // Scrolling should only happen when user explicitly navigates via next/previous
       setSearchResultState(state);
     });
 
