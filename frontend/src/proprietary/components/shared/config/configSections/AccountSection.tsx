@@ -7,7 +7,6 @@ import { useAuth } from '@app/auth/UseSession';
 import { accountService } from '@app/services/accountService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { QRCodeSVG } from 'qrcode.react';
-import { useAccountLogout } from '@app/extensions/accountLogout';
 import { BASE_PATH } from '@app/constants/app';
 import { MfaSetupResponse } from '@app/responses/Mfa/MfaResponse';
 
