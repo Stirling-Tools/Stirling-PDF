@@ -31,6 +31,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPassMfa;
@@ -219,36 +220,32 @@ public class AuthController {
                         .body(Map.of("error", "Not authenticated"));
             }
 
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
-            User user = (User) userDetails;
+            Object principal = auth.getPrincipal();
 
+            User user;
+            if (principal instanceof User u) {
+                user = u;
+            } else {
+                // JWT case - get User from Authority
+                user =
+                        auth.getAuthorities().stream()
+                                .filter(Authority.class::isInstance)
+                                .map(Authority.class::cast)
+                                .findFirst()
+                                .map(Authority::getUser)
+                                .orElseThrow(
+                                        () ->
+                                                new IllegalStateException(
+                                                        "User not found in authentication"));
+            }
             return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
 
+        } catch (IllegalStateException e) {
+            log.error("User not found in authentication context", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User not found"));
         } catch (Exception e) {
             log.error("Get current user error", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Internal server error"));
-        }
-    }
-
-    /**
-     * Logout endpoint
-     *
-     * @param response HTTP response
-     * @return Success message
-     */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        try {
-            SecurityContextHolder.clearContext();
-
-            log.debug("User logged out successfully");
-
-            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
-
-        } catch (Exception e) {
-            log.error("Logout error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Internal server error"));
         }
@@ -507,6 +504,7 @@ public class AuthController {
      */
     private Map<String, Object> buildUserResponse(User user) {
         Map<String, Object> userMap = new HashMap<>();
+
         userMap.put("id", user.getId());
         userMap.put("email", user.getUsername()); // Use username as email
         userMap.put("username", user.getUsername());

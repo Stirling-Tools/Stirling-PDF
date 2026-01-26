@@ -1,20 +1,16 @@
 import { Text, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@app/auth/UseSession';
-import { useNavigate } from 'react-router-dom';
 
 export function OverviewHeader() {
   const { t } = useTranslation();
   const { signOut, user } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    console.log('[OverviewHeader] Logout button clicked, calling signOut()');
+    // signOut() handles navigation to /logout for SAML/OAuth SLO
+    // Do NOT navigate after signOut - it will redirect the page
+    await signOut();
   };
 
   return (

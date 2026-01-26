@@ -309,18 +309,25 @@ class SpringAuthClient {
 
   /**
    * Sign out user (invalidate session)
+   *
+   * For SAML/OAuth users, this navigates to /logout which triggers
+   * Spring Security's logout handler and initiates SSO logout.
+   * The JWT is passed via a short-lived cookie so the backend can
+   * extract the SAML NameID for single logout (SLO).
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
-      const response = await apiClient.post('/api/v1/auth/logout', null, {
-        headers: {
-          'X-XSRF-TOKEN': this.getCsrfToken() || '',
-        },
-        withCredentials: true,
-      });
+      // Get the JWT before removing it - we need to pass it to the backend
+      // so it can extract the SAML NameID for single logout (SLO)
+      const token = localStorage.getItem('stirling_jwt');
 
-      if (response.status === 200) {
-        // console.debug('[SpringAuth] signOut: Success');
+      // Store JWT in a short-lived cookie for the logout request
+      // This avoids exposing the token in URL params while ensuring
+      // it's sent with the redirect request
+      if (token) {
+        // Cookie expires in 30 seconds - just long enough for the logout redirect
+        // Secure: only sent over HTTPS; Path=/logout: scoped to logout endpoint only
+        document.cookie = `stirling_logout_token=${encodeURIComponent(token)}; path=/logout; max-age=30; SameSite=Lax; Secure`;
       }
 
       // Clean up local storage
@@ -355,13 +362,24 @@ class SpringAuthClient {
         console.warn('[SpringAuth] Failed to run platform auth cleanup', cleanupError);
       }
 
-      // Notify listeners
+      // Notify listeners before redirect
       this.notifyListeners('SIGNED_OUT', null);
 
+      // Submit a POST form to /logout to trigger Spring Security's logout handler
+      // Using POST prevents logout CSRF attacks (GET-based logout can be triggered by any site)
+      console.log('[SpringAuth] Submitting POST to /logout for session invalidation');
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `${BASE_PATH}/logout`;
+      form.style.display = 'none';
+      document.body.appendChild(form);
+      form.submit();
+
+      // This won't be reached if redirect happens, but return for type safety
       return { error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] signOut error:', error);
-      // Still remove token even if backend call fails
+      // Still remove token even if the call fails
       localStorage.removeItem('stirling_jwt');
       try {
         await clearPlatformAuthAfterSignOut();

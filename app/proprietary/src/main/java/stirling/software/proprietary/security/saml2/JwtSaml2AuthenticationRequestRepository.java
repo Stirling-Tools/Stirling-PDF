@@ -94,7 +94,7 @@ public class JwtSaml2AuthenticationRequestRepository
 
             if (token != null) {
                 tokenStore.remove(authnRequestId);
-                log.debug("Retrieved SAMLRequest token for RelayState ID: {}", authnRequestId);
+                log.info("Retrieved SAMLRequest token for RelayState ID: {}", authnRequestId);
                 return token;
             } else {
                 log.warn("No SAMLRequest token found for RelayState ID: {}", authnRequestId);

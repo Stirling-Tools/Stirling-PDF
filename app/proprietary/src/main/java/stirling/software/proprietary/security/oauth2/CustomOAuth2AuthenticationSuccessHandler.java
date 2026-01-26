@@ -14,6 +14,7 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -33,6 +34,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
@@ -68,8 +70,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
         // Check if user is eligible for OAuth (grandfathered or system has paid license)
         if (userExists) {
-            stirling.software.proprietary.security.model.User user =
-                    userService.findByUsernameIgnoreCase(username).orElse(null);
+            User user = userService.findByUsernameIgnoreCase(username).orElse(null);
 
             if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
                 // User is not grandfathered and no paid license - block OAuth login
@@ -148,11 +149,21 @@ public class CustomOAuth2AuthenticationSuccessHandler
                             OAUTH2);
                 }
 
-                // Generate JWT if v2 is enabled
                 if (jwtService.isJwtEnabled()) {
-                    String jwt =
-                            jwtService.generateToken(
-                                    authentication, Map.of("authType", AuthenticationType.OAUTH2));
+                    // Build JWT claims with authType and optionally id_token for OIDC logout
+                    Map<String, Object> claims = new java.util.HashMap<>();
+                    claims.put("authType", AuthenticationType.OAUTH2);
+
+                    // Store OIDC id_token for proper SSO logout
+                    if (principal instanceof OidcUser oidcUser) {
+                        String idToken = oidcUser.getIdToken().getTokenValue();
+                        if (idToken != null && !idToken.isBlank()) {
+                            claims.put("id_token", idToken);
+                            log.debug("Stored OIDC id_token in JWT claims for SSO logout");
+                        }
+                    }
+
+                    String jwt = jwtService.generateToken(authentication, claims);
 
                     // Build context-aware redirect URL based on the original request
                     String redirectUrl =
