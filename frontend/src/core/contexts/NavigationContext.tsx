@@ -11,6 +11,32 @@ import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
  * maintain clear separation of concerns.
  */
 
+// Viewer transition animation state
+export interface ViewerTransitionState {
+  isAnimating: boolean;
+  sourceRect: DOMRect | null;
+  sourceThumbnailUrl: string | null;
+  transitionType: 'fileEditor' | 'pageEditor' | null;
+  editorScreenshotUrl: string | null;
+  editorScreenshotRect: DOMRect | null;
+  isZooming: boolean;
+  transitionDirection: 'enter' | 'exit' | null;
+  exitTargetRect: DOMRect | null;
+  exitFileId: string | null;
+}
+
+// Page editor spreading animation state
+export interface PageEditorTransitionState {
+  isAnimating: boolean;
+  direction: 'enter' | 'exit';
+  fileCardRects: Map<string, DOMRect>;
+  filePageCounts: Map<string, number>;
+  pageThumbnails: Map<string, string>; // Map file ID to first page thumbnail URL
+  targetPageRects: Map<string, DOMRect> | null;
+  editorScreenshotUrl: string | null;
+  editorScreenshotRect: DOMRect | null;
+}
+
 // Navigation state
 interface NavigationContextState {
   workbench: WorkbenchType;
@@ -18,6 +44,8 @@ interface NavigationContextState {
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
+  viewerTransition: ViewerTransitionState;
+  pageEditorTransition: PageEditorTransitionState | null;
 }
 
 // Navigation actions
@@ -27,7 +55,15 @@ type NavigationAction =
   | { type: 'SET_TOOL_AND_WORKBENCH'; payload: { toolId: ToolId | null; workbench: WorkbenchType } }
   | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
   | { type: 'SET_PENDING_NAVIGATION'; payload: { navigationFn: (() => void) | null } }
-  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } };
+  | { type: 'SHOW_NAVIGATION_WARNING'; payload: { show: boolean } }
+  | { type: 'START_VIEWER_TRANSITION'; payload: { sourceRect: DOMRect; sourceThumbnailUrl: string; transitionType: 'fileEditor' | 'pageEditor'; editorScreenshotUrl?: string; editorScreenshotRect?: DOMRect } }
+  | { type: 'END_VIEWER_TRANSITION' }
+  | { type: 'START_ZOOM' }
+  | { type: 'START_EXIT_TRANSITION'; payload: { exitTargetRect: DOMRect; sourceThumbnailUrl: string; exitFileId: string } }
+  | { type: 'START_PAGE_EDITOR_ENTRY'; payload: PageEditorTransitionState }
+  | { type: 'START_PAGE_EDITOR_EXIT'; payload: Partial<PageEditorTransitionState> }
+  | { type: 'UPDATE_PAGE_EDITOR_TARGETS'; payload: { targetPageRects: Map<string, DOMRect> } }
+  | { type: 'END_PAGE_EDITOR_TRANSITION' };
 
 // Navigation reducer
 const navigationReducer = (state: NavigationContextState, action: NavigationAction): NavigationContextState => {
@@ -54,6 +90,92 @@ const navigationReducer = (state: NavigationContextState, action: NavigationActi
     case 'SHOW_NAVIGATION_WARNING':
       return { ...state, showNavigationWarning: action.payload.show };
 
+    case 'START_VIEWER_TRANSITION':
+      return {
+        ...state,
+        viewerTransition: {
+          isAnimating: true,
+          sourceRect: action.payload.sourceRect,
+          sourceThumbnailUrl: action.payload.sourceThumbnailUrl,
+          transitionType: action.payload.transitionType,
+          editorScreenshotUrl: action.payload.editorScreenshotUrl || null,
+          editorScreenshotRect: action.payload.editorScreenshotRect || null,
+          isZooming: false,
+          transitionDirection: 'enter',
+          exitTargetRect: null,
+          exitFileId: null
+        }
+      };
+
+    case 'START_EXIT_TRANSITION':
+      return {
+        ...state,
+        viewerTransition: {
+          ...state.viewerTransition,
+          isAnimating: true,
+          transitionDirection: 'exit',
+          exitTargetRect: action.payload.exitTargetRect,
+          sourceThumbnailUrl: action.payload.sourceThumbnailUrl,
+          exitFileId: action.payload.exitFileId,
+          sourceRect: null, // Will be calculated after fileEditor renders
+          isZooming: false
+        }
+      };
+
+    case 'END_VIEWER_TRANSITION':
+      return {
+        ...state,
+        viewerTransition: {
+          isAnimating: false,
+          sourceRect: null,
+          sourceThumbnailUrl: null,
+          transitionType: null,
+          editorScreenshotUrl: null,
+          editorScreenshotRect: null,
+          isZooming: false,
+          transitionDirection: null,
+          exitTargetRect: null,
+          exitFileId: null
+        }
+      };
+
+    case 'START_ZOOM':
+      return {
+        ...state,
+        viewerTransition: {
+          ...state.viewerTransition,
+          isZooming: true
+        }
+      };
+
+    case 'START_PAGE_EDITOR_ENTRY':
+      return {
+        ...state,
+        pageEditorTransition: action.payload
+      };
+
+    case 'START_PAGE_EDITOR_EXIT':
+      return {
+        ...state,
+        pageEditorTransition: state.pageEditorTransition
+          ? { ...state.pageEditorTransition, ...action.payload }
+          : null
+      };
+
+    case 'UPDATE_PAGE_EDITOR_TARGETS':
+      return {
+        ...state,
+        pageEditorTransition: state.pageEditorTransition
+          ? { ...state.pageEditorTransition, targetPageRects: action.payload.targetPageRects }
+          : null
+      };
+
+    case 'END_PAGE_EDITOR_TRANSITION':
+      return {
+        ...state,
+        pageEditorTransition: null
+      };
+
     default:
       return state;
   }
@@ -65,7 +187,20 @@ const initialState: NavigationContextState = {
   selectedTool: null,
   hasUnsavedChanges: false,
   pendingNavigation: null,
-  showNavigationWarning: false
+  showNavigationWarning: false,
+    viewerTransition: {
+      isAnimating: false,
+      sourceRect: null,
+      sourceThumbnailUrl: null,
+      transitionType: null,
+      editorScreenshotUrl: null,
+      editorScreenshotRect: null,
+      isZooming: false,
+      transitionDirection: null,
+      exitTargetRect: null,
+      exitFileId: null
+  },
+  pageEditorTransition: null
 };
 
 // Navigation context actions interface
@@ -82,6 +217,20 @@ export interface NavigationContextActions {
   cancelNavigation: () => void;
   clearToolSelection: () => void;
   handleToolSelect: (toolId: string) => void;
+  startViewerTransition: (
+    sourceRect: DOMRect,
+    sourceThumbnailUrl: string,
+    transitionType: 'fileEditor' | 'pageEditor',
+    editorScreenshotUrl?: string,
+    editorScreenshotRect?: DOMRect
+  ) => void;
+  endViewerTransition: () => void;
+  startZoom: () => void;
+  startExitTransition: (exitTargetRect: DOMRect, sourceThumbnailUrl: string, exitFileId: string) => void;
+  startPageEditorEntryTransition: (state: PageEditorTransitionState) => void;
+  startPageEditorExitTransition: (state: Partial<PageEditorTransitionState>) => void;
+  updatePageEditorTargets: (targetPageRects: Map<string, DOMRect>) => void;
+  endPageEditorTransition: () => void;
 }
 
 // Context state values
@@ -91,6 +240,8 @@ export interface NavigationContextStateValue {
   hasUnsavedChanges: boolean;
   pendingNavigation: (() => void) | null;
   showNavigationWarning: boolean;
+  viewerTransition: ViewerTransitionState;
+  pageEditorTransition: PageEditorTransitionState | null;
 }
 
 export interface NavigationContextActionsValue {
@@ -252,7 +403,7 @@ export const NavigationProvider: React.FC<{
 
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
-      
+
       // If switching away from current tool and have unsaved changes, show warning
       if (hasUnsavedChanges && state.selectedTool && state.selectedTool !== toolId) {
         dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: performToolSelect } });
@@ -261,6 +412,47 @@ export const NavigationProvider: React.FC<{
         performToolSelect();
       }
     }, [toolRegistry, state.hasUnsavedChanges, state.selectedTool]);
+
+    const startViewerTransition = useCallback((
+      sourceRect: DOMRect,
+      sourceThumbnailUrl: string,
+      transitionType: 'fileEditor' | 'pageEditor',
+      editorScreenshotUrl?: string,
+      editorScreenshotRect?: DOMRect
+    ) => {
+      dispatch({
+        type: 'START_VIEWER_TRANSITION',
+        payload: { sourceRect, sourceThumbnailUrl, transitionType, editorScreenshotUrl, editorScreenshotRect }
+      });
+    }, []);
+
+    const endViewerTransition = useCallback(() => {
+      dispatch({ type: 'END_VIEWER_TRANSITION' });
+    }, []);
+
+    const startZoom = useCallback(() => {
+      dispatch({ type: 'START_ZOOM' });
+    }, []);
+
+    const startExitTransition = useCallback((exitTargetRect: DOMRect, sourceThumbnailUrl: string, exitFileId: string) => {
+      dispatch({ type: 'START_EXIT_TRANSITION', payload: { exitTargetRect, sourceThumbnailUrl, exitFileId } });
+    }, []);
+
+    const startPageEditorEntryTransition = useCallback((transitionState: PageEditorTransitionState) => {
+      dispatch({ type: 'START_PAGE_EDITOR_ENTRY', payload: transitionState });
+    }, []);
+
+    const startPageEditorExitTransition = useCallback((transitionState: Partial<PageEditorTransitionState>) => {
+      dispatch({ type: 'START_PAGE_EDITOR_EXIT', payload: transitionState });
+    }, []);
+
+    const updatePageEditorTargets = useCallback((targetPageRects: Map<string, DOMRect>) => {
+      dispatch({ type: 'UPDATE_PAGE_EDITOR_TARGETS', payload: { targetPageRects } });
+    }, []);
+
+    const endPageEditorTransition = useCallback(() => {
+      dispatch({ type: 'END_PAGE_EDITOR_TRANSITION' });
+    }, []);
 
   // Memoize the actions object to prevent unnecessary context updates
   // This is critical to avoid infinite loops when effects depend on actions
@@ -277,6 +469,14 @@ export const NavigationProvider: React.FC<{
     cancelNavigation,
     clearToolSelection,
     handleToolSelect,
+    startViewerTransition,
+    endViewerTransition,
+    startZoom,
+    startExitTransition,
+    startPageEditorEntryTransition,
+    startPageEditorExitTransition,
+    updatePageEditorTargets,
+    endPageEditorTransition,
   }), [
     setWorkbench,
     setSelectedTool,
@@ -290,6 +490,14 @@ export const NavigationProvider: React.FC<{
     cancelNavigation,
     clearToolSelection,
     handleToolSelect,
+    startViewerTransition,
+    endViewerTransition,
+    startZoom,
+    startExitTransition,
+    startPageEditorEntryTransition,
+    startPageEditorExitTransition,
+    updatePageEditorTargets,
+    endPageEditorTransition,
   ]);
 
   const stateValue: NavigationContextStateValue = {
@@ -297,7 +505,9 @@ export const NavigationProvider: React.FC<{
     selectedTool: state.selectedTool,
     hasUnsavedChanges: state.hasUnsavedChanges,
     pendingNavigation: state.pendingNavigation,
-    showNavigationWarning: state.showNavigationWarning
+    showNavigationWarning: state.showNavigationWarning,
+    viewerTransition: state.viewerTransition,
+    pageEditorTransition: state.pageEditorTransition
   };
 
   // Also memoize the context value to prevent unnecessary re-renders

@@ -35,7 +35,7 @@ interface FileEditorThumbnailProps {
   selectionMode: boolean;
   onToggleFile: (fileId: FileId) => void;
   onCloseFile: (fileId: FileId) => void;
-  onViewFile: (fileId: FileId) => void;
+  onViewFile: (fileId: FileId, sourceElement?: HTMLElement) => void;
   _onSetStatus: (status: string) => void;
   onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
   onDownloadFile: (fileId: FileId) => void;
@@ -92,6 +92,7 @@ const FileEditorThumbnail = ({
   const isEncrypted = Boolean(file.processedFile?.isEncrypted);
 
   const handleRef = useRef<HTMLSpanElement | null>(null);
+  const thumbnailRef = useRef<HTMLImageElement | null>(null);
 
   // ---- Selection ----
   const isSelected = selectedFiles.includes(file.id);
@@ -203,7 +204,7 @@ const FileEditorThumbnail = ({
       label: t('openInViewer', 'Open in Viewer'),
       onClick: (e) => {
         e.stopPropagation();
-        onViewFile(file.id);
+        onViewFile(file.id, thumbnailRef.current || undefined);
       },
     },
     {
@@ -253,7 +254,7 @@ const FileEditorThumbnail = ({
 
   const handleCardDoubleClick = () => {
     if (!isSupported) return;
-    onViewFile(file.id);
+    onViewFile(file.id, thumbnailRef.current || undefined);
   };
 
   // ---- Style helpers ----
@@ -392,6 +393,7 @@ const FileEditorThumbnail = ({
           {file.thumbnailUrl ? (
             <PrivateContent>
               <img
+                ref={thumbnailRef}
                 src={file.thumbnailUrl}
                 alt={file.name}
                 draggable={false}
@@ -412,6 +414,7 @@ const FileEditorThumbnail = ({
                 display: 'block',
                 marginLeft: 'auto',
                 marginRight: 'auto',
+                justifySelf: 'center',
                 alignSelf: 'start'
               }}
             />

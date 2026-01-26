@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -8,6 +8,11 @@ import { useNavigationState, useNavigationActions, useNavigationGuard } from '@a
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import type { FileId } from '@app/types/fileContext';
+import { VIEWER_TRANSITION } from '@app/constants/animations';
+import { captureElementScreenshot } from '@app/utils/screenshot';
+import { useViewerTransition } from '@app/hooks/useViewerTransition';
+import { usePageEditorTransition } from '@app/hooks/usePageEditorTransition';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -18,6 +23,10 @@ import Viewer from '@app/components/viewer/Viewer';
 import LandingPage from '@app/components/shared/LandingPage';
 import Footer from '@app/components/shared/Footer';
 import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
+import { ViewerZoomTransition } from '@app/components/viewer/ViewerZoomTransition';
+import { PageEditorSpreadTransition } from '@app/components/pageEditor/PageEditorSpreadTransition';
+
+const MAX_PAGE_EDITOR_SCREENSHOT_PAGES = 24;
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -26,10 +35,12 @@ export default function Workbench() {
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
-  const { workbench: currentView } = useNavigationState();
+  const { workbench: currentView, viewerTransition } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
-  const setCurrentView = navActions.setWorkbench;
   const activeFiles = selectors.getFiles();
+
+  // Ref for capturing screenshot during TopControls transitions
+  const mainContentRef = useRef<HTMLDivElement>(null);
   const {
     previewFile,
     pageEditorFunctions,
@@ -52,6 +63,8 @@ export default function Workbench() {
 
   // Get active file index from ViewerContext
   const { activeFileIndex, setActiveFileIndex } = useViewer();
+  const activeFileId = activeFiles[activeFileIndex]?.fileId;
+  const lastViewerScreenshotRef = useRef<string | null>(null);
   
   // Get navigation guard for unsaved changes check when switching files
   const { requestNavigation } = useNavigationGuard();
@@ -82,11 +95,196 @@ export default function Workbench() {
       handleToolSelect('convert');
       sessionStorage.removeItem('previousMode');
     } else {
-      setCurrentView('fileEditor');
+      navActions.setWorkbench('fileEditor');
     }
   };
 
+  const buildPageEditorFilter = useCallback((root: HTMLElement) => {
+    const rootRect = root.getBoundingClientRect();
+    const margin = 100;
+    const isRectVisible = (rect: DOMRect) =>
+      rect.bottom >= rootRect.top - margin &&
+      rect.right >= rootRect.left - margin &&
+      rect.top <= rootRect.bottom + margin &&
+      rect.left <= rootRect.right + margin;
+
+    const pageElements = Array.from(root.querySelectorAll('[data-page-id]')) as HTMLElement[];
+    const visiblePages = pageElements.filter((page) => isRectVisible(page.getBoundingClientRect()));
+    const allowedPages = new Set(visiblePages.slice(0, MAX_PAGE_EDITOR_SCREENSHOT_PAGES));
+
+    return (node: Node) => {
+      if (node === root) return true;
+      if (!(node instanceof Element)) return true;
+
+      const pageElement = node.closest('[data-page-id]') as HTMLElement | null;
+      if (pageElement) {
+        return allowedPages.has(pageElement);
+      }
+
+      return isRectVisible(node.getBoundingClientRect());
+    };
+  }, []);
+
+  // Capture screenshot helper for TopControls transitions
+  const captureMainContentScreenshot = useCallback(async (): Promise<string | null> => {
+    const root = mainContentRef.current;
+    if (!root) return null;
+
+    if (currentView === 'pageEditor') {
+      const rect = root.getBoundingClientRect();
+      const filter = buildPageEditorFilter(root);
+      return captureElementScreenshot(root, {
+        filter,
+        width: Math.max(1, Math.round(rect.width)),
+        height: Math.max(1, Math.round(rect.height)),
+        restoreScrollPosition: false,
+      });
+    }
+
+    return captureElementScreenshot(root);
+  }, [currentView, buildPageEditorFilter]);
+
+  const capturePageEditorScreenshot = useCallback(async (): Promise<string | null> => {
+    const root = mainContentRef.current;
+    if (!root) return null;
+    const rootRect = root.getBoundingClientRect();
+    const filter = buildPageEditorFilter(root);
+    return captureElementScreenshot(root, {
+      filter,
+      width: Math.max(1, Math.round(rootRect.width)),
+      height: Math.max(1, Math.round(rootRect.height)),
+      restoreScrollPosition: false,
+    });
+  }, [buildPageEditorFilter]);
+
+  const getMainContentRect = useCallback((): DOMRect | null => {
+    const root = mainContentRef.current;
+    return root ? root.getBoundingClientRect() : null;
+  }, []);
+
+  useEffect(() => {
+    const currentUrl = viewerTransition.editorScreenshotUrl;
+    const previousUrl = lastViewerScreenshotRef.current;
+
+    if (currentUrl && currentUrl !== previousUrl) {
+      if (previousUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previousUrl);
+      }
+      lastViewerScreenshotRef.current = currentUrl;
+    }
+
+    if (!viewerTransition.isAnimating && lastViewerScreenshotRef.current) {
+      const urlToRevoke = lastViewerScreenshotRef.current;
+      if (urlToRevoke.startsWith('blob:')) {
+        URL.revokeObjectURL(urlToRevoke);
+      }
+      lastViewerScreenshotRef.current = null;
+    }
+
+    return () => {
+      if (lastViewerScreenshotRef.current) {
+        const urlToRevoke = lastViewerScreenshotRef.current;
+        if (urlToRevoke.startsWith('blob:')) {
+          URL.revokeObjectURL(urlToRevoke);
+        }
+        lastViewerScreenshotRef.current = null;
+      }
+    };
+  }, [viewerTransition.editorScreenshotUrl, viewerTransition.isAnimating]);
+
+  // Get transition handlers
+  const { handleEntryTransition, handleExitTransition } = useViewerTransition({
+    activeFileIndex,
+    currentView,
+    captureScreenshot: captureMainContentScreenshot,
+    getScreenshotRect: getMainContentRect,
+  });
+
+  // Get page editor transition handlers
+  const { handleEntryTransition: handlePageEditorEntry, handleExitTransition: handlePageEditorExit } = usePageEditorTransition({
+    currentView,
+    captureScreenshot: capturePageEditorScreenshot,
+    activeFileId,
+    getScreenshotRect: getMainContentRect,
+  });
+
+  // Wrapper for setCurrentView that adds transition when switching to/from viewer
+  const setCurrentView = useCallback(async (view: typeof currentView, fileId?: FileId, sourceRect?: DOMRect) => {
+    // Handle entry transition (fileEditor/pageEditor → viewer)
+    if (view === 'viewer' && (currentView === 'fileEditor' || currentView === 'pageEditor')) {
+      await handleEntryTransition(fileId, sourceRect);
+    }
+
+    // Handle exit transition (viewer → fileEditor/pageEditor)
+    if ((view === 'fileEditor' || view === 'pageEditor') && currentView === 'viewer') {
+      handleExitTransition(view);
+    }
+
+    // Handle page editor entry (fileEditor → pageEditor)
+    if (view === 'pageEditor' && (currentView === 'fileEditor' || currentView === 'viewer')) {
+      await handlePageEditorEntry(currentView === 'viewer' ? { sourceFileId: activeFileId } : undefined);
+    }
+
+    // Handle page editor exit (pageEditor → fileEditor)
+    if (view === 'fileEditor' && currentView === 'pageEditor') {
+      handlePageEditorExit();
+    }
+
+    navActions.setWorkbench(view);
+  }, [currentView, navActions, handleEntryTransition, handleExitTransition, handlePageEditorEntry, handlePageEditorExit, activeFileId]);
+
   const renderMainContent = () => {
+    // During viewer transition with screenshot, show screenshot overlay
+    if (viewerTransition.isAnimating && viewerTransition.editorScreenshotUrl) {
+      const viewerContent = (
+        <Viewer
+          sidebarsVisible={sidebarsVisible}
+          setSidebarsVisible={setSidebarsVisible}
+          previewFile={previewFile}
+          onClose={handlePreviewClose}
+          activeFileIndex={activeFileIndex}
+          setActiveFileIndex={setActiveFileIndex}
+        />
+      );
+
+      // Screenshot fades out when zoom starts
+      const screenshotRect = viewerTransition.editorScreenshotRect;
+      const screenshotOverlay = (
+        <div
+          style={{
+            position: screenshotRect ? 'fixed' : 'absolute',
+            top: screenshotRect ? `${screenshotRect.top}px` : 0,
+            left: screenshotRect ? `${screenshotRect.left}px` : 0,
+            width: screenshotRect ? `${screenshotRect.width}px` : window.innerWidth,
+            height: screenshotRect ? `${screenshotRect.height}px` : window.innerHeight,
+            opacity: viewerTransition.isZooming ? 0 : 1,
+            transition: viewerTransition.isZooming
+              ? `opacity ${VIEWER_TRANSITION.SCREENSHOT_FADE_DURATION}ms ease-out`
+              : 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          <img
+            src={viewerTransition.editorScreenshotUrl}
+            alt="Loading..."
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'fill',
+              display: 'block',
+            }}
+          />
+        </div>
+      );
+
+      return (
+        <>
+          {viewerContent}
+          {screenshotOverlay}
+        </>
+      );
+    }
+
     // Check for custom workbench views first
     if (!isBaseWorkbench(currentView)) {
       const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
@@ -115,15 +313,9 @@ export default function Workbench() {
           <FileEditor
             toolMode={!!selectedToolId}
             supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
-            {...(!selectedToolId && {
-              onOpenPageEditor: () => {
-                setCurrentView("pageEditor");
-              },
-              onMergeFiles: (filesToMerge) => {
-                addFiles(filesToMerge);
-                setCurrentView("viewer");
-              }
-            })}
+            onOpenViewer={(fileId, sourceRect) => {
+              setCurrentView("viewer", fileId, sourceRect);
+            }}
           />
         );
 
@@ -207,22 +399,31 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
+        ref={mainContentRef}
         className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',
         }}
       >
-        {renderMainContent()}
+{renderMainContent()}
       </Box>
 
-      <Footer
-        analyticsEnabled={config?.enableAnalytics === true}
-        termsAndConditions={config?.termsAndConditions}
-        privacyPolicy={config?.privacyPolicy}
-        cookiePolicy={config?.cookiePolicy}
-        impressum={config?.impressum}
-        accessibilityStatement={config?.accessibilityStatement}
-      />
+      {/* Viewer Zoom Transition Overlay */}
+      <ViewerZoomTransition />
+
+      {/* Page Editor Spread Transition Overlay */}
+      <PageEditorSpreadTransition />
+
+      <Box style={{ position: 'relative', zIndex: 100 }}>
+        <Footer
+          analyticsEnabled={config?.enableAnalytics === true}
+          termsAndConditions={config?.termsAndConditions}
+          privacyPolicy={config?.privacyPolicy}
+          cookiePolicy={config?.cookiePolicy}
+          impressum={config?.impressum}
+          accessibilityStatement={config?.accessibilityStatement}
+        />
+      </Box>
     </Box>
   );
 }

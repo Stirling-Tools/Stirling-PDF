@@ -19,3 +19,21 @@
 .workbenchScrollable::-webkit-scrollbar-thumb:hover {
   background-color: var(--mantine-color-gray-5);
 }
+
+@keyframes :global(fadeIn) {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes :global(fadeOut) {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

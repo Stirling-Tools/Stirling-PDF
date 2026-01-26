@@ -1,0 +1,46 @@
+/* PageEditorSpreadTransition.module.css - Spreading animation styles */
+
+:root {
+  --spread-duration: 600ms;
+  --spread-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Background screenshot that fades out during animation */
+.backgroundScreenshot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-size: 100% 100%;
+  background-position: top left;
+  background-repeat: no-repeat;
+  z-index: 10000;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+/* Individual page thumbnail that animates from file card to grid position */
+.spreadingPage {
+  will-change: transform;
+  transform-origin: top left;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 0;
+  transition: transform var(--spread-duration) var(--spread-easing);
+}
+
+/* Accessibility - respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --spread-duration: 0ms;
+  }
+
+  .backgroundScreenshot {
+    transition: none;
+  }
+
+  .spreadingPage {
+    transition: none !important;
+  }
+}

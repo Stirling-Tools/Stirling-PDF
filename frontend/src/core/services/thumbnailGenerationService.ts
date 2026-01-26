@@ -36,6 +36,7 @@ export class ThumbnailGenerationService {
   // Session-based thumbnail cache
   private thumbnailCache = new Map<FileId | string /* FIX ME: Page ID */, CachedThumbnail>();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
+  private maxCacheEntries = 20; // Hard cap to avoid runaway memory
   private currentCacheSize = 0;
 
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
@@ -228,6 +229,16 @@ export class ThumbnailGenerationService {
   }
 
   addThumbnailToCache(pageId: string, thumbnail: string): void {
+    const existing = this.thumbnailCache.get(pageId);
+    if (existing) {
+      existing.lastUsed = Date.now();
+      return;
+    }
+
+    while (this.thumbnailCache.size >= this.maxCacheEntries) {
+      this.evictLeastRecentlyUsed();
+    }
+
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
 
     // Enforce cache size limits
@@ -265,7 +276,8 @@ export class ThumbnailGenerationService {
     return {
       size: this.thumbnailCache.size,
       sizeBytes: this.currentCacheSize,
-      maxSizeBytes: this.maxCacheSizeBytes
+      maxSizeBytes: this.maxCacheSizeBytes,
+      maxEntries: this.maxCacheEntries
     };
   }
 

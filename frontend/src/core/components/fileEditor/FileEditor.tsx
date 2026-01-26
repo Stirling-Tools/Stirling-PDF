@@ -5,6 +5,7 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '@app/contexts/FileContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 import { zipFileService } from '@app/services/zipFileService';
 import { detectFileExtension } from '@app/utils/fileUtils';
 import FileEditorThumbnail from '@app/components/fileEditor/FileEditorThumbnail';
@@ -18,15 +19,15 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 
 
 interface FileEditorProps {
-  onOpenPageEditor?: () => void;
-  onMergeFiles?: (files: StirlingFile[]) => void;
+  onOpenViewer?: (fileId: FileId, sourceRect?: DOMRect) => void;
   toolMode?: boolean;
   supportedExtensions?: string[];
 }
 
 const FileEditor = ({
   toolMode = false,
-  supportedExtensions = ["pdf"]
+  supportedExtensions = ["pdf"],
+  onOpenViewer
 }: FileEditorProps) => {
 
   // Utility function to check if a file extension is supported
@@ -54,6 +55,9 @@ const FileEditor = ({
   // Get file selection context
   const { setSelectedFiles } = useFileSelection();
 
+  // Get viewer context for active file index
+  const { setActiveFileIndex } = useViewer();
+
   const [_status, _setStatus] = useState<string | null>(null);
   const [_error, _setError] = useState<string | null>(null);
 
@@ -65,6 +69,7 @@ const FileEditor = ({
     alert({ alertType: 'error', title: 'Error', body: message, expandable: true });
   }, []);
   const [selectionMode, setSelectionMode] = useState(toolMode);
+
 
   // Current tool (for enforcing maxFiles limits)
   const { selectedTool } = useToolWorkflow();
@@ -328,14 +333,28 @@ const FileEditor = ({
     }
   }, [activeStirlingFileStubs, selectors, fileActions, removeFiles]);
 
-  const handleViewFile = useCallback((fileId: FileId) => {
+  const handleViewFile = useCallback(async (fileId: FileId, sourceElement?: HTMLElement) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     if (record) {
-      // Set the file as selected in context and switch to viewer for preview
+      // Find the index of the clicked file
+      const fileIndex = activeStirlingFileStubs.findIndex(r => r.id === fileId);
+
+      // Set the file as selected and active
       setSelectedFiles([fileId]);
-      navActions.setWorkbench('viewer');
+      if (fileIndex !== -1) {
+        setActiveFileIndex(fileIndex);
+      }
+
+      const sourceRect = sourceElement?.getBoundingClientRect();
+
+      // Switch to viewer - pass fileId and sourceRect (parent handles fallbacks)
+      if (onOpenViewer) {
+        onOpenViewer(fileId, sourceRect);
+      } else {
+        navActions.setWorkbench('viewer');
+      }
     }
-  }, [activeStirlingFileStubs, setSelectedFiles, navActions.setWorkbench]);
+  }, [activeStirlingFileStubs, setSelectedFiles, setActiveFileIndex, navActions, onOpenViewer]);
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
@@ -364,7 +383,12 @@ const FileEditor = ({
       activateOnClick={false}
       activateOnDrag={true}
     >
-      <Box pos="relative" style={{ overflow: 'auto' }}>
+      <Box
+        pos="relative"
+        style={{
+          overflow: 'auto',
+        }}
+      >
         <LoadingOverlay visible={state.ui.isProcessing} />
 
         <Box p="md">

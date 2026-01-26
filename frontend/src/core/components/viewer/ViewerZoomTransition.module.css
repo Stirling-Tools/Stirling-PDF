@@ -1,0 +1,67 @@
+/* ViewerZoomTransition.module.css - Smooth zoom animation for viewer transitions */
+
+/* Animation timing - synced with constants/animations.ts */
+:root {
+  --viewer-zoom-duration: 400ms; /* VIEWER_TRANSITION.ZOOM_DURATION */
+  --viewer-zoom-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* VIEWER_TRANSITION.EASING */
+}
+
+/* Backdrop that fades in during transition */
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity var(--viewer-zoom-duration) var(--viewer-zoom-easing);
+  pointer-events: none;
+}
+
+.backdropVisible {
+  opacity: 0;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+/* Thumbnail that zooms from source position to PDF page */
+.thumbnail {
+  position: fixed;
+  transition:
+    transform var(--viewer-zoom-duration) var(--viewer-zoom-easing),
+    border-radius var(--viewer-zoom-duration) var(--viewer-zoom-easing),
+    box-shadow var(--viewer-zoom-duration) var(--viewer-zoom-easing);
+  will-change: transform;
+  transform-origin: top left;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.thumbnailZoomed {
+  /* Dimensions controlled by inline styles (calculated from PDF page element) */
+  box-shadow: none;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --viewer-zoom-duration: 0ms;
+  }
+
+  .backdrop {
+    transition: none;
+  }
+
+  .thumbnail {
+    transition: none;
+  }
+
+  .backdropVisible {
+    opacity: 0;
+  }
+
+  .thumbnailZoomed {
+    /* Instant transition for reduced motion - dimensions from inline styles */
+    box-shadow: none;
+  }
+}
