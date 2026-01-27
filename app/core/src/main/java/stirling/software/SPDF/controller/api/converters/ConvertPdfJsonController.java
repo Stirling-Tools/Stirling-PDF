@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -89,7 +88,7 @@ public class ConvertPdfJsonController {
         return WebResponseUtils.bytesToWebResponse(pdfBytes, docName);
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/text-editor/metadata")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/text-editor/metadata")
     @Operation(
             summary = "Extract PDF metadata for text editor lazy loading",
             description =
@@ -127,7 +126,7 @@ public class ConvertPdfJsonController {
                 .body(jsonBytes);
     }
 
-    @PostMapping(
+    @AutoJobPostMapping(
             value = "/pdf/text-editor/partial/{jobId}",
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @StandardPdfResponse
@@ -180,7 +179,7 @@ public class ConvertPdfJsonController {
         return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
     }
 
-    @PostMapping(value = "/pdf/text-editor/clear-cache/{jobId}")
+    @AutoJobPostMapping(value = "/pdf/text-editor/clear-cache/{jobId}")
     @Operation(
             summary = "Clear cached PDF document for text editor",
             description =

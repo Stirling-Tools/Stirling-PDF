@@ -61,6 +61,7 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
+    private Telegram telegram = new Telegram();
 
     private Premium premium = new Premium();
 
@@ -551,10 +552,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-      Driver {
-        driverName='%s'
-      }
-      """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
@@ -607,6 +608,7 @@ public class ApplicationProperties {
         private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
+        @Deprecated
         @Data
         public static class CustomMetadata {
             private boolean autoUpdateMetadata;
@@ -614,16 +616,23 @@ public class ApplicationProperties {
             private String creator;
             private String producer;
 
+            @Deprecated
             public String getCreator() {
                 return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
             }
 
+            @Deprecated
             public String getProducer() {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
             }
         }
     }
 
+    /**
+     * Mail server configuration properties.
+     *
+     * @since 0.46.1
+     */
     @Data
     public static class Mail {
         private boolean enabled;
@@ -644,6 +653,102 @@ public class ApplicationProperties {
         private String sslTrust;
         // Enables hostname verification for TLS connections
         private Boolean sslCheckServerIdentity;
+    }
+
+    /**
+     * Telegram bot configuration properties.
+     *
+     * @since 2.2.x
+     */
+    @Data
+    public static class Telegram {
+        private Boolean enabled = false;
+        @ToString.Exclude private String botToken;
+        private String botUsername;
+        private String pipelineInboxFolder = "telegram";
+        private Boolean customFolderSuffix = false;
+        private Boolean enableAllowUserIDs = false;
+        private List<Long> allowUserIDs = new ArrayList<>();
+        private Boolean enableAllowChannelIDs = false;
+        private List<Long> allowChannelIDs = new ArrayList<>();
+        private long processingTimeoutSeconds = 180;
+        private long pollingIntervalMillis = 2000;
+        private Feedback feedback = new Feedback();
+
+        /**
+         * Configuration for feedback messages sent by the Telegram bot.
+         *
+         * @since 2.2.x
+         */
+        @Data
+        public static class Feedback {
+            private Channel channel = new Channel();
+            private User user = new User();
+
+            /**
+             * Channel-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class Channel {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * the channel (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+
+            /**
+             * User-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class User {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * users (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to users (to
+                 * avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+        }
     }
 
     @Data
@@ -722,6 +827,16 @@ public class ApplicationProperties {
     public static class ProcessExecutor {
         private SessionLimit sessionLimit = new SessionLimit();
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+        private boolean autoUnoServer = true;
+        private List<UnoServerEndpoint> unoServerEndpoints = new ArrayList<>();
+
+        @Data
+        public static class UnoServerEndpoint {
+            private String host = "127.0.0.1";
+            private int port = 2003;
+            private String hostLocation = "auto"; // auto|local|remote
+            private String protocol = "http"; // http|https
+        }
 
         @Data
         public static class SessionLimit {

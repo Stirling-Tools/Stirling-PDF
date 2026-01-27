@@ -1,8 +1,11 @@
 unsavedChanges = "您的 PDF 有未保存的更改。"
+pendingRedactionsTitle = "未应用的涂黑"
+pendingRedactions = "您有未应用的涂黑，离开将会丢失。"
 areYouSure = "确定要离开吗？"
 unsavedChangesTitle = "未保存的更改"
 keepWorking = "继续编辑"
 discardChanges = "放弃并离开"
+discardRedactions = "放弃并离开"
 applyAndContinue = "保存并离开"
 exportAndContinue = "导出并继续"
 cancel = "取消"
@@ -303,6 +306,7 @@ selectOperation = "བཀོལ་སྤྱོད་འདེམས་རོག�
 addOperationButton = "བཀོལ་སྤྱོད་སྣོན།"
 pipelineHeader = "བརྒྱུད་རིམ།"
 saveButton = "ཕབ་ལེན།"
+saveForFolderScanning = "保存用于文件夹扫描"
 validateButton = "ཚད་ལྡན་ཡིན་མིན་ཞིབ་བཤེར།"
 
 [enterpriseEdition]
@@ -340,6 +344,10 @@ advance = "མཐོ་རིམ།"
 edit = "ལྟ་བ་དང་རྩོམ་སྒྲིག"
 popular = "སྤྱི་མོས།"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "首选项"
 
@@ -360,6 +368,7 @@ advanced = "高级"
 title = "安全与认证"
 security = "安全"
 connections = "连接"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "许可与分析"
@@ -434,6 +443,32 @@ currentVersion = "当前版本"
 latestVersion = "最新版本"
 checkForUpdates = "检查更新"
 viewDetails = "查看详情"
+serverNeedsUpdate = "需要管理员更新服务器"
+
+[settings.general.versionInfo]
+title = "版本信息"
+description = "桌面端和服务器版本详情"
+desktop = "桌面版"
+server = "服务器版本"
+
+[settings.security]
+title = "安全"
+description = "更新您的密码以确保账户安全。"
+
+[settings.security.password]
+subtitle = "更改您的密码。更新后您将被登出。"
+required = "所有字段均为必填。"
+mismatch = "新密码不匹配。"
+error = "无法更新密码。请验证您当前的密码后重试。"
+success = "密码更新成功。请重新登录。"
+ssoDisabled = "密码更改由您的身份提供商管理。"
+current = "当前密码"
+currentPlaceholder = "输入您当前的密码"
+new = "新密码"
+newPlaceholder = "输入新密码"
+confirm = "确认新密码"
+confirmPlaceholder = "再次输入新密码"
+update = "更新密码"
 
 [settings.hotkeys]
 title = "键盘快捷键"
@@ -488,11 +523,16 @@ low = "低"
 title = "ངོ་སྤྲོད་ལག་ཁྱེར་བསྒྱུར་བ།"
 header = "ཁྱེད་ཀྱི་ཐོ་མིང་ཞིབ་ཕྲ་གསར་སྒྱུར།"
 changePassword = "ཁྱེད་ཀྱིས་སྔོན་སྒྲིག་ནང་འཛུལ་ངོ་སྤྲོད་བེད་སྤྱོད་བྱེད་བཞིན་ཡོད། གསང་ཚིག་གསར་པ་འཇུག་རོགས།"
+ssoManaged = "您的账户由身份提供商管理。"
 newUsername = "སྤྱོད་མཁན་མིང་གསར་པ།"
 oldPassword = "ད་ལྟའི་གསང་ཚིག"
 newPassword = "གསང་ཚིག་གསར་པ།"
 confirmNewPassword = "གསང་ཚིག་གསར་པ་ངོས་སྦྱོར།"
 submit = "འགྱུར་བ་ཕུལ་བ།"
+credsUpdated = "账户已更新"
+description = "更改已保存。请重新登录。"
+error = "无法更新用户名。请验证您的密码后重试。"
+changeUsername = "更新您的用户名。更新后您将被登出。"
 
 [account]
 title = "ཐོ་མིང་སྒྲིག་འགོད།"
@@ -500,6 +540,8 @@ accountSettings = "ཐོ་མིང་སྒྲིག་འགོད།"
 adminSettings = "དོ་དམ་པའི་སྒྲིག་འགོད། - སྤྱོད་མཁན་ལྟ་བ་དང་སྣོན་པ།"
 userControlSettings = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་འགོད།"
 changeUsername = "སྤྱོད་མཁན་མིང་བསྒྱུར་བ།"
+changeUsernameDescription = "更新您的用户名。更新后您将被登出。"
+newUsernamePlaceholder = "输入您的新用户名"
 newUsername = "སྤྱོད་མཁན་མིང་གསར་པ།"
 password = "གསང་ཚིག་ངོས་སྦྱོར།"
 oldPassword = "གསང་ཚིག་རྙིང་པ།"
@@ -514,6 +556,30 @@ property = "ཁྱད་ཆོས།"
 webBrowserSettings = "བཤར་ཆས་སྒྲིག་འགོད།"
 syncToBrowser = "མཉམ་བགྲོད་ཐོ་མིང་ -> བཤར་ཆས།"
 syncToAccount = "མཉམ་བགྲོད་ཐོ་མིང་ <- བཤར་ཆས།"
+
+[account.mfa]
+title = "双重身份验证"
+setupFailed = "无法开始双重身份验证设置。请重试。"
+codeRequired = "请输入身份验证代码以继续。"
+enabled = "已启用双重身份验证。"
+enableFailed = "无法启用双重身份验证。请检查代码后重试。"
+disabled = "已禁用双重身份验证。"
+disableFailed = "无法禁用双重身份验证。请检查代码后重试。"
+description = "为您的账户添加一层额外的安全保护。"
+enableButton = "启用双重身份验证"
+disableButton = "禁用双重身份验证"
+setupTitle = "设置双重身份验证"
+setupDescription = "使用身份验证器应用扫描此 QR 码，然后输入 6 位代码以确认。"
+manualKey = "手动设置密钥"
+secretWarning = "请妥善保管此密钥。任何获得此密钥的人都可以生成有效的身份验证代码。"
+codePlaceholder = "输入 6 位代码"
+confirmEnable = "启用"
+disableTitle = "禁用双重身份验证"
+disableDescription = "输入有效的身份验证代码以禁用双重身份验证。"
+codeLabel = "身份验证代码"
+confirmDisable = "禁用"
+ssoDescription = "对于单点登录账户，双重身份验证由您的身份提供商管理。"
+ssoManaged = "请通过您的身份提供商配置 MFA。"
 
 [adminUserSettings]
 title = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་འགོད།"
@@ -707,6 +773,11 @@ desc = "检测并将扫描的照片拆分为独立页面"
 tags = "签名,署名"
 title = "མིང་རྟགས།"
 desc = "རི་མོ། ཡི་གེ། པར་རིས་བཅས་ཀྱི་སྒོ་ནས་ PDF ལ་མིང་རྟགས་སྣོན་པ།"
+
+[home.annotate]
+tags = "注释,高亮,绘制"
+title = "注释"
+desc = "在查看器中高亮、绘制、添加笔记和形状"
 
 [home.flatten]
 tags = "扁平化,移除,交互"
@@ -919,7 +990,7 @@ title = "PDF སྟེང་བརྩེགས།"
 
 [home.pdfTextEditor]
 title = "PDF 文本编辑器"
-desc = "编辑 PDF 中的现有文本和图像"
+desc = "审阅并编辑 Stirling PDF 的 JSON 导出，支持分组文本编辑与 PDF 再生成"
 
 [home.addText]
 tags = "文本,注释,标签"
@@ -930,6 +1001,7 @@ desc = "在 PDF 任意位置添加自定义文本"
 addFiles = "添加文件"
 uploadFromComputer = "从电脑上传"
 openFromComputer = "从电脑打开"
+mobileUpload = "从手机上传"
 
 [viewPdf]
 tags = "ལྟ་བ།,ཀློག་པ།,མཆན་འགྲེལ།,ཡི་གེ,པར་རིས།"
@@ -1181,7 +1253,7 @@ selectFilesPlaceholder = "在主视图中选择文件以开始"
 settings = "设置"
 conversionCompleted = "转换完成"
 results = "结果"
-defaultFilename = "已转换_文件"
+defaultFilename = "converted_file"
 conversionResults = "转换结果"
 convertFrom = "从以下格式转换"
 convertTo = "转换为"
@@ -1217,7 +1289,10 @@ downloadHtml = "下载中间 HTML 文件而非 PDF"
 pdfaOptions = "PDF/A 选项"
 outputFormat = "输出格式"
 pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持更多功能。"
+pdfaFormat = "PDF/A 格式"
 pdfaDigitalSignatureWarning = "该 PDF 包含数字签名。下一步将移除它。"
+pdfxDigitalSignatureWarning = "该 PDF 包含数字签名。这将在下一步被移除。"
+pdfxDescription = "PDF/X 是用于可靠打印和图形交换的 ISO 标准 PDF 子集。"
 fileFormat = "文件格式"
 wordDoc = "Word 文档"
 wordDocExt = "Word 文档 (.docx)"
@@ -1245,6 +1320,37 @@ cbzOptions = "CBZ 转 PDF 选项"
 optimizeForEbook = "为电子书阅读器优化 PDF（使用 Ghostscript）"
 cbzOutputOptions = "PDF 转 CBZ 选项"
 cbzDpi = "图像渲染的 DPI"
+cbrOptions = "CBR 选项"
+cbrOutputOptions = "PDF 转 CBR 选项"
+cbrDpi = "图像渲染的 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "电子书转 PDF 选项"
+ebookOptionsDesc = "将电子书转换为 PDF 的选项"
+embedAllFonts = "嵌入所有字体"
+embedAllFontsDesc = "将电子书中的所有字体嵌入生成的 PDF 中"
+includeTableOfContents = "包含目录"
+includeTableOfContentsDesc = "为生成的 PDF 添加生成的目录"
+includePageNumbers = "包含页码"
+includePageNumbersDesc = "为生成的 PDF 添加页码"
+optimizeForEbookPdf = "为电子书阅读器优化"
+optimizeForEbookPdfDesc = "为电子书阅读优化 PDF（文件更小，在电子墨水设备上渲染更佳）"
+
+[convert.epubOptions]
+epubOptions = "PDF 转电子书选项"
+epubOptionsDesc = "将 PDF 转换为 EPUB/AZW3 的选项"
+detectChapters = "检测章节"
+detectChaptersDesc = "检测看起来像章节的标题并插入 EPUB 分页符"
+targetDevice = "目标设备"
+targetDeviceDesc = "选择为阅读设备优化的输出配置"
+outputFormat = "输出格式"
+outputFormatDesc = "选择电子书的输出格式"
+tabletPhone = "平板/手机（带图像）"
+kindleEink = "Kindle 电子墨水（文本优化）"
 
 [imageToPdf]
 tags = "བསྒྱུར་བ།,པར་རིས།,jpg,པར།,འདྲ་པར།"
@@ -1322,6 +1428,7 @@ applySignatures = "应用图像"
 name = "图像"
 placeholder = "上传图像"
 label = "图像文件"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "配置图像"
@@ -1361,6 +1468,11 @@ header = "添加附件"
 add = "添加附件"
 remove = "移除附件"
 embed = "嵌入附件"
+convertToPdfA3b = "转换为 PDF/A-3b"
+convertToPdfA3bDescription = "创建带嵌入附件的归档 PDF"
+convertToPdfA3bTooltip = "PDF/A-3b 是一种确保长期保存的归档格式。它允许将任意文件格式作为附件嵌入。转换需要 Ghostscript，对于大文件可能耗时更长。"
+convertToPdfA3bTooltipHeader = "关于 PDF/A-3b 转换"
+convertToPdfA3bTooltipTitle = "功能说明"
 submit = "添加附件"
 
 [watermark]
@@ -2113,6 +2225,16 @@ tip = "ད་ལྟ་ཡིག་ཆ་མང་པོ་དུས་གཅི�
 outputFormat = "ཕྱིར་འདོན་རྣམ་གཞག"
 pdfWithDigitalSignature = "PDF འདིར་ཨང་ཀིའི་མིང་རྟགས་ཡོད། འདི་རྗེས་མའི་རིམ་པར་སུབ་ངེས་ཡིན།"
 
+[pdfToPDFX]
+tags = "打印,标准,转换,生产,印前,归档"
+title = "PDF 转 PDF/X"
+header = "PDF 转 PDF/X"
+credit = "本服务使用 Ghostscript 进行 PDF/X 转换"
+submit = "转换"
+tip = "目前不支持一次处理多个输入"
+outputFormat = "输出格式"
+pdfWithDigitalSignature = "该 PDF 包含数字签名。这将在下一步被移除。"
+
 [PDFToWord]
 tags = "doc,docx,odt,word,བསྒྱུར་བཅོས།,རྣམ་གཞག,བསྒྱུར་བ།,ཡིག་ཚང་།,microsoft,docfile"
 title = "PDF ནས་ Word ལ།"
@@ -2306,6 +2428,10 @@ saved = "已保存"
 label = "上传签名图片"
 placeholder = "选择图像文件"
 hint = "上传您的签名 PNG 或 JPG 图片"
+removeBackground = "移除白色背景（变为透明）"
+processing = "正在处理图像..."
+backgroundRemovalFailedTitle = "背景移除失败"
+backgroundRemovalFailedMessage = "无法移除图像背景。将使用原始图像。"
 
 [sign.instructions]
 title = "如何添加签名"
@@ -2350,6 +2476,11 @@ note = "扁平化会移除 PDF 中的交互元素，使其不可编辑。"
 [flatten.options.flattenOnlyForms]
 label = "仅扁平化表单"
 desc = "只扁平化表单字段，保留其他交互元素"
+
+[flatten.renderDpi]
+label = "渲染 DPI（可选，建议 150 DPI）"
+help = "留空以使用系统默认值。更高的 DPI 可提升清晰度，但会增加处理时间和文件大小。"
+placeholder = "例如 150"
 
 [flatten.results]
 title = "扁平化结果"
@@ -2925,6 +3056,7 @@ header = "PDF གཏུབ་གཅོད།"
 submit = "ཕུལ་བ།"
 noFileSelected = "选择一个 PDF 文件开始裁剪"
 reset = "重置为完整 PDF"
+autoCrop = "自动裁剪空白"
 
 [crop.preview]
 title = "裁剪区域选择"
@@ -3059,6 +3191,18 @@ other = "其他"
 perPageInfo = "每页信息"
 tableOfContents = "目录"
 
+[getPdfInfo.compliance]
+notDetected = "未检测到"
+passed = "通过"
+failed = "失败"
+compliant = "符合规范"
+nonCompliant = "不符合规范"
+none = "未检测到任何标准"
+passedCount = "通过"
+failedCount = "失败"
+noVerification = "未执行验证"
+noVerificationDesc = "未对该文档的 PDF 标准合规性进行验证。"
+
 [getPdfInfo.other]
 attachments = "附件"
 embeddedFiles = "嵌入文件"
@@ -3090,6 +3234,8 @@ permsRestricted = "{{count}} 项限制"
 permsMixed = "部分权限受限"
 hasCompliance = "符合合规标准"
 noCompliance = "无合规标准"
+compliancePassed = "符合 {{standards}}"
+complianceChecked = "标准已验证（失败 {{failed}} 项）"
 basic = "基本信息"
 documentInfo = "文档信息"
 securityTitle = "安全状态"
@@ -3155,6 +3301,7 @@ title = "遮盖方式"
 mode = "模式"
 automatic = "自动"
 automaticDesc = "基于搜索词遮盖文本"
+automaticDisabledTooltip = "在文件管理器中选择文件以一次性对多个文件进行涂黑"
 manual = "手动"
 manualDesc = "点击并拖动以遮盖特定区域"
 manualComingSoon = "手动遮盖即将推出"
@@ -3225,8 +3372,35 @@ text = "仅匹配完整单词，不匹配部分。启用时，“John”不会�
 title = "转换为 PDF-Image"
 text = "在遮盖后将 PDF 转换为基于图像的 PDF。这可确保遮盖框后的文本被完全移除且无法恢复。"
 
+[redact.tooltip.manual.header]
+title = "手动涂黑控制"
+
+[redact.tooltip.manual.markText]
+title = "标记文本工具"
+text = "在 PDF 上直接选择文本以标记为涂黑。单击并拖动以高亮您想要涂黑的特定文本。"
+
+[redact.tooltip.manual.markArea]
+title = "标记区域工具"
+text = "在 PDF 上绘制矩形区域以标记为涂黑。适合涂黑图像、签名或不规则形状。"
+
+[redact.tooltip.manual.apply]
+title = "应用涂黑"
+text = "标记内容后，点击“应用”以永久涂黑所有标记区域。待处理计数显示有多少涂黑可应用。"
+bullet1 = "在应用前可尽情标记多个区域"
+bullet2 = "所有待处理的涂黑将一次性应用"
+bullet3 = "应用后无法撤销涂黑"
+
 [redact.manual]
+title = "涂黑工具"
+instructions = "在 PDF 上选择文本或绘制区域以标记要涂黑的内容。"
+markText = "标记文本"
+markArea = "标记区域"
+pendingLabel = "待处理："
+applyWarning = "⚠️ 将永久应用，无法撤销，且底层数据将被删除"
+apply = "应用"
+noMarks = "暂无涂黑标记。使用上方工具标记要涂黑的内容。"
 header = "手动遮盖"
+controlsTitle = "手动涂黑控制"
 textBasedRedaction = "基于文本的遮盖"
 pageBasedRedaction = "基于页面的遮盖"
 convertPDFToImageLabel = "将 PDF 转为 PDF-Image（用于移除框后面的文本）"
@@ -3341,6 +3515,19 @@ placeholder = "གཞུང་ཕྱོགས་བགོ་བཤའི་ག�
 [split-by-sections.vertical]
 label = "གྱེན་ཕྱོགས་བགོ་བཤའ།"
 placeholder = "གྱེན་ཕྱོགས་བགོ་བཤའི་གྲངས་ཀ་འཇུག་པ།"
+
+[split-by-sections.splitMode]
+label = "拆分模式"
+description = "选择如何拆分页面"
+splitAll = "拆分所有页面"
+splitAllExceptFirst = "除第一页外全部拆分"
+splitAllExceptLast = "除最后一页外全部拆分"
+splitAllExceptFirstAndLast = "除首尾页外全部拆分"
+custom = "自定义页面"
+
+[split-by-sections.customPages]
+label = "自定义页码"
+placeholder = "例如 2,4,6"
 
 [AddStampRequest]
 tags = "ཐེལ་ཙེ།,པར་རིས་སྣོན་པ།,དཀྱིལ་སྒྲིག་པར་རིས།,ཆུ་རྟགས།,PDF,ནང་འཇུག,རང་སྒྲིག,སྒྲིག་སྦྱོར།"
@@ -3588,6 +3775,13 @@ passwordChangedSuccess = "密码修改成功！请使用新密码登录。"
 credentialsUpdated = "您的凭据已更新。请重新登录。"
 defaultCredentials = "默认登录凭据"
 changePasswordWarning = "首次登录后请更改密码"
+mfaRequired = "需要双重身份验证代码"
+mfaCode = "身份验证代码"
+enterMfaCode = "输入 6 位代码"
+mfaPromptTitle = "双重身份验证"
+mfaPromptBody = "请从您的身份验证器应用输入身份验证代码以继续。"
+verifyingMfa = "正在验证..."
+verifyMfa = "验证代码"
 
 [login.slides.overview]
 alt = "Stirling PDF 概览"
@@ -3703,6 +3897,19 @@ filesize = "文件大小"
 [compress.grayscale]
 label = "应用灰度进行压缩"
 
+[compress.linearize]
+label = "线性化 PDF 以便快速网页浏览"
+
+[compress.lineArt]
+label = "将图像转换为线稿"
+description = "使用 ImageMagick 将页面转换为高对比度的黑白线稿，以最大限度减小体积。"
+unavailable = "此服务器未安装或未启用 ImageMagick"
+detailLevel = "细节级别"
+edgeEmphasis = "边缘强化"
+edgeLow = "柔和"
+edgeMedium = "平衡"
+edgeHigh = "强"
+
 [compress.tooltip.header]
 title = "压缩设置概览"
 
@@ -3720,6 +3927,10 @@ bullet2 = "较高的值可减少文件大小"
 title = "灰度"
 text = "选择此选项可将所有图像转换为黑白，这对扫描 PDF 或图像较多的文档可显著减小文件大小。"
 
+[compress.tooltip.lineArt]
+title = "线稿"
+text = "使用 ImageMagick 将页面转换为高对比度黑白。通过细节级别控制有多少内容变为黑色，通过边缘强化控制边缘检测的强度。"
+
 [compress.error]
 failed = "压缩 PDF 时发生错误。"
 
@@ -3731,6 +3942,11 @@ failed = "压缩 PDF 时发生错误。"
 [compress.selectText.1]
 _value = "压缩设置"
 1 = "1-3 PDF 压缩，</br> 4-6 轻度图像压缩，</br> 7-9 强烈图像压缩 会显著降低图像质量"
+
+[compress.compressionLevel]
+range1to3 = "数值越低越保真，但文件更大"
+range4to6 = "中等压缩，质量适度下降"
+range7to9 = "更高数值可显著减小文件大小，但可能降低图像清晰度"
 
 [decrypt]
 passwordPrompt = "ཡིག་ཆ་འདི་གསང་ཚིག་གིས་སྲུང་སྐྱོབ་བྱས་ཡོད། གསང་ཚིག་འཇུག་རོགས།"
@@ -3971,22 +4187,97 @@ deleteSelected = "删除所选页面"
 closePdf = "关闭 PDF"
 exportAll = "导出 PDF"
 downloadSelected = "下载所选文件"
-downloadAll = "全部下载"
-saveAll = "全部保存"
+annotations = "注释"
+exportSelected = "导出所选页面"
+saveChanges = "保存更改"
 toggleTheme = "切换主题"
-toggleBookmarks = "切换书签"
 language = "语言"
+toggleAnnotations = "切换注释可见性"
 search = "搜索 PDF"
 panMode = "平移模式"
+applyRedactionsFirst = "请先应用涂黑"
 rotateLeft = "向左旋转"
 rotateRight = "向右旋转"
 toggleSidebar = "切换侧边栏"
-exportSelected = "导出所选页面"
-toggleAnnotations = "切换注释可见性"
-annotationMode = "切换注释模式"
+toggleBookmarks = "切换书签"
 print = "打印 PDF"
 draw = "绘制"
+redact = "涂黑"
+exitRedaction = "退出涂黑模式"
 save = "保存"
+downloadAll = "全部下载"
+saveAll = "全部保存"
+
+[textAlign]
+left = "左对齐"
+center = "居中"
+right = "右对齐"
+
+[annotation]
+title = "注释"
+desc = "使用高亮、画笔、文本和便签。更改实时生效——无需扁平化。"
+highlight = "高亮"
+pen = "画笔"
+text = "文本框"
+note = "便签"
+rectangle = "矩形"
+ellipse = "椭圆"
+select = "选择"
+exit = "退出注释模式"
+strokeWidth = "宽度"
+opacity = "不透明度"
+strokeOpacity = "描边不透明度"
+fillOpacity = "填充不透明度"
+fontSize = "字号"
+chooseColor = "选择颜色"
+color = "颜色"
+strokeColor = "描边颜色"
+fillColor = "填充颜色"
+underline = "下划线"
+strikeout = "删除线"
+squiggly = "波浪线"
+inkHighlighter = "自由手高亮"
+freehandHighlighter = "自由手高亮"
+square = "正方形"
+circle = "圆形"
+polygon = "多边形"
+line = "直线"
+stamp = "添加图像"
+textMarkup = "文本标注"
+drawing = "绘图"
+shapes = "形状"
+notesStamps = "便签与图章"
+settings = "设置"
+borderOn = "边框：开"
+borderOff = "边框：关"
+editInk = "编辑画笔"
+editLine = "编辑直线"
+editNote = "编辑便签"
+editText = "编辑文本框"
+editTextMarkup = "编辑文本标注"
+editSelected = "编辑注释"
+editSquare = "编辑正方形"
+editCircle = "编辑圆形"
+editPolygon = "编辑多边形"
+unsupportedType = "此注释类型暂不完全支持编辑。"
+textAlignment = "文本对齐"
+noteIcon = "便签图标"
+imagePreview = "预览"
+contents = "文本"
+backgroundColor = "背景颜色"
+clearBackground = "移除背景"
+noBackground = "无背景"
+stampSettings = "图章设置"
+savingCopy = "正在准备下载..."
+saveFailed = "无法保存副本"
+saveReady = "下载已准备好"
+selectAndMove = "选择并编辑"
+editSelectDescription = "单击现有注释以编辑其颜色、不透明度、文本或大小。"
+editStampHint = "若要更换图像，请删除此图章并重新添加。"
+editSwitchToSelect = "切换到“选择并编辑”以编辑此注释。"
+undo = "撤销"
+redo = "重做"
+applyChanges = "应用更改"
 saveChanges = "保存更改"
 
 [search]
@@ -4038,12 +4329,20 @@ settings = "设置"
 adminSettings = "管理员设置"
 allTools = "All Tools"
 reader = "阅读器"
+tours = "导览"
+showMeAround = "带我看看"
+
+[quickAccess.toursTooltip]
+admin = "在此观看演示：工具导览、V2 新布局导览，以及管理员导览。"
+user = "在此观看演示：工具导览和 V2 新布局导览。"
 
 [quickAccess.helpMenu]
 toolsTour = "工具导览"
 toolsTourDesc = "了解这些工具能做什么"
 adminTour = "管理导览"
 adminTourDesc = "探索管理设置与功能"
+whatsNewTour = "查看 V2 的新变化"
+whatsNewTourDesc = "导览更新后的布局"
 
 [admin]
 error = "错误"
@@ -4062,6 +4361,8 @@ fetchError = "加载设置失败"
 saveError = "保存设置失败"
 saved = "设置保存成功"
 saveSuccess = "设置保存成功"
+success = "设置保存成功"
+error = "设置保存失败"
 save = "保存更改"
 discard = "放弃"
 restartRequired = "需要重启"
@@ -4081,6 +4382,10 @@ hint = "您有未保存的更改"
 title = "需要登录模式"
 message = "必须启用登录模式才能修改管理员设置。请在环境中设置 SECURITY_ENABLELOGIN=true 或在 settings.yml 中设置 security.enableLogin: true，然后重启服务器。"
 readOnly = "以下设置仅显示示例值供参考。启用登录模式以查看并编辑实际配置。"
+
+[admin.settings.enterpriseRequired]
+title = "需要企业版许可"
+message = "访问 {{featureName}} 需要企业版许可。您当前查看的是演示数据，仅供参考。"
 
 [admin.settings.restart]
 title = "需要重启"
@@ -4184,6 +4489,13 @@ description = "WeasyPrint 可执行文件的路径，用于 HTML 转 PDF（留�
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert 可执行文件"
 description = "LibreOffice unoconvert 的路径，用于文档转换（留空使用默认：/opt/venv/bin/unoconvert）"
+
+[admin.settings.general.frontendUrl]
+label = "前端 URL"
+description = "前端的基础 URL（例如 https://pdf.example.com）。用于邮件邀请链接和移动端 QR 码上传。留空则使用后端 URL。"
+
+[admin.settings.badge]
+clickToUpgrade = "点击查看方案详情"
 
 [admin.settings.security]
 title = "安全"
@@ -4321,6 +4633,19 @@ connect = "连接"
 disconnect = "断开连接"
 disconnected = "已成功断开提供方"
 disconnectError = "断开提供方失败"
+mobileScannerConvertToPdf = "将图像转换为 PDF"
+mobileScannerConvertToPdfDesc = "自动将上传的图像转换为 PDF 格式。若禁用，图像将保持原样。"
+mobileScannerImageResolution = "图像分辨率"
+mobileScannerImageResolutionDesc = "上传图像的分辨率。“缩小”会将图像缩放到最长边 1200px 以减小文件大小。"
+imageResolutionFull = "完整（原始大小）"
+imageResolutionReduced = "缩小（最大 1200px）"
+mobileScannerPageFormat = "页面格式"
+mobileScannerPageFormatDesc = "转换后图像的 PDF 页面尺寸。“保留”使用原始图像尺寸。"
+pageFormatKeep = "保留（原始尺寸）"
+pageFormatA4 = "A4（210×297mm）"
+pageFormatLetter = "信纸（8.5×11 英寸）"
+mobileScannerStretchToFit = "拉伸以适配"
+mobileScannerStretchToFitDesc = "将图像拉伸以填满整页。禁用时，图像会在保持纵横比的情况下居中。"
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO 自动登录"
@@ -4389,10 +4714,168 @@ description = "首次使用 SAML2 登录时自动创建用户账号"
 label = "阻止注册"
 description = "阻止通过 SAML2 进行新用户注册"
 
+[admin.settings.connections.mobileScanner]
+label = "手机上传"
+enable = "启用 QR 码上传"
+description = "允许用户通过扫描 QR 码从移动设备上传文件"
+note = "注意：需要先配置前端 URL。 "
+link = "在系统设置中配置"
+mobileScannerConvertToPdf = "将图像转换为 PDF"
+mobileScannerConvertToPdfDesc = "自动将上传的图像转换为 PDF 格式。若禁用，图像将保持原样。"
+mobileScannerImageResolution = "图像分辨率"
+mobileScannerImageResolutionDesc = "上传图像的分辨率。“缩小”会将图像缩放到最长边 1200px 以减小文件大小。"
+imageResolutionFull = "完整（原始大小）"
+imageResolutionReduced = "缩小（最大 1200px）"
+mobileScannerPageFormat = "页面格式"
+mobileScannerPageFormatDesc = "转换后图像的 PDF 页面尺寸。“保留”使用原始图像尺寸。"
+pageFormatKeep = "保留（原始尺寸）"
+pageFormatA4 = "A4（210×297mm）"
+pageFormatLetter = "信纸（8.5×11 英寸）"
+mobileScannerStretchToFit = "拉伸以适配"
+mobileScannerStretchToFitDesc = "将图像拉伸以填满整页。禁用时，图像会在保持纵横比的情况下居中。"
+
+[admin.settings.telegram]
+title = "Telegram 机器人"
+description = "配置 Telegram 机器人连接、访问控制和反馈行为。"
+
+[admin.settings.telegram.enabled]
+label = "启用 Telegram 机器人"
+description = "允许用户通过您配置的 Telegram 机器人与 Stirling PDF 交互。"
+
+[admin.settings.telegram.botUsername]
+label = "机器人用户名"
+description = "您的 Telegram 机器人的公共用户名。"
+
+[admin.settings.telegram.botToken]
+label = "机器人令牌"
+description = "由 BotFather 提供的 Telegram 机器人 API 令牌。"
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "收件文件夹"
+description = "pipeline 目录下用于存放来自 Telegram 的传入文件的文件夹。"
+
+[admin.settings.telegram.customFolderSuffix]
+label = "使用自定义文件夹后缀"
+description = "将聊天 ID 附加到传入文件文件夹中，以按聊天隔离上传。"
+
+[admin.settings.telegram.accessControl]
+title = "访问控制"
+description = "限制哪些用户或频道可与机器人交互。"
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "仅允许特定用户 ID"
+description = "启用后，仅列出的用户 ID 可使用该机器人。"
+
+[admin.settings.telegram.allowUserIDs]
+label = "允许的用户 ID"
+description = "输入允许与机器人交互的 Telegram 用户 ID。"
+placeholder = "添加用户 ID 并按回车"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "仅允许特定频道 ID"
+description = "启用后，仅列出的频道 ID 可使用该机器人。"
+
+[admin.settings.telegram.allowChannelIDs]
+label = "允许的频道 ID"
+description = "输入允许与机器人交互的 Telegram 频道 ID。"
+placeholder = "添加频道 ID 并按回车"
+
+[admin.settings.telegram.processing]
+title = "处理"
+description = "控制 Telegram 上传的轮询间隔与处理超时。"
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "处理超时（秒）"
+description = "在报告错误前等待处理作业的最长时间。"
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "轮询间隔（毫秒）"
+description = "检查新的 Telegram 更新之间的间隔。"
+
+[admin.settings.telegram.feedback]
+title = "反馈消息"
+description = "选择机器人何时向用户和频道发送反馈。"
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "启用反馈"
+description = "控制机器人是否发送反馈消息。"
+
+[admin.settings.telegram.feedback.channel]
+title = "频道反馈规则"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "显示“无有效文档”（频道）"
+description = "对频道上传抑制“无有效文档”的响应。"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "显示处理错误（频道）"
+description = "向频道发送处理错误消息。"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "显示错误消息（频道）"
+description = "为频道显示详细错误消息。"
+
+[admin.settings.telegram.feedback.user]
+title = "用户反馈规则"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "显示“无有效文档”（用户）"
+description = "对用户上传抑制“无有效文档”的响应。"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "显示处理错误（用户）"
+description = "向用户发送处理错误消息。"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "显示错误消息（用户）"
+description = "为用户显示详细错误消息。"
+
 [admin.settings.database]
 title = "数据库"
 description = "为企业部署配置自定义数据库连接设置。"
 configuration = "数据库配置"
+backupTitle = "备份与恢复"
+backupDescription = "在管理控制台直接管理 H2 备份。"
+loadError = "无法加载数据库备份"
+backupCreated = "备份创建成功"
+backupFailed = "创建备份失败"
+deleteTitle = "删除备份"
+deleteConfirm = "删除此备份？此操作无法撤销。"
+deleteSuccess = "备份已删除"
+deleteFailed = "删除备份失败"
+deleteConfirmAction = "删除备份"
+downloadFailed = "下载备份失败"
+version = "H2 版本"
+embedded = "嵌入式 H2"
+external = "外部数据库"
+h2Only = "仅对嵌入式 H2 数据库提供备份功能。"
+h2Hint = "将数据库类型设置为 H2 并禁用自定义数据库，以启用备份与恢复。"
+manageBackups = "管理备份"
+refresh = "刷新"
+createBackup = "创建备份"
+uploadTitle = "上传与导入"
+chooseFile = "选择一个 .sql 备份文件"
+importFromUpload = "导入已上传文件"
+confirmImportTitle = "确认导入数据库"
+overwriteWarning = "警告：这将覆盖当前数据库。"
+overwriteWarningBody = "所有现有数据都将被上传的备份替换。此操作无法撤销。"
+confirmCodeLabel = "请输入确认代码以继续"
+enterCode = "输入上方显示的代码"
+confirmImport = "确认导入"
+codeMismatch = "确认代码不匹配"
+codeMismatchBody = "请按显示内容精确输入代码以继续。"
+selectFile = "请选择要导入的 .sql 文件"
+importSuccess = "备份导入成功"
+importFailed = "导入备份失败"
+noBackups = "尚未找到任何备份。"
+unavailable = "当前数据库配置无法获取备份列表。"
+fileName = "文件"
+created = "创建时间"
+size = "大小"
+actions = "操作"
+download = "下载"
+import = "导入"
+delete = "删除"
 
 [admin.settings.database.enableCustom]
 label = "启用自定义数据库"
@@ -4470,6 +4953,26 @@ description = "图像处理的最大 DPI（0 = 不限）"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata 目录"
 description = "OCR 语言文件的 tessdata 目录路径"
+downloadMissingTitle = "未选择语言"
+downloadMissingBody = "请至少选择一种语言进行下载。"
+downloadSuccessTitle = "语言已下载"
+downloadSuccessBody = "所选 tessdata 语言已保存。"
+downloadErrorTitle = "下载失败"
+loadingLanguages = "正在加载已安装的 tessdata 语言…"
+installedLanguages = "已安装的 tessdata 语言"
+noLanguages = "在已配置的目录中未找到 tessdata 语言。"
+downloadLabel = "下载更多 tessdata 语言"
+downloadPlaceholder = "选择语言"
+downloadNothingFound = "未找到其他语言"
+permissionNotice = "tessdata 路径不可写。下载将会在浏览器中打开；请将 .traineddata 文件手动保存到 tessdata 文件夹中。"
+manualLinks = "手动下载：点击链接并将文件放入 tessdata 文件夹。"
+downloadButton = "下载所选语言"
+downloadInvalidTitle = "选择无效"
+downloadInvalidBody = "部分所选语言不可下载。请刷新并从列表中选择。"
+downloadErrorNetwork = "由于网络错误，下载失败。请检查您的连接并重试。"
+downloadErrorServer = "服务器在下载 tessdata 语言时遇到错误。请稍后重试。"
+downloadErrorPermission = "tessdata 目录不可写：{{message}}。请选择可写目录（例如应用数据文件夹下）或调整权限。"
+downloadErrorGeneric = "下载失败：{{message}}。请稍后重试。"
 
 [admin.settings.advanced.disableSanitize]
 label = "禁用 HTML 清理"
@@ -4569,6 +5072,10 @@ description = "允许管理员通过邮件邀请用户，并自动生成密码"
 [admin.settings.mail.frontendUrl]
 label = "前端 URL"
 description = "前端的基础 URL（例如：https://pdf.example.com）。用于在邮件中生成邀请链接。留空则使用后端 URL。"
+
+[admin.settings.mail.frontendUrlNote]
+note = "注意：需要先配置前端 URL。 "
+link = "在系统设置中配置"
 
 [admin.settings.legal]
 title = "法律文档"
@@ -4754,6 +5261,9 @@ googleDriveShort = "Drive"
 myFiles = "我的文件"
 noRecentFiles = "未找到最近文件"
 googleDriveNotAvailable = "Google Drive 集成不可用"
+mobileUpload = "手机上传"
+mobileShort = "手机"
+mobileUploadNotAvailable = "未启用手机上传"
 downloadSelected = "下载所选"
 saveSelected = "保存所选"
 openFiles = "打开文件"
@@ -4966,6 +5476,7 @@ desc = "通过将 PDF 操作串联起来构建多步工作流。非常适合重�
 invalidStep = "无效步骤"
 reviewTitle = "自动化结果"
 copyToSaved = "复制到已保存"
+exportForFolderScanning = "导出用于文件夹扫描"
 
 [automate.files]
 placeholder = "选择要用此自动化处理的文件"
@@ -4987,6 +5498,7 @@ createTitle = "创建自动化"
 editTitle = "编辑自动化"
 intro = "自动化按顺序运行工具。开始之前，请按希望运行的顺序添加工具。"
 save = "保存自动化"
+exportForFolderScanning = "导出用于文件夹扫描"
 
 [automate.creation.name]
 label = "自动化名称"
@@ -5069,6 +5581,7 @@ loading = "正在加载..."
 back = "返回"
 continue = "继续"
 error = "错误"
+save = "保存"
 
 [config.overview]
 title = "应用配置"
@@ -5130,6 +5643,15 @@ warning = "⚠️ 警告：此操作将生成新的 API 密钥，并使之前的
 impact = "任何当前使用这些密钥的应用或服务将停止工作，直到您用新密钥更新它们。"
 confirmPrompt = "确定要继续吗？"
 confirmCta = "刷新密钥"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API 密钥错误"
+failedToCreateApiKey = "创建 API 密钥失败。"
+failedToRetrieveApiKey = "无法从响应中获取 API 密钥。"
+failedToFetchApiKey = "获取 API 密钥失败。"
+apiKeyRefreshed = "API 密钥已刷新"
+apiKeyRefreshedBody = "您的 API 密钥已成功刷新。"
+failedToRefreshApiKey = "刷新 API 密钥失败。"
 
 [AddAttachmentsRequest]
 attachments = "选择附件"
@@ -5235,6 +5757,16 @@ finish = "完成"
 startTour = "开始导览"
 startTourDescription = "带您了解 Stirling PDF 的关键功能"
 
+[onboarding.whatsNew]
+quickAccess = "从 <strong>快速访问</strong> 侧栏开始，可在阅读器、自动化、您的文件和所有导览之间快速切换。"
+leftPanel = "左侧的<strong>工具</strong>面板列出了所有功能。可按类别浏览或搜索快速找到工具。"
+fileUpload = "使用<strong>文件</strong>按钮上传或选择最近的 PDF。我们会加载一个示例以展示工作区。"
+rightRail = "<strong>右侧栏</strong>包含选择文件、更改主题或语言以及下载结果的快捷操作。"
+topBar = "顶部栏可在<strong>查看器</strong>、<strong>页面编辑器</strong>和<strong>活动文件</strong>之间切换。"
+pageEditorView = "切换到页面编辑器以重新排序、旋转或删除页面。"
+activeFilesView = "使用活动文件查看所有已打开的内容并选择要处理的文件。"
+wrapUp = "这就是 V2 的新内容。随时打开<strong>导览</strong>菜单重播本导览、工具导览或管理员导览。"
+
 [onboarding.welcomeModal]
 title = "欢迎使用 Stirling PDF！"
 description = "您是否愿意进行一个 1 分钟的快速导览，了解关键功能以及如何开始？"
@@ -5255,6 +5787,10 @@ download = "下载 →"
 showMeAround = "带我看看"
 skipTheTour = "跳过引导"
 
+[onboarding.tourOverview]
+title = "导览概述"
+body = "Stirling PDF V2 提供数十种工具和焕新的布局。快速导览可帮助您了解变化以及如何找到所需功能。"
+
 [onboarding.serverLicense]
 skip = "暂时跳过"
 seePlans = "查看方案 →"
@@ -5262,7 +5798,7 @@ upgrade = "立即升级 →"
 freeTitle = "服务器许可证"
 overLimitTitle = "需要服务器许可证"
 overLimitBody = "我们的许可每台服务器最多允许 <strong>{{freeTierLimit}}</strong> 名用户免费使用。您共有 <strong>{{overLimitUserCopy}}</strong> 名 Stirling 用户。为避免中断，请升级到 Stirling Server 方案 - <strong>无限席位</strong>、PDF 文本编辑，以及每台服务器 $99/月 的完整管理员控制。"
-freeBody = "我们的<strong>Open-Core</strong>许可允许每台服务器最多<strong>{{freeTierLimit}}</strong>名用户免费使用。为实现不中断的扩展，我们推荐 Stirling Server 方案 - <strong>不限席位</strong>并提供<strong>SSO 支持</strong>，$99/服务器/月。"
+freeBody = "我们的 <strong>开源内核（Open-Core）</strong> 许可允许每台服务器最多 <strong>{{freeTierLimit}}</strong> 名用户免费使用。为顺畅扩展并抢先体验全新的 <strong>PDF 文本编辑工具</strong>，我们推荐 Stirling Server 方案 - 完整编辑与 <strong>无限席位</strong>，$99/服务器/月。"
 
 [onboarding.desktopInstall]
 title = "下载"
@@ -5337,9 +5873,11 @@ username = "用户名（邮箱）"
 usernamePlaceholder = "user@example.com"
 password = "密码"
 passwordPlaceholder = "输入密码"
+passwordRequired = "需要密码"
 role = "角色"
 team = "团队（可选）"
 teamPlaceholder = "选择一个团队"
+authType = "认证类型"
 forcePasswordChange = "首次登录强制修改密码"
 cancel = "取消"
 submit = "添加成员"
@@ -5347,6 +5885,13 @@ usernameRequired = "需要用户名和密码"
 passwordTooShort = "密码至少需 6 个字符"
 success = "用户创建成功"
 error = "创建用户失败"
+forceMFA = "在下次登录时强制设置 MFA"
+
+[workspace.people.authType]
+password = "密码"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "用户将通过 SSO 提供商进行认证"
 
 [workspace.people.editMember]
 title = "编辑成员"
@@ -5449,6 +5994,11 @@ fromLicense = "来自许可证"
 slotsAvailable = "可用用户席位 {{count}} 个"
 noSlotsAvailable = "无可用席位"
 currentUsage = "当前使用 {{current}} / {{max}} 个用户许可证"
+
+[workspace.people.mfa]
+adminDisableSuccess = "已为该用户成功禁用 MFA"
+adminDisableError = "未能为该用户禁用 MFA"
+disableByAdmin = "禁用 MFA"
 
 [workspace.teams]
 title = "团队"
@@ -5568,6 +6118,28 @@ contactSales = "联系销售"
 contactToUpgrade = "联系我们以升级或自定义您的套餐"
 maxUsers = "最大用户数"
 upTo = "最多"
+getLicense = "获取服务器许可证"
+upgradeToEnterprise = "升级到企业版"
+selectPeriod = "选择计费周期"
+monthlyBilling = "按月计费"
+yearlyBilling = "按年计费"
+checkoutOpened = "已打开结账"
+checkoutInstructions = "在 Stripe 选项卡中完成购买。付款后返回此处并刷新页面以激活您的许可证。您也会收到含许可证密钥的电子邮件。"
+activateLicense = "激活您的许可证"
+
+[plan.static.licenseActivation]
+checkoutOpened = "在新标签页中打开了结账"
+instructions = "在 Stripe 标签页中完成购买。付款完成后，您将收到包含许可证密钥的电子邮件。"
+enterKey = "在下方输入您的许可证密钥以激活您的方案："
+keyDescription = "粘贴您邮件中的许可证密钥"
+activate = "激活许可证"
+doLater = "稍后再做"
+success = "许可证已激活！"
+successMessage = "您的许可证已成功激活。您现在可以关闭此窗口。"
+
+[plan.static.billingPortal]
+title = "需要邮箱验证"
+message = "您需要在 Stripe 账单门户中验证您的邮箱地址。请检查邮箱获取登录链接。"
 
 [plan.period]
 month = "月"
@@ -5771,6 +6343,8 @@ notAvailable = "审计系统不可用"
 notAvailableMessage = "审计系统未配置或不可用。"
 disabled = "已禁用审计日志"
 disabledMessage = "请在应用配置中启用审计日志以跟踪系统事件。"
+enterpriseRequired = "需要企业版许可证"
+enterpriseRequiredMessage = "审计日志系统是企业功能。请升级到企业版许可证以访问审计日志和分析功能。"
 
 [audit.error]
 title = "加载审计系统时出错"
@@ -5868,6 +6442,7 @@ endpoint = "端点"
 visits = "访问量"
 percentage = "百分比"
 noData = "暂无数据"
+unknownEndpoint = "未知端点"
 
 [backendHealth]
 checking = "正在检查后端状态..."
@@ -5942,6 +6517,7 @@ description = "输入自托管 Stirling PDF 服务器的完整 URL"
 
 [setup.server.error]
 emptyUrl = "请输入服务器 URL"
+invalidUrl = "URL 格式无效。请输入有效的 URL，例如 https://your-server.com"
 unreachable = "无法连接到服务器"
 testFailed = "连接测试失败"
 configFetch = "获取服务器配置失败。请检查 URL 后重试。"
@@ -5960,6 +6536,7 @@ connectingTo = "正在连接："
 submit = "登录"
 signInWith = "登录方式"
 oauthPending = "正在打开浏览器进行认证..."
+sso = "单点登录"
 orContinueWith = "或使用邮箱继续"
 serverRequirement = "注意：服务器必须启用登录功能。"
 showInstructions = "如何启用？"
@@ -6025,6 +6602,8 @@ reset = "重置更改"
 downloadJson = "下载 JSON"
 generatePdf = "生成 PDF"
 saveChanges = "保存更改"
+applyChanges = "应用更改"
+downloadCopy = "下载副本"
 
 [pdfTextEditor.options.autoScaleText]
 title = "自动缩放文本以适配框"
@@ -6042,6 +6621,24 @@ descriptionInline = "提示：按住 Ctrl（或 Cmd）或 Shift 可多选文本�
 [pdfTextEditor.options.forceSingleElement]
 title = "将已编辑文本锁定为单个 PDF 元素"
 description = "启用后，导出时每个已编辑文本框将作为一个 PDF 文本元素，以避免字形重叠或字体混杂。"
+
+[pdfTextEditor.options.advanced]
+title = "高级设置"
+
+[pdfTextEditor.tooltip.header]
+title = "预览限制"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "文本与图像重点"
+text = "此工作区侧重于编辑文本和重新定位嵌入图像。复杂的页面图形、表单控件和分层图形会在导出时保留，但在此处不可完全编辑。"
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "预览差异"
+text = "某些视觉元素（如表格边框、形状或注释外观）在预览中可能不完全一致。导出的 PDF 会尽可能保留原始绘制指令。"
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha 查看器"
+text = "该 Alpha 查看器仍在完善——某些字体、颜色、透明效果和布局细节可能略有变化。请在分享前仔细检查生成的 PDF。"
 
 [pdfTextEditor.manual]
 mergeTooltip = "合并所选框"
@@ -6164,3 +6761,58 @@ title = "添加文本结果"
 
 [addText.error]
 failed = "向 PDF 添加文本时发生错误。"
+
+[mobileUpload]
+title = "从手机上传"
+description = "扫码上传照片。图像将自动转换为 PDF。"
+descriptionNoConvert = "从移动设备扫码上传照片。"
+error = "连接错误"
+pollingError = "检查文件时出错"
+sessionId = "会话 ID"
+sessionCreateError = "创建会话失败"
+expiryWarning = "会话即将过期"
+expiryWarningMessage = "此 QR 码将在 {{seconds}} 秒后过期。将自动生成新代码。"
+filesReceived = "已接收 {{count}} 个文件"
+connected = "移动设备已连接"
+instructions = "用手机相机扫描。图像会自动转换为 PDF。"
+instructionsNoConvert = "用手机相机扫描以上传文件。"
+
+[mobileScanner]
+title = "手机扫描器"
+noSession = "无效的会话"
+noSessionMessage = "请扫描有效的 QR 码以访问此页面。"
+validating = "正在验证会话..."
+sessionInvalid = "会话错误"
+sessionExpired = "此会话已过期。请刷新后重试。"
+sessionNotFound = "未找到会话。请刷新后重试。"
+sessionValidationError = "无法验证会话。请重试。"
+uploadSuccess = "上传成功！"
+uploadSuccessMessage = "您的图像已传输。"
+httpsRequired = "相机访问需要 HTTPS 或 localhost。请使用 HTTPS 或通过 localhost 访问。"
+uploadFailed = "上传失败，请重试。"
+uploading = "正在上传..."
+connected = "已连接"
+connecting = "正在连接..."
+chooseMethod = "选择上传方式"
+chooseMethodDescription = "选择您希望如何扫描并上传文档"
+camera = "相机"
+cameraDescription = "使用设备相机扫描文档，自动边缘检测"
+fileUpload = "文件上传"
+fileDescription = "从设备上传现有照片或文档"
+cameraAccessDenied = "相机访问被拒。请启用相机权限。"
+back = "返回"
+settings = "设置"
+edgeDetection = "边缘检测"
+flashlight = "手电筒"
+flash = "闪光灯"
+processing = "正在处理..."
+capture = "拍照"
+selectFilesPrompt = "选择要上传的文件"
+selectImage = "选择图像"
+preview = "预览"
+retake = "重拍"
+addToBatch = "加入批次"
+upload = "上传"
+batchImages = "批次"
+clearBatch = "清空"
+uploadAll = "全部上传"

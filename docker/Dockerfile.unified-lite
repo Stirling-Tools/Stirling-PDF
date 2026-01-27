@@ -2,7 +2,7 @@
 # Supports MODE parameter: BOTH (default), FRONTEND, BACKEND
 
 # Stage 1: Build Frontend
-FROM node:20-alpine AS frontend-build
+FROM node:20-alpine@sha256:658d0f63e501824d6c23e06d4bb95c71e7d704537c9d9272f488ac03a370d448 AS frontend-build
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY frontend .
 RUN DISABLE_ADDITIONAL_FEATURES=true VITE_API_BASE_URL=/ npm run build
 
 # Stage 2: Build Backend
-FROM gradle:8.14-jdk21 AS backend-build
+FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS backend-build
 
 COPY build.gradle .
 COPY settings.gradle .
@@ -30,11 +30,10 @@ WORKDIR /app
 COPY . .
 
 RUN DISABLE_ADDITIONAL_FEATURES=true \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Stage 3: Final unified ultra-lite image
-FROM alpine:3.22.1
+FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
 
 ARG VERSION_TAG
 

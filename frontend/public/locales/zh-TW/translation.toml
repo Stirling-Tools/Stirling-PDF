@@ -1,8 +1,11 @@
 unsavedChanges = "您對 PDF 的變更尚未儲存。"
+pendingRedactionsTitle = "未套用的塗黑"
+pendingRedactions = "您有尚未套用的塗黑，將會遺失。"
 areYouSure = "確定要離開嗎？"
 unsavedChangesTitle = "未儲存的變更"
 keepWorking = "繼續編輯"
 discardChanges = "捨棄並離開"
+discardRedactions = "捨棄並離開"
 applyAndContinue = "儲存並離開"
 exportAndContinue = "匯出並繼續"
 cancel = "取消"
@@ -303,6 +306,7 @@ selectOperation = "選擇操作"
 addOperationButton = "新增操作"
 pipelineHeader = "管道："
 saveButton = "下載"
+saveForFolderScanning = "儲存供資料夾掃描"
 validateButton = "驗證"
 
 [enterpriseEdition]
@@ -340,6 +344,10 @@ advance = "進階"
 edit = "檢視與編輯"
 popular = "熱門功能"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "偏好設定"
 
@@ -360,6 +368,7 @@ advanced = "進階"
 title = "安全性與身分驗證"
 security = "安全性"
 connections = "連線"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "授權與分析"
@@ -434,6 +443,32 @@ currentVersion = "目前版本"
 latestVersion = "最新版本"
 checkForUpdates = "檢查更新"
 viewDetails = "檢視詳細資料"
+serverNeedsUpdate = "伺服器需要由管理員更新"
+
+[settings.general.versionInfo]
+title = "版本資訊"
+description = "桌面版與伺服器版詳細資訊"
+desktop = "桌面版版本"
+server = "伺服器版本"
+
+[settings.security]
+title = "安全性"
+description = "更新您的密碼以保護帳戶安全。"
+
+[settings.security.password]
+subtitle = "變更您的密碼。更新後您將被登出。"
+required = "所有欄位皆為必填。"
+mismatch = "新密碼不相符。"
+error = "無法更新密碼。請確認您目前的密碼後再試一次。"
+success = "密碼更新成功。請重新登入。"
+ssoDisabled = "密碼變更由您的身分提供者管理。"
+current = "目前的密碼"
+currentPlaceholder = "輸入您目前的密碼"
+new = "新密碼"
+newPlaceholder = "輸入新密碼"
+confirm = "確認新密碼"
+confirmPlaceholder = "再次輸入您的新密碼"
+update = "更新密碼"
 
 [settings.hotkeys]
 title = "鍵盤快速鍵"
@@ -488,11 +523,16 @@ low = "低"
 title = "變更憑證"
 header = "更新您的帳號詳細資訊"
 changePassword = "您正在使用預設登入憑證。請輸入新密碼"
+ssoManaged = "您的帳戶由身分提供者管理。"
 newUsername = "新使用者名稱"
 oldPassword = "目前密碼"
 newPassword = "新密碼"
 confirmNewPassword = "確認新密碼"
 submit = "送出變更"
+credsUpdated = "帳戶已更新"
+description = "變更已儲存。請重新登入。"
+error = "無法更新使用者名稱。請確認您的密碼後再試一次。"
+changeUsername = "更新您的使用者名稱。更新後您將被登出。"
 
 [account]
 title = "帳號設定"
@@ -500,6 +540,8 @@ accountSettings = "帳號設定"
 adminSettings = "管理員設定 - 檢視和新增使用者"
 userControlSettings = "使用者控制設定"
 changeUsername = "修改使用者名稱"
+changeUsernameDescription = "更新您的使用者名稱。更新後您將被登出。"
+newUsernamePlaceholder = "輸入您的新使用者名稱"
 newUsername = "新使用者名稱"
 password = "確認密碼"
 oldPassword = "舊密碼"
@@ -514,6 +556,30 @@ property = "屬性"
 webBrowserSettings = "網頁瀏覽器設定"
 syncToBrowser = "同步帳號 → 瀏覽器"
 syncToAccount = "同步帳號 ← 瀏覽器"
+
+[account.mfa]
+title = "雙重驗證"
+setupFailed = "無法開始雙重驗證設定。請再試一次。"
+codeRequired = "請輸入驗證碼以繼續。"
+enabled = "已啟用雙重驗證。"
+enableFailed = "無法啟用雙重驗證。請檢查驗證碼並再試一次。"
+disabled = "已停用雙重驗證。"
+disableFailed = "無法停用雙重驗證。請檢查驗證碼並再試一次。"
+description = "為您的帳戶新增一層安全防護。"
+enableButton = "啟用雙重驗證"
+disableButton = "停用雙重驗證"
+setupTitle = "設定雙重驗證"
+setupDescription = "使用驗證器應用程式掃描 QR 碼，然後輸入 6 位數代碼以確認。"
+manualKey = "手動設定金鑰"
+secretWarning = "請妥善保管此金鑰。任何取得此金鑰的人都能產生有效的驗證碼。"
+codePlaceholder = "輸入 6 位數代碼"
+confirmEnable = "啟用"
+disableTitle = "停用雙重驗證"
+disableDescription = "請輸入有效的驗證碼以停用雙重驗證。"
+codeLabel = "驗證碼"
+confirmDisable = "停用"
+ssoDescription = "對於單一登入帳戶，雙重驗證由您的身分識別提供者管理。"
+ssoManaged = "請透過您的身分識別提供者設定 MFA。"
 
 [adminUserSettings]
 title = "使用者控制設定"
@@ -707,6 +773,11 @@ desc = "偵測並將掃描的照片分割為獨立頁面"
 tags = "簽名,署名"
 title = "簽章"
 desc = "透過繪圖、文字或影像新增簽章到 PDF"
+
+[home.annotate]
+tags = "註解,螢光標記,繪圖"
+title = "註解"
+desc = "在檢視器中突顯、手繪、加入註釋與形狀"
 
 [home.flatten]
 tags = "簡化,移除,互動"
@@ -919,7 +990,7 @@ title = "覆蓋 PDF"
 
 [home.pdfTextEditor]
 title = "PDF 文字編輯器"
-desc = "編輯 PDF 中既有的文字與圖片"
+desc = "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
 
 [home.addText]
 tags = "文字,註解,標籤"
@@ -930,6 +1001,7 @@ desc = "在 PDF 的任意位置新增自訂文字"
 addFiles = "新增檔案"
 uploadFromComputer = "從電腦上傳"
 openFromComputer = "從電腦開啟"
+mobileUpload = "從行動裝置上傳"
 
 [viewPdf]
 tags = "檢視,閱讀,註釋,文字,圖片"
@@ -1181,7 +1253,7 @@ selectFilesPlaceholder = "在主視圖選取檔案以開始"
 settings = "設定"
 conversionCompleted = "轉換完成"
 results = "結果"
-defaultFilename = "已轉換_檔案"
+defaultFilename = "converted_file"
 conversionResults = "轉換結果"
 convertFrom = "來源格式"
 convertTo = "目標格式"
@@ -1217,7 +1289,10 @@ downloadHtml = "下載中介的 HTML 檔而非 PDF"
 pdfaOptions = "PDF/A 選項"
 outputFormat = "輸出格式"
 pdfaNote = "PDF/A-1b 相容性較佳，PDF/A-2b 支援更多功能。"
+pdfaFormat = "PDF/A 格式"
 pdfaDigitalSignatureWarning = "該 PDF 的憑證簽章將會在下一步被移除"
+pdfxDigitalSignatureWarning = "該 PDF 含有數位簽章。此簽章將在下一步移除。"
+pdfxDescription = "PDF/X 是 ISO 標準的 PDF 子集，用於可靠的列印與圖形交換。"
 fileFormat = "檔案格式"
 wordDoc = "Word 文件"
 wordDocExt = "Word 文件（.docx）"
@@ -1245,6 +1320,37 @@ cbzOptions = "CBZ 轉 PDF 選項"
 optimizeForEbook = "為電子書閱讀器最佳化 PDF（使用 Ghostscript）"
 cbzOutputOptions = "PDF 轉 CBZ 選項"
 cbzDpi = "影像轉繪的 DPI"
+cbrOptions = "CBR 選項"
+cbrOutputOptions = "PDF 轉 CBR 選項"
+cbrDpi = "影像渲染的 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "電子書轉 PDF 選項"
+ebookOptionsDesc = "電子書轉換為 PDF 的選項"
+embedAllFonts = "內嵌所有字型"
+embedAllFontsDesc = "將電子書中的所有字型內嵌至產生的 PDF"
+includeTableOfContents = "包含目錄"
+includeTableOfContentsDesc = "在結果 PDF 中加入自動產生的目錄"
+includePageNumbers = "包含頁碼"
+includePageNumbersDesc = "在產生的 PDF 中加入頁碼"
+optimizeForEbookPdf = "為電子書閱讀器最佳化"
+optimizeForEbookPdfDesc = "為電子書閱讀最佳化 PDF（檔案較小、在電子紙裝置上有更佳顯示）"
+
+[convert.epubOptions]
+epubOptions = "PDF 轉電子書選項"
+epubOptionsDesc = "將 PDF 轉為 EPUB/AZW3 的選項"
+detectChapters = "偵測章節"
+detectChaptersDesc = "偵測看起來像章節的標題並插入 EPUB 分頁"
+targetDevice = "目標裝置"
+targetDeviceDesc = "選擇為閱讀裝置最佳化的輸出設定檔"
+outputFormat = "輸出格式"
+outputFormatDesc = "選擇電子書的輸出格式"
+tabletPhone = "平板／手機（含圖片）"
+kindleEink = "Kindle 電子墨水（文字最佳化）"
 
 [imageToPdf]
 tags = "轉換,img,jpg,圖片,照片"
@@ -1322,6 +1428,7 @@ applySignatures = "套用圖片"
 name = "圖片"
 placeholder = "上傳一張圖片"
 label = "圖片檔"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "設定圖片"
@@ -1361,6 +1468,11 @@ header = "新增附件"
 add = "新增附件"
 remove = "移除附件"
 embed = "內嵌附件"
+convertToPdfA3b = "轉換為 PDF/A-3b"
+convertToPdfA3bDescription = "建立含內嵌附件的封存用 PDF"
+convertToPdfA3bTooltip = "PDF/A-3b 是確保長期保存的封存格式。它允許將任意檔案格式作為附件內嵌。轉換需要 Ghostscript，大型檔案可能耗時較久。"
+convertToPdfA3bTooltipHeader = "關於 PDF/A-3b 轉換"
+convertToPdfA3bTooltipTitle = "功能說明"
 submit = "新增附件"
 
 [watermark]
@@ -1368,7 +1480,7 @@ title = "新增浮水印"
 desc = "將文字或影像浮水印加入 PDF 檔案"
 completed = "已加入浮水印"
 submit = "新增浮水印"
-filenamePrefix = "已加_浮水印"
+filenamePrefix = "watermarked"
 
 [watermark.error]
 failed = "為 PDF 新增浮水印時發生錯誤。"
@@ -2113,6 +2225,16 @@ tip = "目前不支援上傳多個"
 outputFormat = "輸出格式"
 pdfWithDigitalSignature = "該 PDF 的憑證簽章將會在下一步被移除"
 
+[pdfToPDFX]
+tags = "列印,標準,轉換,製作,印前,封存"
+title = "PDF 轉為 PDF/X"
+header = "PDF 轉為 PDF/X"
+credit = "本服務使用 Ghostscript 進行 PDF/X 轉換"
+submit = "轉換"
+tip = "目前不支援同時處理多個輸入"
+outputFormat = "輸出格式"
+pdfWithDigitalSignature = "該 PDF 含有數位簽章。此簽章將在下一步移除。"
+
 [PDFToWord]
 tags = "doc,docx,odt,word,轉換,格式,轉檔,office,微軟,docfile"
 title = "PDF 轉 Word"
@@ -2306,6 +2428,10 @@ saved = "已儲存"
 label = "上傳簽名影像"
 placeholder = "選擇影像檔"
 hint = "上傳您的簽名 PNG 或 JPG 影像"
+removeBackground = "移除白色背景（設為透明）"
+processing = "正在處理影像…"
+backgroundRemovalFailedTitle = "背景移除失敗"
+backgroundRemovalFailedMessage = "無法移除影像背景。將改用原始影像。"
 
 [sign.instructions]
 title = "如何加入簽名"
@@ -2350,6 +2476,11 @@ note = "扁平化會移除 PDF 的互動元素，使其無法編輯。"
 [flatten.options.flattenOnlyForms]
 label = "僅將表單平坦化"
 desc = "僅扁平化表單欄位，保留其他互動元素"
+
+[flatten.renderDpi]
+label = "渲染 DPI（選用，建議 150 DPI）"
+help = "留空以使用系統預設值。較高的 DPI 會使輸出更銳利，但會增加處理時間與檔案大小。"
+placeholder = "例如 150"
 
 [flatten.results]
 title = "扁平化結果"
@@ -2925,6 +3056,7 @@ header = "裁剪 PDF"
 submit = "送出"
 noFileSelected = "選取一個 PDF 檔以開始裁切"
 reset = "重設為整個 PDF"
+autoCrop = "自動裁切空白"
 
 [crop.preview]
 title = "裁切區域選擇"
@@ -3059,6 +3191,18 @@ other = "其他"
 perPageInfo = "每頁資訊"
 tableOfContents = "目錄"
 
+[getPdfInfo.compliance]
+notDetected = "未偵測到"
+passed = "通過"
+failed = "失敗"
+compliant = "合規"
+nonCompliant = "不合規"
+none = "未偵測到標準"
+passedCount = "通過"
+failedCount = "失敗"
+noVerification = "未執行驗證"
+noVerificationDesc = "未針對此文件驗證其是否符合 PDF 標準。"
+
 [getPdfInfo.other]
 attachments = "附件"
 embeddedFiles = "內嵌檔案"
@@ -3090,6 +3234,8 @@ permsRestricted = "{{count}} 個限制"
 permsMixed = "部分權限受限"
 hasCompliance = "具有符合性標準"
 noCompliance = "無符合性標準"
+compliancePassed = "{{standards}} 合規"
+complianceChecked = "已驗證標準（{{failed}} 項失敗）"
 basic = "基本資訊"
 documentInfo = "文件資訊"
 securityTitle = "安全性狀態"
@@ -3155,6 +3301,7 @@ title = "遮蔽方式"
 mode = "模式"
 automatic = "自動"
 automaticDesc = "根據搜尋詞遮蔽文字"
+automaticDisabledTooltip = "在檔案管理器中選取檔案可一次塗黑多個檔案"
 manual = "手動"
 manualDesc = "點擊並拖曳以遮蔽特定區域"
 manualComingSoon = "即將推出手動遮蔽"
@@ -3225,8 +3372,35 @@ text = "只比對完整單字，不進行部分比對。啟用後『John』不�
 title = "轉為 PDF-Image"
 text = "遮蔽後將 PDF 轉為以影像為基礎的 PDF，確保遮蔽方框後方的文字完全移除且無法復原。"
 
+[redact.tooltip.manual.header]
+title = "手動塗黑控制"
+
+[redact.tooltip.manual.markText]
+title = "標記文字工具"
+text = "直接在 PDF 上選取文字以標記為塗黑。點擊並拖曳可反白想要塗黑的特定文字。"
+
+[redact.tooltip.manual.markArea]
+title = "標記區域工具"
+text = "在 PDF 上繪製矩形區域以標記要塗黑的區塊。適用於塗黑圖片、簽名或不規則形狀。"
+
+[redact.tooltip.manual.apply]
+title = "套用塗黑"
+text = "標記完成後，按一下「套用」即可永久塗黑所有標記區域。待處理計數會顯示有多少塗黑已可套用。"
+bullet1 = "套用前可視需要標記任意多個區域"
+bullet2 = "所有待處理的塗黑會一次套用"
+bullet3 = "套用後無法復原"
+
 [redact.manual]
+title = "塗黑工具"
+instructions = "在 PDF 上選取文字或繪製區域，以標記要塗黑的內容。"
+markText = "標記文字"
+markArea = "標記區域"
+pendingLabel = "待處理："
+applyWarning = "⚠️ 永久套用，無法復原，且底層資料將被刪除"
+apply = "套用"
+noMarks = "沒有塗黑標記。請使用上方工具來標記要塗黑的內容。"
 header = "手動遮蔽"
+controlsTitle = "手動塗黑控制"
 textBasedRedaction = "文字式遮蔽"
 pageBasedRedaction = "以頁面為單位遮蔽"
 convertPDFToImageLabel = "將 PDF 轉為 PDF-Image（用於移除方框後方文字）"
@@ -3341,6 +3515,19 @@ placeholder = "輸入水平劃分的數量"
 [split-by-sections.vertical]
 label = "垂直劃分"
 placeholder = "輸入垂直劃分的數量"
+
+[split-by-sections.splitMode]
+label = "分割模式"
+description = "選擇要如何分割頁面"
+splitAll = "分割所有頁面"
+splitAllExceptFirst = "除第一頁外全部分割"
+splitAllExceptLast = "除最後一頁外全部分割"
+splitAllExceptFirstAndLast = "除第一與最後一頁外全部分割"
+custom = "自訂頁面"
+
+[split-by-sections.customPages]
+label = "自訂頁碼"
+placeholder = "例如 2,4,6"
 
 [AddStampRequest]
 tags = "圖章,新增圖片,中心影像,浮水印,PDF,嵌入,自訂"
@@ -3588,6 +3775,13 @@ passwordChangedSuccess = "密碼變更成功！請使用新密碼登入。"
 credentialsUpdated = "您的認證資訊已更新。請重新登入。"
 defaultCredentials = "預設登入憑證"
 changePasswordWarning = "首次登入後請更改您的密碼"
+mfaRequired = "需要雙重驗證碼"
+mfaCode = "驗證碼"
+enterMfaCode = "輸入 6 位數代碼"
+mfaPromptTitle = "雙重驗證"
+mfaPromptBody = "請輸入驗證器應用程式產生的驗證碼以繼續。"
+verifyingMfa = "驗證中..."
+verifyMfa = "驗證代碼"
 
 [login.slides.overview]
 alt = "Stirling PDF 概覽"
@@ -3637,7 +3831,7 @@ title = "PDF 轉為單一頁面"
 header = "PDF 轉為單一頁面"
 submit = "轉換為單一頁面"
 description = "此工具會將 PDF 的所有頁面合併成一個大型單頁。寬度將與原頁相同，但高度會是所有頁面高度之總和。"
-filenamePrefix = "單一_頁面"
+filenamePrefix = "single_page"
 
 [pdfToSinglePage.files]
 placeholder = "在主畫面選擇一個 PDF 檔開始使用"
@@ -3703,6 +3897,19 @@ filesize = "檔案大小"
 [compress.grayscale]
 label = "套用灰階進行壓縮"
 
+[compress.linearize]
+label = "線性化 PDF 以加快網頁檢視"
+
+[compress.lineArt]
+label = "將影像轉換為線條圖"
+description = "使用 ImageMagick 將頁面轉為高對比黑白，以達到最大壓縮率。"
+unavailable = "此伺服器未安裝或未啟用 ImageMagick"
+detailLevel = "細節層級"
+edgeEmphasis = "邊緣強化"
+edgeLow = "柔和"
+edgeMedium = "適中"
+edgeHigh = "強烈"
+
 [compress.tooltip.header]
 title = "壓縮設定總覽"
 
@@ -3720,6 +3927,10 @@ bullet2 = "較高數值降低檔案大小"
 title = "灰階"
 text = "選取此選項可將所有影像轉為黑白，對於掃描 PDF 或影像較多的文件，可大幅減少檔案大小。"
 
+[compress.tooltip.lineArt]
+title = "線條圖"
+text = "使用 ImageMagick 將頁面轉為高對比黑白。利用細節層級控制有多少內容會變成黑色，並用邊緣強化控制邊緣偵測的強度。"
+
 [compress.error]
 failed = "壓縮 PDF 時發生錯誤。"
 
@@ -3731,6 +3942,11 @@ failed = "壓縮 PDF 時發生錯誤。"
 [compress.selectText.1]
 _value = "壓縮設定"
 1 = "1-3 為一般 PDF 壓縮，</br> 4-6 為輕度圖片壓縮，</br> 7-9 為高強度圖片壓縮，將大幅降低圖片品質"
+
+[compress.compressionLevel]
+range1to3 = "較低的數值可保留品質，但檔案較大"
+range4to6 = "中等壓縮，品質適度降低"
+range7to9 = "較高的數值可大幅減少檔案大小，但可能降低影像清晰度"
 
 [decrypt]
 passwordPrompt = "此檔案已受密碼保護。請輸入密碼："
@@ -3971,22 +4187,97 @@ deleteSelected = "刪除所選頁面"
 closePdf = "關閉 PDF"
 exportAll = "匯出 PDF"
 downloadSelected = "下載選取的檔案"
-downloadAll = "全部下載"
-saveAll = "全部儲存"
+annotations = "註解"
+exportSelected = "匯出選取的頁面"
+saveChanges = "儲存變更"
 toggleTheme = "切換主題"
-toggleBookmarks = "切換書籤"
 language = "語言"
+toggleAnnotations = "切換註解可見度"
 search = "搜尋 PDF"
 panMode = "平移模式"
+applyRedactionsFirst = "請先套用塗黑"
 rotateLeft = "向左旋轉"
 rotateRight = "向右旋轉"
 toggleSidebar = "切換側邊欄"
-exportSelected = "匯出選取的頁面"
-toggleAnnotations = "切換註解可見度"
-annotationMode = "切換註解模式"
+toggleBookmarks = "切換書籤"
 print = "列印 PDF"
 draw = "繪圖"
+redact = "塗黑"
+exitRedaction = "退出塗黑模式"
 save = "儲存"
+downloadAll = "全部下載"
+saveAll = "全部儲存"
+
+[textAlign]
+left = "靠左"
+center = "置中"
+right = "靠右"
+
+[annotation]
+title = "註解"
+desc = "使用螢光標記、筆、文字與註釋。變更即時生效—無需扁平化。"
+highlight = "螢光標記"
+pen = "筆"
+text = "文字框"
+note = "註釋"
+rectangle = "長方形"
+ellipse = "橢圓"
+select = "選取"
+exit = "退出註解模式"
+strokeWidth = "線寬"
+opacity = "不透明度"
+strokeOpacity = "邊框不透明度"
+fillOpacity = "填滿不透明度"
+fontSize = "字型大小"
+chooseColor = "選擇顏色"
+color = "顏色"
+strokeColor = "邊框顏色"
+fillColor = "填滿顏色"
+underline = "底線"
+strikeout = "刪除線"
+squiggly = "波浪底線"
+inkHighlighter = "手繪螢光標記"
+freehandHighlighter = "手繪螢光標記"
+square = "正方形"
+circle = "圓形"
+polygon = "多邊形"
+line = "線條"
+stamp = "新增圖片"
+textMarkup = "文字標記"
+drawing = "繪圖"
+shapes = "形狀"
+notesStamps = "註釋與圖章"
+settings = "設定"
+borderOn = "邊框：開"
+borderOff = "邊框：關"
+editInk = "編輯筆"
+editLine = "編輯線條"
+editNote = "編輯註釋"
+editText = "編輯文字框"
+editTextMarkup = "編輯文字標記"
+editSelected = "編輯註解"
+editSquare = "編輯正方形"
+editCircle = "編輯圓形"
+editPolygon = "編輯多邊形"
+unsupportedType = "此註解類型尚未完全支援編輯。"
+textAlignment = "文字對齊"
+noteIcon = "註釋圖示"
+imagePreview = "預覽"
+contents = "文字"
+backgroundColor = "背景顏色"
+clearBackground = "移除背景"
+noBackground = "無背景"
+stampSettings = "圖章設定"
+savingCopy = "正在準備下載…"
+saveFailed = "無法儲存副本"
+saveReady = "下載已就緒"
+selectAndMove = "選取與編輯"
+editSelectDescription = "點選現有註解以編輯其顏色、不透明度、文字或大小。"
+editStampHint = "若要更換圖片，請刪除此圖章並新增一個新的。"
+editSwitchToSelect = "切換到「選取與編輯」以編輯此註解。"
+undo = "復原"
+redo = "重做"
+applyChanges = "套用變更"
 saveChanges = "儲存變更"
 
 [search]
@@ -4038,12 +4329,20 @@ settings = "設定"
 adminSettings = "管理員設定"
 allTools = "All Tools"
 reader = "閱讀器"
+tours = "導覽"
+showMeAround = "帶我逛逛"
+
+[quickAccess.toursTooltip]
+admin = "在此觀看導覽：工具導覽、V2 新版版面配置導覽，以及管理員導覽。"
+user = "在此觀看導覽：工具導覽與 V2 新版版面配置導覽。"
 
 [quickAccess.helpMenu]
 toolsTour = "工具導覽"
 toolsTourDesc = "了解這些工具能做什麼"
 adminTour = "管理導覽"
 adminTourDesc = "探索管理設定與功能"
+whatsNewTour = "查看 V2 的新功能"
+whatsNewTourDesc = "導覽更新後的版面配置"
 
 [admin]
 error = "錯誤"
@@ -4062,6 +4361,8 @@ fetchError = "載入設定失敗"
 saveError = "儲存設定失敗"
 saved = "設定已成功儲存"
 saveSuccess = "設定已成功儲存"
+success = "設定已成功儲存"
+error = "儲存設定失敗"
 save = "儲存變更"
 discard = "捨棄"
 restartRequired = "需要重新啟動"
@@ -4081,6 +4382,10 @@ hint = "您有未儲存的變更"
 title = "需要登入模式"
 message = "必須啟用登入模式才能修改管理設定。請在環境中設定 SECURITY_ENABLELOGIN=true 或在 settings.yml 設定 security.enableLogin: true，然後重新啟動伺服器。"
 readOnly = "下列設定僅示範參考值。啟用登入模式即可檢視並編輯實際組態。"
+
+[admin.settings.enterpriseRequired]
+title = "需要企業版授權"
+message = "存取 {{featureName}} 需要企業版授權。您目前看到的是示範資料，供參考。"
 
 [admin.settings.restart]
 title = "需要重新啟動"
@@ -4184,6 +4489,13 @@ description = "用於 HTML 轉 PDF 的 WeasyPrint 可執行檔路徑（留空使
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Unoconvert 可執行檔"
 description = "用於文件轉換的 LibreOffice unoconvert 路徑（留空使用預設：/opt/venv/bin/unoconvert）"
+
+[admin.settings.general.frontendUrl]
+label = "前端 URL"
+description = "前端的基礎 URL（例如：https://pdf.example.com）。用於電子郵件邀請連結與行動 QR 碼上傳。留空則使用後端 URL。"
+
+[admin.settings.badge]
+clickToUpgrade = "點擊查看方案詳情"
 
 [admin.settings.security]
 title = "安全性"
@@ -4321,6 +4633,19 @@ connect = "連線"
 disconnect = "中斷連線"
 disconnected = "已成功中斷提供者的連線"
 disconnectError = "無法中斷提供者的連線"
+mobileScannerConvertToPdf = "將影像轉為 PDF"
+mobileScannerConvertToPdfDesc = "自動將上傳的影像轉換為 PDF 格式。若停用，影像將維持原樣。"
+mobileScannerImageResolution = "影像解析度"
+mobileScannerImageResolutionDesc = "上傳影像的解析度。「縮減」會將影像縮放至最長邊 1200px 以降低檔案大小。"
+imageResolutionFull = "完整（原始尺寸）"
+imageResolutionReduced = "縮減（最長 1200px）"
+mobileScannerPageFormat = "頁面格式"
+mobileScannerPageFormatDesc = "轉換後影像的 PDF 頁面大小。「保留」會使用原始影像尺寸。"
+pageFormatKeep = "保留（原始尺寸）"
+pageFormatA4 = "A4（210×297mm）"
+pageFormatLetter = "Letter（8.5×11 吋）"
+mobileScannerStretchToFit = "等比填滿"
+mobileScannerStretchToFitDesc = "將影像拉伸以填滿整個頁面。若停用，影像將置中並保留長寬比。"
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO 自動登入"
@@ -4389,10 +4714,168 @@ description = "首次以 SAML2 登入時自動建立使用者帳戶"
 label = "阻止註冊"
 description = "阻止透過 SAML2 註冊新使用者"
 
+[admin.settings.connections.mobileScanner]
+label = "手機上傳"
+enable = "啟用 QR 碼上傳"
+description = "允許使用者透過掃描 QR 碼從行動裝置上傳檔案"
+note = "注意：需要先設定前端 URL。 "
+link = "在系統設定中設定"
+mobileScannerConvertToPdf = "將影像轉為 PDF"
+mobileScannerConvertToPdfDesc = "自動將上傳的影像轉換為 PDF 格式。若停用，影像將維持原樣。"
+mobileScannerImageResolution = "影像解析度"
+mobileScannerImageResolutionDesc = "上傳影像的解析度。「縮減」會將影像縮放至最長邊 1200px 以降低檔案大小。"
+imageResolutionFull = "完整（原始尺寸）"
+imageResolutionReduced = "縮減（最長 1200px）"
+mobileScannerPageFormat = "頁面格式"
+mobileScannerPageFormatDesc = "轉換後影像的 PDF 頁面大小。「保留」會使用原始影像尺寸。"
+pageFormatKeep = "保留（原始尺寸）"
+pageFormatA4 = "A4（210×297mm）"
+pageFormatLetter = "Letter（8.5×11 吋）"
+mobileScannerStretchToFit = "等比填滿"
+mobileScannerStretchToFitDesc = "將影像拉伸以填滿整個頁面。若停用，影像將置中並保留長寬比。"
+
+[admin.settings.telegram]
+title = "Telegram 機器人"
+description = "設定 Telegram 機器人的連線、存取控制與回饋行為。"
+
+[admin.settings.telegram.enabled]
+label = "啟用 Telegram 機器人"
+description = "允許使用者透過您設定的 Telegram 機器人操作 Stirling PDF。"
+
+[admin.settings.telegram.botUsername]
+label = "機器人使用者名稱"
+description = "您的 Telegram 機器人的公開使用者名稱。"
+
+[admin.settings.telegram.botToken]
+label = "機器人 Token"
+description = "由 BotFather 提供的 Telegram 機器人 API token。"
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "收件匣資料夾"
+description = "pipeline 目錄下儲存來自 Telegram 之傳入檔案的資料夾。"
+
+[admin.settings.telegram.customFolderSuffix]
+label = "使用自訂資料夾後綴"
+description = "在傳入檔案資料夾後附加聊天 ID，以分隔各聊天的上傳。"
+
+[admin.settings.telegram.accessControl]
+title = "存取控制"
+description = "限制哪些使用者或頻道可以與機器人互動。"
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "僅允許特定使用者 ID"
+description = "啟用後，只有清單中的使用者 ID 可使用機器人。"
+
+[admin.settings.telegram.allowUserIDs]
+label = "允許的使用者 ID"
+description = "輸入允許與機器人互動的 Telegram 使用者 ID。"
+placeholder = "新增使用者 ID 並按 Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "僅允許特定頻道 ID"
+description = "啟用後，只有清單中的頻道 ID 可使用機器人。"
+
+[admin.settings.telegram.allowChannelIDs]
+label = "允許的頻道 ID"
+description = "輸入允許與機器人互動的 Telegram 頻道 ID。"
+placeholder = "新增頻道 ID 並按 Enter"
+
+[admin.settings.telegram.processing]
+title = "處理"
+description = "控制 Telegram 上傳的輪詢間隔與處理逾時。"
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "處理逾時（秒）"
+description = "等待處理工作的最長時間，超過即回報錯誤。"
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "輪詢間隔（毫秒）"
+description = "檢查新的 Telegram 更新之間的間隔。"
+
+[admin.settings.telegram.feedback]
+title = "回饋訊息"
+description = "選擇機器人何時向使用者與頻道發送回饋。"
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "啟用回饋"
+description = "控制機器人是否要發送回饋訊息。"
+
+[admin.settings.telegram.feedback.channel]
+title = "頻道回饋規則"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "顯示「沒有有效文件」（頻道）"
+description = "對頻道上傳抑制「沒有有效文件」的回應。"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "顯示處理錯誤（頻道）"
+description = "將處理錯誤訊息傳送至頻道。"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "顯示錯誤訊息（頻道）"
+description = "向頻道顯示詳細錯誤訊息。"
+
+[admin.settings.telegram.feedback.user]
+title = "使用者回饋規則"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "顯示「沒有有效文件」（使用者）"
+description = "對使用者上傳抑制「沒有有效文件」的回應。"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "顯示處理錯誤（使用者）"
+description = "將處理錯誤訊息傳送給使用者。"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "顯示錯誤訊息（使用者）"
+description = "向使用者顯示詳細錯誤訊息。"
+
 [admin.settings.database]
 title = "資料庫"
 description = "設定企業部署的自訂資料庫連線。"
 configuration = "資料庫設定"
+backupTitle = "備份與還原"
+backupDescription = "直接從管理主控台管理 H2 備份。"
+loadError = "無法載入資料庫備份"
+backupCreated = "備份建立成功"
+backupFailed = "建立備份失敗"
+deleteTitle = "刪除備份"
+deleteConfirm = "要刪除此備份？此動作無法復原。"
+deleteSuccess = "已刪除備份"
+deleteFailed = "刪除備份失敗"
+deleteConfirmAction = "刪除備份"
+downloadFailed = "下載備份失敗"
+version = "H2 版本"
+embedded = "內嵌 H2"
+external = "外部資料庫"
+h2Only = "備份僅適用於內嵌的 H2 資料庫。"
+h2Hint = "將資料庫類型設為 H2，並停用自訂資料庫以啟用備份與還原。"
+manageBackups = "管理備份"
+refresh = "重新整理"
+createBackup = "建立備份"
+uploadTitle = "上傳與匯入"
+chooseFile = "選取 .sql 備份檔"
+importFromUpload = "匯入上傳"
+confirmImportTitle = "確認匯入資料庫"
+overwriteWarning = "警告：這將覆寫目前的資料庫。"
+overwriteWarningBody = "所有現有資料將被上傳的備份取代。此動作無法復原。"
+confirmCodeLabel = "輸入確認碼以繼續"
+enterCode = "輸入上方顯示的確認碼"
+confirmImport = "確認匯入"
+codeMismatch = "確認碼不相符"
+codeMismatchBody = "請依照顯示內容完整輸入確認碼以繼續。"
+selectFile = "請選取要匯入的 .sql 檔案"
+importSuccess = "備份匯入成功"
+importFailed = "匯入備份失敗"
+noBackups = "尚未找到任何備份。"
+unavailable = "目前的資料庫設定無法使用備份清單。"
+fileName = "檔案"
+created = "建立時間"
+size = "大小"
+actions = "操作"
+download = "下載"
+import = "匯入"
+delete = "刪除"
 
 [admin.settings.database.enableCustom]
 label = "啟用自訂資料庫"
@@ -4470,6 +4953,26 @@ description = "影像處理的最大 DPI（0 = 不限）"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata 目錄"
 description = "OCR 語言檔的 tessdata 目錄路徑"
+downloadMissingTitle = "未選取語言"
+downloadMissingBody = "請至少選取一種語言以進行下載。"
+downloadSuccessTitle = "語言已下載"
+downloadSuccessBody = "已儲存所選的 tessdata 語言。"
+downloadErrorTitle = "下載失敗"
+loadingLanguages = "正在載入已安裝的 tessdata 語言…"
+installedLanguages = "已安裝的 tessdata 語言"
+noLanguages = "在已設定的目錄中找不到任何 tessdata 語言。"
+downloadLabel = "下載其他 tessdata 語言"
+downloadPlaceholder = "選取語言"
+downloadNothingFound = "找不到其他語言"
+permissionNotice = "tessdata 路徑不可寫入。下載將在瀏覽器中開啟；請手動將 .traineddata 檔案儲存到 tessdata 資料夾中。"
+manualLinks = "手動下載：按一下連結，並將檔案放入 tessdata 資料夾。"
+downloadButton = "下載所選語言"
+downloadInvalidTitle = "無效的選取"
+downloadInvalidBody = "部分所選語言無法下載。請重新整理並從清單中選取。"
+downloadErrorNetwork = "由於網路錯誤，下載失敗。請檢查您的連線後再試一次。"
+downloadErrorServer = "伺服器在下載 tessdata 語言時發生錯誤。請稍後再試。"
+downloadErrorPermission = "tessdata 目錄不可寫入：{{message}}。請選擇可寫入的目錄（例如應用程式資料夾下）或調整權限。"
+downloadErrorGeneric = "下載失敗：{{message}}。請稍後再試。"
 
 [admin.settings.advanced.disableSanitize]
 label = "停用 HTML 淨化"
@@ -4569,6 +5072,10 @@ description = "允許管理員透過電子郵件邀請使用者，並自動產�
 [admin.settings.mail.frontendUrl]
 label = "前端 URL"
 description = "前端的基底 URL（例如：https://pdf.example.com）。用於在電子郵件中產生邀請連結。留空則使用後端 URL。"
+
+[admin.settings.mail.frontendUrlNote]
+note = "注意：需要先設定前端 URL。 "
+link = "在系統設定中設定"
 
 [admin.settings.legal]
 title = "法律文件"
@@ -4754,6 +5261,9 @@ googleDriveShort = "雲端硬碟"
 myFiles = "我的檔案"
 noRecentFiles = "找不到最近的檔案"
 googleDriveNotAvailable = "無法使用 Google Drive 整合"
+mobileUpload = "行動上傳"
+mobileShort = "行動"
+mobileUploadNotAvailable = "未啟用行動上傳"
 downloadSelected = "下載所選"
 saveSelected = "儲存已選"
 openFiles = "開啟檔案"
@@ -4966,6 +5476,7 @@ desc = "透過串接多個 PDF 操作來建立多步驟工作流程。非常適�
 invalidStep = "無效的步驟"
 reviewTitle = "自動化結果"
 copyToSaved = "複製到已儲存"
+exportForFolderScanning = "匯出供資料夾掃描"
 
 [automate.files]
 placeholder = "選取要由此自動化流程處理的檔案"
@@ -4987,6 +5498,7 @@ createTitle = "建立自動化"
 editTitle = "編輯自動化"
 intro = "自動化會依序執行工具。開始之前，請按您希望的順序加入工具。"
 save = "儲存自動化"
+exportForFolderScanning = "匯出供資料夾掃描"
 
 [automate.creation.name]
 label = "自動化名稱"
@@ -5069,6 +5581,7 @@ loading = "正在載入..."
 back = "返回"
 continue = "繼續"
 error = "錯誤"
+save = "儲存"
 
 [config.overview]
 title = "應用程式設定"
@@ -5130,6 +5643,15 @@ warning = "⚠️ 警告：此動作將產生新的 API 金鑰，並使您先前
 impact = "任何目前使用這些金鑰的應用程式或服務都會停止運作，直到您更新為新金鑰。"
 confirmPrompt = "確定要繼續嗎？"
 confirmCta = "重新產生金鑰"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API 金鑰錯誤"
+failedToCreateApiKey = "建立 API 金鑰失敗。"
+failedToRetrieveApiKey = "無法自回應中取得 API 金鑰。"
+failedToFetchApiKey = "擷取 API 金鑰失敗。"
+apiKeyRefreshed = "API 金鑰已更新"
+apiKeyRefreshedBody = "您的 API 金鑰已成功重新整理。"
+failedToRefreshApiKey = "重新整理 API 金鑰失敗。"
 
 [AddAttachmentsRequest]
 attachments = "選擇附件"
@@ -5235,6 +5757,16 @@ finish = "完成"
 startTour = "開始導覽"
 startTourDescription = "帶您導覽 Stirling PDF 的重點功能"
 
+[onboarding.whatsNew]
+quickAccess = "從<strong>快速存取</strong>側欄開始，可在閱讀器、Automate、您的檔案與所有導覽間快速切換。"
+leftPanel = "左側的<strong>工具</strong>面板列出您可以做的所有事。瀏覽分類或搜尋以快速找到工具。"
+fileUpload = "使用<strong>檔案</strong>按鈕上傳或選擇最近的 PDF。我們會載入範例以展示工作區。"
+rightRail = "<strong>右側欄</strong>提供快速操作，可選擇檔案、變更主題或語言，以及下載結果。"
+topBar = "頂端列可在<strong>檢視器</strong>、<strong>頁面編輯器</strong>與<strong>使用中檔案</strong>間切換。"
+pageEditorView = "切換到頁面編輯器以重新排序、旋轉或刪除頁面。"
+activeFilesView = "使用「使用中檔案」查看所有已開啟的內容並選擇要處理的項目。"
+wrapUp = "以上是 V2 的新內容。隨時開啟<strong>導覽</strong>選單以重播本導覽、工具導覽或管理員導覽。"
+
 [onboarding.welcomeModal]
 title = "歡迎使用 Stirling PDF！"
 description = "要不要來個 1 分鐘的快速導覽，了解重點功能與如何開始？"
@@ -5255,6 +5787,10 @@ download = "下載 →"
 showMeAround = "帶我導覽"
 skipTheTour = "略過導覽"
 
+[onboarding.tourOverview]
+title = "導覽總覽"
+body = "Stirling PDF V2 隨附數十種工具與全新版面配置。快速導覽可讓您了解有哪些改變以及在哪裡找到所需功能。"
+
 [onboarding.serverLicense]
 skip = "暫時略過"
 seePlans = "查看方案 →"
@@ -5262,7 +5798,7 @@ upgrade = "立即升級 →"
 freeTitle = "伺服器授權"
 overLimitTitle = "需要伺服器授權"
 overLimitBody = "我們的授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。你有 <strong>{{overLimitUserCopy}}</strong> 位 Stirling 使用者。若要不中斷使用，請升級至 Stirling Server 方案 - <strong>不限席次</strong>、PDF 文字編輯，以及完整管理控制，每台伺服器 $99/月。"
-freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充，我們建議選用 Stirling Server 方案 - <strong>不限席次</strong> 與 <strong>SSO 支援</strong>，每伺服器每月 $99。"
+freeBody = "我們的 <strong>Open-Core</strong> 授權允許每台伺服器最多 <strong>{{freeTierLimit}}</strong> 位使用者免費使用。若要無縫擴充並搶先體驗全新的 <strong>PDF 文字編輯工具</strong>，建議升級至 Stirling Server 方案 - 完整編輯與 <strong>不限席次</strong>，每台伺服器 $99/月。"
 
 [onboarding.desktopInstall]
 title = "下載"
@@ -5337,9 +5873,11 @@ username = "使用者名稱（電子郵件）"
 usernamePlaceholder = "user@example.com"
 password = "密碼"
 passwordPlaceholder = "輸入密碼"
+passwordRequired = "需要密碼"
 role = "角色"
 team = "團隊（選填）"
 teamPlaceholder = "選擇團隊"
+authType = "驗證類型"
 forcePasswordChange = "首次登入時強制變更密碼"
 cancel = "取消"
 submit = "新增成員"
@@ -5347,6 +5885,13 @@ usernameRequired = "需要使用者名稱與密碼"
 passwordTooShort = "密碼至少需 6 個字元"
 success = "已成功建立使用者"
 error = "建立使用者失敗"
+forceMFA = "於下次登入強制設定 MFA"
+
+[workspace.people.authType]
+password = "密碼"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "使用者將透過 SSO 供應商進行驗證"
 
 [workspace.people.editMember]
 title = "編輯成員"
@@ -5449,6 +5994,11 @@ fromLicense = "來自授權"
 slotsAvailable = "尚有 {{count}} 個使用者名額"
 noSlotsAvailable = "沒有可用名額"
 currentUsage = "目前使用 {{current}} / {{max}} 個使用者授權"
+
+[workspace.people.mfa]
+adminDisableSuccess = "已成功為使用者停用 MFA"
+adminDisableError = "無法為使用者停用 MFA"
+disableByAdmin = "停用 MFA"
 
 [workspace.teams]
 title = "團隊"
@@ -5568,6 +6118,28 @@ contactSales = "聯絡業務"
 contactToUpgrade = "聯絡我們以升級或自訂您的方案"
 maxUsers = "使用者上限"
 upTo = "最多"
+getLicense = "取得伺服器授權"
+upgradeToEnterprise = "升級至企業版"
+selectPeriod = "選擇計費週期"
+monthlyBilling = "按月計費"
+yearlyBilling = "按年計費"
+checkoutOpened = "已開啟結帳"
+checkoutInstructions = "請在 Stripe 分頁完成購買。付款後返回此處並重新整理頁面以啟用您的授權。您也會收到一封包含授權金鑰的電子郵件。"
+activateLicense = "啟用您的授權"
+
+[plan.static.licenseActivation]
+checkoutOpened = "已在新分頁開啟結帳"
+instructions = "請在 Stripe 分頁完成購買。付款完成後，您將收到一封包含授權金鑰的電子郵件。"
+enterKey = "在下方輸入您的授權金鑰以啟用方案："
+keyDescription = "貼上電子郵件中的授權金鑰"
+activate = "啟用授權"
+doLater = "稍後再說"
+success = "授權已啟用！"
+successMessage = "您的授權已成功啟用。您現在可以關閉此視窗。"
+
+[plan.static.billingPortal]
+title = "需要電子郵件驗證"
+message = "您需要在 Stripe 計費入口網站驗證電子郵件地址。請至信箱查收登入連結。"
 
 [plan.period]
 month = "月"
@@ -5771,6 +6343,8 @@ notAvailable = "稽核系統不可用"
 notAvailableMessage = "稽核系統未設定或不可用。"
 disabled = "已停用稽核記錄"
 disabledMessage = "請在應用程式設定中啟用稽核記錄以追蹤系統事件。"
+enterpriseRequired = "需要企業版授權"
+enterpriseRequiredMessage = "稽核記錄系統是企業版功能。請升級至企業版授權以存取稽核記錄與分析。"
 
 [audit.error]
 title = "載入稽核系統時發生錯誤"
@@ -5868,6 +6442,7 @@ endpoint = "端點"
 visits = "造訪數"
 percentage = "百分比"
 noData = "無可用資料"
+unknownEndpoint = "未知端點"
 
 [backendHealth]
 checking = "正在檢查後端狀態..."
@@ -5942,6 +6517,7 @@ description = "輸入你自託管 Stirling PDF 伺服器的完整 URL"
 
 [setup.server.error]
 emptyUrl = "請輸入伺服器 URL"
+invalidUrl = "URL 格式無效。請輸入有效的 URL，如 https://your-server.com"
 unreachable = "無法連線至伺服器"
 testFailed = "連線測試失敗"
 configFetch = "無法擷取伺服器組態。請檢查 URL 後再試一次。"
@@ -5960,6 +6536,7 @@ connectingTo = "正在連線到："
 submit = "登入"
 signInWith = "以此登入"
 oauthPending = "正在開啟瀏覽器進行驗證..."
+sso = "單一登入"
 orContinueWith = "或改用 Email 繼續"
 serverRequirement = "注意：伺服器必須啟用登入功能。"
 showInstructions = "如何啟用？"
@@ -5974,7 +6551,7 @@ label = "使用者名稱"
 placeholder = "輸入你的使用者名稱"
 
 [setup.login.email]
-label = "電子郵件"
+label = "Email"
 placeholder = "輸入你的 Email"
 
 [setup.login.password]
@@ -6025,6 +6602,8 @@ reset = "重設變更"
 downloadJson = "下載 JSON"
 generatePdf = "產生 PDF"
 saveChanges = "儲存變更"
+applyChanges = "套用變更"
+downloadCopy = "下載副本"
 
 [pdfTextEditor.options.autoScaleText]
 title = "自動縮放文字以符合方框"
@@ -6042,6 +6621,24 @@ descriptionInline = "提示：按住 Ctrl（或 Cmd）或 Shift 以多選文字�
 [pdfTextEditor.options.forceSingleElement]
 title = "將已編輯文字鎖定為單一 PDF 元素"
 description = "啟用時，編輯器會將每個已編輯文字框匯出為一個 PDF 文字元素，以避免字形重疊或字型混用。"
+
+[pdfTextEditor.options.advanced]
+title = "進階設定"
+
+[pdfTextEditor.tooltip.header]
+title = "預覽限制"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "文字與影像焦點"
+text = "此工作區專注於編輯文字與重新定位內嵌影像。複雜的頁面圖稿、表單元件與分層圖形會在匯出時保留，但在此處不支援完整編輯。"
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "預覽差異"
+text = "某些視覺元素（例如表格邊框、形狀或註解外觀）在預覽中可能不完全一致。匯出的 PDF 會在可行時保留原始繪圖指令。"
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alpha 檢視器"
+text = "此 Alpha 檢視器仍在演進中—某些字型、顏色、透明效果與版面細節可能略有變動。分享前請再次確認產生的 PDF。"
 
 [pdfTextEditor.manual]
 mergeTooltip = "合併所選方框"
@@ -6164,3 +6761,58 @@ title = "新增文字結果"
 
 [addText.error]
 failed = "將文字新增到 PDF 時發生錯誤。"
+
+[mobileUpload]
+title = "從行動裝置上傳"
+description = "掃描即可上傳相片。影像會自動轉換為 PDF。"
+descriptionNoConvert = "掃描即可從行動裝置上傳相片。"
+error = "連線錯誤"
+pollingError = "檢查檔案時發生錯誤"
+sessionId = "工作階段 ID"
+sessionCreateError = "建立工作階段失敗"
+expiryWarning = "工作階段即將到期"
+expiryWarningMessage = "此 QR 碼將在 {{seconds}} 秒後到期。系統會自動產生新的 QR 碼。"
+filesReceived = "已接收 {{count}} 個檔案"
+connected = "已連線至行動裝置"
+instructions = "以手機相機掃描。影像會自動轉為 PDF。"
+instructionsNoConvert = "以手機相機掃描以上傳檔案。"
+
+[mobileScanner]
+title = "行動掃描器"
+noSession = "無效的工作階段"
+noSessionMessage = "請掃描有效的 QR 碼以存取此頁面。"
+validating = "正在驗證工作階段…"
+sessionInvalid = "工作階段錯誤"
+sessionExpired = "此工作階段已到期。請重新整理後再試一次。"
+sessionNotFound = "找不到工作階段。請重新整理後再試一次。"
+sessionValidationError = "無法驗證工作階段。請再試一次。"
+uploadSuccess = "上傳成功！"
+uploadSuccessMessage = "您的影像已傳送完成。"
+httpsRequired = "相機存取需要 HTTPS 或 localhost。請使用 HTTPS 或透過 localhost 存取。"
+uploadFailed = "上傳失敗。請再試一次。"
+uploading = "上傳中…"
+connected = "已連線"
+connecting = "連線中…"
+chooseMethod = "選擇上傳方式"
+chooseMethodDescription = "選擇您要如何掃描並上傳文件"
+camera = "相機"
+cameraDescription = "使用裝置相機掃描文件並自動進行邊緣偵測"
+fileUpload = "檔案上傳"
+fileDescription = "從裝置上傳現有的相片或文件"
+cameraAccessDenied = "相機權限被拒。請啟用相機存取權。"
+back = "返回"
+settings = "設定"
+edgeDetection = "邊緣偵測"
+flashlight = "手電筒"
+flash = "閃光燈"
+processing = "處理中…"
+capture = "拍攝照片"
+selectFilesPrompt = "選擇要上傳的檔案"
+selectImage = "選擇圖片"
+preview = "預覽"
+retake = "重拍"
+addToBatch = "加入批次"
+upload = "上傳"
+batchImages = "批次"
+clearBatch = "清除"
+uploadAll = "全部上傳"

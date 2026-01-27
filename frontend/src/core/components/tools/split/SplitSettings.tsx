@@ -3,6 +3,7 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { SPLIT_METHODS } from '@app/constants/splitConstants';
 import { SplitParameters } from '@app/hooks/tools/split/useSplitParameters';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;
@@ -62,6 +63,7 @@ const SplitSettings = ({
           { value: 'CUSTOM', label: t("split-by-sections.splitMode.custom", "Custom pages") },
         ]}
         disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
       {parameters.splitMode === 'CUSTOM' && (
         <TextInput

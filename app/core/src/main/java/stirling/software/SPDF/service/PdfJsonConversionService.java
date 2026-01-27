@@ -3424,7 +3424,7 @@ public class PdfJsonConversionService {
                         }
                         break;
                     case "Tj":
-                        if (i == 0 || !(tokens.get(i - 1) instanceof COSString cosString)) {
+                        if (i == 0 || !(tokens.get(i - 1) instanceof COSString)) {
                             log.debug(
                                     "Encountered Tj without preceding string operand; aborting rewrite");
                             return false;
@@ -3435,7 +3435,8 @@ public class PdfJsonConversionService {
                                 i,
                                 cursor.remaining());
                         if (!rewriteShowText(
-                                cosString,
+                                tokens,
+                                i - 1,
                                 currentFont,
                                 currentFontModel,
                                 currentFontName,
@@ -3496,7 +3497,8 @@ public class PdfJsonConversionService {
     }
 
     private boolean rewriteShowText(
-            COSString cosString,
+            List<Object> tokens,
+            int tokenIndex,
             PDFont font,
             PdfJsonFont fontModel,
             String expectedFontName,
@@ -3509,6 +3511,7 @@ public class PdfJsonConversionService {
                     expectedFontName);
             return false;
         }
+        COSString cosString = (COSString) tokens.get(tokenIndex);
         int glyphCount = countGlyphs(cosString, font);
         log.trace(
                 "rewriteShowText consuming {} glyphs at cursor index {} for font {}",
@@ -3525,7 +3528,7 @@ public class PdfJsonConversionService {
             return false;
         }
         if (removeOnly) {
-            cosString.setValue(new byte[0]);
+            tokens.set(tokenIndex, new COSString(new byte[0]));
             return true;
         }
         MergedText replacement = mergeText(consumed);
@@ -3540,7 +3543,7 @@ public class PdfJsonConversionService {
                         replacement.text());
                 return false;
             }
-            cosString.setValue(encoded);
+            tokens.set(tokenIndex, new COSString(encoded));
             return true;
         } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
             log.debug(

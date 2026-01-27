@@ -6,7 +6,7 @@
 # ========================================
 # STAGE 1: Build stage - Alpine with Gradle
 # ========================================
-FROM gradle:8.14-jdk21 AS build
+FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
 
 COPY build.gradle .
 COPY settings.gradle .
@@ -25,7 +25,6 @@ COPY . .
 
 # Build the application (server-only JAR - no UI, includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # ========================================

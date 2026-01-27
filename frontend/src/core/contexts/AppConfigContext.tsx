@@ -26,6 +26,8 @@ export interface AppConfig {
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
+  enableOAuth?: boolean;
+  enableSaml?: boolean;
   isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;

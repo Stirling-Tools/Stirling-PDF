@@ -12,8 +12,9 @@ public class H2SQLCondition implements Condition {
         boolean enableCustomDatabase =
                 env.getProperty("system.datasource.enableCustomDatabase", Boolean.class, false);
 
-        if (enableCustomDatabase) {
-            return false;
+        // If custom database is not enabled, H2 is used by default
+        if (!enableCustomDatabase) {
+            return true;
         }
 
         String dataSourceType = env.getProperty("system.datasource.type", String.class, "");
