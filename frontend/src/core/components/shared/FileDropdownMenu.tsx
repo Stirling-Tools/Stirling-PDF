@@ -1,15 +1,18 @@
 import React from 'react';
-import { Menu, Loader, Group, Text } from '@mantine/core';
+import { Menu, Loader, Group, Text, ActionIcon, Tooltip } from '@mantine/core';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import CloseIcon from '@mui/icons-material/Close';
 import FitText from '@app/components/shared/FitText';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { useTranslation } from 'react-i18next';
 
 interface FileDropdownMenuProps {
   displayName: string;
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex: number;
   onFileSelect?: (index: number) => void;
+  onFileRemove?: (fileId: string, index: number) => void;
   switchingTo?: string | null;
   viewOptionStyle: React.CSSProperties;
   pillRef?: React.RefObject<HTMLDivElement>;
@@ -20,9 +23,12 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   activeFiles,
   currentFileIndex,
   onFileSelect,
+  onFileRemove,
   switchingTo,
   viewOptionStyle,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Menu trigger="click" position="bottom" width="30rem">
       <Menu.Target>
@@ -68,11 +74,39 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                     <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
                   </PrivateContent>
                 </div>
-                {file.versionNumber && file.versionNumber > 1 && (
-                  <Text size="xs" c="dimmed">
-                    v{file.versionNumber}
-                  </Text>
-                )}
+                <Group gap="xs" style={{ flexShrink: 0 }}>
+                  {file.versionNumber && file.versionNumber > 1 && (
+                    <Text size="xs" c="dimmed">
+                      v{file.versionNumber}
+                    </Text>
+                  )}
+                  {onFileRemove && (
+                    <Tooltip label={t('close', 'Close')} position="top" withArrow>
+                      <ActionIcon
+                        size="xs"
+                        variant="subtle"
+                        color="gray"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onFileRemove(file.fileId, index);
+                        }}
+                        style={{
+                          opacity: 0.6,
+                          transition: 'opacity 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '1';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '0.6';
+                        }}
+                        aria-label={t('close', 'Close')}
+                      >
+                        <CloseIcon style={{ fontSize: 14 }} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </Group>
               </Group>
             </Menu.Item>
           );

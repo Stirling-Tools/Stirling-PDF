@@ -29,6 +29,7 @@ const createViewOptions = (
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
+  onFileRemove?: (fileId: string, index: number) => void,
   pageEditorState?: PageEditorDropdownState,
   customViews?: CustomWorkbenchViewInstance[]
 ) => {
@@ -47,6 +48,7 @@ const createViewOptions = (
         activeFiles={activeFiles}
         currentFileIndex={currentFileIndex}
         onFileSelect={onFileSelect}
+        onFileRemove={onFileRemove}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
       />
@@ -132,6 +134,7 @@ interface TopControlsProps {
   activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex?: number;
   onFileSelect?: (index: number) => void;
+  onFileRemove?: (fileId: string, index: number) => void;
 }
 
 const TopControls = ({
@@ -141,6 +144,7 @@ const TopControls = ({
   activeFiles = [],
   currentFileIndex = 0,
   onFileSelect,
+  onFileRemove,
 }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
@@ -176,9 +180,10 @@ const TopControls = ({
     activeFiles,
     currentFileIndex,
     onFileSelect,
+    onFileRemove,
     pageEditorState,
     customViews
-  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState, customViews]);
+  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, onFileRemove, pageEditorState, customViews]);
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">

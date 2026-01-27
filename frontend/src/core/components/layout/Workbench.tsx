@@ -3,7 +3,7 @@ import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
-import { useFileState } from '@app/contexts/FileContext';
+import { useFileState, useFileActions } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
@@ -26,6 +26,7 @@ export default function Workbench() {
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
+  const { actions: fileActions } = useFileActions();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
@@ -61,12 +62,34 @@ export default function Workbench() {
   const handleFileSelect = useCallback((index: number) => {
     // Don't do anything if selecting the same file
     if (index === activeFileIndex) return;
-    
+
     // requestNavigation handles the unsaved changes check internally
     requestNavigation(() => {
       setActiveFileIndex(index);
     });
   }, [activeFileIndex, requestNavigation, setActiveFileIndex]);
+
+  // Handle file removal from dropdown
+  const handleFileRemove = useCallback(async (fileId: string, index: number) => {
+    // Remove the file from FileContext (handles memory cleanup)
+    await fileActions.removeFiles([fileId]);
+
+    // Adjust activeFileIndex if needed
+    if (activeFiles.length > 1) {
+      if (index === activeFileIndex) {
+        // Removing the active file - switch to the next file (or previous if it's the last)
+        const newIndex = index >= activeFiles.length - 1 ? Math.max(0, index - 1) : index;
+        setActiveFileIndex(newIndex);
+      } else if (index < activeFileIndex) {
+        // Removing a file before the active one - decrement active index
+        setActiveFileIndex(activeFileIndex - 1);
+      }
+      // If removing a file after the active one, no index adjustment needed
+    } else {
+      // Last file removed - reset to index 0 (will show landing page)
+      setActiveFileIndex(0);
+    }
+  }, [activeFiles.length, activeFileIndex, fileActions, setActiveFileIndex]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -199,6 +222,7 @@ export default function Workbench() {
           })}
           currentFileIndex={activeFileIndex}
           onFileSelect={handleFileSelect}
+          onFileRemove={handleFileRemove}
         />
       )}
 

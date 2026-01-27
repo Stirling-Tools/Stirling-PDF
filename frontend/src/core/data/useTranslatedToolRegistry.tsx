@@ -811,7 +811,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devFolderScanning.desc", "Link to automated folder scanning guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/",
+        link: "https://docs.stirlingpdf.com/Configuration/Folder%20Scanning/",
         synonyms: getSynonyms(t, "devFolderScanning"),
         supportsAutomate: false,
         automationSettings: null
@@ -823,7 +823,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devSsoGuide.desc", "Link to SSO guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
+        link: "https://docs.stirlingpdf.com/Configuration/Single%20Sign-On%20Configuration/",
         synonyms: getSynonyms(t, "devSsoGuide"),
         supportsAutomate: false,
         automationSettings: null
