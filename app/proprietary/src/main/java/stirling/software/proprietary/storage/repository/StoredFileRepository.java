@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.workflow.model.WorkflowSession;
 
 public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     Optional<StoredFile> findByIdAndOwner(Long id, User owner);
@@ -49,4 +50,7 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
                     + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
                     + "FROM StoredFile f")
     long sumStorageBytesTotal();
+
+    /** Finds all files associated with a workflow session. */
+    List<StoredFile> findByWorkflowSession(WorkflowSession workflowSession);
 }
