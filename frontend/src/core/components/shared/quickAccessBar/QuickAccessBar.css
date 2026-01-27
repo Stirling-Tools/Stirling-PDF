@@ -270,6 +270,7 @@
   position: fixed;
   z-index: 1000;
   width: 21rem;
+  max-height: calc(100vh - 4rem);
   opacity: 0;
   pointer-events: none;
   transform: translateX(-8px) scale(0.98);
@@ -288,6 +289,9 @@
   border: 1px solid var(--border-default);
   box-shadow: 0 18px 36px color-mix(in srgb, var(--text-primary) 12%, transparent);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 4rem);
 }
 
 .quick-access-popout__header {
@@ -297,6 +301,7 @@
   grid-template-columns: 2.25rem 1fr 2.25rem;
   align-items: center;
   padding: 0.75rem 0.75rem;
+  flex-shrink: 0;
 }
 
 [data-mantine-color-scheme="light"] .quick-access-popout__header {
@@ -363,10 +368,39 @@
   transform: translateX(-50%);
 }
 
+/* Tab-based positioning for 3 panels */
+.quick-access-popout__body.tab-access,
+.quick-access-popout__body.tab-requestSignatures,
+.quick-access-popout__body.tab-signRequests {
+  width: 300%;
+}
+
+.quick-access-popout__body.tab-access {
+  transform: translateX(0%);
+}
+
+.quick-access-popout__body.tab-requestSignatures {
+  transform: translateX(-33.333%);
+}
+
+.quick-access-popout__body.tab-signRequests {
+  transform: translateX(-66.666%);
+}
+
 .quick-access-popout__panel {
   width: 50%;
   padding: 1rem 1rem 0.75rem;
   box-sizing: border-box;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: top;
+}
+
+/* 3-panel layout for tab system */
+.quick-access-popout__body.tab-access .quick-access-popout__panel,
+.quick-access-popout__body.tab-requestSignatures .quick-access-popout__panel,
+.quick-access-popout__body.tab-signRequests .quick-access-popout__panel {
+  width: 33.333%;
 }
 
 .quick-access-popout__panel--invite {
@@ -448,6 +482,12 @@
   align-items: center;
 }
 
+.quick-access-popout__row-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .quick-access-popout__icon-bubble {
   width: 2rem;
   height: 2rem;
@@ -463,11 +503,17 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .quick-access-popout__row-subtitle {
   font-size: 0.75rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .quick-access-popout__person {
@@ -584,6 +630,7 @@
   padding: 0.75rem 1rem 1rem;
   background: var(--bg-muted);
   border-top: 1px solid var(--border-default);
+  flex-shrink: 0;
 }
 
 .quick-access-popout__error {
@@ -625,6 +672,114 @@
   padding: 0.5rem 0.75rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* Tab navigation */
+.quick-access-popout__tab-nav {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+}
+
+.quick-access-popout__tab-button {
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: color 150ms, border-color 150ms;
+}
+
+.quick-access-popout__tab-button.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--btn-open-file);
+  font-weight: 500;
+}
+
+.quick-access-popout__tab-button:hover {
+  color: var(--text-primary);
+}
+
+/* Sign request row styling */
+.quick-access-popout__sign-request-row {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background 150ms;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quick-access-popout__sign-request-row:hover {
+  background: color-mix(in srgb, var(--text-primary) 5%, var(--bg-surface));
+}
+
+.quick-access-popout__sign-request-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-access-popout__sign-request-badge {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+/* Sign popover height constraints */
+.quick-access-sign-popout .quick-access-popout__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.quick-access-sign-popout .quick-access-popout__header {
+  flex-shrink: 0;
+}
+
+.quick-access-sign-popout .quick-access-popout__tab-nav {
+  flex-shrink: 0;
+}
+
+.quick-access-sign-popout .quick-access-popout__footer {
+  flex-shrink: 0;
+}
+
+/* Sign popover 3-panel layout */
+.quick-access-sign-popout .quick-access-popout__body {
+  width: 300%;
+  transform: translateX(0%);
+  transition: transform 240ms ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+.quick-access-sign-popout .quick-access-popout__body.sign-tab-requestSignatures {
+  transform: translateX(0%);
+}
+
+.quick-access-sign-popout .quick-access-popout__body.sign-tab-signRequests {
+  transform: translateX(-33.333%);
+}
+
+.quick-access-sign-popout .quick-access-popout__body.sign-tab-mySessions {
+  transform: translateX(-66.666%);
+}
+
+.quick-access-sign-popout .quick-access-popout__panel {
+  width: 33.333%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
 }
 
 @media (max-width: 980px) {

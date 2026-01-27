@@ -11,6 +11,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,11 +28,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.workflow.model.WorkflowSession;
 
 @Entity
 @Table(
         name = "stored_files",
-        indexes = {@Index(name = "idx_stored_files_owner", columnList = "owner_id")})
+        indexes = {
+            @Index(name = "idx_stored_files_owner", columnList = "owner_id"),
+            @Index(name = "idx_stored_files_workflow", columnList = "workflow_session_id")
+        })
 @NoArgsConstructor
 @Getter
 @Setter
@@ -82,6 +88,16 @@ public class StoredFile implements Serializable {
 
     @Column(name = "audit_log_storage_key", unique = true)
     private String auditLogStorageKey;
+
+    // Link to workflow if this file is part of a workflow
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workflow_session_id")
+    private WorkflowSession workflowSession;
+
+    // Purpose classification
+    @Column(name = "file_purpose")
+    @Enumerated(EnumType.STRING)
+    private FilePurpose purpose;
 
     @OneToMany(
             mappedBy = "file",

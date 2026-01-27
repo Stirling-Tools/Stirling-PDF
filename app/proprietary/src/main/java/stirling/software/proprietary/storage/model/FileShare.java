@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 
 @Entity
 @Table(
@@ -38,7 +39,8 @@ import stirling.software.proprietary.security.model.User;
         },
         indexes = {
             @Index(name = "idx_file_shares_file_id", columnList = "stored_file_id"),
-            @Index(name = "idx_file_shares_share_token", columnList = "share_token")
+            @Index(name = "idx_file_shares_share_token", columnList = "share_token"),
+            @Index(name = "idx_file_shares_participant", columnList = "workflow_participant_id")
         })
 @NoArgsConstructor
 @Getter
@@ -70,7 +72,18 @@ public class FileShare implements Serializable {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    // Link to workflow participant if this share is for a workflow
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workflow_participant_id")
+    private WorkflowParticipant workflowParticipant;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    // Helper methods
+
+    public boolean isWorkflowShare() {
+        return workflowParticipant != null;
+    }
 }
