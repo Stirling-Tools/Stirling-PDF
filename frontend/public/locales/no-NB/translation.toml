@@ -950,6 +950,7 @@ title = "Auto-del størrelse/antall"
 desc = "Del en enkelt PDF i flere dokumenter basert på størrelse, antall sider eller dokumenter"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Erstatt og inverter farger"
 desc = "Erstatt eller inverter farger i PDF-dokumenter"
 
@@ -964,18 +965,22 @@ title = "Automatisert mappeskanning"
 desc = "Lenke til veiledning for automatisert mappeskanning"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO-veiledning"
 desc = "Lenke til SSO-veiledning"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Luftgap-oppsett"
 desc = "Lenke til veiledning for luftgap-oppsett"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Legg til Passord"
 desc = "Krypter din PDF-dokument med et passord."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Endre tillatelser"
 desc = "Endre dokumentbegrensninger og tillatelser"
 
@@ -985,10 +990,12 @@ title = "Automatiser"
 desc = "Bygg flertrinns arbeidsflyter ved å lenke sammen PDF-handlinger. Ideelt for gjentakende oppgaver."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Legger PDF-er over hverandre"
 title = "Overlay PDF-er"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-tekstredigerer"
 desc = "Gå gjennom og rediger Stirling PDF JSON-eksporter med gruppert tekstredigering og regenerering av PDF"
 
@@ -4525,6 +4532,13 @@ description = "Maksimalt antall mislykkede innloggingsforsøk før kontolåsing"
 [admin.settings.security.loginResetTimeMinutes]
 label = "Tilbakestillingstid for innlogging (minutter)"
 description = "Tid før mislykkede innloggingsforsøk nullstilles"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Deaktiver CSRF-beskyttelse"

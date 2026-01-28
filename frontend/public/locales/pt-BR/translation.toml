@@ -950,6 +950,7 @@ title = "Divisão Manual do PDF"
 desc = "Divida um PDF em vários, com base no tamanho, contagem de páginas ou contagem de documentos."
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Substituir e inverter cor"
 desc = "Substituir ou inverter cores em documentos PDF"
 
@@ -964,18 +965,22 @@ title = "Varredura automática de pasta"
 desc = "Link para o guia de varredura automática de pastas"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Guia de SSO"
 desc = "Link para o guia de SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Configuração Air-gapped"
 desc = "Link para o guia de configuração isolada (air-gapped)"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Proteger PDF"
 desc = "Criptografar seu PDF com uma senha podendo realizar alterações de permissões."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Alterar Permissões"
 desc = "Alterar restrições e permissões do documento"
 
@@ -985,10 +990,12 @@ title = "Automatizar"
 desc = "Crie fluxos de trabalho de várias etapas encadeando ações de PDF. Ideal para tarefas recorrentes."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Sobrepor um PDF sobre outro"
 title = "Sobrepor PDFs"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor de texto de PDF"
 desc = "Revise e edite exportações JSON do Stirling PDF com edição de texto agrupada e regeneração do PDF"
 
@@ -4525,6 +4532,13 @@ description = "Número máximo de tentativas de login com falha antes do bloquei
 [admin.settings.security.loginResetTimeMinutes]
 label = "Tempo para redefinir tentativas (minutos)"
 description = "Tempo antes que as tentativas de login com falha sejam redefinidas"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Desativar proteção CSRF"

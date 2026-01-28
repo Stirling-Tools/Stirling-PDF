@@ -950,6 +950,7 @@ title = "Auto rozdeliť veľkosť/počet"
 desc = "Rozdelí jeden PDF na viacero dokumentov na základe veľkosti, počtu stránok alebo počtu dokumentov"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Nahradiť a invertovať farby"
 desc = "Nahradiť alebo invertovať farby v dokumentoch PDF"
 
@@ -964,18 +965,22 @@ title = "Auto skenovanie priečinkov"
 desc = "Odkaz na príručku k automatizovanému skenovaniu priečinkov"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO príručka"
 desc = "Odkaz na SSO príručku"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped nastavenie"
 desc = "Odkaz na príručku k air-gapped nastaveniu"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Pridať heslo"
 desc = "Šifrovať váš PDF dokument heslom."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Zmeniť povolenia"
 desc = "Zmeniť obmedzenia a povolenia dokumentu"
 
@@ -985,10 +990,12 @@ title = "Automatizovať"
 desc = "Stavať viacstupňové pracovné postupy spájaním akcií PDF. Ideálne pre opakované úlohy."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Prekrýva PDF súbory na iný PDF"
 title = "Prekrývanie PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor textu PDF"
 desc = "Kontrolujte a upravujte Stirling PDF JSON exporty so skupinovými úpravami textu a opätovným vytvorením PDF"
 
@@ -4525,6 +4532,13 @@ description = "Maximálny počet neúspešných pokusov o prihlásenie pred zabl
 [admin.settings.security.loginResetTimeMinutes]
 label = "Reset prihlásenia (minúty)"
 description = "Čas, po ktorom sa zlyhané pokusy o prihlásenie vynulujú"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Zakázať ochranu CSRF"

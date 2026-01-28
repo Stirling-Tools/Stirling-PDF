@@ -950,6 +950,7 @@ title = "Samodejno razdeli po vel./št."
 desc = "Razdeli en PDF na več dokumentov glede na velikost, število strani ali število dokumentov"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Zamenjaj in invertiraj barve"
 desc = "Zamenjajte ali invertirajte barve v dokumentih PDF"
 
@@ -964,18 +965,22 @@ title = "Samodejno skeniranje map"
 desc = "Povezava do vodiča za avtomatizirano skeniranje map"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Vodič za SSO"
 desc = "Povezava do vodiča za SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Izolirana namestitev"
 desc = "Povezava do vodiča za namestitev v izoliranem omrežju"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Dodaj geslo"
 desc = "Šifrirajte svoj dokument PDF z geslom."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Spremeni dovoljenja"
 desc = "Spremenite omejitve in dovoljenja dokumenta"
 
@@ -985,10 +990,12 @@ title = "Avtomatiziraj"
 desc = "Sestavite večkorakovne poteke z veriženjem dejanj PDF. Idealno za ponavljajoče se naloge."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Prekriva PDF-je na vrhu drugega PDF-ja"
 title = "Prekrivanje PDF-jev"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Urejevalnik besedila PDF"
 desc = "Pregledujte in urejajte Stirling PDF JSON izvoze z urejanjem združenega besedila in ponovnim ustvarjanjem PDF"
 
@@ -4525,6 +4532,13 @@ description = "Največje število neuspelih poskusov prijave pred zaklepom raču
 [admin.settings.security.loginResetTimeMinutes]
 label = "Čas ponastavitve prijave (minute)"
 description = "Čas do ponastavitve neuspelih poskusov prijave"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Onemogoči zaščito CSRF"

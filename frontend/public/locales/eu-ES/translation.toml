@@ -950,6 +950,7 @@ title = "Autom. zatitu tamaina/kop."
 desc = "Split a single PDF into multiple documents based on size, page count, or document count"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ordeztu eta inbertitu kolorea"
 desc = "Ordeztu edo alderantzikatu koloreak PDF dokumentuetan"
 
@@ -964,18 +965,22 @@ title = "Karpeta eskaneatze autom."
 desc = "Esteka karpeta eskaneatze automatizatuaren gidara"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO gida"
 desc = "Esteka SSO gidara"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Sare isolatuko konfigurazioa"
 desc = "Esteka sare isolatutako konfigurazio gidara"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Gehitu pasahitza"
 desc = "Enkriptatu PDF dokumentua pasahitz batekin"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Aldatu baimenak"
 desc = "Aldatu dokumentuaren murrizketak eta baimenak"
 
@@ -985,10 +990,12 @@ title = "Automatizatu"
 desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregin errepikakorretarako."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Overlays PDFs on-top of another PDF"
 title = "Gainjarri PDFak"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF testu-editorea"
 desc = "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
 
@@ -4525,6 +4532,13 @@ description = "Kontua blokeatu aurretik huts egindako saio-saiakeren gehienezko 
 [admin.settings.security.loginResetTimeMinutes]
 label = "Saio-hasieraren berrezartze denbora (minutuak)"
 description = "Huts egindako saio-saiakerak berrezarri aurreko denbora"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF babesa desgaitu"

@@ -950,6 +950,7 @@ title = "സൈസ്/കൗണ്ട് ഓട്ടോ സ്പ്ലിറ�
 desc = "ഫയൽ വലുപ്പം അല്ലെങ്കിൽ പേജ് എണ്ണം പ്രകാരം PDF-കൾ സ്വയം വിഭജിക്കുക"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "നിറം മാറ്റുക / ഇൻവേർട്ട്"
 desc = "PDF ഡോക്യുമെന്റുകളിൽ നിറങ്ങൾ പകരംവെക്കുകയോ ഇൻവേർട്ട് ചെയ്യുകയോ ചെയ്യുക"
 
@@ -964,18 +965,22 @@ title = "ഓട്ടോമേറ്റഡ് ഫോൾഡർ സ്കാനി
 desc = "ഓട്ടോമേറ്റഡ് ഫോൾഡർ സ്കാനിംഗ് ഗൈഡിലേക്കുള്ള ലിങ്ക്"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO ഗൈഡ്"
 desc = "SSO ഗൈഡിലേക്കുള്ള ലിങ്ക്"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped സെറ്റപ്പ്"
 desc = "എയർ-ഗ്യാപ്ഡ് സെറ്റപ്പ് ഗൈഡിലേക്കുള്ള ലിങ്ക്"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "പാസ്‌വേഡ് ചേർക്കുക"
 desc = "നിങ്ങളുടെ PDF പ്രമാണം ഒരു പാസ്‌വേഡ് ഉപയോഗിച്ച് എൻക്രിപ്റ്റ് ചെയ്യുക."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "അനുമതികൾ മാറ്റുക"
 desc = "ഡോക്യുമെന്റ് നിയന്ത്രണങ്ങളും അനുമതികളും മാറ്റുക"
 
@@ -985,10 +990,12 @@ title = "ഓട്ടോമേറ്റ്"
 desc = "PDF പ്രവർത്തനങ്ങൾ ബന്ധിപ്പിച്ച് മൾട്ടി-സ്റ്റെപ്പ് വർക്‌ഫ്ലോകൾ നിർമ്മിക്കുക. ആവർത്തിക്കുന്ന ജോലികൾക്ക് അനുയോജ്യം."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "മറ്റൊരു PDF-ന് മുകളിൽ PDF-കൾ ഓവർലേ ചെയ്യുന്നു"
 title = "PDF-കൾ ഓവർലേ ചെയ്യുക"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF ടെക്സ്റ്റ് എഡിറ്റർ"
 desc = "ഗ്രൂപ്പുചെയ്ത ടെക്സ്റ്റ് എഡിറ്റിംഗിനോടും PDF വീണ്ടും സൃഷ്ടിക്കുന്നതോടും കൂടി Stirling PDF JSON എക്സ്പോർട്ടുകൾ റിവ്യൂ ചെയ്ത് എഡിറ്റ് ചെയ്യുക"
 
@@ -4525,6 +4532,13 @@ description = "അക്കൗണ്ട് ലോക്കാകുന്നത�
 [admin.settings.security.loginResetTimeMinutes]
 label = "ലോഗിൻ റീസെറ്റ് സമയം (മിനിറ്റ്)"
 description = "പരാജയപ്പെട്ട ലോഗിൻ ശ്രമങ്ങൾ റീസെറ്റ് ചെയ്യുന്നതിന് മുമ്പുള്ള സമയം"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF സംരക്ഷണം അപ്രാപ്തമാക്കുക"

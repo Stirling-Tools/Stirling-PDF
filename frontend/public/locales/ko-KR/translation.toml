@@ -950,6 +950,7 @@ title = "크기/개수별 자동 분할"
 desc = "단일 PDF를 크기, 페이지 수 또는 문서 수를 기준으로 여러 문서로 분할"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "색상 교체 및 반전"
 desc = "PDF 문서의 색상을 교체하거나 반전합니다."
 
@@ -964,18 +965,22 @@ title = "자동 폴더 스캔"
 desc = "자동 폴더 스캔 가이드로 이동"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO 가이드"
 desc = "SSO 가이드로 이동"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "격리 환경 설정"
 desc = "격리 환경 설정 가이드로 이동"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "비밀번호 추가"
 desc = "PDF 문서를 비밀번호로 암호화합니다."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "권한 변경"
 desc = "문서 제한 및 권한 변경"
 
@@ -985,10 +990,12 @@ title = "자동화"
 desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. 반복 작업에 이상적입니다."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF를 다른 PDF 위에 오버레이"
 title = "PDF 오버레이"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF 텍스트 편집기"
 desc = "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
 
@@ -4525,6 +4532,13 @@ description = "계정 잠금 전 허용되는 최대 로그인 실패 횟수"
 [admin.settings.security.loginResetTimeMinutes]
 label = "로그인 재설정 시간(분)"
 description = "로그인 실패 횟수가 재설정되기까지의 시간"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF 보호 비활성화"

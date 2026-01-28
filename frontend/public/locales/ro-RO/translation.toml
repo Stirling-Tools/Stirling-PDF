@@ -950,6 +950,7 @@ title = "Auto-împărțire mărime/pagini"
 desc = "Împarte un singur PDF în mai multe documente bazat pe dimensiune, număr de pagini sau număr de documente"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Schimbă și inversează culori"
 desc = "Înlocuiți sau inversați culorile în documente PDF"
 
@@ -964,18 +965,22 @@ title = "Scanare automată foldere"
 desc = "Link către ghidul de scanare automată a folderelor"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Ghid SSO"
 desc = "Link către ghidul SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Configurare air-gapped"
 desc = "Link către ghidul de configurare izolată de rețea"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Adaugă Parolă"
 desc = "Criptează documentul PDF cu o parolă."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Schimbă Permisiunile"
 desc = "Schimbați restricțiile și permisiunile documentului"
 
@@ -985,10 +990,12 @@ title = "Automatizare"
 desc = "Construiți fluxuri cu mai mulți pași legând acțiuni PDF. Ideal pentru sarcini recurente."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Suprapune PDF-uri peste alt PDF"
 title = "Suprapune PDF-uri"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor text PDF"
 desc = "Revizuiește și editează exporturile JSON Stirling PDF cu editare de text grupată și regenerare PDF"
 
@@ -4525,6 +4532,13 @@ description = "Numărul maxim de încercări eșuate înainte de blocarea contul
 [admin.settings.security.loginResetTimeMinutes]
 label = "Timp resetare autentificare (minute)"
 description = "Timpul înainte de resetarea încercărilor eșuate"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Dezactivează protecția CSRF"

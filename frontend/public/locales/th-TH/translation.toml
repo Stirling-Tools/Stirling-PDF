@@ -950,6 +950,7 @@ title = "แยกตามขนาด/จำนวน"
 desc = "แยก PDF เป็นเอกสารหลายฉบับตามขนาด จำนวนหน้า หรือจำนวนเอกสาร"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "แทนที่และกลับสี"
 desc = "แทนที่หรือกลับสีในเอกสาร PDF"
 
@@ -964,18 +965,22 @@ title = "สแกน โฟลเดอร์ อัตโนมัติ"
 desc = "ลิงก์ไปยังคู่มือการสแกนโฟลเดอร์อัตโนมัติ"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "คู่มือ SSO"
 desc = "ลิงก์ไปยังคู่มือ SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "การตั้งค่า Air-gapped"
 desc = "ลิงก์ไปยังคู่มือการตั้งค่า Air-gapped"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "เพิ่มรหัสผ่าน"
 desc = "เข้ารหัสเอกสาร PDF ของคุณด้วยรหัสผ่าน"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "เปลี่ยนสิทธิ์"
 desc = "เปลี่ยนข้อจำกัดและสิทธิ์ของเอกสาร"
 
@@ -985,10 +990,12 @@ title = "ทำให้อัตโนมัติ"
 desc = "สร้างเวิร์กโฟลว์หลายขั้นตอนโดยเชื่อมโยงการกระทำ PDF เข้าด้วยกัน เหมาะสำหรับงานที่เกิดซ้ำ"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "ซ้อนทับ PDF บน PDF อีกไฟล์หนึ่ง"
 title = "ซ้อนทับ PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "แก้ไขข้อความ PDF"
 desc = "ตรวจทานและแก้ไขไฟล์ JSON ที่ส่งออกจาก Stirling PDF ด้วยการแก้ไขข้อความแบบกลุ่มและการสร้าง PDF ใหม่"
 
@@ -4525,6 +4532,13 @@ description = "จำนวนครั้งสูงสุดของกา�
 [admin.settings.security.loginResetTimeMinutes]
 label = "เวลาล้างจำนวนครั้ง (นาที)"
 description = "ระยะเวลาก่อนที่จะรีเซ็ตจำนวนครั้งที่เข้าสู่ระบบล้มเหลว"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "ปิดการป้องกัน CSRF"
