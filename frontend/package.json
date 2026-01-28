@@ -7,7 +7,7 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
     "@dnd-kit/core": "^6.3.1",
-    "@embedpdf/core": "^1.5.0",
+    "@embedpdf/core": "^2.3.0",
     "@embedpdf/engines": "^1.5.0",
     "@embedpdf/plugin-annotation": "^1.5.0",
     "@embedpdf/plugin-bookmark": "^1.5.0",
