@@ -950,6 +950,7 @@ title = "Automatisch splitsen op grootte/aantal"
 desc = "Splits een enkele PDF in meerdere documenten op basis van grootte, aantal pagina's of aantal documenten"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Kleur vervangen en inverteren"
 desc = "Kleuren in PDF-documenten vervangen of inverteren"
 
@@ -964,18 +965,22 @@ title = "Geautomatiseerd mappenscannen"
 desc = "Link naar handleiding voor geautomatiseerd mappenscannen"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO-gids"
 desc = "Link naar SSO-gids"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped-installatie"
 desc = "Link naar handleiding voor air-gapped-installatie"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Wachtwoord toevoegen"
 desc = "Versleutel uw PDF-document met een wachtwoord."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Rechten wijzigen"
 desc = "Documentbeperkingen en machtigingen wijzigen"
 
@@ -985,10 +990,12 @@ title = "Automatiseren"
 desc = "Bouw workflows met meerdere stappen door PDF-acties te koppelen. Ideaal voor terugkerende taken."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Plaatst PDF's over een andere PDF heen"
 title = "PDF's overlappen"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-teksteditor"
 desc = "Bewerk bestaande tekst en afbeeldingen in PDF's"
 
@@ -4525,6 +4532,13 @@ description = "Maximaal aantal mislukte inlogpogingen voordat het account wordt 
 [admin.settings.security.loginResetTimeMinutes]
 label = "Resetperiode voor inloggen (minuten)"
 description = "Tijd voordat mislukte inlogpogingen worden gereset"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF-bescherming uitschakelen"
