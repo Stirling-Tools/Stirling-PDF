@@ -207,8 +207,11 @@ pub async fn login(
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
 
-    // Create HTTP client
-    let client = reqwest::Client::new();
+    // Create HTTP client with certificate bypass for self-signed certs
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     if is_supabase {
         // Supabase authentication flow
@@ -476,7 +479,11 @@ async fn exchange_code_for_token(
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Exchanging authorization code for access token with PKCE");
 
-    let client = reqwest::Client::new();
+    // Create HTTP client with certificate bypass for self-signed certs
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
     // grant_type goes in query string, not body!
     let token_url = format!("{}/auth/v1/token?grant_type=pkce", auth_server_url.trim_end_matches('/'));
 
