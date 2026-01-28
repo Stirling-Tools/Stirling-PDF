@@ -251,11 +251,15 @@ export class ConnectionModeService {
       diagnostics.push(stage2Result);
 
       if (stage2Result.success) {
-        console.log(`[ConnectionModeService] ⚠️ Certificate issue detected - works without validation`);
+        console.log(`[ConnectionModeService] ⚠️ Certificate issue detected - but connection works with bypass enabled`);
+        console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SUMMARY ====================`);
+        console.log(`[ConnectionModeService] ✅ CONNECTION SUCCESSFUL (with certificate bypass)`);
+        console.log(`[ConnectionModeService] Protocol: HTTPS with certificate validation disabled`);
+        console.log(`[ConnectionModeService] Duration: ${stage2Result.duration}ms`);
+        console.log(`[ConnectionModeService] Note: Server has missing intermediate certificate or invalid cert`);
+        console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SESSION END ====================`);
         return {
-          success: false,
-          error: 'SSL certificate validation failed. The server has an invalid, self-signed, or untrusted certificate.',
-          errorCode: 'SSL_CERTIFICATE_INVALID',
+          success: true,
           diagnostics,
         };
       }
@@ -487,7 +491,13 @@ export class ConnectionModeService {
 
       let detailedMessage = `Failed: ${errorMsg}`;
 
-      if (errorLower.includes('timeout') || errorLower.includes('timed out')) {
+      // Check for TLS version mismatch (TLS 1.0/1.1 not supported)
+      if (errorLower.includes('peer is incompatible') ||
+          errorLower.includes('protocol version') ||
+          errorLower.includes('peerincompatible') ||
+          (errorLower.includes('handshake') && (errorLower.includes('tls') || errorLower.includes('ssl')))) {
+        detailedMessage = `TLS version not supported - Server appears to use TLS 1.0 or 1.1 (desktop app requires TLS 1.2+). Please upgrade your server's TLS configuration or use the web version.`;
+      } else if (errorLower.includes('timeout') || errorLower.includes('timed out')) {
         detailedMessage = `Timeout after ${duration}ms - server not responding`;
       } else if (errorLower.includes('certificate') || errorLower.includes('cert') || errorLower.includes('ssl') || errorLower.includes('tls')) {
         detailedMessage = `SSL/TLS error - ${errorMsg}`;
