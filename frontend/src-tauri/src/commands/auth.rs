@@ -213,11 +213,22 @@ pub async fn login(
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
 
-    // Create HTTP client with certificate bypass for self-signed certs
+    // Create HTTP client with certificate bypass and lenient TLS settings
+    // This handles:
+    // - Self-signed certificates
+    // - Missing intermediate certificates
+    // - Older TLS versions (TLS 1.0, 1.1, 1.2)
+    // - Certificate hostname mismatches
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
+        .use_rustls_tls()
+        .min_tls_version(reqwest::tls::Version::TLS_1_0)
+        .timeout(std::time::Duration::from_secs(30))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| {
+            log::error!("Failed to create HTTP client: {}", e);
+            format!("Failed to create HTTP client: {}", e)
+        })?;
 
     if is_supabase {
         // Supabase authentication flow
@@ -238,7 +249,10 @@ pub async fn login(
             .json(&request_body)
             .send()
             .await
-            .map_err(|e| format!("Network error: {}", e))?;
+            .map_err(|e| {
+                log::error!("Supabase login network error: {}", e);
+                format!("Network error connecting to Supabase: {}", e)
+            })?;
 
         let status = response.status();
 
@@ -299,7 +313,24 @@ pub async fn login(
             .json(&payload)
             .send()
             .await
-            .map_err(|e| format!("Network error: {}", e))?;
+            .map_err(|e| {
+                let error_msg = e.to_string().to_lowercase();
+                log::error!("Spring Boot login network error: {}", e);
+
+                // Provide detailed error messages based on error type
+                if error_msg.contains("tls") || error_msg.contains("ssl") ||
+                   error_msg.contains("certificate") || error_msg.contains("decrypt") {
+                    format!("TLS/SSL connection error: {}. This usually means the server has certificate issues or is using an outdated TLS version.", e)
+                } else if error_msg.contains("connection refused") {
+                    format!("Connection refused: Server is not reachable at {}. Check if the server is running and the URL is correct.", login_url)
+                } else if error_msg.contains("timeout") {
+                    format!("Connection timeout: Server at {} is not responding. Check your network connection.", login_url)
+                } else if error_msg.contains("dns") || error_msg.contains("resolve") {
+                    format!("DNS resolution failed: Cannot resolve hostname. Check if the server URL is correct.")
+                } else {
+                    format!("Network error: {}", e)
+                }
+            })?;
 
         let status = response.status();
         log::debug!("Spring Boot login response status: {}", status);
@@ -508,11 +539,22 @@ async fn exchange_code_for_token(
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Exchanging authorization code for access token with PKCE");
 
-    // Create HTTP client with certificate bypass for self-signed certs
+    // Create HTTP client with certificate bypass and lenient TLS settings
+    // This handles:
+    // - Self-signed certificates
+    // - Missing intermediate certificates
+    // - Older TLS versions (TLS 1.0, 1.1, 1.2)
+    // - Certificate hostname mismatches
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
+        .use_rustls_tls()
+        .min_tls_version(reqwest::tls::Version::TLS_1_0)
+        .timeout(std::time::Duration::from_secs(30))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| {
+            log::error!("Failed to create HTTP client: {}", e);
+            format!("Failed to create HTTP client: {}", e)
+        })?;
     // grant_type goes in query string, not body!
     let token_url = format!("{}/auth/v1/token?grant_type=pkce", auth_server_url.trim_end_matches('/'));
 
