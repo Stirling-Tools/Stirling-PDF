@@ -208,21 +208,20 @@ public class SecurityConfiguration {
         } else {
             String xFrameOption = securityProperties.getXFrameOptions();
             if (xFrameOption != null) {
-                http.headers(headers -> {
-                    if ("DISABLED".equalsIgnoreCase(xFrameOption)) {
-                        headers.frameOptions(frameOptions -> frameOptions.disable());
-                    } else if ("SAMEORIGIN".equalsIgnoreCase(xFrameOption)) {
-                        headers.frameOptions(frameOptions -> frameOptions.sameOrigin());
-                    } else {
-                        // Default to DENY
-                        headers.frameOptions(frameOptions -> frameOptions.deny());
-                    }
-                });
+                http.headers(
+                        headers -> {
+                            if ("DISABLED".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(frameOptions -> frameOptions.disable());
+                            } else if ("SAMEORIGIN".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(frameOptions -> frameOptions.sameOrigin());
+                            } else {
+                                // Default to DENY
+                                headers.frameOptions(frameOptions -> frameOptions.deny());
+                            }
+                        });
             } else {
                 // If not configured, use default DENY
-                http.headers(headers ->
-                    headers.frameOptions(frameOptions -> frameOptions.deny())
-                );
+                http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.deny()));
             }
         }
 
