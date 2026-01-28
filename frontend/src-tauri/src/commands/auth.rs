@@ -213,16 +213,14 @@ pub async fn login(
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
 
-    // Create HTTP client with certificate bypass and lenient TLS settings
+    // Create HTTP client with certificate bypass
     // This handles:
     // - Self-signed certificates
     // - Missing intermediate certificates
-    // - Older TLS versions (TLS 1.0, 1.1, 1.2)
     // - Certificate hostname mismatches
+    // Note: Rustls only supports TLS 1.2 and TLS 1.3
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
-        .use_rustls_tls()
-        .min_tls_version(reqwest::tls::Version::TLS_1_0)
         .timeout(std::time::Duration::from_secs(30))
         .build()
         .map_err(|e| {
@@ -539,16 +537,14 @@ async fn exchange_code_for_token(
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Exchanging authorization code for access token with PKCE");
 
-    // Create HTTP client with certificate bypass and lenient TLS settings
+    // Create HTTP client with certificate bypass
     // This handles:
     // - Self-signed certificates
     // - Missing intermediate certificates
-    // - Older TLS versions (TLS 1.0, 1.1, 1.2)
     // - Certificate hostname mismatches
+    // Note: Rustls only supports TLS 1.2 and TLS 1.3
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
-        .use_rustls_tls()
-        .min_tls_version(reqwest::tls::Version::TLS_1_0)
         .timeout(std::time::Duration::from_secs(30))
         .build()
         .map_err(|e| {
