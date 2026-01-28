@@ -45,6 +45,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
       }
 
+      localStorage.setItem('server_url', baseUrl);
+
       // Debug logging
       console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
 
