@@ -10,4 +10,5 @@ public class PDFText {
     private final float x2;
     private final float y2;
     private final String text;
+    private final float fontSize;
 }
