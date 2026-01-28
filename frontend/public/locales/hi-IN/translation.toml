@@ -954,6 +954,7 @@ desc = "एक PDF को आकार, पृष्ठ संख्या, य�
 [home.replaceColor]
 title = "रंग बदलें/उलटें"
 desc = "PDF दस्तावेज़ों में रंगों को प्रतिस्थापित या उलटें"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,development,documentation"
@@ -968,18 +969,22 @@ desc = "स्वचालित फ़ोल्डर स्कैनिंग 
 [home.devSsoGuide]
 title = "SSO गाइड"
 desc = "SSO गाइड के लिए लिंक"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "एयर-गैप्ड सेटअप"
 desc = "एयर-गैप्ड सेटअप गाइड के लिए लिंक"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "पासवर्ड जोड़ें"
 desc = "पासवर्ड के साथ अपने PDF दस्तावेज को एन्क्रिप्ट करें।"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "अनुमतियां बदलें"
 desc = "दस्तावेज़ प्रतिबंध और अनुमतियाँ बदलें"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "वर्कफ़्लो,सीक्वेंस,स्वचालन"
@@ -989,10 +994,12 @@ desc = "PDF क्रियाओं को जोड़कर बहु-चर�
 [home.overlay-pdfs]
 desc = "PDF को दूसरी PDF के ऊपर ओवरले करें"
 title = "PDF ओवरले करें"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF टेक्स्ट एडिटर"
 desc = "ग्रुप्ड टेक्स्ट एडिटिंग और PDF पुनर्जनन के साथ Stirling PDF JSON एक्सपोर्ट की समीक्षा व संपादन करें"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,annotation,label"
@@ -4625,6 +4632,13 @@ description = "लिंक-लोकल पते ब्लॉक करें 
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "क्लाउड मेटाडाटा एंडपॉइंट्स ब्लॉक करें"
 description = "क्लाउड प्रदाता मेटाडाटा एंडपॉइंट्स ब्लॉक करें (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "कनेक्शंस"

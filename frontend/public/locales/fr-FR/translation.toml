@@ -954,6 +954,7 @@ desc = "Séparer un PDF unique en plusieurs documents en fonction de la taille, 
 [home.replaceColor]
 title = "Remplacer & inverser couleurs"
 desc = "Remplacer ou inverser les couleurs dans les documents PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,développement,documentation"
@@ -968,18 +969,22 @@ desc = "Lien vers le guide d’analyse de dossier automatisée"
 [home.devSsoGuide]
 title = "Guide SSO"
 desc = "Lien vers le guide SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Installation isolée"
 desc = "Lien vers le guide d’installation isolée (air-gapped)"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Ajouter un mot de passe"
 desc = "Chiffrez votre PDF avec un mot de passe."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Modifier les permissions"
 desc = "Modifier les restrictions et permissions du document"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "workflow,séquence,automatisation"
@@ -989,10 +994,12 @@ desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéa
 [home.overlay-pdfs]
 desc = "Superposer un PDF sur un autre"
 title = "Superposer des PDF"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "Éditeur de texte PDF"
 desc = "Afficher et modifier les exports JSON de Stirling PDF avec édition de texte groupée et régénération du PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "texte,annotation,étiquette"
@@ -4625,6 +4632,13 @@ description = "Bloquer les adresses link-local (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Bloquer les endpoints de métadonnées cloud"
 description = "Bloquer les endpoints de métadonnées des fournisseurs cloud (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Connexions"

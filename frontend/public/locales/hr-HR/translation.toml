@@ -954,6 +954,7 @@ desc = "Podijelite jedan PDF na više dokumenata na temelju veličine, broja str
 [home.replaceColor]
 title = "Zamijeni i invertiraj boju"
 desc = "Zamijenite ili invertirajte boje u PDF dokumentima"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,razvoj,dokumentacija"
@@ -968,18 +969,22 @@ desc = "Poveznica na vodič za automatizirano skeniranje mapa"
 [home.devSsoGuide]
 title = "SSO vodič"
 desc = "Poveznica na SSO vodič"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Air-gapped postavljanje"
 desc = "Poveznica na vodič za air-gapped postavljanje"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Dodaj lozinku"
 desc = "Šifrirajte svoj PDF dokument lozinkom.."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Promjena dopuštenja"
 desc = "Promijenite ograničenja dokumenta i dopuštenja"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "tijek rada,sekvenca,automatizacija"
@@ -989,10 +994,12 @@ desc = "Izgradite višekoračne tijekove rada povezivanjem PDF radnji. Idealno z
 [home.overlay-pdfs]
 desc = "Preklapa PDF-ove na drugi PDF"
 title = "Preklapanje PDF-ova"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF uređivač teksta"
 desc = "Pregledajte i uredite Stirling PDF JSON izvoze s grupnim uređivanjem teksta i ponovnim generiranjem PDF-a"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "tekst,anotacija,oznaka"
@@ -4625,6 +4632,13 @@ description = "Blokiraj link-local adrese (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blokiraj cloud metadata krajnje točke"
 description = "Blokiraj krajnje točke metapodataka pružatelja clouda (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Veze"

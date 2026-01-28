@@ -954,6 +954,7 @@ desc = "ഫയൽ വലുപ്പം അല്ലെങ്കിൽ പേജ
 [home.replaceColor]
 title = "നിറം മാറ്റുക / ഇൻവേർട്ട്"
 desc = "PDF ഡോക്യുമെന്റുകളിൽ നിറങ്ങൾ പകരംവെക്കുകയോ ഇൻവേർട്ട് ചെയ്യുകയോ ചെയ്യുക"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,ഡെവലപ്മെന്റ്,ഡോക്യുമെന്റേഷൻ"
@@ -968,18 +969,22 @@ desc = "ഓട്ടോമേറ്റഡ് ഫോൾഡർ സ്കാനി�
 [home.devSsoGuide]
 title = "SSO ഗൈഡ്"
 desc = "SSO ഗൈഡിലേക്കുള്ള ലിങ്ക്"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Air-gapped സെറ്റപ്പ്"
 desc = "എയർ-ഗ്യാപ്ഡ് സെറ്റപ്പ് ഗൈഡിലേക്കുള്ള ലിങ്ക്"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "പാസ്‌വേഡ് ചേർക്കുക"
 desc = "നിങ്ങളുടെ PDF പ്രമാണം ഒരു പാസ്‌വേഡ് ഉപയോഗിച്ച് എൻക്രിപ്റ്റ് ചെയ്യുക."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "അനുമതികൾ മാറ്റുക"
 desc = "ഡോക്യുമെന്റ് നിയന്ത്രണങ്ങളും അനുമതികളും മാറ്റുക"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "വർക്‌ഫ്ലോ,ക്രമം,ഓട്ടോമേഷൻ"
@@ -989,10 +994,12 @@ desc = "PDF പ്രവർത്തനങ്ങൾ ബന്ധിപ്പി�
 [home.overlay-pdfs]
 desc = "മറ്റൊരു PDF-ന് മുകളിൽ PDF-കൾ ഓവർലേ ചെയ്യുന്നു"
 title = "PDF-കൾ ഓവർലേ ചെയ്യുക"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF ടെക്സ്റ്റ് എഡിറ്റർ"
 desc = "ഗ്രൂപ്പുചെയ്ത ടെക്സ്റ്റ് എഡിറ്റിംഗിനോടും PDF വീണ്ടും സൃഷ്ടിക്കുന്നതോടും കൂടി Stirling PDF JSON എക്സ്പോർട്ടുകൾ റിവ്യൂ ചെയ്ത് എഡിറ്റ് ചെയ്യുക"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,annotation,label"
@@ -4625,6 +4632,13 @@ description = "ലിങ്ക്-ലോകൽ വിലാസങ്ങൾ ബ�
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "ക്ലൗഡ് മെറ്റാഡാറ്റ എൻഡ്‌പോയിന്റുകൾ ബ്ലോക്ക് ചെയ്യുക"
 description = "ക്ലൌഡ് പ്രൊവൈഡർ മെറ്റാഡാറ്റ എൻഡ്‌പോയിന്റുകൾ ബ്ലോക്ക് ചെയ്യുക (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "കണക്ഷനുകൾ"

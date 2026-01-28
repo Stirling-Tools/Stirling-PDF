@@ -954,6 +954,7 @@ desc = "Împarte un singur PDF în mai multe documente bazat pe dimensiune, num�
 [home.replaceColor]
 title = "Schimbă și inversează culori"
 desc = "Înlocuiți sau inversați culorile în documente PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,dezvoltare,documentație"
@@ -968,18 +969,22 @@ desc = "Link către ghidul de scanare automată a folderelor"
 [home.devSsoGuide]
 title = "Ghid SSO"
 desc = "Link către ghidul SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Configurare air-gapped"
 desc = "Link către ghidul de configurare izolată de rețea"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Adaugă Parolă"
 desc = "Criptează documentul PDF cu o parolă."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Schimbă Permisiunile"
 desc = "Schimbați restricțiile și permisiunile documentului"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "flux,secvență,automatizare"
@@ -989,10 +994,12 @@ desc = "Construiți fluxuri cu mai mulți pași legând acțiuni PDF. Ideal pent
 [home.overlay-pdfs]
 desc = "Suprapune PDF-uri peste alt PDF"
 title = "Suprapune PDF-uri"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "Editor text PDF"
 desc = "Revizuiește și editează exporturile JSON Stirling PDF cu editare de text grupată și regenerare PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,anotare,etichetă"
@@ -4625,6 +4632,13 @@ description = "Blochează adresele link-local (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blochează endpoint-urile de metadate cloud"
 description = "Blochează endpoint-ul de metadate al furnizorilor cloud (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Conexiuni"

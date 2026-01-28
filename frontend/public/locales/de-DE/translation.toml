@@ -954,6 +954,7 @@ desc = "Teilen Sie ein einzelnes PDF basierend auf Größe, Seitenanzahl oder Do
 [home.replaceColor]
 title = "Farbe ersetzen & invertieren"
 desc = "Farben in PDF-Dokumenten ersetzen oder invertieren"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,entwicklung,dokumentation"
@@ -968,18 +969,22 @@ desc = "Link zum Leitfaden für automatisches Ordner-Scannen"
 [home.devSsoGuide]
 title = "SSO-Anleitung"
 desc = "Link zum SSO-Leitfaden"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Offline-Setup"
 desc = "Link zum Air-Gap-Einrichtungsleitfaden"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Passwort hinzufügen"
 desc = "Das PDF mit einem Passwort verschlüsseln"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Berechtigungen ändern"
 desc = "Dokumentbeschränkungen und -berechtigungen ändern"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "arbeitsablauf,sequenz,automatisierung"
@@ -989,10 +994,12 @@ desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen.
 [home.overlay-pdfs]
 desc = "Ein PDF über ein anderes legen"
 title = "PDFs überlagern"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF-Texteditor"
 desc = "Vorhandenen Text und Bilder in PDFs bearbeiten"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,anmerkung,beschriftung"
@@ -4625,6 +4632,13 @@ description = "Link-Local-Adressen blockieren (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Cloud-Metadaten-Endpunkte blockieren"
 description = "Metadaten-Endpunkte von Cloud-Anbietern blockieren (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Verbindungen"

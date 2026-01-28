@@ -954,6 +954,7 @@ desc = "Rozdziela dokument PDF na wiele dokumentów bazując na podanym rozmiarz
 [home.replaceColor]
 title = "Zastąp i odwróć kolor"
 desc = "Zastępuj lub odwracaj kolory w dokumentach PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,rozwój,dokumentacja"
@@ -968,18 +969,22 @@ desc = "Link do przewodnika automatycznego skanowania folderów"
 [home.devSsoGuide]
 title = "Przewodnik SSO"
 desc = "Link do przewodnika SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Konfiguracja odizolowana"
 desc = "Link do przewodnika konfiguracji odizolowanej"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Dodaj hasło"
 desc = "Zaszyfruj dokument PDF za pomocą hasła."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Zmień uprawnienia"
 desc = "Zmień ograniczenia i uprawnienia dokumentu"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "przepływ,sekwencja,automatyzacja"
@@ -989,10 +994,12 @@ desc = "Buduj wieloetapowe przepływy, łącząc akcje PDF. Idealne do powtarzaj
 [home.overlay-pdfs]
 desc = "Nakłada dokumenty PDF na siebie"
 title = "Nałóż PDFa"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "Edytor tekstu PDF"
 desc = "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "tekst,adnotacja,etykieta"
@@ -4625,6 +4632,13 @@ description = "Blokuj adresy link-local (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blokuj endpointy metadanych chmurowych"
 description = "Blokuj endpointy metadanych dostawców chmury (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Połączenia"

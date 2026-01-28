@@ -954,6 +954,7 @@ desc = "Rozdělí jeden PDF na více dokumentů podle velikosti, počtu stránek
 [home.replaceColor]
 title = "Nahradit a invertovat barvy"
 desc = "Nahradit nebo invertovat barvy v dokumentech PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,vývoj,dokumentace"
@@ -968,18 +969,22 @@ desc = "Odkaz na průvodce automatizovaným skenováním složek"
 [home.devSsoGuide]
 title = "Průvodce SSO"
 desc = "Odkaz na průvodce SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Offline nastavení"
 desc = "Odkaz na průvodce nastavením v odpojeném prostředí"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Přidat heslo"
 desc = "Zašifrovat váš PDF dokument heslem."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Změnit oprávnění"
 desc = "Změnit omezení a oprávnění dokumentu"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "pracovní postup,sekvence,automatizace"
@@ -989,10 +994,12 @@ desc = "Vytvářejte vícekrokové workflow řetězením akcí PDF. Ideální pr
 [home.overlay-pdfs]
 desc = "Překryje PDF nad jiným PDF"
 title = "Překrýt PDF"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "Editor textu PDF"
 desc = "Prohlížejte a upravujte exporty JSON ze Stirling PDF se skupinovými úpravami textu a regenerací PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,anotace,štítek"
@@ -4625,6 +4632,13 @@ description = "Blokovat link-local adresy (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blokovat koncové body metadat cloudu"
 description = "Blokovat koncové body metadat poskytovatelů cloudu (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Připojení"

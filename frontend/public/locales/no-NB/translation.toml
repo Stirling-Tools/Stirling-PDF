@@ -954,6 +954,7 @@ desc = "Del en enkelt PDF i flere dokumenter basert på størrelse, antall sider
 [home.replaceColor]
 title = "Erstatt og inverter farger"
 desc = "Erstatt eller inverter farger i PDF-dokumenter"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,utvikling,dokumentasjon"
@@ -968,18 +969,22 @@ desc = "Lenke til veiledning for automatisert mappeskanning"
 [home.devSsoGuide]
 title = "SSO-veiledning"
 desc = "Lenke til SSO-veiledning"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Luftgap-oppsett"
 desc = "Lenke til veiledning for luftgap-oppsett"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Legg til Passord"
 desc = "Krypter din PDF-dokument med et passord."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Endre tillatelser"
 desc = "Endre dokumentbegrensninger og tillatelser"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "arbeidsflyt,sekvens,automatisering"
@@ -989,10 +994,12 @@ desc = "Bygg flertrinns arbeidsflyter ved å lenke sammen PDF-handlinger. Ideelt
 [home.overlay-pdfs]
 desc = "Legger PDF-er over hverandre"
 title = "Overlay PDF-er"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF-tekstredigerer"
 desc = "Gå gjennom og rediger Stirling PDF JSON-eksporter med gruppert tekstredigering og regenerering av PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "tekst,merknad,etikett"
@@ -4625,6 +4632,13 @@ description = "Blokker link-local-adresser (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blokker endepunkter for skymetadata"
 description = "Blokker skyleverandørers metadata-endepunkter (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Tilkoblinger"

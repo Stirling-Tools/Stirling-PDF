@@ -954,6 +954,7 @@ desc = "단일 PDF를 크기, 페이지 수 또는 문서 수를 기준으로 �
 [home.replaceColor]
 title = "색상 교체 및 반전"
 desc = "PDF 문서의 색상을 교체하거나 반전합니다."
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,개발,문서"
@@ -968,18 +969,22 @@ desc = "자동 폴더 스캔 가이드로 이동"
 [home.devSsoGuide]
 title = "SSO 가이드"
 desc = "SSO 가이드로 이동"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "격리 환경 설정"
 desc = "격리 환경 설정 가이드로 이동"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "비밀번호 추가"
 desc = "PDF 문서를 비밀번호로 암호화합니다."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "권한 변경"
 desc = "문서 제한 및 권한 변경"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "워크플로,시퀀스,자동화"
@@ -989,10 +994,12 @@ desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. �
 [home.overlay-pdfs]
 desc = "PDF를 다른 PDF 위에 오버레이"
 title = "PDF 오버레이"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF 텍스트 편집기"
 desc = "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "텍스트,주석,레이블"
@@ -4625,6 +4632,13 @@ description = "링크-로컬 주소 차단(169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "클라우드 메타데이터 엔드포인트 차단"
 description = "클라우드 제공자 메타데이터 엔드포인트 차단(169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "연결"

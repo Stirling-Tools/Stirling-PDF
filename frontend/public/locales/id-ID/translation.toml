@@ -954,6 +954,7 @@ desc = "Membagi satu PDF menjadi beberapa dokumen berdasarkan ukuran, jumlah hal
 [home.replaceColor]
 title = "Ganti & Balik Warna"
 desc = "Ganti atau balik warna dalam dokumen PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,pengembangan,dokumentasi"
@@ -968,18 +969,22 @@ desc = "Tautan ke panduan pemindaian folder otomatis"
 [home.devSsoGuide]
 title = "Panduan SSO"
 desc = "Tautan ke panduan SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Penyiapan Air-gapped"
 desc = "Tautan ke panduan penyiapan air-gapped"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Tambahkan Kata Sandi"
 desc = "Enkripsi dokumen PDF Anda dengan kata sandi."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Ganti Perizinan"
 desc = "Ubah pembatasan dan izin dokumen"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "alur-kerja,urutan,otomasi"
@@ -989,10 +994,12 @@ desc = "Bangun alur kerja multi-langkah dengan merangkai tindakan PDF. Ideal unt
 [home.overlay-pdfs]
 desc = "Menumpuk PDF di atas PDF lain"
 title = "Tumpuk PDF"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "Editor Teks PDF"
 desc = "Tinjau dan edit ekspor Stirling PDF JSON dengan pengeditan teks terkelompok dan pembuatan ulang PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "teks,anotasi,label"
@@ -4625,6 +4632,13 @@ description = "Blokir alamat link-local (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blokir Endpoint Metadata Cloud"
 description = "Blokir endpoint metadata penyedia cloud (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Koneksi"

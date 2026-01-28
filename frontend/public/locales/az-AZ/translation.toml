@@ -954,6 +954,7 @@ desc = "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir n
 [home.replaceColor]
 title = "Rəngi əvəz et və invert et"
 desc = "PDF sənədlərində rəngləri əvəz edin və ya invert edin"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,inkişaf,sənədləşmə"
@@ -968,18 +969,22 @@ desc = "Avtomatlaşdırılmış qovluq skan təlimatına keçid"
 [home.devSsoGuide]
 title = "SSO təlimatı"
 desc = "SSO təlimatına keçid"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Şəbəkəsiz quraşdırma"
 desc = "Təcrid edilmiş quraşdırma təlimatına keçid"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Şifr Əlavə Et"
 desc = "Sənədini şifr ilə kilidlə."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "İcazələri Dəyişdir"
 desc = "Sənəd məhdudiyyətlərini və icazələrini dəyişin"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "iş axını,ardıcıllıq,avtomatlaşdırma"
@@ -989,10 +994,12 @@ desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları q
 [home.overlay-pdfs]
 desc = "Bir PDF-i digərinin üstünə qoyur"
 title = "Üst-Üstə Qoy"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF Mətn Redaktoru"
 desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "mətn,şərh,etiket"
@@ -4625,6 +4632,13 @@ description = "Link-local ünvanlarını blokla (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Bulud metadata son nöqtələrini blokla"
 description = "Bulud provayderlərinin metadata son nöqtələrini blokla (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Bağlantılar"

@@ -954,6 +954,7 @@ desc = "Dividi un singolo PDF in più documenti in base alle dimensioni, al nume
 [home.replaceColor]
 title = "Sostituisci e inverti colore"
 desc = "Sostituisci o inverti i colori nei documenti PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,sviluppo,documentazione"
@@ -968,18 +969,22 @@ desc = "Link alla guida per scansione cartelle automatizzata"
 [home.devSsoGuide]
 title = "Guida SSO"
 desc = "Link alla guida SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Setup isolato (air‑gapped)"
 desc = "Link alla guida per setup air‑gapped"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Aggiungi Password"
 desc = "Crittografa il tuo PDF con una password."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Cambia Permessi"
 desc = "Modifica restrizioni e permessi del documento"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "flusso di lavoro,sequenza,automazione"
@@ -989,10 +994,12 @@ desc = "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività r
 [home.overlay-pdfs]
 desc = "Sovrapponi un PDF sopra un altro"
 title = "Sovrapponi PDF"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "Editor di testo PDF"
 desc = "Modifica testo e immagini esistenti nei PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "testo,annotazione,etichetta"
@@ -4625,6 +4632,13 @@ description = "Blocca indirizzi link-locali (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blocca endpoint dei metadati cloud"
 description = "Blocca gli endpoint dei metadati dei provider cloud (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Connessioni"

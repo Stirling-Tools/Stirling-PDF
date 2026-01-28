@@ -954,6 +954,7 @@ desc = "Divideix un únic PDF en múltiples documents basant-se en la mida, el n
 [home.replaceColor]
 title = "Substitueix i inverteix el color"
 desc = "Substitueix o inverteix colors en documents PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,desenvolupament,documentació"
@@ -968,18 +969,22 @@ desc = "Enllaç a la guia d'escaneig automàtic de carpetes"
 [home.devSsoGuide]
 title = "Guia d'SSO"
 desc = "Enllaç a la guia d'SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Configuració air-gapped"
 desc = "Enllaç a la guia de configuració en entorn air-gapped"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Afegir Contrasenya"
 desc = "Xifra el document PDF amb contrasenya."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Canviar Permissos"
 desc = "Canvia les restriccions i els permisos del document"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "flux de treball,seqüència,automatització"
@@ -989,10 +994,12 @@ desc = "Construeix fluxos de treball multietapa enllaçant accions PDF. Ideal pe
 [home.overlay-pdfs]
 desc = "Superposa PDFs sobre un altre PDF"
 title = "Superposar PDFs"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "Editor de text PDF"
 desc = "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,anotació,etiqueta"
@@ -4625,6 +4632,13 @@ description = "Bloqueja adreces link-local (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Bloqueja punts finals de metadades del núvol"
 description = "Bloqueja punts finals de metadades dels proveïdors de núvol (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Connexions"

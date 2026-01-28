@@ -954,6 +954,7 @@ desc = "Dela en enda PDF till flera dokument baserat på storlek, sidantal eller
 [home.replaceColor]
 title = "Ersätt och invertera färg"
 desc = "Ersätt eller invertera färger i PDF‑dokument"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,utveckling,dokumentation"
@@ -968,18 +969,22 @@ desc = "Länk till guide för automatiserad mappskanning"
 [home.devSsoGuide]
 title = "SSO‑guide"
 desc = "Länk till SSO‑guide"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Isolerad installation"
 desc = "Länk till guide för isolerad installation"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Lägg till lösenord"
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Ändra behörigheter"
 desc = "Ändra dokumentrestriktioner och behörigheter"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "arbetsflöde,sekvens,automation"
@@ -989,10 +994,12 @@ desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. P
 [home.overlay-pdfs]
 desc = "Överlagrar PDF:er ovanpå en annan PDF"
 title = "Överlagra PDF:er"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF-textredigerare"
 desc = "Granska och redigera Stirling PDF JSON-exporter med grupperad textredigering och PDF-återgenerering"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,kommentar,etikett"
@@ -4625,6 +4632,13 @@ description = "Blockera länk-lokala adresser (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blockera molnmetadata-slutpunkter"
 description = "Blockera molnleverantörers metadata-slutpunkter (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Anslutningar"

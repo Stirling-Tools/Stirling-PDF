@@ -954,6 +954,7 @@ desc = "تقسيم ملف PDF واحد إلى مستندات متعددة بنا
 [home.replaceColor]
 title = "استبدال وعكس الألوان"
 desc = "استبدال الألوان أو عكسها في مستندات PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API،تطوير،توثيق"
@@ -968,18 +969,22 @@ desc = "رابط إلى دليل المسح الآلي للمجلدات"
 [home.devSsoGuide]
 title = "دليل SSO"
 desc = "رابط إلى دليل SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "إعداد معزول"
 desc = "رابط إلى دليل الإعداد المعزول"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "إضافة كلمة مرور"
 desc = "تشفير مستند PDF الخاص بك بكلمة مرور."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "تغيير الأذونات"
 desc = "تغيير قيود المستند وأذوناته"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "سير عمل،تسلسل،أتمتة"
@@ -989,10 +994,12 @@ desc = "ابنِ تدفّقات عمل متعددة الخطوات بسلسلة 
 [home.overlay-pdfs]
 desc = "تراكب ملف PDF فوق آخر"
 title = "تراكب ملفات PDF"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "محرر نصوص PDF"
 desc = "مراجعة وتحرير صادرات Stirling PDF بصيغة JSON مع تحرير نصوص مجمّعة وإعادة إنشاء PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "نص,تعليق,تسمية"
@@ -4625,6 +4632,13 @@ description = "حظر عناوين link-local ‏(169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "حظر نقاط نهاية بيانات تعريف السحابة"
 description = "حظر نقاط نهاية بيانات تعريف مزودي السحابة (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "الاتصالات"

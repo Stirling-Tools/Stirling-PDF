@@ -954,6 +954,7 @@ desc = "Разделете един PDF на множество документ
 [home.replaceColor]
 title = "Смени/обърни цветове"
 desc = "Заместване или инвертиране на цветове в PDF документи"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,разработка,документация"
@@ -968,18 +969,22 @@ desc = "Връзка към ръководство за автоматизира
 [home.devSsoGuide]
 title = "Ръководство за SSO"
 desc = "Връзка към SSO ръководство"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "Настройка за air‑gapped среда"
 desc = "Връзка към ръководство за air‑gapped настройка"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "Добавете парола"
 desc = "Шифровайте вашия PDF документ с парола."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "Промяна на правата"
 desc = "Промяна на ограниченията и разрешенията на документа"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "работен процес,последователност,автоматизация"
@@ -989,10 +994,12 @@ desc = "Създавайте многостъпкови работни проц�
 [home.overlay-pdfs]
 desc = "Наслагва PDF файлове върху друг PDF"
 title = "Наслагване PDF-и"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF текстов редактор"
 desc = "Преглеждайте и редактирайте JSON експорти на Stirling PDF с групово редактиране на текст и повторно генериране на PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "текст,анотация,етикет"
@@ -4625,6 +4632,13 @@ description = "Блокирай link-local адреси (169.254.x.x, fe80::/10)
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Блокирай крайни точки за облачни метаданни"
 description = "Блокирай крайни точки за облачни доставчици на метаданни (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Връзки"

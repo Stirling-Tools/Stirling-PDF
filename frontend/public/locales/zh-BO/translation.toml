@@ -954,6 +954,7 @@ desc = "按文件大小或页数自动拆分 PDF"
 [home.replaceColor]
 title = "替换与反转颜色"
 desc = "替换或反转 PDF 文档中的颜色"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,开发,文档"
@@ -968,18 +969,22 @@ desc = "链接到自动化文件夹扫描指南"
 [home.devSsoGuide]
 title = "SSO 指南"
 desc = "链接到 SSO 指南"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "离线隔离部署"
 desc = "链接到离线隔离部署指南"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "གསང་ཚིག་སྣོན་པ།"
 desc = "PDF ཡིག་ཆར་གསང་ཚིག་གིས་གསང་སྡོམ་བྱེད་པ།"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "更改权限"
 desc = "更改文档限制与权限"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "工作流,序列,自动化"
@@ -989,10 +994,12 @@ desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
 [home.overlay-pdfs]
 desc = "PDF གཞན་ཞིག་གི་སྟེང་དུ་ PDF བརྩེགས་པ།"
 title = "PDF སྟེང་བརྩེགས།"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF 文本编辑器"
 desc = "审阅并编辑 Stirling PDF 的 JSON 导出，支持分组文本编辑与 PDF 再生成"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "文本,注释,标签"
@@ -4625,6 +4632,13 @@ description = "阻止链路本地地址（169.254.x.x、fe80::/10）"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "阻止云元数据端点"
 description = "阻止云服务商元数据端点（169.254.169.254）"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "连接"

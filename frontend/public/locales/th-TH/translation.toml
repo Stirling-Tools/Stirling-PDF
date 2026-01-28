@@ -954,6 +954,7 @@ desc = "แยก PDF เป็นเอกสารหลายฉบับต�
 [home.replaceColor]
 title = "แทนที่และกลับสี"
 desc = "แทนที่หรือกลับสีในเอกสาร PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,development,documentation"
@@ -968,18 +969,22 @@ desc = "ลิงก์ไปยังคู่มือการสแกนโ
 [home.devSsoGuide]
 title = "คู่มือ SSO"
 desc = "ลิงก์ไปยังคู่มือ SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "การตั้งค่า Air-gapped"
 desc = "ลิงก์ไปยังคู่มือการตั้งค่า Air-gapped"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "เพิ่มรหัสผ่าน"
 desc = "เข้ารหัสเอกสาร PDF ของคุณด้วยรหัสผ่าน"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "เปลี่ยนสิทธิ์"
 desc = "เปลี่ยนข้อจำกัดและสิทธิ์ของเอกสาร"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "เวิร์กโฟลว์,ลำดับ,ระบบอัตโนมัติ"
@@ -989,10 +994,12 @@ desc = "สร้างเวิร์กโฟลว์หลายขั้น
 [home.overlay-pdfs]
 desc = "ซ้อนทับ PDF บน PDF อีกไฟล์หนึ่ง"
 title = "ซ้อนทับ PDF"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "แก้ไขข้อความ PDF"
 desc = "ตรวจทานและแก้ไขไฟล์ JSON ที่ส่งออกจาก Stirling PDF ด้วยการแก้ไขข้อความแบบกลุ่มและการสร้าง PDF ใหม่"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "text,annotation,label"
@@ -4625,6 +4632,13 @@ description = "บล็อกที่อยู่ link-local (169.254.x.x, fe8
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "บล็อก Cloud Metadata Endpoints"
 description = "บล็อกจุดปลายทาง metadata ของผู้ให้บริการคลาวด์ (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "การเชื่อมต่อ"

@@ -954,6 +954,7 @@ desc = "تقسیم یک PDF به چند سند بر اساس اندازه، تع
 [home.replaceColor]
 title = "جایگزینی و معکوس کردن رنگ"
 desc = "جایگزینی یا معکوس کردن رنگ‌ها در اسناد PDF"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,توسعه,مستندات"
@@ -968,18 +969,22 @@ desc = "پیوند به راهنمای اسکن خودکار پوشه"
 [home.devSsoGuide]
 title = "راهنمای SSO"
 desc = "پیوند به راهنمای SSO"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "راه‌اندازی Air-gapped"
 desc = "پیوند به راهنمای راه‌اندازی Air-gapped"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "افزودن رمز عبور"
 desc = "رمزگذاری سند PDF شما با رمز عبور."
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "تغییر مجوزها"
 desc = "تغییر محدودیت‌ها و مجوزهای سند"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "گردش‌کار,توالی,اتوماسیون"
@@ -989,10 +994,12 @@ desc = "ساخت گردش‌کارهای چندمرحله‌ای با زنجیر
 [home.overlay-pdfs]
 desc = "PDF‌ها را بر روی PDF دیگری هم‌پوشانی می‌کند"
 title = "هم‌پوشانی PDF‌ها"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "ویرایشگر متن PDF"
 desc = "بازبینی و ویرایش خروجی‌های JSON Stirling PDF با ویرایش گروهی متن و بازتولید PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "متن,حاشیه‌نویسی,برچسب"
@@ -4625,6 +4632,13 @@ description = "مسدود کردن آدرس‌های link-local (169.254.x.x, fe
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "مسدود کردن نقاط پایانی فرادادهٔ ابری"
 description = "مسدود کردن نقاط پایانی فرادادهٔ ارائه‌دهندگان ابری (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "اتصالات"

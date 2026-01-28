@@ -954,6 +954,7 @@ desc = "根據大小、頁數或文件數將單一 PDF 分割為多個文件"
 [home.replaceColor]
 title = "取代與反轉顏色"
 desc = "在 PDF 文件中取代或反轉顏色"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,開發,文件"
@@ -968,18 +969,22 @@ desc = "連結至自動化資料夾掃描指南"
 [home.devSsoGuide]
 title = "SSO 指南"
 desc = "連結至 SSO 指南"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 title = "隔離網路設定"
 desc = "連結至隔離網路設定指南"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 title = "新增密碼"
 desc = "用密碼加密您的 PDF 檔案。"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 title = "變更權限"
 desc = "變更文件限制與權限"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "工作流程,序列,自動化"
@@ -989,10 +994,12 @@ desc = "將多個 PDF 動作串接，建立多步驟工作流程。適合重複�
 [home.overlay-pdfs]
 desc = "將 PDF 覆蓋在另一個 PDF 上"
 title = "覆蓋 PDF"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 title = "PDF 文字編輯器"
 desc = "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "文字,註解,標籤"
@@ -4625,6 +4632,13 @@ description = "封鎖連結本機位址（169.254.x.x、fe80::/10）"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "封鎖雲端中繼資料端點"
 description = "封鎖雲端供應商的中繼資料端點（169.254.169.254）"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "連線"
