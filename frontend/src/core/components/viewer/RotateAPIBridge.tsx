@@ -1,39 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRotate } from '@embedpdf/plugin-rotate/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
-/**
- * Component that runs inside EmbedPDF context and updates rotation state in ViewerContext
- */
 export function RotateAPIBridge() {
-  const { provides: rotate, rotation } = useRotate();
-  const { registerBridge } = useViewer();
+  const activeDocumentId = useActiveDocumentId();
   
-  // Store state locally
-  const [_localState, setLocalState] = useState({
-    rotation: 0
-  });
+  // Don't render the inner component until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return <RotateAPIBridgeInner documentId={activeDocumentId} />;
+}
+
+function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
+  const { provides: rotate, rotation } = useRotate(documentId);
+  const { registerBridge } = useViewer();
+
+  // Keep rotate ref updated to avoid re-running effect when object reference changes
+  const rotateRef = useRef(rotate);
+  useEffect(() => {
+    rotateRef.current = rotate;
+  }, [rotate]);
 
   useEffect(() => {
-    if (rotate) {
-      // Update local state
+    const currentRotate = rotateRef.current;
+    if (currentRotate) {
       const newState = {
         rotation
       };
-      setLocalState(newState);
 
       // Register this bridge with ViewerContext
       registerBridge('rotation', {
         state: newState,
         api: {
-          rotateForward: () => rotate.rotateForward(),
-          rotateBackward: () => rotate.rotateBackward(),
-          setRotation: (rotationValue: number) => rotate.setRotation(rotationValue),
+          rotateForward: () => currentRotate.rotateForward(),
+          rotateBackward: () => currentRotate.rotateBackward(),
+          setRotation: (rotationValue: number) => currentRotate.setRotation(rotationValue),
           getRotation: () => rotation,
         }
       });
     }
-  }, [rotate, rotation]);
+  }, [rotation, registerBridge]);
 
   return null;
 }

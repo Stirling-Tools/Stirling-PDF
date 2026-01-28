@@ -1,4 +1,4 @@
-import { useRedaction as useEmbedPdfRedaction, SelectionMenuProps } from '@embedpdf/plugin-redaction/react';
+import { useRedaction as useEmbedPdfRedaction, RedactionSelectionMenuProps } from '@embedpdf/plugin-redaction/react';
 import { ActionIcon, Tooltip, Button, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
@@ -6,46 +6,63 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useRedaction } from '@app/contexts/RedactionContext';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
-/**
- * Custom menu component that appears when a pending redaction mark is selected.
- * Allows users to remove or apply individual pending marks.
- * Uses a portal to ensure it appears above all content, including next pages.
- */
-export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: SelectionMenuProps) {
-  const { t } = useTranslation();
-  const { provides } = useEmbedPdfRedaction();
-  const { setRedactionsApplied } = useRedaction();
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+// Use the official EmbedPDF v2.3.0 types
+export type { RedactionSelectionMenuProps };
+
+export function RedactionSelectionMenu(props: RedactionSelectionMenuProps) {
+  const activeDocumentId = useActiveDocumentId();
   
-  // Merge refs if menuWrapperProps has a ref
+  // Don't render until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return (
+    <RedactionSelectionMenuInner 
+      documentId={activeDocumentId}
+      {...props}
+    />
+  );
+}
+
+function RedactionSelectionMenuInner({ 
+  documentId,
+  context,
+  selected, 
+  menuWrapperProps,
+}: RedactionSelectionMenuProps & { documentId: string }) {
+  // Extract item and pageIndex from context (EmbedPDF v2.3.0 API)
+  const item = context?.item;
+  const pageIndex = context?.pageIndex;
+  const { t } = useTranslation();
+  const { provides } = useEmbedPdfRedaction(documentId);
+  const { setRedactionsApplied } = useRedaction();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  
+  // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback((node: HTMLDivElement | null) => {
     wrapperRef.current = node;
-    if (menuWrapperProps?.ref) {
-      const ref = menuWrapperProps.ref;
-      if (typeof ref === 'function') {
-        ref(node);
-      } else if (ref && 'current' in ref) {
-        (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
-      }
-    }
+    // Call the EmbedPDF ref callback
+    menuWrapperProps?.ref?.(node);
   }, [menuWrapperProps]);
   
   const handleRemove = useCallback(() => {
-    if (provides?.removePending && item) {
-      provides.removePending(item.page, item.id);
+    if (provides?.removePending && item && pageIndex !== undefined) {
+      provides.removePending(pageIndex, item.id);
     }
-  }, [provides, item]);
+  }, [provides, item, pageIndex]);
 
   const handleApply = useCallback(() => {
-    if (provides?.commitPending && item) {
-      provides.commitPending(item.page, item.id);
+    if (provides?.commitPending && item && pageIndex !== undefined) {
+      provides.commitPending(pageIndex, item.id);
       // Mark redactions as applied (but not yet saved) so the Save Changes button stays enabled
       // This ensures the button doesn't become disabled when pendingCount decreases
       setRedactionsApplied(true);
     }
-  }, [provides, item, setRedactionsApplied]);
+  }, [provides, item, pageIndex, setRedactionsApplied]);
 
   // Calculate position for portal based on wrapper element
   useEffect(() => {
@@ -61,13 +78,13 @@ export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: Sel
         return;
       }
 
-      const rect = wrapper.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
       // Position menu below the wrapper, centered
       // Use getBoundingClientRect which gives viewport-relative coordinates
       // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
       setMenuPosition({
-        top: rect.bottom + 8,
-        left: rect.left + rect.width / 2,
+        top: wrapperRect.bottom + 8,
+        left: wrapperRect.left + wrapperRect.width / 2,
       });
     };
 
@@ -152,19 +169,16 @@ export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: Sel
       </div>
     ) : null;
 
-  // Extract ref from menuWrapperProps to avoid conflicts
-  const { ref: _, ...wrapperPropsWithoutRef } = menuWrapperProps || {};
-
   return (
     <>
+      {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps */}
       <div 
         ref={setRef} 
-        {...wrapperPropsWithoutRef} 
         style={{ 
-          // Preserve the original positioning from menuWrapperProps
-          ...(wrapperPropsWithoutRef?.style || {}),
-          // Override visibility to hide the wrapper (we only need its position)
-          visibility: 'hidden',
+          // Use EmbedPDF's positioning styles
+          ...menuWrapperProps?.style,
+          // Keep the wrapper invisible but still occupying space for positioning
+          opacity: 0,
           pointerEvents: 'none',
         }} 
       />
@@ -174,4 +188,3 @@ export function RedactionSelectionMenu({ item, selected, menuWrapperProps }: Sel
     </>
   );
 }
-

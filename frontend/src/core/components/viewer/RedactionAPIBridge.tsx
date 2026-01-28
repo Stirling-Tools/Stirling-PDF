@@ -1,17 +1,21 @@
 import { useEffect, useImperativeHandle } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
 import { useRedaction } from '@app/contexts/RedactionContext';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
-/**
- * RedactionAPIBridge connects the EmbedPDF redaction plugin to our RedactionContext.
- * It must be rendered inside the EmbedPDF context to access the plugin API.
- * 
- * It does two things:
- * 1. Syncs EmbedPDF state (pendingCount, activeType, isRedacting) to our context
- * 2. Exposes the EmbedPDF API through our context's ref so outside components can call it
- */
 export function RedactionAPIBridge() {
-  const { state, provides } = useEmbedPdfRedaction();
+  const activeDocumentId = useActiveDocumentId();
+  
+  // Don't render the inner component until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return <RedactionAPIBridgeInner documentId={activeDocumentId} />;
+}
+
+function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
+  const { state, provides } = useEmbedPdfRedaction(documentId);
   const { 
     redactionApiRef, 
     setPendingCount, 

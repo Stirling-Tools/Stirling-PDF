@@ -1,6 +1,38 @@
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
 import { PdfBookmarkObject } from '@embedpdf/models';
 
+export enum PdfPermissionFlag {
+  Print = 0x0004,
+  ModifyContents = 0x0008,
+  CopyContents = 0x0010,
+  ModifyAnnotations = 0x0020,
+  FillForms = 0x0100,
+  ExtractForAccessibility = 0x0200,
+  AssembleDocument = 0x0400,
+  PrintHighQuality = 0x0800,
+  AllowAll = 0x0f3c,
+}
+
+export interface DocumentPermissionsState {
+  isEncrypted: boolean;
+  isOwnerUnlocked: boolean;
+  permissions: number;
+  canPrint: boolean;
+  canModifyContents: boolean;
+  canCopyContents: boolean;
+  canModifyAnnotations: boolean;
+  canFillForms: boolean;
+  canExtractForAccessibility: boolean;
+  canAssembleDocument: boolean;
+  canPrintHighQuality: boolean;
+}
+
+export interface DocumentPermissionsAPIWrapper {
+  hasPermission: (flag: PdfPermissionFlag) => boolean;
+  hasAllPermissions: (flags: PdfPermissionFlag[]) => boolean;
+  getEffectivePermission: (flag: PdfPermissionFlag) => boolean;
+}
+
 export interface ScrollAPIWrapper {
   scrollToPage: (params: { pageNumber: number; behavior?: ScrollBehavior }) => void;
   scrollToPreviousPage: () => void;
@@ -137,6 +169,7 @@ export interface BridgeStateMap {
   export: ExportState;
   bookmark: BookmarkState;
   print: unknown;
+  permissions: DocumentPermissionsState;
 }
 
 export interface BridgeApiMap {
@@ -151,6 +184,7 @@ export interface BridgeApiMap {
   export: ExportAPIWrapper;
   bookmark: BookmarkAPIWrapper;
   print: PrintAPIWrapper;
+  permissions: DocumentPermissionsAPIWrapper;
 }
 
 export type BridgeKey = keyof BridgeStateMap;
@@ -171,6 +205,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
   export: null,
   bookmark: null,
   print: null,
+  permissions: null,
 });
 
 export function registerBridge<K extends BridgeKey>(
