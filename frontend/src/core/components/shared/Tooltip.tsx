@@ -83,7 +83,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
     }
   }, []);
 
-  const sidebarContext = sidebarTooltip ? useSidebarContext() : null;
+  // Always call the hook unconditionally to satisfy React's rules of hooks.
+  // The context is only used when sidebarTooltip is true.
+  const sidebarContextValue = useSidebarContext();
+  const sidebarContext = sidebarTooltip ? sidebarContextValue : null;
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;

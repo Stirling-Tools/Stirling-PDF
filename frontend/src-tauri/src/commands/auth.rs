@@ -33,15 +33,20 @@ fn get_keyring_entry() -> Result<Entry, String> {
 
 #[tauri::command]
 pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
-    if token.is_empty() {
+    let trimmed = token.trim();
+    if trimmed.is_empty() {
         log::warn!("Attempted to save empty auth token");
         return Err("Token cannot be empty".to_string());
     }
 
     let entry = get_keyring_entry()?;
 
+    if trimmed.len() != token.len() {
+        log::debug!("Auth token had surrounding whitespace; storing trimmed token");
+    }
+
     entry
-        .set_password(&token)
+        .set_password(trimmed)
         .map_err(|e| {
             log::error!("Failed to set password in keyring: {}", e);
             format!("Failed to save token to keyring: {}", e)
@@ -50,7 +55,7 @@ pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<()
     // Verify the save worked
     match entry.get_password() {
         Ok(retrieved_token) => {
-            if retrieved_token != token {
+            if retrieved_token != trimmed {
                 log::error!("Token verification failed: Retrieved token doesn't match");
                 return Err("Token verification failed after save".to_string());
             }
@@ -201,6 +206,7 @@ pub async fn login(
     server_url: String,
     username: String,
     password: String,
+    mfa_code: Option<String>,
     supabase_key: String,
     saas_server_url: String,
 ) -> Result<LoginResponse, String> {
@@ -275,12 +281,22 @@ pub async fn login(
         let login_url = format!("{}/api/v1/auth/login", server_url.trim_end_matches('/'));
         log::debug!("Spring Boot login URL: {}", login_url);
 
+        let mut payload = serde_json::json!({
+            "username": username,
+            "password": password,
+        });
+
+        if let Some(code) = mfa_code
+            .as_ref()
+            .map(|c| c.trim())
+            .filter(|c| !c.is_empty())
+        {
+            payload["mfaCode"] = serde_json::Value::String(code.to_string());
+        }
+
         let response = client
             .post(&login_url)
-            .json(&serde_json::json!({
-                "username": username,
-                "password": password,
-            }))
+            .json(&payload)
             .send()
             .await
             .map_err(|e| format!("Network error: {}", e))?;
@@ -294,6 +310,19 @@ pub async fn login(
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
             log::error!("Spring Boot login failed with status {}: {}", status, error_text);
+
+            if let Ok(error_json) = serde_json::from_str::<serde_json::Value>(&error_text) {
+                let error_code = error_json
+                    .get("error")
+                    .and_then(|value| value.as_str())
+                    .map(|value| value.to_string());
+
+                if let Some(code) = error_code {
+                    if code == "mfa_required" || code == "invalid_mfa_code" {
+                        return Err(code);
+                    }
+                }
+            }
 
             return Err(if status.as_u16() == 401 {
                 "Invalid username or password".to_string()

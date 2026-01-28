@@ -2,7 +2,7 @@
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:8.14-jdk21 AS build
+FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
 
 # Install Node.js and npm for frontend build
 RUN apt-get update && apt-get install -y \
@@ -32,11 +32,13 @@ COPY . .
 
 # Build ultra-lite JAR with embedded frontend (minimal features)
 RUN DISABLE_ADDITIONAL_FEATURES=true \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Stage 2: Runtime image
-FROM alpine:3.22.1
+FROM alpine:3.23.2@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
 
 ARG VERSION_TAG
 

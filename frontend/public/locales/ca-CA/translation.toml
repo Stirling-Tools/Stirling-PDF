@@ -1,8 +1,11 @@
 unsavedChanges = "Tens canvis sense desar al teu PDF."
+pendingRedactionsTitle = "Redaccions no aplicades"
+pendingRedactions = "Hi ha redaccions no aplicades que es perdran."
 areYouSure = "Segur que vols sortir?"
 unsavedChangesTitle = "Canvis sense desar"
 keepWorking = "Continua treballant"
 discardChanges = "Descarta i surt"
+discardRedactions = "Descarta i surt"
 applyAndContinue = "Desa i surt"
 exportAndContinue = "Exporta i continua"
 cancel = "Cancel·la"
@@ -303,6 +306,7 @@ selectOperation = "Selecciona Operació"
 addOperationButton = "Afegeix operació"
 pipelineHeader = "Procés:"
 saveButton = "Descarrega"
+saveForFolderScanning = "Desa per a l'escaneig de carpetes"
 validateButton = "Valida"
 
 [enterpriseEdition]
@@ -340,6 +344,10 @@ advance = "Avançat"
 edit = "Visualitzar i Editar"
 popular = "Popular"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Preferències"
 
@@ -352,7 +360,7 @@ teams = "Equips"
 title = "Configuració"
 systemSettings = "Configuració del sistema"
 features = "Funcions"
-endpoints = "Punts finals"
+endpoints = "Endpoints"
 database = "Base de dades"
 advanced = "Avançat"
 
@@ -360,6 +368,7 @@ advanced = "Avançat"
 title = "Seguretat i autenticació"
 security = "Seguretat"
 connections = "Connexions"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Llicències i analítiques"
@@ -434,6 +443,32 @@ currentVersion = "Versió actual"
 latestVersion = "Última versió"
 checkForUpdates = "Comprova actualitzacions"
 viewDetails = "Veure detalls"
+serverNeedsUpdate = "L'administrador ha d'actualitzar el servidor"
+
+[settings.general.versionInfo]
+title = "Informació de la versió"
+description = "Detalls de les versions d'escriptori i del servidor"
+desktop = "Versió d'escriptori"
+server = "Versió del servidor"
+
+[settings.security]
+title = "Seguretat"
+description = "Actualitza la contrasenya per mantenir segur el compte."
+
+[settings.security.password]
+subtitle = "Canvia la contrasenya. Es tancarà la sessió després d’actualitzar."
+required = "Tots els camps són obligatoris."
+mismatch = "Les contrasenyes noves no coincideixen."
+error = "No s'ha pogut actualitzar la contrasenya. Verifica la contrasenya actual i torna-ho a provar."
+success = "La contrasenya s'ha actualitzat correctament. Torna a iniciar la sessió."
+ssoDisabled = "Els canvis de contrasenya els gestiona el proveïdor d'identitat."
+current = "Contrasenya actual"
+currentPlaceholder = "Introdueix la contrasenya actual"
+new = "Contrasenya nova"
+newPlaceholder = "Introdueix una contrasenya nova"
+confirm = "Confirma la contrasenya nova"
+confirmPlaceholder = "Torna a introduir la contrasenya nova"
+update = "Actualitza la contrasenya"
 
 [settings.hotkeys]
 title = "Dreceres de teclat"
@@ -488,11 +523,16 @@ low = "Baixa"
 title = "Canvia les Credencials"
 header = "Actualitza les Dades del Compte"
 changePassword = "Estàs utilitzant les credencials d'inici de sessió per defecte. Si us plau, introdueix una nova contrasenya"
+ssoManaged = "El compte el gestiona el proveïdor d'identitat."
 newUsername = "Nou Nom d'Usuari"
 oldPassword = "Contrasenya Actual"
 newPassword = "Nova Contrasenya"
 confirmNewPassword = "Confirma la Nova Contrasenya"
 submit = "Envia els Canvis"
+credsUpdated = "Compte actualitzat"
+description = "S'han desat els canvis. Torna a iniciar la sessió."
+error = "No s'ha pogut actualitzar el nom d'usuari. Verifica la contrasenya i torna-ho a provar."
+changeUsername = "Actualitza el nom d'usuari. Es tancarà la sessió després d’actualitzar."
 
 [account]
 title = "Opcions del compte"
@@ -500,6 +540,8 @@ accountSettings = "Opcions del compte"
 adminSettings = "Opcions d'Administrador - Veure i afegir usuaris"
 userControlSettings = "Opcions de Control d'Usuari"
 changeUsername = "Canvia el nom d'usuari"
+changeUsernameDescription = "Actualitza el nom d'usuari. Es tancarà la sessió després d’actualitzar."
+newUsernamePlaceholder = "Introdueix el nom d'usuari nou"
 newUsername = "Nom d'usuari nou"
 password = "Confirma contrasenya"
 oldPassword = "Contrasenya Antiga"
@@ -514,6 +556,30 @@ property = "Propietat:"
 webBrowserSettings = "Opcions del Navegador"
 syncToBrowser = "Sincronitza Compte -> Navegador"
 syncToAccount = "Sincronitza Compte <- Navegador"
+
+[account.mfa]
+title = "Autenticació de dos factors"
+setupFailed = "No s'ha pogut iniciar la configuració de l'autenticació de dos factors. Torneu-ho a provar."
+codeRequired = "Introduïu el codi d'autenticació per continuar."
+enabled = "Autenticació de dos factors activada."
+enableFailed = "No s'ha pogut activar l'autenticació de dos factors. Comproveu el codi i torneu-ho a provar."
+disabled = "Autenticació de dos factors desactivada."
+disableFailed = "No s'ha pogut desactivar l'autenticació de dos factors. Comproveu el codi i torneu-ho a provar."
+description = "Afegiu una capa addicional de seguretat al vostre compte."
+enableButton = "Activa l'autenticació de dos factors"
+disableButton = "Desactiva l'autenticació de dos factors"
+setupTitle = "Configura l'autenticació de dos factors"
+setupDescription = "Escanegeu el codi QR amb la vostra aplicació d'autenticació i, a continuació, introduïu el codi de 6 dígits per confirmar."
+manualKey = "Clau de configuració manual"
+secretWarning = "Manteniu aquesta clau en secret. Qualsevol persona amb accés pot generar codis d'autenticació vàlids."
+codePlaceholder = "Introduïu el codi de 6 dígits"
+confirmEnable = "Activa"
+disableTitle = "Desactiva l'autenticació de dos factors"
+disableDescription = "Introduïu un codi d'autenticació vàlid per desactivar l'autenticació de dos factors."
+codeLabel = "Codi d'autenticació"
+confirmDisable = "Desactiva"
+ssoDescription = "L'autenticació de dos factors és gestionada pel vostre proveïdor d'identitat per als comptes d'inici de sessió únic."
+ssoManaged = "Configureu l'MFA a través del vostre proveïdor d'identitat."
 
 [adminUserSettings]
 title = "Opcions de Control d'Usuari"
@@ -561,7 +627,7 @@ totalEndpoints = "Total d'endpoints"
 totalVisits = "Total de visites"
 showing = "Mostrant"
 selectedVisits = "Visites seleccionades"
-endpoint = "Punt final"
+endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Percentatge"
 loading = "Carregant..."
@@ -707,6 +773,11 @@ desc = "Detecta i separa fotos escanejades en pàgines separades"
 tags = "signatura,autògraf"
 title = "Signa"
 desc = "Afegeix signatura al PDF mitjançant dibuix, text o imatge"
+
+[home.annotate]
+tags = "anotar,ressaltar,dibuixar"
+title = "Anota"
+desc = "Ressalta, dibuixa i afegeix notes i formes al visor"
 
 [home.flatten]
 tags = "simplifica,elimina,interactiu"
@@ -919,7 +990,7 @@ title = "Superposar PDFs"
 
 [home.pdfTextEditor]
 title = "Editor de text PDF"
-desc = "Edita el text i les imatges existents dins dels PDF"
+desc = "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
 
 [home.addText]
 tags = "text,anotació,etiqueta"
@@ -930,6 +1001,7 @@ desc = "Afegeix text personalitzat a qualsevol lloc del teu PDF"
 addFiles = "Afegeix fitxers"
 uploadFromComputer = "Puja des de l'ordinador"
 openFromComputer = "Obre des de l'ordinador"
+mobileUpload = "Puja des del mòbil"
 
 [viewPdf]
 tags = "veure,llegir,anotar,text,imatge"
@@ -1217,7 +1289,10 @@ downloadHtml = "Baixa el fitxer HTML intermedi en lloc del PDF"
 pdfaOptions = "Opcions de PDF/A"
 outputFormat = "Format de sortida"
 pdfaNote = "PDF/A-1b és més compatible; PDF/A-2b admet més funcions."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
+pdfxDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta se suprimirà en el pas següent."
+pdfxDescription = "PDF/X és un subconjunt de PDF estàndard ISO per a una impressió fiable i un intercanvi de gràfics fiable."
 fileFormat = "Format de fitxer"
 wordDoc = "Document de Word"
 wordDocExt = "Document de Word (.docx)"
@@ -1245,6 +1320,37 @@ cbzOptions = "Opcions de CBZ a PDF"
 optimizeForEbook = "Optimitza el PDF per a lectors d'ebook (usa Ghostscript)"
 cbzOutputOptions = "Opcions de PDF a CBZ"
 cbzDpi = "DPI per al renderitzat d'imatges"
+cbrOptions = "Opcions CBR"
+cbrOutputOptions = "Opcions de PDF a CBR"
+cbrDpi = "DPI per al renderitzat d'imatges"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "Opcions d'eBook a PDF"
+ebookOptionsDesc = "Opcions per convertir eBooks a PDF"
+embedAllFonts = "Incrusta tots els tipus de lletra"
+embedAllFontsDesc = "Incrusta tots els tipus de lletra de l'eBook al PDF generat"
+includeTableOfContents = "Inclou la taula de continguts"
+includeTableOfContentsDesc = "Afegeix una taula de continguts generada al PDF resultant"
+includePageNumbers = "Inclou números de pàgina"
+includePageNumbersDesc = "Afegeix números de pàgina al PDF generat"
+optimizeForEbookPdf = "Optimitza per a lectors d'eBook"
+optimizeForEbookPdfDesc = "Optimitza el PDF per a la lectura en eBook (mida de fitxer menor, millor renderitzat en dispositius eInk)"
+
+[convert.epubOptions]
+epubOptions = "Opcions de PDF a eBook"
+epubOptionsDesc = "Opcions per convertir PDF a EPUB/AZW3"
+detectChapters = "Detecta capítols"
+detectChaptersDesc = "Detecta encapçalaments que semblin capítols i insereix salts de pàgina EPUB"
+targetDevice = "Dispositiu de destinació"
+targetDeviceDesc = "Tria un perfil de sortida optimitzat per al dispositiu lector"
+outputFormat = "Format de sortida"
+outputFormatDesc = "Tria el format de sortida per a l'eBook"
+tabletPhone = "Tauleta/Telèfon (amb imatges)"
+kindleEink = "Kindle e-Ink (text optimitzat)"
 
 [imageToPdf]
 tags = "conversió,img,jpg,imatge,foto"
@@ -1322,6 +1428,7 @@ applySignatures = "Aplica les imatges"
 name = "Imatge"
 placeholder = "Puja una imatge"
 label = "Fitxer d'imatge"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configura la imatge"
@@ -1361,6 +1468,11 @@ header = "Add attachments"
 add = "Afegeix adjunt"
 remove = "Elimina adjunt"
 embed = "Incrusta adjunt"
+convertToPdfA3b = "Converteix a PDF/A-3b"
+convertToPdfA3bDescription = "Crea un PDF d'arxiu amb fitxers adjunts incrustats"
+convertToPdfA3bTooltip = "PDF/A-3b és un format d'arxiu que garanteix la preservació a llarg termini. Permet incrustar formats de fitxer arbitraris com a adjunts. La conversió requereix Ghostscript i pot trigar més amb fitxers grans."
+convertToPdfA3bTooltipHeader = "Sobre la conversió a PDF/A-3b"
+convertToPdfA3bTooltipTitle = "Què fa"
 submit = "Add attachments"
 
 [watermark]
@@ -2113,6 +2225,16 @@ tip = "Actualment no funciona per a múltiples entrades al mateix temps"
 outputFormat = "Format de sortida"
 pdfWithDigitalSignature = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
 
+[pdfToPDFX]
+tags = "impressió,estàndard,conversió,producció,preimpressió,arxiu"
+title = "PDF a PDF/X"
+header = "PDF a PDF/X"
+credit = "Aquest servei utilitza Ghostscript per a la conversió a PDF/X"
+submit = "Converteix"
+tip = "Actualment no funciona amb diverses entrades alhora"
+outputFormat = "Format de sortida"
+pdfWithDigitalSignature = "El PDF conté una signatura digital. Aquesta se suprimirà en el pas següent."
+
 [PDFToWord]
 tags = "doc,docx,odt,word,transformació,format,conversió,oficina,microsoft,fitxer doc"
 title = "PDF a Word"
@@ -2306,6 +2428,10 @@ saved = "Desades"
 label = "Carrega la imatge de la signatura"
 placeholder = "Selecciona el fitxer d'imatge"
 hint = "Carrega una imatge PNG o JPG de la teva signatura"
+removeBackground = "Elimina el fons blanc (fes-lo transparent)"
+processing = "Processant la imatge..."
+backgroundRemovalFailedTitle = "No s'ha pogut eliminar el fons"
+backgroundRemovalFailedMessage = "No s'ha pogut eliminar el fons de la imatge. S'utilitzarà la imatge original."
 
 [sign.instructions]
 title = "Com afegir la signatura"
@@ -2350,6 +2476,11 @@ note = "Aplanar elimina els elements interactius del PDF, fent-los no editables.
 [flatten.options.flattenOnlyForms]
 label = "Aplana només els formularis"
 desc = "Aplana només els camps de formulari, deixant intactes altres elements interactius"
+
+[flatten.renderDpi]
+label = "DPI de renderitzat (opcional, recomanat 150 DPI)"
+help = "Deixa-ho en blanc per usar el valor predeterminat del sistema. Un DPI més alt afina el resultat però augmenta el temps de processament i la mida del fitxer."
+placeholder = "p. ex., 150"
 
 [flatten.results]
 title = "Resultats d'aplanament"
@@ -2925,6 +3056,7 @@ header = "Talla PDF"
 submit = "Envia"
 noFileSelected = "Seleccioneu un fitxer PDF per començar a retallar"
 reset = "Restableix al PDF complet"
+autoCrop = "Retalla automàticament els espais en blanc"
 
 [crop.preview]
 title = "Selecció de l'àrea de retall"
@@ -3059,6 +3191,18 @@ other = "Altres"
 perPageInfo = "Informació per pàgina"
 tableOfContents = "Taula de continguts"
 
+[getPdfInfo.compliance]
+notDetected = "No detectat"
+passed = "Superat"
+failed = "Fallat"
+compliant = "Conforme"
+nonCompliant = "No conforme"
+none = "No s'han detectat estàndards"
+passedCount = "superats"
+failedCount = "fallats"
+noVerification = "No s'ha realitzat cap verificació"
+noVerificationDesc = "El compliment dels estàndards PDF no s'ha verificat per a aquest document."
+
 [getPdfInfo.other]
 attachments = "Fitxers adjunts"
 embeddedFiles = "Fitxers incrustats"
@@ -3090,6 +3234,8 @@ permsRestricted = "{{count}} restriccions"
 permsMixed = "Alguns permisos restringits"
 hasCompliance = "Té estàndards de conformitat"
 noCompliance = "Sense estàndards de conformitat"
+compliancePassed = "{{standards}} conforme"
+complianceChecked = "Estàndards verificats ({{failed}} fallats)"
 basic = "Informació bàsica"
 documentInfo = "Informació del document"
 securityTitle = "Estat de seguretat"
@@ -3155,6 +3301,7 @@ title = "Mètode de redacció"
 mode = "Mode"
 automatic = "Automàtic"
 automaticDesc = "Redacta text en funció de termes de cerca"
+automaticDisabledTooltip = "Selecciona fitxers al gestor de fitxers per redactar diversos fitxers alhora"
 manual = "Manual"
 manualDesc = "Feu clic i arrossegueu per redactar àrees específiques"
 manualComingSoon = "La redacció manual arribarà aviat"
@@ -3225,8 +3372,35 @@ text = "Només coincideix amb paraules completes, no coincidències parcials. 'J
 title = "Converteix a PDF-imatge"
 text = "Converteix el PDF a un PDF basat en imatges després de la redacció. Això assegura que el text darrere dels quadres de redacció s'elimini completament i no es pugui recuperar."
 
+[redact.tooltip.manual.header]
+title = "Controls de redacció manuals"
+
+[redact.tooltip.manual.markText]
+title = "Eina de marcar text"
+text = "Selecciona text directament al PDF per marcar-lo per a la redacció. Fes clic i arrossega per ressaltar el text específic que vulguis redactar."
+
+[redact.tooltip.manual.markArea]
+title = "Eina de marcar àrea"
+text = "Dibuixa àrees rectangulars al PDF per marcar regions per a la redacció. Útil per redactar imatges, signatures o formes irregulars."
+
+[redact.tooltip.manual.apply]
+title = "Aplica les redaccions"
+text = "Després de marcar el contingut, fes clic a «Aplica» per redactar permanentment totes les àrees marcades. El recompte pendent mostra quantes redaccions estan preparades per aplicar-se."
+bullet1 = "Marca tantes àrees com calgui abans d'aplicar"
+bullet2 = "Totes les redaccions pendents s'apliquen alhora"
+bullet3 = "Les redaccions no es poden desfer després d'aplicar-les"
+
 [redact.manual]
+title = "Eines de redacció"
+instructions = "Selecciona text o dibuixa àrees al PDF per marcar contingut per a la redacció."
+markText = "Marca text"
+markArea = "Marca àrea"
+pendingLabel = "Pendent:"
+applyWarning = "⚠️ Aplicació permanent: no es pot desfer i les dades que hi ha a sota s'eliminaran"
+apply = "Aplica"
+noMarks = "No hi ha marques de redacció. Utilitza les eines de dalt per marcar contingut per a la redacció."
 header = "Redacció manual"
+controlsTitle = "Controls de redacció manuals"
 textBasedRedaction = "Redacció basada en text"
 pageBasedRedaction = "Redacció basada en pàgina"
 convertPDFToImageLabel = "Converteix PDF a PDF-imatge (S'utilitza per eliminar el text darrere del quadre)"
@@ -3341,6 +3515,19 @@ placeholder = "Introdueix el nombre de divisions horitzontals"
 [split-by-sections.vertical]
 label = "Divisions Verticals"
 placeholder = "Introdueix el nombre de divisions verticals"
+
+[split-by-sections.splitMode]
+label = "Mode de divisió"
+description = "Tria com dividir les pàgines"
+splitAll = "Divideix totes les pàgines"
+splitAllExceptFirst = "Divideix totes excepte la primera"
+splitAllExceptLast = "Divideix totes excepte l'última"
+splitAllExceptFirstAndLast = "Divideix totes excepte la primera i l'última"
+custom = "Pàgines personalitzades"
+
+[split-by-sections.customPages]
+label = "Números de pàgina personalitzats"
+placeholder = "p. ex., 2,4,6"
 
 [AddStampRequest]
 tags = "Segell, Afegeix imatge, Centra imatge, Marca d'aigua, PDF, Insereix, Personalitza"
@@ -3588,6 +3775,13 @@ passwordChangedSuccess = "Contrasenya canviada correctament! Inicieu sessió amb
 credentialsUpdated = "S'han actualitzat les vostres credencials. Torneu a iniciar sessió."
 defaultCredentials = "Credencials d'inici de sessió predeterminades"
 changePasswordWarning = "Canvia la contrasenya després d'iniciar sessió per primera vegada"
+mfaRequired = "Es requereix un codi de dos factors"
+mfaCode = "Codi d'autenticació"
+enterMfaCode = "Introduïu el codi de 6 dígits"
+mfaPromptTitle = "Autenticació de dos factors"
+mfaPromptBody = "Introduïu el codi d'autenticació de la vostra aplicació d'autenticació per continuar."
+verifyingMfa = "Verificant..."
+verifyMfa = "Verifica el codi"
 
 [login.slides.overview]
 alt = "Visió general de Stirling PDF"
@@ -3703,6 +3897,19 @@ filesize = "Mida del Fitxer"
 [compress.grayscale]
 label = "Aplicar escala de grisos per a la compressió"
 
+[compress.linearize]
+label = "Linearitza el PDF per a una visualització web ràpida"
+
+[compress.lineArt]
+label = "Converteix les imatges a dibuix de línies"
+description = "Utilitza ImageMagick per reduir les pàgines a blanc i negre d'alt contrast per a una reducció de mida màxima."
+unavailable = "ImageMagick no està instal·lat ni habilitat en aquest servidor"
+detailLevel = "Nivell de detall"
+edgeEmphasis = "Èmfasi de vores"
+edgeLow = "Suau"
+edgeMedium = "Equilibrat"
+edgeHigh = "Fort"
+
 [compress.tooltip.header]
 title = "Resum de configuració de compressió"
 
@@ -3720,6 +3927,10 @@ bullet2 = "Els valors alts redueixen la mida del fitxer"
 title = "Escala de grisos"
 text = "Seleccioneu aquesta opció per convertir totes les imatges a blanc i negre, cosa que pot reduir significativament la mida del fitxer, especialment per a PDFs escanejats o documents amb moltes imatges."
 
+[compress.tooltip.lineArt]
+title = "Dibuix de línies"
+text = "Converteix pàgines a blanc i negre d'alt contrast amb ImageMagick. Utilitza el nivell de detall per controlar quant contingut esdevé negre i l’èmfasi de vores per controlar com d’agressiva és la detecció de vores."
+
 [compress.error]
 failed = "S'ha produït un error en comprimir el PDF."
 
@@ -3731,6 +3942,11 @@ failed = "S'ha produït un error en comprimir el PDF."
 [compress.selectText.1]
 _value = "Configuració de compressió"
 1 = "1-3 compressió de PDF,</br> 4-6 compressió lleugera d'imatges,</br> 7-9 compressió intensa d'imatges Reduirà dràsticament la qualitat de la imatge"
+
+[compress.compressionLevel]
+range1to3 = "Valors baixos conserven la qualitat però generen fitxers més grans"
+range4to6 = "Compressió mitjana amb una reducció moderada de la qualitat"
+range7to9 = "Valors alts redueixen significativament la mida del fitxer però poden reduir la nitidesa de la imatge"
 
 [decrypt]
 passwordPrompt = "Aquest fitxer està protegit amb contrasenya. Si us plau, introdueix la contrasenya:"
@@ -3971,22 +4187,97 @@ deleteSelected = "Suprimeix les pàgines seleccionades"
 closePdf = "Tanca el PDF"
 exportAll = "Exporta el PDF"
 downloadSelected = "Descarrega els fitxers seleccionats"
-downloadAll = "Descarrega-ho tot"
-saveAll = "Desa-ho tot"
+annotations = "Anotacions"
+exportSelected = "Exporta les pàgines seleccionades"
+saveChanges = "Desa els canvis"
 toggleTheme = "Canvia el tema"
-toggleBookmarks = "Mostra/amaga marcadors"
 language = "Idioma"
+toggleAnnotations = "Mostra/oculta les anotacions"
 search = "Cerca al PDF"
 panMode = "Mode de desplaçament"
+applyRedactionsFirst = "Aplica primer les redaccions"
 rotateLeft = "Gira a l'esquerra"
 rotateRight = "Gira a la dreta"
 toggleSidebar = "Mostra/oculta la barra lateral"
-exportSelected = "Exporta les pàgines seleccionades"
-toggleAnnotations = "Mostra/oculta les anotacions"
-annotationMode = "Activa/desactiva el mode d'anotació"
+toggleBookmarks = "Mostra/amaga marcadors"
 print = "Imprimeix el PDF"
 draw = "Dibuixa"
+redact = "Redacta"
+exitRedaction = "Surt del mode de redacció"
 save = "Desa"
+downloadAll = "Descarrega-ho tot"
+saveAll = "Desa-ho tot"
+
+[textAlign]
+left = "Esquerra"
+center = "Centre"
+right = "Dreta"
+
+[annotation]
+title = "Anota"
+desc = "Utilitza ressaltador, ploma, text i notes. Els canvis es mantenen en viu—no cal aplanar."
+highlight = "Ressaltador"
+pen = "Ploma"
+text = "Quadre de text"
+note = "Nota"
+rectangle = "Rectangle"
+ellipse = "El·lipse"
+select = "Selecciona"
+exit = "Surt del mode d'anotació"
+strokeWidth = "Amplada"
+opacity = "Opacitat"
+strokeOpacity = "Opacitat del traç"
+fillOpacity = "Opacitat de farciment"
+fontSize = "Mida de la lletra"
+chooseColor = "Tria el color"
+color = "Color"
+strokeColor = "Color del traç"
+fillColor = "Color de farciment"
+underline = "Subratllat"
+strikeout = "Barrat"
+squiggly = "Subratllat ondulat"
+inkHighlighter = "Ressaltador a mà alçada"
+freehandHighlighter = "Ressaltador a mà alçada"
+square = "Quadrat"
+circle = "Cercle"
+polygon = "Polígon"
+line = "Línia"
+stamp = "Afegeix imatge"
+textMarkup = "Marcat de text"
+drawing = "Dibuix"
+shapes = "Formes"
+notesStamps = "Notes i segells"
+settings = "Configuració"
+borderOn = "Vora: activada"
+borderOff = "Vora: desactivada"
+editInk = "Edita la ploma"
+editLine = "Edita la línia"
+editNote = "Edita la nota"
+editText = "Edita el quadre de text"
+editTextMarkup = "Edita el marcat de text"
+editSelected = "Edita l'anotació"
+editSquare = "Edita el quadrat"
+editCircle = "Edita el cercle"
+editPolygon = "Edita el polígon"
+unsupportedType = "Aquest tipus d’anotació no és totalment compatible amb l’edició."
+textAlignment = "Alineació del text"
+noteIcon = "Icona de nota"
+imagePreview = "Previsualització"
+contents = "Text"
+backgroundColor = "Color de fons"
+clearBackground = "Elimina el fons"
+noBackground = "Sense fons"
+stampSettings = "Configuració del segell"
+savingCopy = "Preparant la baixada..."
+saveFailed = "No s'ha pogut desar la còpia"
+saveReady = "Baixada preparada"
+selectAndMove = "Selecciona i edita"
+editSelectDescription = "Fes clic en una anotació existent per editar-ne el color, l'opacitat, el text o la mida."
+editStampHint = "Per canviar la imatge, suprimeix aquest segell i n'afegeix un de nou."
+editSwitchToSelect = "Canvia a Selecciona i edita per editar aquesta anotació."
+undo = "Desfés"
+redo = "Refés"
+applyChanges = "Aplica els canvis"
 saveChanges = "Desa els canvis"
 
 [search]
@@ -4033,17 +4324,25 @@ files = "Fitxers"
 activity = "Registre"
 help = "Ajuda"
 account = "Compte"
-config = "Configuració"
+config = "Config"
 settings = "Ajustos"
 adminSettings = "Ajustos admin"
 allTools = "All Tools"
 reader = "Lector"
+tours = "Visites guiades"
+showMeAround = "Fes-me una visita guiada"
+
+[quickAccess.toursTooltip]
+admin = "Mira els recorreguts aquí: visita de les eines, visita del nou disseny V2 i la visita d’administració."
+user = "Mira els recorreguts aquí: visita de les eines i visita del nou disseny V2."
 
 [quickAccess.helpMenu]
 toolsTour = "Visita guiada de les eines"
 toolsTourDesc = "Descobriu què poden fer les eines"
 adminTour = "Visita per a administradors"
 adminTourDesc = "Exploreu la configuració i les funcions d'administració"
+whatsNewTour = "Descobreix les novetats de la V2"
+whatsNewTourDesc = "Recorregut pel disseny actualitzat"
 
 [admin]
 error = "Error"
@@ -4062,6 +4361,8 @@ fetchError = "No s'ha pogut carregar la configuració"
 saveError = "No s'ha pogut desar la configuració"
 saved = "Configuració desada correctament"
 saveSuccess = "Configuració desada correctament"
+success = "La configuració s'ha desat correctament"
+error = "No s'ha pogut desar la configuració"
 save = "Desa els canvis"
 discard = "Descarta"
 restartRequired = "Cal reiniciar"
@@ -4081,6 +4382,10 @@ hint = "Tens canvis no desats"
 title = "Cal el mode d'inici de sessió"
 message = "S'ha d'activar el mode d'inici de sessió per modificar la configuració d'administració. Si us plau, establiu SECURITY_ENABLELOGIN=true al vostre entorn o security.enableLogin: true a settings.yml, i després reinicieu el servidor."
 readOnly = "Els paràmetres següents mostren valors d'exemple com a referència. Activeu el mode d'inici de sessió per veure i editar la configuració real."
+
+[admin.settings.enterpriseRequired]
+title = "Es requereix llicència Enterprise"
+message = "Es requereix una llicència Enterprise per accedir a {{featureName}}. Esteu veient dades de demostració com a referència."
 
 [admin.settings.restart]
 title = "Cal reiniciar"
@@ -4184,6 +4489,13 @@ description = "Camí a l'executable de WeasyPrint per a la conversió d'HTML a P
 [admin.settings.general.customPaths.operations.unoconvert]
 label = "Executable d'Unoconvert"
 description = "Camí a LibreOffice unoconvert per a conversions de documents (deixeu-ho buit per al valor per defecte: /opt/venv/bin/unoconvert)"
+
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "URL base per al frontend (p. ex., https://pdf.example.com). S'utilitza per a enllaços d'invitació per correu i pujades via codi QR mòbil. Deixa-ho en blanc per usar l'URL del backend."
+
+[admin.settings.badge]
+clickToUpgrade = "Fes clic per veure els detalls del pla"
 
 [admin.settings.security]
 title = "Seguretat"
@@ -4321,6 +4633,19 @@ connect = "Connecta"
 disconnect = "Desconnecta"
 disconnected = "Proveïdor desconnectat correctament"
 disconnectError = "No s'ha pogut desconnectar el proveïdor"
+mobileScannerConvertToPdf = "Converteix imatges a PDF"
+mobileScannerConvertToPdfDesc = "Converteix automàticament les imatges pujades al format PDF. Si es desactiva, les imatges es mantindran tal com estan."
+mobileScannerImageResolution = "Resolució de la imatge"
+mobileScannerImageResolutionDesc = "Resolució de les imatges pujades. «Reduïda» escala les imatges fins a un màxim de 1200 px per reduir la mida del fitxer."
+imageResolutionFull = "Completa (mida original)"
+imageResolutionReduced = "Reduïda (màx. 1200 px)"
+mobileScannerPageFormat = "Format de pàgina"
+mobileScannerPageFormatDesc = "Mida de pàgina del PDF per a les imatges convertides. «Mantén» utilitza les dimensions originals de la imatge."
+pageFormatKeep = "Mantén (dimensions originals)"
+pageFormatA4 = "A4 (210×297 mm)"
+pageFormatLetter = "Letter (8,5×11 polzades)"
+mobileScannerStretchToFit = "Ajusta per omplir"
+mobileScannerStretchToFitDesc = "Estira les imatges per omplir tota la pàgina. Si es desactiva, les imatges es centraran preservant la relació d’aspecte."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Inici de sessió automàtic amb SSO"
@@ -4389,10 +4714,168 @@ description = "Crea automàticament comptes d'usuari en el primer inici de sessi
 label = "Bloqueja el registre"
 description = "Evita el registre de nous usuaris via SAML2"
 
+[admin.settings.connections.mobileScanner]
+label = "Pujada des del telèfon mòbil"
+enable = "Habilita la pujada per codi QR"
+description = "Permet als usuaris pujar fitxers des de dispositius mòbils escanejant un codi QR"
+note = "Nota: cal configurar el Frontend URL. "
+link = "Configura-ho a la configuració del sistema"
+mobileScannerConvertToPdf = "Converteix imatges a PDF"
+mobileScannerConvertToPdfDesc = "Converteix automàticament les imatges pujades al format PDF. Si es desactiva, les imatges es mantindran tal com estan."
+mobileScannerImageResolution = "Resolució de la imatge"
+mobileScannerImageResolutionDesc = "Resolució de les imatges pujades. «Reduïda» escala les imatges fins a un màxim de 1200 px per reduir la mida del fitxer."
+imageResolutionFull = "Completa (mida original)"
+imageResolutionReduced = "Reduïda (màx. 1200 px)"
+mobileScannerPageFormat = "Format de pàgina"
+mobileScannerPageFormatDesc = "Mida de pàgina del PDF per a les imatges convertides. «Mantén» utilitza les dimensions originals de la imatge."
+pageFormatKeep = "Mantén (dimensions originals)"
+pageFormatA4 = "A4 (210×297 mm)"
+pageFormatLetter = "Letter (8,5×11 polzades)"
+mobileScannerStretchToFit = "Ajusta per omplir"
+mobileScannerStretchToFitDesc = "Estira les imatges per omplir tota la pàgina. Si es desactiva, les imatges es centraran preservant la relació d’aspecte."
+
+[admin.settings.telegram]
+title = "Bot de Telegram"
+description = "Configura la connectivitat del bot de Telegram, els controls d'accés i el comportament dels missatges de retroacció."
+
+[admin.settings.telegram.enabled]
+label = "Habilita el bot de Telegram"
+description = "Permet als usuaris interactuar amb Stirling PDF a través del bot de Telegram configurat."
+
+[admin.settings.telegram.botUsername]
+label = "Nom d'usuari del bot"
+description = "El nom d'usuari públic del bot de Telegram."
+
+[admin.settings.telegram.botToken]
+label = "Token del bot"
+description = "Token d'API proporcionat per BotFather per al bot de Telegram."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Carpeta d'entrada"
+description = "Carpeta dins del directori de pipeline on s'emmagatzemen els fitxers entrants de Telegram."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Usa un sufix personalitzat de carpeta"
+description = "Afegeix l'ID del xat a les carpetes de fitxers entrants per aïllar les pujades per xat."
+
+[admin.settings.telegram.accessControl]
+title = "Control d'accés"
+description = "Restringeix quins usuaris o canals poden interactuar amb el bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Permet ID d'usuari específics"
+description = "Quan està habilitat, només els ID d'usuari llistats poden utilitzar el bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "ID d'usuari permesos"
+description = "Introdueix els ID d'usuari de Telegram que poden interactuar amb el bot."
+placeholder = "Afegeix un ID d'usuari i prem Retorn"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Permet ID de canal específics"
+description = "Quan està habilitat, només els ID de canal llistats poden utilitzar el bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "ID de canal permesos"
+description = "Introdueix els ID de canal de Telegram que poden interactuar amb el bot."
+placeholder = "Afegeix un ID de canal i prem Retorn"
+
+[admin.settings.telegram.processing]
+title = "Processament"
+description = "Controla els intervals de consulta i els temps d'espera del processament per a pujades de Telegram."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Temps d'espera del processament (segons)"
+description = "Temps màxim d'espera d'una tasca de processament abans d'informar d'un error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Interval de consulta (ms)"
+description = "Interval entre comprovacions de noves actualitzacions de Telegram."
+
+[admin.settings.telegram.feedback]
+title = "Missatges de retroacció"
+description = "Tria quan el bot ha d'enviar retroacció als usuaris i canals."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Habilita la retroacció"
+description = "Controla si el bot envia missatges de retroacció."
+
+[admin.settings.telegram.feedback.channel]
+title = "Regles de retroacció del canal"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Mostra «No hi ha cap document vàlid» (canal)"
+description = "Suprimeix la resposta de «no hi ha cap document vàlid» per a pujades al canal."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Mostra errors de processament (canal)"
+description = "Envia missatges d'error de processament als canals."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Mostra missatges d'error (canal)"
+description = "Mostra missatges d'error detallats per als canals."
+
+[admin.settings.telegram.feedback.user]
+title = "Regles de retroacció de l'usuari"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Mostra «No hi ha cap document vàlid» (usuari)"
+description = "Suprimeix la resposta de «no hi ha cap document vàlid» per a pujades d'usuari."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Mostra errors de processament (usuari)"
+description = "Envia missatges d'error de processament als usuaris."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Mostra missatges d'error (usuari)"
+description = "Mostra missatges d'error detallats per als usuaris."
+
 [admin.settings.database]
 title = "Base de dades"
 description = "Configureu la configuració de connexió de base de dades personalitzada per a desplegaments d'empresa."
 configuration = "Configuració de la base de dades"
+backupTitle = "Còpies de seguretat i restauració"
+backupDescription = "Gestiona còpies de seguretat d'H2 directament des de la consola d'administració."
+loadError = "No s'han pogut carregar les còpies de seguretat de la base de dades"
+backupCreated = "La còpia de seguretat s'ha creat correctament"
+backupFailed = "No s'ha pogut crear la còpia de seguretat"
+deleteTitle = "Suprimeix la còpia de seguretat"
+deleteConfirm = "Voleu suprimir aquesta còpia de seguretat? Aquesta acció no es pot desfer."
+deleteSuccess = "S'ha suprimit la còpia de seguretat"
+deleteFailed = "No s'ha pogut suprimir la còpia de seguretat"
+deleteConfirmAction = "Suprimeix la còpia de seguretat"
+downloadFailed = "No s'ha pogut descarregar la còpia de seguretat"
+version = "Versió d'H2"
+embedded = "H2 integrat"
+external = "Base de dades externa"
+h2Only = "Les còpies de seguretat només estan disponibles per a la base de dades H2 integrada."
+h2Hint = "Establiu el tipus de base de dades a H2 i desactiveu la base de dades personalitzada per habilitar la còpia de seguretat i la restauració."
+manageBackups = "Gestiona les còpies de seguretat"
+refresh = "Actualitza"
+createBackup = "Crea una còpia de seguretat"
+uploadTitle = "Puja i importa"
+chooseFile = "Trieu un fitxer de còpia de seguretat .sql"
+importFromUpload = "Importa la pujada"
+confirmImportTitle = "Confirma la importació de la base de dades"
+overwriteWarning = "Avís: això sobreescriurà la base de dades actual."
+overwriteWarningBody = "Totes les dades existents se substituiran per la còpia de seguretat pujada. Aquesta acció no es pot desfer."
+confirmCodeLabel = "Introduïu el codi de confirmació per continuar"
+enterCode = "Introduïu el codi que es mostra a dalt"
+confirmImport = "Confirma la importació"
+codeMismatch = "El codi de confirmació no coincideix"
+codeMismatchBody = "Introduïu el codi exactament tal com es mostra per continuar."
+selectFile = "Seleccioneu un fitxer .sql per importar"
+importSuccess = "La còpia de seguretat s'ha importat correctament"
+importFailed = "No s'ha pogut importar la còpia de seguretat"
+noBackups = "Encara no s'han trobat còpies de seguretat."
+unavailable = "La llista de còpies de seguretat no està disponible per a la configuració actual de la base de dades."
+fileName = "Fitxer"
+created = "Creat"
+size = "Mida"
+actions = "Accions"
+download = "Descarrega"
+import = "Importa"
+delete = "Suprimeix"
 
 [admin.settings.database.enableCustom]
 label = "Habilita base de dades personalitzada"
@@ -4451,7 +4934,7 @@ features = "Banderes de funcions"
 processing = "Processament"
 
 [admin.settings.advanced.endpoints]
-label = "Punts finals"
+label = "Endpoints"
 manage = "Gestiona els endpoints de l'API"
 description = "La gestió d'endpoints es configura via YAML. Consulteu la documentació per a detalls sobre com habilitar/deshabilitar endpoints específics."
 
@@ -4470,6 +4953,26 @@ description = "DPI màxim per al processament d'imatges (0 = il·limitat)"
 [admin.settings.advanced.tessdataDir]
 label = "Directori tessdata"
 description = "Camí al directori tessdata per als fitxers d'idioma d'OCR"
+downloadMissingTitle = "No s'ha seleccionat cap idioma"
+downloadMissingBody = "Seleccioneu almenys un idioma per descarregar."
+downloadSuccessTitle = "Idiomes descarregats"
+downloadSuccessBody = "S'han desat els idiomes de tessdata seleccionats."
+downloadErrorTitle = "La descàrrega ha fallat"
+loadingLanguages = "S'estan carregant els idiomes de tessdata instal·lats..."
+installedLanguages = "Idiomes de tessdata instal·lats"
+noLanguages = "No s'ha trobat cap idioma de tessdata al directori configurat."
+downloadLabel = "Descarrega idiomes de tessdata addicionals"
+downloadPlaceholder = "Seleccioneu idiomes"
+downloadNothingFound = "No s'han trobat idiomes addicionals"
+permissionNotice = "El camí de tessdata no té permisos d'escriptura. Les descàrregues s'obriran al navegador; deseu manualment els fitxers .traineddata a la carpeta tessdata."
+manualLinks = "Descàrregues manuals: feu clic als enllaços i col·loqueu els fitxers a la carpeta tessdata."
+downloadButton = "Descarrega els idiomes seleccionats"
+downloadInvalidTitle = "Selecció no vàlida"
+downloadInvalidBody = "Alguns idiomes seleccionats no estan disponibles per descarregar. Actualitzeu i trieu de la llista."
+downloadErrorNetwork = "La descàrrega ha fallat per un error de xarxa. Comproveu la connexió i torneu-ho a provar."
+downloadErrorServer = "El servidor ha trobat un error en descarregar els idiomes de tessdata. Torneu-ho a provar més tard."
+downloadErrorPermission = "El directori de tessdata no és escrivible: {{message}}. Trieu un directori amb permisos d'escriptura (per exemple, dins de la carpeta de dades de l'aplicació) o ajusteu-ne els permisos."
+downloadErrorGeneric = "La descàrrega ha fallat: {{message}}. Torneu-ho a provar més tard."
 
 [admin.settings.advanced.disableSanitize]
 label = "Desactiva la sanitització d'HTML"
@@ -4569,6 +5072,10 @@ description = "Permet que els administradors convidin usuaris per correu amb con
 [admin.settings.mail.frontendUrl]
 label = "URL del frontend"
 description = "URL base del frontend (p. ex. https://pdf.example.com). S'utilitza per generar enllaços d'invitació als correus. Deixeu-ho buit per usar l'URL del backend."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Nota: cal configurar el Frontend URL. "
+link = "Configura-ho a la configuració del sistema"
 
 [admin.settings.legal]
 title = "Documents legals"
@@ -4754,6 +5261,9 @@ googleDriveShort = "Drive"
 myFiles = "Els meus fitxers"
 noRecentFiles = "No s'han trobat fitxers recents"
 googleDriveNotAvailable = "La integració amb Google Drive no està disponible"
+mobileUpload = "Pujada des del mòbil"
+mobileShort = "Mòbil"
+mobileUploadNotAvailable = "La pujada des del mòbil no està habilitada"
 downloadSelected = "Descarrega els seleccionats"
 saveSelected = "Desa la selecció"
 openFiles = "Obre fitxers"
@@ -4966,6 +5476,7 @@ desc = "Creeu fluxos de treball de diversos passos encadenant accions de PDF. Id
 invalidStep = "Pas no vàlid"
 reviewTitle = "Resultats de l’automatització"
 copyToSaved = "Copia a Desats"
+exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
 
 [automate.files]
 placeholder = "Seleccioneu fitxers per processar amb aquesta automatització"
@@ -4987,6 +5498,7 @@ createTitle = "Crea automatització"
 editTitle = "Edita automatització"
 intro = "Les automatitzacions executen les eines seqüencialment. Per començar, afegiu les eines en l’ordre que voleu que s’executin."
 save = "Desa l’automatització"
+exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
 
 [automate.creation.name]
 label = "Nom de l’automatització"
@@ -5069,6 +5581,7 @@ loading = "Carregant..."
 back = "Enrere"
 continue = "Continua"
 error = "Error"
+save = "Desa"
 
 [config.overview]
 title = "Configuració de l’aplicació"
@@ -5130,6 +5643,15 @@ warning = "⚠️ Avís: Aquesta acció generarà claus API noves i invalidarà 
 impact = "Qualsevol aplicació o servei que actualment utilitzi aquestes claus deixarà de funcionar fins que les actualitzeu amb les noves claus."
 confirmPrompt = "Esteu segur que voleu continuar?"
 confirmCta = "Actualitza les claus"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Error de clau d'API"
+failedToCreateApiKey = "No s'ha pogut crear la clau d'API."
+failedToRetrieveApiKey = "No s'ha pogut obtenir la clau d'API de la resposta."
+failedToFetchApiKey = "No s'ha pogut recuperar la clau d'API."
+apiKeyRefreshed = "Clau d'API actualitzada"
+apiKeyRefreshedBody = "La clau d'API s'ha actualitzat correctament."
+failedToRefreshApiKey = "No s'ha pogut actualitzar la clau d'API."
 
 [AddAttachmentsRequest]
 attachments = "Seleccioneu adjunts"
@@ -5235,6 +5757,16 @@ finish = "Finalitza"
 startTour = "Inicia la visita"
 startTourDescription = "Feu una visita guiada per les funcions clau de Stirling PDF"
 
+[onboarding.whatsNew]
+quickAccess = "Comença a la barra de <strong>Accés ràpid</strong> per saltar entre el Lector, Automatitza, els teus fitxers i totes les visites guiades."
+leftPanel = "El panell esquerre de <strong>Eines</strong> llista tot el que pots fer. Navega per categories o cerca per trobar una eina ràpidament."
+fileUpload = "Utilitza el botó <strong>Fitxers</strong> per pujar o triar un PDF recent. Carregarem un exemple perquè vegis l'espai de treball."
+rightRail = "La <strong>barra dreta</strong> conté accions ràpides per seleccionar fitxers, canviar el tema o l’idioma i baixar els resultats."
+topBar = "La barra superior et permet canviar entre el <strong>Visor</strong>, l’<strong>Editor de pàgines</strong> i els <strong>Fitxers actius</strong>."
+pageEditorView = "Canvia a l'Editor de pàgines per reordenar, girar o suprimir pàgines."
+activeFilesView = "Utilitza Fitxers actius per veure tot el que tens obert i triar amb què treballar."
+wrapUp = "Això és el que hi ha de nou a la V2. Obre el menú de <strong>Visites guiades</strong> en qualsevol moment per tornar a veure aquesta, la visita d’Eines o la d’Administració."
+
 [onboarding.welcomeModal]
 title = "Us donem la benvinguda a Stirling PDF!"
 description = "Voleu fer una visita guiada d’1 minut per conèixer les funcions clau i com començar?"
@@ -5255,6 +5787,10 @@ download = "Baixa →"
 showMeAround = "Fes-me un recorregut"
 skipTheTour = "Omet la visita guiada"
 
+[onboarding.tourOverview]
+title = "Resum de la visita"
+body = "Stirling PDF V2 inclou desenes d'eines i un disseny renovat. Fes una visita ràpida per veure què ha canviat i on trobar les funcions que necessites."
+
 [onboarding.serverLicense]
 skip = "Omet per ara"
 seePlans = "Veure plans →"
@@ -5262,7 +5798,7 @@ upgrade = "Actualitza ara →"
 freeTitle = "Llicència del servidor"
 overLimitTitle = "Cal una llicència de servidor"
 overLimitBody = "La nostra llicència permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Tens <strong>{{overLimitUserCopy}}</strong> usuaris de Stirling. Per continuar sense interrupcions, actualitza al pla Stirling Server: <strong>seients il·limitats</strong>, edició de text de PDF i control d'administració complet per 99 $/servidor/mes."
-freeBody = "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions, recomanem el pla Stirling Server - <strong>places il·limitades</strong> i <strong>suport SSO</strong> per $99/servidor/mes."
+freeBody = "La nostra llicència <strong>Open-Core</strong> permet fins a <strong>{{freeTierLimit}}</strong> usuaris gratuïts per servidor. Per escalar sense interrupcions i obtenir accés anticipat a la nova <strong>eina d'edició de text PDF</strong>, recomanem el pla Stirling Server: edició completa i <strong>seients il·limitats</strong> per 99 $/servidor/mes."
 
 [onboarding.desktopInstall]
 title = "Baixa"
@@ -5337,9 +5873,11 @@ username = "Nom d’usuari (correu electrònic)"
 usernamePlaceholder = "user@example.com"
 password = "Contrasenya"
 passwordPlaceholder = "Introduïu la contrasenya"
+passwordRequired = "La contrasenya és obligatòria"
 role = "Rol"
 team = "Equip (opcional)"
 teamPlaceholder = "Seleccioneu un equip"
+authType = "Tipus d'autenticació"
 forcePasswordChange = "Obliga a canviar la contrasenya en el primer inici de sessió"
 cancel = "Cancel·la"
 submit = "Afegeix membre"
@@ -5347,6 +5885,13 @@ usernameRequired = "Cal nom d’usuari i contrasenya"
 passwordTooShort = "La contrasenya ha de tenir almenys 6 caràcters"
 success = "Usuari creat correctament"
 error = "No s’ha pogut crear l’usuari"
+forceMFA = "Força la configuració de l'MFA en el proper inici de sessió"
+
+[workspace.people.authType]
+password = "Contrasenya"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "L'usuari s'autenticarà a través del proveïdor SSO"
 
 [workspace.people.editMember]
 title = "Edita membre"
@@ -5449,6 +5994,11 @@ fromLicense = "de la llicència"
 slotsAvailable = "{{count}} plaça(es) d’usuari disponibles"
 noSlotsAvailable = "No hi ha places disponibles"
 currentUsage = "Actualment s’estan utilitzant {{current}} de {{max}} llicències d’usuari"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA desactivada correctament per a l'usuari"
+adminDisableError = "No s'ha pogut desactivar l'MFA per a l'usuari"
+disableByAdmin = "Desactiva l'MFA"
 
 [workspace.teams]
 title = "Equips"
@@ -5568,6 +6118,28 @@ contactSales = "Contacta amb vendes"
 contactToUpgrade = "Contacteu-nos per actualitzar o personalitzar el vostre pla"
 maxUsers = "Nombre màxim d’usuaris"
 upTo = "Fins a"
+getLicense = "Obtén la llicència del servidor"
+upgradeToEnterprise = "Actualitza a Enterprise"
+selectPeriod = "Selecciona el període de facturació"
+monthlyBilling = "Facturació mensual"
+yearlyBilling = "Facturació anual"
+checkoutOpened = "Pagament obert"
+checkoutInstructions = "Completa la compra a la pestanya de Stripe. Després del pagament, torna aquí i actualitza la pàgina per activar la llicència. També rebràs un correu electrònic amb la clau de llicència."
+activateLicense = "Activa la teva llicència"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Pagament obert en una pestanya nova"
+instructions = "Completa la compra a la pestanya de Stripe. Un cop completat el pagament, rebràs un correu electrònic amb la clau de llicència."
+enterKey = "Introdueix la clau de llicència a continuació per activar el pla:"
+keyDescription = "Enganxa la clau de llicència del correu electrònic"
+activate = "Activa la llicència"
+doLater = "Ho faré més tard"
+success = "Llicència activada!"
+successMessage = "La llicència s'ha activat correctament. Ara pots tancar aquesta finestra."
+
+[plan.static.billingPortal]
+title = "Cal verificació del correu electrònic"
+message = "Hauràs de verificar l'adreça de correu electrònic al portal de facturació de Stripe. Comprova el correu per trobar l'enllaç d'inici de sessió."
 
 [plan.period]
 month = "mes"
@@ -5771,6 +6343,8 @@ notAvailable = "Sistema d’auditoria no disponible"
 notAvailableMessage = "El sistema d’auditoria no està configurat o no està disponible."
 disabled = "El registre d’auditoria està desactivat"
 disabledMessage = "Activeu el registre d’auditoria a la configuració de l’aplicació per fer el seguiment dels esdeveniments del sistema."
+enterpriseRequired = "Cal llicència Enterprise"
+enterpriseRequiredMessage = "El sistema de registres d’auditoria és una funció d’Enterprise. Actualitza a una llicència Enterprise per accedir als registres d’auditoria i a les analítiques."
 
 [audit.error]
 title = "Error en carregar el sistema d’auditoria"
@@ -5864,10 +6438,11 @@ title = "Gràfic d'ús dels endpoints"
 
 [usage.table]
 title = "Estadístiques detallades"
-endpoint = "Punt final"
+endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Percentatge"
 noData = "No hi ha dades disponibles"
+unknownEndpoint = "Punt final desconegut"
 
 [backendHealth]
 checking = "Comprovant l'estat del backend..."
@@ -5942,6 +6517,7 @@ description = "Introdueix la URL completa del teu servidor autoallotjat de Stirl
 
 [setup.server.error]
 emptyUrl = "Introdueix una URL de servidor"
+invalidUrl = "Format d'URL invàlid. Introdueix una URL vàlida com https://your-server.com"
 unreachable = "No s'ha pogut connectar amb el servidor"
 testFailed = "Ha fallat la prova de connexió"
 configFetch = "No s'ha pogut obtenir la configuració del servidor. Comproveu l'URL i torneu-ho a provar."
@@ -5960,6 +6536,7 @@ connectingTo = "Connectant amb:"
 submit = "Inicia sessió"
 signInWith = "Inicia sessió amb"
 oauthPending = "Obrint el navegador per autenticar-te..."
+sso = "Inici de sessió únic"
 orContinueWith = "O continua amb el correu electrònic"
 serverRequirement = "Nota: el servidor ha de tenir l'inici de sessió habilitat."
 showInstructions = "Com s'habilita?"
@@ -6025,6 +6602,8 @@ reset = "Restableix els canvis"
 downloadJson = "Descarrega JSON"
 generatePdf = "Genera PDF"
 saveChanges = "Deseu els canvis"
+applyChanges = "Aplica els canvis"
+downloadCopy = "Baixa una còpia"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Autoajusta el text a les caixes"
@@ -6042,6 +6621,24 @@ descriptionInline = "Consell: Mantén premut Ctrl (Cmd) o Shift per seleccionar 
 [pdfTextEditor.options.forceSingleElement]
 title = "Bloqueja el text editat a un únic element del PDF"
 description = "Quan s'habilita, l'editor exporta cada quadre de text editat com un sol element de text del PDF per evitar glifs superposats o tipus de lletra barrejats."
+
+[pdfTextEditor.options.advanced]
+title = "Paràmetres avançats"
+
+[pdfTextEditor.tooltip.header]
+title = "Limitacions de la previsualització"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Enfocament en text i imatge"
+text = "Aquest espai de treball se centra en l’edició de text i el reposicionament d’imatges incrustades. Els elements gràfics complexos, els ginys de formulari i els gràfics amb capes es conserven per a l’exportació però no són totalment editables aquí."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Variacions de previsualització"
+text = "Alguns elements visuals (com les vores de taula, formes o aparença d’anotacions) poden no mostrar-se exactament a la previsualització. El PDF exportat manté les ordres de dibuix originals sempre que sigui possible."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Visor alfa"
+text = "Aquest visor alfa encara està evolucionant; certs tipus de lletra, colors, efectes de transparència i detalls de disposició poden variar lleugerament. Revisa dues vegades el PDF generat abans de compartir-lo."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Fusiona els quadres seleccionats"
@@ -6164,3 +6761,58 @@ title = "Resultats d'afegir text"
 
 [addText.error]
 failed = "S'ha produït un error en afegir text al PDF."
+
+[mobileUpload]
+title = "Puja des del mòbil"
+description = "Escaneja per pujar fotos. Les imatges es converteixen automàticament a PDF."
+descriptionNoConvert = "Escaneja per pujar fotos des del dispositiu mòbil."
+error = "Error de connexió"
+pollingError = "Error en comprovar si hi ha fitxers"
+sessionId = "ID de sessió"
+sessionCreateError = "No s'ha pogut crear la sessió"
+expiryWarning = "La sessió caducarà aviat"
+expiryWarningMessage = "Aquest codi QR caducarà d'aquí a {{seconds}} segons. Es generarà un codi nou automàticament."
+filesReceived = "S'han rebut {{count}} fitxer(s)"
+connected = "Dispositiu mòbil connectat"
+instructions = "Escaneja amb la càmera del telèfon. Les imatges es converteixen automàticament a PDF."
+instructionsNoConvert = "Escaneja amb la càmera del telèfon per pujar fitxers."
+
+[mobileScanner]
+title = "Escàner mòbil"
+noSession = "Sessió no vàlida"
+noSessionMessage = "Escaneja un codi QR vàlid per accedir a aquesta pàgina."
+validating = "Validant la sessió..."
+sessionInvalid = "Error de sessió"
+sessionExpired = "Aquesta sessió ha caducat. Actualitza i torna-ho a provar."
+sessionNotFound = "No s'ha trobat la sessió. Actualitza i torna-ho a provar."
+sessionValidationError = "No s'ha pogut verificar la sessió. Torna-ho a provar."
+uploadSuccess = "Pujada correcta!"
+uploadSuccessMessage = "Les imatges s'han transferit."
+httpsRequired = "L'accés a la càmera requereix HTTPS o localhost. Utilitza HTTPS o accedeix mitjançant localhost."
+uploadFailed = "La pujada ha fallat. Torna-ho a provar."
+uploading = "Pujant..."
+connected = "Connectat"
+connecting = "Connectant..."
+chooseMethod = "Tria el mètode de pujada"
+chooseMethodDescription = "Selecciona com vols escanejar i pujar documents"
+camera = "Càmera"
+cameraDescription = "Escaneja documents amb la càmera del dispositiu amb detecció automàtica de vores"
+fileUpload = "Pujada de fitxers"
+fileDescription = "Puja fotos o documents existents des del dispositiu"
+cameraAccessDenied = "S'ha denegat l'accés a la càmera. Habilita l'accés a la càmera."
+back = "Enrere"
+settings = "Configuració"
+edgeDetection = "Detecció de vores"
+flashlight = "Llanterna"
+flash = "Flash"
+processing = "Processant..."
+capture = "Captura la foto"
+selectFilesPrompt = "Selecciona els fitxers per pujar"
+selectImage = "Selecciona la imatge"
+preview = "Previsualitza"
+retake = "Torna a fer-la"
+addToBatch = "Afegeix al lot"
+upload = "Puja"
+batchImages = "Lot"
+clearBatch = "Buida"
+uploadAll = "Puja-ho tot"
