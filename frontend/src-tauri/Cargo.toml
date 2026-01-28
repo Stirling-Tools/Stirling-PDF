@@ -35,7 +35,7 @@ tauri-plugin-opener = "2.5.3"
 tauri-plugin-deep-link = "2.4.6"
 keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.0", features = ["time", "sync"] }
-reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls", "rustls-tls-native-roots"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "rustls-tls-native-roots"] }
 tiny_http = "0.12"
 url = "2.5"
 urlencoding = "2.1"
