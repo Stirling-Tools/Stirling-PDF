@@ -248,8 +248,22 @@ pub async fn login(
             .send()
             .await
             .map_err(|e| {
+                let error_msg = e.to_string();
+                let error_lower = error_msg.to_lowercase();
                 log::error!("Supabase login network error: {}", e);
-                format!("Network error connecting to Supabase: {}", e)
+
+                // Detect TLS version mismatch
+                if error_lower.contains("peer is incompatible") ||
+                   error_lower.contains("protocol version") ||
+                   error_lower.contains("peerincompatible") ||
+                   (error_lower.contains("handshake") && (error_lower.contains("tls") || error_lower.contains("ssl"))) {
+                    format!(
+                        "TLS version not supported: The Supabase server appears to require an unsupported TLS version. \
+                        Please contact support. Technical details: {}", e
+                    )
+                } else {
+                    format!("Network error connecting to Supabase: {}", e)
+                }
             })?;
 
         let status = response.status();
@@ -312,18 +326,33 @@ pub async fn login(
             .send()
             .await
             .map_err(|e| {
-                let error_msg = e.to_string().to_lowercase();
+                let error_msg = e.to_string();
+                let error_lower = error_msg.to_lowercase();
                 log::error!("Spring Boot login network error: {}", e);
 
-                // Provide detailed error messages based on error type
-                if error_msg.contains("tls") || error_msg.contains("ssl") ||
-                   error_msg.contains("certificate") || error_msg.contains("decrypt") {
-                    format!("TLS/SSL connection error: {}. This usually means the server has certificate issues or is using an outdated TLS version.", e)
-                } else if error_msg.contains("connection refused") {
+                // Detect TLS version mismatch (server using TLS 1.0/1.1)
+                if error_lower.contains("peer is incompatible") ||
+                   error_lower.contains("protocol version") ||
+                   error_lower.contains("peerincompatible") ||
+                   (error_lower.contains("handshake") && (error_lower.contains("tls") || error_lower.contains("ssl"))) {
+                    format!(
+                        "TLS version not supported: The server appears to be using TLS 1.0 or TLS 1.1, which are not supported by this desktop app. \
+                        Please upgrade your server to use TLS 1.2 or higher, or use the web version of Stirling-PDF instead. \
+                        Technical details: {}", e
+                    )
+                // Other TLS/SSL errors (certificate issues)
+                } else if error_lower.contains("tls") || error_lower.contains("ssl") ||
+                   error_lower.contains("certificate") || error_lower.contains("decrypt") {
+                    format!(
+                        "TLS/SSL connection error: This usually means the server has certificate issues. \
+                        The desktop app accepts self-signed certificates, so this might be a TLS version issue. \
+                        Technical details: {}", e
+                    )
+                } else if error_lower.contains("connection refused") {
                     format!("Connection refused: Server is not reachable at {}. Check if the server is running and the URL is correct.", login_url)
-                } else if error_msg.contains("timeout") {
+                } else if error_lower.contains("timeout") {
                     format!("Connection timeout: Server at {} is not responding. Check your network connection.", login_url)
-                } else if error_msg.contains("dns") || error_msg.contains("resolve") {
+                } else if error_lower.contains("dns") || error_lower.contains("resolve") {
                     format!("DNS resolution failed: Cannot resolve hostname. Check if the server URL is correct.")
                 } else {
                     format!("Network error: {}", e)
@@ -571,7 +600,24 @@ async fn exchange_code_for_token(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Failed to exchange code for token: {}", e))?;
+        .map_err(|e| {
+            let error_msg = e.to_string();
+            let error_lower = error_msg.to_lowercase();
+            log::error!("OAuth token exchange network error: {}", e);
+
+            // Detect TLS version mismatch
+            if error_lower.contains("peer is incompatible") ||
+               error_lower.contains("protocol version") ||
+               error_lower.contains("peerincompatible") ||
+               (error_lower.contains("handshake") && (error_lower.contains("tls") || error_lower.contains("ssl"))) {
+                format!(
+                    "TLS version not supported: The authentication server appears to require an unsupported TLS version. \
+                    Please contact support. Technical details: {}", e
+                )
+            } else {
+                format!("Failed to exchange code for token: {}", e)
+            }
+        })?;
 
     let status = response.status();
     if !status.is_success() {
