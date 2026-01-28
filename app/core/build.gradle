@@ -221,6 +221,7 @@ tasks.register('npmBuild', Exec) {
     commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build']
     dependsOn npmInstall
     inputs.dir(new File(frontendDir, 'src'))
+    inputs.dir(new File(frontendDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
     outputs.dir(frontendDistDir)
 

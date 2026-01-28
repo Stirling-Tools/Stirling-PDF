@@ -692,257 +692,257 @@ workbenchSlide = "Workspace panel"
 workspace = "Workspace"
 
 [home.multiTool]
-tags = "multiple,tools"
+tags = "multiple,tools,multi-tool,all-in-one,swiss army,page organizer,page editor,edit pages,manage pages,organize,reorganize"
 title = "PDF Multi Tool"
 desc = "Merge, Rotate, Rearrange, Split, and Remove pages"
 
 [home.merge]
-tags = "combine,join,unite"
+tags = "combine,join,unite,merge,merge PDFs,combine PDFs,join PDFs,concatenate,append,stitch,combine files,join files,merge documents"
 title = "Merge"
 desc = "Easily merge multiple PDFs into one."
 
 [home.split]
-tags = "divide,separate,break"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Split"
 desc = "Split PDFs into multiple documents"
 
 [home.rotate]
-tags = "turn,flip,orient"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotate"
 desc = "Easily rotate your PDFs."
 
 [home.convert]
-tags = "transform,change"
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 title = "Convert"
 desc = "Convert files between different formats"
 
 [home.pdfOrganiser]
-tags = "organize,rearrange,reorder"
+tags = "organize,rearrange,reorder,organise,arrange pages,sort,move pages,delete pages,remove pages,page management,page organizer,page organiser,resequence"
 title = "Organise"
 desc = "Remove/Rearrange pages in any order"
 
 [home.addImage]
-tags = "insert,embed,place"
+tags = "insert,embed,place,add image,insert image,place image,embed image,add photo,add picture,add logo,graphics,insert picture,place photo,PNG,JPG,JPEG"
 title = "Add image"
 desc = "Adds a image onto a set location on the PDF"
 
 [home.addAttachments]
-tags = "embed,attach,include"
+tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
 title = "Add Attachments"
 desc = "Add or remove embedded files (attachments) to/from a PDF"
 
 [home.watermark]
-tags = "stamp,mark,overlay"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "Add Watermark"
 desc = "Add a custom watermark to your PDF document."
 
 [home.removePassword]
-tags = "unlock"
+tags = "unlock,remove password,unlock PDF,decrypt,remove encryption,unprotect,open protected PDF,password removal,unlock protected,disable password,remove security,remove owner password"
 title = "Remove Password"
 desc = "Remove password protection from your PDF document."
 
 [home.compress]
-tags = "shrink,reduce,optimize"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Compress"
 desc = "Compress PDFs to reduce their file size."
 
 [home.unlockPDFForms]
-tags = "unlock,enable,edit"
+tags = "unlock,enable,edit,unlock forms,enable forms,editable forms,remove read only,make editable,unlock fields,enable editing,form fields,fillable,unprotect forms"
 title = "Unlock PDF Forms"
 desc = "Remove read-only property of form fields in a PDF document."
 
 [home.changeMetadata]
-tags = "edit,modify,update"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 title = "Change Metadata"
 desc = "Change/Remove/Add metadata from a PDF document"
 
 [home.ocr]
-tags = "extract,scan"
+tags = "extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognize text,read scanned"
 title = "OCR / Cleanup scans"
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
 
 [home.extractImages]
-tags = "pull,save,export"
+tags = "pull,save,export,extract images,get images,save images,export images,extract photos,extract pictures,pull images,download images,rip images,extract graphics,save photos"
 title = "Extract Images"
 desc = "Extracts all images from a PDF and saves them to zip"
 
 [home.scannerImageSplit]
-tags = "detect,split,photos"
+tags = "detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
 title = "Detect & Split Scanned Photos"
 desc = "Detect and split scanned photos into separate pages"
 
 [home.sign]
-tags = "signature,autograph"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
 desc = "Adds signature to PDF by drawing, text or image"
 
 [home.annotate]
-tags = "annotate,highlight,draw"
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
 desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
-tags = "simplify,remove,interactive"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
 desc = "Remove all interactive elements and forms from a PDF"
 
 [home.certSign]
-tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
+tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto,digital certificate,certificate signature,PKI,cryptographic signature,trusted signature"
 title = "Sign with Certificate"
 desc = "Signs a PDF with a Certificate/Key (PEM/P12)"
 
 [home.repair]
-tags = "fix,restore"
+tags = "fix,restore,repair,fix PDF,fix broken,fix corrupt,repair PDF,repair corrupt,broken PDF,corrupt PDF,damaged PDF,recover,fix errors,PDF won't open,can't open PDF,PDF errors,troubleshoot,restore PDF,rebuild,corrupted"
 title = "Repair"
 desc = "Tries to repair a corrupt/broken PDF"
 
 [home.removeBlanks]
-tags = "delete,clean,empty"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Remove Blank pages"
 desc = "Detects and removes blank pages from a document"
 
 [home.removeAnnotations]
-tags = "delete,clean,strip"
+tags = "delete,clean,strip,remove annotations,remove comments,delete comments,remove markup,remove highlights,clean annotations,strip comments,remove notes,delete markup,clear comments"
 title = "Remove Annotations"
 desc = "Removes all comments/annotations from a PDF"
 
 [home.compare]
-tags = "difference"
+tags = "difference,compare,diff,compare PDFs,compare documents,find differences,show differences,changes,what changed,track changes,revisions,version compare,side by side,contrast,delta"
 title = "Compare"
 desc = "Compares and shows the differences between 2 PDF Documents"
 
 [home.removeCertSign]
-tags = "remove,delete,unlock"
+tags = "remove,delete,unlock,remove certificate,remove signature,delete signature,unsigned,remove digital signature,strip signature,remove cert,unsign"
 title = "Remove Certificate Sign"
 desc = "Remove certificate signature from PDF"
 
 [home.pageLayout]
-tags = "layout,arrange,combine"
+tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "Multi-Page Layout"
 desc = "Merge multiple pages of a PDF document into a single page"
 
 [home.bookletImposition]
-tags = "booklet,print,binding"
+tags = "booklet,print,binding,imposition,booklet printing,saddle stitch,fold,pamphlet,brochure,print booklet,duplex,two-sided,signature,book layout,page imposition,print layout"
 title = "Booklet Imposition"
 desc = "Create booklets with proper page ordering and multi-page layout for printing and binding"
 
 [home.scalePages]
-tags = "resize,adjust,scale"
+tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page size/scale"
 desc = "Change the size/scale of a page and/or its contents."
 
 [home.addPageNumbers]
-tags = "number,pagination,count"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
 desc = "Add Page numbers throughout a document in a set location"
 
 [home.autoRename]
-tags = "auto-detect,header-based,organize,relabel"
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
 desc = "Auto renames a PDF file based on its detected header"
 
 [home.adjustContrast]
-tags = "contrast,brightness,saturation"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Adjust Colours/Contrast"
 desc = "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
 
 [home.crop]
-tags = "trim,cut,resize"
+tags = "trim,cut,resize,crop,crop PDF,trim PDF,trim margins,remove margins,cut edges,trim borders,remove white space,crop pages,trim pages,reduce margins,set margins"
 title = "Crop PDF"
 desc = "Crop a PDF to reduce its size (maintains text!)"
 
 [home.autoSplitPDF]
-tags = "auto,split,QR"
+tags = "auto,split,QR,auto split,QR code,QR split,barcode,automatic split,divider page,separator page,scan divider,batch scanning"
 title = "Auto Split Pages"
 desc = "Auto Split Scanned PDF with physical scanned page splitter QR Code"
 
 [home.sanitize]
-tags = "clean,purge,remove"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Sanitise"
 desc = "Remove potentially harmful elements from PDF files"
 
 [home.getPdfInfo]
-tags = "info,metadata,details"
+tags = "info,metadata,details,PDF info,document info,properties,file info,get info,show info,view properties,document properties,statistics,page count,file details,inspect"
 title = "Get ALL Info on PDF"
 desc = "Grabs any and all information possible on PDFs"
 
 [home.pdfToSinglePage]
-tags = "combine,merge,single"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF to Single Large Page"
 desc = "Merges all PDF pages into one large single page"
 
 [home.showJS]
-tags = "javascript,code,script"
+tags = "javascript,code,script,show javascript,show JS,find javascript,detect javascript,view javascript,embedded scripts,malware,security,inspect,debug"
 title = "Show Javascript"
 desc = "Searches and displays any JS injected into a PDF"
 
 [home.redact]
-tags = "censor,blackout,hide"
+tags = "censor,blackout,hide,redact,redaction,black out,block out,remove sensitive,hide text,privacy,confidential,GDPR,PII,sensitive data,permanently remove,cover up,legal redaction"
 title = "Redact"
 desc = "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
 
 [home.splitBySections]
-tags = "split,sections,divide"
+tags = "split,sections,divide,split by sections,grid split,divide pages,split into sections,cut pages,divide grid,section split,horizontal split,vertical split"
 title = "Split PDF by Sections"
 desc = "Divide each page of a PDF into smaller horizontal and vertical sections"
 
 [home.addStamp]
-tags = "stamp,mark,seal"
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 title = "Add Stamp to PDF"
 desc = "Add text or add image stamps at set locations"
 
 [home.removeImage]
-tags = "remove,delete,clean"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Remove image"
 desc = "Remove image from PDF to reduce file size"
 
 [home.splitByChapters]
-tags = "split,chapters,structure"
+tags = "split,chapters,structure,split by chapters,split by bookmarks,bookmarks,outline,table of contents,TOC split,chapter split,divide by sections"
 title = "Split PDF by Chapters"
 desc = "Split a PDF into multiple files based on its chapter structure."
 
 [home.validateSignature]
-tags = "validate,verify,certificate"
+tags = "validate,verify,certificate,validate signature,verify signature,check signature,digital signature,certificate verification,signature validation,authentic,trust,signed,verify certificate"
 title = "Validate PDF Signature"
 desc = "Verify digital signatures and certificates in PDF documents"
 
 [home.swagger]
-tags = "API,documentation,test"
+tags = "API,documentation,test,swagger,API docs,REST API,endpoints,developer,API reference,API testing,OpenAPI,integration,developer docs"
 title = "API Documentation"
 desc = "View API documentation and test endpoints"
 
 [home.scannerEffect]
-tags = "scan,simulate,create"
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 title = "Scanner Effect"
 desc = "Create a PDF that looks like it was scanned"
 
 [home.editTableOfContents]
-tags = "bookmarks,contents,edit"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 title = "Edit Table of Contents"
 desc = "Add or edit bookmarks and table of contents in PDF documents"
 
 [home.manageCertificates]
-tags = "certificates,import,export"
+tags = "certificates,import,export,manage certificates,digital certificates,certificate management,PFX,P12,keystore,import certificate,export certificate,certificate store,PKI"
 title = "Manage Certificates"
 desc = "Import, export, or delete digital certificate files used for signing PDFs."
 
 [home.read]
-tags = "view,open,display"
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 title = "Read"
 desc = "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
 
 [home.reorganizePages]
-tags = "rearrange,reorder,organize"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 title = "Reorganize Pages"
 desc = "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
 
 [home.extractPages]
-tags = "pull,select,copy"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Extract Pages"
 desc = "Extract specific pages from a PDF document"
 
 [home.removePages]
-tags = "delete,extract,exclude"
+tags = "delete,extract,exclude,remove pages,delete pages,remove page,delete page,exclude pages,take out pages,discard pages,drop pages"
 title = "Remove Pages"
 desc = "Remove specific pages from a PDF document"
 
@@ -952,50 +952,57 @@ title = "Auto Split by Size/Count"
 desc = "Automatically split PDFs by file size or page count"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Replace & Invert Colour"
 desc = "Replace or invert colours in PDF documents"
 
 [home.devApi]
-tags = "API,development,documentation"
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
 title = "API"
 desc = "Link to API documentation"
 
 [home.devFolderScanning]
-tags = "automation,folder,scanning"
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
 title = "Automated Folder Scanning"
 desc = "Link to automated folder scanning guide"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO Guide"
 desc = "Link to SSO guide"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped Setup"
 desc = "Link to air-gapped setup guide"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Add Password"
 desc = "Add password protection and restrictions to PDF files"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
 desc = "Change document restrictions and permissions"
 
 [home.automate]
-tags = "workflow,sequence,automation"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automate"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Overlay one PDF on top of another"
 title = "Overlay PDFs"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 desc = "Edit existing text and images inside PDFs"
 
 [home.addText]
-tags = "text,annotation,label"
+tags = "text,annotation,label,add text,insert text,place text,text box,add label,add caption,type on PDF,write on PDF,add words,add note,text overlay,typewriter"
 title = "Add Text"
 desc = "Add custom text anywhere in your PDF"
 
@@ -4528,6 +4535,13 @@ description = "Maximum number of failed login attempts before account lockout"
 [admin.settings.security.loginResetTimeMinutes]
 label = "Login Reset Time (minutes)"
 description = "Time before failed login attempts are reset"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Disable CSRF Protection"
