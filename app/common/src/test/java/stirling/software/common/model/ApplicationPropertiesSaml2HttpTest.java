@@ -31,9 +31,9 @@ class ApplicationPropertiesSaml2HttpTest {
             String url = server.url("/meta").toString();
 
             var s = new ApplicationProperties.Security.SAML2();
-            s.setIdpMetadataUri(url);
+            s.setMetadataUri(url);
 
-            try (InputStream in = s.getIdpMetadataUri()) {
+            try (InputStream in = s.getMetadataUriAsStream()) {
                 String body = new String(in.readAllBytes(), StandardCharsets.UTF_8);
                 assertTrue(body.contains("EntityDescriptor"));
             }
@@ -44,9 +44,9 @@ class ApplicationPropertiesSaml2HttpTest {
     void idpMetadataUri_invalidUri_triggers_catch_and_throwsIOException() {
         // Ungültige URI -> new URI(...) wirft URISyntaxException -> catch -> IOException
         var s = new ApplicationProperties.Security.SAML2();
-        s.setIdpMetadataUri("http:##invalid uri"); // absichtlich kaputt (Leerzeichen + ##)
+        s.setMetadataUri("http:##invalid uri"); // absichtlich kaputt (Leerzeichen + ##)
 
-        assertThrows(IOException.class, s::getIdpMetadataUri);
+        assertThrows(IOException.class, s::getMetadataUriAsStream);
     }
 
     @Test
@@ -57,8 +57,8 @@ class ApplicationPropertiesSaml2HttpTest {
         Path tmp = Files.createTempFile("spdf-spcert-", ".crt");
         Files.writeString(tmp, "CERT");
 
-        s.setSpCert(tmp.toString());
-        Resource r = s.getSpCert();
+        s.getSp().setCert(tmp.toString());
+        Resource r = s.getSp().getCertResource();
 
         assertNotNull(r);
         assertInstanceOf(FileSystemResource.class, r, "Expected FileSystemResource for FS path");
@@ -71,8 +71,8 @@ class ApplicationPropertiesSaml2HttpTest {
 
         // bewusst nicht existierender Pfad -> else-Zweig wird trotzdem genommen
         String missing = "/this/path/does/not/exist/idp.crt";
-        s.setIdpCert(missing);
-        Resource r = s.getIdpCert();
+        s.getProvider().setCert(missing);
+        Resource r = s.getProvider().getCertResource();
 
         assertNotNull(r);
         assertInstanceOf(FileSystemResource.class, r, "Expected FileSystemResource for FS path");

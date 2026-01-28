@@ -142,7 +142,14 @@
 .oauth-container-vertical {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.75rem; /* 12px */
+  width: 100%;
+}
+
+.oauth-container-vertical > div {
+  width: 100%;
+  max-width: 320rem; /* 320px - consistent width for all buttons */
 }
 
 .oauth-button-icon {
@@ -185,22 +192,24 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0.75rem 1rem; /* 12px 16px */
-  border: 1px solid #d1d5db;
+  justify-content: center; /* Center icon and text */
+  padding: 0.875rem 1.25rem !important; /* 14px 20px - increased for better visibility */
+  min-height: 3rem !important; /* 48px - ensure readable height */
+  height: auto !important; /* Override Mantine default height */
+  border: 1px solid #d1d5db !important;
   border-radius: 0.75rem; /* 12px */
-  background-color: var(--auth-card-bg-light-only);
+  background-color: var(--auth-card-bg-light-only) !important;
   font-size: 1rem; /* 16px */
   font-weight: 500;
-  color: var(--auth-text-primary-light-only);
+  color: var(--auth-text-primary-light-only) !important;
   cursor: pointer;
-  gap: 0.75rem; /* 12px */
+  gap: 1rem !important; /* 16px - increased spacing between icon and text */
   font-family: inherit;
   transition: background-color 0.2s ease;
 }
 
 .oauth-button-vertical:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: #f3f4f6 !important;
 }
 
 .oauth-button-vertical:disabled {
@@ -243,10 +252,14 @@
 }
 
 .oauth-icon-tiny {
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
+  width: 1.5rem; /* 24px - increased for better visibility */
+  height: 1.5rem; /* 24px */
   display: block;
   flex-shrink: 0;
+}
+
+.oauth-button-vertical span {
+  margin-left: 0.5rem; /* 8px - additional spacing between icon and text */
 }
 
 /* Login Header Styles */

@@ -232,29 +232,6 @@ public class AuthController {
     }
 
     /**
-     * Logout endpoint
-     *
-     * @param response HTTP response
-     * @return Success message
-     */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        try {
-            SecurityContextHolder.clearContext();
-
-            log.debug("User logged out successfully");
-
-            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
-
-        } catch (Exception e) {
-            log.error("Logout error", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Internal server error"));
-        }
-    }
-
-    /**
      * Refresh token
      *
      * @param request HTTP request containing current JWT cookie
