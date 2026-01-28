@@ -164,6 +164,7 @@ public class ApplicationProperties {
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
+        private String xFrameOptions = "DENY";
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();

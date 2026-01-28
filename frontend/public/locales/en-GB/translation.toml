@@ -4527,6 +4527,13 @@ description = "Maximum number of failed login attempts before account lockout"
 label = "Login Reset Time (minutes)"
 description = "Time before failed login attempts are reset"
 
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
+
 [admin.settings.security.csrfDisabled]
 label = "Disable CSRF Protection"
 description = "Disable Cross-Site Request Forgery protection (not recommended)"

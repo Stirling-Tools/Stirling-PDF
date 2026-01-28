@@ -16,6 +16,7 @@ interface SecuritySettingsData {
   loginMethod?: string;
   loginAttemptCount?: number;
   loginResetTimeMinutes?: number;
+  xFrameOptions?: string;
   jwt?: {
     persistence?: boolean;
     enableKeyRotation?: boolean;
@@ -125,6 +126,7 @@ export default function AdminSecuritySection() {
         'security.loginMethod': securitySettings.loginMethod,
         'security.loginAttemptCount': securitySettings.loginAttemptCount,
         'security.loginResetTimeMinutes': securitySettings.loginResetTimeMinutes,
+        'security.xFrameOptions': securitySettings.xFrameOptions,
         // JWT settings
         'security.jwt.persistence': securitySettings.jwt?.persistence,
         'security.jwt.enableKeyRotation': securitySettings.jwt?.enableKeyRotation,
@@ -277,6 +279,27 @@ export default function AdminSecuritySection() {
               onChange={(value) => setSettings({ ...settings, loginResetTimeMinutes: Number(value) })}
               min={0}
               max={1440}
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div>
+            <Select
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.security.xFrameOptions.label', 'X-Frame-Options')}</span>
+                  <PendingBadge show={isFieldPending('xFrameOptions')} />
+                </Group>
+              }
+              description={t('admin.settings.security.xFrameOptions.description', 'Controls whether the application can be embedded in iframes')}
+              value={settings?.xFrameOptions || 'DENY'}
+              onChange={(value) => setSettings({ ...settings, xFrameOptions: value || 'DENY' })}
+              data={[
+                { value: 'DENY', label: t('admin.settings.security.xFrameOptions.deny', 'Deny (Prevents all framing)') },
+                { value: 'SAMEORIGIN', label: t('admin.settings.security.xFrameOptions.sameorigin', 'Same Origin (Allow framing from same domain)') },
+                { value: 'DISABLED', label: t('admin.settings.security.xFrameOptions.disabled', 'Disabled (No X-Frame-Options header)') },
+              ]}
+              comboboxProps={{ zIndex: 1400 }}
               disabled={!loginEnabled}
             />
           </div>
