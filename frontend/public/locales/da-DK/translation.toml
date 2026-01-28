@@ -950,6 +950,7 @@ title = "Auto-opdel størrelse/antal"
 desc = "Opdel en enkelt PDF i flere dokumenter baseret på størrelse, sideantal eller dokumentantal"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Erstat og inverter farver"
 desc = "Erstat eller inverter farver i PDF-dokumenter"
 
@@ -964,18 +965,22 @@ title = "Automatiseret mappescanning"
 desc = "Link til guide for automatiseret mappescanning"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO-vejledning"
 desc = "Link til SSO-vejledning"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped opsætning"
 desc = "Link til guide for air-gapped opsætning"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Tilføj Adgangskode"
 desc = "Kryptér dit PDF-dokument med en adgangskode."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Ændre Tilladelser"
 desc = "Ændr dokumentbegrænsninger og tilladelser"
 
@@ -985,10 +990,12 @@ title = "Automatiser"
 desc = "Byg flertrins-workflows ved at kæde PDF-handlinger sammen. Ideelt til tilbagevendende opgaver."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Overlejrer PDF'er oven på en anden PDF"
 title = "Overlejr PDF'er"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-teksteditor"
 desc = "Gennemse og rediger Stirling PDF JSON-eksporter med grupperet tekstredigering og regenerering af PDF"
 
@@ -4525,6 +4532,13 @@ description = "Maksimalt antal mislykkede loginforsøg før kontolock"
 [admin.settings.security.loginResetTimeMinutes]
 label = "Nulstil login (minutter)"
 description = "Tid før mislykkede loginforsøg nulstilles"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Deaktivér CSRF-beskyttelse"

@@ -950,6 +950,7 @@ title = "Auto felosztás méret/darab"
 desc = "Egyetlen PDF felosztása több dokumentumra méret, oldalszám vagy dokumentumszám alapján"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Színek cseréje és invertálása"
 desc = "Színek cseréje vagy invertálása PDF dokumentumokban"
 
@@ -964,18 +965,22 @@ title = "Automatikus mappaszkennelés"
 desc = "Hivatkozás az automatikus mappaszkennelés útmutatójára"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO útmutató"
 desc = "Hivatkozás az SSO útmutatóra"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped beállítás"
 desc = "Hivatkozás az elszigetelt környezet beállítási útmutatójára"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Jelszó hozzáadása"
 desc = "PDF dokumentum jelszavas védelme"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Jogosultságok módosítása"
 desc = "Dokumentumkorlátozások és jogosultságok módosítása"
 
@@ -985,10 +990,12 @@ title = "Automatizálás"
 desc = "Többlépéses munkafolyamatok összeállítása PDF műveletek összefűzésével. Ideális ismétlődő feladatokhoz."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF-ek egymásra helyezése egy másik PDF-en"
 title = "PDF-ek egymásra helyezése"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF szövegszerkesztő"
 desc = "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
 
@@ -4525,6 +4532,13 @@ description = "Sikertelen bejelentkezési kísérletek maximális száma fiókz�
 [admin.settings.security.loginResetTimeMinutes]
 label = "Visszaállítás ideje (perc)"
 description = "Idő, ami után a sikertelen bejelentkezési kísérletek számlálója lenullázódik"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF védelem letiltása"
