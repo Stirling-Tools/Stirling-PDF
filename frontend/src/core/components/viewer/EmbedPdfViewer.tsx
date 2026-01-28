@@ -345,21 +345,6 @@ const EmbedPdfViewerContent = ({
       // Always consider applied redactions as unsaved until export
       const hasAppliedRedactions = redactionsApplied;
 
-      // When in redact mode, still include annotation changes (users may draw)
-      if (isManualRedactMode) {
-        console.log('[Viewer] Checking for unsaved changes (redact mode):', {
-          hasPendingRedactions,
-          hasAppliedRedactions,
-          hasAnnotationChanges,
-        });
-      } else {
-        console.log('[Viewer] Checking for unsaved changes:', {
-          hasAnnotationChanges,
-          hasPendingRedactions,
-          hasAppliedRedactions,
-        });
-      }
-
       return hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions;
     };
 
