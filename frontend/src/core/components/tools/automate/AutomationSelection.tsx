@@ -59,7 +59,7 @@ export default function AutomationSelection({
             onClick={() => onRun(automation)}
             showMenu={true}
             onEdit={() => onEdit(automation)}
-            onExport={() => downloadFolderScanningConfig(automation)}
+            onExport={() => downloadFolderScanningConfig(automation, toolRegistry)}
             onDelete={() => onDelete(automation)}
             toolRegistry={toolRegistry}
           />

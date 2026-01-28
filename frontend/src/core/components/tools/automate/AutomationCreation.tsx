@@ -223,7 +223,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
                 createdAt: existingAutomation?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString()
               };
-              downloadFolderScanningConfig(tempAutomation);
+              downloadFolderScanningConfig(tempAutomation, toolRegistry);
             }}
             disabled={!canSaveAutomation()}
             variant="light"
