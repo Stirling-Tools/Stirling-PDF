@@ -955,7 +955,6 @@ desc = "Split a single PDF into multiple documents based on size, page count, or
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ordeztu eta inbertitu kolorea"
 desc = "Ordeztu edo alderantzikatu koloreak PDF dokumentuetan"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,garapena,dokumentazioa"
@@ -971,25 +970,21 @@ desc = "Esteka karpeta eskaneatze automatizatuaren gidara"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO gida"
 desc = "Esteka SSO gidara"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Sare isolatuko konfigurazioa"
 desc = "Esteka sare isolatutako konfigurazio gidara"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Gehitu pasahitza"
 desc = "Enkriptatu PDF dokumentua pasahitz batekin"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Aldatu baimenak"
 desc = "Aldatu dokumentuaren murrizketak eta baimenak"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "workflow,sekuentzia,automatizazioa"
@@ -1000,13 +995,11 @@ desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregi
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Overlays PDFs on-top of another PDF"
 title = "Gainjarri PDFak"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF testu-editorea"
 desc = "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "testua,anotazioa,etiketa"
@@ -4646,13 +4639,6 @@ description = "Link-local helbideak blokeatu (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Hodeiko metadatu endpointak blokeatu"
 description = "Hodei-hornitzaileen metadatuen endpointak blokeatu (169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Konexioak"

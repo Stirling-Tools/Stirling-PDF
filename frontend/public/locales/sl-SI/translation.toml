@@ -955,7 +955,6 @@ desc = "Razdeli en PDF na več dokumentov glede na velikost, število strani ali
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Zamenjaj in invertiraj barve"
 desc = "Zamenjajte ali invertirajte barve v dokumentih PDF"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,razvoj,dokumentacija"
@@ -971,25 +970,21 @@ desc = "Povezava do vodiča za avtomatizirano skeniranje map"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Vodič za SSO"
 desc = "Povezava do vodiča za SSO"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Izolirana namestitev"
 desc = "Povezava do vodiča za namestitev v izoliranem omrežju"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Dodaj geslo"
 desc = "Šifrirajte svoj dokument PDF z geslom."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Spremeni dovoljenja"
 desc = "Spremenite omejitve in dovoljenja dokumenta"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "potek,sekvenca,avtomatizacija"
@@ -1000,13 +995,11 @@ desc = "Sestavite večkorakovne poteke z veriženjem dejanj PDF. Idealno za pona
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Prekriva PDF-je na vrhu drugega PDF-ja"
 title = "Prekrivanje PDF-jev"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Urejevalnik besedila PDF"
 desc = "Pregledujte in urejajte Stirling PDF JSON izvoze z urejanjem združenega besedila in ponovnim ustvarjanjem PDF"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "besedilo,pripomba,oznaka"
@@ -4646,13 +4639,6 @@ description = "Blokiraj povezavno-lokalne naslove (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Blokiraj končne točke metapodatkov v oblaku"
 description = "Blokiraj končne točke metapodatkov ponudnikov oblaka (169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Povezave"

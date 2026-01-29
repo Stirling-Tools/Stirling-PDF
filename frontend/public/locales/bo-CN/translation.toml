@@ -955,7 +955,6 @@ desc = "རང་འགུལ་གྱིས་ཡིག་ཆའི་ཆེ་
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "ཁ་དོག་བརྗེ་ལེན་དང་བསྒྱུར་བ།"
 desc = "PDFཡིག་ཆའི་ནང་ཁ་དོག་བརྗེ་ལེན་བྱེད་པའམ་ཡང་ན་བསྒྱུར་བ།"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API འཛུགས་སྐྲུན་དང་ཡིག་ཆ།"
@@ -971,25 +970,21 @@ desc = "རང་འགུལ་སྣོད་ཀྱི་པར་བཤེར
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO ལམ་སྟོན།"
 desc = "SSO ལམ་སྟོན་ལ་འབྲེལ་མཐུད་བྱེད།"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "མཁའ་དབྱིངས་ཀྱི་ཆ་སྒྲིག་སྒྲིག་བཀོད།"
 desc = "མཁའ་རླུང་གི་བར་ཐག་གིས་སྒྲིག་པའི་སྒྲིག་ལམ་ལ་འབྲེལ་མཐུད་བྱེད་པ།"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "གསང་གྲངས་ཁ་སྣོན་བྱེད།"
 desc = "གསང་གྲངས་སྲུང་སྐྱོབ་དང་ཚད་བཀག་PDFཡིག་ཆ་ལ་ཁ་སྣོན་བྱེད་པ།"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "འཕོ་འགྱུར།"
 desc = "ཡིག་ཆའི་ཚད་བཀག་དང་ཆོག་མཆན་བསྒྱུར་བ།"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "ལས་ཀའི་འགྲོ་ལམ། རྗེས་འདེད། རང་འགུལ་ཅན།"
@@ -1000,13 +995,11 @@ desc = "གོམ་པ་མང་པོའི་ལས་ཀའི་འགྲ
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "གཞན་ཞིག་གི་སྟེང་དུ་PDFགཅིག་བཀབ་དགོས།"
 title = "བཀབ་པའི་PDFs"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDFཡིག་འབྲིའི་རྩོམ་སྒྲིག་པ།"
 desc = "ད་ཡོད་ཀྱི་ཡིག་ཆ་དང་པར་རིས་PDFནང་དུ་རྩོམ་སྒྲིག་བྱས།"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "རྩོམ་ཡིག བརྗོད་གཞི།"
@@ -4646,13 +4639,6 @@ description = "བཀག་སྡོམ། ས་གནས་ཀྱི་ཁ་�
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "བཀག་སྡོམ་གྱི་སྤྲིན་པ་མེ་ཊ་ཊ་མཇུག་འགོད།"
 description = "བཀག་པའི་སྤྲིན་པ་མཁོ་སྤྲོད་བྱེད་མཁན་གྱི་མེ་ཊ་གྲངས་ཐོ་(169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "འབྲེལ་མཐུད།"

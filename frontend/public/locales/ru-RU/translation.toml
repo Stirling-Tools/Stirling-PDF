@@ -955,7 +955,6 @@ desc = "Разделяет один PDF на несколько документ
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Заменить и инвертировать цвет"
 desc = "Заменяйте или инвертируйте цвета в PDF-документах"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,разработка,документация"
@@ -971,25 +970,21 @@ desc = "Ссылка на руководство по автоматическо
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Руководство по SSO"
 desc = "Ссылка на руководство по SSO"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Изолированная установка"
 desc = "Ссылка на руководство по изолированной установке"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Добавить пароль"
 desc = "Зашифруйте ваш PDF-документ паролем."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Изменить разрешения"
 desc = "Изменение ограничений и разрешений документа"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "рабочий процесс,последовательность,автоматизация"
@@ -1000,13 +995,11 @@ desc = "Создавайте многошаговые процессы, связ
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Наложить один PDF поверх другого"
 title = "Наложение PDF"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Редактор текста в PDF"
 desc = "Просмотр и редактирование экспортов Stirling PDF в JSON с групповым редактированием текста и регенерацией PDF"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "текст,аннотация,ярлык"
@@ -4646,13 +4639,6 @@ description = "Блокировать адреса link-local (169.254.x.x, fe80
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Блокировать эндпойнты метаданных облака"
 description = "Блокировать эндпойнты метаданных облачных провайдеров (169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Подключения"

@@ -955,7 +955,6 @@ desc = "Chia một tệp PDF thành nhiều tài liệu dựa trên kích thư�
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Thay thế & Đảo ngược Màu"
 desc = "Thay thế hoặc đảo ngược màu trong tài liệu PDF"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,phát triển,tài liệu"
@@ -971,25 +970,21 @@ desc = "Liên kết tới hướng dẫn quét thư mục tự động"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Hướng dẫn SSO"
 desc = "Liên kết tới hướng dẫn SSO"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Thiết lập cách ly mạng"
 desc = "Liên kết tới hướng dẫn thiết lập cách ly mạng"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Thêm mật khẩu"
 desc = "Mã hóa tài liệu PDF của bạn bằng mật khẩu."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Thay đổi quyền"
 desc = "Thay đổi hạn chế và quyền của tài liệu"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "quy trình,trình tự,tự động hóa"
@@ -1000,13 +995,11 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Chồng lớp PDF lên trên PDF khác"
 title = "Chồng lớp PDF"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Trình chỉnh sửa văn bản PDF"
 desc = "Xem và chỉnh sửa xuất JSON của Stirling PDF với chỉnh sửa văn bản theo nhóm và tái tạo PDF"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "văn bản,chú thích,nhãn"
@@ -4646,13 +4639,6 @@ description = "Chặn địa chỉ link-local (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Chặn điểm cuối siêu dữ liệu đám mây"
 description = "Chặn điểm cuối siêu dữ liệu của nhà cung cấp đám mây (169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Kết nối"

@@ -955,7 +955,6 @@ desc = "Scoilt PDF amháin i ndoiciméid iolracha bunaithe ar mhéid, líon na l
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ionadaigh & Inbhéartaigh Dath"
 desc = "Ionadaigh nó inbhéartaigh dathanna i gcáipéisí PDF"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,forbairt,doiciméadú"
@@ -971,25 +970,21 @@ desc = "Nasc le treoir scantha fillteán uathoibrithe"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Treoir SSO"
 desc = "Nasc le treoir SSO"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Socrú Air-gapped"
 desc = "Nasc le treoir socraithe Air-gapped"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Cuir Pasfhocal leis"
 desc = "Criptigh do dhoiciméad PDF le focal faire."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Athrú Ceadanna"
 desc = "Athraigh srianta agus ceadanna cáipéise"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "sreabhadh oibre,ord,uathoibriú"
@@ -1000,13 +995,11 @@ desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a nascadh le chéil
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Forleagain PDF ar bharr PDF eile"
 title = "Forleagan PDF"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Eagarthóir Téacs PDF"
 desc = "Cuir téacs agus íomhánna atá ann cheana in eagar laistigh de PDFanna"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "annotate,highlight,draw"
@@ -4646,13 +4639,6 @@ description = "Cuir bac ar sheoltaí link-local (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Cuir Bac ar Chríochphointí Meiteashonraí Scamall"
 description = "Cuir bac ar chríochphointí meiteashonraí soláthraithe scamall (169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Nascanna"

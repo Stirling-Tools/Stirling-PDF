@@ -955,7 +955,6 @@ desc = "サイズ・ページ数またはドキュメント数に基づいて、
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "色の置換と反転"
 desc = "PDF 文書の色を置換または反転"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,開発,ドキュメント"
@@ -971,25 +970,21 @@ desc = "自動フォルダスキャン ガイドへのリンク"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO ガイド"
 desc = "SSO ガイドへのリンク"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "エアギャップ設定"
 desc = "エアギャップ環境のセットアップガイドへのリンク"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "パスワードの追加"
 desc = "PDFをパスワードで暗号化します。"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "権限の変更"
 desc = "文書の制限と権限を変更"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "ワークフロー,シーケンス,自動化"
@@ -1000,13 +995,11 @@ desc = "PDF アクションを連結して複数ステップのワークフロ�
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDFテキストエディター"
 desc = "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "テキスト,注釈,ラベル"
@@ -4646,13 +4639,6 @@ description = "リンクローカルアドレスをブロック（169.254.x.x, f
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "クラウドメタデータエンドポイントをブロック"
 description = "クラウドプロバイダのメタデータエンドポイントをブロック（169.254.169.254）"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "接続"

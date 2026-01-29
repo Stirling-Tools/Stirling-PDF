@@ -955,7 +955,6 @@ desc = "Tek bir PDF'yi boyut, sayfa sayısı veya belge sayısına göre birden 
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Rengi Değiştir & Ters Çevir"
 desc = "PDF belgelerindeki renkleri değiştirin veya tersine çevirin"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,geliştirme,dokümantasyon"
@@ -971,25 +970,21 @@ desc = "Otomatik klasör tarama kılavuzuna bağlantı"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO Kılavuzu"
 desc = "SSO kılavuzuna bağlantı"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Ağdan İzole Kurulum"
 desc = "Ağdan izole kurulum kılavuzuna bağlantı"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Parola Ekle"
 desc = "PDF belgenizi bir parola ile şifreleyin."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "İzinleri Değiştir"
 desc = "Belge kısıtlamalarını ve izinleri değiştirin"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "iş_akışı,sıralı,otomasyon"
@@ -1000,13 +995,11 @@ desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları olu�
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF'leri başka bir PDF'nin üzerine bindirir"
 title = "PDF'leri Bindirme"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Metin Düzenleyici"
 desc = "Gruplu metin düzenleme ve PDF yeniden oluşturma ile Stirling PDF JSON dışa aktarımlarını gözden geçirin ve düzenleyin"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "metin,ek açıklama,etiket"
@@ -4646,13 +4639,6 @@ description = "Link-local adreslerini engelle (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Bulut Metadata Uç Noktalarını Engelle"
 description = "Bulut sağlayıcı metadata uç noktalarını engelle (169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Bağlantılar"

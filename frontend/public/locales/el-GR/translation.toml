@@ -955,7 +955,6 @@ desc = "Διαχωρισμός ενός PDF σε πολλαπλά έγγραφα
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Αλλαγή & αντιστροφή χρώματος"
 desc = "Αντικαταστήστε ή αντιστρέψτε χρώματα σε έγγραφα PDF"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,ανάπτυξη,τεκμηρίωση"
@@ -971,25 +970,21 @@ desc = "Σύνδεσμος προς τον οδηγό αυτοματοποιημ
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Οδηγός SSO"
 desc = "Σύνδεσμος προς τον οδηγό SSO"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Ρύθμιση Air-gapped"
 desc = "Σύνδεσμος προς τον οδηγό ρύθμισης Air-gapped"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Προσθήκη κωδικού"
 desc = "Κρυπτογράφηση του εγγράφου PDF με κωδικό."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Αλλαγή δικαιωμάτων"
 desc = "Αλλαγή περιορισμών και δικαιωμάτων εγγράφου"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "ροή εργασιών,ακολουθία,αυτοματοποίηση"
@@ -1000,13 +995,11 @@ desc = "Δημιουργήστε ροές πολλών βημάτων συνδέ
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Επικάλυψη PDF πάνω σε άλλο PDF"
 title = "Επικάλυψη PDF"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Επεξεργαστής κειμένου PDF"
 desc = "Επιθεωρήστε και επεξεργαστείτε εξαγωγές JSON του Stirling PDF με ομαδοποιημένη επεξεργασία κειμένου και αναδημιουργία PDF"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "κείμενο,σχολιασμός,ετικέτα"
@@ -4646,13 +4639,6 @@ description = "Αποκλεισμός link-local διευθύνσεων (169.254
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Αποκλεισμός endpoints μεταδεδομένων cloud"
 description = "Αποκλεισμός endpoints μεταδεδομένων παρόχων cloud (169.254.169.254)"
-
-[admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Συνδέσεις"
