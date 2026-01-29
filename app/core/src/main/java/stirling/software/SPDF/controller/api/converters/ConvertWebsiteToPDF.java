@@ -54,6 +54,7 @@ public class ConvertWebsiteToPDF {
             Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
 
     private static final Pattern NUMERIC_HTML_ENTITY_PATTERN = Pattern.compile("&#(x?[0-9a-f]+);");
+    private static final int MAX_REDIRECTS = 5;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/url/pdf")
     @Operation(
@@ -81,6 +82,12 @@ public class ConvertWebsiteToPDF {
                     RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches();
             boolean generalValid = GeneralUtils.isValidURL(URL);
             if (!patternValid && !generalValid) {
+                location =
+                        uriComponentsBuilder
+                                .queryParam("error", "error.invalidUrlFormat")
+                                .build()
+                                .toUri();
+            } else if (!GeneralUtils.isUrlAllowedForServerFetch(URL)) {
                 location =
                         uriComponentsBuilder
                                 .queryParam("error", "error.invalidUrlFormat")
@@ -166,29 +173,60 @@ public class ConvertWebsiteToPDF {
     private String fetchRemoteHtml(String url) throws IOException, InterruptedException {
         HttpClient client =
                 HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .followRedirects(HttpClient.Redirect.NEVER)
                         .connectTimeout(Duration.ofSeconds(10))
                         .build();
 
-        HttpRequest request =
-                HttpRequest.newBuilder(URI.create(url))
-                        .timeout(Duration.ofSeconds(20))
-                        .GET()
-                        .header("User-Agent", "Stirling-PDF/URL-to-PDF")
-                        .build();
+        URI currentUri = URI.create(url);
+        for (int redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++) {
+            String currentUrl = currentUri.toString();
+            if (!GeneralUtils.isUrlAllowedForServerFetch(currentUrl)) {
+                throw ExceptionUtils.createIOException(
+                        "error.invalidUrlFormat",
+                        "Disallowed URL target: {0}",
+                        null,
+                        currentUrl);
+            }
 
-        HttpResponse<String> response =
-                client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            HttpRequest request =
+                    HttpRequest.newBuilder(currentUri)
+                            .timeout(Duration.ofSeconds(20))
+                            .GET()
+                            .header("User-Agent", "Stirling-PDF/URL-to-PDF")
+                            .build();
 
-        if (response.statusCode() >= 400 || response.body() == null) {
-            throw ExceptionUtils.createIOException(
-                    "error.httpRequestFailed",
-                    "Failed to retrieve remote HTML. Status: {0}",
-                    null,
-                    response.statusCode());
+            HttpResponse<String> response =
+                    client.send(
+                            request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+            int statusCode = response.statusCode();
+            if (statusCode >= 300 && statusCode < 400) {
+                String location = response.headers().firstValue("location").orElse(null);
+                if (location == null || location.isBlank()) {
+                    throw ExceptionUtils.createIOException(
+                            "error.httpRequestFailed",
+                            "Redirect response missing Location header",
+                            null);
+                }
+                currentUri = currentUri.resolve(location);
+                continue;
+            }
+
+            if (statusCode >= 400 || response.body() == null) {
+                throw ExceptionUtils.createIOException(
+                        "error.httpRequestFailed",
+                        "Failed to retrieve remote HTML. Status: {0}",
+                        null,
+                        statusCode);
+            }
+
+            return response.body();
         }
 
-        return response.body();
+        throw ExceptionUtils.createIOException(
+                "error.httpRequestFailed",
+                "Too many redirects while retrieving remote HTML",
+                null);
     }
 
     private boolean containsDisallowedUriScheme(String htmlContent) {
