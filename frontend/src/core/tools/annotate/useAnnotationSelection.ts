@@ -270,7 +270,11 @@ export function useAnnotationSelection({
           // internal selection state (e.g., accessing `selectedUid` on
           // an undefined object). Treat this as "no current selection"
           // instead of crashing the annotations tool.
-          console.error('[useAnnotationSelection] getSelectedAnnotation failed:', error);
+          // Only log unexpected errors - "No active document" is a common expected state during init
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (!errorMessage.includes('No active document')) {
+            console.error('[useAnnotationSelection] getSelectedAnnotation failed:', error);
+          }
           ann = null;
         }
       }

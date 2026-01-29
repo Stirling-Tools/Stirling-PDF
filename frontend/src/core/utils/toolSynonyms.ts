@@ -8,16 +8,26 @@ export const getSynonyms = (t: TFunction, toolId: string): string[] => {
 
     // If the translation key doesn't exist or returns the key itself, return empty array
     if (!tags || tags === tagsKey) {
+      console.warn(`[Tags] Missing tags for tool: ${toolId}`);
       return [];
     }
 
     // Split by comma and clean up the tags
-    return tags
+    const cleanedTags = tags
       .split(',')
       .map((tag: string) => tag.trim())
       .filter((tag: string) => tag.length > 0);
+
+    // Log the tags found for this tool
+    if (cleanedTags.length > 0) {
+      console.info(`[Tags] Tool "${toolId}" has ${cleanedTags.length} tags:`, cleanedTags);
+    } else {
+      console.warn(`[Tags] Tool "${toolId}" has empty tags value`);
+    }
+
+    return cleanedTags;
   } catch (error) {
-    console.warn(`Failed to get translated synonyms for tool ${toolId}:`, error);
+    console.error(`[Tags] Failed to get translated synonyms for tool ${toolId}:`, error);
     return [];
   }};
 

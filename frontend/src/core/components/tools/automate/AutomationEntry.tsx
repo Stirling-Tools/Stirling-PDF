@@ -5,6 +5,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DownloadIcon from '@mui/icons-material/Download';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { ToolIcon } from '@app/components/shared/ToolIcon';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
@@ -31,6 +32,8 @@ interface AutomationEntryProps {
   onDelete?: () => void;
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
+  /** Export handler (for folder scanning) */
+  onExport?: () => void;
   /** Tool registry to resolve operation names */
   toolRegistry?: Partial<ToolRegistry>;
 }
@@ -46,6 +49,7 @@ export default function AutomationEntry({
   onEdit,
   onDelete,
   onCopy,
+  onExport,
   toolRegistry
 }: AutomationEntryProps) {
   const { t } = useTranslation();
@@ -223,6 +227,17 @@ export default function AutomationEntry({
                 }}
               >
                 {t('edit', 'Edit')}
+              </Menu.Item>
+            )}
+            {onExport && (
+              <Menu.Item
+                leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExport();
+                }}
+              >
+                {t('automate.exportForFolderScanning', 'Export for Folder Scanning')}
               </Menu.Item>
             )}
             {onDelete && (

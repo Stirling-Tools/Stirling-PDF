@@ -306,6 +306,7 @@ selectOperation = "Pilih Operasi"
 addOperationButton = "Tambah operasi"
 pipelineHeader = "Pipeline:"
 saveButton = "Unduh"
+saveForFolderScanning = "Simpan untuk Pemindaian Folder"
 validateButton = "Validasi"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Properti"
 webBrowserSettings = "Pengaturan Peramban Web"
 syncToBrowser = "Sinkronisasi Akun -> Browser"
 syncToAccount = "Sinkronisasi Akun <- Browser"
+
+[account.mfa]
+title = "Autentikasi dua faktor"
+setupFailed = "Tidak dapat memulai penyiapan autentikasi dua faktor. Coba lagi."
+codeRequired = "Masukkan kode autentikasi untuk melanjutkan."
+enabled = "Autentikasi dua faktor diaktifkan."
+enableFailed = "Tidak dapat mengaktifkan autentikasi dua faktor. Periksa kode dan coba lagi."
+disabled = "Autentikasi dua faktor dinonaktifkan."
+disableFailed = "Tidak dapat menonaktifkan autentikasi dua faktor. Periksa kode dan coba lagi."
+description = "Tambahkan lapisan keamanan ekstra ke akun Anda."
+enableButton = "Aktifkan autentikasi dua faktor"
+disableButton = "Nonaktifkan autentikasi dua faktor"
+setupTitle = "Siapkan autentikasi dua faktor"
+setupDescription = "Pindai kode QR dengan aplikasi autentikator Anda, lalu masukkan kode 6 digit untuk mengonfirmasi."
+manualKey = "Kunci penyiapan manual"
+secretWarning = "Jaga kerahasiaan kunci ini. Siapa pun yang memiliki akses dapat menghasilkan kode autentikasi yang valid."
+codePlaceholder = "Masukkan kode 6 digit"
+confirmEnable = "Aktifkan"
+disableTitle = "Nonaktifkan autentikasi dua faktor"
+disableDescription = "Masukkan kode autentikasi yang valid untuk menonaktifkan autentikasi dua faktor."
+codeLabel = "Kode autentikasi"
+confirmDisable = "Nonaktifkan"
+ssoDescription = "Autentikasi dua faktor dikelola oleh penyedia identitas Anda untuk akun single sign-on."
+ssoManaged = "Konfigurasikan MFA melalui penyedia identitas Anda."
 
 [adminUserSettings]
 title = "Pengaturan Kontrol Pengguna"
@@ -925,6 +950,7 @@ title = "Pisah otomatis ukuran/jumlah"
 desc = "Membagi satu PDF menjadi beberapa dokumen berdasarkan ukuran, jumlah halaman, atau jumlah dokumen"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ganti & Balik Warna"
 desc = "Ganti atau balik warna dalam dokumen PDF"
 
@@ -939,18 +965,22 @@ title = "Pemindaian Folder Otomatis"
 desc = "Tautan ke panduan pemindaian folder otomatis"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Panduan SSO"
 desc = "Tautan ke panduan SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Penyiapan Air-gapped"
 desc = "Tautan ke panduan penyiapan air-gapped"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Tambahkan Kata Sandi"
 desc = "Enkripsi dokumen PDF Anda dengan kata sandi."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Ganti Perizinan"
 desc = "Ubah pembatasan dan izin dokumen"
 
@@ -960,10 +990,12 @@ title = "Otomasi"
 desc = "Bangun alur kerja multi-langkah dengan merangkai tindakan PDF. Ideal untuk tugas berulang."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Menumpuk PDF di atas PDF lain"
 title = "Tumpuk PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor Teks PDF"
 desc = "Tinjau dan edit ekspor Stirling PDF JSON dengan pengeditan teks terkelompok dan pembuatan ulang PDF"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Unduh file perantara HTML alih-alih PDF"
 pdfaOptions = "Opsi PDF/A"
 outputFormat = "Format Keluaran"
 pdfaNote = "PDF/A-1b lebih kompatibel, PDF/A-2b mendukung lebih banyak fitur."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
+pdfxDigitalSignatureWarning = "PDF berisi tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
+pdfxDescription = "PDF/X adalah subset standar ISO dari PDF untuk pencetakan yang andal dan pertukaran grafis."
 fileFormat = "Format File"
 wordDoc = "Dokumen Word"
 wordDocExt = "Dokumen Word (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI untuk perenderan gambar"
 cbrOptions = "Opsi CBR"
 cbrOutputOptions = "Opsi PDF ke CBR"
 cbrDpi = "DPI untuk perenderan gambar"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opsi eBook ke PDF"
@@ -1396,6 +1435,7 @@ applySignatures = "Terapkan Gambar"
 name = "Gambar"
 placeholder = "Unggah gambar"
 label = "File gambar"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Konfigurasi Gambar"
@@ -2191,6 +2231,16 @@ submit = "Konversi"
 tip = "Saat ini tidak dapat digunakan untuk beberapa input sekaligus"
 outputFormat = "Format keluaran"
 pdfWithDigitalSignature = "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
+
+[pdfToPDFX]
+tags = "cetak,standar,konversi,produksi,pracetak,arsip"
+title = "PDF ke PDF/X"
+header = "PDF ke PDF/X"
+credit = "Layanan ini menggunakan Ghostscript untuk konversi PDF/X"
+submit = "Konversi"
+tip = "Saat ini tidak berfungsi untuk beberapa input sekaligus"
+outputFormat = "Format keluaran"
+pdfWithDigitalSignature = "PDF berisi tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
 
 [PDFToWord]
 tags = "doc, docx, odt, kata, transformasi, format, konversi, kantor, microsoft, docfile"
@@ -3148,6 +3198,18 @@ other = "Lainnya"
 perPageInfo = "Info per Halaman"
 tableOfContents = "Daftar Isi"
 
+[getPdfInfo.compliance]
+notDetected = "Tidak Terdeteksi"
+passed = "Lulus"
+failed = "Gagal"
+compliant = "Patuh"
+nonCompliant = "Tidak Patuh"
+none = "Tidak ada standar yang terdeteksi"
+passedCount = "lulus"
+failedCount = "gagal"
+noVerification = "Tidak Ada Verifikasi Dilakukan"
+noVerificationDesc = "Kepatuhan terhadap standar PDF tidak diverifikasi untuk dokumen ini."
+
 [getPdfInfo.other]
 attachments = "Lampiran"
 embeddedFiles = "File Tertanam"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} pembatasan"
 permsMixed = "Beberapa izin dibatasi"
 hasCompliance = "Memiliki standar kepatuhan"
 noCompliance = "Tidak ada standar kepatuhan"
+compliancePassed = "Sesuai {{standards}}"
+complianceChecked = "Standar diverifikasi ({{failed}} gagal)"
 basic = "Informasi Dasar"
 documentInfo = "Informasi Dokumen"
 securityTitle = "Status Keamanan"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Kata sandi berhasil diubah! Silakan masuk dengan kata 
 credentialsUpdated = "Kredensial Anda telah diperbarui. Silakan masuk lagi."
 defaultCredentials = "Kredensial Login Bawaan"
 changePasswordWarning = "Harap ganti kata sandi Anda setelah login untuk pertama kalinya"
+mfaRequired = "Kode autentikasi dua faktor diperlukan"
+mfaCode = "Kode Autentikasi"
+enterMfaCode = "Masukkan kode 6 digit"
+mfaPromptTitle = "Autentikasi dua faktor"
+mfaPromptBody = "Masukkan kode autentikasi dari aplikasi autentikator Anda untuk melanjutkan."
+verifyingMfa = "Memverifikasi..."
+verifyMfa = "Verifikasi kode"
 
 [login.slides.overview]
 alt = "Sekilas Stirling PDF"
@@ -4319,6 +4390,10 @@ title = "Mode Login Diperlukan"
 message = "Mode login harus diaktifkan untuk mengubah pengaturan admin. Harap set SECURITY_ENABLELOGIN=true di lingkungan Anda atau security.enableLogin: true di settings.yml, lalu mulai ulang server."
 readOnly = "Pengaturan di bawah ini menampilkan nilai contoh sebagai referensi. Aktifkan mode login untuk melihat dan mengedit konfigurasi sebenarnya."
 
+[admin.settings.enterpriseRequired]
+title = "Lisensi Enterprise Diperlukan"
+message = "Lisensi Enterprise diperlukan untuk mengakses {{featureName}}. Anda sedang melihat data demo sebagai referensi."
+
 [admin.settings.restart]
 title = "Perlu Mulai Ulang"
 message = "Pengaturan telah berhasil disimpan. Diperlukan mulai ulang server agar perubahan berlaku."
@@ -4457,6 +4532,13 @@ description = "Jumlah maksimum kegagalan login sebelum akun terkunci"
 [admin.settings.security.loginResetTimeMinutes]
 label = "Waktu Reset Login (menit)"
 description = "Waktu sebelum upaya login yang gagal direset"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Nonaktifkan Perlindungan CSRF"
@@ -4766,6 +4848,48 @@ description = "Tampilkan pesan kesalahan terperinci untuk pengguna."
 title = "Database"
 description = "Konfigurasikan pengaturan koneksi database kustom untuk penerapan enterprise."
 configuration = "Konfigurasi Database"
+backupTitle = "Cadangan & Pemulihan"
+backupDescription = "Kelola cadangan H2 langsung dari konsol admin."
+loadError = "Gagal memuat cadangan basis data"
+backupCreated = "Cadangan berhasil dibuat"
+backupFailed = "Gagal membuat cadangan"
+deleteTitle = "Hapus cadangan"
+deleteConfirm = "Hapus cadangan ini? Tindakan ini tidak dapat dibatalkan."
+deleteSuccess = "Cadangan dihapus"
+deleteFailed = "Gagal menghapus cadangan"
+deleteConfirmAction = "Hapus cadangan"
+downloadFailed = "Gagal mengunduh cadangan"
+version = "Versi H2"
+embedded = "H2 Tertanam"
+external = "DB Eksternal"
+h2Only = "Cadangan hanya tersedia untuk basis data H2 tertanam."
+h2Hint = "Setel tipe basis data ke H2 dan nonaktifkan basis data kustom untuk mengaktifkan pencadangan dan pemulihan."
+manageBackups = "Kelola cadangan"
+refresh = "Segarkan"
+createBackup = "Buat cadangan"
+uploadTitle = "Unggah & impor"
+chooseFile = "Pilih berkas cadangan .sql"
+importFromUpload = "Impor unggahan"
+confirmImportTitle = "Konfirmasi impor basis data"
+overwriteWarning = "Peringatan: Ini akan menimpa basis data saat ini."
+overwriteWarningBody = "Semua data yang ada akan diganti oleh cadangan yang diunggah. Tindakan ini tidak dapat dibatalkan."
+confirmCodeLabel = "Masukkan kode konfirmasi untuk melanjutkan"
+enterCode = "Masukkan kode yang ditampilkan di atas"
+confirmImport = "Konfirmasi impor"
+codeMismatch = "Kode konfirmasi tidak cocok"
+codeMismatchBody = "Masukkan kode persis seperti yang ditampilkan untuk melanjutkan."
+selectFile = "Silakan pilih berkas .sql untuk diimpor"
+importSuccess = "Cadangan berhasil diimpor"
+importFailed = "Gagal mengimpor cadangan"
+noBackups = "Belum ada cadangan."
+unavailable = "Daftar cadangan tidak tersedia untuk konfigurasi basis data saat ini."
+fileName = "Berkas"
+created = "Dibuat"
+size = "Ukuran"
+actions = "Tindakan"
+download = "Unduh"
+import = "Impor"
+delete = "Hapus"
 
 [admin.settings.database.enableCustom]
 label = "Aktifkan Database Kustom"
@@ -4843,6 +4967,26 @@ description = "DPI maksimum untuk pemrosesan gambar (0 = tanpa batas)"
 [admin.settings.advanced.tessdataDir]
 label = "Direktori Tessdata"
 description = "Path ke direktori tessdata untuk file bahasa OCR"
+downloadMissingTitle = "Tidak ada bahasa yang dipilih"
+downloadMissingBody = "Pilih setidaknya satu bahasa untuk diunduh."
+downloadSuccessTitle = "Bahasa berhasil diunduh"
+downloadSuccessBody = "Bahasa tessdata yang dipilih telah disimpan."
+downloadErrorTitle = "Unduhan Gagal"
+loadingLanguages = "Memuat bahasa tessdata yang terpasang..."
+installedLanguages = "Bahasa tessdata yang terpasang"
+noLanguages = "Tidak ditemukan bahasa tessdata di direktori yang dikonfigurasi."
+downloadLabel = "Unduh bahasa tessdata tambahan"
+downloadPlaceholder = "Pilih bahasa"
+downloadNothingFound = "Tidak ditemukan bahasa tambahan"
+permissionNotice = "Jalur tessdata tidak dapat ditulisi. Unduhan akan dibuka di peramban; silakan simpan berkas .traineddata secara manual ke dalam folder tessdata."
+manualLinks = "Unduhan manual: klik tautan dan tempatkan berkas ke folder tessdata."
+downloadButton = "Unduh bahasa yang dipilih"
+downloadInvalidTitle = "Pilihan tidak valid"
+downloadInvalidBody = "Beberapa bahasa yang dipilih tidak tersedia untuk diunduh. Silakan segarkan dan pilih dari daftar."
+downloadErrorNetwork = "Unduhan gagal karena kesalahan jaringan. Periksa koneksi Anda dan coba lagi."
+downloadErrorServer = "Server mengalami kesalahan saat mengunduh bahasa tessdata. Cobalah lagi nanti."
+downloadErrorPermission = "Direktori tessdata tidak dapat ditulisi: {{message}}. Pilih direktori yang dapat ditulisi (mis. di bawah folder data aplikasi) atau sesuaikan izin."
+downloadErrorGeneric = "Unduhan gagal: {{message}}. Silakan coba lagi nanti."
 
 [admin.settings.advanced.disableSanitize]
 label = "Nonaktifkan Sanitasi HTML"
@@ -5346,6 +5490,7 @@ desc = "Bangun alur kerja multi-langkah dengan merangkaikan aksi PDF. Ideal untu
 invalidStep = "Langkah tidak valid"
 reviewTitle = "Hasil Otomatisasi"
 copyToSaved = "Salin ke Tersimpan"
+exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
 
 [automate.files]
 placeholder = "Pilih file untuk diproses dengan otomatisasi ini"
@@ -5367,6 +5512,7 @@ createTitle = "Buat Otomatisasi"
 editTitle = "Edit Otomatisasi"
 intro = "Otomatisasi menjalankan alat secara berurutan. Untuk memulai, tambahkan alat sesuai urutan yang Anda inginkan."
 save = "Simpan Otomatisasi"
+exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
 
 [automate.creation.name]
 label = "Nama Otomatisasi"
@@ -5741,9 +5887,11 @@ username = "Nama Pengguna (Email)"
 usernamePlaceholder = "user@example.com"
 password = "Kata Sandi"
 passwordPlaceholder = "Masukkan kata sandi"
+passwordRequired = "Kata sandi diperlukan"
 role = "Peran"
 team = "Tim (Opsional)"
 teamPlaceholder = "Pilih tim"
+authType = "Jenis autentikasi"
 forcePasswordChange = "Wajibkan ganti kata sandi saat login pertama"
 cancel = "Batal"
 submit = "Tambah Anggota"
@@ -5751,6 +5899,13 @@ usernameRequired = "Nama pengguna dan kata sandi wajib diisi"
 passwordTooShort = "Kata sandi harus minimal 6 karakter"
 success = "Pengguna berhasil dibuat"
 error = "Gagal membuat pengguna"
+forceMFA = "Wajibkan penyiapan MFA pada login berikutnya"
+
+[workspace.people.authType]
+password = "Kata sandi"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Pengguna akan diautentikasi melalui penyedia SSO"
 
 [workspace.people.editMember]
 title = "Edit Anggota"
@@ -5853,6 +6008,11 @@ fromLicense = "dari lisensi"
 slotsAvailable = "{{count}} slot pengguna tersedia"
 noSlotsAvailable = "Tidak ada slot tersedia"
 currentUsage = "Saat ini menggunakan {{current}} dari {{max}} lisensi pengguna"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA berhasil dinonaktifkan untuk pengguna"
+adminDisableError = "Gagal menonaktifkan MFA untuk pengguna"
+disableByAdmin = "Nonaktifkan MFA"
 
 [workspace.teams]
 title = "Tim"
@@ -6296,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Kunjungan"
 percentage = "Persentase"
 noData = "Tidak ada data"
+unknownEndpoint = "Endpoint tidak dikenal"
 
 [backendHealth]
 checking = "Memeriksa status backend..."

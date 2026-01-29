@@ -1,16 +1,32 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
-/**
- * Component that runs inside EmbedPDF context and updates spread state in ViewerContext
- */
 export function SpreadAPIBridge() {
-  const { provides: spread, spreadMode } = useSpread();
+  const activeDocumentId = useActiveDocumentId();
+  
+  // Don't render the inner component until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return <SpreadAPIBridgeInner documentId={activeDocumentId} />;
+}
+
+function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
+  const { provides: spread, spreadMode } = useSpread(documentId);
   const { registerBridge, triggerImmediateSpreadUpdate } = useViewer();
 
+  // Keep spread ref updated to avoid re-running effect when object reference changes
+  const spreadRef = useRef(spread);
   useEffect(() => {
-    if (!spread) {
+    spreadRef.current = spread;
+  }, [spread]);
+
+  useEffect(() => {
+    const currentSpread = spreadRef.current;
+    if (!currentSpread || spreadMode === undefined) {
       return;
     }
 
@@ -23,20 +39,20 @@ export function SpreadAPIBridge() {
       state: newState,
       api: {
         setSpreadMode: (mode: SpreadMode) => {
-          spread.setSpreadMode(mode);
+          currentSpread.setSpreadMode(mode);
         },
-        getSpreadMode: () => spread.getSpreadMode(),
+        getSpreadMode: () => currentSpread.getSpreadMode(),
         toggleSpreadMode: () => {
-          const current = spread.getSpreadMode();
+          const current = currentSpread.getSpreadMode();
           const nextMode = current === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
-          spread.setSpreadMode(nextMode);
+          currentSpread.setSpreadMode(nextMode);
         },
         SpreadMode,
       },
     });
 
     triggerImmediateSpreadUpdate(spreadMode);
-  }, [spread, spreadMode, registerBridge, triggerImmediateSpreadUpdate]);
+  }, [spreadMode, registerBridge, triggerImmediateSpreadUpdate]);
 
   return null;
 }

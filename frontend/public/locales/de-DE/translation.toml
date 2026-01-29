@@ -306,6 +306,7 @@ selectOperation = "Vorgang auswählen"
 addOperationButton = "Vorgang hinzufügen"
 pipelineHeader = "Pipeline:"
 saveButton = "Herunterladen"
+saveForFolderScanning = "Für Ordnerscan speichern"
 validateButton = "Validieren"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Eigenschaft"
 webBrowserSettings = "Webbrowser-Einstellung"
 syncToBrowser = "Konto → Browser synchronisieren"
 syncToAccount = "Konto ← Browser synchronisieren"
+
+[account.mfa]
+title = "Zwei-Faktor-Authentifizierung"
+setupFailed = "Zwei-Faktor-Einrichtung konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
+codeRequired = "Geben Sie zur Fortsetzung den Authentifizierungscode ein."
+enabled = "Zwei-Faktor-Authentifizierung aktiviert."
+enableFailed = "Zwei-Faktor-Authentifizierung konnte nicht aktiviert werden. Bitte prüfen Sie den Code und versuchen Sie es erneut."
+disabled = "Zwei-Faktor-Authentifizierung deaktiviert."
+disableFailed = "Zwei-Faktor-Authentifizierung konnte nicht deaktiviert werden. Bitte prüfen Sie den Code und versuchen Sie es erneut."
+description = "Fügen Sie Ihrem Konto eine zusätzliche Sicherheitsebene hinzu."
+enableButton = "Zwei-Faktor-Authentifizierung aktivieren"
+disableButton = "Zwei-Faktor-Authentifizierung deaktivieren"
+setupTitle = "Zwei-Faktor-Authentifizierung einrichten"
+setupDescription = "Scannen Sie den QR-Code mit Ihrer Authenticator-App und geben Sie anschließend den 6-stelligen Code zur Bestätigung ein."
+manualKey = "Manueller Einrichtungsschlüssel"
+secretWarning = "Bewahren Sie diesen Schlüssel geheim auf. Jeder mit Zugriff kann gültige Authentifizierungscodes generieren."
+codePlaceholder = "6-stelligen Code eingeben"
+confirmEnable = "Aktivieren"
+disableTitle = "Zwei-Faktor-Authentifizierung deaktivieren"
+disableDescription = "Geben Sie einen gültigen Authentifizierungscode ein, um die Zwei-Faktor-Authentifizierung zu deaktivieren."
+codeLabel = "Authentifizierungscode"
+confirmDisable = "Deaktivieren"
+ssoDescription = "Für Single Sign-On-Konten wird die Zwei-Faktor-Authentifizierung von Ihrem Identitätsanbieter verwaltet."
+ssoManaged = "Konfigurieren Sie MFA über Ihren Identitätsanbieter."
 
 [adminUserSettings]
 title = "Benutzerkontrolle"
@@ -925,6 +950,7 @@ title = "Teilen nach Größe/Anzahl"
 desc = "Teilen Sie ein einzelnes PDF basierend auf Größe, Seitenanzahl oder Dokumentanzahl in mehrere Dokumente auf"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Farbe ersetzen & invertieren"
 desc = "Farben in PDF-Dokumenten ersetzen oder invertieren"
 
@@ -939,18 +965,22 @@ title = "Autom. Ordner-Scan"
 desc = "Link zum Leitfaden für automatisches Ordner-Scannen"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO-Anleitung"
 desc = "Link zum SSO-Leitfaden"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Offline-Setup"
 desc = "Link zum Air-Gap-Einrichtungsleitfaden"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Passwort hinzufügen"
 desc = "Das PDF mit einem Passwort verschlüsseln"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Berechtigungen ändern"
 desc = "Dokumentbeschränkungen und -berechtigungen ändern"
 
@@ -960,10 +990,12 @@ title = "Automatisieren"
 desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen. Ideal für wiederkehrende Aufgaben."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Ein PDF über ein anderes legen"
 title = "PDFs überlagern"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-Texteditor"
 desc = "Vorhandenen Text und Bilder in PDFs bearbeiten"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "HTML-Zwischendatei anstatt PDF herunterladen"
 pdfaOptions = "PDF/A-Optionen"
 outputFormat = "Ausgabeformat"
 pdfaNote = "PDF/A-1b ist kompatibler, PDF/A-2b unterstützt mehr Funktionen."
+pdfaFormat = "PDF/A-Format"
 pdfaDigitalSignatureWarning = "Das PDF enthält eine digitale Signatur. Sie wird im nächsten Schritt entfernt."
+pdfxDigitalSignatureWarning = "Das PDF enthält eine digitale Signatur. Diese wird im nächsten Schritt entfernt."
+pdfxDescription = "PDF/X ist eine ISO-Standard-PDF-Teilmenge für zuverlässigen Druck und Grafikaustausch."
 fileFormat = "Dateiformat"
 wordDoc = "Word-Dokument"
 wordDocExt = "Word-Dokument (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI für Bildrendering"
 cbrOptions = "CBR-Optionen"
 cbrOutputOptions = "Optionen: PDF zu CBR"
 cbrDpi = "DPI für Bildrendering"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Optionen: E-Book zu PDF"
@@ -1396,6 +1435,7 @@ applySignatures = "Bilder anwenden"
 name = "Bild"
 placeholder = "Ein Bild hochladen"
 label = "Bilddatei"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Bild konfigurieren"
@@ -2191,6 +2231,16 @@ submit = "Konvertieren"
 tip = "Dieser Dienst kann nur einzelne Eingangsdateien verarbeiten."
 outputFormat = "Ausgabeformat"
 pdfWithDigitalSignature = "Das PDF enthält eine digitale Signatur. Sie wird im nächsten Schritt entfernt."
+
+[pdfToPDFX]
+tags = "druck,standard,konvertierung,produktion,vorstufe,archiv"
+title = "PDF in PDF/X"
+header = "PDF in PDF/X"
+credit = "Dieser Dienst verwendet Ghostscript für die PDF/X-Konvertierung"
+submit = "Konvertieren"
+tip = "Funktioniert derzeit nicht für mehrere Eingaben gleichzeitig"
+outputFormat = "Ausgabeformat"
+pdfWithDigitalSignature = "Das PDF enthält eine digitale Signatur. Diese wird im nächsten Schritt entfernt."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformation,format,konvertierung,office,microsoft,docfile"
@@ -3148,6 +3198,18 @@ other = "Sonstiges"
 perPageInfo = "Informationen pro Seite"
 tableOfContents = "Inhaltsverzeichnis"
 
+[getPdfInfo.compliance]
+notDetected = "Nicht erkannt"
+passed = "Bestanden"
+failed = "Fehlgeschlagen"
+compliant = "Konform"
+nonCompliant = "Nicht konform"
+none = "Keine Standards erkannt"
+passedCount = "bestanden"
+failedCount = "fehlgeschlagen"
+noVerification = "Keine Überprüfung durchgeführt"
+noVerificationDesc = "Die Konformität mit PDF-Standards wurde für dieses Dokument nicht überprüft."
+
 [getPdfInfo.other]
 attachments = "Anhänge"
 embeddedFiles = "Eingebettete Dateien"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} Einschränkungen"
 permsMixed = "Einige Berechtigungen eingeschränkt"
 hasCompliance = "Entspricht Compliance-Standards"
 noCompliance = "Keine Compliance-Standards"
+compliancePassed = "Mit {{standards}} konform"
+complianceChecked = "Standards überprüft ({{failed}} fehlgeschlagen)"
 basic = "Grundlegende Informationen"
 documentInfo = "Dokumentinformationen"
 securityTitle = "Sicherheitsstatus"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Passwort erfolgreich geändert! Bitte melden Sie sich 
 credentialsUpdated = "Ihre Anmeldedaten wurden aktualisiert. Bitte melden Sie sich erneut an."
 defaultCredentials = "Standard-Login-Daten"
 changePasswordWarning = "Bitte ändern Sie Ihr Passwort nach dem ersten Login."
+mfaRequired = "Zwei-Faktor-Code erforderlich"
+mfaCode = "Authentifizierungscode"
+enterMfaCode = "6-stelligen Code eingeben"
+mfaPromptTitle = "Zwei-Faktor-Authentifizierung"
+mfaPromptBody = "Geben Sie den Authentifizierungscode aus Ihrer Authenticator-App ein, um fortzufahren."
+verifyingMfa = "Wird überprüft..."
+verifyMfa = "Code überprüfen"
 
 [login.slides.overview]
 alt = "Stirling PDF Übersicht"
@@ -4319,6 +4390,10 @@ title = "Anmeldemodus erforderlich"
 message = "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu ändern. Bitte setzen Sie SECURITY_ENABLELOGIN=true in Ihrer Umgebung oder security.enableLogin: true in settings.yml und starten Sie dann den Server neu."
 readOnly = "Die folgenden Einstellungen zeigen Beispielwerte als Referenz. Aktivieren Sie den Anmeldemodus, um die tatsächliche Konfiguration anzuzeigen und zu bearbeiten."
 
+[admin.settings.enterpriseRequired]
+title = "Enterprise-Lizenz erforderlich"
+message = "Für den Zugriff auf {{featureName}} ist eine Enterprise-Lizenz erforderlich. Sie sehen zu Referenzzwecken Demodaten."
+
 [admin.settings.restart]
 title = "Neustart erforderlich"
 message = "Einstellungen wurden erfolgreich gespeichert. Ein Serverneustart ist erforderlich, damit die Änderungen wirksam werden."
@@ -4457,6 +4532,13 @@ description = "Maximale Anzahl fehlgeschlagener Anmeldeversuche vor Kontosperre"
 [admin.settings.security.loginResetTimeMinutes]
 label = "Zurücksetzungszeit für Anmeldungen (Minuten)"
 description = "Zeit, nach der fehlgeschlagene Anmeldeversuche zurückgesetzt werden"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF-Schutz deaktivieren"
@@ -4766,6 +4848,48 @@ description = "Show detailed error messages for users."
 title = "Datenbank"
 description = "Benutzerdefinierte Datenbankverbindungseinstellungen für Enterprise-Bereitstellungen konfigurieren."
 configuration = "Datenbankkonfiguration"
+backupTitle = "Backups & Wiederherstellung"
+backupDescription = "H2-Backups direkt über die Admin-Konsole verwalten."
+loadError = "Datenbank-Backups konnten nicht geladen werden"
+backupCreated = "Backup erfolgreich erstellt"
+backupFailed = "Erstellen des Backups fehlgeschlagen"
+deleteTitle = "Backup löschen"
+deleteConfirm = "Dieses Backup löschen? Dies kann nicht rückgängig gemacht werden."
+deleteSuccess = "Backup gelöscht"
+deleteFailed = "Löschen des Backups fehlgeschlagen"
+deleteConfirmAction = "Backup löschen"
+downloadFailed = "Herunterladen des Backups fehlgeschlagen"
+version = "H2-Version"
+embedded = "Eingebettetes H2"
+external = "Externe DB"
+h2Only = "Backups sind nur für die eingebettete H2-Datenbank verfügbar."
+h2Hint = "Setzen Sie den Datenbanktyp auf H2 und deaktivieren Sie die benutzerdefinierte Datenbank, um Backup und Wiederherstellung zu aktivieren."
+manageBackups = "Backups verwalten"
+refresh = "Aktualisieren"
+createBackup = "Backup erstellen"
+uploadTitle = "Hochladen & Importieren"
+chooseFile = "Eine .sql-Backup-Datei auswählen"
+importFromUpload = "Upload importieren"
+confirmImportTitle = "Datenbankimport bestätigen"
+overwriteWarning = "Warnung: Dies überschreibt die aktuelle Datenbank."
+overwriteWarningBody = "Alle vorhandenen Daten werden durch das hochgeladene Backup ersetzt. Diese Aktion kann nicht rückgängig gemacht werden."
+confirmCodeLabel = "Zum Fortfahren den Bestätigungscode eingeben"
+enterCode = "Den oben angezeigten Code eingeben"
+confirmImport = "Import bestätigen"
+codeMismatch = "Bestätigungscode stimmt nicht überein"
+codeMismatchBody = "Bitte den Code exakt wie angezeigt eingeben, um fortzufahren."
+selectFile = "Bitte eine .sql-Datei zum Importieren auswählen"
+importSuccess = "Backup erfolgreich importiert"
+importFailed = "Import des Backups fehlgeschlagen"
+noBackups = "Noch keine Backups gefunden."
+unavailable = "Die Backupliste ist für die aktuelle Datenbankkonfiguration nicht verfügbar."
+fileName = "Datei"
+created = "Erstellt"
+size = "Größe"
+actions = "Aktionen"
+download = "Herunterladen"
+import = "Importieren"
+delete = "Löschen"
 
 [admin.settings.database.enableCustom]
 label = "Benutzerdefinierte Datenbank aktivieren"
@@ -4843,6 +4967,26 @@ description = "Maximale DPI für Bildverarbeitung (0 = unbegrenzt)"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata-Verzeichnis"
 description = "Pfad zum tessdata-Verzeichnis für OCR-Sprachdateien"
+downloadMissingTitle = "Keine Sprache ausgewählt"
+downloadMissingBody = "Bitte mindestens eine Sprache zum Herunterladen auswählen."
+downloadSuccessTitle = "Sprachen heruntergeladen"
+downloadSuccessBody = "Die ausgewählten tessdata-Sprachen wurden gespeichert."
+downloadErrorTitle = "Download fehlgeschlagen"
+loadingLanguages = "Installierte tessdata-Sprachen werden geladen..."
+installedLanguages = "Installierte tessdata-Sprachen"
+noLanguages = "Keine tessdata-Sprachen im konfigurierten Verzeichnis gefunden."
+downloadLabel = "Zusätzliche tessdata-Sprachen herunterladen"
+downloadPlaceholder = "Sprachen auswählen"
+downloadNothingFound = "Keine zusätzlichen Sprachen gefunden"
+permissionNotice = "Der tessdata-Pfad ist nicht beschreibbar. Downloads werden im Browser geöffnet; bitte die .traineddata-Dateien manuell in den tessdata-Ordner speichern."
+manualLinks = "Manuelle Downloads: Links anklicken und die Dateien in den tessdata-Ordner ablegen."
+downloadButton = "Ausgewählte Sprachen herunterladen"
+downloadInvalidTitle = "Ungültige Auswahl"
+downloadInvalidBody = "Einige ausgewählte Sprachen sind nicht zum Download verfügbar. Bitte aktualisieren und aus der Liste auswählen."
+downloadErrorNetwork = "Download aufgrund eines Netzwerkfehlers fehlgeschlagen. Bitte die Verbindung prüfen und erneut versuchen."
+downloadErrorServer = "Beim Herunterladen von tessdata-Sprachen ist ein Serverfehler aufgetreten. Bitte später erneut versuchen."
+downloadErrorPermission = "Tessdata-Verzeichnis ist nicht beschreibbar: {{message}}. Bitte ein beschreibbares Verzeichnis wählen (z. B. im Anwendungsdaten-Ordner) oder Berechtigungen anpassen."
+downloadErrorGeneric = "Download fehlgeschlagen: {{message}}. Bitte später erneut versuchen."
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML-Bereinigung deaktivieren"
@@ -5346,6 +5490,7 @@ desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen.
 invalidStep = "Ungültiger Schritt"
 reviewTitle = "Automatisierungsergebnisse"
 copyToSaved = "In gespeicherte kopieren"
+exportForFolderScanning = "Für Ordnerscan exportieren"
 
 [automate.files]
 placeholder = "Wählen Sie Dateien aus, die mit dieser Automatisierung verarbeitet werden sollen"
@@ -5367,6 +5512,7 @@ createTitle = "Automatisierung erstellen"
 editTitle = "Automatisierung bearbeiten"
 intro = "Automatisierungen führen Werkzeuge sequenziell aus. Fügen Sie Werkzeuge in der gewünschten Reihenfolge hinzu, um zu beginnen."
 save = "Automatisierung speichern"
+exportForFolderScanning = "Für Ordnerscan exportieren"
 
 [automate.creation.name]
 label = "Name der Automatisierung"
@@ -5741,9 +5887,11 @@ username = "Benutzername (E-Mail)"
 usernamePlaceholder = "user@example.com"
 password = "Passwort"
 passwordPlaceholder = "Passwort eingeben"
+passwordRequired = "Passwort ist erforderlich"
 role = "Rolle"
 team = "Team (optional)"
 teamPlaceholder = "Team auswählen"
+authType = "Authentifizierungstyp"
 forcePasswordChange = "Passwortänderung bei erster Anmeldung erzwingen"
 cancel = "Abbrechen"
 submit = "Mitglied hinzufügen"
@@ -5751,6 +5899,13 @@ usernameRequired = "Benutzername und Passwort sind erforderlich"
 passwordTooShort = "Passwort muss mindestens 6 Zeichen lang sein"
 success = "Benutzer erfolgreich erstellt"
 error = "Benutzer konnte nicht erstellt werden"
+forceMFA = "MFA-Einrichtung bei der nächsten Anmeldung erzwingen"
+
+[workspace.people.authType]
+password = "Passwort"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Der Benutzer authentifiziert sich über den SSO-Anbieter"
 
 [workspace.people.editMember]
 title = "Mitglied bearbeiten"
@@ -5853,6 +6008,11 @@ fromLicense = "aus der Lizenz"
 slotsAvailable = "{{count}} Benutzer-Slot(s) verfügbar"
 noSlotsAvailable = "Keine Slots verfügbar"
 currentUsage = "Derzeit werden {{current}} von {{max}} Benutzerlizenzen verwendet"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA für Benutzer erfolgreich deaktiviert"
+adminDisableError = "MFA konnte für Benutzer nicht deaktiviert werden"
+disableByAdmin = "MFA deaktivieren"
 
 [workspace.teams]
 title = "Teams"
@@ -6296,6 +6456,7 @@ endpoint = "Endpunkt"
 visits = "Aufrufe"
 percentage = "Prozentsatz"
 noData = "Keine Daten verfügbar"
+unknownEndpoint = "Unbekannter Endpunkt"
 
 [backendHealth]
 checking = "Backend-Status wird geprüft..."

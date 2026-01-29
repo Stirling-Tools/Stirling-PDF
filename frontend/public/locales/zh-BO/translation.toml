@@ -306,6 +306,7 @@ selectOperation = "བཀོལ་སྤྱོད་འདེམས་རོག�
 addOperationButton = "བཀོལ་སྤྱོད་སྣོན།"
 pipelineHeader = "བརྒྱུད་རིམ།"
 saveButton = "ཕབ་ལེན།"
+saveForFolderScanning = "保存用于文件夹扫描"
 validateButton = "ཚད་ལྡན་ཡིན་མིན་ཞིབ་བཤེར།"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "ཁྱད་ཆོས།"
 webBrowserSettings = "བཤར་ཆས་སྒྲིག་འགོད།"
 syncToBrowser = "མཉམ་བགྲོད་ཐོ་མིང་ -> བཤར་ཆས།"
 syncToAccount = "མཉམ་བགྲོད་ཐོ་མིང་ <- བཤར་ཆས།"
+
+[account.mfa]
+title = "双重身份验证"
+setupFailed = "无法开始双重身份验证设置。请重试。"
+codeRequired = "请输入身份验证代码以继续。"
+enabled = "已启用双重身份验证。"
+enableFailed = "无法启用双重身份验证。请检查代码后重试。"
+disabled = "已禁用双重身份验证。"
+disableFailed = "无法禁用双重身份验证。请检查代码后重试。"
+description = "为您的账户添加一层额外的安全保护。"
+enableButton = "启用双重身份验证"
+disableButton = "禁用双重身份验证"
+setupTitle = "设置双重身份验证"
+setupDescription = "使用身份验证器应用扫描此 QR 码，然后输入 6 位代码以确认。"
+manualKey = "手动设置密钥"
+secretWarning = "请妥善保管此密钥。任何获得此密钥的人都可以生成有效的身份验证代码。"
+codePlaceholder = "输入 6 位代码"
+confirmEnable = "启用"
+disableTitle = "禁用双重身份验证"
+disableDescription = "输入有效的身份验证代码以禁用双重身份验证。"
+codeLabel = "身份验证代码"
+confirmDisable = "禁用"
+ssoDescription = "对于单点登录账户，双重身份验证由您的身份提供商管理。"
+ssoManaged = "请通过您的身份提供商配置 MFA。"
 
 [adminUserSettings]
 title = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་འགོད།"
@@ -925,6 +950,7 @@ title = "按大小/页数自动拆分"
 desc = "按文件大小或页数自动拆分 PDF"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "替换与反转颜色"
 desc = "替换或反转 PDF 文档中的颜色"
 
@@ -939,18 +965,22 @@ title = "自动化文件夹扫描"
 desc = "链接到自动化文件夹扫描指南"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO 指南"
 desc = "链接到 SSO 指南"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "离线隔离部署"
 desc = "链接到离线隔离部署指南"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "གསང་ཚིག་སྣོན་པ།"
 desc = "PDF ཡིག་ཆར་གསང་ཚིག་གིས་གསང་སྡོམ་བྱེད་པ།"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "更改权限"
 desc = "更改文档限制与权限"
 
@@ -960,10 +990,12 @@ title = "自动化"
 desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF གཞན་ཞིག་གི་སྟེང་དུ་ PDF བརྩེགས་པ།"
 title = "PDF སྟེང་བརྩེགས།"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF 文本编辑器"
 desc = "审阅并编辑 Stirling PDF 的 JSON 导出，支持分组文本编辑与 PDF 再生成"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "下载中间 HTML 文件而非 PDF"
 pdfaOptions = "PDF/A 选项"
 outputFormat = "输出格式"
 pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持更多功能。"
+pdfaFormat = "PDF/A 格式"
 pdfaDigitalSignatureWarning = "该 PDF 包含数字签名。下一步将移除它。"
+pdfxDigitalSignatureWarning = "该 PDF 包含数字签名。这将在下一步被移除。"
+pdfxDescription = "PDF/X 是用于可靠打印和图形交换的 ISO 标准 PDF 子集。"
 fileFormat = "文件格式"
 wordDoc = "Word 文档"
 wordDocExt = "Word 文档 (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "图像渲染的 DPI"
 cbrOptions = "CBR 选项"
 cbrOutputOptions = "PDF 转 CBR 选项"
 cbrDpi = "图像渲染的 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "电子书转 PDF 选项"
@@ -1396,6 +1435,7 @@ applySignatures = "应用图像"
 name = "图像"
 placeholder = "上传图像"
 label = "图像文件"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "配置图像"
@@ -2191,6 +2231,16 @@ submit = "བསྒྱུར་བ།"
 tip = "ད་ལྟ་ཡིག་ཆ་མང་པོ་དུས་གཅིག་ལ་བསྒྱུར་མི་ཐུབ།"
 outputFormat = "ཕྱིར་འདོན་རྣམ་གཞག"
 pdfWithDigitalSignature = "PDF འདིར་ཨང་ཀིའི་མིང་རྟགས་ཡོད། འདི་རྗེས་མའི་རིམ་པར་སུབ་ངེས་ཡིན།"
+
+[pdfToPDFX]
+tags = "打印,标准,转换,生产,印前,归档"
+title = "PDF 转 PDF/X"
+header = "PDF 转 PDF/X"
+credit = "本服务使用 Ghostscript 进行 PDF/X 转换"
+submit = "转换"
+tip = "目前不支持一次处理多个输入"
+outputFormat = "输出格式"
+pdfWithDigitalSignature = "该 PDF 包含数字签名。这将在下一步被移除。"
 
 [PDFToWord]
 tags = "doc,docx,odt,word,བསྒྱུར་བཅོས།,རྣམ་གཞག,བསྒྱུར་བ།,ཡིག་ཚང་།,microsoft,docfile"
@@ -3148,6 +3198,18 @@ other = "其他"
 perPageInfo = "每页信息"
 tableOfContents = "目录"
 
+[getPdfInfo.compliance]
+notDetected = "未检测到"
+passed = "通过"
+failed = "失败"
+compliant = "符合规范"
+nonCompliant = "不符合规范"
+none = "未检测到任何标准"
+passedCount = "通过"
+failedCount = "失败"
+noVerification = "未执行验证"
+noVerificationDesc = "未对该文档的 PDF 标准合规性进行验证。"
+
 [getPdfInfo.other]
 attachments = "附件"
 embeddedFiles = "嵌入文件"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} 项限制"
 permsMixed = "部分权限受限"
 hasCompliance = "符合合规标准"
 noCompliance = "无合规标准"
+compliancePassed = "符合 {{standards}}"
+complianceChecked = "标准已验证（失败 {{failed}} 项）"
 basic = "基本信息"
 documentInfo = "文档信息"
 securityTitle = "安全状态"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "密码修改成功！请使用新密码登录。"
 credentialsUpdated = "您的凭据已更新。请重新登录。"
 defaultCredentials = "默认登录凭据"
 changePasswordWarning = "首次登录后请更改密码"
+mfaRequired = "需要双重身份验证代码"
+mfaCode = "身份验证代码"
+enterMfaCode = "输入 6 位代码"
+mfaPromptTitle = "双重身份验证"
+mfaPromptBody = "请从您的身份验证器应用输入身份验证代码以继续。"
+verifyingMfa = "正在验证..."
+verifyMfa = "验证代码"
 
 [login.slides.overview]
 alt = "Stirling PDF 概览"
@@ -4319,6 +4390,10 @@ title = "需要登录模式"
 message = "必须启用登录模式才能修改管理员设置。请在环境中设置 SECURITY_ENABLELOGIN=true 或在 settings.yml 中设置 security.enableLogin: true，然后重启服务器。"
 readOnly = "以下设置仅显示示例值供参考。启用登录模式以查看并编辑实际配置。"
 
+[admin.settings.enterpriseRequired]
+title = "需要企业版许可"
+message = "访问 {{featureName}} 需要企业版许可。您当前查看的是演示数据，仅供参考。"
+
 [admin.settings.restart]
 title = "需要重启"
 message = "设置已成功保存。需要重启服务器以使更改生效。"
@@ -4457,6 +4532,13 @@ description = "在账户锁定前允许的最大失败登录次数"
 [admin.settings.security.loginResetTimeMinutes]
 label = "登录重置时间（分钟）"
 description = "失败登录尝试被重置前的时间"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "禁用 CSRF 保护"
@@ -4766,6 +4848,48 @@ description = "为用户显示详细错误消息。"
 title = "数据库"
 description = "为企业部署配置自定义数据库连接设置。"
 configuration = "数据库配置"
+backupTitle = "备份与恢复"
+backupDescription = "在管理控制台直接管理 H2 备份。"
+loadError = "无法加载数据库备份"
+backupCreated = "备份创建成功"
+backupFailed = "创建备份失败"
+deleteTitle = "删除备份"
+deleteConfirm = "删除此备份？此操作无法撤销。"
+deleteSuccess = "备份已删除"
+deleteFailed = "删除备份失败"
+deleteConfirmAction = "删除备份"
+downloadFailed = "下载备份失败"
+version = "H2 版本"
+embedded = "嵌入式 H2"
+external = "外部数据库"
+h2Only = "仅对嵌入式 H2 数据库提供备份功能。"
+h2Hint = "将数据库类型设置为 H2 并禁用自定义数据库，以启用备份与恢复。"
+manageBackups = "管理备份"
+refresh = "刷新"
+createBackup = "创建备份"
+uploadTitle = "上传与导入"
+chooseFile = "选择一个 .sql 备份文件"
+importFromUpload = "导入已上传文件"
+confirmImportTitle = "确认导入数据库"
+overwriteWarning = "警告：这将覆盖当前数据库。"
+overwriteWarningBody = "所有现有数据都将被上传的备份替换。此操作无法撤销。"
+confirmCodeLabel = "请输入确认代码以继续"
+enterCode = "输入上方显示的代码"
+confirmImport = "确认导入"
+codeMismatch = "确认代码不匹配"
+codeMismatchBody = "请按显示内容精确输入代码以继续。"
+selectFile = "请选择要导入的 .sql 文件"
+importSuccess = "备份导入成功"
+importFailed = "导入备份失败"
+noBackups = "尚未找到任何备份。"
+unavailable = "当前数据库配置无法获取备份列表。"
+fileName = "文件"
+created = "创建时间"
+size = "大小"
+actions = "操作"
+download = "下载"
+import = "导入"
+delete = "删除"
 
 [admin.settings.database.enableCustom]
 label = "启用自定义数据库"
@@ -4843,6 +4967,26 @@ description = "图像处理的最大 DPI（0 = 不限）"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata 目录"
 description = "OCR 语言文件的 tessdata 目录路径"
+downloadMissingTitle = "未选择语言"
+downloadMissingBody = "请至少选择一种语言进行下载。"
+downloadSuccessTitle = "语言已下载"
+downloadSuccessBody = "所选 tessdata 语言已保存。"
+downloadErrorTitle = "下载失败"
+loadingLanguages = "正在加载已安装的 tessdata 语言…"
+installedLanguages = "已安装的 tessdata 语言"
+noLanguages = "在已配置的目录中未找到 tessdata 语言。"
+downloadLabel = "下载更多 tessdata 语言"
+downloadPlaceholder = "选择语言"
+downloadNothingFound = "未找到其他语言"
+permissionNotice = "tessdata 路径不可写。下载将会在浏览器中打开；请将 .traineddata 文件手动保存到 tessdata 文件夹中。"
+manualLinks = "手动下载：点击链接并将文件放入 tessdata 文件夹。"
+downloadButton = "下载所选语言"
+downloadInvalidTitle = "选择无效"
+downloadInvalidBody = "部分所选语言不可下载。请刷新并从列表中选择。"
+downloadErrorNetwork = "由于网络错误，下载失败。请检查您的连接并重试。"
+downloadErrorServer = "服务器在下载 tessdata 语言时遇到错误。请稍后重试。"
+downloadErrorPermission = "tessdata 目录不可写：{{message}}。请选择可写目录（例如应用数据文件夹下）或调整权限。"
+downloadErrorGeneric = "下载失败：{{message}}。请稍后重试。"
 
 [admin.settings.advanced.disableSanitize]
 label = "禁用 HTML 清理"
@@ -5346,6 +5490,7 @@ desc = "通过将 PDF 操作串联起来构建多步工作流。非常适合重�
 invalidStep = "无效步骤"
 reviewTitle = "自动化结果"
 copyToSaved = "复制到已保存"
+exportForFolderScanning = "导出用于文件夹扫描"
 
 [automate.files]
 placeholder = "选择要用此自动化处理的文件"
@@ -5367,6 +5512,7 @@ createTitle = "创建自动化"
 editTitle = "编辑自动化"
 intro = "自动化按顺序运行工具。开始之前，请按希望运行的顺序添加工具。"
 save = "保存自动化"
+exportForFolderScanning = "导出用于文件夹扫描"
 
 [automate.creation.name]
 label = "自动化名称"
@@ -5741,9 +5887,11 @@ username = "用户名（邮箱）"
 usernamePlaceholder = "user@example.com"
 password = "密码"
 passwordPlaceholder = "输入密码"
+passwordRequired = "需要密码"
 role = "角色"
 team = "团队（可选）"
 teamPlaceholder = "选择一个团队"
+authType = "认证类型"
 forcePasswordChange = "首次登录强制修改密码"
 cancel = "取消"
 submit = "添加成员"
@@ -5751,6 +5899,13 @@ usernameRequired = "需要用户名和密码"
 passwordTooShort = "密码至少需 6 个字符"
 success = "用户创建成功"
 error = "创建用户失败"
+forceMFA = "在下次登录时强制设置 MFA"
+
+[workspace.people.authType]
+password = "密码"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "用户将通过 SSO 提供商进行认证"
 
 [workspace.people.editMember]
 title = "编辑成员"
@@ -5853,6 +6008,11 @@ fromLicense = "来自许可证"
 slotsAvailable = "可用用户席位 {{count}} 个"
 noSlotsAvailable = "无可用席位"
 currentUsage = "当前使用 {{current}} / {{max}} 个用户许可证"
+
+[workspace.people.mfa]
+adminDisableSuccess = "已为该用户成功禁用 MFA"
+adminDisableError = "未能为该用户禁用 MFA"
+disableByAdmin = "禁用 MFA"
 
 [workspace.teams]
 title = "团队"
@@ -6296,6 +6456,7 @@ endpoint = "端点"
 visits = "访问量"
 percentage = "百分比"
 noData = "暂无数据"
+unknownEndpoint = "未知端点"
 
 [backendHealth]
 checking = "正在检查后端状态..."

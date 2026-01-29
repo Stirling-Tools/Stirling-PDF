@@ -306,6 +306,7 @@ selectOperation = "Művelet kiválasztása"
 addOperationButton = "Művelet hozzáadása"
 pipelineHeader = "Folyamat:"
 saveButton = "Letöltés"
+saveForFolderScanning = "Mentés mappavizsgálathoz"
 validateButton = "Ellenőrzés"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Tulajdonság"
 webBrowserSettings = "Böngészőbeállítások"
 syncToBrowser = "Szinkronizálás: Fiók -> Böngésző"
 syncToAccount = "Szinkronizálás: Böngésző -> Fiók"
+
+[account.mfa]
+title = "Kétfaktoros hitelesítés"
+setupFailed = "Nem sikerült elindítani a kétfaktoros beállítást. Próbálja újra."
+codeRequired = "A folytatáshoz adja meg a hitelesítési kódot."
+enabled = "Kétfaktoros hitelesítés engedélyezve."
+enableFailed = "Nem sikerült engedélyezni a kétfaktoros hitelesítést. Ellenőrizze a kódot, majd próbálja újra."
+disabled = "Kétfaktoros hitelesítés letiltva."
+disableFailed = "Nem sikerült letiltani a kétfaktoros hitelesítést. Ellenőrizze a kódot, majd próbálja újra."
+description = "Adjon hozzá egy további biztonsági réteget a fiókjához."
+enableButton = "Kétfaktoros hitelesítés engedélyezése"
+disableButton = "Kétfaktoros hitelesítés letiltása"
+setupTitle = "Kétfaktoros hitelesítés beállítása"
+setupDescription = "Olvassa be a QR-kódot a hitelesítő alkalmazással, majd a megerősítéshez adja meg a 6 számjegyű kódot."
+manualKey = "Kézi beállítási kulcs"
+secretWarning = "Tartsa ezt a kulcsot titokban. Aki hozzáfér, érvényes hitelesítési kódokat tud generálni."
+codePlaceholder = "Adja meg a 6 számjegyű kódot"
+confirmEnable = "Engedélyezés"
+disableTitle = "Kétfaktoros hitelesítés letiltása"
+disableDescription = "Adjon meg egy érvényes hitelesítési kódot a kétfaktoros hitelesítés letiltásához."
+codeLabel = "Hitelesítési kód"
+confirmDisable = "Letiltás"
+ssoDescription = "Az egyszeri bejelentkezéses fiókoknál a kétfaktoros hitelesítést az identitásszolgáltató kezeli."
+ssoManaged = "Konfigurálja az MFA-t az identitásszolgáltatón keresztül."
 
 [adminUserSettings]
 title = "Felhasználókezelés"
@@ -925,6 +950,7 @@ title = "Auto felosztás méret/darab"
 desc = "Egyetlen PDF felosztása több dokumentumra méret, oldalszám vagy dokumentumszám alapján"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Színek cseréje és invertálása"
 desc = "Színek cseréje vagy invertálása PDF dokumentumokban"
 
@@ -939,18 +965,22 @@ title = "Automatikus mappaszkennelés"
 desc = "Hivatkozás az automatikus mappaszkennelés útmutatójára"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO útmutató"
 desc = "Hivatkozás az SSO útmutatóra"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped beállítás"
 desc = "Hivatkozás az elszigetelt környezet beállítási útmutatójára"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Jelszó hozzáadása"
 desc = "PDF dokumentum jelszavas védelme"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Jogosultságok módosítása"
 desc = "Dokumentumkorlátozások és jogosultságok módosítása"
 
@@ -960,10 +990,12 @@ title = "Automatizálás"
 desc = "Többlépéses munkafolyamatok összeállítása PDF műveletek összefűzésével. Ideális ismétlődő feladatokhoz."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF-ek egymásra helyezése egy másik PDF-en"
 title = "PDF-ek egymásra helyezése"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF szövegszerkesztő"
 desc = "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "HTML köztes fájl letöltése PDF helyett"
 pdfaOptions = "PDF/A beállítások"
 outputFormat = "Kimeneti formátum"
 pdfaNote = "A PDF/A-1b kompatibilisebb, a PDF/A-2b több funkciót támogat."
+pdfaFormat = "PDF/A formátum"
 pdfaDigitalSignatureWarning = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
+pdfxDigitalSignatureWarning = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
+pdfxDescription = "A PDF/X egy ISO szabványos PDF-részhalmaz megbízható nyomtatáshoz és grafikai cseréhez."
 fileFormat = "Fájlformátum"
 wordDoc = "Word-dokumentum"
 wordDocExt = "Word-dokumentum (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI a képrendereléshez"
 cbrOptions = "CBR beállítások"
 cbrOutputOptions = "PDF → CBR beállítások"
 cbrDpi = "DPI a képrendereléshez"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "E-könyv → PDF beállítások"
@@ -1396,6 +1435,7 @@ applySignatures = "Képek alkalmazása"
 name = "Kép"
 placeholder = "Töltsön fel egy képet"
 label = "Képfájl"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Kép beállítása"
@@ -2189,6 +2229,16 @@ header = "PDF konvertálása PDF/A formátumba"
 credit = "Ez a szolgáltatás a libreoffice használatával végzi a PDF/A konverziót"
 submit = "Konvertálás"
 tip = "Jelenleg nem támogatja a több fájl egyidejű feldolgozását"
+outputFormat = "Kimeneti formátum"
+pdfWithDigitalSignature = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
+
+[pdfToPDFX]
+tags = "nyomtatás,szabvány,átalakítás,gyártás,előnyomdai,archiválás"
+title = "PDF PDF/X-re"
+header = "PDF PDF/X-re"
+credit = "Ez a szolgáltatás a Ghostscriptet használja a PDF/X átalakításhoz"
+submit = "Átalakítás"
+tip = "Jelenleg nem működik több bemenettel egyszerre"
 outputFormat = "Kimeneti formátum"
 pdfWithDigitalSignature = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
 
@@ -3148,6 +3198,18 @@ other = "Egyéb"
 perPageInfo = "Oldalankénti információk"
 tableOfContents = "Tartalomjegyzék"
 
+[getPdfInfo.compliance]
+notDetected = "Nem észlelve"
+passed = "Megfelelt"
+failed = "Nem felelt meg"
+compliant = "Megfelelő"
+nonCompliant = "Nem megfelelő"
+none = "Nem észleltek szabványt"
+passedCount = "megfelelt"
+failedCount = "nem felelt meg"
+noVerification = "Nem történt ellenőrzés"
+noVerificationDesc = "Ennél a dokumentumnál nem ellenőrizték a PDF-szabványoknak való megfelelést."
+
 [getPdfInfo.other]
 attachments = "Mellékletek"
 embeddedFiles = "Beágyazott fájlok"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} korlátozás"
 permsMixed = "Néhány jogosultság korlátozott"
 hasCompliance = "Megfelelőségi szabványokkal rendelkezik"
 noCompliance = "Nincsenek megfelelőségi szabványok"
+compliancePassed = "{{standards}}-kompatibilis"
+complianceChecked = "Szabványok ellenőrizve ({{failed}} sikertelen)"
 basic = "Alapinformációk"
 documentInfo = "Dokumentuminformációk"
 securityTitle = "Biztonsági állapot"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "A jelszó sikeresen megváltozott! Jelentkezzen be az 
 credentialsUpdated = "Az adatait frissítettük. Kérjük, jelentkezzen be újra."
 defaultCredentials = "Alapértelmezett bejelentkezési adatok"
 changePasswordWarning = "Kérjük, az első bejelentkezés után változtassa meg a jelszavát"
+mfaRequired = "Kétfaktoros kód szükséges"
+mfaCode = "Hitelesítési kód"
+enterMfaCode = "Adja meg a 6 számjegyű kódot"
+mfaPromptTitle = "Kétfaktoros hitelesítés"
+mfaPromptBody = "A folytatáshoz adja meg a hitelesítő alkalmazás által generált kódot."
+verifyingMfa = "Ellenőrzés..."
+verifyMfa = "Kód ellenőrzése"
 
 [login.slides.overview]
 alt = "Stirling PDF áttekintés"
@@ -4319,6 +4390,10 @@ title = "Bejelentkezési mód szükséges"
 message = "Az admin beállítások módosításához be kell kapcsolni a bejelentkezési módot. Állítsa be a SECURITY_ENABLELOGIN=true értéket a környezetben, vagy a security.enableLogin: true beállítást a settings.yml fájlban, majd indítsa újra a szervert."
 readOnly = "Az alábbi beállítások csak példaként láthatók. Engedélyezze a bejelentkezési módot a tényleges konfiguráció megtekintéséhez és szerkesztéséhez."
 
+[admin.settings.enterpriseRequired]
+title = "Vállalati licenc szükséges"
+message = "{{featureName}} eléréséhez vállalati licenc szükséges. Jelenleg referenciaként demóadatokat lát."
+
 [admin.settings.restart]
 title = "Újraindítás szükséges"
 message = "A beállítások sikeresen mentésre kerültek. A változtatások életbe lépéséhez a szervert újra kell indítani."
@@ -4457,6 +4532,13 @@ description = "Sikertelen bejelentkezési kísérletek maximális száma fiókz�
 [admin.settings.security.loginResetTimeMinutes]
 label = "Visszaállítás ideje (perc)"
 description = "Idő, ami után a sikertelen bejelentkezési kísérletek számlálója lenullázódik"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF védelem letiltása"
@@ -4766,6 +4848,48 @@ description = "Részletes hibaüzenetek megjelenítése felhasználók számára
 title = "Adatbázis"
 description = "Egyéni adatbázis-kapcsolati beállítások konfigurálása vállalati telepítésekhez."
 configuration = "Adatbázis-konfiguráció"
+backupTitle = "Biztonsági mentések és visszaállítás"
+backupDescription = "H2 biztonsági mentések kezelése közvetlenül az admin konzolról."
+loadError = "Nem sikerült betölteni az adatbázis biztonsági mentéseit"
+backupCreated = "A biztonsági mentés sikeresen létrejött"
+backupFailed = "Nem sikerült létrehozni a biztonsági mentést"
+deleteTitle = "Biztonsági mentés törlése"
+deleteConfirm = "Törli ezt a biztonsági mentést? Ez nem vonható vissza."
+deleteSuccess = "Biztonsági mentés törölve"
+deleteFailed = "Nem sikerült törölni a biztonsági mentést"
+deleteConfirmAction = "Biztonsági mentés törlése"
+downloadFailed = "Nem sikerült letölteni a biztonsági mentést"
+version = "H2 verzió"
+embedded = "Beágyazott H2"
+external = "Külső adatbázis"
+h2Only = "A biztonsági mentések csak a beágyazott H2 adatbázishoz érhetők el."
+h2Hint = "Állítsa az adatbázistípust H2-re, és tiltsa le az egyéni adatbázist a mentés és visszaállítás engedélyezéséhez."
+manageBackups = "Biztonsági mentések kezelése"
+refresh = "Frissítés"
+createBackup = "Biztonsági mentés készítése"
+uploadTitle = "Feltöltés és importálás"
+chooseFile = "Válasszon egy .sql biztonsági mentési fájlt"
+importFromUpload = "Feltöltés importálása"
+confirmImportTitle = "Adatbázis-import megerősítése"
+overwriteWarning = "Figyelem: Ez felülírja a jelenlegi adatbázist."
+overwriteWarningBody = "Minden meglévő adatot a feltöltött biztonsági mentés felülír. Ez a művelet nem vonható vissza."
+confirmCodeLabel = "A folytatáshoz adja meg a megerősítő kódot"
+enterCode = "Adja meg a fent látható kódot"
+confirmImport = "Importálás megerősítése"
+codeMismatch = "A megerősítő kód nem egyezik"
+codeMismatchBody = "A folytatáshoz pontosan a megjelenített kódot adja meg."
+selectFile = "Válasszon ki egy .sql fájlt az importáláshoz"
+importSuccess = "A biztonsági mentés sikeresen importálva"
+importFailed = "Nem sikerült importálni a biztonsági mentést"
+noBackups = "Még nem található biztonsági mentés."
+unavailable = "A mentéslista nem érhető el a jelenlegi adatbázis-konfigurációhoz."
+fileName = "Fájl"
+created = "Létrehozva"
+size = "Méret"
+actions = "Műveletek"
+download = "Letöltés"
+import = "Importálás"
+delete = "Törlés"
 
 [admin.settings.database.enableCustom]
 label = "Egyéni adatbázis engedélyezése"
@@ -4843,6 +4967,26 @@ description = "Maximális DPI a képfeldolgozáshoz (0 = korlátlan)"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata könyvtár"
 description = "Elérési út a tessdata könyvtárhoz az OCR nyelvi fájlokhoz"
+downloadMissingTitle = "Nincs kiválasztott nyelv"
+downloadMissingBody = "Válasszon ki legalább egy letöltendő nyelvet."
+downloadSuccessTitle = "Nyelvek letöltve"
+downloadSuccessBody = "A kiválasztott tessdata nyelvek mentésre kerültek."
+downloadErrorTitle = "Sikertelen letöltés"
+loadingLanguages = "Telepített tessdata nyelvek betöltése..."
+installedLanguages = "Telepített tessdata nyelvek"
+noLanguages = "Nem találhatók tessdata nyelvek a beállított könyvtárban."
+downloadLabel = "További tessdata nyelvek letöltése"
+downloadPlaceholder = "Válasszon nyelveket"
+downloadNothingFound = "Nem találhatók további nyelvek"
+permissionNotice = "A tessdata elérési út nem írható. A letöltések a böngészőben nyílnak meg; mentse a .traineddata fájlokat kézzel a tessdata mappába."
+manualLinks = "Kézi letöltések: kattintson a hivatkozásokra, és helyezze a fájlokat a tessdata mappába."
+downloadButton = "Kiválasztott nyelvek letöltése"
+downloadInvalidTitle = "Érvénytelen kiválasztás"
+downloadInvalidBody = "Néhány kiválasztott nyelv nem tölthető le. Frissítsen, és válasszon a listából."
+downloadErrorNetwork = "A letöltés hálózati hiba miatt sikertelen. Ellenőrizze a kapcsolatot, majd próbálja újra."
+downloadErrorServer = "A szerveren hiba történt a tessdata nyelvek letöltése közben. Próbálja meg később újra."
+downloadErrorPermission = "A tessdata könyvtár nem írható: {{message}}. Válasszon írható könyvtárat (pl. az alkalmazásadatok mappája alatt), vagy módosítsa a jogosultságokat."
+downloadErrorGeneric = "Sikertelen letöltés: {{message}}. Próbálja meg később újra."
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML tisztítás letiltása"
@@ -5346,6 +5490,7 @@ desc = "Többlépéses munkafolyamatok építése PDF-műveletek láncolásával
 invalidStep = "Érvénytelen lépés"
 reviewTitle = "Automatizálás eredményei"
 copyToSaved = "Másolás a mentettek közé"
+exportForFolderScanning = "Exportálás mappavizsgálathoz"
 
 [automate.files]
 placeholder = "Válassza ki az automatizálással feldolgozandó fájlokat"
@@ -5367,6 +5512,7 @@ createTitle = "Automatizálás létrehozása"
 editTitle = "Automatizálás szerkesztése"
 intro = "Az automatizálások egymás után futtatják az eszközöket. Kezdésként adja hozzá az eszközöket a kívánt sorrendben."
 save = "Automatizálás mentése"
+exportForFolderScanning = "Exportálás mappavizsgálathoz"
 
 [automate.creation.name]
 label = "Automatizálás neve"
@@ -5741,9 +5887,11 @@ username = "Felhasználónév (e-mail)"
 usernamePlaceholder = "user@example.com"
 password = "Jelszó"
 passwordPlaceholder = "Adja meg a jelszót"
+passwordRequired = "Jelszó szükséges"
 role = "Szerepkör"
 team = "Csapat (opcionális)"
 teamPlaceholder = "Válasszon csapatot"
+authType = "Hitelesítési típus"
 forcePasswordChange = "Jelszócsere kényszerítése az első bejelentkezéskor"
 cancel = "Mégse"
 submit = "Tag hozzáadása"
@@ -5751,6 +5899,13 @@ usernameRequired = "Felhasználónév és jelszó megadása kötelező"
 passwordTooShort = "A jelszónak legalább 6 karakterből kell állnia"
 success = "Felhasználó sikeresen létrehozva"
 error = "Nem sikerült létrehozni a felhasználót"
+forceMFA = "MFA beállításának kényszerítése a következő bejelentkezéskor"
+
+[workspace.people.authType]
+password = "Jelszó"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "A felhasználó SSO szolgáltatón keresztül azonosítja magát"
 
 [workspace.people.editMember]
 title = "Tag szerkesztése"
@@ -5853,6 +6008,11 @@ fromLicense = "licencből"
 slotsAvailable = "{{count}} felhasználói hely elérhető"
 noSlotsAvailable = "Nincs elérhető hely"
 currentUsage = "Jelenleg {{current}} / {{max}} felhasználói licenc használatban"
+
+[workspace.people.mfa]
+adminDisableSuccess = "A felhasználónál az MFA sikeresen letiltva"
+adminDisableError = "Nem sikerült letiltani az MFA-t a felhasználónál"
+disableByAdmin = "MFA letiltása"
 
 [workspace.teams]
 title = "Csapatok"
@@ -6296,6 +6456,7 @@ endpoint = "Végpont"
 visits = "Látogatások"
 percentage = "Százalék"
 noData = "Nem áll rendelkezésre adat"
+unknownEndpoint = "Ismeretlen végpont"
 
 [backendHealth]
 checking = "Backend állapotának ellenőrzése..."

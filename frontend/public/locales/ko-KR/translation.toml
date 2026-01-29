@@ -306,6 +306,7 @@ selectOperation = "작업 선택"
 addOperationButton = "작업 추가"
 pipelineHeader = "파이프라인:"
 saveButton = "다운로드"
+saveForFolderScanning = "폴더 스캔용으로 저장"
 validateButton = "검증"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "속성"
 webBrowserSettings = "웹 브라우저 설정"
 syncToBrowser = "동기화 계정 -> 브라우저"
 syncToAccount = "동기화 계정 <- 브라우저"
+
+[account.mfa]
+title = "2단계 인증"
+setupFailed = "2단계 인증 설정을 시작할 수 없습니다. 다시 시도하세요."
+codeRequired = "계속하려면 인증 코드를 입력하세요."
+enabled = "2단계 인증이 활성화되었습니다."
+enableFailed = "2단계 인증을 활성화할 수 없습니다. 코드를 확인하고 다시 시도하세요."
+disabled = "2단계 인증이 비활성화되었습니다."
+disableFailed = "2단계 인증을 비활성화할 수 없습니다. 코드를 확인하고 다시 시도하세요."
+description = "계정에 보안 계층을 추가합니다."
+enableButton = "2단계 인증 활성화"
+disableButton = "2단계 인증 비활성화"
+setupTitle = "2단계 인증 설정"
+setupDescription = "인증 앱으로 QR 코드를 스캔한 뒤, 확인을 위해 6자리 코드를 입력하세요."
+manualKey = "수동 설정 키"
+secretWarning = "이 키는 비공개로 유지하세요. 접근 가능한 누구나 유효한 인증 코드를 생성할 수 있습니다."
+codePlaceholder = "6자리 코드를 입력하세요"
+confirmEnable = "활성화"
+disableTitle = "2단계 인증 비활성화"
+disableDescription = "2단계 인증을 비활성화하려면 유효한 인증 코드를 입력하세요."
+codeLabel = "인증 코드"
+confirmDisable = "비활성화"
+ssoDescription = "Single Sign-On 계정의 경우 2단계 인증은 ID 제공자에서 관리됩니다."
+ssoManaged = "ID 제공자를 통해 MFA를 구성하세요."
 
 [adminUserSettings]
 title = "사용자 제어 설정"
@@ -925,6 +950,7 @@ title = "크기/개수별 자동 분할"
 desc = "단일 PDF를 크기, 페이지 수 또는 문서 수를 기준으로 여러 문서로 분할"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "색상 교체 및 반전"
 desc = "PDF 문서의 색상을 교체하거나 반전합니다."
 
@@ -939,18 +965,22 @@ title = "자동 폴더 스캔"
 desc = "자동 폴더 스캔 가이드로 이동"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO 가이드"
 desc = "SSO 가이드로 이동"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "격리 환경 설정"
 desc = "격리 환경 설정 가이드로 이동"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "비밀번호 추가"
 desc = "PDF 문서를 비밀번호로 암호화합니다."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "권한 변경"
 desc = "문서 제한 및 권한 변경"
 
@@ -960,10 +990,12 @@ title = "자동화"
 desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. 반복 작업에 이상적입니다."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF를 다른 PDF 위에 오버레이"
 title = "PDF 오버레이"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF 텍스트 편집기"
 desc = "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "PDF 대신 중간 HTML 파일 다운로드"
 pdfaOptions = "PDF/A 옵션"
 outputFormat = "출력 형식"
 pdfaNote = "PDF/A-1b는 호환성이 더 높고, PDF/A-2b는 더 많은 기능을 지원합니다."
+pdfaFormat = "PDF/A 형식"
 pdfaDigitalSignatureWarning = "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+pdfxDigitalSignatureWarning = "해당 PDF에는 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+pdfxDescription = "PDF/X는 신뢰할 수 있는 인쇄와 그래픽 교환을 위한 ISO 표준 PDF 하위 집합입니다."
 fileFormat = "파일 형식"
 wordDoc = "Word 문서"
 wordDocExt = "Word 문서 (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "이미지 렌더링용 DPI"
 cbrOptions = "CBR 옵션"
 cbrOutputOptions = "PDF에서 CBR로 옵션"
 cbrDpi = "이미지 렌더링용 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook에서 PDF로 옵션"
@@ -1396,6 +1435,7 @@ applySignatures = "이미지 적용"
 name = "이미지"
 placeholder = "이미지 업로드"
 label = "이미지 파일"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "이미지 구성"
@@ -2191,6 +2231,16 @@ submit = "변환"
 tip = "현재 여러 입력을 한 번에 처리할 수 없습니다"
 outputFormat = "출력 형식"
 pdfWithDigitalSignature = "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+
+[pdfToPDFX]
+tags = "인쇄,표준,변환,제작,프리프레스,보관"
+title = "PDF를 PDF/X로"
+header = "PDF를 PDF/X로"
+credit = "이 서비스는 PDF/X 변환에 Ghostscript를 사용합니다"
+submit = "변환"
+tip = "현재 여러 입력을 동시에 지원하지 않습니다."
+outputFormat = "출력 형식"
+pdfWithDigitalSignature = "해당 PDF에는 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
 
 [PDFToWord]
 tags = "doc,docx,odt,워드,변환,형식,변환,오피스,마이크로소프트,docfile"
@@ -3148,6 +3198,18 @@ other = "기타"
 perPageInfo = "페이지별 정보"
 tableOfContents = "목차"
 
+[getPdfInfo.compliance]
+notDetected = "감지되지 않음"
+passed = "통과"
+failed = "실패"
+compliant = "준수"
+nonCompliant = "비준수"
+none = "표준이 감지되지 않음"
+passedCount = "통과"
+failedCount = "실패"
+noVerification = "검증이 수행되지 않음"
+noVerificationDesc = "이 문서에 대해 PDF 표준 준수 여부가 검증되지 않았습니다."
+
 [getPdfInfo.other]
 attachments = "첨부 파일"
 embeddedFiles = "내장 파일"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}}개의 제한"
 permsMixed = "일부 권한이 제한됨"
 hasCompliance = "규격 준수 기준 있음"
 noCompliance = "규격 준수 기준 없음"
+compliancePassed = "{{standards}} 준수"
+complianceChecked = "표준 검증 완료 (실패: {{failed}})"
 basic = "기본 정보"
 documentInfo = "문서 정보"
 securityTitle = "보안 상태"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "비밀번호가 성공적으로 변경되었습니다!
 credentialsUpdated = "자격 증명이 업데이트되었습니다. 다시 로그인하세요."
 defaultCredentials = "기본 로그인 정보"
 changePasswordWarning = "첫 로그인 후 비밀번호를 변경하세요"
+mfaRequired = "2단계 인증 코드가 필요합니다"
+mfaCode = "인증 코드"
+enterMfaCode = "6자리 코드를 입력하세요"
+mfaPromptTitle = "2단계 인증"
+mfaPromptBody = "진행하려면 인증 앱의 인증 코드를 입력하세요."
+verifyingMfa = "확인 중..."
+verifyMfa = "코드 확인"
 
 [login.slides.overview]
 alt = "Stirling PDF 개요"
@@ -4319,6 +4390,10 @@ title = "로그인 모드 필요"
 message = "관리자 설정을 변경하려면 로그인 모드를 활성화해야 합니다. 환경 변수에서 SECURITY_ENABLELOGIN=true 또는 settings.yml에서 security.enableLogin: true 로 설정한 다음 서버를 재시작하세요."
 readOnly = "아래 설정은 참고용 예시 값입니다. 로그인 모드를 활성화하면 실제 구성을 보고 편집할 수 있습니다."
 
+[admin.settings.enterpriseRequired]
+title = "Enterprise 라이선스 필요"
+message = "{{featureName}}에 액세스하려면 Enterprise 라이선스가 필요합니다. 참고용으로 데모 데이터를 보고 있습니다."
+
 [admin.settings.restart]
 title = "재시작 필요"
 message = "설정이 성공적으로 저장되었습니다. 변경 사항을 적용하려면 서버를 재시작해야 합니다."
@@ -4457,6 +4532,13 @@ description = "계정 잠금 전 허용되는 최대 로그인 실패 횟수"
 [admin.settings.security.loginResetTimeMinutes]
 label = "로그인 재설정 시간(분)"
 description = "로그인 실패 횟수가 재설정되기까지의 시간"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF 보호 비활성화"
@@ -4766,6 +4848,48 @@ description = "사용자에게 상세 오류 메시지를 표시합니다."
 title = "데이터베이스"
 description = "엔터프라이즈 배포를 위한 사용자 지정 데이터베이스 연결 설정을 구성합니다."
 configuration = "데이터베이스 구성"
+backupTitle = "백업 및 복원"
+backupDescription = "관리자 콘솔에서 H2 백업을 직접 관리합니다."
+loadError = "데이터베이스 백업을 불러오지 못했습니다"
+backupCreated = "백업이 성공적으로 생성되었습니다"
+backupFailed = "백업 생성에 실패했습니다"
+deleteTitle = "백업 삭제"
+deleteConfirm = "이 백업을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+deleteSuccess = "백업이 삭제되었습니다"
+deleteFailed = "백업 삭제에 실패했습니다"
+deleteConfirmAction = "백업 삭제"
+downloadFailed = "백업 다운로드에 실패했습니다"
+version = "H2 버전"
+embedded = "내장형 H2"
+external = "외부 DB"
+h2Only = "백업은 내장형 H2 데이터베이스에서만 사용할 수 있습니다."
+h2Hint = "데이터베이스 유형을 H2로 설정하고 사용자 지정 데이터베이스를 비활성화하여 백업 및 복원을 활성화하세요."
+manageBackups = "백업 관리"
+refresh = "새로고침"
+createBackup = "백업 생성"
+uploadTitle = "업로드 및 가져오기"
+chooseFile = ".sql 백업 파일을 선택하세요"
+importFromUpload = "업로드 가져오기"
+confirmImportTitle = "데이터베이스 가져오기 확인"
+overwriteWarning = "경고: 현재 데이터베이스를 덮어씁니다."
+overwriteWarningBody = "업로드된 백업으로 기존 모든 데이터가 대체됩니다. 이 작업은 되돌릴 수 없습니다."
+confirmCodeLabel = "계속하려면 확인 코드를 입력하세요"
+enterCode = "위에 표시된 코드를 입력하세요"
+confirmImport = "가져오기 확인"
+codeMismatch = "확인 코드가 일치하지 않습니다"
+codeMismatchBody = "계속하려면 표시된 그대로 코드를 입력하세요."
+selectFile = "가져올 .sql 파일을 선택하세요"
+importSuccess = "백업을 성공적으로 가져왔습니다"
+importFailed = "백업 가져오기에 실패했습니다"
+noBackups = "아직 백업이 없습니다."
+unavailable = "현재 데이터베이스 구성에서는 백업 목록을 사용할 수 없습니다."
+fileName = "파일"
+created = "생성됨"
+size = "크기"
+actions = "작업"
+download = "다운로드"
+import = "가져오기"
+delete = "삭제"
 
 [admin.settings.database.enableCustom]
 label = "사용자 지정 데이터베이스 사용"
@@ -4843,6 +4967,26 @@ description = "이미지 처리의 최대 DPI(0 = 무제한)"
 [admin.settings.advanced.tessdataDir]
 label = "tessdata 디렉터리"
 description = "OCR 언어 파일을 위한 tessdata 디렉터리 경로"
+downloadMissingTitle = "언어가 선택되지 않았습니다"
+downloadMissingBody = "다운로드할 언어를 하나 이상 선택하세요."
+downloadSuccessTitle = "언어 다운로드 완료"
+downloadSuccessBody = "선택한 tessdata 언어가 저장되었습니다."
+downloadErrorTitle = "다운로드 실패"
+loadingLanguages = "설치된 tessdata 언어를 불러오는 중..."
+installedLanguages = "설치된 tessdata 언어"
+noLanguages = "구성된 디렉터리에서 tessdata 언어를 찾을 수 없습니다."
+downloadLabel = "추가 tessdata 언어 다운로드"
+downloadPlaceholder = "언어 선택"
+downloadNothingFound = "추가 언어가 없습니다"
+permissionNotice = "tessdata 경로에 쓸 수 없습니다. 다운로드는 브라우저에서 열리며, .traineddata 파일을 직접 tessdata 폴더에 저장하세요."
+manualLinks = "수동 다운로드: 링크를 클릭하고 파일을 tessdata 폴더에 넣으세요."
+downloadButton = "선택한 언어 다운로드"
+downloadInvalidTitle = "잘못된 선택"
+downloadInvalidBody = "선택한 일부 언어는 다운로드할 수 없습니다. 새로고침 후 목록에서 선택하세요."
+downloadErrorNetwork = "네트워크 오류로 다운로드에 실패했습니다. 연결을 확인한 후 다시 시도하세요."
+downloadErrorServer = "서버에서 tessdata 언어 다운로드 중 오류가 발생했습니다. 나중에 다시 시도하세요."
+downloadErrorPermission = "tessdata 디렉터리에 쓸 수 없습니다: {{message}}. 쓰기 가능한 디렉터리(예: 애플리케이션 데이터 폴더 하위)로 선택하거나 권한을 조정하세요."
+downloadErrorGeneric = "다운로드에 실패했습니다: {{message}}. 나중에 다시 시도하세요."
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML 정화 비활성화"
@@ -5346,6 +5490,7 @@ desc = "PDF 작업을 연결해 다단계 워크플로를 구성하세요. 반�
 invalidStep = "잘못된 단계"
 reviewTitle = "자동화 결과"
 copyToSaved = "저장됨으로 복사"
+exportForFolderScanning = "폴더 스캔용으로 내보내기"
 
 [automate.files]
 placeholder = "이 자동화로 처리할 파일을 선택하세요"
@@ -5367,6 +5512,7 @@ createTitle = "자동화 만들기"
 editTitle = "자동화 편집"
 intro = "자동화는 도구를 순차적으로 실행합니다. 시작하려면 실행 순서대로 도구를 추가하세요."
 save = "자동화 저장"
+exportForFolderScanning = "폴더 스캔용으로 내보내기"
 
 [automate.creation.name]
 label = "자동화 이름"
@@ -5741,9 +5887,11 @@ username = "사용자 이름(이메일)"
 usernamePlaceholder = "user@example.com"
 password = "비밀번호"
 passwordPlaceholder = "비밀번호 입력"
+passwordRequired = "비밀번호가 필요합니다"
 role = "역할"
 team = "팀(선택 사항)"
 teamPlaceholder = "팀 선택"
+authType = "인증 유형"
 forcePasswordChange = "첫 로그인 시 비밀번호 변경 강제"
 cancel = "취소"
 submit = "멤버 추가"
@@ -5751,6 +5899,13 @@ usernameRequired = "사용자 이름과 비밀번호가 필요합니다"
 passwordTooShort = "비밀번호는 6자 이상이어야 합니다"
 success = "사용자가 성공적으로 생성되었습니다"
 error = "사용자 생성에 실패했습니다"
+forceMFA = "다음 로그인 시 MFA 설정 강제"
+
+[workspace.people.authType]
+password = "비밀번호"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "사용자는 SSO 공급자를 통해 인증합니다"
 
 [workspace.people.editMember]
 title = "멤버 편집"
@@ -5853,6 +6008,11 @@ fromLicense = "라이선스 기준"
 slotsAvailable = "사용자 슬롯 {{count}}개 사용 가능"
 noSlotsAvailable = "가용 슬롯 없음"
 currentUsage = "현재 사용자 라이선스 {{max}}개 중 {{current}}개 사용 중"
+
+[workspace.people.mfa]
+adminDisableSuccess = "사용자에 대해 MFA가 성공적으로 비활성화되었습니다"
+adminDisableError = "사용자에 대해 MFA 비활성화에 실패했습니다"
+disableByAdmin = "MFA 비활성화"
 
 [workspace.teams]
 title = "팀"
@@ -6296,6 +6456,7 @@ endpoint = "엔드포인트"
 visits = "방문 수"
 percentage = "백분율"
 noData = "데이터가 없습니다"
+unknownEndpoint = "알 수 없는 엔드포인트"
 
 [backendHealth]
 checking = "백엔드 상태 확인 중..."

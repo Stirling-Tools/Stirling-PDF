@@ -306,6 +306,7 @@ selectOperation = "Επιλογή λειτουργίας"
 addOperationButton = "Προσθήκη λειτουργίας"
 pipelineHeader = "Pipeline:"
 saveButton = "Λήψη"
+saveForFolderScanning = "Αποθήκευση για σάρωση φακέλων"
 validateButton = "Επικύρωση"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Ιδιότητα"
 webBrowserSettings = "Ρύθμιση περιηγητή"
 syncToBrowser = "Συγχρονισμός λογαριασμού -> περιηγητή"
 syncToAccount = "Συγχρονισμός λογαριασμού <- περιηγητή"
+
+[account.mfa]
+title = "Έλεγχος ταυτότητας δύο παραγόντων"
+setupFailed = "Δεν ήταν δυνατή η έναρξη ρύθμισης ελέγχου ταυτότητας δύο παραγόντων. Προσπαθήστε ξανά."
+codeRequired = "Εισαγάγετε τον κωδικό ελέγχου ταυτότητας για να συνεχίσετε."
+enabled = "Ο έλεγχος ταυτότητας δύο παραγόντων ενεργοποιήθηκε."
+enableFailed = "Δεν ήταν δυνατή η ενεργοποίηση του ελέγχου ταυτότητας δύο παραγόντων. Ελέγξτε τον κωδικό και προσπαθήστε ξανά."
+disabled = "Ο έλεγχος ταυτότητας δύο παραγόντων απενεργοποιήθηκε."
+disableFailed = "Δεν ήταν δυνατή η απενεργοποίηση του ελέγχου ταυτότητας δύο παραγόντων. Ελέγξτε τον κωδικό και προσπαθήστε ξανά."
+description = "Προσθέστε ένα επιπλέον επίπεδο ασφάλειας στον λογαριασμό σας."
+enableButton = "Ενεργοποίηση ελέγχου ταυτότητας δύο παραγόντων"
+disableButton = "Απενεργοποίηση ελέγχου ταυτότητας δύο παραγόντων"
+setupTitle = "Ρύθμιση ελέγχου ταυτότητας δύο παραγόντων"
+setupDescription = "Σαρώστε τον κωδικό QR με την εφαρμογή ελέγχου ταυτότητας και, στη συνέχεια, εισαγάγετε τον 6ψήφιο κωδικό για επιβεβαίωση."
+manualKey = "Χειροκίνητο κλειδί ρύθμισης"
+secretWarning = "Κρατήστε αυτό το κλειδί ιδιωτικό. Όποιος έχει πρόσβαση μπορεί να δημιουργήσει έγκυρους κωδικούς ελέγχου ταυτότητας."
+codePlaceholder = "Εισαγάγετε 6ψήφιο κωδικό"
+confirmEnable = "Ενεργοποίηση"
+disableTitle = "Απενεργοποίηση ελέγχου ταυτότητας δύο παραγόντων"
+disableDescription = "Εισαγάγετε έναν έγκυρο κωδικό ελέγχου ταυτότητας για να απενεργοποιήσετε τον έλεγχο ταυτότητας δύο παραγόντων."
+codeLabel = "Κωδικός ελέγχου ταυτότητας"
+confirmDisable = "Απενεργοποίηση"
+ssoDescription = "Ο έλεγχος ταυτότητας δύο παραγόντων διαχειρίζεται από τον πάροχο ταυτότητάς σας για λογαριασμούς ενιαίας σύνδεσης."
+ssoManaged = "Ρυθμίστε το MFA μέσω του παρόχου ταυτότητάς σας."
 
 [adminUserSettings]
 title = "Ρυθμίσεις ελέγχου χρήστη"
@@ -925,6 +950,7 @@ title = "Αυτόματο σπάσιμο με μέγεθος/σελ."
 desc = "Διαχωρισμός ενός PDF σε πολλαπλά έγγραφα βάσει μεγέθους, αριθμού σελίδων ή αριθμού εγγράφων"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Αλλαγή & αντιστροφή χρώματος"
 desc = "Αντικαταστήστε ή αντιστρέψτε χρώματα σε έγγραφα PDF"
 
@@ -939,18 +965,22 @@ title = "Αυτόματη σάρωση φακέλων"
 desc = "Σύνδεσμος προς τον οδηγό αυτοματοποιημένης σάρωσης φακέλων"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Οδηγός SSO"
 desc = "Σύνδεσμος προς τον οδηγό SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Ρύθμιση Air-gapped"
 desc = "Σύνδεσμος προς τον οδηγό ρύθμισης Air-gapped"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Προσθήκη κωδικού"
 desc = "Κρυπτογράφηση του εγγράφου PDF με κωδικό."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Αλλαγή δικαιωμάτων"
 desc = "Αλλαγή περιορισμών και δικαιωμάτων εγγράφου"
 
@@ -960,10 +990,12 @@ title = "Αυτοματοποίηση"
 desc = "Δημιουργήστε ροές πολλών βημάτων συνδέοντας ενέργειες PDF. Ιδανικό για επαναλαμβανόμενες εργασίες."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Επικάλυψη PDF πάνω σε άλλο PDF"
 title = "Επικάλυψη PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Επεξεργαστής κειμένου PDF"
 desc = "Επιθεωρήστε και επεξεργαστείτε εξαγωγές JSON του Stirling PDF με ομαδοποιημένη επεξεργασία κειμένου και αναδημιουργία PDF"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Λήψη ενδιάμεσου αρχείου HTML αντί γι�
 pdfaOptions = "Επιλογές PDF/A"
 outputFormat = "Μορφή εξόδου"
 pdfaNote = "Το PDF/A-1b είναι πιο συμβατό, το PDF/A-2b υποστηρίζει περισσότερες δυνατότητες."
+pdfaFormat = "Μορφή PDF/A"
 pdfaDigitalSignatureWarning = "Το PDF περιέχει ψηφιακή υπογραφή. Αυτή θα αφαιρεθεί στο επόμενο βήμα."
+pdfxDigitalSignatureWarning = "Το PDF περιέχει ψηφιακή υπογραφή. Αυτή θα αφαιρεθεί στο επόμενο βήμα."
+pdfxDescription = "Το PDF/X είναι ένα υποσύνολο PDF προτύπου ISO για αξιόπιστη εκτύπωση και ανταλλαγή γραφικών."
 fileFormat = "Μορφή αρχείου"
 wordDoc = "Έγγραφο Word"
 wordDocExt = "Έγγραφο Word (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI για απόδοση εικόνας"
 cbrOptions = "Επιλογές CBR"
 cbrOutputOptions = "Επιλογές PDF σε CBR"
 cbrDpi = "DPI για απόδοση εικόνων"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Επιλογές eBook σε PDF"
@@ -1396,6 +1435,7 @@ applySignatures = "Εφαρμογή εικόνων"
 name = "Εικόνα"
 placeholder = "Ανεβάστε μια εικόνα"
 label = "Αρχείο εικόνας"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Ρύθμιση εικόνας"
@@ -2187,6 +2227,16 @@ tags = "αρχείο,μακροχρόνιο,πρότυπο,μετατροπή,α
 title = "PDF σε PDF/A"
 header = "PDF σε PDF/A"
 credit = "Αυτή η υπηρεσία χρησιμοποιεί libreoffice για μετατροπή PDF/A"
+submit = "Μετατροπή"
+tip = "Προς το παρόν δεν λειτουργεί για πολλαπλές εισόδους ταυτόχρονα"
+outputFormat = "Μορφή εξόδου"
+pdfWithDigitalSignature = "Το PDF περιέχει ψηφιακή υπογραφή. Αυτή θα αφαιρεθεί στο επόμενο βήμα."
+
+[pdfToPDFX]
+tags = "εκτύπωση,πρότυπο,μετατροπή,παραγωγή,προεκτύπωση,αρχειοθέτηση"
+title = "PDF σε PDF/X"
+header = "PDF σε PDF/X"
+credit = "Αυτή η υπηρεσία χρησιμοποιεί Ghostscript για τη μετατροπή σε PDF/X"
 submit = "Μετατροπή"
 tip = "Προς το παρόν δεν λειτουργεί για πολλαπλές εισόδους ταυτόχρονα"
 outputFormat = "Μορφή εξόδου"
@@ -3148,6 +3198,18 @@ other = "Άλλα"
 perPageInfo = "Πληροφορίες ανά σελίδα"
 tableOfContents = "Πίνακας περιεχομένων"
 
+[getPdfInfo.compliance]
+notDetected = "Δεν εντοπίστηκε"
+passed = "Επιτυχής"
+failed = "Απέτυχε"
+compliant = "Συμβατό"
+nonCompliant = "Μη συμβατό"
+none = "Δεν εντοπίστηκαν πρότυπα"
+passedCount = "επιτυχίες"
+failedCount = "αποτυχίες"
+noVerification = "Δεν πραγματοποιήθηκε επαλήθευση"
+noVerificationDesc = "Η συμμόρφωση με τα πρότυπα PDF δεν επαληθεύτηκε για αυτό το έγγραφο."
+
 [getPdfInfo.other]
 attachments = "Συνημμένα"
 embeddedFiles = "Ενσωματωμένα αρχεία"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} περιορισμοί"
 permsMixed = "Ορισμένα δικαιώματα είναι περιορισμένα"
 hasCompliance = "Διαθέτει πρότυπα συμμόρφωσης"
 noCompliance = "Χωρίς πρότυπα συμμόρφωσης"
+compliancePassed = "Συμβατό με {{standards}}"
+complianceChecked = "Έγινε επαλήθευση προτύπων ({{failed}} απέτυχαν)"
 basic = "Βασικές πληροφορίες"
 documentInfo = "Πληροφορίες εγγράφου"
 securityTitle = "Κατάσταση ασφάλειας"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Ο κωδικός άλλαξε με επιτυχία! 
 credentialsUpdated = "Τα διαπιστευτήριά σας ενημερώθηκαν. Συνδεθείτε ξανά."
 defaultCredentials = "Προεπιλεγμένα διαπιστευτήρια σύνδεσης"
 changePasswordWarning = "Αλλάξτε τον κωδικό σας μετά την πρώτη σας σύνδεση"
+mfaRequired = "Απαιτείται κωδικός δύο παραγόντων"
+mfaCode = "Κωδικός ελέγχου ταυτότητας"
+enterMfaCode = "Εισαγάγετε 6ψήφιο κωδικό"
+mfaPromptTitle = "Έλεγχος ταυτότητας δύο παραγόντων"
+mfaPromptBody = "Εισαγάγετε τον κωδικό ελέγχου ταυτότητας από την εφαρμογή ελέγχου ταυτότητας για να συνεχίσετε."
+verifyingMfa = "Γίνεται επαλήθευση..."
+verifyMfa = "Επαλήθευση κωδικού"
 
 [login.slides.overview]
 alt = "Επισκόπηση του Stirling PDF"
@@ -4319,6 +4390,10 @@ title = "Απαιτείται λειτουργία σύνδεσης"
 message = "Πρέπει να είναι ενεργοποιημένη η λειτουργία σύνδεσης για να τροποποιήσετε τις ρυθμίσεις διαχειριστή. Ορίστε το SECURITY_ENABLELOGIN=true στο περιβάλλον σας ή το security.enableLogin: true στο settings.yml, και στη συνέχεια επανεκκινήστε τον διακομιστή."
 readOnly = "Οι παρακάτω ρυθμίσεις εμφανίζουν ενδεικτικές τιμές για αναφορά. Ενεργοποιήστε τη λειτουργία σύνδεσης για να δείτε και να επεξεργαστείτε την πραγματική διαμόρφωση."
 
+[admin.settings.enterpriseRequired]
+title = "Απαιτείται άδεια Enterprise"
+message = "Απαιτείται άδεια Enterprise για πρόσβαση στο {{featureName}}. Βλέπετε δεδομένα επίδειξης για αναφορά."
+
 [admin.settings.restart]
 title = "Απαιτείται επανεκκίνηση"
 message = "Οι ρυθμίσεις αποθηκεύτηκαν με επιτυχία. Απαιτείται επανεκκίνηση του διακομιστή για να τεθούν σε ισχύ οι αλλαγές."
@@ -4457,6 +4532,13 @@ description = "Μέγιστος αριθμός αποτυχημένων προσ
 [admin.settings.security.loginResetTimeMinutes]
 label = "Χρόνος επαναφοράς σύνδεσης (λεπτά)"
 description = "Χρόνος πριν μηδενιστούν οι αποτυχημένες προσπάθειες σύνδεσης"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Απενεργοποίηση προστασίας CSRF"
@@ -4766,6 +4848,48 @@ description = "Εμφάνιση αναλυτικών μηνυμάτων σφάλ
 title = "Βάση δεδομένων"
 description = "Ρυθμίστε προσαρμοσμένες ρυθμίσεις σύνδεσης βάσης δεδομένων για επιχειρησιακές εγκαταστάσεις."
 configuration = "Διαμόρφωση βάσης δεδομένων"
+backupTitle = "Αντίγραφα ασφαλείας & Επαναφορά"
+backupDescription = "Διαχειριστείτε αντίγραφα ασφαλείας H2 απευθείας από την κονσόλα διαχειριστή."
+loadError = "Αποτυχία φόρτωσης αντιγράφων ασφαλείας βάσης δεδομένων"
+backupCreated = "Το αντίγραφο ασφαλείας δημιουργήθηκε με επιτυχία"
+backupFailed = "Αποτυχία δημιουργίας αντιγράφου ασφαλείας"
+deleteTitle = "Διαγραφή αντιγράφου ασφαλείας"
+deleteConfirm = "Να διαγραφεί αυτό το αντίγραφο ασφαλείας; Δεν είναι δυνατή η αναίρεση."
+deleteSuccess = "Το αντίγραφο ασφαλείας διαγράφηκε"
+deleteFailed = "Αποτυχία διαγραφής αντιγράφου ασφαλείας"
+deleteConfirmAction = "Διαγραφή αντιγράφου ασφαλείας"
+downloadFailed = "Αποτυχία λήψης αντιγράφου ασφαλείας"
+version = "Έκδοση H2"
+embedded = "Ενσωματωμένο H2"
+external = "Εξωτερική βάση δεδομένων"
+h2Only = "Τα αντίγραφα ασφαλείας είναι διαθέσιμα μόνο για την ενσωματωμένη βάση δεδομένων H2."
+h2Hint = "Ορίστε τον τύπο βάσης δεδομένων σε H2 και απενεργοποιήστε την προσαρμοσμένη βάση δεδομένων για να ενεργοποιήσετε τη δημιουργία αντιγράφων ασφαλείας και την επαναφορά."
+manageBackups = "Διαχείριση αντιγράφων ασφαλείας"
+refresh = "Ανανέωση"
+createBackup = "Δημιουργία αντιγράφου ασφαλείας"
+uploadTitle = "Μεταφόρτωση & εισαγωγή"
+chooseFile = "Επιλέξτε ένα αρχείο αντιγράφου ασφαλείας .sql"
+importFromUpload = "Εισαγωγή από μεταφόρτωση"
+confirmImportTitle = "Επιβεβαίωση εισαγωγής βάσης δεδομένων"
+overwriteWarning = "Προειδοποίηση: Αυτό θα αντικαταστήσει την τρέχουσα βάση δεδομένων."
+overwriteWarningBody = "Όλα τα υπάρχοντα δεδομένα θα αντικατασταθούν από το μεταφορτωμένο αντίγραφο ασφαλείας. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
+confirmCodeLabel = "Εισαγάγετε τον κωδικό επιβεβαίωσης για να συνεχίσετε"
+enterCode = "Εισαγάγετε τον κωδικό που εμφανίζεται παραπάνω"
+confirmImport = "Επιβεβαίωση εισαγωγής"
+codeMismatch = "Ο κωδικός επιβεβαίωσης δεν ταιριάζει"
+codeMismatchBody = "Εισαγάγετε τον κωδικό ακριβώς όπως εμφανίζεται για να συνεχίσετε."
+selectFile = "Επιλέξτε ένα αρχείο .sql για εισαγωγή"
+importSuccess = "Το αντίγραφο ασφαλείας εισήχθη με επιτυχία"
+importFailed = "Αποτυχία εισαγωγής αντιγράφου ασφαλείας"
+noBackups = "Δεν βρέθηκαν ακόμη αντίγραφα ασφαλείας."
+unavailable = "Η λίστα αντιγράφων ασφαλείας δεν είναι διαθέσιμη για την τρέχουσα διαμόρφωση βάσης δεδομένων."
+fileName = "Αρχείο"
+created = "Δημιουργήθηκε"
+size = "Μέγεθος"
+actions = "Ενέργειες"
+download = "Λήψη"
+import = "Εισαγωγή"
+delete = "Διαγραφή"
 
 [admin.settings.database.enableCustom]
 label = "Ενεργοποίηση προσαρμοσμένης βάσης δεδομένων"
@@ -4843,6 +4967,26 @@ description = "Μέγιστο DPI για επεξεργασία εικόνας (
 [admin.settings.advanced.tessdataDir]
 label = "Κατάλογος Tessdata"
 description = "Διαδρομή προς τον κατάλογο tessdata για αρχεία γλωσσών OCR"
+downloadMissingTitle = "Δεν έχει επιλεγεί γλώσσα"
+downloadMissingBody = "Επιλέξτε τουλάχιστον μία γλώσσα για λήψη."
+downloadSuccessTitle = "Οι γλώσσες λήφθηκαν"
+downloadSuccessBody = "Οι επιλεγμένες γλώσσες tessdata αποθηκεύτηκαν."
+downloadErrorTitle = "Αποτυχία λήψης"
+loadingLanguages = "Φόρτωση εγκατεστημένων γλωσσών tessdata..."
+installedLanguages = "Εγκατεστημένες γλώσσες tessdata"
+noLanguages = "Δεν βρέθηκαν γλώσσες tessdata στον ρυθμισμένο κατάλογο."
+downloadLabel = "Λήψη επιπλέον γλωσσών tessdata"
+downloadPlaceholder = "Επιλέξτε γλώσσες"
+downloadNothingFound = "Δεν βρέθηκαν επιπλέον γλώσσες"
+permissionNotice = "Η διαδρομή tessdata δεν είναι εγγράψιμη. Οι λήψεις θα ανοίγουν στο πρόγραμμα περιήγησης. Αποθηκεύστε χειροκίνητα τα αρχεία .traineddata στον φάκελο tessdata."
+manualLinks = "Χειροκίνητες λήψεις: κάντε κλικ στους συνδέσμους και τοποθετήστε τα αρχεία στον φάκελο tessdata."
+downloadButton = "Λήψη επιλεγμένων γλωσσών"
+downloadInvalidTitle = "Μη έγκυρη επιλογή"
+downloadInvalidBody = "Ορισμένες επιλεγμένες γλώσσες δεν είναι διαθέσιμες για λήψη. Παρακαλώ ανανεώστε και επιλέξτε από τη λίστα."
+downloadErrorNetwork = "Η λήψη απέτυχε λόγω σφάλματος δικτύου. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά."
+downloadErrorServer = "Ο διακομιστής αντιμετώπισε σφάλμα κατά τη λήψη γλωσσών tessdata. Δοκιμάστε ξανά αργότερα."
+downloadErrorPermission = "Ο κατάλογος tessdata δεν είναι εγγράψιμος: {{message}}. Επιλέξτε έναν εγγράψιμο κατάλογο (π.χ. κάτω από τον φάκελο δεδομένων της εφαρμογής) ή προσαρμόστε τα δικαιώματα."
+downloadErrorGeneric = "Η λήψη απέτυχε: {{message}}. Δοκιμάστε ξανά αργότερα."
 
 [admin.settings.advanced.disableSanitize]
 label = "Απενεργοποίηση καθαρισμού HTML"
@@ -5346,6 +5490,7 @@ desc = "Δημιουργήστε ροές εργασίας πολλών βημά
 invalidStep = "Μη έγκυρο βήμα"
 reviewTitle = "Αποτελέσματα αυτοματοποίησης"
 copyToSaved = "Αντιγραφή στα Αποθηκευμένα"
+exportForFolderScanning = "Εξαγωγή για σάρωση φακέλων"
 
 [automate.files]
 placeholder = "Επιλέξτε αρχεία για επεξεργασία με αυτήν την αυτοματοποίηση"
@@ -5367,6 +5512,7 @@ createTitle = "Δημιουργία αυτοματοποίησης"
 editTitle = "Επεξεργασία αυτοματοποίησης"
 intro = "Οι αυτοματισμοί εκτελούν εργαλεία διαδοχικά. Για να ξεκινήσετε, προσθέστε εργαλεία με τη σειρά που θέλετε να εκτελεστούν."
 save = "Αποθήκευση αυτοματοποίησης"
+exportForFolderScanning = "Εξαγωγή για σάρωση φακέλων"
 
 [automate.creation.name]
 label = "Όνομα αυτοματοποίησης"
@@ -5741,9 +5887,11 @@ username = "Όνομα χρήστη (Email)"
 usernamePlaceholder = "user@example.com"
 password = "Κωδικός πρόσβασης"
 passwordPlaceholder = "Εισαγάγετε κωδικό πρόσβασης"
+passwordRequired = "Απαιτείται κωδικός πρόσβασης"
 role = "Ρόλος"
 team = "Ομάδα (Προαιρετικό)"
 teamPlaceholder = "Επιλέξτε ομάδα"
+authType = "Τύπος ελέγχου ταυτότητας"
 forcePasswordChange = "Εξαναγκασμός αλλαγής κωδικού στην πρώτη σύνδεση"
 cancel = "Άκυρο"
 submit = "Προσθήκη μέλους"
@@ -5751,6 +5899,13 @@ usernameRequired = "Απαιτούνται όνομα χρήστη και κωδ
 passwordTooShort = "Ο κωδικός πρόσβασης πρέπει να έχει τουλάχιστον 6 χαρακτήρες"
 success = "Ο χρήστης δημιουργήθηκε με επιτυχία"
 error = "Αποτυχία δημιουργίας χρήστη"
+forceMFA = "Επιβολή ρύθμισης MFA στην επόμενη σύνδεση"
+
+[workspace.people.authType]
+password = "Κωδικός πρόσβασης"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Ο χρήστης θα πραγματοποιεί έλεγχο ταυτότητας μέσω παρόχου SSO"
 
 [workspace.people.editMember]
 title = "Επεξεργασία μέλους"
@@ -5853,6 +6008,11 @@ fromLicense = "από την άδεια"
 slotsAvailable = "{{count}} διαθέσιμη(ες) θέση(εις) χρήστη"
 noSlotsAvailable = "Δεν υπάρχουν διαθέσιμες θέσεις"
 currentUsage = "Αυτή τη στιγμή χρησιμοποιείτε {{current}} από {{max}} άδειες χρήστη"
+
+[workspace.people.mfa]
+adminDisableSuccess = "Το MFA απενεργοποιήθηκε με επιτυχία για τον χρήστη"
+adminDisableError = "Αποτυχία απενεργοποίησης MFA για τον χρήστη"
+disableByAdmin = "Απενεργοποίηση MFA"
 
 [workspace.teams]
 title = "Ομάδες"
@@ -6296,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Επισκέψεις"
 percentage = "Ποσοστό"
 noData = "Δεν υπάρχουν διαθέσιμα δεδομένα"
+unknownEndpoint = "Άγνωστο endpoint"
 
 [backendHealth]
 checking = "Έλεγχος κατάστασης backend..."

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/react';
-import { BookmarkCapability } from '@embedpdf/plugin-bookmark';
+import { useBookmarkCapability, BookmarkCapability } from '@embedpdf/plugin-bookmark/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { BookmarkState, BookmarkAPIWrapper } from '@app/contexts/viewer/viewerBridges';
 

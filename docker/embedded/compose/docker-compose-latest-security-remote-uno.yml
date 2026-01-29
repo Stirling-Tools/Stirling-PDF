@@ -1,0 +1,99 @@
+services:
+  stirling-pdf:
+    container_name: Stirling-PDF-Security-Remote-UNO
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    build:
+      context: ../../..
+      dockerfile: docker/embedded/Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - 8080:8080
+    volumes:
+      - ../../../stirling/latest/data:/usr/share/tessdata:rw
+      - ../../../stirling/latest/config:/configs:rw
+      - ../../../stirling/latest/logs:/logs:rw
+      - stirling-tmp:/tmp/stirling-pdf:rw
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      SECURITY_ENABLELOGIN: "false"
+      # Disable auto UNO server (we're using remote servers instead)
+      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "false"
+      # Configure remote UNO server pool
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST: "unoserver1"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PORT: "2003"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST_LOCATION: "remote"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PROTOCOL: "http"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_HOST: "unoserver2"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_PORT: "2003"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_HOST_LOCATION: "remote"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_PROTOCOL: "http"
+      # Session limit should match endpoint count for optimal concurrency
+      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "2"
+      PUID: 1002
+      PGID: 1002
+      UMASK: "022"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest with Security + Remote UNO Servers
+      UI_APPNAMENAVBAR: Stirling-PDF Latest
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "true"
+      SHOW_SURVEY: "true"
+    depends_on:
+      unoserver1:
+        condition: service_healthy
+      unoserver2:
+        condition: service_healthy
+    networks:
+      - stirling-network
+    restart: on-failure:5
+
+  unoserver1:
+    container_name: UNO-Server-1
+    # NOTE: This image needs to be updated to unoserver 3.6 to match Stirling-PDF's client version
+    # Current :latest uses 3.4 which causes API mismatch errors
+    image: ghcr.io/unoconv/unoserver-docker:latest
+    volumes:
+      - stirling-tmp:/tmp/stirling-pdf:rw
+    expose:
+      - "2003"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/2003' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - stirling-network
+    restart: on-failure:5
+
+  unoserver2:
+    container_name: UNO-Server-2
+    # NOTE: This image needs to be updated to unoserver 3.6 to match Stirling-PDF's client version
+    # Current :latest uses 3.4 which causes API mismatch errors
+    image: ghcr.io/unoconv/unoserver-docker:latest
+    volumes:
+      - stirling-tmp:/tmp/stirling-pdf:rw
+    expose:
+      - "2003"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/2003' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - stirling-network
+    restart: on-failure:5
+
+networks:
+  stirling-network:
+    driver: bridge
+
+volumes:
+  stirling-tmp:

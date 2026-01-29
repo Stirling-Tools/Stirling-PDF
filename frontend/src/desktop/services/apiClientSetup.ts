@@ -45,6 +45,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
       }
 
+      localStorage.setItem('server_url', baseUrl);
+
       // Debug logging
       console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
 
@@ -101,6 +103,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
+        if (originalRequest.skipAuthRedirect) {
+          return Promise.reject(error);
+        }
         originalRequest._retry = true;
 
         const isRemote = await operationRouter.isSelfHostedMode();

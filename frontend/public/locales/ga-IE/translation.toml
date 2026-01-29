@@ -306,6 +306,7 @@ selectOperation = "Roghnaigh Oibríocht"
 addOperationButton = "Cuir oibríocht leis"
 pipelineHeader = "Píblíne:"
 saveButton = "Íosluchtaigh"
+saveForFolderScanning = "Sábháil le haghaidh Scanadh Fillteáin"
 validateButton = "Bailíochtaigh"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Maoin"
 webBrowserSettings = "Socrú Brabhsálaí Gréasáin"
 syncToBrowser = "Cuntas Sync -> Brabhsálaí"
 syncToAccount = "Cuntas Sioncronaigh <- Brabhsálaí"
+
+[account.mfa]
+title = "Fíordheimhniú dhá fhachtóir"
+setupFailed = "Níorbh fhéidir socrú dhá fhachtóir a thosú. Bain triail eile as, le do thoil."
+codeRequired = "Cuir isteach an cód fíordheimhnithe chun leanúint ar aghaidh."
+enabled = "Cumasaíodh fíordheimhniú dhá fhachtóir."
+enableFailed = "Níorbh fhéidir fíordheimhniú dhá fhachtóir a chumasú. Seiceáil an cód agus bain triail eile as."
+disabled = "Díchumasaíodh fíordheimhniú dhá fhachtóir."
+disableFailed = "Níorbh fhéidir fíordheimhniú dhá fhachtóir a dhíchumasú. Seiceáil an cód agus bain triail eile as."
+description = "Cuir ciseal breise slándála le do chuntas."
+enableButton = "Cumasaigh fíordheimhniú dhá fhachtóir"
+disableButton = "Díchumasaigh fíordheimhniú dhá fhachtóir"
+setupTitle = "Socraigh fíordheimhniú dhá fhachtóir"
+setupDescription = "Scan an cód QR le d’aip fíordheimhnitheora, ansin cuir isteach an cód 6 dhigit chun deimhniú."
+manualKey = "Eochair shocraithe láimhe"
+secretWarning = "Coinnigh an eochair seo príobháideach. Féadfaidh aon duine a bhfuil rochtain aige/aici cóid fíordheimhnithe bailí a ghiniúint."
+codePlaceholder = "Cuir isteach cód 6 dhigit"
+confirmEnable = "Cumasaigh"
+disableTitle = "Díchumasaigh fíordheimhniú dhá fhachtóir"
+disableDescription = "Cuir isteach cód fíordheimhnithe bailí chun fíordheimhniú dhá fhachtóir a dhíchumasú."
+codeLabel = "Cód fíordheimhnithe"
+confirmDisable = "Díchumasaigh"
+ssoDescription = "Is ag do sholáthraí aitheantais a bhainistítear fíordheimhniú dhá fhachtóir do chuntais le síniú isteach aonair."
+ssoManaged = "Cumraigh MFA trí do sholáthraí aitheantais."
 
 [adminUserSettings]
 title = "Socruithe Rialaithe Úsáideora"
@@ -925,6 +950,7 @@ title = "Scoilt auto: méid/líon"
 desc = "Scoilt PDF amháin i ndoiciméid iolracha bunaithe ar mhéid, líon na leathanach, nó comhaireamh doiciméad"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ionadaigh & Inbhéartaigh Dath"
 desc = "Ionadaigh nó inbhéartaigh dathanna i gcáipéisí PDF"
 
@@ -939,18 +965,22 @@ title = "Scanadh Fillteán Uathoibríoch"
 desc = "Nasc le treoir scantha fillteán uathoibrithe"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Treoir SSO"
 desc = "Nasc le treoir SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Socrú Air-gapped"
 desc = "Nasc le treoir socraithe Air-gapped"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Cuir Pasfhocal leis"
 desc = "Criptigh do dhoiciméad PDF le focal faire."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Athrú Ceadanna"
 desc = "Athraigh srianta agus ceadanna cáipéise"
 
@@ -960,10 +990,12 @@ title = "Uathoibrigh"
 desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a nascadh le chéile. Foirfe do thascanna athfhillteacha."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Forleagain PDF ar bharr PDF eile"
 title = "Forleagan PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Eagarthóir Téacs PDF"
 desc = "Cuir téacs agus íomhánna atá ann cheana in eagar laistigh de PDFanna"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Íoslódáil comhad idirmheánach HTML in ionad PDF"
 pdfaOptions = "Roghanna PDF/A"
 outputFormat = "Formáid Aschuir"
 pdfaNote = "Tá PDF/A-1b níos comhoiriúnaí, tacaíonn PDF/A-2b le níos mó gnéithe."
+pdfaFormat = "Formáid PDF/A"
 pdfaDigitalSignatureWarning = "Tá síniú digiteach ar an PDF. Bainfear é seo sa chéad chéim eile."
+pdfxDigitalSignatureWarning = "Tá síniú digiteach sa PDF. Bainfear é sa chéad chéim eile."
+pdfxDescription = "Is fo-thacar PDF de chaighdeán ISO é PDF/X le haghaidh priontála agus malartaithe grafaice iontaofa."
 fileFormat = "Formáid Comhaid"
 wordDoc = "Cáipéis Word"
 wordDocExt = "Cáipéis Word (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI le haghaidh rindreáil íomhá"
 cbrOptions = "CRoghanna BR"
 cbrOutputOptions = "Roghanna PDF go CBR"
 cbrDpi = "DPI le haghaidh rindreáil íomhá"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Roghanna ríomhleabhar go PDF"
@@ -1396,6 +1435,7 @@ applySignatures = "Cuir Íomhánna i bhFeidhm"
 name = "Íomhá"
 placeholder = "Uaslódáil íomhá"
 label = "Comhad íomhá"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Cumraigh Íomhá"
@@ -2191,6 +2231,16 @@ submit = "Tiontaigh"
 tip = "Faoi láthair ní oibríonn sé le haghaidh ionchuir iolracha ag an am céanna"
 outputFormat = "Formáid aschuir"
 pdfWithDigitalSignature = "Tá síniú digiteach ar an PDF. Bainfear é seo sa chéad chéim eile."
+
+[pdfToPDFX]
+tags = "priontáil,caighdeán,tiontú,táirgeadh,réamhphriontáil,cartlann"
+title = "PDF go PDF/X"
+header = "PDF go PDF/X"
+credit = "Úsáideann an tseirbhís seo Ghostscript le haghaidh tiontaithe PDF/X"
+submit = "Tiontaigh"
+tip = "Ní oibríonn sé faoi láthair le haghaidh ionchuir iolracha ag an am céanna"
+outputFormat = "Formáid aschuir"
+pdfWithDigitalSignature = "Tá síniú digiteach sa PDF. Bainfear é sa chéad chéim eile."
 
 [PDFToWord]
 tags = "doc, docx, odt, focal, claochlú, formáid, comhshó, oifig, microsoft, docfile"
@@ -3148,6 +3198,18 @@ other = "Eile"
 perPageInfo = "Eolas in aghaidh an leathanaigh"
 tableOfContents = "Clár Ábhair"
 
+[getPdfInfo.compliance]
+notDetected = "Níor braitheadh"
+passed = "D'éirigh leis"
+failed = "Theip air"
+compliant = "Comhlíontach"
+nonCompliant = "Neamhchomhlíontach"
+none = "Níor braitheadh caighdeáin ar bith"
+passedCount = "rite"
+failedCount = "teipthe"
+noVerification = "Ní dhearnadh aon fhíorú"
+noVerificationDesc = "Ní dhearnadh fíorú ar chomhlíonadh caighdeáin PDF don cháipéis seo."
+
 [getPdfInfo.other]
 attachments = "Iatáin"
 embeddedFiles = "Comhaid Leabaithe"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} srianta"
 permsMixed = "Tá roinnt ceadanna srianta"
 hasCompliance = "Tá caighdeáin chomhlíonta ann"
 noCompliance = "Gan chaighdeáin chomhlíonta"
+compliancePassed = "I gcomhréir le {{standards}}"
+complianceChecked = "Caighdeáin fíoraithe ({{failed}} teipthe)"
 basic = "Buneolas"
 documentInfo = "Eolas faoin Doiciméad"
 securityTitle = "Stádas Slándála"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Athraíodh an focal faire go rathúil! Logáil isteach
 credentialsUpdated = "Nuashonraíodh do dhintiúir. Logáil isteach arís, le do thoil."
 defaultCredentials = "Dintiúir logála isteach réamhshocraithe"
 changePasswordWarning = "Athraigh do fhocal faire tar éis duit logáil isteach don chéad uair"
+mfaRequired = "Cód dhá fhachtóir de dhíth"
+mfaCode = "Cód Fíordheimhnithe"
+enterMfaCode = "Cuir isteach cód 6 dhigit"
+mfaPromptTitle = "Fíordheimhniú dhá fhachtóir"
+mfaPromptBody = "Cuir isteach an cód fíordheimhnithe ó d’aip fíordheimhnitheora chun leanúint ar aghaidh."
+verifyingMfa = "Á fhíorú..."
+verifyMfa = "Fíoraigh an cód"
 
 [login.slides.overview]
 alt = "Forbhreathnú Stirling PDF"
@@ -4319,6 +4390,10 @@ title = "Mód Logála Isteach de Dhíth"
 message = "Ní mór mód logála isteach a bheith cumasaithe chun socruithe riarthóra a athrú. Socraigh SECURITY_ENABLELOGIN=true i do thimpeallacht nó security.enableLogin: true i settings.yml, agus atosaigh an freastalaí ansin."
 readOnly = "Taispeánann na socruithe thíos luachanna samplacha le tagairt. Cumasaigh mód logála isteach chun an chumraíocht iarbhír a fheiceáil agus a chur in eagar."
 
+[admin.settings.enterpriseRequired]
+title = "Ceadúnas Fiontraíochta de dhíth"
+message = "Tá ceadúnas Fiontraíochta de dhíth chun rochtain a fháil ar {{featureName}}. Tá tú ag féachaint ar shonraí taispeána mar thagairt."
+
 [admin.settings.restart]
 title = "Athtosú de Dhíth"
 message = "Sábháladh na socruithe go rathúil. Tá athtosú freastalaí de dhíth chun na hathruithe a chur i bhfeidhm."
@@ -4457,6 +4532,13 @@ description = "Uasmhéid iarrachtaí logála isteach teipthe sula gcuirtear an c
 [admin.settings.security.loginResetTimeMinutes]
 label = "Am Athshocraithe Logála Isteach (nóiméid)"
 description = "Am sula n‑athshocraítear iarrachtaí logála isteach teipthe"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Díchumasaigh Cosaint CSRF"
@@ -4766,6 +4848,48 @@ description = "Taispeáin teachtaireachtaí earráide mionsonraithe d’úsáide
 title = "Bunachar Sonraí"
 description = "Cumraigh socruithe ceangail bunachair shonraí saincheaptha le haghaidh imscaradh fiontraíochta."
 configuration = "Cumraíocht Bunachair Sonraí"
+backupTitle = "Cúltacaí agus Athchóiriú"
+backupDescription = "Bainistigh cúltacaí H2 go díreach ón gconsól riaracháin."
+loadError = "Theip ar luchtú cúltacaí an bhunachair sonraí"
+backupCreated = "Cruthaíodh cúltaca go rathúil"
+backupFailed = "Theip ar chruthú cúltaca"
+deleteTitle = "Scrios cúltaca"
+deleteConfirm = "Scrios an cúltaca seo? Ní féidir é seo a chur ar ceal."
+deleteSuccess = "Scriosadh cúltaca"
+deleteFailed = "Theip ar scriosadh cúltaca"
+deleteConfirmAction = "Scrios an cúltaca"
+downloadFailed = "Theip ar íoslódáil cúltaca"
+version = "Leagan H2"
+embedded = "H2 leabaithe"
+external = "Bunachar Sonraí Seachtrach"
+h2Only = "Níl cúltacaí ar fáil ach don bhunachar sonraí H2 leabaithe."
+h2Hint = "Socraigh cineál an bhunachair sonraí mar H2 agus díchumasaigh an bunachar sonraí saincheaptha chun cúltaca agus athchóiriú a chumasú."
+manageBackups = "Bainistigh cúltacaí"
+refresh = "Athnuaigh"
+createBackup = "Cruthaigh cúltaca"
+uploadTitle = "Uaslódáil agus iompórtáil"
+chooseFile = "Roghnaigh comhad cúltaca .sql"
+importFromUpload = "Iompórtáil ón uaslódáil"
+confirmImportTitle = "Deimhnigh iompórtáil an bhunachair sonraí"
+overwriteWarning = "Rabhadh: Forscríobhfaidh sé seo an bunachar sonraí reatha."
+overwriteWarningBody = "Cuirfear na sonraí go léir atá ann in ionad na sonraí reatha leis an gcúltaca uaslódáilte. Ní féidir an gníomh seo a chur ar ceal."
+confirmCodeLabel = "Iontráil an cód dearbhaithe chun dul ar aghaidh"
+enterCode = "Iontráil an cód a thaispeántar thuas"
+confirmImport = "Deimhnigh an iompórtáil"
+codeMismatch = "Ní mheaitseálann an cód dearbhaithe"
+codeMismatchBody = "Iontráil an cód go díreach mar a thaispeántar é chun dul ar aghaidh."
+selectFile = "Roghnaigh comhad .sql le hiompórtáil"
+importSuccess = "Iompórtáladh cúltaca go rathúil"
+importFailed = "Theip ar iompórtáil cúltaca"
+noBackups = "Níor aimsíodh aon chúltacaí go fóill."
+unavailable = "Níl liosta na gcúltacaí ar fáil don chumraíocht bhunachair sonraí reatha."
+fileName = "Comhad"
+created = "Cruthaithe"
+size = "Méid"
+actions = "Gníomhartha"
+download = "Íoslódáil"
+import = "Iompórtáil"
+delete = "Scrios"
 
 [admin.settings.database.enableCustom]
 label = "Cumasaigh Bunachar Sonraí Saincheaptha"
@@ -4843,6 +4967,26 @@ description = "DPI uasta le haghaidh próiseála íomhá (0 = gan teorainn)"
 [admin.settings.advanced.tessdataDir]
 label = "Comhadlann tessdata"
 description = "Conair chuig an gcomhadlann tessdata do chomhaid teanga OCR"
+downloadMissingTitle = "Níor roghnaíodh aon teanga"
+downloadMissingBody = "Roghnaigh teanga amháin ar a laghad le híoslódáil."
+downloadSuccessTitle = "Íoslódáladh na teangacha"
+downloadSuccessBody = "Sábháladh na teangacha tessdata roghnaithe."
+downloadErrorTitle = "Theip ar an íoslódáil"
+loadingLanguages = "Teangacha tessdata suiteáilte á lódáil..."
+installedLanguages = "Teangacha tessdata suiteáilte"
+noLanguages = "Níor aimsíodh teangacha tessdata sa chomhadlann chumraithe."
+downloadLabel = "Íoslódáil teangacha tessdata breise"
+downloadPlaceholder = "Roghnaigh teangacha"
+downloadNothingFound = "Níor aimsíodh teangacha breise"
+permissionNotice = "Níl cosán an tessdata inscríofa. Osclófar íoslódálacha sa bhrabhsálaí; sábháil na comhaid .traineddata de láimh sa chomhadlann tessdata le do thoil."
+manualLinks = "Íoslódálacha láimhe: cliceáil ar na naisc agus cuir na comhaid sa chomhadlann tessdata."
+downloadButton = "Íoslódáil na teangacha roghnaithe"
+downloadInvalidTitle = "Rogha neamhbhailí"
+downloadInvalidBody = "Níl roinnt de na teangacha roghnaithe ar fáil le híoslódáil. Athnuaigh agus roghnaigh ón liosta le do thoil."
+downloadErrorNetwork = "Theip ar an íoslódáil mar gheall ar earráid líonra. Seiceáil do cheangal agus bain triail eile as."
+downloadErrorServer = "Tharla earráid ar an bhfreastalaí agus teangacha tessdata á n-íoslódáil. Bain triail eile as níos déanaí."
+downloadErrorPermission = "Níl an chomhadlann tessdata inscríofa: {{message}}. Roghnaigh comhadlann inscríofa (m.sh. faoin bhfillteán sonraí feidhmchláir) nó coigeartaigh na ceadanna."
+downloadErrorGeneric = "Theip ar an íoslódáil: {{message}}. Bain triail eile as níos déanaí."
 
 [admin.settings.advanced.disableSanitize]
 label = "Díchumasaigh Sláintiú HTML"
@@ -5346,6 +5490,7 @@ desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a shlabhrú le ché
 invalidStep = "Céim neamhbhailí"
 reviewTitle = "Torthaí an Uathoibrithe"
 copyToSaved = "Cóipeáil chuig Sábháilte"
+exportForFolderScanning = "Easpórtáil le haghaidh Scanadh Fillteáin"
 
 [automate.files]
 placeholder = "Roghnaigh comhaid le próiseáil leis an uathoibriú seo"
@@ -5367,6 +5512,7 @@ createTitle = "Cruthaigh Uathoibriú"
 editTitle = "Cuir Uathoibriú in Eagar"
 intro = "Ritheann uathoibrithe uirlisí as a chéile. Chun tosú, cuir uirlisí leis san ord ina bhfuil tú ag iarraidh iad a rith."
 save = "Sábháil an tUathoibriú"
+exportForFolderScanning = "Easpórtáil le haghaidh Scanadh Fillteáin"
 
 [automate.creation.name]
 label = "Ainm an Uathoibrithe"
@@ -5741,9 +5887,11 @@ username = "Ainm Úsáideora (R-phost)"
 usernamePlaceholder = "úsáideoir@sampla.com"
 password = "Focal Faire"
 passwordPlaceholder = "Cuir isteach focal faire"
+passwordRequired = "Tá focal faire riachtanach"
 role = "Ról"
 team = "Foireann (Roghnach)"
 teamPlaceholder = "Roghnaigh foireann"
+authType = "Cineál Fíordheimhnithe"
 forcePasswordChange = "Cuir iallach ar athrú focail faire ag an gcéad logáil isteach"
 cancel = "Cealaigh"
 submit = "Cuir Ball Leis"
@@ -5751,6 +5899,13 @@ usernameRequired = "Tá ainm úsáideora agus focal faire ag teastáil"
 passwordTooShort = "Caithfidh an focal faire a bheith ar a laghad 6 charachtar"
 success = "Cruthaíodh an t-úsáideoir go rathúil"
 error = "Theip ar úsáideoir a chruthú"
+forceMFA = "Cuir iallach ar shocrú MFA ag an gcéad logáil isteach eile"
+
+[workspace.people.authType]
+password = "Focal faire"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Déanfaidh an t-úsáideoir fíordheimhniú trí sholáthraí SSO"
 
 [workspace.people.editMember]
 title = "Cuir Ball in Eagar"
@@ -5853,6 +6008,11 @@ fromLicense = "ón gceadúnas"
 slotsAvailable = "{{count}} áit(í) úsáideora ar fáil"
 noSlotsAvailable = "Níl aon áiteanna ar fáil"
 currentUsage = "Faoi láthair tá {{current}} as {{max}} ceadúnas úsáideora in úsáid"
+
+[workspace.people.mfa]
+adminDisableSuccess = "Díchumasaíodh MFA don úsáideoir go rathúil"
+adminDisableError = "Níorbh fhéidir MFA a dhíchumasú don úsáideoir"
+disableByAdmin = "Díchumasaigh MFA"
 
 [workspace.teams]
 title = "Foirne"
@@ -6296,6 +6456,7 @@ endpoint = "Críochphointe"
 visits = "Cuairteanna"
 percentage = "Céatadán"
 noData = "Níl aon sonraí ar fáil"
+unknownEndpoint = "Críochphointe anaithnid"
 
 [backendHealth]
 checking = "Stádas an chúlchórais á sheiceáil..."

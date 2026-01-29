@@ -12,12 +12,14 @@ import {
 } from '@mantine/core';
 import { Z_INDEX_AUTOMATE_MODAL } from '@app/styles/zIndex';
 import CheckIcon from '@mui/icons-material/Check';
+import DownloadIcon from '@mui/icons-material/Download';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import ToolConfigurationModal from '@app/components/tools/automate/ToolConfigurationModal';
 import ToolList from '@app/components/tools/automate/ToolList';
 import IconSelector from '@app/components/tools/automate/IconSelector';
 import { AutomationConfig, AutomationMode, AutomationTool } from '@app/types/automation';
 import { useAutomationForm } from '@app/hooks/tools/automate/useAutomationForm';
+import { downloadFolderScanningConfig } from '@app/utils/automationConverter';
 
 
 interface AutomationCreationProps {
@@ -194,15 +196,42 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
         <Divider />
 
-        {/* Save Button */}
-        <Button
-          leftSection={<CheckIcon />}
-          onClick={saveAutomation}
-          disabled={!canSaveAutomation()}
-          fullWidth
-        >
-          {t('automate.creation.save', 'Save Automation')}
-        </Button>
+        {/* Action Buttons */}
+        <Stack gap="sm">
+          <Button
+            leftSection={<CheckIcon />}
+            onClick={saveAutomation}
+            disabled={!canSaveAutomation()}
+            fullWidth
+          >
+            {t('automate.creation.save', 'Save Automation')}
+          </Button>
+
+          <Button
+            leftSection={<DownloadIcon />}
+            onClick={() => {
+              // Create a temporary automation config from current state
+              const tempAutomation: AutomationConfig = {
+                id: existingAutomation?.id || 'temp',
+                name: automationName.trim(),
+                description: automationDescription.trim(),
+                icon: automationIcon,
+                operations: selectedTools.map(tool => ({
+                  operation: tool.operation,
+                  parameters: tool.parameters || {}
+                })),
+                createdAt: existingAutomation?.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              downloadFolderScanningConfig(tempAutomation, toolRegistry);
+            }}
+            disabled={!canSaveAutomation()}
+            variant="light"
+            fullWidth
+          >
+            {t('automate.creation.exportForFolderScanning', 'Export for Folder Scanning')}
+          </Button>
+        </Stack>
       </Stack>
 
       {/* Tool Configuration Modal */}

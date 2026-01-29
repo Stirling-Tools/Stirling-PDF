@@ -306,6 +306,7 @@ selectOperation = "Wybierz operację"
 addOperationButton = "Dodaj operację"
 pipelineHeader = "Automatyzacja"
 saveButton = "Pobierz"
+saveForFolderScanning = "Zapisz do skanowania folderu"
 validateButton = "Waliduj"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Własność"
 webBrowserSettings = "Ustawienia przeglądarki"
 syncToBrowser = "Zapisz dane konta w przeglądarce"
 syncToAccount = "Wczytaj dane konta z przeglądarki"
+
+[account.mfa]
+title = "Uwierzytelnianie dwuskładnikowe"
+setupFailed = "Nie można rozpocząć konfiguracji uwierzytelniania dwuskładnikowego. Spróbuj ponownie."
+codeRequired = "Wprowadź kod uwierzytelniający, aby kontynuować."
+enabled = "Uwierzytelnianie dwuskładnikowe włączone."
+enableFailed = "Nie można włączyć uwierzytelniania dwuskładnikowego. Sprawdź kod i spróbuj ponownie."
+disabled = "Uwierzytelnianie dwuskładnikowe wyłączone."
+disableFailed = "Nie można wyłączyć uwierzytelniania dwuskładnikowego. Sprawdź kod i spróbuj ponownie."
+description = "Dodaj dodatkową warstwę zabezpieczeń do swojego konta."
+enableButton = "Włącz uwierzytelnianie dwuskładnikowe"
+disableButton = "Wyłącz uwierzytelnianie dwuskładnikowe"
+setupTitle = "Skonfiguruj uwierzytelnianie dwuskładnikowe"
+setupDescription = "Zeskanuj kod QR w aplikacji uwierzytelniającej, a następnie wprowadź 6-cyfrowy kod, aby potwierdzić."
+manualKey = "Klucz do ręcznej konfiguracji"
+secretWarning = "Zachowaj ten klucz w tajemnicy. Każdy, kto ma do niego dostęp, może generować prawidłowe kody uwierzytelniające."
+codePlaceholder = "Wprowadź 6-cyfrowy kod"
+confirmEnable = "Włącz"
+disableTitle = "Wyłącz uwierzytelnianie dwuskładnikowe"
+disableDescription = "Aby wyłączyć uwierzytelnianie dwuskładnikowe, wprowadź prawidłowy kod uwierzytelniający."
+codeLabel = "Kod uwierzytelniający"
+confirmDisable = "Wyłącz"
+ssoDescription = "Uwierzytelnianiem dwuskładnikowym zarządza Twój dostawca tożsamości dla kont Single Sign-On (SSO)."
+ssoManaged = "Skonfiguruj MFA poprzez swojego dostawcę tożsamości."
 
 [adminUserSettings]
 title = "Ustawienia konta użytkownika"
@@ -925,6 +950,7 @@ title = "Podziel (Rozmiar/Ilość stron)"
 desc = "Rozdziela dokument PDF na wiele dokumentów bazując na podanym rozmiarze, ilości stron bądź ilości dokumentów"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Zastąp i odwróć kolor"
 desc = "Zastępuj lub odwracaj kolory w dokumentach PDF"
 
@@ -939,18 +965,22 @@ title = "Auto skan folderów"
 desc = "Link do przewodnika automatycznego skanowania folderów"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Przewodnik SSO"
 desc = "Link do przewodnika SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Konfiguracja odizolowana"
 desc = "Link do przewodnika konfiguracji odizolowanej"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Dodaj hasło"
 desc = "Zaszyfruj dokument PDF za pomocą hasła."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Zmień uprawnienia"
 desc = "Zmień ograniczenia i uprawnienia dokumentu"
 
@@ -960,10 +990,12 @@ title = "Automatyzuj"
 desc = "Buduj wieloetapowe przepływy, łącząc akcje PDF. Idealne do powtarzających się zadań."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Nakłada dokumenty PDF na siebie"
 title = "Nałóż PDFa"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Edytor tekstu PDF"
 desc = "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Pobierz pośredni plik HTML zamiast PDF"
 pdfaOptions = "Opcje PDF/A"
 outputFormat = "Format wyjściowy"
 pdfaNote = "PDF/A-1b jest bardziej kompatybilny, PDF/A-2b obsługuje więcej funkcji."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "Dokument zawiera podpis cyfrowy, nie zostanie on wczytany."
+pdfxDigitalSignatureWarning = "PDF zawiera podpis cyfrowy. Zostanie on usunięty w następnym kroku."
+pdfxDescription = "PDF/X to podzbiór PDF zgodny z normą ISO, przeznaczony do niezawodnego druku i wymiany grafiki."
 fileFormat = "Format pliku"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI renderowania obrazu"
 cbrOptions = "Opcje CBR"
 cbrOutputOptions = "Opcje konwersji PDF do CBR"
 cbrDpi = "DPI renderowania obrazu"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opcje konwersji eBook do PDF"
@@ -1396,6 +1435,7 @@ applySignatures = "Zastosuj obrazy"
 name = "Obraz"
 placeholder = "Prześlij obraz"
 label = "Plik obrazu"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Skonfiguruj obraz"
@@ -2191,6 +2231,16 @@ submit = "Konwertuj"
 tip = "Tylko jeden plik na raz"
 outputFormat = "Format wyjściowy:"
 pdfWithDigitalSignature = "Dokument zawiera podpis cyfrowy, nie zostanie on wczytany."
+
+[pdfToPDFX]
+tags = "druk,standard,konwersja,produkcja,prepress,archiwizacja"
+title = "PDF do PDF/X"
+header = "PDF do PDF/X"
+credit = "Ta usługa używa Ghostscript do konwersji PDF/X"
+submit = "Konwertuj"
+tip = "Obecnie nie działa dla wielu plików jednocześnie"
+outputFormat = "Format wyjściowy"
+pdfWithDigitalSignature = "PDF zawiera podpis cyfrowy. Zostanie on usunięty w następnym kroku."
 
 [PDFToWord]
 tags = "doc,docx,odt,word, przekształcenie, transformacja, konwersja, office, microsoft, plik doc"
@@ -3148,6 +3198,18 @@ other = "Inne"
 perPageInfo = "Informacje dla każdej strony"
 tableOfContents = "Spis treści"
 
+[getPdfInfo.compliance]
+notDetected = "Nie wykryto"
+passed = "Zaliczone"
+failed = "Niezaliczone"
+compliant = "Zgodny"
+nonCompliant = "Niezgodny"
+none = "Nie wykryto standardów"
+passedCount = "zaliczone"
+failedCount = "niezaliczone"
+noVerification = "Nie przeprowadzono weryfikacji"
+noVerificationDesc = "Zgodność ze standardami PDF nie została zweryfikowana dla tego dokumentu."
+
 [getPdfInfo.other]
 attachments = "Załączniki"
 embeddedFiles = "Osadzone pliki"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} ograniczeń"
 permsMixed = "Niektóre uprawnienia ograniczone"
 hasCompliance = "Spełnia standardy zgodności"
 noCompliance = "Brak standardów zgodności"
+compliancePassed = "Zgodny z {{standards}}"
+complianceChecked = "Zweryfikowano standardy ({{failed}} niezaliczonych)"
 basic = "Informacje podstawowe"
 documentInfo = "Informacje o dokumencie"
 securityTitle = "Stan zabezpieczeń"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Hasło zostało zmienione! Zaloguj się nowym hasłem.
 credentialsUpdated = "Dane logowania zostały zaktualizowane. Zaloguj się ponownie."
 defaultCredentials = "Domyślne dane logowania"
 changePasswordWarning = "Zmień hasło po pierwszym zalogowaniu."
+mfaRequired = "Wymagany kod dwuskładnikowy"
+mfaCode = "Kod uwierzytelniający"
+enterMfaCode = "Wprowadź 6-cyfrowy kod"
+mfaPromptTitle = "Uwierzytelnianie dwuskładnikowe"
+mfaPromptBody = "Wprowadź kod uwierzytelniający z aplikacji uwierzytelniającej, aby kontynuować."
+verifyingMfa = "Weryfikowanie..."
+verifyMfa = "Zweryfikuj kod"
 
 [login.slides.overview]
 alt = "Przegląd Stirling PDF"
@@ -4319,6 +4390,10 @@ title = "Wymagany tryb logowania"
 message = "Tryb logowania musi być włączony, aby modyfikować ustawienia administratora. Ustaw SECURITY_ENABLELOGIN=true w środowisku lub security.enableLogin: true w settings.yml, a następnie uruchom ponownie serwer."
 readOnly = "Poniższe ustawienia pokazują przykładowe wartości w celach poglądowych. Włącz tryb logowania, aby wyświetlać i edytować rzeczywistą konfigurację."
 
+[admin.settings.enterpriseRequired]
+title = "Wymagana licencja Enterprise"
+message = "Do uzyskania dostępu do {{featureName}} wymagana jest licencja Enterprise. Obecnie wyświetlasz dane demonstracyjne w celach poglądowych."
+
 [admin.settings.restart]
 title = "Wymagane ponowne uruchomienie"
 message = "Ustawienia zostały pomyślnie zapisane. Aby zmiany odniosły skutek, wymagane jest ponowne uruchomienie serwera."
@@ -4457,6 +4532,13 @@ description = "Maksymalna liczba nieudanych prób logowania przed zablokowaniem 
 [admin.settings.security.loginResetTimeMinutes]
 label = "Czas resetu prób logowania (minuty)"
 description = "Czas, po którym licznik nieudanych prób logowania jest resetowany"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Wyłącz ochronę CSRF"
@@ -4766,6 +4848,48 @@ description = "Pokazuj szczegółowe komunikaty o błędach dla użytkowników."
 title = "Baza danych"
 description = "Skonfiguruj niestandardowe ustawienia połączenia z bazą danych dla wdrożeń korporacyjnych."
 configuration = "Konfiguracja bazy danych"
+backupTitle = "Kopie zapasowe i przywracanie"
+backupDescription = "Zarządzaj kopiami zapasowymi H2 bezpośrednio z konsoli administracyjnej."
+loadError = "Nie udało się wczytać kopii zapasowych bazy danych"
+backupCreated = "Pomyślnie utworzono kopię zapasową"
+backupFailed = "Nie udało się utworzyć kopii zapasowej"
+deleteTitle = "Usuń kopię zapasową"
+deleteConfirm = "Usunąć tę kopię zapasową? Tej operacji nie można cofnąć."
+deleteSuccess = "Kopia zapasowa usunięta"
+deleteFailed = "Nie udało się usunąć kopii zapasowej"
+deleteConfirmAction = "Usuń kopię zapasową"
+downloadFailed = "Nie udało się pobrać kopii zapasowej"
+version = "Wersja H2"
+embedded = "Wbudowana H2"
+external = "Zewnętrzna baza danych"
+h2Only = "Kopie zapasowe są dostępne tylko dla wbudowanej bazy danych H2."
+h2Hint = "Ustaw typ bazy danych na H2 i wyłącz niestandardową bazę danych, aby włączyć tworzenie kopii zapasowych i przywracanie."
+manageBackups = "Zarządzaj kopiami zapasowymi"
+refresh = "Odśwież"
+createBackup = "Utwórz kopię zapasową"
+uploadTitle = "Prześlij i zaimportuj"
+chooseFile = "Wybierz plik kopii zapasowej .sql"
+importFromUpload = "Importuj przesłany plik"
+confirmImportTitle = "Potwierdź import bazy danych"
+overwriteWarning = "Uwaga: Spowoduje to nadpisanie bieżącej bazy danych."
+overwriteWarningBody = "Wszystkie istniejące dane zostaną zastąpione przesłaną kopią zapasową. Tej operacji nie można cofnąć."
+confirmCodeLabel = "Wprowadź kod potwierdzający, aby kontynuować"
+enterCode = "Wprowadź kod pokazany powyżej"
+confirmImport = "Potwierdź import"
+codeMismatch = "Kod potwierdzenia nie pasuje"
+codeMismatchBody = "Aby kontynuować, wprowadź kod dokładnie tak, jak pokazano."
+selectFile = "Wybierz plik .sql do importu"
+importSuccess = "Pomyślnie zaimportowano kopię zapasową"
+importFailed = "Nie udało się zaimportować kopii zapasowej"
+noBackups = "Nie znaleziono jeszcze żadnych kopii zapasowych."
+unavailable = "Lista kopii zapasowych jest niedostępna dla bieżącej konfiguracji bazy danych."
+fileName = "Plik"
+created = "Utworzono"
+size = "Rozmiar"
+actions = "Akcje"
+download = "Pobierz"
+import = "Importuj"
+delete = "Usuń"
 
 [admin.settings.database.enableCustom]
 label = "Włącz niestandardową bazę danych"
@@ -4843,6 +4967,26 @@ description = "Maksymalne DPI dla przetwarzania obrazów (0 = bez limitu)"
 [admin.settings.advanced.tessdataDir]
 label = "Katalog tessdata"
 description = "Ścieżka do katalogu tessdata dla plików językowych OCR"
+downloadMissingTitle = "Nie wybrano języka"
+downloadMissingBody = "Wybierz co najmniej jeden język do pobrania."
+downloadSuccessTitle = "Pobrano języki"
+downloadSuccessBody = "Wybrane języki tessdata zostały zapisane."
+downloadErrorTitle = "Pobieranie nie powiodło się"
+loadingLanguages = "Ładowanie zainstalowanych języków tessdata..."
+installedLanguages = "Zainstalowane języki tessdata"
+noLanguages = "Nie znaleziono języków tessdata w skonfigurowanym katalogu."
+downloadLabel = "Pobierz dodatkowe języki tessdata"
+downloadPlaceholder = "Wybierz języki"
+downloadNothingFound = "Nie znaleziono dodatkowych języków"
+permissionNotice = "Ścieżka tessdata nie jest zapisywalna. Pobrania zostaną otwarte w przeglądarce; zapisz pliki .traineddata ręcznie w folderze tessdata."
+manualLinks = "Pobieranie ręczne: kliknij linki i umieść pliki w folderze tessdata."
+downloadButton = "Pobierz wybrane języki"
+downloadInvalidTitle = "Nieprawidłowy wybór"
+downloadInvalidBody = "Niektóre wybrane języki nie są dostępne do pobrania. Odśwież i wybierz z listy."
+downloadErrorNetwork = "Pobieranie nie powiodło się z powodu błędu sieci. Sprawdź połączenie i spróbuj ponownie."
+downloadErrorServer = "Serwer napotkał błąd podczas pobierania języków tessdata. Spróbuj ponownie później."
+downloadErrorPermission = "Katalog tessdata nie jest zapisywalny: {{message}}. Wybierz katalog z uprawnieniami do zapisu (np. w folderze danych aplikacji) lub dostosuj uprawnienia."
+downloadErrorGeneric = "Pobieranie nie powiodło się: {{message}}. Spróbuj ponownie później."
 
 [admin.settings.advanced.disableSanitize]
 label = "Wyłącz oczyszczanie HTML"
@@ -5346,6 +5490,7 @@ desc = "Buduj wieloetapowe przepływy pracy, łącząc akcje PDF. Idealne dla za
 invalidStep = "Nieprawidłowy krok"
 reviewTitle = "Wyniki automatyzacji"
 copyToSaved = "Skopiuj do zapisanych"
+exportForFolderScanning = "Eksportuj do skanowania folderu"
 
 [automate.files]
 placeholder = "Wybierz pliki do przetworzenia w ramach tej automatyzacji"
@@ -5367,6 +5512,7 @@ createTitle = "Utwórz automatyzację"
 editTitle = "Edytuj automatyzację"
 intro = "Automatyzacje uruchamiają narzędzia sekwencyjnie. Aby zacząć, dodaj narzędzia w kolejności, w jakiej mają zostać uruchomione."
 save = "Zapisz automatyzację"
+exportForFolderScanning = "Eksportuj do skanowania folderu"
 
 [automate.creation.name]
 label = "Nazwa automatyzacji"
@@ -5741,9 +5887,11 @@ username = "Nazwa użytkownika (e‑mail)"
 usernamePlaceholder = "user@example.com"
 password = "Hasło"
 passwordPlaceholder = "Wprowadź hasło"
+passwordRequired = "Hasło jest wymagane"
 role = "Rola"
 team = "Zespół (opcjonalnie)"
 teamPlaceholder = "Wybierz zespół"
+authType = "Typ uwierzytelniania"
 forcePasswordChange = "Wymuś zmianę hasła przy pierwszym logowaniu"
 cancel = "Anuluj"
 submit = "Dodaj członka"
@@ -5751,6 +5899,13 @@ usernameRequired = "Wymagana jest nazwa użytkownika i hasło"
 passwordTooShort = "Hasło musi mieć co najmniej 6 znaków"
 success = "Użytkownik utworzony pomyślnie"
 error = "Nie udało się utworzyć użytkownika"
+forceMFA = "Wymuś konfigurację MFA przy następnym logowaniu"
+
+[workspace.people.authType]
+password = "Hasło"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Użytkownik będzie uwierzytelniany przez dostawcę SSO"
 
 [workspace.people.editMember]
 title = "Edytuj członka"
@@ -5853,6 +6008,11 @@ fromLicense = "z licencji"
 slotsAvailable = "{{count}} wolnych miejsc dla użytkowników"
 noSlotsAvailable = "Brak wolnych miejsc"
 currentUsage = "Obecnie użyto {{current}} z {{max}} licencji użytkowników"
+
+[workspace.people.mfa]
+adminDisableSuccess = "Pomyślnie wyłączono MFA dla użytkownika"
+adminDisableError = "Nie udało się wyłączyć MFA dla użytkownika"
+disableByAdmin = "Wyłącz MFA"
 
 [workspace.teams]
 title = "Zespoły"
@@ -6296,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Wizyty"
 percentage = "Procent"
 noData = "Brak dostępnych danych"
+unknownEndpoint = "Nieznany endpoint"
 
 [backendHealth]
 checking = "Sprawdzanie statusu backendu..."

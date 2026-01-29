@@ -306,6 +306,7 @@ selectOperation = "Selecciona Operació"
 addOperationButton = "Afegeix operació"
 pipelineHeader = "Procés:"
 saveButton = "Descarrega"
+saveForFolderScanning = "Desa per a l'escaneig de carpetes"
 validateButton = "Valida"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Propietat:"
 webBrowserSettings = "Opcions del Navegador"
 syncToBrowser = "Sincronitza Compte -> Navegador"
 syncToAccount = "Sincronitza Compte <- Navegador"
+
+[account.mfa]
+title = "Autenticació de dos factors"
+setupFailed = "No s'ha pogut iniciar la configuració de l'autenticació de dos factors. Torneu-ho a provar."
+codeRequired = "Introduïu el codi d'autenticació per continuar."
+enabled = "Autenticació de dos factors activada."
+enableFailed = "No s'ha pogut activar l'autenticació de dos factors. Comproveu el codi i torneu-ho a provar."
+disabled = "Autenticació de dos factors desactivada."
+disableFailed = "No s'ha pogut desactivar l'autenticació de dos factors. Comproveu el codi i torneu-ho a provar."
+description = "Afegiu una capa addicional de seguretat al vostre compte."
+enableButton = "Activa l'autenticació de dos factors"
+disableButton = "Desactiva l'autenticació de dos factors"
+setupTitle = "Configura l'autenticació de dos factors"
+setupDescription = "Escanegeu el codi QR amb la vostra aplicació d'autenticació i, a continuació, introduïu el codi de 6 dígits per confirmar."
+manualKey = "Clau de configuració manual"
+secretWarning = "Manteniu aquesta clau en secret. Qualsevol persona amb accés pot generar codis d'autenticació vàlids."
+codePlaceholder = "Introduïu el codi de 6 dígits"
+confirmEnable = "Activa"
+disableTitle = "Desactiva l'autenticació de dos factors"
+disableDescription = "Introduïu un codi d'autenticació vàlid per desactivar l'autenticació de dos factors."
+codeLabel = "Codi d'autenticació"
+confirmDisable = "Desactiva"
+ssoDescription = "L'autenticació de dos factors és gestionada pel vostre proveïdor d'identitat per als comptes d'inici de sessió únic."
+ssoManaged = "Configureu l'MFA a través del vostre proveïdor d'identitat."
 
 [adminUserSettings]
 title = "Opcions de Control d'Usuari"
@@ -925,6 +950,7 @@ title = "Divideix auto per mida/pàg."
 desc = "Divideix un únic PDF en múltiples documents basant-se en la mida, el nombre de pàgines o el nombre de documents"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Substitueix i inverteix el color"
 desc = "Substitueix o inverteix colors en documents PDF"
 
@@ -939,18 +965,22 @@ title = "Escaneig automàtic de carpeta"
 desc = "Enllaç a la guia d'escaneig automàtic de carpetes"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Guia d'SSO"
 desc = "Enllaç a la guia d'SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Configuració air-gapped"
 desc = "Enllaç a la guia de configuració en entorn air-gapped"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Afegir Contrasenya"
 desc = "Xifra el document PDF amb contrasenya."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Canviar Permissos"
 desc = "Canvia les restriccions i els permisos del document"
 
@@ -960,10 +990,12 @@ title = "Automatitza"
 desc = "Construeix fluxos de treball multietapa enllaçant accions PDF. Ideal per a tasques recurrents."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Superposa PDFs sobre un altre PDF"
 title = "Superposar PDFs"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor de text PDF"
 desc = "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Baixa el fitxer HTML intermedi en lloc del PDF"
 pdfaOptions = "Opcions de PDF/A"
 outputFormat = "Format de sortida"
 pdfaNote = "PDF/A-1b és més compatible; PDF/A-2b admet més funcions."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
+pdfxDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta se suprimirà en el pas següent."
+pdfxDescription = "PDF/X és un subconjunt de PDF estàndard ISO per a una impressió fiable i un intercanvi de gràfics fiable."
 fileFormat = "Format de fitxer"
 wordDoc = "Document de Word"
 wordDocExt = "Document de Word (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI per al renderitzat d'imatges"
 cbrOptions = "Opcions CBR"
 cbrOutputOptions = "Opcions de PDF a CBR"
 cbrDpi = "DPI per al renderitzat d'imatges"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opcions d'eBook a PDF"
@@ -1396,6 +1435,7 @@ applySignatures = "Aplica les imatges"
 name = "Imatge"
 placeholder = "Puja una imatge"
 label = "Fitxer d'imatge"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configura la imatge"
@@ -2191,6 +2231,16 @@ submit = "Converteix"
 tip = "Actualment no funciona per a múltiples entrades al mateix temps"
 outputFormat = "Format de sortida"
 pdfWithDigitalSignature = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
+
+[pdfToPDFX]
+tags = "impressió,estàndard,conversió,producció,preimpressió,arxiu"
+title = "PDF a PDF/X"
+header = "PDF a PDF/X"
+credit = "Aquest servei utilitza Ghostscript per a la conversió a PDF/X"
+submit = "Converteix"
+tip = "Actualment no funciona amb diverses entrades alhora"
+outputFormat = "Format de sortida"
+pdfWithDigitalSignature = "El PDF conté una signatura digital. Aquesta se suprimirà en el pas següent."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformació,format,conversió,oficina,microsoft,fitxer doc"
@@ -3148,6 +3198,18 @@ other = "Altres"
 perPageInfo = "Informació per pàgina"
 tableOfContents = "Taula de continguts"
 
+[getPdfInfo.compliance]
+notDetected = "No detectat"
+passed = "Superat"
+failed = "Fallat"
+compliant = "Conforme"
+nonCompliant = "No conforme"
+none = "No s'han detectat estàndards"
+passedCount = "superats"
+failedCount = "fallats"
+noVerification = "No s'ha realitzat cap verificació"
+noVerificationDesc = "El compliment dels estàndards PDF no s'ha verificat per a aquest document."
+
 [getPdfInfo.other]
 attachments = "Fitxers adjunts"
 embeddedFiles = "Fitxers incrustats"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} restriccions"
 permsMixed = "Alguns permisos restringits"
 hasCompliance = "Té estàndards de conformitat"
 noCompliance = "Sense estàndards de conformitat"
+compliancePassed = "{{standards}} conforme"
+complianceChecked = "Estàndards verificats ({{failed}} fallats)"
 basic = "Informació bàsica"
 documentInfo = "Informació del document"
 securityTitle = "Estat de seguretat"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Contrasenya canviada correctament! Inicieu sessió amb
 credentialsUpdated = "S'han actualitzat les vostres credencials. Torneu a iniciar sessió."
 defaultCredentials = "Credencials d'inici de sessió predeterminades"
 changePasswordWarning = "Canvia la contrasenya després d'iniciar sessió per primera vegada"
+mfaRequired = "Es requereix un codi de dos factors"
+mfaCode = "Codi d'autenticació"
+enterMfaCode = "Introduïu el codi de 6 dígits"
+mfaPromptTitle = "Autenticació de dos factors"
+mfaPromptBody = "Introduïu el codi d'autenticació de la vostra aplicació d'autenticació per continuar."
+verifyingMfa = "Verificant..."
+verifyMfa = "Verifica el codi"
 
 [login.slides.overview]
 alt = "Visió general de Stirling PDF"
@@ -4319,6 +4390,10 @@ title = "Cal el mode d'inici de sessió"
 message = "S'ha d'activar el mode d'inici de sessió per modificar la configuració d'administració. Si us plau, establiu SECURITY_ENABLELOGIN=true al vostre entorn o security.enableLogin: true a settings.yml, i després reinicieu el servidor."
 readOnly = "Els paràmetres següents mostren valors d'exemple com a referència. Activeu el mode d'inici de sessió per veure i editar la configuració real."
 
+[admin.settings.enterpriseRequired]
+title = "Es requereix llicència Enterprise"
+message = "Es requereix una llicència Enterprise per accedir a {{featureName}}. Esteu veient dades de demostració com a referència."
+
 [admin.settings.restart]
 title = "Cal reiniciar"
 message = "La configuració s'ha desat correctament. Cal reiniciar el servidor perquè els canvis tinguin efecte."
@@ -4457,6 +4532,13 @@ description = "Nombre màxim d'intents d'inici de sessió fallits abans de bloqu
 [admin.settings.security.loginResetTimeMinutes]
 label = "Temps de reinicialització d'inici de sessió (minuts)"
 description = "Temps abans que es restableixin els intents d'inici de sessió fallits"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Desactiva la protecció CSRF"
@@ -4766,6 +4848,48 @@ description = "Mostra missatges d'error detallats per als usuaris."
 title = "Base de dades"
 description = "Configureu la configuració de connexió de base de dades personalitzada per a desplegaments d'empresa."
 configuration = "Configuració de la base de dades"
+backupTitle = "Còpies de seguretat i restauració"
+backupDescription = "Gestiona còpies de seguretat d'H2 directament des de la consola d'administració."
+loadError = "No s'han pogut carregar les còpies de seguretat de la base de dades"
+backupCreated = "La còpia de seguretat s'ha creat correctament"
+backupFailed = "No s'ha pogut crear la còpia de seguretat"
+deleteTitle = "Suprimeix la còpia de seguretat"
+deleteConfirm = "Voleu suprimir aquesta còpia de seguretat? Aquesta acció no es pot desfer."
+deleteSuccess = "S'ha suprimit la còpia de seguretat"
+deleteFailed = "No s'ha pogut suprimir la còpia de seguretat"
+deleteConfirmAction = "Suprimeix la còpia de seguretat"
+downloadFailed = "No s'ha pogut descarregar la còpia de seguretat"
+version = "Versió d'H2"
+embedded = "H2 integrat"
+external = "Base de dades externa"
+h2Only = "Les còpies de seguretat només estan disponibles per a la base de dades H2 integrada."
+h2Hint = "Establiu el tipus de base de dades a H2 i desactiveu la base de dades personalitzada per habilitar la còpia de seguretat i la restauració."
+manageBackups = "Gestiona les còpies de seguretat"
+refresh = "Actualitza"
+createBackup = "Crea una còpia de seguretat"
+uploadTitle = "Puja i importa"
+chooseFile = "Trieu un fitxer de còpia de seguretat .sql"
+importFromUpload = "Importa la pujada"
+confirmImportTitle = "Confirma la importació de la base de dades"
+overwriteWarning = "Avís: això sobreescriurà la base de dades actual."
+overwriteWarningBody = "Totes les dades existents se substituiran per la còpia de seguretat pujada. Aquesta acció no es pot desfer."
+confirmCodeLabel = "Introduïu el codi de confirmació per continuar"
+enterCode = "Introduïu el codi que es mostra a dalt"
+confirmImport = "Confirma la importació"
+codeMismatch = "El codi de confirmació no coincideix"
+codeMismatchBody = "Introduïu el codi exactament tal com es mostra per continuar."
+selectFile = "Seleccioneu un fitxer .sql per importar"
+importSuccess = "La còpia de seguretat s'ha importat correctament"
+importFailed = "No s'ha pogut importar la còpia de seguretat"
+noBackups = "Encara no s'han trobat còpies de seguretat."
+unavailable = "La llista de còpies de seguretat no està disponible per a la configuració actual de la base de dades."
+fileName = "Fitxer"
+created = "Creat"
+size = "Mida"
+actions = "Accions"
+download = "Descarrega"
+import = "Importa"
+delete = "Suprimeix"
 
 [admin.settings.database.enableCustom]
 label = "Habilita base de dades personalitzada"
@@ -4843,6 +4967,26 @@ description = "DPI màxim per al processament d'imatges (0 = il·limitat)"
 [admin.settings.advanced.tessdataDir]
 label = "Directori tessdata"
 description = "Camí al directori tessdata per als fitxers d'idioma d'OCR"
+downloadMissingTitle = "No s'ha seleccionat cap idioma"
+downloadMissingBody = "Seleccioneu almenys un idioma per descarregar."
+downloadSuccessTitle = "Idiomes descarregats"
+downloadSuccessBody = "S'han desat els idiomes de tessdata seleccionats."
+downloadErrorTitle = "La descàrrega ha fallat"
+loadingLanguages = "S'estan carregant els idiomes de tessdata instal·lats..."
+installedLanguages = "Idiomes de tessdata instal·lats"
+noLanguages = "No s'ha trobat cap idioma de tessdata al directori configurat."
+downloadLabel = "Descarrega idiomes de tessdata addicionals"
+downloadPlaceholder = "Seleccioneu idiomes"
+downloadNothingFound = "No s'han trobat idiomes addicionals"
+permissionNotice = "El camí de tessdata no té permisos d'escriptura. Les descàrregues s'obriran al navegador; deseu manualment els fitxers .traineddata a la carpeta tessdata."
+manualLinks = "Descàrregues manuals: feu clic als enllaços i col·loqueu els fitxers a la carpeta tessdata."
+downloadButton = "Descarrega els idiomes seleccionats"
+downloadInvalidTitle = "Selecció no vàlida"
+downloadInvalidBody = "Alguns idiomes seleccionats no estan disponibles per descarregar. Actualitzeu i trieu de la llista."
+downloadErrorNetwork = "La descàrrega ha fallat per un error de xarxa. Comproveu la connexió i torneu-ho a provar."
+downloadErrorServer = "El servidor ha trobat un error en descarregar els idiomes de tessdata. Torneu-ho a provar més tard."
+downloadErrorPermission = "El directori de tessdata no és escrivible: {{message}}. Trieu un directori amb permisos d'escriptura (per exemple, dins de la carpeta de dades de l'aplicació) o ajusteu-ne els permisos."
+downloadErrorGeneric = "La descàrrega ha fallat: {{message}}. Torneu-ho a provar més tard."
 
 [admin.settings.advanced.disableSanitize]
 label = "Desactiva la sanitització d'HTML"
@@ -5346,6 +5490,7 @@ desc = "Creeu fluxos de treball de diversos passos encadenant accions de PDF. Id
 invalidStep = "Pas no vàlid"
 reviewTitle = "Resultats de l’automatització"
 copyToSaved = "Copia a Desats"
+exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
 
 [automate.files]
 placeholder = "Seleccioneu fitxers per processar amb aquesta automatització"
@@ -5367,6 +5512,7 @@ createTitle = "Crea automatització"
 editTitle = "Edita automatització"
 intro = "Les automatitzacions executen les eines seqüencialment. Per començar, afegiu les eines en l’ordre que voleu que s’executin."
 save = "Desa l’automatització"
+exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
 
 [automate.creation.name]
 label = "Nom de l’automatització"
@@ -5741,9 +5887,11 @@ username = "Nom d’usuari (correu electrònic)"
 usernamePlaceholder = "user@example.com"
 password = "Contrasenya"
 passwordPlaceholder = "Introduïu la contrasenya"
+passwordRequired = "La contrasenya és obligatòria"
 role = "Rol"
 team = "Equip (opcional)"
 teamPlaceholder = "Seleccioneu un equip"
+authType = "Tipus d'autenticació"
 forcePasswordChange = "Obliga a canviar la contrasenya en el primer inici de sessió"
 cancel = "Cancel·la"
 submit = "Afegeix membre"
@@ -5751,6 +5899,13 @@ usernameRequired = "Cal nom d’usuari i contrasenya"
 passwordTooShort = "La contrasenya ha de tenir almenys 6 caràcters"
 success = "Usuari creat correctament"
 error = "No s’ha pogut crear l’usuari"
+forceMFA = "Força la configuració de l'MFA en el proper inici de sessió"
+
+[workspace.people.authType]
+password = "Contrasenya"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "L'usuari s'autenticarà a través del proveïdor SSO"
 
 [workspace.people.editMember]
 title = "Edita membre"
@@ -5853,6 +6008,11 @@ fromLicense = "de la llicència"
 slotsAvailable = "{{count}} plaça(es) d’usuari disponibles"
 noSlotsAvailable = "No hi ha places disponibles"
 currentUsage = "Actualment s’estan utilitzant {{current}} de {{max}} llicències d’usuari"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA desactivada correctament per a l'usuari"
+adminDisableError = "No s'ha pogut desactivar l'MFA per a l'usuari"
+disableByAdmin = "Desactiva l'MFA"
 
 [workspace.teams]
 title = "Equips"
@@ -6296,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Percentatge"
 noData = "No hi ha dades disponibles"
+unknownEndpoint = "Punt final desconegut"
 
 [backendHealth]
 checking = "Comprovant l'estat del backend..."

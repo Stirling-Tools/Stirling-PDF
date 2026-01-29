@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "3.5.7"
+    id "org.springframework.boot" version "3.5.9"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.1.0"
@@ -18,7 +18,7 @@ import groovy.xml.XmlSlurper
 import org.gradle.api.tasks.testing.Test
 
 ext {
-    springBootVersion = "3.5.7"
+    springBootVersion = "3.5.9"
     pdfboxVersion = "3.0.6"
     imageioVersion = "3.13.0"
     lombokVersion = "1.18.42"
@@ -27,7 +27,7 @@ ext {
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.27.0"
     googleJavaFormatVersion = "1.28.0"
-    logback = "1.5.23"
+    logback = "1.5.25"
     junitPlatformVersion = "1.12.2"
 }
 
@@ -36,6 +36,16 @@ ext.isSecurityDisabled = { ->
     System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true' ||
     (project.hasProperty('DISABLE_ADDITIONAL_FEATURES') &&
      System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')
+}
+
+ext.mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
+ext.username = System.getenv('MAVEN_USER') ?: ""
+ext.password = System.getenv('MAVEN_PASSWORD') ?: ""
+
+if (rootProject.ext.mavenUrl.isEmpty()) {
+    println "No custom MAVEN_PUBLIC_URL set, defaulting to Maven Central"
+} else {
+    println "MAVEN_PUBLIC_URL set"
 }
 
 jar {
@@ -55,14 +65,9 @@ springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
 }
 
-repositories {
-    mavenCentral()
-    maven { url = 'https://build.shibboleth.net/maven/releases' }
-}
-
 allprojects {
     group = 'stirling.software'
-    version = '2.2.1'
+    version = '2.4.1'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
@@ -97,12 +102,14 @@ def updateSimulationVersion(File fileToUpdate, String version) {
     writeIfChanged(fileToUpdate, updatedContent)
 }
 
+def rootProjectRef = project
+
 tasks.register('syncAppVersion') {
     group = 'versioning'
     description = 'Synchronizes app version across desktop and simulation configs.'
 
     doLast {
-        def appVersion = project.version.toString()
+        def appVersion = rootProjectRef.version.toString()
         println "Synchronizing application version to ${appVersion}"
         updateTauriConfigVersion(appVersion)
 
@@ -135,13 +142,27 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_17
     }
 
-     if (project.name != "stirling-pdf") {
+    if (project.name != "stirling-pdf") {
         bootJar {
             enabled = false
         }
-     }
+    }
 
     repositories {
+        if (!rootProject.ext.mavenUrl.isEmpty()) {
+            maven {
+                url = rootProject.ext.mavenUrl + '/releases'
+                credentials(PasswordCredentials) {
+                    username = rootProject.ext.username
+                    password = rootProject.ext.password
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
+                allowInsecureProtocol = true
+            }
+        }
+        maven { url = "https://build.shibboleth.net/maven/releases" }
         mavenCentral()
     }
 
@@ -378,8 +399,10 @@ tasks.withType(JavaCompile).configureEach {
 
 gradle.taskGraph.whenReady { graph ->
     if (project.hasProperty("noSpotless")) {
-        tasks.matching { it.name.startsWith("spotless") }.configureEach {
-            enabled = false
+        allprojects { scopedProject ->
+            scopedProject.tasks.matching { it.name.startsWith("spotless") }.configureEach {
+                enabled = false
+            }
         }
     }
 }

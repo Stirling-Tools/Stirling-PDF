@@ -306,6 +306,7 @@ selectOperation = "Odaberite Operaciju"
 addOperationButton = "Dodajte operaciju"
 pipelineHeader = "Cjevovod:"
 saveButton = "Preuzmi datoteku"
+saveForFolderScanning = "Spremi za skeniranje mape"
 validateButton = "Potvrdi"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Svojstvo"
 webBrowserSettings = "Postavka web-preglednika"
 syncToBrowser = "Sinkronizacija Račun -> Preglednik"
 syncToAccount = "Sinkronizacija Račun <- Preglednik"
+
+[account.mfa]
+title = "Dvofaktorska autentikacija"
+setupFailed = "Nije moguće započeti postavljanje dvofaktorske autentikacije. Pokušajte ponovno."
+codeRequired = "Unesite autentikacijski kod za nastavak."
+enabled = "Dvofaktorska autentikacija je omogućena."
+enableFailed = "Nije moguće omogućiti dvofaktorsku autentikaciju. Provjerite kod i pokušajte ponovno."
+disabled = "Dvofaktorska autentikacija je onemogućena."
+disableFailed = "Nije moguće onemogućiti dvofaktorsku autentikaciju. Provjerite kod i pokušajte ponovno."
+description = "Dodajte dodatni sloj sigurnosti svom računu."
+enableButton = "Omogući dvofaktorsku autentikaciju"
+disableButton = "Onemogući dvofaktorsku autentikaciju"
+setupTitle = "Postavite dvofaktorsku autentikaciju"
+setupDescription = "Skenirajte QR kod aplikacijom za autentikaciju, zatim unesite 6-znamenkasti kod za potvrdu."
+manualKey = "Ključ za ručno postavljanje"
+secretWarning = "Držite ovaj ključ privatnim. Svatko s pristupom može generirati valjane autentikacijske kodove."
+codePlaceholder = "Unesite 6-znamenkasti kod"
+confirmEnable = "Omogući"
+disableTitle = "Onemogućite dvofaktorsku autentikaciju"
+disableDescription = "Unesite valjani autentikacijski kod da biste onemogućili dvofaktorsku autentikaciju."
+codeLabel = "Autentikacijski kod"
+confirmDisable = "Onemogući"
+ssoDescription = "Za račune s jedinstvenom prijavom dvofaktorskom autentikacijom upravlja vaš davatelj identiteta."
+ssoManaged = "Konfigurirajte MFA putem svojeg davatelja identiteta."
 
 [adminUserSettings]
 title = "Postavka kontrole korisnika"
@@ -925,6 +950,7 @@ title = "Auto dijeli po veličini/broju"
 desc = "Podijelite jedan PDF na više dokumenata na temelju veličine, broja stranica ili broja dokumenata"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Zamijeni i invertiraj boju"
 desc = "Zamijenite ili invertirajte boje u PDF dokumentima"
 
@@ -939,18 +965,22 @@ title = "Auto skeniranje mapa"
 desc = "Poveznica na vodič za automatizirano skeniranje mapa"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO vodič"
 desc = "Poveznica na SSO vodič"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped postavljanje"
 desc = "Poveznica na vodič za air-gapped postavljanje"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Dodaj lozinku"
 desc = "Šifrirajte svoj PDF dokument lozinkom.."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Promjena dopuštenja"
 desc = "Promijenite ograničenja dokumenta i dopuštenja"
 
@@ -960,10 +990,12 @@ title = "Automatiziraj"
 desc = "Izgradite višekoračne tijekove rada povezivanjem PDF radnji. Idealno za ponavljajuće zadatke."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Preklapa PDF-ove na drugi PDF"
 title = "Preklapanje PDF-ova"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF uređivač teksta"
 desc = "Pregledajte i uredite Stirling PDF JSON izvoze s grupnim uređivanjem teksta i ponovnim generiranjem PDF-a"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Preuzmi HTML međudatoteku umjesto PDF-a"
 pdfaOptions = "PDF/A opcije"
 outputFormat = "Izlazni format"
 pdfaNote = "PDF/A-1b je kompatibilniji, PDF/A-2b podržava više značajki."
+pdfaFormat = "PDF/A format"
 pdfaDigitalSignatureWarning = "PDF sadrži digitalni potpis. U sledećem koraku će biti uklonjen."
+pdfxDigitalSignatureWarning = "PDF sadrži digitalni potpis. Bit će uklonjen u sljedećem koraku."
+pdfxDescription = "PDF/X je ISO standardni podskup PDF-a za pouzdani tisak i razmjenu grafike."
 fileFormat = "Format datoteke"
 wordDoc = "Word dokument"
 wordDocExt = "Word dokument (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI za renderiranje slike"
 cbrOptions = "CBR opcije"
 cbrOutputOptions = "Opcije PDF u CBR"
 cbrDpi = "DPI za renderiranje slike"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "Opcije eBook u PDF"
@@ -1396,6 +1435,7 @@ applySignatures = "Primijeni slike"
 name = "Slika"
 placeholder = "Učitaj sliku"
 label = "Datoteka slike"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Konfiguriraj sliku"
@@ -2191,6 +2231,16 @@ submit = "Pretvoriti"
 tip = "Trenutno ne radi za više unosa odjednom"
 outputFormat = "Izlazni format"
 pdfWithDigitalSignature = "PDF sadrži digitalni potpis. U sledećem koraku će biti uklonjen."
+
+[pdfToPDFX]
+tags = "tisak,standard,pretvorba,produkcija,priprema za tisak,arhiva"
+title = "PDF u PDF/X"
+header = "PDF u PDF/X"
+credit = "Ova usluga koristi Ghostscript za pretvorbu u PDF/X"
+submit = "Pretvori"
+tip = "Trenutačno ne radi s više ulaza odjednom"
+outputFormat = "Izlazni format"
+pdfWithDigitalSignature = "PDF sadrži digitalni potpis. Bit će uklonjen u sljedećem koraku."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformacija,format,konverzija,office,microsoft,docfile"
@@ -3148,6 +3198,18 @@ other = "Ostalo"
 perPageInfo = "Informacije po stranici"
 tableOfContents = "Sadržaj"
 
+[getPdfInfo.compliance]
+notDetected = "Nije otkriveno"
+passed = "Prošlo"
+failed = "Nije prošlo"
+compliant = "Sukladno"
+nonCompliant = "Nesukladno"
+none = "Nisu otkriveni standardi"
+passedCount = "prošlo"
+failedCount = "nije prošlo"
+noVerification = "Provjera nije izvršena"
+noVerificationDesc = "Usklađenost s PDF standardima nije provjerena za ovaj dokument."
+
 [getPdfInfo.other]
 attachments = "Privici"
 embeddedFiles = "Ugrađene datoteke"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} ograničenja"
 permsMixed = "Neke dozvole su ograničene"
 hasCompliance = "Ima standarde sukladnosti"
 noCompliance = "Nema standarda sukladnosti"
+compliancePassed = "U skladu s {{standards}}"
+complianceChecked = "Standardi provjereni ({{failed}} nije prošlo)"
 basic = "Osnovne informacije"
 documentInfo = "Informacije o dokumentu"
 securityTitle = "Status sigurnosti"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Lozinka je uspješno promijenjena! Prijavite se novom 
 credentialsUpdated = "Vaše vjerodajnice su ažurirane. Prijavite se ponovno."
 defaultCredentials = "Zadane vjerodajnice za prijavu"
 changePasswordWarning = "Promijenite lozinku nakon prve prijave"
+mfaRequired = "Potreban je dvofaktorski kod"
+mfaCode = "Autentikacijski kod"
+enterMfaCode = "Unesite 6-znamenkasti kod"
+mfaPromptTitle = "Dvofaktorska autentikacija"
+mfaPromptBody = "Unesite autentikacijski kod iz svoje aplikacije za autentikaciju za nastavak."
+verifyingMfa = "Provjera..."
+verifyMfa = "Provjeri kod"
 
 [login.slides.overview]
 alt = "Pregled Stirling PDF-a"
@@ -4319,6 +4390,10 @@ title = "Potreban je način prijave"
 message = "Način prijave mora biti omogućen za izmjenu administratorskih postavki. Postavite SECURITY_ENABLELOGIN=true u svom okruženju ili security.enableLogin: true u settings.yml, zatim ponovno pokrenite poslužitelj."
 readOnly = "Donje postavke prikazuju primjerne vrijednosti za referencu. Omogućite način prijave za pregled i uređivanje stvarne konfiguracije."
 
+[admin.settings.enterpriseRequired]
+title = "Potrebna je Enterprise licenca"
+message = "Za pristup {{featureName}} potrebna je Enterprise licenca. Prikazuju se ogledni podaci radi reference."
+
 [admin.settings.restart]
 title = "Potrebno ponovno pokretanje"
 message = "Postavke su uspješno spremljene. Potrebno je ponovno pokretanje poslužitelja da bi promjene stupile na snagu."
@@ -4457,6 +4532,13 @@ description = "Maksimalan broj neuspjelih pokušaja prijave prije zaključavanja
 [admin.settings.security.loginResetTimeMinutes]
 label = "Vrijeme resetiranja prijave (minute)"
 description = "Vrijeme prije resetiranja neuspjelih pokušaja prijave"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Onemogući zaštitu od CSRF-a"
@@ -4766,6 +4848,48 @@ description = "Prikaži detaljne poruke o pogreškama za korisnike."
 title = "Baza podataka"
 description = "Konfigurirajte prilagođene postavke povezivanja baze podataka za enterprise implementacije."
 configuration = "Konfiguracija baze podataka"
+backupTitle = "Sigurnosne kopije i vraćanje"
+backupDescription = "Upravljajte H2 sigurnosnim kopijama izravno iz administratorske konzole."
+loadError = "Učitavanje sigurnosnih kopija baze podataka nije uspjelo"
+backupCreated = "Sigurnosna kopija je uspješno izrađena"
+backupFailed = "Izrada sigurnosne kopije nije uspjela"
+deleteTitle = "Izbriši sigurnosnu kopiju"
+deleteConfirm = "Izbrisati ovu sigurnosnu kopiju? Ovo se ne može poništiti."
+deleteSuccess = "Sigurnosna kopija je izbrisana"
+deleteFailed = "Brisanje sigurnosne kopije nije uspjelo"
+deleteConfirmAction = "Izbriši sigurnosnu kopiju"
+downloadFailed = "Preuzimanje sigurnosne kopije nije uspjelo"
+version = "H2 verzija"
+embedded = "Ugrađeni H2"
+external = "Vanjska baza podataka"
+h2Only = "Sigurnosne kopije dostupne su samo za ugrađenu H2 bazu podataka."
+h2Hint = "Postavite vrstu baze podataka na H2 i onemogućite prilagođenu bazu podataka kako biste omogućili izradu i vraćanje sigurnosnih kopija."
+manageBackups = "Upravljaj sigurnosnim kopijama"
+refresh = "Osvježi"
+createBackup = "Izradi sigurnosnu kopiju"
+uploadTitle = "Prijenos i uvoz"
+chooseFile = "Odaberite .sql datoteku sigurnosne kopije"
+importFromUpload = "Uvezi preneseno"
+confirmImportTitle = "Potvrdite uvoz baze podataka"
+overwriteWarning = "Upozorenje: Ovo će prebrisati trenutačnu bazu podataka."
+overwriteWarningBody = "Svi postojeći podaci bit će zamijenjeni prenesenom sigurnosnom kopijom. Ova se radnja ne može poništiti."
+confirmCodeLabel = "Unesite potvrdni kod za nastavak"
+enterCode = "Unesite kod prikazan iznad"
+confirmImport = "Potvrdi uvoz"
+codeMismatch = "Potvrdni kod se ne podudara"
+codeMismatchBody = "Za nastavak unesite kod točno onako kako je prikazan."
+selectFile = "Odaberite .sql datoteku za uvoz"
+importSuccess = "Sigurnosna kopija je uspješno uvezena"
+importFailed = "Uvoz sigurnosne kopije nije uspio"
+noBackups = "Još nema sigurnosnih kopija."
+unavailable = "Popis sigurnosnih kopija nije dostupan za trenutačnu konfiguraciju baze podataka."
+fileName = "Datoteka"
+created = "Stvoreno"
+size = "Veličina"
+actions = "Radnje"
+download = "Preuzmi"
+import = "Uvezi"
+delete = "Izbriši"
 
 [admin.settings.database.enableCustom]
 label = "Omogući prilagođenu bazu podataka"
@@ -4843,6 +4967,26 @@ description = "Maksimalni DPI za obradu slika (0 = neograničeno)"
 [admin.settings.advanced.tessdataDir]
 label = "Direktorij tessdata"
 description = "Put do direktorija tessdata za OCR jezične datoteke"
+downloadMissingTitle = "Nije odabran nijedan jezik"
+downloadMissingBody = "Odaberite barem jedan jezik za preuzimanje."
+downloadSuccessTitle = "Jezici su preuzeti"
+downloadSuccessBody = "Odabrani tessdata jezici su spremljeni."
+downloadErrorTitle = "Preuzimanje nije uspjelo"
+loadingLanguages = "Učitavanje instaliranih tessdata jezika..."
+installedLanguages = "Instalirani tessdata jezici"
+noLanguages = "U konfiguriranom direktoriju nisu pronađeni tessdata jezici."
+downloadLabel = "Preuzmi dodatne tessdata jezike"
+downloadPlaceholder = "Odaberite jezike"
+downloadNothingFound = "Nisu pronađeni dodatni jezici"
+permissionNotice = "Putanja do tessdata nije zapisiva. Preuzimanja će se otvoriti u pregledniku; spremite .traineddata datoteke ručno u mapu tessdata."
+manualLinks = "Ručno preuzimanje: kliknite poveznice i stavite datoteke u mapu tessdata."
+downloadButton = "Preuzmi odabrane jezike"
+downloadInvalidTitle = "Neispravan odabir"
+downloadInvalidBody = "Neki odabrani jezici nisu dostupni za preuzimanje. Osvježite i odaberite s popisa."
+downloadErrorNetwork = "Preuzimanje nije uspjelo zbog mrežne pogreške. Provjerite vezu i pokušajte ponovno."
+downloadErrorServer = "Poslužitelj je naišao na pogrešku tijekom preuzimanja tessdata jezika. Pokušajte ponovno kasnije."
+downloadErrorPermission = "Direktorij tessdata nije zapisiv: {{message}}. Odaberite direktorij s mogućnošću upisa (npr. unutar mape podataka aplikacije) ili prilagodite dopuštenja."
+downloadErrorGeneric = "Preuzimanje nije uspjelo: {{message}}. Pokušajte ponovno kasnije."
 
 [admin.settings.advanced.disableSanitize]
 label = "Onemogući sanitizaciju HTML-a"
@@ -5346,6 +5490,7 @@ desc = "Izgradite višekoračne tijekove rada povezivanjem PDF radnji. Idealno z
 invalidStep = "Nevažeći korak"
 reviewTitle = "Rezultati automatizacije"
 copyToSaved = "Kopiraj u spremljeno"
+exportForFolderScanning = "Izvoz za skeniranje mape"
 
 [automate.files]
 placeholder = "Odaberite datoteke za obradu ovom automatizacijom"
@@ -5367,6 +5512,7 @@ createTitle = "Stvori automatizaciju"
 editTitle = "Uredi automatizaciju"
 intro = "Automatizacije pokreću alate sekvencijalno. Za početak dodajte alate redoslijedom kojim želite da se izvršavaju."
 save = "Spremi automatizaciju"
+exportForFolderScanning = "Izvoz za skeniranje mape"
 
 [automate.creation.name]
 label = "Naziv automatizacije"
@@ -5741,9 +5887,11 @@ username = "Korisničko ime (e-pošta)"
 usernamePlaceholder = "user@example.com"
 password = "Lozinka"
 passwordPlaceholder = "Unesite lozinku"
+passwordRequired = "Lozinka je obavezna"
 role = "Uloga"
 team = "Tim (neobavezno)"
 teamPlaceholder = "Odaberite tim"
+authType = "Vrsta autentikacije"
 forcePasswordChange = "Prisili promjenu lozinke pri prvoj prijavi"
 cancel = "Odustani"
 submit = "Dodaj člana"
@@ -5751,6 +5899,13 @@ usernameRequired = "Potrebni su korisničko ime i lozinka"
 passwordTooShort = "Lozinka mora imati najmanje 6 znakova"
 success = "Korisnik je uspješno stvoren"
 error = "Stvaranje korisnika nije uspjelo"
+forceMFA = "Nametni postavljanje MFA pri sljedećoj prijavi"
+
+[workspace.people.authType]
+password = "Lozinka"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Korisnik će se autentificirati putem SSO pružatelja"
 
 [workspace.people.editMember]
 title = "Uredi člana"
@@ -5853,6 +6008,11 @@ fromLicense = "iz licence"
 slotsAvailable = "{{count}} slobodnih korisničkih mjesta"
 noSlotsAvailable = "Nema dostupnih mjesta"
 currentUsage = "Trenutno se koristi {{current}} od {{max}} korisničkih licenci"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA je uspješno onemogućena za korisnika"
+adminDisableError = "Onemogućavanje MFA za korisnika nije uspjelo"
+disableByAdmin = "Onemogući MFA"
 
 [workspace.teams]
 title = "Timovi"
@@ -6296,6 +6456,7 @@ endpoint = "Krajnja točka"
 visits = "Posjete"
 percentage = "Postotak"
 noData = "Podaci nisu dostupni"
+unknownEndpoint = "Nepoznata krajnja točka"
 
 [backendHealth]
 checking = "Provjera statusa pozadinskog sustava..."

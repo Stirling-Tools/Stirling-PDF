@@ -306,6 +306,7 @@ selectOperation = "Vybrat operaci"
 addOperationButton = "Přidat operaci"
 pipelineHeader = "Pipeline:"
 saveButton = "Stáhnout"
+saveForFolderScanning = "Uložit pro skenování složky"
 validateButton = "Ověřit"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Vlastnost"
 webBrowserSettings = "Nastavení webového prohlížeče"
 syncToBrowser = "Synchronizovat účet -> prohlížeč"
 syncToAccount = "Synchronizovat účet <- prohlížeč"
+
+[account.mfa]
+title = "Dvoufázové ověření"
+setupFailed = "Nelze zahájit nastavení dvoufázového ověření. Zkuste to prosím znovu."
+codeRequired = "Pro pokračování zadejte ověřovací kód."
+enabled = "Dvoufázové ověření povoleno."
+enableFailed = "Dvoufázové ověření se nepodařilo povolit. Zkontrolujte kód a zkuste to znovu."
+disabled = "Dvoufázové ověření zakázáno."
+disableFailed = "Dvoufázové ověření se nepodařilo zakázat. Zkontrolujte kód a zkuste to znovu."
+description = "Přidejte k účtu další vrstvu zabezpečení."
+enableButton = "Povolit dvoufázové ověření"
+disableButton = "Zakázat dvoufázové ověření"
+setupTitle = "Nastavit dvoufázové ověření"
+setupDescription = "Naskenujte QR kód ve své ověřovací aplikaci a poté pro potvrzení zadejte 6místný kód."
+manualKey = "Klíč pro ruční nastavení"
+secretWarning = "Tento klíč uchovávejte v soukromí. Kdokoli s přístupem může generovat platné ověřovací kódy."
+codePlaceholder = "Zadejte 6místný kód"
+confirmEnable = "Povolit"
+disableTitle = "Zakázat dvoufázové ověření"
+disableDescription = "Zadejte platný ověřovací kód pro zakázání dvoufázového ověření."
+codeLabel = "Ověřovací kód"
+confirmDisable = "Zakázat"
+ssoDescription = "U účtů s jednotným přihlášením je dvoufázové ověření spravováno vaším poskytovatelem identity."
+ssoManaged = "Nastavte MFA prostřednictvím svého poskytovatele identity."
 
 [adminUserSettings]
 title = "Nastavení správy uživatelů"
@@ -925,6 +950,7 @@ title = "Automaticky rozdělit podle velikosti/počtu"
 desc = "Rozdělí jeden PDF na více dokumentů podle velikosti, počtu stránek nebo počtu dokumentů"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Nahradit a invertovat barvy"
 desc = "Nahradit nebo invertovat barvy v dokumentech PDF"
 
@@ -939,18 +965,22 @@ title = "Autom. skenování složek"
 desc = "Odkaz na průvodce automatizovaným skenováním složek"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Průvodce SSO"
 desc = "Odkaz na průvodce SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Offline nastavení"
 desc = "Odkaz na průvodce nastavením v odpojeném prostředí"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Přidat heslo"
 desc = "Zašifrovat váš PDF dokument heslem."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Změnit oprávnění"
 desc = "Změnit omezení a oprávnění dokumentu"
 
@@ -960,10 +990,12 @@ title = "Automatizace"
 desc = "Vytvářejte vícekrokové workflow řetězením akcí PDF. Ideální pro opakující se úlohy."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Překryje PDF nad jiným PDF"
 title = "Překrýt PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor textu PDF"
 desc = "Prohlížejte a upravujte exporty JSON ze Stirling PDF se skupinovými úpravami textu a regenerací PDF"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Stáhnout HTML mezisoubor místo PDF"
 pdfaOptions = "Možnosti PDF/A"
 outputFormat = "Výstupní formát"
 pdfaNote = "PDF/A-1b je kompatibilnější, PDF/A-2b podporuje více funkcí."
+pdfaFormat = "Formát PDF/A"
 pdfaDigitalSignatureWarning = "PDF obsahuje digitální podpis, který bude v dalším kroku odstraněn."
+pdfxDigitalSignatureWarning = "PDF obsahuje digitální podpis. Ten bude v dalším kroku odstraněn."
+pdfxDescription = "PDF/X je podmnožina PDF dle standardu ISO pro spolehlivý tisk a výměnu grafiky."
 fileFormat = "Formát souboru"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
@@ -1295,6 +1330,10 @@ cbzDpi = "DPI pro vykreslení obrázků"
 cbrOptions = "CBR Options"
 cbrOutputOptions = "PDF to CBR Options"
 cbrDpi = "DPI for image rendering"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -1396,6 +1435,7 @@ applySignatures = "Použít obrázky"
 name = "Obrázek"
 placeholder = "Nahrajte obrázek"
 label = "Soubor obrázku"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Nastavit obrázek"
@@ -2191,6 +2231,16 @@ submit = "Převést"
 tip = "Momentálně nefunguje pro více vstupů najednou"
 outputFormat = "Výstupní formát"
 pdfWithDigitalSignature = "PDF obsahuje digitální podpis, který bude v dalším kroku odstraněn."
+
+[pdfToPDFX]
+tags = "tisk,standard,konverze,produkce,předtisk,archiv"
+title = "PDF na PDF/X"
+header = "PDF na PDF/X"
+credit = "Tato služba používá Ghostscript pro převod na PDF/X"
+submit = "Převést"
+tip = "Aktuálně nefunguje pro více vstupů najednou"
+outputFormat = "Výstupní formát"
+pdfWithDigitalSignature = "PDF obsahuje digitální podpis. Ten bude v dalším kroku odstraněn."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,transformace,formát,převod,office,microsoft,docfile"
@@ -3148,6 +3198,18 @@ other = "Ostatní"
 perPageInfo = "Informace po stránkách"
 tableOfContents = "Obsah"
 
+[getPdfInfo.compliance]
+notDetected = "Nezjištěno"
+passed = "Prošlo"
+failed = "Neprošlo"
+compliant = "V souladu"
+nonCompliant = "Není v souladu"
+none = "Nezjištěny žádné standardy"
+passedCount = "prošlo"
+failedCount = "neprošlo"
+noVerification = "Ověření neproběhlo"
+noVerificationDesc = "Shoda se standardy PDF nebyla pro tento dokument ověřena."
+
 [getPdfInfo.other]
 attachments = "Přílohy"
 embeddedFiles = "Vložené soubory"
@@ -3179,6 +3241,8 @@ permsRestricted = "{{count}} omezení"
 permsMixed = "Některá oprávnění jsou omezena"
 hasCompliance = "Obsahuje standardy shody"
 noCompliance = "Žádné standardy shody"
+compliancePassed = "V souladu s {{standards}}"
+complianceChecked = "Standardy ověřeny ({{failed}} neprošlo)"
 basic = "Základní informace"
 documentInfo = "Informace o dokumentu"
 securityTitle = "Stav zabezpečení"
@@ -3718,6 +3782,13 @@ passwordChangedSuccess = "Heslo bylo úspěšně změněno! Přihlaste se novým
 credentialsUpdated = "Vaše přihlašovací údaje byly aktualizovány. Přihlaste se prosím znovu."
 defaultCredentials = "Výchozí přihlašovací údaje"
 changePasswordWarning = "Po prvním přihlášení si prosím změňte heslo"
+mfaRequired = "Je vyžadován kód pro dvoufázové ověření"
+mfaCode = "Ověřovací kód"
+enterMfaCode = "Zadejte 6místný kód"
+mfaPromptTitle = "Dvoufázové ověření"
+mfaPromptBody = "Pro pokračování zadejte ověřovací kód ze své ověřovací aplikace."
+verifyingMfa = "Ověřování..."
+verifyMfa = "Ověřit kód"
 
 [login.slides.overview]
 alt = "Přehled Stirling PDF"
@@ -4319,6 +4390,10 @@ title = "Vyžadován režim přihlášení"
 message = "Režim přihlášení musí být povolen, abyste mohli upravovat nastavení správce. Nastavte prosím SECURITY_ENABLELOGIN=true ve vašem prostředí nebo security.enableLogin: true v souboru settings.yml a poté restartujte server."
 readOnly = "Níže uvedená nastavení zobrazují vzorové hodnoty pro orientaci. Povolte režim přihlášení pro zobrazení a úpravu skutečné konfigurace."
 
+[admin.settings.enterpriseRequired]
+title = "Je vyžadována licence Enterprise"
+message = "Pro přístup k {{featureName}} je vyžadována licence Enterprise. Zobrazená data jsou pouze ukázková."
+
 [admin.settings.restart]
 title = "Vyžadován restart"
 message = "Nastavení byla úspěšně uložena. Aby se změny projevily, je vyžadován restart serveru."
@@ -4457,6 +4532,13 @@ description = "Maximální počet neúspěšných pokusů o přihlášení před
 [admin.settings.security.loginResetTimeMinutes]
 label = "Čas pro reset přihlášení (minuty)"
 description = "Doba, po které se neúspěšné pokusy o přihlášení resetují"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Zakázat ochranu CSRF"
@@ -4766,6 +4848,48 @@ description = "Zobrazit podrobná chybová hlášení pro uživatele."
 title = "Databáze"
 description = "Nakonfigurujte vlastní nastavení připojení k databázi pro podniková nasazení."
 configuration = "Konfigurace databáze"
+backupTitle = "Zálohy a obnovení"
+backupDescription = "Spravujte zálohy H2 přímo z administrátorské konzole."
+loadError = "Nepodařilo se načíst zálohy databáze"
+backupCreated = "Záloha byla úspěšně vytvořena"
+backupFailed = "Nepodařilo se vytvořit zálohu"
+deleteTitle = "Smazat zálohu"
+deleteConfirm = "Smazat tuto zálohu? Tuto akci nelze vrátit zpět."
+deleteSuccess = "Záloha byla smazána"
+deleteFailed = "Nepodařilo se smazat zálohu"
+deleteConfirmAction = "Smazat zálohu"
+downloadFailed = "Nepodařilo se stáhnout zálohu"
+version = "Verze H2"
+embedded = "Vestavěná H2"
+external = "Externí DB"
+h2Only = "Zálohy jsou dostupné pouze pro vestavěnou databázi H2."
+h2Hint = "Nastavte typ databáze na H2 a zakažte vlastní databázi, aby bylo možné zálohování a obnovu."
+manageBackups = "Spravovat zálohy"
+refresh = "Obnovit"
+createBackup = "Vytvořit zálohu"
+uploadTitle = "Nahrát a importovat"
+chooseFile = "Vyberte soubor zálohy .sql"
+importFromUpload = "Importovat nahraný soubor"
+confirmImportTitle = "Potvrdit import databáze"
+overwriteWarning = "Varování: Tímto přepíšete aktuální databázi."
+overwriteWarningBody = "Všechna existující data budou nahrazena nahranou zálohou. Tuto akci nelze vrátit zpět."
+confirmCodeLabel = "Pro pokračování zadejte potvrzovací kód"
+enterCode = "Zadejte kód zobrazený výše"
+confirmImport = "Potvrdit import"
+codeMismatch = "Potvrzovací kód nesouhlasí"
+codeMismatchBody = "Pro pokračování zadejte kód přesně tak, jak je zobrazen."
+selectFile = "Vyberte soubor .sql k importu"
+importSuccess = "Záloha byla úspěšně importována"
+importFailed = "Nepodařilo se importovat zálohu"
+noBackups = "Zatím nebyly nalezeny žádné zálohy."
+unavailable = "Seznam záloh není k dispozici pro aktuální konfiguraci databáze."
+fileName = "Soubor"
+created = "Vytvořeno"
+size = "Velikost"
+actions = "Akce"
+download = "Stáhnout"
+import = "Importovat"
+delete = "Smazat"
 
 [admin.settings.database.enableCustom]
 label = "Povolit vlastní databázi"
@@ -4843,6 +4967,26 @@ description = "Maximální DPI pro zpracování obrázků (0 = neomezeně)"
 [admin.settings.advanced.tessdataDir]
 label = "Adresář tessdata"
 description = "Cesta k adresáři tessdata pro jazykové soubory OCR"
+downloadMissingTitle = "Není vybrán žádný jazyk"
+downloadMissingBody = "Vyberte alespoň jeden jazyk ke stažení."
+downloadSuccessTitle = "Jazyky staženy"
+downloadSuccessBody = "Vybrané jazyky tessdata byly uloženy."
+downloadErrorTitle = "Stažení se nezdařilo"
+loadingLanguages = "Načítání nainstalovaných jazyků tessdata..."
+installedLanguages = "Nainstalované jazyky tessdata"
+noLanguages = "V nakonfigurovaném adresáři nebyly nalezeny žádné jazyky tessdata."
+downloadLabel = "Stáhnout další jazyky tessdata"
+downloadPlaceholder = "Vyberte jazyky"
+downloadNothingFound = "Nebyly nalezeny žádné další jazyky"
+permissionNotice = "Cesta k tessdata není zapisovatelná. Stažení se otevře v prohlížeči; soubory .traineddata prosím uložte ručně do složky tessdata."
+manualLinks = "Ruční stažení: klikněte na odkazy a umístěte soubory do složky tessdata."
+downloadButton = "Stáhnout vybrané jazyky"
+downloadInvalidTitle = "Neplatný výběr"
+downloadInvalidBody = "Některé vybrané jazyky nejsou k dispozici ke stažení. Obnovte prosím a vyberte ze seznamu."
+downloadErrorNetwork = "Stažení selhalo kvůli chybě sítě. Zkontrolujte prosím své připojení a zkuste to znovu."
+downloadErrorServer = "Při stahování jazyků tessdata došlo na serveru k chybě. Zkuste to prosím později."
+downloadErrorPermission = "Adresář tessdata není zapisovatelný: {{message}}. Vyberte prosím zapisovatelný adresář (např. v adresáři dat aplikace) nebo upravte oprávnění."
+downloadErrorGeneric = "Stažení selhalo: {{message}}. Zkuste to prosím později."
 
 [admin.settings.advanced.disableSanitize]
 label = "Zakázat sanitizaci HTML"
@@ -5346,6 +5490,7 @@ desc = "Vytvářejte vícekrokové pracovní postupy řetězením akcí PDF. Ide
 invalidStep = "Neplatný krok"
 reviewTitle = "Výsledky automatizace"
 copyToSaved = "Zkopírovat do uložených"
+exportForFolderScanning = "Export pro skenování složky"
 
 [automate.files]
 placeholder = "Vyberte soubory pro zpracování touto automatizací"
@@ -5367,6 +5512,7 @@ createTitle = "Vytvořit automatizaci"
 editTitle = "Upravit automatizaci"
 intro = "Automatizace spouštějí nástroje postupně. Začněte přidáním nástrojů v pořadí, v jakém je chcete spustit."
 save = "Uložit automatizaci"
+exportForFolderScanning = "Export pro skenování složky"
 
 [automate.creation.name]
 label = "Název automatizace"
@@ -5741,9 +5887,11 @@ username = "Uživatelské jméno (e‑mail)"
 usernamePlaceholder = "uzivatel@priklad.cz"
 password = "Heslo"
 passwordPlaceholder = "Zadejte heslo"
+passwordRequired = "Heslo je povinné"
 role = "Role"
 team = "Tým (volitelné)"
 teamPlaceholder = "Vyberte tým"
+authType = "Typ ověřování"
 forcePasswordChange = "Vynutit změnu hesla při prvním přihlášení"
 cancel = "Zrušit"
 submit = "Přidat člena"
@@ -5751,6 +5899,13 @@ usernameRequired = "Uživatelské jméno a heslo jsou povinné"
 passwordTooShort = "Heslo musí mít alespoň 6 znaků"
 success = "Uživatel úspěšně vytvořen"
 error = "Nepodařilo se vytvořit uživatele"
+forceMFA = "Vynutit nastavení MFA při příštím přihlášení"
+
+[workspace.people.authType]
+password = "Heslo"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Uživatel se bude ověřovat přes poskytovatele SSO"
 
 [workspace.people.editMember]
 title = "Upravit člena"
@@ -5853,6 +6008,11 @@ fromLicense = "z licence"
 slotsAvailable = "{{count}} míst pro uživatele k dispozici"
 noSlotsAvailable = "Žádná volná místa"
 currentUsage = "Aktuálně používáte {{current}} z {{max}} uživatelských licencí"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA bylo u uživatele úspěšně zakázáno"
+adminDisableError = "Nepodařilo se zakázat MFA u uživatele"
+disableByAdmin = "Zakázat MFA"
 
 [workspace.teams]
 title = "Týmy"
@@ -6296,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Návštěvy"
 percentage = "Procenta"
 noData = "Žádná data nejsou k dispozici"
+unknownEndpoint = "Neznámý koncový bod"
 
 [backendHealth]
 checking = "Kontrola stavu backendu..."
