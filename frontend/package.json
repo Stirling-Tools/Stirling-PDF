@@ -159,7 +159,7 @@
     "postcss-simple-vars": "^7.0.1",
     "puppeteer": "^24.25.0",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.44.1",
+    "typescript-eslint": "^8.54.0",
     "vite": "^7.1.7",
     "vite-plugin-static-copy": "^3.1.4",
     "vite-tsconfig-paths": "^5.1.4",
