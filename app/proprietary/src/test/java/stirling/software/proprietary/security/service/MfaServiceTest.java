@@ -1,7 +1,11 @@
 package stirling.software.proprietary.security.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,14 +27,20 @@ class MfaServiceTest {
     @Test
     void setSecretStoresSecretAndDisablesMfa() throws Exception {
         User user = new User();
+        user.setId(1L);
         user.getSettings().put(MfaService.MFA_LAST_USED_STEP_KEY, "10");
+        when(userRepository.findByIdWithSettingsForUpdate(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         mfaService.setSecret(user, "NEWSECRET");
 
         assertEquals("NEWSECRET", user.getSettings().get(MfaService.MFA_SECRET_KEY));
         assertEquals("false", user.getSettings().get(MfaService.MFA_ENABLED_KEY));
-        assertNull(user.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY));
+        assertEquals("10", user.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY));
+        verify(userRepository)
+                .deleteSettingsByUserIdAndKeys(
+                        eq(1L),
+                        eq(List.of(MfaService.MFA_SECRET_KEY, MfaService.MFA_LAST_USED_STEP_KEY)));
         verify(databaseService).exportDatabase();
     }
 
@@ -48,15 +58,21 @@ class MfaServiceTest {
     @Test
     void disableMfaClearsSecretAndUsage() throws Exception {
         User user = new User();
+        user.setId(1L);
         user.getSettings().put(MfaService.MFA_SECRET_KEY, "SECRET");
         user.getSettings().put(MfaService.MFA_LAST_USED_STEP_KEY, "20");
+        when(userRepository.findByIdWithSettingsForUpdate(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         mfaService.disableMfa(user);
 
         assertEquals("false", user.getSettings().get(MfaService.MFA_ENABLED_KEY));
-        assertNull(user.getSettings().get(MfaService.MFA_SECRET_KEY));
-        assertNull(user.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY));
+        assertEquals("SECRET", user.getSettings().get(MfaService.MFA_SECRET_KEY));
+        assertEquals("20", user.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY));
+        verify(userRepository)
+                .deleteSettingsByUserIdAndKeys(
+                        eq(1L),
+                        eq(List.of(MfaService.MFA_SECRET_KEY, MfaService.MFA_LAST_USED_STEP_KEY)));
         verify(databaseService).exportDatabase();
     }
 
@@ -122,15 +138,21 @@ class MfaServiceTest {
     @Test
     void clearPendingSecretResetsValues() throws Exception {
         User user = new User();
+        user.setId(1L);
         user.getSettings().put(MfaService.MFA_SECRET_KEY, "SECRET");
         user.getSettings().put(MfaService.MFA_LAST_USED_STEP_KEY, "12");
+        when(userRepository.findByIdWithSettingsForUpdate(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         mfaService.clearPendingSecret(user);
 
         assertEquals("false", user.getSettings().get(MfaService.MFA_ENABLED_KEY));
-        assertNull(user.getSettings().get(MfaService.MFA_SECRET_KEY));
-        assertNull(user.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY));
+        assertEquals("SECRET", user.getSettings().get(MfaService.MFA_SECRET_KEY));
+        assertEquals("12", user.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY));
+        verify(userRepository)
+                .deleteSettingsByUserIdAndKeys(
+                        eq(1L),
+                        eq(List.of(MfaService.MFA_SECRET_KEY, MfaService.MFA_LAST_USED_STEP_KEY)));
         verify(databaseService).exportDatabase();
     }
 
