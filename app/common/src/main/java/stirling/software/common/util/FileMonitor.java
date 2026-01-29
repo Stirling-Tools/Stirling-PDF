@@ -29,7 +29,7 @@ public class FileMonitor {
     private final ConcurrentHashMap.KeySetView<Path, Boolean> readyForProcessingFiles;
     private final WatchService watchService;
     private final Predicate<Path> pathFilter;
-    private final Path rootDir;
+    private final List<Path> rootDirs;
     private Set<Path> stagingFiles;
 
     /**
@@ -47,8 +47,28 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
-        log.info("Monitoring directory: {}", runtimePathConfig.getPipelineWatchedFoldersPath());
-        this.rootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath());
+
+        List<String> watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
+        List<Path> validRootDirs = new ArrayList<>();
+
+        for (String pathStr : watchedFoldersDirs) {
+            try {
+                Path path = Path.of(pathStr);
+                validRootDirs.add(path);
+                log.info("Monitoring directory: {}", path);
+            } catch (Exception e) {
+                log.error(
+                        "Failed to initialize monitoring for path '{}': {}",
+                        pathStr,
+                        e.getMessage());
+            }
+        }
+
+        this.rootDirs = Collections.unmodifiableList(validRootDirs);
+
+        if (this.rootDirs.isEmpty()) {
+            log.error("No valid directories to monitor - FileMonitor will not function");
+        }
     }
 
     private boolean shouldNotProcess(Path path) {
@@ -85,13 +105,15 @@ public class FileMonitor {
         readyForProcessingFiles.clear();
 
         if (path2KeyMapping.isEmpty()) {
-            log.warn("not monitoring any directory, even the root directory itself: {}", rootDir);
-            if (Files.exists(
-                    rootDir)) { // if the root directory exists, re-register the root directory
-                try {
-                    recursivelyRegisterEntry(rootDir);
-                } catch (IOException e) {
-                    log.error("unable to register monitoring", e);
+            log.warn("Not monitoring any directories; attempting to re-register root paths.");
+            for (Path rootDir : rootDirs) {
+                if (Files.exists(
+                        rootDir)) { // if the root directory exists, re-register the root directory
+                    try {
+                        recursivelyRegisterEntry(rootDir);
+                    } catch (IOException e) {
+                        log.error("unable to register monitoring for {}", rootDir, e);
+                    }
                 }
             }
         }
