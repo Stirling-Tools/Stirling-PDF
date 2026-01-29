@@ -952,6 +952,7 @@ title = "Automaticky rozdělit podle velikosti/počtu"
 desc = "Rozdělí jeden PDF na více dokumentů podle velikosti, počtu stránek nebo počtu dokumentů"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Nahradit a invertovat barvy"
 desc = "Nahradit nebo invertovat barvy v dokumentech PDF"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Autom. skenování složek"
 desc = "Odkaz na průvodce automatizovaným skenováním složek"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Průvodce SSO"
 desc = "Odkaz na průvodce SSO"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Offline nastavení"
 desc = "Odkaz na průvodce nastavením v odpojeném prostředí"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Přidat heslo"
 desc = "Zašifrovat váš PDF dokument heslem."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Změnit oprávnění"
 desc = "Změnit omezení a oprávnění dokumentu"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Automatizace"
 desc = "Vytvářejte vícekrokové workflow řetězením akcí PDF. Ideální pro opakující se úlohy."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Překryje PDF nad jiným PDF"
 title = "Překrýt PDF"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor textu PDF"
 desc = "Prohlížejte a upravujte exporty JSON ze Stirling PDF se skupinovými úpravami textu a regenerací PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Maximální počet neúspěšných pokusů o přihlášení před
 [admin.settings.security.loginResetTimeMinutes]
 label = "Čas pro reset přihlášení (minuty)"
 description = "Doba, po které se neúspěšné pokusy o přihlášení resetují"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Zakázat ochranu CSRF"

@@ -952,6 +952,7 @@ title = "根據大小/數量自動分割"
 desc = "根據大小、頁數或文件數將單一 PDF 分割為多個文件"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "取代與反轉顏色"
 desc = "在 PDF 文件中取代或反轉顏色"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "自動化資料夾掃描"
 desc = "連結至自動化資料夾掃描指南"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO 指南"
 desc = "連結至 SSO 指南"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "隔離網路設定"
 desc = "連結至隔離網路設定指南"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "新增密碼"
 desc = "用密碼加密您的 PDF 檔案。"
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "變更權限"
 desc = "變更文件限制與權限"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "自動化"
 desc = "將多個 PDF 動作串接，建立多步驟工作流程。適合重複性工作。"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "將 PDF 覆蓋在另一個 PDF 上"
 title = "覆蓋 PDF"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF 文字編輯器"
 desc = "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "帳戶被鎖定前允許的最大登入失敗次數"
 [admin.settings.security.loginResetTimeMinutes]
 label = "登入重設時間（分鐘）"
 description = "登入失敗次數重設所需的時間"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "停用 CSRF 保護"

@@ -952,6 +952,7 @@ title = "自动根据大小/数目拆分 PDF"
 desc = "将单个 PDF 拆分为多个文档，基于大小、页数或文档数"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "替换和反转颜色"
 desc = "替换或反转 PDF 文档中的颜色"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "自动文件夹扫描"
 desc = "跳转至自动文件夹扫描指南"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO 指南"
 desc = "跳转至 SSO 指南"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "离线/隔离部署"
 desc = "跳转至隔离部署指南"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "添加密码"
 desc = "使用密码对 PDF 文档进行加密。"
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "更改权限"
 desc = "更改文档限制与权限"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "自动化"
 desc = "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "将一个 PDF 叠加在另一个之上"
 title = "叠加 PDF"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF 文本编辑器"
 desc = "审阅并编辑 Stirling PDF 导出的 JSON，支持分组文本编辑并重新生成 PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "达到该失败次数后将锁定账户"
 [admin.settings.security.loginResetTimeMinutes]
 label = "登录重置时间（分钟）"
 description = "重置失败尝试计数的时间"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "禁用CSRF保护"

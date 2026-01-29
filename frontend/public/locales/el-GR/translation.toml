@@ -952,6 +952,7 @@ title = "Αυτόματο σπάσιμο με μέγεθος/σελ."
 desc = "Διαχωρισμός ενός PDF σε πολλαπλά έγγραφα βάσει μεγέθους, αριθμού σελίδων ή αριθμού εγγράφων"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Αλλαγή & αντιστροφή χρώματος"
 desc = "Αντικαταστήστε ή αντιστρέψτε χρώματα σε έγγραφα PDF"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Αυτόματη σάρωση φακέλων"
 desc = "Σύνδεσμος προς τον οδηγό αυτοματοποιημένης σάρωσης φακέλων"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Οδηγός SSO"
 desc = "Σύνδεσμος προς τον οδηγό SSO"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Ρύθμιση Air-gapped"
 desc = "Σύνδεσμος προς τον οδηγό ρύθμισης Air-gapped"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Προσθήκη κωδικού"
 desc = "Κρυπτογράφηση του εγγράφου PDF με κωδικό."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Αλλαγή δικαιωμάτων"
 desc = "Αλλαγή περιορισμών και δικαιωμάτων εγγράφου"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Αυτοματοποίηση"
 desc = "Δημιουργήστε ροές πολλών βημάτων συνδέοντας ενέργειες PDF. Ιδανικό για επαναλαμβανόμενες εργασίες."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Επικάλυψη PDF πάνω σε άλλο PDF"
 title = "Επικάλυψη PDF"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Επεξεργαστής κειμένου PDF"
 desc = "Επιθεωρήστε και επεξεργαστείτε εξαγωγές JSON του Stirling PDF με ομαδοποιημένη επεξεργασία κειμένου και αναδημιουργία PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Μέγιστος αριθμός αποτυχημένων προσ
 [admin.settings.security.loginResetTimeMinutes]
 label = "Χρόνος επαναφοράς σύνδεσης (λεπτά)"
 description = "Χρόνος πριν μηδενιστούν οι αποτυχημένες προσπάθειες σύνδεσης"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Απενεργοποίηση προστασίας CSRF"

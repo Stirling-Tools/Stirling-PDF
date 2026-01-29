@@ -952,6 +952,7 @@ title = "Авторазбить по размеру/стр."
 desc = "Разделяет один PDF на несколько документов на основе размера, количества страниц или количества документов"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Заменить и инвертировать цвет"
 desc = "Заменяйте или инвертируйте цвета в PDF-документах"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Автосканирование папок"
 desc = "Ссылка на руководство по автоматическому сканированию папок"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Руководство по SSO"
 desc = "Ссылка на руководство по SSO"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Изолированная установка"
 desc = "Ссылка на руководство по изолированной установке"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Добавить пароль"
 desc = "Зашифруйте ваш PDF-документ паролем."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Изменить разрешения"
 desc = "Изменение ограничений и разрешений документа"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Автоматизация"
 desc = "Создавайте многошаговые процессы, связывая PDF-действия. Идеально для повторяющихся задач."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Наложить один PDF поверх другого"
 title = "Наложение PDF"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Редактор текста в PDF"
 desc = "Просмотр и редактирование экспортов Stirling PDF в JSON с групповым редактированием текста и регенерацией PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Максимальное число неудачных попыт
 [admin.settings.security.loginResetTimeMinutes]
 label = "Время сброса попыток (минуты)"
 description = "Время до сброса счетчика неудачных попыток входа"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Отключить защиту CSRF"

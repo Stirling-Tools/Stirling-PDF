@@ -952,6 +952,7 @@ title = "Say/Ölçüyə Əsasən Avtomatik Ayır"
 desc = "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Rəngi əvəz et və invert et"
 desc = "PDF sənədlərində rəngləri əvəz edin və ya invert edin"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Avtomatik qovluq skanı"
 desc = "Avtomatlaşdırılmış qovluq skan təlimatına keçid"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO təlimatı"
 desc = "SSO təlimatına keçid"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Şəbəkəsiz quraşdırma"
 desc = "Təcrid edilmiş quraşdırma təlimatına keçid"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Şifr Əlavə Et"
 desc = "Sənədini şifr ilə kilidlə."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "İcazələri Dəyişdir"
 desc = "Sənəd məhdudiyyətlərini və icazələrini dəyişin"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Avtomatlaşdır"
 desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları qurun. Təkrarlanan tapşırıqlar üçün idealdır."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Bir PDF-i digərinin üstünə qoyur"
 title = "Üst-Üstə Qoy"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Mətn Redaktoru"
 desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Hesabın bloklanmasından əvvəl maksimal uğursuz giriş cəhdl
 [admin.settings.security.loginResetTimeMinutes]
 label = "Girişi sıfırlama vaxtı (dəqiqə)"
 description = "Uğursuz giriş cəhdlərinin sıfırlanmasına qədər olan vaxt"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF mühafizəsini söndür"

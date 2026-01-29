@@ -952,6 +952,7 @@ title = "Автоподіл за розміром/стор."
 desc = "Розділяє один PDF на кілька документів на основі розміру, кількості сторінок або кількості документів"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Замінити й інвертувати колір"
 desc = "Замінювати або інвертувати кольори в PDF-документах"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Автоматичне сканування папок"
 desc = "Посилання на посібник із автоматичного сканування папок"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Посібник з SSO"
 desc = "Посилання на посібник з SSO"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Ізольоване розгортання"
 desc = "Посилання на посібник з налаштування ізольованого середовища"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Додати пароль"
 desc = "Зашифруйте документ PDF паролем."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Змінити дозволи"
 desc = "Змінити обмеження та дозволи документа"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Автоматизація"
 desc = "Створюйте багатокрокові робочі процеси, поєднуючи дії з PDF. Ідеально для повторюваних завдань."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Накладення одного PDF поверх іншого PDF"
 title = "Накладення PDF"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Редактор тексту PDF"
 desc = "Переглядайте й редагуйте JSON-експорти Stirling PDF з груповим редагуванням тексту та повторною генерацією PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Максимальна кількість невдалих спр
 [admin.settings.security.loginResetTimeMinutes]
 label = "Час скидання спроб (хвилини)"
 description = "Час, після якого лічильник невдалих спроб входу скидається"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Вимкнути захист CSRF"

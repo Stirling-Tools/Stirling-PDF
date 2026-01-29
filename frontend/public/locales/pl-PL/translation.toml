@@ -952,6 +952,7 @@ title = "Podziel (Rozmiar/Ilość stron)"
 desc = "Rozdziela dokument PDF na wiele dokumentów bazując na podanym rozmiarze, ilości stron bądź ilości dokumentów"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Zastąp i odwróć kolor"
 desc = "Zastępuj lub odwracaj kolory w dokumentach PDF"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Auto skan folderów"
 desc = "Link do przewodnika automatycznego skanowania folderów"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Przewodnik SSO"
 desc = "Link do przewodnika SSO"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Konfiguracja odizolowana"
 desc = "Link do przewodnika konfiguracji odizolowanej"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Dodaj hasło"
 desc = "Zaszyfruj dokument PDF za pomocą hasła."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Zmień uprawnienia"
 desc = "Zmień ograniczenia i uprawnienia dokumentu"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Automatyzuj"
 desc = "Buduj wieloetapowe przepływy, łącząc akcje PDF. Idealne do powtarzających się zadań."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Nakłada dokumenty PDF na siebie"
 title = "Nałóż PDFa"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Edytor tekstu PDF"
 desc = "Przeglądaj i edytuj eksporty JSON z Stirling PDF z grupową edycją tekstu i ponowną generacją PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Maksymalna liczba nieudanych prób logowania przed zablokowaniem 
 [admin.settings.security.loginResetTimeMinutes]
 label = "Czas resetu prób logowania (minuty)"
 description = "Czas, po którym licznik nieudanych prób logowania jest resetowany"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Wyłącz ochronę CSRF"

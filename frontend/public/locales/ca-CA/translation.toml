@@ -952,6 +952,7 @@ title = "Divideix auto per mida/pàg."
 desc = "Divideix un únic PDF en múltiples documents basant-se en la mida, el nombre de pàgines o el nombre de documents"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Substitueix i inverteix el color"
 desc = "Substitueix o inverteix colors en documents PDF"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Escaneig automàtic de carpeta"
 desc = "Enllaç a la guia d'escaneig automàtic de carpetes"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Guia d'SSO"
 desc = "Enllaç a la guia d'SSO"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Configuració air-gapped"
 desc = "Enllaç a la guia de configuració en entorn air-gapped"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Afegir Contrasenya"
 desc = "Xifra el document PDF amb contrasenya."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Canviar Permissos"
 desc = "Canvia les restriccions i els permisos del document"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Automatitza"
 desc = "Construeix fluxos de treball multietapa enllaçant accions PDF. Ideal per a tasques recurrents."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Superposa PDFs sobre un altre PDF"
 title = "Superposar PDFs"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor de text PDF"
 desc = "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Nombre màxim d'intents d'inici de sessió fallits abans de bloqu
 [admin.settings.security.loginResetTimeMinutes]
 label = "Temps de reinicialització d'inici de sessió (minuts)"
 description = "Temps abans que es restableixin els intents d'inici de sessió fallits"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Desactiva la protecció CSRF"

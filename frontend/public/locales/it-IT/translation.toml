@@ -952,6 +952,7 @@ title = "Dividi auto per peso/pagine"
 desc = "Dividi un singolo PDF in più documenti in base alle dimensioni, al numero di pagine o al numero di documenti"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Sostituisci e inverti colore"
 desc = "Sostituisci o inverti i colori nei documenti PDF"
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
@@ -967,21 +968,25 @@ title = "Scansione automatica cartelle"
 desc = "Link alla guida per scansione cartelle automatizzata"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Guida SSO"
 desc = "Link alla guida SSO"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Setup isolato (air‑gapped)"
 desc = "Link alla guida per setup air‑gapped"
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Aggiungi Password"
 desc = "Crittografa il tuo PDF con una password."
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Cambia Permessi"
 desc = "Modifica restrizioni e permessi del documento"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
@@ -992,11 +997,13 @@ title = "Automatizza"
 desc = "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività ricorrenti."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Sovrapponi un PDF sopra un altro"
 title = "Sovrapponi PDF"
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor di testo PDF"
 desc = "Modifica testo e immagini esistenti nei PDF"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
@@ -4534,6 +4541,13 @@ description = "Numero massimo di tentativi di accesso falliti prima del blocco d
 [admin.settings.security.loginResetTimeMinutes]
 label = "Tempo di reset accessi (minuti)"
 description = "Tempo prima che i tentativi di accesso falliti vengano azzerati"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Disabilita protezione CSRF"
