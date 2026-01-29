@@ -2,15 +2,15 @@ import React from 'react';
 import { Stack } from '@mantine/core';
 import CoreGeneralSection from '@core/components/shared/config/configSections/GeneralSection';
 import { DefaultAppSettings } from '@app/components/shared/config/configSections/DefaultAppSettings';
+import { useVersionInfo } from '@app/hooks/useVersionInfo';
 
-/**
- * Desktop extension of GeneralSection that adds default PDF editor settings
- */
 const GeneralSection: React.FC = () => {
+  const { desktopVersion } = useVersionInfo();
+
   return (
     <Stack gap="lg">
       <DefaultAppSettings />
-      <CoreGeneralSection />
+      <CoreGeneralSection hideTitle desktopVersion={desktopVersion} isDesktop />
     </Stack>
   );
 };

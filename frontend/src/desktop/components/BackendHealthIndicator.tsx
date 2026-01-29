@@ -1,7 +1,8 @@
 import React, { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Tooltip, useMantineTheme, useComputedColorScheme, rem } from '@mantine/core';
+import { Box, Tooltip, useMantineTheme, useComputedColorScheme, rem, Stack, Text } from '@mantine/core';
 import { useBackendHealth } from '@app/hooks/useBackendHealth';
+import { useVersionInfo } from '@app/hooks/useVersionInfo';
 
 interface BackendHealthIndicatorProps {
   className?: string;
@@ -14,18 +15,40 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
   const theme = useMantineTheme();
   const colorScheme = useComputedColorScheme('light');
   const { status, isHealthy, checkHealth } = useBackendHealth();
+  const { desktopVersion, serverVersion } = useVersionInfo();
 
   const label = useMemo(() => {
-    if (status === 'starting') {
-      return t('backendHealth.checking', 'Checking backend status...');
+    const statusText = status === 'starting'
+      ? t('backendHealth.checking', 'Checking backend status...')
+      : isHealthy
+        ? t('backendHealth.online', 'Backend Online')
+        : t('backendHealth.offline', 'Backend Offline');
+
+    const versionLines: string[] = [];
+
+    if (desktopVersion) {
+      versionLines.push(`Desktop: ${desktopVersion}`);
     }
 
-    if (isHealthy) {
-      return t('backendHealth.online', 'Backend Online');
+    if (serverVersion) {
+      versionLines.push(`Server: ${serverVersion}`);
     }
 
-    return t('backendHealth.offline', 'Backend Offline');
-  }, [status, isHealthy, t]);
+    if (versionLines.length > 0) {
+      return (
+        <Stack gap={4}>
+          <Text size="sm">{statusText}</Text>
+          {versionLines.map((line, idx) => (
+            <Text key={idx} size="xs" c="dimmed">
+              {line}
+            </Text>
+          ))}
+        </Stack>
+      );
+    }
+
+    return statusText;
+  }, [status, isHealthy, t, desktopVersion, serverVersion]);
 
   const dotColor = useMemo(() => {
     if (status === 'starting') {
