@@ -41,7 +41,7 @@
     "@reactour/tour": "^3.8.0",
     "@stripe/react-stripe-js": "^4.0.2",
     "@stripe/stripe-js": "^7.9.0",
-    "@supabase/supabase-js": "^2.47.13",
+    "@supabase/supabase-js": "^2.93.3",
     "@tailwindcss/postcss": "^4.1.13",
     "@tanstack/react-virtual": "^3.13.12",
     "@tauri-apps/api": "^2.9.1",
