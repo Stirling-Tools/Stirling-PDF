@@ -439,7 +439,9 @@ fullscreen = "Teljes képernyő"
 [settings.general.updates]
 title = "Szoftverfrissítések"
 description = "Frissítések keresése és verzióinformációk megtekintése"
-currentVersion = "Jelenlegi verzió"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Legújabb verzió"
 checkForUpdates = "Frissítések keresése"
 viewDetails = "Részletek megtekintése"
@@ -953,6 +955,7 @@ desc = "Egyetlen PDF felosztása több dokumentumra méret, oldalszám vagy doku
 tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Színek cseréje és invertálása"
 desc = "Színek cseréje vagy invertálása PDF dokumentumokban"
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 
 [home.devApi]
 tags = "API,fejlesztés,dokumentáció"
@@ -968,21 +971,25 @@ desc = "Hivatkozás az automatikus mappaszkennelés útmutatójára"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO útmutató"
 desc = "Hivatkozás az SSO útmutatóra"
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [home.devAirgapped]
 tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped beállítás"
 desc = "Hivatkozás az elszigetelt környezet beállítási útmutatójára"
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 
 [home.addPassword]
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Jelszó hozzáadása"
 desc = "PDF dokumentum jelszavas védelme"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 
 [home.changePermissions]
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Jogosultságok módosítása"
 desc = "Dokumentumkorlátozások és jogosultságok módosítása"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 
 [home.automate]
 tags = "munkafolyamat,sorozat,automatizálás"
@@ -993,11 +1000,13 @@ desc = "Többlépéses munkafolyamatok összeállítása PDF műveletek összef�
 tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF-ek egymásra helyezése egy másik PDF-en"
 title = "PDF-ek egymásra helyezése"
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 
 [home.pdfTextEditor]
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF szövegszerkesztő"
 desc = "Nézze át és szerkessze a Stirling PDF JSON exportokat csoportosított szövegszerkesztéssel és PDF-újragenerálással"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 
 [home.addText]
 tags = "szöveg, megjegyzés, címke"
@@ -4637,6 +4646,13 @@ description = "Link-local címek tiltása (169.254.x.x, fe80::/10)"
 [admin.settings.security.htmlUrlSecurity.blockCloudMetadata]
 label = "Felhőszolgáltatói metaadat-végpontok tiltása"
 description = "Felhőszolgáltatói metaadat-végpontok tiltása (169.254.169.254)"
+
+[admin.settings.security.xFrameOptions]
+deny = "Deny (Prevents all framing)"
+description = "Controls whether the application can be embedded in iframes"
+disabled = "Disabled (No X-Frame-Options header)"
+label = "X-Frame-Options"
+sameorigin = "Same Origin (Allow framing from same domain)"
 
 [admin.settings.connections]
 title = "Kapcsolatok"
