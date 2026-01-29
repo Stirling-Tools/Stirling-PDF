@@ -392,12 +392,12 @@ public class UserService implements UserServiceInterface {
         settings.put(MFA_ENABLED_KEY, String.valueOf(request.isMfaEnabled()));
         if (request.getMfaSecret() != null && !request.getMfaSecret().isEmpty()) {
             settings.put(MFA_SECRET_KEY, request.getMfaSecret());
-        } else {
+        } else if (settings.containsKey(MFA_SECRET_KEY)) {
             settings.remove(MFA_SECRET_KEY);
         }
         if (request.getMfaLastUsedStep() != null) {
             settings.put(MFA_LAST_USED_STEP_KEY, String.valueOf(request.getMfaLastUsedStep()));
-        } else {
+        } else if (settings.containsKey(MFA_LAST_USED_STEP_KEY)) {
             settings.remove(MFA_LAST_USED_STEP_KEY);
         }
         log.info(

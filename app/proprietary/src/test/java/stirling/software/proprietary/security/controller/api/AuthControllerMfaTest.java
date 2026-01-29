@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -87,6 +88,25 @@ class AuthControllerMfaTest {
                 .andExpect(jsonPath("$.otpauthUri").value("otpauth://test"));
 
         verify(mfaService).setSecret(user, "SECRET");
+    }
+
+    @Test
+    void setupMfaAlwaysGeneratesNewSecret() throws Exception {
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
+                .thenReturn(Optional.of(user));
+        when(mfaService.isMfaEnabled(user)).thenReturn(false);
+        when(totpService.generateSecret()).thenReturn("SECRET");
+        when(totpService.buildOtpAuthUri(USERNAME, "SECRET")).thenReturn("otpauth://test");
+
+        mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.secret").value("SECRET"))
+                .andExpect(jsonPath("$.otpauthUri").value("otpauth://test"));
+
+        verify(mfaService).setSecret(user, "SECRET");
+        verify(mfaService, never()).getSecret(any());
+        verify(totpService).generateSecret();
+        verify(totpService).buildOtpAuthUri(USERNAME, "SECRET");
     }
 
     @Test

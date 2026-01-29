@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
@@ -21,6 +24,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("FROM User u LEFT JOIN FETCH u.settings where u.id = :id")
     Optional<User> findByIdWithSettings(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("FROM User u LEFT JOIN FETCH u.settings where u.id = :id")
+    Optional<User> findByIdWithSettingsForUpdate(@Param("id") Long id);
 
     Optional<User> findByUsername(String username);
 
