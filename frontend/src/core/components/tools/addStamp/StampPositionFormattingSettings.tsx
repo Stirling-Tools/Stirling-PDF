@@ -99,7 +99,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.fontSize}
-              onChange={(v) => onParameterChange('fontSize', typeof v === 'number' ? v : 1)}
+              onChange={(v) => onParameterChange('fontSize', typeof v === 'number' && v > 0 ? v : 1)}
               min={1}
               max={400}
               step={1}
@@ -114,6 +114,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
               max={400}
               step={1}
               className={styles.slider}
+              disabled={disabled}
             />
           </Group>
         </Stack>

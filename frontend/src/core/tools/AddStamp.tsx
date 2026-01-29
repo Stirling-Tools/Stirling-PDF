@@ -80,6 +80,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           parameters={params.parameters}
           onParameterChange={params.updateParameter}
           disabled={endpointLoading}
+          filename={selectedFiles[0]?.name}
         />
       ),
     });
