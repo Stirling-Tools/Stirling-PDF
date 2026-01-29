@@ -509,18 +509,20 @@ Examples:
 
   # Positional arguments (backward compatibility):
   convert_cff_to_ttf.py font.cff font.otf mapping.tounicode
-        """
+        """,
     )
 
     # Add named arguments
-    parser.add_argument('--input', dest='input_file', help='Input CFF file path')
-    parser.add_argument('--output', dest='output_file', help='Output OTF file path')
-    parser.add_argument('--to-unicode', dest='tounicode_file', help='ToUnicode mapping file path')
+    parser.add_argument("--input", dest="input_file", help="Input CFF file path")
+    parser.add_argument("--output", dest="output_file", help="Output OTF file path")
+    parser.add_argument(
+        "--to-unicode", dest="tounicode_file", help="ToUnicode mapping file path"
+    )
 
     # Add positional arguments for backward compatibility
-    parser.add_argument('input_pos', nargs='?', help='Input CFF file (positional)')
-    parser.add_argument('output_pos', nargs='?', help='Output OTF file (positional)')
-    parser.add_argument('tounicode_pos', nargs='?', help='ToUnicode file (positional)')
+    parser.add_argument("input_pos", nargs="?", help="Input CFF file (positional)")
+    parser.add_argument("output_pos", nargs="?", help="Output OTF file (positional)")
+    parser.add_argument("tounicode_pos", nargs="?", help="ToUnicode file (positional)")
 
     args = parser.parse_args()
 
