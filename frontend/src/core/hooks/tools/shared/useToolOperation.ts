@@ -14,6 +14,7 @@ import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/fi
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
+import { isTauri } from '@tauri-apps/api/core';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -437,6 +438,76 @@ export const useToolOperation = <TParams>(
         console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
         const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
 
+        // Auto-save to local path if single input with local path produced single output (desktop only)
+        console.log('[Tool] Checking auto-save conditions:', {
+          isTauri: isTauri(),
+          inputCount: toConsumeInputIds.length,
+          outputCount: outputStirlingFiles.length
+        });
+        if (isTauri() && toConsumeInputIds.length === 1 && outputStirlingFiles.length === 1) {
+          const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
+          console.log('[Tool] Input file stub:', inputStub);
+          console.log('[Tool] Has localFilePath?', !!inputStub?.localFilePath, inputStub?.localFilePath);
+          if (inputStub?.localFilePath) {
+            try {
+              console.log('[Tool] Attempting auto-save to:', inputStub.localFilePath);
+              // @ts-ignore - Desktop module not available in proprietary build
+              const { saveToLocalPath } = await import('@desktop/services/localFileSaveService');
+              const result = await saveToLocalPath(outputStirlingFiles[0], inputStub.localFilePath);
+              if (result.success) {
+                console.log(`[Tool] ✓ Auto-saved to ${inputStub.localFilePath}`);
+                // Preserve localFilePath in output file for future operations
+                fileActions.updateStirlingFileStub(outputFileIds[0], {
+                  localFilePath: inputStub.localFilePath
+                });
+              } else {
+                console.warn('[Tool] ✗ Auto-save failed:', result.error);
+              }
+            } catch (error) {
+              console.error('[Tool] ✗ Auto-save error:', error);
+            }
+          } else {
+            console.log('[Tool] No localFilePath on input file - skipping auto-save');
+          }
+        } else {
+          console.log('[Tool] Auto-save conditions not met - skipping');
+        }
+
+        // Prompt for folder if single input with local path produced multiple outputs (desktop only)
+        if (isTauri() && toConsumeInputIds.length === 1 && outputStirlingFiles.length > 1) {
+          const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
+          if (inputStub?.localFilePath) {
+            try {
+              // @ts-ignore - Desktop module not available in proprietary build
+              const { saveMultipleFilesWithPrompt } = await import('@desktop/services/localFileSaveService');
+              const { dirname } = await import('@tauri-apps/api/path');
+
+              // Get directory of original file as default
+              const defaultDir = await dirname(inputStub.localFilePath);
+
+              actions.setStatus(`Saving ${outputStirlingFiles.length} files...`);
+              const result = await saveMultipleFilesWithPrompt(outputStirlingFiles, defaultDir);
+
+              if (result.success) {
+                console.log(`[Tool] Saved ${result.savedCount} files to user-selected folder`);
+                actions.setStatus(`Saved ${result.savedCount} file${result.savedCount > 1 ? 's' : ''}`);
+              } else if (result.cancelledByUser) {
+                console.log('[Tool] User cancelled save dialog - files remain in workbench');
+                actions.setStatus('Files added to workbench');
+              } else {
+                console.warn('[Tool] Multi-file save failed:', result.error);
+                actions.setStatus(result.savedCount > 0
+                  ? `Saved ${result.savedCount}/${outputStirlingFiles.length} files`
+                  : 'Save failed - files remain in workbench'
+                );
+              }
+            } catch (error) {
+              console.error('[Tool] Multi-file save error:', error);
+              actions.setStatus('Files added to workbench');
+            }
+          }
+        }
+
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
           inputFiles: extractFiles(validFiles), // Convert to File objects for undo
@@ -532,6 +603,24 @@ export const useToolOperation = <TParams>(
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
 
+      // Auto-restore original file to local path if applicable (desktop only)
+      if (isTauri() && inputStirlingFileStubs.length === 1 && inputFiles[0]) {
+        const inputStub = inputStirlingFileStubs[0];
+        if (inputStub?.localFilePath) {
+          try {
+            // @ts-ignore - Desktop module not available in proprietary build
+            const { saveToLocalPath } = await import('@desktop/services/localFileSaveService');
+            const result = await saveToLocalPath(inputFiles[0], inputStub.localFilePath);
+            if (result.success) {
+              console.log(`[Undo] Restored original file to ${inputStub.localFilePath}`);
+            } else {
+              console.warn('[Undo] Failed to restore file:', result.error);
+            }
+          } catch (error) {
+            console.error('[Undo] Auto-restore error:', error);
+          }
+        }
+      }
 
       // Clear results and operation tracking
       resetResults();

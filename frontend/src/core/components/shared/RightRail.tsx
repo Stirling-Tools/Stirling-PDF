@@ -22,8 +22,6 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
-import { isTauri } from '@tauri-apps/api/core';
-import { isStirlingFile } from '@app/types/fileContext';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
@@ -138,47 +136,12 @@ export default function RightRail() {
     [actions, allButtonsDisabled, disableForFullscreen, tooltipPosition, tooltipOffset]
   );
 
-  const saveToLocalPathIfPossible = useCallback(async (file: File, filePath?: string | null) => {
-    if (!filePath || !isTauri()) {
-      return false;
-    }
-
-    const { writeFile } = await import('@tauri-apps/plugin-fs');
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      await writeFile(filePath, new Uint8Array(arrayBuffer));
-      return true;
-    } catch (error) {
-      console.error('[RightRail] Failed to save file to local path:', error);
-      return false;
-    }
-  }, []);
-
   const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
       if (!signaturesApplied) {
         alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
         return;
       }
-      const activeFile = activeFiles[activeFileIndex] ?? activeFiles[0];
-      const activeFileId = isStirlingFile(activeFile) ? activeFile.fileId : undefined;
-      const activeStub = activeFileId ? selectors.getStirlingFileStub(activeFileId) : undefined;
-      const localFilePath = activeStub?.localFilePath;
-
-      if (localFilePath && viewerContext?.exportActions?.saveAsCopy && isTauri()) {
-        const { writeFile } = await import('@tauri-apps/plugin-fs');
-        try {
-          const arrayBuffer = await viewerContext.exportActions.saveAsCopy();
-          if (arrayBuffer) {
-            await writeFile(localFilePath, new Uint8Array(arrayBuffer));
-            return;
-          }
-        } catch (error) {
-          console.error('[RightRail] Failed to overwrite local PDF:', error);
-        }
-      }
-
       viewerContext?.exportActions?.download?.();
       return;
     }
@@ -189,16 +152,7 @@ export default function RightRail() {
     }
 
     const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-    for (const file of filesToDownload) {
-      const fileId = isStirlingFile(file) ? file.fileId : undefined;
-      const stub = fileId ? selectors.getStirlingFileStub(fileId) : undefined;
-      const localFilePath = stub?.localFilePath;
-
-      const savedToLocalPath = await saveToLocalPathIfPossible(file, localFilePath);
-      if (savedToLocalPath) {
-        continue;
-      }
-
+    filesToDownload.forEach(file => {
       const link = document.createElement('a');
       link.href = URL.createObjectURL(file);
       link.download = file.name;
@@ -206,7 +160,7 @@ export default function RightRail() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
-    }
+    });
   }, [
     currentView,
     selectedFiles,
@@ -214,9 +168,6 @@ export default function RightRail() {
     pageEditorFunctions,
     viewerContext,
     signaturesApplied,
-    activeFileIndex,
-    selectors,
-    saveToLocalPathIfPossible,
   ]);
 
   const downloadTooltip = useMemo(() => {

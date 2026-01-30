@@ -309,6 +309,25 @@ export async function addFiles(
     // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
     const fileStub = createNewStirlingFileStub(file, fileId);
 
+    // Check for pending file path mapping from Tauri file dialog (desktop only)
+    try {
+      const { pendingFilePathMappings } = await import('@app/contexts/FileManagerContext');
+      console.log(`[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`);
+      console.log(`[FileActions] Available mappings:`, Array.from(pendingFilePathMappings.keys()));
+      const localFilePath = pendingFilePathMappings.get(quickKey);
+      if (localFilePath) {
+        console.log(`[FileActions] ✓ Found localFilePath: ${localFilePath}`);
+        fileStub.localFilePath = localFilePath;
+        pendingFilePathMappings.delete(quickKey); // Clean up after use
+        console.log(`[FileActions] Applied localFilePath to file: ${file.name}`);
+      } else {
+        console.log(`[FileActions] ✗ No localFilePath found for this file`);
+      }
+    } catch (error) {
+      console.log('[FileActions] Could not check for localFilePath:', error);
+      // FileManagerContext may not be available in all contexts
+    }
+
     // Store insertion position if provided
     if (options.insertAfterPageId !== undefined) {
       fileStub.insertAfterPageId = options.insertAfterPageId;

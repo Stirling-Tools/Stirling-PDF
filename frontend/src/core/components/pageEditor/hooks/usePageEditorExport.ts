@@ -69,23 +69,6 @@ export const usePageEditorExport = ({
   setExportLoading,
   setSplitPositions,
 }: UsePageEditorExportParams) => {
-  const saveBlobToLocalPath = useCallback(async (blob: Blob, filePath?: string): Promise<boolean> => {
-    if (!filePath || !isTauri()) {
-      return false;
-    }
-
-    const { writeFile } = await import("@tauri-apps/plugin-fs");
-
-    try {
-      const arrayBuffer = await blob.arrayBuffer();
-      await writeFile(filePath, new Uint8Array(arrayBuffer));
-      return true;
-    } catch (error) {
-      console.error("[PageEditor] Failed to save file to local path:", error);
-      return false;
-    }
-  }, []);
-
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
     const sourceFiles = new Map<FileId, File>();
 
@@ -162,13 +145,7 @@ export const usePageEditorExport = ({
             { selectedOnly: true, filename: exportFilename }
           );
 
-      const selectedFileId = selectedFileIds.length === 1 ? selectedFileIds[0] : null;
-      const selectedStub = selectedFileId ? selectors.getStirlingFileStub(selectedFileId) : null;
-      const savedToLocalPath = await saveBlobToLocalPath(result.blob, selectedStub?.localFilePath);
-
-      if (!savedToLocalPath) {
-        pdfExportService.downloadFile(result.blob, result.filename);
-      }
+      pdfExportService.downloadFile(result.blob, result.filename);
       setHasUnsavedChanges(false);
       setSplitPositions(new Set());
       setExportLoading(false);
@@ -182,9 +159,6 @@ export const usePageEditorExport = ({
     splitPositions,
     getSourceFiles,
     getExportFilename,
-    selectedFileIds,
-    selectors,
-    saveBlobToLocalPath,
     setHasUnsavedChanges,
     setExportLoading,
   ]);
@@ -234,13 +208,7 @@ export const usePageEditorExport = ({
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
         const file = files[0];
-        const selectedFileId = selectedFileIds.length === 1 ? selectedFileIds[0] : null;
-        const selectedStub = selectedFileId ? selectors.getStirlingFileStub(selectedFileId) : null;
-        const savedToLocalPath = await saveBlobToLocalPath(file, selectedStub?.localFilePath);
-
-        if (!savedToLocalPath) {
-          pdfExportService.downloadFile(file, file.name);
-        }
+        pdfExportService.downloadFile(file, file.name);
       }
 
       setHasUnsavedChanges(false);
@@ -255,9 +223,6 @@ export const usePageEditorExport = ({
     splitPositions,
     getSourceFiles,
     getExportFilename,
-    selectedFileIds,
-    selectors,
-    saveBlobToLocalPath,
     setHasUnsavedChanges,
     setExportLoading,
   ]);
@@ -313,6 +278,56 @@ export const usePageEditorExport = ({
       });
       if (newStirlingFiles.length > 0) {
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));
+      }
+
+      // Auto-save to local path if single source had one (desktop only)
+      if (isTauri() && sourceFileIds.length === 1 && newStirlingFiles.length === 1) {
+        const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
+        if (sourceStub?.localFilePath && renamedFiles[0]) {
+          try {
+            // @ts-ignore - Desktop module not available in proprietary build
+            const { saveToLocalPath } = await import("@desktop/services/localFileSaveService");
+            const result = await saveToLocalPath(renamedFiles[0], sourceStub.localFilePath);
+            if (result.success) {
+              console.log(`[PageEditor] Auto-saved to ${sourceStub.localFilePath}`);
+              // Preserve localFilePath in output file
+              actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
+                localFilePath: sourceStub.localFilePath
+              });
+            } else {
+              console.warn('[PageEditor] Auto-save failed:', result.error);
+            }
+          } catch (error) {
+            console.error('[PageEditor] Auto-save error:', error);
+          }
+        }
+      }
+
+      // Prompt for folder if single source with local path produced multiple outputs (desktop only)
+      if (isTauri() && sourceFileIds.length === 1 && newStirlingFiles.length > 1) {
+        const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
+        if (sourceStub?.localFilePath && renamedFiles.length > 0) {
+          try {
+            // @ts-ignore - Desktop module not available in proprietary build
+            const { saveMultipleFilesWithPrompt } = await import("@desktop/services/localFileSaveService");
+            const { dirname } = await import("@tauri-apps/api/path");
+
+            // Get directory of original file as default
+            const defaultDir = await dirname(sourceStub.localFilePath);
+
+            const result = await saveMultipleFilesWithPrompt(renamedFiles, defaultDir);
+
+            if (result.success) {
+              console.log(`[PageEditor] Saved ${result.savedCount} files to user-selected folder`);
+            } else if (result.cancelledByUser) {
+              console.log('[PageEditor] User cancelled save dialog - files remain in workbench');
+            } else {
+              console.warn('[PageEditor] Multi-file save failed:', result.error);
+            }
+          } catch (error) {
+            console.error('[PageEditor] Multi-file save error:', error);
+          }
+        }
       }
 
       // Remove source files from context

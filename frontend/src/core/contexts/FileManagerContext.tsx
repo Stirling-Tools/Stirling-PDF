@@ -5,6 +5,12 @@ import { StirlingFileStub } from '@app/types/fileContext';
 import { downloadFiles } from '@app/utils/downloadUtils';
 import { FileId } from '@app/types/file';
 import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
+import { isTauri } from '@tauri-apps/api/core';
+import { createQuickKey } from '@app/types/fileContext';
+
+// Module-level storage for file path mappings (quickKey -> localFilePath)
+// Used to pass file paths from Tauri file dialog to FileContext
+export const pendingFilePathMappings = new Map<string, string>();
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -135,9 +141,84 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, []);
 
-  const handleLocalFileClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+  const handleLocalFileClick = useCallback(async () => {
+    // Use Tauri's native file dialog in desktop mode to get actual file paths
+    if (isTauri()) {
+      console.log('[FileManager] Using Tauri native file dialog');
+      try {
+        // @ts-ignore - Desktop module not available in proprietary build
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        // @ts-ignore - Desktop module not available in proprietary build
+        const { readFile } = await import('@tauri-apps/plugin-fs');
+
+        console.log('[FileManager] Opening file dialog...');
+        const selectedPaths = await open({
+          multiple: true,
+          filters: [{
+            name: 'Documents',
+            extensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'tiff', 'bmp', 'html', 'zip']
+          }]
+        });
+
+        if (!selectedPaths) {
+          console.log('[FileManager] User cancelled file dialog');
+          return;
+        }
+
+        const paths = Array.isArray(selectedPaths) ? selectedPaths : [selectedPaths];
+        console.log(`[FileManager] Selected ${paths.length} file(s):`, paths);
+        const filesWithPaths: Array<{ file: File; path: string; quickKey: string }> = [];
+
+        // Read each file and create File objects with paths
+        for (const filePath of paths) {
+          try {
+            console.log(`[FileManager] Reading file: ${filePath}`);
+            const fileData = await readFile(filePath);
+            const fileName = filePath.split(/[/\\]/).pop() || 'document';
+            const file = new File([fileData], fileName, {
+              type: fileName.endsWith('.pdf') ? 'application/pdf' : undefined
+            });
+            const quickKey = createQuickKey(file);
+            console.log(`[FileManager] Created File object: ${fileName}, quickKey: ${quickKey}`);
+            filesWithPaths.push({
+              file,
+              path: filePath,
+              quickKey
+            });
+          } catch (error) {
+            console.error(`[FileManager] Failed to read file ${filePath}:`, error);
+          }
+        }
+
+        if (filesWithPaths.length > 0) {
+          // Store file path mappings for FileContext to pick up
+          console.log('[FileManager] Storing file path mappings:');
+          for (const { quickKey, path } of filesWithPaths) {
+            console.log(`  - ${quickKey} -> ${path}`);
+            pendingFilePathMappings.set(quickKey, path);
+          }
+          console.log('[FileManager] Total pending mappings:', pendingFilePathMappings.size);
+
+          // Pass files to FileContext (which will add them and apply the paths)
+          const files = filesWithPaths.map(f => f.file);
+          console.log('[FileManager] Passing files to FileContext:', files.map(f => f.name));
+          onNewFilesSelect(files);
+
+          await refreshRecentFiles();
+          onClose();
+        }
+      } catch (error) {
+        console.error('[FileManager] Failed to open files with Tauri dialog:', error);
+        console.log('[FileManager] Falling back to browser file input');
+        // Fallback to browser file input
+        fileInputRef.current?.click();
+      }
+    } else {
+      console.log('[FileManager] Web mode detected - using browser file input (no file paths available)');
+      // Web mode - use browser file input
+      fileInputRef.current?.click();
+    }
+  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
 
   const handleFileSelect = useCallback((file: StirlingFileStub, currentIndex: number, shiftKey?: boolean) => {
     const fileId = file.id;

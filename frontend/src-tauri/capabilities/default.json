@@ -40,6 +40,12 @@
       "identifier": "fs:allow-read-file",
       "allow": [{ "path": "**" }]
     },
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [{ "path": "**" }]
+    },
+    "dialog:default",
+    "dialog:allow-open",
     "opener:default",
     "shell:allow-open"
   ]
