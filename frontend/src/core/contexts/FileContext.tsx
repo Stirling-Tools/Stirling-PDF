@@ -328,6 +328,47 @@ function FileContextInner({
     addFiles: addRawFiles,
     addStirlingFileStubs: addStirlingFileStubsAction,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
+      // Check if any files have localFilePath (desktop mode)
+      const filesWithLocalPaths: Array<{ id: FileId; path: string; name: string }> = [];
+      for (const fileId of fileIds) {
+        const stub = stateRef.current.files.byId[fileId];
+        if (stub?.localFilePath) {
+          filesWithLocalPaths.push({
+            id: fileId,
+            path: stub.localFilePath,
+            name: stub.name
+          });
+        }
+      }
+
+      // Ask user if they want to delete from disk (desktop only)
+      if (filesWithLocalPaths.length > 0) {
+        const fileList = filesWithLocalPaths.map(f => `• ${f.name}`).join('\n');
+        const message = filesWithLocalPaths.length === 1
+          ? `Delete "${filesWithLocalPaths[0].name}" from disk?\n\nThis will permanently delete the file from:\n${filesWithLocalPaths[0].path}`
+          : `Delete ${filesWithLocalPaths.length} files from disk?\n\n${fileList}\n\nThis will permanently delete these files from your computer.`;
+
+        const shouldDeleteFromDisk = window.confirm(message);
+
+        if (shouldDeleteFromDisk) {
+          try {
+            // @ts-ignore - Desktop module not available in proprietary build
+            const { deleteLocalFile } = await import('@desktop/services/localFileSaveService');
+
+            for (const file of filesWithLocalPaths) {
+              const result = await deleteLocalFile(file.path);
+              if (result.success) {
+                console.log(`[FileContext] Deleted from disk: ${file.name}`);
+              } else {
+                console.warn(`[FileContext] Failed to delete from disk: ${file.name}`, result.error);
+              }
+            }
+          } catch (error) {
+            console.error('[FileContext] Failed to delete files from disk:', error);
+          }
+        }
+      }
+
       // Remove from memory and cleanup resources
       lifecycleManager.removeFiles(fileIds, stateRef);
 

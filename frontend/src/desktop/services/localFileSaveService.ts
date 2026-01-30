@@ -43,6 +43,63 @@ export function shouldAutoSave(inputCount: number, outputCount: number): boolean
   return isTauri() && inputCount === 1 && outputCount === 1;
 }
 
+/**
+ * Delete a file from local filesystem (Tauri desktop only)
+ *
+ * @param filePath - Absolute path to delete
+ * @returns Result indicating success or failure
+ */
+export async function deleteLocalFile(filePath: string): Promise<SaveResult> {
+  if (!isTauri()) {
+    return { success: false, error: "Not running in Tauri desktop app" };
+  }
+
+  try {
+    const { remove } = await import("@tauri-apps/plugin-fs");
+    await remove(filePath);
+    console.log(`[LocalFileDelete] Deleted: ${filePath}`);
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[LocalFileDelete] Failed to delete:', message);
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Show native save dialog and return selected path
+ *
+ * @param defaultFilename - Suggested filename
+ * @param defaultDirectory - Optional default directory
+ * @returns Selected file path or null if cancelled
+ */
+export async function showSaveDialog(
+  defaultFilename: string,
+  defaultDirectory?: string
+): Promise<string | null> {
+  if (!isTauri()) {
+    return null;
+  }
+
+  try {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+
+    const selectedPath = await save({
+      defaultPath: defaultDirectory ? `${defaultDirectory}/${defaultFilename}` : defaultFilename,
+      filters: [{
+        name: 'PDF',
+        extensions: ['pdf']
+      }],
+      title: 'Save As'
+    });
+
+    return selectedPath;
+  } catch (error) {
+    console.error('[SaveDialog] Failed to show dialog:', error);
+    return null;
+  }
+}
+
 export interface MultiFileSaveResult {
   success: boolean;
   savedCount: number;

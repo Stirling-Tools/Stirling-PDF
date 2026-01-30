@@ -44,8 +44,13 @@
       "identifier": "fs:allow-write-file",
       "allow": [{ "path": "**" }]
     },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [{ "path": "**" }]
+    },
     "dialog:default",
     "dialog:allow-open",
+    "dialog:allow-save",
     "opener:default",
     "shell:allow-open"
   ]

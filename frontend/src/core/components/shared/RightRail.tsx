@@ -22,6 +22,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
+import { isTauri } from '@tauri-apps/api/core';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
@@ -151,16 +152,51 @@ export default function RightRail() {
       return;
     }
 
-    const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-    filesToDownload.forEach(file => {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(file);
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    });
+    const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+
+    // Desktop mode: Show "Save As" dialog for each file
+    if (isTauri()) {
+      try {
+        // @ts-ignore - Desktop module not available in proprietary build
+        const { showSaveDialog, saveToLocalPath } = await import('@desktop/services/localFileSaveService');
+
+        for (const file of filesToExport) {
+          const savePath = await showSaveDialog(file.name);
+          if (savePath) {
+            const result = await saveToLocalPath(file, savePath);
+            if (result.success) {
+              console.log(`[RightRail] Saved to: ${savePath}`);
+            } else {
+              console.error(`[RightRail] Failed to save: ${result.error}`);
+              alert(`Failed to save ${file.name}: ${result.error}`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[RightRail] Save As error:', error);
+        // Fallback to browser download
+        filesToExport.forEach(file => {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(file);
+          link.download = file.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+        });
+      }
+    } else {
+      // Web mode: Regular download
+      filesToExport.forEach(file => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      });
+    }
   }, [
     currentView,
     selectedFiles,
@@ -174,11 +210,21 @@ export default function RightRail() {
     if (currentView === 'pageEditor') {
       return t('rightRail.exportAll', 'Export PDF');
     }
+
+    // Desktop mode: "Save As" instead of "Download"
+    if (isTauri()) {
+      if (selectedCount > 0) {
+        return selectedCount === 1 ? 'Save As...' : `Save ${selectedCount} Files As...`;
+      }
+      return 'Save As...';
+    }
+
+    // Web mode: "Download"
     if (selectedCount > 0) {
       return terminology.downloadSelected;
     }
     return terminology.downloadAll;
-  }, [currentView, selectedCount, t]);
+  }, [currentView, selectedCount, t, terminology]);
 
   return (
     <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail">
