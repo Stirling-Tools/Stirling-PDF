@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.proprietary.json",
+  "extends": "./tsconfig.proprietary.vite.json",
   "compilerOptions": {
     "paths": {
       "@app/*": [
@@ -11,11 +11,11 @@
       "@core/*": ["src/core/*"]
     }
   },
-  "include": [
-    "src/*.js",
-    "src/*.ts",
-    "src/*.tsx",
-    "src/core/setupTests.ts",
-    "src/desktop"
+  "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/proprietary/**/*.test.ts*",
+    "src/proprietary/**/*.spec.ts*",
+    "node_modules"
   ]
 }
