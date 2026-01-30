@@ -111,7 +111,11 @@ public class UserController {
                             .password(password)
                             .team(team)
                             .enabled(false)
-                            .requireMfa(applicationProperties.getSecurity().getMfaRequired().isEnforceForUsers());
+                            .requireMfa(
+                                    applicationProperties
+                                            .getSecurity()
+                                            .getMfaRequired()
+                                            .isEnforceForUsers());
             User user = userService.saveUserCore(builder.build());
 
             log.info("User registered successfully: {}", username);
@@ -459,11 +463,11 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Password must be at least 6 characters."));
             }
-            forceMFA = applicationProperties.getSecurity().getMfaRequired().isEnforceForUsers() ? true : forceMFA;
-            builder
-                .password(password)
-                .firstLogin(forceChange)
-                .requireMfa(forceMFA);
+            forceMFA =
+                    applicationProperties.getSecurity().getMfaRequired().isEnforceForUsers()
+                            ? true
+                            : forceMFA;
+            builder.password(password).firstLogin(forceChange).requireMfa(forceMFA);
         }
         userService.saveUserCore(builder.build());
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
@@ -899,7 +903,9 @@ public class UserController {
                             .role(role)
                             .firstLogin(true)
                             .requireMfa(
-                                    applicationProperties.getSecurity().getMfaRequired()
+                                    applicationProperties
+                                            .getSecurity()
+                                            .getMfaRequired()
                                             .isEnforceForUsers());
             userService.saveUserCore(builder.build());
 

@@ -121,7 +121,11 @@ public class InitialSecuritySetup {
                             .team(team)
                             .role(Role.ADMIN.getRoleId())
                             .firstLogin(false)
-                            .requireMfa(applicationProperties.getSecurity().getMfaRequired().isEnforceForAdmins());
+                            .requireMfa(
+                                    applicationProperties
+                                            .getSecurity()
+                                            .getMfaRequired()
+                                            .isEnforceForAdmins());
             userService.saveUserCore(builder.build());
             log.info("Admin user created: {}", initialUsername);
         } else {
@@ -142,7 +146,11 @@ public class InitialSecuritySetup {
                             .team(team)
                             .role(Role.ADMIN.getRoleId())
                             .firstLogin(true)
-                            .requireMfa(applicationProperties.getSecurity().getMfaRequired().isEnforceForAdmins());
+                            .requireMfa(
+                                    applicationProperties
+                                            .getSecurity()
+                                            .getMfaRequired()
+                                            .isEnforceForAdmins());
             userService.saveUserCore(builder.build());
             log.info("Default admin user created: {}", defaultUsername);
         }
