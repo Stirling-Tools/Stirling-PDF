@@ -596,24 +596,24 @@ public class EndpointConfiguration {
     }
 
     private boolean isToolGroup(String group) {
-        return "qpdf".equals(group)
-                || "OCRmyPDF".equals(group)
-                || "Ghostscript".equals(group)
-                || "LibreOffice".equals(group)
-                || "tesseract".equals(group)
-                || "CLI".equals(group)
-                || "Python".equals(group)
-                || "OpenCV".equals(group)
-                || "Unoconvert".equals(group)
-                || "Java".equals(group)
-                || "Javascript".equals(group)
-                || "Weasyprint".equals(group)
-                || "Pdftohtml".equals(group)
-                || "ImageMagick".equals(group)
-                || "rar".equals(group)
-                || "Calibre".equals(group)
-                || "FFmpeg".equals(group)
-                || "veraPDF".equals(group);
+        return "qpdf".equalsIgnoreCase(group)
+                || "OCRmyPDF".equalsIgnoreCase(group)
+                || "Ghostscript".equalsIgnoreCase(group)
+                || "LibreOffice".equalsIgnoreCase(group)
+                || "tesseract".equalsIgnoreCase(group)
+                || "CLI".equalsIgnoreCase(group)
+                || "Python".equalsIgnoreCase(group)
+                || "OpenCV".equalsIgnoreCase(group)
+                || "Unoconvert".equalsIgnoreCase(group)
+                || "Java".equalsIgnoreCase(group)
+                || "Javascript".equalsIgnoreCase(group)
+                || "Weasyprint".equalsIgnoreCase(group)
+                || "Pdftohtml".equalsIgnoreCase(group)
+                || "ImageMagick".equalsIgnoreCase(group)
+                || "rar".equalsIgnoreCase(group)
+                || "Calibre".equalsIgnoreCase(group)
+                || "FFmpeg".equalsIgnoreCase(group)
+                || "veraPDF".equalsIgnoreCase(group);
     }
 
     private boolean isEndpointEnabledDirectly(String endpoint) {

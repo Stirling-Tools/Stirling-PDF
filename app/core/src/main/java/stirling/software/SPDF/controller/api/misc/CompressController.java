@@ -939,16 +939,35 @@ public class CompressController {
         Boolean convertToLineArt = request.getLineArt();
         Double lineArtThreshold = request.getLineArtThreshold();
         Integer lineArtEdgeLevel = request.getLineArtEdgeLevel();
+
+        // Handle case where no main parameters are provided
         if (expectedOutputSizeString == null && optimizeLevel == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    ExceptionUtils.ErrorCode.COMPRESSION_OPTIONS);
+            optimizeLevel = 5;
+            log.info("No compression parameters provided. Defaulting to optimizeLevel=5.");
         }
 
         Long expectedOutputSize = 0L;
         boolean autoMode = false;
+
+        // Only enable auto mode if expectedOutputSize is provided AND optimizeLevel is NOT provided
+        // If both are provided, prioritize the explicit optimizeLevel
         if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1) {
-            expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
-            autoMode = true;
+            if (optimizeLevel == null) {
+                expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
+                autoMode = true;
+                log.info("Auto mode enabled with target size: {}", expectedOutputSizeString);
+            } else {
+                log.info(
+                        "Both optimizeLevel ({}) and expectedOutputSize ({}) provided. Using"
+                                + " explicit optimizeLevel.",
+                        optimizeLevel,
+                        expectedOutputSizeString);
+            }
+        }
+
+        // Final fallback if still null (should be covered by first check, but safe to keep)
+        if (optimizeLevel == null && !autoMode) {
+            optimizeLevel = 5;
         }
 
         List<TempFile> tempFiles = new ArrayList<>();
@@ -1084,7 +1103,7 @@ public class CompressController {
                 currentFile = originalFile;
             }
             long finalFileSize = Files.size(currentFile);
-            if (finalFileSize >= inputFileSize) {
+            if (finalFileSize > inputFileSize) {
                 log.warn(
                         "Optimized file is larger than the original. Using the original file"
                                 + " instead.");
@@ -1185,11 +1204,13 @@ public class CompressController {
     }
 
     // Run Ghostscript compression
+    // Run Ghostscript compression
     private void applyGhostscriptCompression(
             OptimizePdfRequest request, int optimizeLevel, Path currentFile) throws IOException {
 
         long preGsSize = Files.size(currentFile);
         log.info("Pre-Ghostscript file size: {}", GeneralUtils.formatBytes(preGsSize));
+        log.info("optimize level :{}", optimizeLevel);
 
         try (TempFile gsOutputFile = tempFileManager.createManagedTempFile(".pdf")) {
             Path gsOutputPath = gsOutputFile.getPath();
@@ -1203,90 +1224,103 @@ public class CompressController {
             command.add("-dQUIET");
             command.add("-dBATCH");
 
-            // General compression enhancements
-            command.add("-dDetectDuplicateImages=true");
-            command.add("-dDownsampleColorImages=true");
-            command.add("-dCompressFonts=true");
-            command.add("-dSubsetFonts=true");
-
             // Map optimization levels to Ghostscript settings
             switch (optimizeLevel) {
                 case 1:
+                    // Highest quality - minimal compression, suitable for professional printing
                     command.add("-dPDFSETTINGS=/prepress");
+                    command.add("-dColorImageResolution=300");
+                    command.add("-dGrayImageResolution=300");
+                    command.add("-dMonoImageResolution=1200");
                     break;
                 case 2:
+                    // High quality - good for printing
                     command.add("-dPDFSETTINGS=/printer");
+                    command.add("-dColorImageResolution=300");
+                    command.add("-dGrayImageResolution=300");
+                    command.add("-dMonoImageResolution=1200");
                     break;
                 case 3:
+                    // Medium-high quality - suitable for ebooks
                     command.add("-dPDFSETTINGS=/ebook");
-                    break;
-                case 4:
-                case 5:
-                    command.add("-dPDFSETTINGS=/screen");
-                    break;
-                case 6:
-                case 7:
-                    command.add("-dPDFSETTINGS=/screen");
                     command.add("-dColorImageResolution=150");
                     command.add("-dGrayImageResolution=150");
-                    command.add("-dMonoImageResolution=300");
+                    command.add("-dMonoImageResolution=600");
                     break;
-                case 8:
-                case 9:
+                case 4:
+                    // Medium quality - balanced compression
+                    command.add("-dPDFSETTINGS=/ebook");
+                    command.add("-dColorImageResolution=120");
+                    command.add("-dGrayImageResolution=120");
+                    command.add("-dMonoImageResolution=400");
+                    addDownsampleFlags(command);
+                    break;
+                case 5:
+                    // Medium-low quality - more aggressive compression
                     command.add("-dPDFSETTINGS=/screen");
-                    // Use stronger downsampling at the highest level
-                    if (optimizeLevel == 9) {
-                        command.add("-dColorImageResolution=72");
-                        command.add("-dGrayImageResolution=72");
-                        command.add("-dMonoImageResolution=150");
-                    } else {
-                        command.add("-dColorImageResolution=100");
-                        command.add("-dGrayImageResolution=100");
-                        command.add("-dMonoImageResolution=200");
-                    }
+                    command.add("-dColorImageResolution=100");
+                    command.add("-dGrayImageResolution=100");
+                    command.add("-dMonoImageResolution=300");
+                    addDownsampleFlags(command);
                     break;
-                case 10:
+                case 6:
+                    // Low quality - significant compression
+                    command.add("-dPDFSETTINGS=/screen");
+                    command.add("-dColorImageResolution=90");
+                    command.add("-dGrayImageResolution=90");
+                    command.add("-dMonoImageResolution=200");
+                    addDownsampleFlags(command);
+                    command.add("-dJPEGQ=75");
+                    break;
+                case 7:
+                    // Lower quality - heavy compression
                     command.add("-dPDFSETTINGS=/screen");
                     command.add("-dColorImageResolution=72");
                     command.add("-dGrayImageResolution=72");
                     command.add("-dMonoImageResolution=150");
+                    addDownsampleFlags(command);
+                    command.add("-dJPEGQ=65");
+                    break;
+                case 8:
+                    // Very low quality - very heavy compression
+                    command.add("-dPDFSETTINGS=/screen");
+                    command.add("-dColorImageResolution=60");
+                    command.add("-dGrayImageResolution=60");
+                    command.add("-dMonoImageResolution=120");
+                    addDownsampleFlags(command);
+                    command.add("-dJPEGQ=50");
+                    break;
+                case 9:
+                    // Minimum quality - maximum compression
+                    command.add("-dPDFSETTINGS=/screen");
+                    command.add("-dColorImageResolution=50");
+                    command.add("-dGrayImageResolution=50");
+                    command.add("-dMonoImageResolution=100");
+                    addDownsampleFlags(command);
+                    command.add("-dJPEGQ=40");
+                    break;
+                case 10:
+                    // Extreme compression - lowest quality
+                    command.add("-dPDFSETTINGS=/screen");
+                    command.add("-dColorImageResolution=36");
+                    command.add("-dGrayImageResolution=36");
+                    command.add("-dMonoImageResolution=72");
+                    addDownsampleFlags(command);
+                    command.add("-dJPEGQ=30");
                     break;
                 default:
                     command.add("-dPDFSETTINGS=/screen");
+                    addDownsampleFlags(command);
                     break;
-            }
-
-            // If grayscale conversion requested, enforce grayscale color processing in Ghostscript
-            boolean grayscaleRequested = Boolean.TRUE.equals(request.getGrayscale());
-            if (grayscaleRequested) {
-                command.add("-dColorConversionStrategy=/Gray");
-                command.add("-dProcessColorModel=/DeviceGray");
-            }
-
-            // Optional conversion: CMYK -> RGB for color output only (avoid conflict with
-            // grayscale)
-            if (optimizeLevel >= 7 && !grayscaleRequested) {
-                command.add("-dConvertCMYKImagesToRGB=true");
             }
 
             command.add("-sOutputFile=" + gsOutputPath.toString());
             command.add(currentFile.toString());
 
-            ProcessExecutorResult returnCode;
             try {
-                returnCode =
+                ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                                 .runCommandWithOutputHandling(command);
-
-                // Check for critical errors in the output before checking return code
-                String gsOutput = returnCode.getMessages();
-                ExceptionUtils.GhostscriptException criticalError =
-                        ExceptionUtils.detectGhostscriptCriticalError(gsOutput);
-                if (criticalError != null) {
-                    log.error(
-                            "Ghostscript critical error detected: {}", criticalError.getMessage());
-                    throw criticalError;
-                }
 
                 if (returnCode.getRc() == 0) {
                     // Update current file to the Ghostscript output
@@ -1302,19 +1336,42 @@ public class CompressController {
                     log.warn(
                             "Ghostscript compression failed with return code: {}",
                             returnCode.getRc());
-                    throw ExceptionUtils.createGhostscriptCompressionException(gsOutput);
+                    throw ExceptionUtils.createGhostscriptCompressionException(
+                            returnCode.getMessages());
                 }
 
             } catch (InterruptedException e) {
                 throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
-            } catch (ExceptionUtils.GhostscriptException e) {
-                // Re-throw Ghostscript-specific exceptions
-                throw e;
             } catch (Exception e) {
                 log.warn("Ghostscript compression failed, will fallback to other methods", e);
+                // Throwing specific exception to be handled by caller if needed, or just let it
+                // bubble up as IOException in fallback logic
                 throw ExceptionUtils.createGhostscriptCompressionException(e);
             }
         }
+    }
+
+    // Add flags to force image downsampling in Ghostscript
+    private void addDownsampleFlags(List<String> command) {
+        // Enable downsampling for all image types
+        command.add("-dDownsampleColorImages=true");
+        command.add("-dDownsampleGrayImages=true");
+        command.add("-dDownsampleMonoImages=true");
+        // Use bicubic interpolation for better quality during downsampling
+        command.add("-dColorImageDownsampleType=/Bicubic");
+        command.add("-dGrayImageDownsampleType=/Bicubic");
+        command.add("-dMonoImageDownsampleType=/Bicubic");
+        // Always downsample if image exceeds target resolution (threshold = 1.0)
+        command.add("-dColorImageDownsampleThreshold=1.0");
+        command.add("-dGrayImageDownsampleThreshold=1.0");
+        command.add("-dMonoImageDownsampleThreshold=1.0");
+        // Encode images for smaller file size
+        command.add("-dEncodeColorImages=true");
+        command.add("-dEncodeGrayImages=true");
+        command.add("-dAutoFilterColorImages=false");
+        command.add("-dAutoFilterGrayImages=false");
+        command.add("-dColorImageFilter=/DCTEncode");
+        command.add("-dGrayImageFilter=/DCTEncode");
     }
 
     // Run QPDF compression
