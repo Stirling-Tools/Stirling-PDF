@@ -388,7 +388,7 @@ class SpringAuthClient {
       });
 
       const data = response.data;
-      const token = data.session.access_token;
+      const token = data.access_token;
 
       // Update local storage with new token
       localStorage.setItem('stirling_jwt', token);
@@ -399,12 +399,14 @@ class SpringAuthClient {
       const session: Session = {
         user: data.user,
         access_token: token,
-        expires_in: data.session.expires_in,
-        expires_at: Date.now() + data.session.expires_in * 1000,
+        expires_in: data.expires_in,
+        expires_at: Date.now() + data.expires_in * 1000,
       };
 
       // Notify listeners
       this.notifyListeners('TOKEN_REFRESHED', session);
+
+      console.debug('[SpringAuth] Token refreshed successfully');
 
       return { data: { session }, error: null };
     } catch (error: unknown) {
