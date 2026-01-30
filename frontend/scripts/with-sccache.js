@@ -36,9 +36,21 @@ const result = spawnSync(args[0], args.slice(1), {
   shell: process.platform === 'win32',
 });
 
+const exitCode =
+  result.status !== null && result.status !== undefined
+    ? result.status
+    : (() => {
+        if (result.signal) {
+          console.error(
+            `[with-sccache] Child process terminated by signal ${result.signal}`,
+          );
+        }
+        return 1;
+      })();
+
 if (result.error) {
   console.error(`[with-sccache] Failed to run ${args[0]}: ${result.error.message}`);
-  process.exit(result.status ?? 1);
+  process.exit(exitCode);
 }
 
-process.exit(result.status ?? 0);
+process.exit(exitCode);
