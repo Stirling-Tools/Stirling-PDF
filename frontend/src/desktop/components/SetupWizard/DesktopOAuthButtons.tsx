@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { authService, UserInfo } from '@app/services/authService';
 import { buildOAuthCallbackHtml } from '@app/utils/oauthCallbackHtml';
 import { BASE_PATH } from '@app/constants/app';
-import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import '@app/routes/authShared/auth.css';
 
 type KnownProviderId = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
