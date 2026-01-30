@@ -209,9 +209,20 @@ export default function AdminConnectionsSection() {
     return !!(providerSettings?.clientId);
   };
 
+  // Helper to get nested value from object using dot notation
+  const getNestedValue = (obj: Record<string, any>, path: string): any => {
+    return path.split('.').reduce((acc, part) => acc?.[part], obj);
+  };
+
   const getProviderSettings = (provider: Provider): Record<string, any> => {
     if (provider.id === 'saml2') {
-      return settings?.saml2 || {};
+      const saml2 = settings?.saml2 || {};
+      // Flatten nested structure to match field keys with dot notation
+      const result: Record<string, any> = {};
+      provider.fields.forEach((field) => {
+        result[field.key] = getNestedValue(saml2, field.key);
+      });
+      return result;
     }
 
     if (provider.id === 'smtp') {
@@ -297,8 +308,9 @@ export default function AdminConnectionsSection() {
         const deltaSettings: Record<string, any> = {};
 
         if (provider.id === 'saml2') {
-          // SAML2 settings
+          // SAML2 settings - keys may use dot notation (e.g., 'provider.name')
           Object.keys(providerSettings).forEach((key) => {
+            // Key already has dot notation for nested paths, just prepend security.saml2.
             deltaSettings[`security.saml2.${key}`] = providerSettings[key];
           });
         } else if (provider.id === 'oauth2-generic') {

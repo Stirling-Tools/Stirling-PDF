@@ -1,53 +1,58 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
-import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
-
-import com.coveo.saml.SamlClient;
-import com.coveo.saml.SamlException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.UrlUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
-import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @Slf4j
-@RequiredArgsConstructor
 public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";
 
     private final ApplicationProperties.Security securityProperties;
-
-    private final AppConfig appConfig;
-
     private final JwtServiceInterface jwtService;
+    private final LogoutSuccessHandler samlLogoutHandler;
+
+    public CustomLogoutSuccessHandler(
+            ApplicationProperties.Security securityProperties, JwtServiceInterface jwtService) {
+        this(securityProperties, jwtService, null);
+    }
+
+    public CustomLogoutSuccessHandler(
+            ApplicationProperties.Security securityProperties,
+            JwtServiceInterface jwtService,
+            LogoutSuccessHandler samlLogoutHandler) {
+        this.securityProperties = securityProperties;
+        this.jwtService = jwtService;
+        this.samlLogoutHandler = samlLogoutHandler;
+    }
 
     @Override
     @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
@@ -56,13 +61,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             throws IOException {
 
         if (!response.isCommitted()) {
+            if (handleSamlLogout(request, response, authentication)) {
+                return;
+            }
+
             if (authentication != null) {
-                if (authentication instanceof Saml2Authentication samlAuthentication) {
-                    // Handle SAML2 logout redirection
-                    getRedirect_saml2(request, response, samlAuthentication);
-                } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
+                if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
                     // Handle OAuth2 logout redirection
-                    getRedirect_oauth2(request, response, oAuthToken);
+                    getRedirectOauth2(request, response, oAuthToken);
                 } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
                     // Handle Username/Password logout
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
@@ -74,71 +80,152 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
             } else {
-                if (jwtService != null) {
-                    String token = jwtService.extractToken(request);
-                    if (token != null && !token.isBlank()) {
-                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                        return;
-                    }
-                }
-                // Redirect to login page after logout
-                String path = checkForErrors(request);
-                getRedirectStrategy().sendRedirect(request, response, path);
+                // Redirect to login page after logout (handles error parameters if present)
+                String queryParams = checkForErrors(request);
+                getRedirectStrategy().sendRedirect(request, response, "/login?" + queryParams);
             }
         }
     }
 
-    // Redirect for SAML2 authentication logout
-    private void getRedirect_saml2(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Saml2Authentication samlAuthentication)
+    /**
+     * Handles SAML logout - either via IdP Single Logout (SLO) or local logout.
+     *
+     * @return true if this was a SAML user and logout was handled, false otherwise
+     */
+    private boolean handleSamlLogout(
+            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
+        // Logout locally if this is a SAMLResponse from to /logout instead of /logout/saml2/slo
+        String samlResponse = request.getParameter("SAMLResponse");
+        if (samlResponse != null && !samlResponse.isBlank()) {
+            if (samlResponse.contains("/saml2/slo")) {
+                log.info(
+                        "Received SAML LogoutResponse at /logout endpoint, completing logout locally");
+                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                return true;
+            }
+        }
 
-        SAML2 samlConf = securityProperties.getSaml2();
-        String registrationId = samlConf.getRegistrationId();
+        if (securityProperties.getSaml2().getEnableSingleLogout()) {
+            log.info("SP-initiated SLO detected, logging out via IdP");
 
-        CustomSaml2AuthenticatedPrincipal principal =
-                (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
+            if (authentication instanceof Saml2Authentication samlAuthentication) {
+                if (samlLogoutHandler != null) {
+                    try {
+                        samlLogoutHandler.onLogoutSuccess(request, response, samlAuthentication);
+                    } catch (Exception e) {
+                        log.error("SP-initiated SLO failed, falling back to local logout", e);
+                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    }
+                } else {
+                    log.warn(
+                            "SAML SLO enabled but handler not configured, performing local logout only");
+                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                }
 
-        String nameIdValue = principal.name();
+                return true;
+            } else {
+                // Reconstruct Saml2Authentication from JWT claims for SLO
+                Optional<Saml2Authentication> reconstructedAuth =
+                        reconstructSaml2AuthenticationFromJwt(request);
 
+                if (reconstructedAuth.isPresent()) {
+                    Saml2Authentication samlAuth = reconstructedAuth.get();
+
+                    if (samlLogoutHandler != null) {
+                        try {
+                            samlLogoutHandler.onLogoutSuccess(request, response, samlAuth);
+                        } catch (Exception e) {
+                            log.error("SP-initiated SLO failed, falling back to local logout", e);
+                            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                        }
+                    } else {
+                        log.warn(
+                                "SAML SLO enabled but handler not configured, performing local logout only");
+                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Reconstructs a Saml2Authentication from JWT claims for SAML Single Logout. This allows SLO to
+     * work even with stateless JWT sessions by extracting the SAML attributes that were stored in
+     * the JWT during initial authentication.
+     */
+    @SuppressWarnings("unchecked")
+    private Optional<Saml2Authentication> reconstructSaml2AuthenticationFromJwt(
+            HttpServletRequest request) {
         try {
-            // Read certificate from the resource
-            Resource certificateResource = samlConf.getSpCert();
-            X509Certificate certificate = CertificateUtils.readCertificate(certificateResource);
+            String token = jwtService.extractToken(request);
+            if (token == null || token.isBlank()) {
+                return Optional.empty();
+            }
 
-            List<X509Certificate> certificates = new ArrayList<>();
-            certificates.add(certificate);
+            Map<String, Object> claims = jwtService.extractClaims(token);
+            Object authType = claims.get("authType");
 
-            // Construct URLs required for SAML configuration
-            SamlClient samlClient = getSamlClient(registrationId, samlConf, certificates);
+            if (authType == null || !"SAML2".equalsIgnoreCase(authType.toString())) {
+                return Optional.empty();
+            }
 
-            // Read private key for service provider
-            Resource privateKeyResource = samlConf.getPrivateKey();
-            RSAPrivateKey privateKey = CertificateUtils.readPrivateKey(privateKeyResource);
+            // Extract SAML claims from JWT
+            String username = (String) claims.get("sub");
+            String nameId = (String) claims.get("samlNameId");
+            String registrationId = (String) claims.get("samlRegistrationId");
+            Object sessionIndexesObj = claims.get("samlSessionIndexes");
 
-            // Set service provider keys for the SamlClient
-            samlClient.setSPKeys(certificate, privateKey);
+            if (nameId == null || registrationId == null) {
+                log.debug(
+                        "Missing required SAML claims for SLO reconstruction: nameId={}, registrationId={}",
+                        nameId,
+                        registrationId);
+                return Optional.empty();
+            }
 
-            // Build relay state to return user to login page after IdP logout
-            String relayState =
-                    UrlUtils.getOrigin(request) + request.getContextPath() + LOGOUT_PATH;
+            List<String> sessionIndexes = Collections.emptyList();
+            if (sessionIndexesObj instanceof List<?>) {
+                sessionIndexes =
+                        ((List<?>) sessionIndexesObj).stream().map(Object::toString).toList();
+            }
 
-            // Redirect to identity provider for logout with relay state
-            samlClient.redirectToIdentityProvider(response, relayState, nameIdValue);
-        } catch (Exception e) {
-            log.error(
-                    "Error retrieving logout URL from Provider {} for user {}",
-                    samlConf.getProvider(),
-                    nameIdValue,
-                    e);
-            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+            // Create principal with all SAML attributes needed for SLO
+            CustomSaml2AuthenticatedPrincipal principal =
+                    new CustomSaml2AuthenticatedPrincipal(
+                            username,
+                            Collections.emptyMap(), // Attributes not needed for logout
+                            nameId,
+                            sessionIndexes,
+                            registrationId);
+
+            // Create Saml2Authentication with the reconstructed principal
+            // The saml2Response parameter is not used by the logout handler, but constructor
+            // requires non-empty value, so we provide a placeholder
+            Saml2Authentication samlAuth =
+                    new Saml2Authentication(
+                            principal,
+                            "<!-- reconstructed for logout -->",
+                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+
+            log.debug(
+                    "Reconstructed Saml2Authentication from JWT for user {} with registrationId {}",
+                    username,
+                    registrationId);
+            return Optional.of(samlAuth);
+
+        } catch (Exception ex) {
+            log.error("Unable to reconstruct Saml2Authentication from JWT", ex);
+            return Optional.empty();
         }
     }
 
     // Redirect for OAuth2 authentication logout
-    private void getRedirect_oauth2(
+    private void getRedirectOauth2(
             HttpServletRequest request,
             HttpServletResponse response,
             OAuth2AuthenticationToken oAuthToken)
@@ -169,7 +256,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     logoutUrl +=
                             "/protocol/openid-connect/logout"
                                     + "?client_id="
-                                    + oauth.getClientId()
+                                    + keycloak.getClientId()
                                     + "&post_logout_redirect_uri="
                                     + response.encodeRedirectURL(redirectUrl);
                     log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
@@ -194,30 +281,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 response.sendRedirect(redirectUrl);
             }
         }
-    }
-
-    private SamlClient getSamlClient(
-            String registrationId, SAML2 samlConf, List<X509Certificate> certificates)
-            throws SamlException {
-        String serverUrl = appConfig.getBackendUrl() + ":" + appConfig.getServerPort();
-
-        String relyingPartyIdentifier =
-                serverUrl + "/saml2/service-provider-metadata/" + registrationId;
-
-        String assertionConsumerServiceUrl = serverUrl + "/login/saml2/sso/" + registrationId;
-
-        String idpSLOUrl = samlConf.getIdpSingleLogoutUrl();
-
-        String idpIssuer = samlConf.getIdpIssuer();
-
-        // Create SamlClient instance for SAML logout
-        return new SamlClient(
-                relyingPartyIdentifier,
-                assertionConsumerServiceUrl,
-                idpSLOUrl,
-                idpIssuer,
-                certificates,
-                SamlClient.SamlIdpBinding.POST);
     }
 
     /**

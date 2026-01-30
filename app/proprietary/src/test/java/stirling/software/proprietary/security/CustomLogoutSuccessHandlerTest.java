@@ -6,9 +6,9 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -26,17 +26,24 @@ class CustomLogoutSuccessHandlerTest {
 
     @Mock private JwtServiceInterface jwtService;
 
-    @InjectMocks private CustomLogoutSuccessHandler customLogoutSuccessHandler;
+    @Mock private ApplicationProperties.Security.SAML2 saml2;
+
+    private CustomLogoutSuccessHandler customLogoutSuccessHandler;
+
+    @BeforeEach
+    void setUp() {
+        customLogoutSuccessHandler = new CustomLogoutSuccessHandler(securityProperties, jwtService);
+    }
 
     @Test
     void testSuccessfulLogout() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
-        String token = "token";
         String logoutPath = "/login?logout=true";
 
         when(response.isCommitted()).thenReturn(false);
-        when(jwtService.extractToken(request)).thenReturn(token);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
@@ -50,10 +57,10 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         String logoutPath = "/login?logout=true";
-        String token = "token";
 
         when(response.isCommitted()).thenReturn(false);
-        when(jwtService.extractToken(request)).thenReturn(token);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
@@ -71,6 +78,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getScheme()).thenReturn("http");
@@ -96,6 +106,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
@@ -128,6 +141,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter(error)).thenReturn("true");
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
@@ -152,6 +168,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn("!!!" + error + "!!!");
         when(request.getScheme()).thenReturn("http");
@@ -177,10 +196,12 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter(error)).thenReturn("true");
-        when(request.getContextPath()).thenReturn(url);
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
@@ -204,6 +225,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
@@ -236,6 +260,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);
@@ -269,6 +296,9 @@ class CustomLogoutSuccessHandlerTest {
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
         when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("SAMLResponse")).thenReturn(null);
+        when(securityProperties.getSaml2()).thenReturn(saml2);
+        when(saml2.getEnableSingleLogout()).thenReturn(false);
         when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
         when(request.getParameter("errorOAuth")).thenReturn(null);
         when(request.getParameter("oAuth2AutoCreateDisabled")).thenReturn(null);

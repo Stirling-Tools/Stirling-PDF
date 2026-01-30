@@ -61,6 +61,15 @@ vi.mock('@app/services/apiClient', () => ({
   },
 }));
 
+// Helper to create mock API responses with TauriHttpResponse structure
+const createMockResponse = <T,>(data: T) => ({
+  data,
+  status: 200,
+  statusText: 'OK',
+  headers: {},
+  config: {},
+});
+
 const mockNavigate = vi.fn();
 const mockBackendProbeState = {
   status: 'up' as const,
@@ -112,12 +121,10 @@ describe('Login', () => {
     });
 
     // Mock apiClient for login UI data
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        enableLogin: true,
-        providerList: {},
-      },
-    });
+    vi.mocked(apiClient.get).mockResolvedValue(createMockResponse({
+      enableLogin: true,
+      providerList: {},
+    }));
   });
 
   it('should render login form', async () => {
@@ -264,14 +271,12 @@ describe('Login', () => {
     const user = userEvent.setup();
 
     // Mock provider list with authentik
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        enableLogin: true,
-        providerList: {
-          '/oauth2/authorization/authentik': 'Authentik',
-        },
+    vi.mocked(apiClient.get).mockResolvedValue(createMockResponse({
+      enableLogin: true,
+      providerList: {
+        '/oauth2/authorization/authentik': 'Authentik',
       },
-    });
+    }));
 
     vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
       error: null,
@@ -307,14 +312,12 @@ describe('Login', () => {
     const user = userEvent.setup();
 
     // Mock provider list with custom provider 'mycompany'
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        enableLogin: true,
-        providerList: {
-          '/oauth2/authorization/mycompany': 'My Company SSO',
-        },
+    vi.mocked(apiClient.get).mockResolvedValue(createMockResponse({
+      enableLogin: true,
+      providerList: {
+        '/oauth2/authorization/mycompany': 'My Company SSO',
       },
-    });
+    }));
 
     vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
       error: null,
@@ -351,14 +354,12 @@ describe('Login', () => {
     const user = userEvent.setup();
 
     // Mock provider list with 'oidc'
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        enableLogin: true,
-        providerList: {
-          '/oauth2/authorization/oidc': 'OIDC',
-        },
+    vi.mocked(apiClient.get).mockResolvedValue(createMockResponse({
+      enableLogin: true,
+      providerList: {
+        '/oauth2/authorization/oidc': 'OIDC',
       },
-    });
+    }));
 
     vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
       error: null,
@@ -510,12 +511,10 @@ describe('Login', () => {
   it('should redirect to home when login disabled', async () => {
     mockBackendProbeState.loginDisabled = true;
     mockProbe.mockResolvedValueOnce({ status: 'up', loginDisabled: true, loading: false });
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      data: {
-        enableLogin: false,
-        providerList: {},
-      },
-    });
+    vi.mocked(apiClient.get).mockResolvedValueOnce(createMockResponse({
+      enableLogin: false,
+      providerList: {},
+    }));
 
     render(
       <TestWrapper>
@@ -531,14 +530,12 @@ describe('Login', () => {
   });
 
   it('should handle OAuth provider click', async () => {
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      data: {
-        enableLogin: true,
-        providerList: {
-          '/oauth2/authorization/github': 'GitHub',
-        },
+    vi.mocked(apiClient.get).mockResolvedValueOnce(createMockResponse({
+      enableLogin: true,
+      providerList: {
+        '/oauth2/authorization/github': 'GitHub',
       },
-    });
+    }));
 
     vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
       error: null,
@@ -565,12 +562,10 @@ describe('Login', () => {
   });
 
   it('should show email form by default when no SSO providers', async () => {
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      data: {
-        enableLogin: true,
-        providerList: {}, // No providers
-      },
-    });
+    vi.mocked(apiClient.get).mockResolvedValueOnce(createMockResponse({
+      enableLogin: true,
+      providerList: {}, // No providers
+    }));
 
     render(
       <TestWrapper>

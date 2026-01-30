@@ -134,9 +134,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for jwt-available event (triggered by desktop auth or other sources)
     const handleJwtAvailable = () => {
-      console.debug('[Auth] JWT available event received, refreshing session');
+      console.log('[Auth] JWT available event received, refreshing session');
+      // Set loading true while we re-validate
+      setLoading(true);
       void initializeAuth();
     };
+
+    // Log that we're setting up the listener
+    console.debug('[Auth] Setting up jwt-available event listener');
 
     window.addEventListener('jwt-available', handleJwtAvailable);
 

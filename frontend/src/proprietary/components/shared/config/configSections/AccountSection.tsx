@@ -7,14 +7,12 @@ import { useAuth } from '@app/auth/UseSession';
 import { accountService } from '@app/services/accountService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { QRCodeSVG } from 'qrcode.react';
-import { useAccountLogout } from '@app/extensions/accountLogout';
 import { BASE_PATH } from '@app/constants/app';
 import { MfaSetupResponse } from '@app/responses/Mfa/MfaResponse';
 
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
-  const accountLogout = useAccountLogout();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [usernameModalOpen, setUsernameModalOpen] = useState(false);
 
@@ -53,13 +51,12 @@ const AccountSection: React.FC = () => {
 
   const userIdentifier = useMemo(() => user?.email || user?.username || '', [user?.email, user?.username]);
 
-  const redirectToLogin = useCallback(() => {
-    window.location.assign('/login');
-  }, []);
-
   const handleLogout = useCallback(async () => {
-    await accountLogout({ signOut, redirectToLogin });
-  }, [accountLogout, redirectToLogin, signOut]);
+    console.log('[AccountSection] Logout button clicked, calling signOut()');
+    // signOut() handles navigation to /logout for SAML/OAuth SLO
+    // Do NOT navigate after signOut - it will redirect the page
+    await signOut();
+  }, [signOut]);
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

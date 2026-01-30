@@ -7,6 +7,8 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,6 +35,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
@@ -70,8 +73,7 @@ public class CustomSaml2AuthenticationSuccessHandler
 
             // Check if user is eligible for SAML (grandfathered or system has ENTERPRISE license)
             if (userExists) {
-                stirling.software.proprietary.security.model.User user =
-                        userService.findByUsernameIgnoreCase(username).orElse(null);
+                User user = userService.findByUsernameIgnoreCase(username).orElse(null);
 
                 if (user != null && !licenseSettingsService.isSamlEligible(user)) {
                     // User is not grandfathered and no ENTERPRISE license - block SAML login
@@ -172,7 +174,11 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                     // Extract SSO provider information from SAML2 assertion
                     String ssoProviderId = saml2Principal.nameId();
-                    String ssoProvider = "saml2"; // fixme
+                    String ssoProvider =
+                            (saml2Properties.getIdpIssuer() != null
+                                            && !saml2Properties.getIdpIssuer().isBlank())
+                                    ? saml2Properties.getIdpIssuer()
+                                    : saml2Properties.getRegistrationId();
 
                     log.debug(
                             "Processing SSO post-login for user: {} (Provider: {}, ProviderId: {})",
@@ -188,12 +194,21 @@ public class CustomSaml2AuthenticationSuccessHandler
                             SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
-                    // Generate JWT if v2 is enabled
                     if (jwtService.isJwtEnabled()) {
-                        String jwt =
-                                jwtService.generateToken(
-                                        authentication,
-                                        Map.of("authType", AuthenticationType.SAML2));
+                        Map<String, Object> claims = new HashMap<>();
+                        claims.put("authType", AuthenticationType.SAML2);
+                        claims.put("samlNameId", saml2Principal.nameId());
+                        List<String> sessionIndexes = saml2Principal.sessionIndexes();
+                        if (sessionIndexes != null && !sessionIndexes.isEmpty()) {
+                            claims.put("samlSessionIndexes", sessionIndexes);
+                        }
+                        if (ssoProvider != null) {
+                            claims.put("samlProvider", ssoProvider);
+                        }
+                        if (saml2Properties.getRegistrationId() != null) {
+                            claims.put("samlRegistrationId", saml2Properties.getRegistrationId());
+                        }
+                        String jwt = jwtService.generateToken(authentication, claims);
 
                         // Build context-aware redirect URL based on the original request
                         String redirectUrl =
