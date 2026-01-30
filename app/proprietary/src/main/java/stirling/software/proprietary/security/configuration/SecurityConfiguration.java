@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -185,10 +186,38 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain samlFilterChain(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        http.securityMatcher("/saml2/**", "/login/saml2/**");
+
+        SessionCreationPolicy sessionPolicy =
+                (securityProperties.isSaml2Active() && runningProOrHigher)
+                        ? SessionCreationPolicy.IF_REQUIRED
+                        : SessionCreationPolicy.STATELESS;
+
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             @Lazy IPRateLimitingFilter rateLimitingFilter,
             @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        SessionCreationPolicy sessionPolicy = SessionCreationPolicy.STATELESS;
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    private SecurityFilterChain configureSecurity(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
+            SessionCreationPolicy sessionPolicy)
             throws Exception {
         // Enable CORS only if we have configured origins
         CorsConfigurationSource corsSource = corsConfigurationSource();
@@ -233,9 +262,7 @@ public class SecurityConfiguration {
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(
-                    sessionManagement ->
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS));
+                    sessionManagement -> sessionManagement.sessionCreationPolicy(sessionPolicy));
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
 
