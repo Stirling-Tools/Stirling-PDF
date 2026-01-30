@@ -69,11 +69,28 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
       console.log('[ServerSelection] ✅ Connection test successful');
 
+      // Check if the connection requires accepting invalid certificates
+      const allowInvalidCerts = testResult.requiresInvalidCertAcceptance || false;
+      if (allowInvalidCerts) {
+        console.warn('[ServerSelection] ⚠️ Server uses self-signed/invalid certificate - will accept for all requests');
+      }
+
       // Fetch OAuth providers and check if login is enabled
       const enabledProviders: SSOProviderConfig[] = [];
       try {
         console.log('[ServerSelection] Fetching login configuration...');
-        const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`);
+
+        // Prepare fetch options with danger mode if needed
+        const fetchOptions: any = {};
+        if (allowInvalidCerts) {
+          fetchOptions.danger = {
+            acceptInvalidCerts: true,
+            acceptInvalidHostnames: true,
+          };
+          console.debug('[ServerSelection] Using danger mode for login config fetch');
+        }
+
+        const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`, fetchOptions);
 
         // Check if security is disabled (status 403, 401, or 404 - endpoint doesn't exist)
         if (!response.ok) {
@@ -147,11 +164,12 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         return;
       }
 
-      // Connection successful - pass URL and OAuth providers
+      // Connection successful - pass URL, OAuth providers, and cert settings
       console.log('[ServerSelection] ✅ Server selection complete, proceeding to login');
       onSelect({
         url,
         enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+        allow_invalid_certs: allowInvalidCerts,
       });
     } catch (error) {
       console.error('[ServerSelection] ❌ Unexpected error during connection test:', error);

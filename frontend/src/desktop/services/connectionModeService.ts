@@ -12,6 +12,7 @@ export interface SSOProviderConfig {
 export interface ServerConfig {
   url: string;
   enabledOAuthProviders?: SSOProviderConfig[];
+  allow_invalid_certs?: boolean;
 }
 
 export interface ConnectionConfig {
@@ -31,6 +32,7 @@ export interface ConnectionTestResult {
   error?: string;
   errorCode?: string;
   diagnostics?: DiagnosticResult[];
+  requiresInvalidCertAcceptance?: boolean;
 }
 
 export class ConnectionModeService {
@@ -256,10 +258,11 @@ export class ConnectionModeService {
         console.log(`[ConnectionModeService] ✅ CONNECTION SUCCESSFUL (with certificate bypass)`);
         console.log(`[ConnectionModeService] Protocol: HTTPS with certificate validation disabled`);
         console.log(`[ConnectionModeService] Duration: ${stage2Result.duration}ms`);
-        console.log(`[ConnectionModeService] Note: Server has missing intermediate certificate or invalid cert`);
+        console.log(`[ConnectionModeService] Note: Server has self-signed or invalid certificate - allowing connection`);
         console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SESSION END ====================`);
         return {
           success: true,
+          requiresInvalidCertAcceptance: true,
           diagnostics,
         };
       }

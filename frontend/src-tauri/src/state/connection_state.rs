@@ -11,6 +11,8 @@ pub enum ConnectionMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     pub url: String,
+    #[serde(default)]
+    pub allow_invalid_certs: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
