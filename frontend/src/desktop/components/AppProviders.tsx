@@ -6,7 +6,7 @@ import { SetupWizard } from '@app/components/SetupWizard';
 import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
-import { connectionModeService } from '@desktop/services/connectionModeService';
+import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { authService } from '@app/services/authService';
 
