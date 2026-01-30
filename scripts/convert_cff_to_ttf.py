@@ -3,6 +3,7 @@
 Wrap raw CFF/Type1C data (extracted from PDFs) as OpenType-CFF for web compatibility.
 Builds proper Unicode cmap from PDF ToUnicode data.
 """
+
 import sys
 import re
 from pathlib import Path
@@ -13,6 +14,7 @@ from fontTools.ttLib.tables._c_m_a_p import cmap_format_4, cmap_format_12
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables.O_S_2f_2 import Panose
 
+
 def parse_unicode_mapping(mapping_path):
     """
     Parse Unicode mapping (either JSON with CharCode→CID→GID→Unicode or raw ToUnicode CMap).
@@ -21,23 +23,27 @@ def parse_unicode_mapping(mapping_path):
         dict[int, int]: GID → Unicode codepoint
     """
     try:
-        with open(mapping_path, 'rb') as f:
-            data = f.read().decode('utf-8', errors='ignore')
+        with open(mapping_path, "rb") as f:
+            data = f.read().decode("utf-8", errors="ignore")
 
         # Try parsing as JSON first (CID font with complete mapping)
-        if data.strip().startswith('{'):
+        if data.strip().startswith("{"):
             import json
+
             try:
                 mapping_data = json.loads(data)
-                if mapping_data.get('isCID'):
+                if mapping_data.get("isCID"):
                     # Build GID → Unicode mapping from entries
                     gid_to_unicode = {}
-                    for entry in mapping_data.get('entries', []):
-                        gid = entry['gid']
-                        unicode_val = entry['unicode']
+                    for entry in mapping_data.get("entries", []):
+                        gid = entry["gid"]
+                        unicode_val = entry["unicode"]
                         if unicode_val > 0:
                             gid_to_unicode[gid] = unicode_val
-                    print(f"Parsed JSON mapping: {len(gid_to_unicode)} GID→Unicode entries", file=sys.stderr)
+                    print(
+                        f"Parsed JSON mapping: {len(gid_to_unicode)} GID→Unicode entries",
+                        file=sys.stderr,
+                    )
                     return gid_to_unicode
             except json.JSONDecodeError:
                 pass
@@ -47,7 +53,7 @@ def parse_unicode_mapping(mapping_path):
         gid_to_unicode = {}
 
         # Pattern for bfchar entries
-        bfchar_pattern = r'<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>'
+        bfchar_pattern = r"<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>"
         for match in re.finditer(bfchar_pattern, data):
             gid = int(match.group(1), 16)  # For non-CID, char code == GID
             unicode_val = int(match.group(2), 16)
@@ -55,7 +61,7 @@ def parse_unicode_mapping(mapping_path):
                 gid_to_unicode[gid] = unicode_val
 
         # Pattern for bfrange entries
-        bfrange_pattern = r'<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>'
+        bfrange_pattern = r"<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>"
         for match in re.finditer(bfrange_pattern, data):
             start_gid = int(match.group(1), 16)
             end_gid = int(match.group(2), 16)
@@ -72,6 +78,7 @@ def parse_unicode_mapping(mapping_path):
         print(f"Warning: Failed to parse Unicode mapping: {e}", file=sys.stderr)
         return {}
 
+
 def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
     """
     Wrap raw CFF data (from PDF font stream) as OpenType-CFF.
@@ -86,7 +93,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
     """
     try:
         # Read raw CFF data
-        with open(input_path, 'rb') as f:
+        with open(input_path, "rb") as f:
             cff_data = f.read()
 
         # Parse raw CFF data
@@ -106,29 +113,35 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
             gid_to_unicode = parse_unicode_mapping(tounicode_path)
 
         # Create a new OTF font
-        otf = TTFont(sfntVersion='OTTO')  # 'OTTO' = CFF-flavored OpenType
+        otf = TTFont(sfntVersion="OTTO")  # 'OTTO' = CFF-flavored OpenType
 
         # Get glyph names
-        if hasattr(cff_font, 'charset') and cff_font.charset is not None:
-            glyph_order = ['.notdef'] + [name for name in cff_font.charset if name != '.notdef']
+        if hasattr(cff_font, "charset") and cff_font.charset is not None:
+            glyph_order = [".notdef"] + [
+                name for name in cff_font.charset if name != ".notdef"
+            ]
         else:
             # Fallback to CharStrings keys
             charstrings = cff_font.CharStrings
-            glyph_order = ['.notdef'] + [name for name in charstrings.keys() if name != '.notdef']
+            glyph_order = [".notdef"] + [
+                name for name in charstrings.keys() if name != ".notdef"
+            ]
 
         otf.setGlyphOrder(glyph_order)
 
         # === Add CFF table (the actual font outlines) ===
-        cff_table = newTable('CFF ')
+        cff_table = newTable("CFF ")
         cff_table.cff = cff_fontset
-        otf['CFF '] = cff_table
+        otf["CFF "] = cff_table
 
         # === Calculate metrics from CFF ===
         charstrings = cff_font.CharStrings
 
         # Get defaults from CFF Private dict
-        private_dict = getattr(cff_font, 'Private', None)
-        default_width = getattr(private_dict, 'defaultWidthX', 500) if private_dict else 500
+        private_dict = getattr(cff_font, "Private", None)
+        default_width = (
+            getattr(private_dict, "defaultWidthX", 500) if private_dict else 500
+        )
 
         # Calculate bounding box, widths, and LSBs
         x_min = 0
@@ -152,7 +165,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                     cs = charstrings[glyph_name]
 
                     # Get width from charstring
-                    if hasattr(cs, 'width'):
+                    if hasattr(cs, "width"):
                         width = int(cs.width)
 
                     # Calculate bounds for LSB and bbox
@@ -181,7 +194,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                     except:
                         pass  # Some glyphs may not have outlines
 
-                except Exception as e:
+                except Exception:
                     pass  # Use defaults
 
             widths[glyph_name] = width
@@ -196,7 +209,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         units_per_em = 1000  # Standard for Type1/CFF
 
         # === Create head table ===
-        head = newTable('head')
+        head = newTable("head")
         head.tableVersion = 1.0
         head.fontRevision = 1.0
         head.checkSumAdjustment = 0
@@ -214,10 +227,10 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         head.indexToLocFormat = 0
         head.glyphDataFormat = 0
         head.lowestRecPPEM = 8
-        otf['head'] = head
+        otf["head"] = head
 
         # === Create hhea table with correct metrics ===
-        hhea = newTable('hhea')
+        hhea = newTable("hhea")
         hhea.tableVersion = 0x00010000
         hhea.ascent = max(y_max, 800)
         hhea.descent = min(y_min, -200)
@@ -235,27 +248,30 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         hhea.reserved3 = 0
         hhea.metricDataFormat = 0
         hhea.numberOfHMetrics = len(glyph_order)
-        otf['hhea'] = hhea
+        otf["hhea"] = hhea
 
         # === Create hmtx table with correct LSBs ===
-        hmtx = newTable('hmtx')
+        hmtx = newTable("hmtx")
         hmtx.metrics = {}
         for glyph_name in glyph_order:
-            hmtx.metrics[glyph_name] = (widths.get(glyph_name, default_width), lsbs.get(glyph_name, 0))
-        otf['hmtx'] = hmtx
+            hmtx.metrics[glyph_name] = (
+                widths.get(glyph_name, default_width),
+                lsbs.get(glyph_name, 0),
+            )
+        otf["hmtx"] = hmtx
 
         # === Create maxp table (simpler for CFF) ===
-        maxp = newTable('maxp')
+        maxp = newTable("maxp")
         maxp.tableVersion = 0x00005000  # CFF version (0.5)
         maxp.numGlyphs = len(glyph_order)
-        otf['maxp'] = maxp
+        otf["maxp"] = maxp
 
         # === Build Unicode cmap from GID→Unicode mapping ===
         unicode_to_glyph = {}
 
         if gid_to_unicode:
             # Debug: Show first few glyph names to understand naming convention
-            sample_glyphs = glyph_order[:min(10, len(glyph_order))]
+            sample_glyphs = glyph_order[: min(10, len(glyph_order))]
             print(f"Sample glyph names: {sample_glyphs}", file=sys.stderr)
 
             # Debug: Show which GIDs we have mappings for
@@ -264,7 +280,9 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
 
             # For CID fonts: glyph names are "cid00123" (5-digit zero-padded)
             # For non-CID fonts: glyph names vary but GID == array index
-            is_cid_font = any(gn.startswith('cid') for gn in glyph_order[1:6])  # Check first few non-.notdef glyphs
+            is_cid_font = any(
+                gn.startswith("cid") for gn in glyph_order[1:6]
+            )  # Check first few non-.notdef glyphs
 
             for gid, unicode_val in gid_to_unicode.items():
                 if unicode_val > 0:
@@ -285,18 +303,21 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                             glyph_name = glyph_order[gid]
                             unicode_to_glyph[unicode_val] = glyph_name
 
-        print(f"Mapped {len(unicode_to_glyph)} Unicode codepoints (isCID={is_cid_font if gid_to_unicode else 'unknown'})", file=sys.stderr)
+        print(
+            f"Mapped {len(unicode_to_glyph)} Unicode codepoints (isCID={is_cid_font if gid_to_unicode else 'unknown'})",
+            file=sys.stderr,
+        )
 
         # Also try to map from glyph names (uni0041 → U+0041)
         for glyph_name in glyph_order:
-            if glyph_name.startswith('uni') and len(glyph_name) == 7:
+            if glyph_name.startswith("uni") and len(glyph_name) == 7:
                 try:
                     unicode_val = int(glyph_name[3:], 16)
                     if unicode_val not in unicode_to_glyph:
                         unicode_to_glyph[unicode_val] = glyph_name
                 except:
                     pass
-            elif glyph_name.startswith('u') and len(glyph_name) >= 5:
+            elif glyph_name.startswith("u") and len(glyph_name) >= 5:
                 try:
                     unicode_val = int(glyph_name[1:], 16)
                     if unicode_val not in unicode_to_glyph:
@@ -305,14 +326,14 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                     pass
 
         # === Create cmap table ===
-        cmap = newTable('cmap')
+        cmap = newTable("cmap")
         cmap.tableVersion = 0
         cmap_tables = []
 
         # Windows Unicode BMP (format 4) - required
         cmap4_win = cmap_format_4(4)
         cmap4_win.platformID = 3  # Windows
-        cmap4_win.platEncID = 1   # Unicode BMP
+        cmap4_win.platEncID = 1  # Unicode BMP
         cmap4_win.language = 0
         cmap4_win.cmap = {cp: gn for cp, gn in unicode_to_glyph.items() if cp <= 0xFFFF}
         cmap_tables.append(cmap4_win)
@@ -329,23 +350,27 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         # Mac Unicode (format 4) - for compatibility
         cmap4_mac = cmap_format_4(4)
         cmap4_mac.platformID = 1  # Mac
-        cmap4_mac.platEncID = 0   # Roman
+        cmap4_mac.platEncID = 0  # Roman
         cmap4_mac.language = 0
         cmap4_mac.cmap = {cp: gn for cp, gn in unicode_to_glyph.items() if cp <= 0xFFFF}
         cmap_tables.append(cmap4_mac)
 
-        cmap.tables = [t for t in cmap_tables if t.cmap] or [cmap4_win]  # Ensure at least one
-        otf['cmap'] = cmap
+        cmap.tables = [t for t in cmap_tables if t.cmap] or [
+            cmap4_win
+        ]  # Ensure at least one
+        otf["cmap"] = cmap
 
-        print(f"Built cmap with {len(unicode_to_glyph)} Unicode mappings", file=sys.stderr)
+        print(
+            f"Built cmap with {len(unicode_to_glyph)} Unicode mappings", file=sys.stderr
+        )
 
         # === Create OS/2 table with correct metrics ===
-        os2 = newTable('OS/2')
+        os2 = newTable("OS/2")
         os2.version = 4
         os2.xAvgCharWidth = int(sum(widths.values()) / len(widths)) if widths else 500
         os2.usWeightClass = 400  # Normal
-        os2.usWidthClass = 5     # Medium
-        os2.fsType = 0           # Installable embedding
+        os2.usWidthClass = 5  # Medium
+        os2.fsType = 0  # Installable embedding
         os2.ySubscriptXSize = 650
         os2.ySubscriptYSize = 600
         os2.ySubscriptXOffset = 0
@@ -375,7 +400,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         os2.ulUnicodeRange2 = 0
         os2.ulUnicodeRange3 = 0
         os2.ulUnicodeRange4 = 0
-        os2.achVendID = 'SPDF'
+        os2.achVendID = "SPDF"
         os2.fsSelection = 0x0040  # REGULAR bit
 
         # Set character index range from actual cmap
@@ -385,7 +410,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
             os2.usLastCharIndex = codepoints[-1]
         else:
             os2.usFirstCharIndex = 0x20  # space
-            os2.usLastCharIndex = 0x7E   # tilde
+            os2.usLastCharIndex = 0x7E  # tilde
 
         # Typo metrics match hhea
         os2.sTypoAscender = hhea.ascent
@@ -403,10 +428,10 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         os2.usDefaultChar = 0
         os2.usBreakChar = 32
         os2.usMaxContext = 0
-        otf['OS/2'] = os2
+        otf["OS/2"] = os2
 
         # === Create name table with Windows and Mac records ===
-        name = newTable('name')
+        name = newTable("name")
         name.names = []
 
         # Get font name from CFF if available
@@ -418,7 +443,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
             3: f"Stirling-PDF: {font_name}",  # Unique ID
             4: font_name,  # Full Name
             5: "Version 1.0",  # Version
-            6: font_name.replace(' ', '-'),  # PostScript Name
+            6: font_name.replace(" ", "-"),  # PostScript Name
         }
 
         # Add both Windows and Mac name records
@@ -441,10 +466,10 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
             rec_mac.string = value
             name.names.append(rec_mac)
 
-        otf['name'] = name
+        otf["name"] = name
 
         # === Create post table (format 3.0 for smaller web fonts) ===
-        post = newTable('post')
+        post = newTable("post")
         post.formatType = 3.0  # No glyph names (smaller, web-optimized)
         post.italicAngle = 0
         post.underlinePosition = -100
@@ -454,7 +479,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
         post.maxMemType42 = 0
         post.minMemType1 = 0
         post.maxMemType1 = 0
-        otf['post'] = post
+        otf["post"] = post
 
         # Save the OTF font
         otf.save(output_path)
@@ -465,17 +490,56 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
     except Exception as e:
         print(f"ERROR: Conversion failed: {str(e)}", file=sys.stderr)
         import traceback
+
         traceback.print_exc(file=sys.stderr)
         return False
 
+
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: convert_cff_to_ttf.py <input.cff> <output.otf> [tounicode.cmap]", file=sys.stderr)
+    import argparse
+
+    # Create argument parser that supports both named and positional arguments
+    parser = argparse.ArgumentParser(
+        description="Convert CFF font data to OpenType-CFF format",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Named arguments (used by Java code):
+  convert_cff_to_ttf.py --input font.cff --output font.otf --to-unicode mapping.tounicode
+
+  # Positional arguments (backward compatibility):
+  convert_cff_to_ttf.py font.cff font.otf mapping.tounicode
+        """,
+    )
+
+    # Add named arguments
+    parser.add_argument("--input", dest="input_file", help="Input CFF file path")
+    parser.add_argument("--output", dest="output_file", help="Output OTF file path")
+    parser.add_argument(
+        "--to-unicode", dest="tounicode_file", help="ToUnicode mapping file path"
+    )
+
+    # Add positional arguments for backward compatibility
+    parser.add_argument("input_pos", nargs="?", help="Input CFF file (positional)")
+    parser.add_argument("output_pos", nargs="?", help="Output OTF file (positional)")
+    parser.add_argument("tounicode_pos", nargs="?", help="ToUnicode file (positional)")
+
+    args = parser.parse_args()
+
+    # Determine which arguments to use (named take precedence over positional)
+    input_path = args.input_file or args.input_pos
+    output_path = args.output_file or args.output_pos
+    tounicode_path = args.tounicode_file or args.tounicode_pos
+
+    # Validate required arguments
+    if not input_path or not output_path:
+        parser.print_help(file=sys.stderr)
+        print("\nERROR: Both input and output files are required", file=sys.stderr)
         sys.exit(1)
 
-    input_path = Path(sys.argv[1])
-    output_path = Path(sys.argv[2])
-    tounicode_path = Path(sys.argv[3]) if len(sys.argv) > 3 else None
+    input_path = Path(input_path)
+    output_path = Path(output_path)
+    tounicode_path = Path(tounicode_path) if tounicode_path else None
 
     if not input_path.exists():
         print(f"ERROR: Input file not found: {input_path}", file=sys.stderr)
@@ -485,8 +549,13 @@ def main():
         print(f"Warning: ToUnicode file not found: {tounicode_path}", file=sys.stderr)
         tounicode_path = None
 
-    success = wrap_cff_as_otf(str(input_path), str(output_path), str(tounicode_path) if tounicode_path else None)
+    success = wrap_cff_as_otf(
+        str(input_path),
+        str(output_path),
+        str(tounicode_path) if tounicode_path else None,
+    )
     sys.exit(0 if success else 1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

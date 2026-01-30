@@ -91,6 +91,7 @@ export default function RightRail() {
     (btn: RightRailButtonConfig) => {
       const action = actions[btn.id];
       const disabled = Boolean(btn.disabled || allButtonsDisabled || disableForFullscreen);
+      const isActive = Boolean(btn.active);
 
       const triggerAction = () => {
         if (!disabled) action?.();
@@ -103,6 +104,7 @@ export default function RightRail() {
           allButtonsDisabled,
           action,
           triggerAction,
+          active: isActive,
         };
         return btn.render(context) ?? null;
       }
@@ -114,12 +116,15 @@ export default function RightRail() {
       const className = ['right-rail-icon', btn.className].filter(Boolean).join(' ');
       const buttonNode = (
         <ActionIcon
-          variant="subtle"
+          variant={isActive ? 'filled' : 'subtle'}
+          color={isActive ? 'blue' : undefined}
           radius="md"
           className={className}
           onClick={triggerAction}
           disabled={disabled}
           aria-label={ariaLabel}
+          aria-pressed={isActive ? true : undefined}
+          data-active={isActive ? 'true' : 'false'}
         >
           {btn.icon}
         </ActionIcon>
@@ -216,14 +221,12 @@ export default function RightRail() {
             tooltipOffset
           )}
 
-          {renderWithTooltip(
-            <div style={{ display: 'inline-flex' }}>
-              <LanguageSelector position="left-start" offset={6} compact />
-            </div>,
-            t('rightRail.language', 'Language'),
-            tooltipPosition,
-            tooltipOffset
-          )}
+          <LanguageSelector
+            position="left-start"
+            offset={6}
+            compact
+            tooltip={t('rightRail.language', 'Language')}
+          />
 
           {renderWithTooltip(
             <ActionIcon

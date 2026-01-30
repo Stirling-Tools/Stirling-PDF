@@ -12,8 +12,8 @@ import stirling.software.common.model.api.PDFFile;
 public class PdfToPdfARequest extends PDFFile {
 
     @Schema(
-            description = "The output PDF/A type",
+            description = "The output format type (PDF/A or PDF/X)",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            allowableValues = {"pdfa", "pdfa-1"})
+            allowableValues = {"pdfa", "pdfa-1", "pdfa-2", "pdfa-2b", "pdfa-3", "pdfa-3b", "pdfx"})
     private String outputFormat;
 }

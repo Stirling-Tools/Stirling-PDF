@@ -5,6 +5,7 @@ import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier 
 import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
 import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { isCurrentTier as checkIsCurrentTier, isDowngrade as checkIsDowngrade } from '@app/utils/planTierUtils';
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
@@ -15,6 +16,7 @@ interface AvailablePlansSectionProps {
   currency?: string;
   onCurrencyChange?: (currency: string) => void;
   currencyOptions?: { value: string; label: string }[];
+  loginEnabled?: boolean;
 }
 
 const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
@@ -25,6 +27,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
   currency,
   onCurrencyChange,
   currencyOptions,
+  loginEnabled = true,
 }) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
@@ -41,28 +44,12 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 
   // Determine if the current tier matches (checks both Stripe subscription and license)
   const isCurrentTier = (tierGroup: PlanTierGroup): boolean => {
-    // Check license tier match
-    if (currentTier && tierGroup.tier === currentTier) {
-      return true;
-    }
-    return false;
+    return checkIsCurrentTier(currentTier, tierGroup.tier);
   };
 
   // Determine if selecting this plan would be a downgrade
   const isDowngrade = (tierGroup: PlanTierGroup): boolean => {
-    if (!currentTier) return false;
-
-    // Define tier hierarchy: enterprise > server > free
-    const tierHierarchy: Record<string, number> = {
-      'enterprise': 3,
-      'server': 2,
-      'free': 1
-    };
-
-    const currentLevel = tierHierarchy[currentTier] || 0;
-    const targetLevel = tierHierarchy[tierGroup.tier] || 0;
-
-    return currentLevel > targetLevel;
+    return checkIsDowngrade(currentTier, tierGroup.tier);
   };
 
   return (
@@ -91,6 +78,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             clearable={false}
             w={300}
             comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+            disabled={!loginEnabled}
           />
         )}
       </Group>
@@ -100,7 +88,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '1rem',
-          marginBottom: '0.5rem',
+          marginBottom: '0.1rem',
         }}
       >
         {groupedPlans.map((group) => (
@@ -113,6 +101,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
             currentTier={currentTier}
             onUpgradeClick={onUpgradeClick}
             onManageClick={onManageClick}
+            loginEnabled={loginEnabled}
           />
         ))}
       </div>

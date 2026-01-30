@@ -5,6 +5,8 @@ Automatically translates JSON batch files to target language while preserving:
 - Placeholders: {n}, {total}, {filename}, {{variable}}
 - HTML tags: <strong>, </strong>, etc.
 - Technical terms: PDF, API, OAuth2, SAML2, JWT, etc.
+
+Note: Works with JSON batch files. Translation files can be TOML or JSON format.
 """
 
 import json
@@ -77,10 +79,12 @@ CRITICAL RULES - MUST FOLLOW EXACTLY:
 
 Return ONLY the translated JSON. No markdown, no explanations, just the JSON object."""
 
-    def translate_batch(self, batch_data: dict, target_language: str, language_code: str) -> dict:
+    def translate_batch(
+        self, batch_data: dict, target_language: str, language_code: str
+    ) -> dict:
         """Translate a batch file using OpenAI API."""
         # Convert batch to compact JSON for API
-        input_json = json.dumps(batch_data, ensure_ascii=False, separators=(',', ':'))
+        input_json = json.dumps(batch_data, ensure_ascii=False, separators=(",", ":"))
 
         print(f"Translating {len(batch_data)} entries to {target_language}...")
         print(f"Input size: {len(input_json)} characters")
@@ -92,12 +96,14 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
                 messages=[
                     {
                         "role": "system",
-                        "content": self.get_translation_prompt(target_language, language_code)
+                        "content": self.get_translation_prompt(
+                            target_language, language_code
+                        ),
                     },
                     {
                         "role": "user",
-                        "content": f"Translate this JSON:\n\n{input_json}"
-                    }
+                        "content": f"Translate this JSON:\n\n{input_json}",
+                    },
                 ],
             )
 
@@ -105,13 +111,13 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
 
             # Remove markdown code blocks if present
             if translated_text.startswith("```"):
-                lines = translated_text.split('\n')
-                translated_text = '\n'.join(lines[1:-1])
+                lines = translated_text.split("\n")
+                translated_text = "\n".join(lines[1:-1])
 
             # Parse the translated JSON
             translated_data = json.loads(translated_text)
 
-            print(f"✓ Translation complete")
+            print("✓ Translation complete")
             return translated_data
 
         except json.JSONDecodeError as e:
@@ -137,7 +143,8 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
 
         # Check placeholders in each value
         import re
-        placeholder_pattern = r'\{[^}]+\}|\{\{[^}]+\}\}'
+
+        placeholder_pattern = r"\{[^}]+\}|\{\{[^}]+\}\}"
 
         for key in original.keys():
             if key not in translated:
@@ -151,7 +158,9 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
             trans_placeholders = set(re.findall(placeholder_pattern, trans_value))
 
             if orig_placeholders != trans_placeholders:
-                issues.append(f"Placeholder mismatch in '{key}': {orig_placeholders} vs {trans_placeholders}")
+                issues.append(
+                    f"Placeholder mismatch in '{key}': {orig_placeholders} vs {trans_placeholders}"
+                )
 
         if issues:
             print("\n⚠ Validation warnings:")
@@ -168,37 +177,37 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
 def get_language_info(language_code: str) -> tuple:
     """Get full language name from code."""
     languages = {
-        'zh-CN': ('Simplified Chinese', 'zh-CN'),
-        'es-ES': ('Spanish', 'es-ES'),
-        'it-IT': ('Italian', 'it-IT'),
-        'de-DE': ('German', 'de-DE'),
-        'ar-AR': ('Arabic', 'ar-AR'),
-        'pt-BR': ('Brazilian Portuguese', 'pt-BR'),
-        'ru-RU': ('Russian', 'ru-RU'),
-        'fr-FR': ('French', 'fr-FR'),
-        'ja-JP': ('Japanese', 'ja-JP'),
-        'ko-KR': ('Korean', 'ko-KR'),
-        'nl-NL': ('Dutch', 'nl-NL'),
-        'pl-PL': ('Polish', 'pl-PL'),
-        'sv-SE': ('Swedish', 'sv-SE'),
-        'da-DK': ('Danish', 'da-DK'),
-        'no-NB': ('Norwegian', 'no-NB'),
-        'fi-FI': ('Finnish', 'fi-FI'),
-        'tr-TR': ('Turkish', 'tr-TR'),
-        'vi-VN': ('Vietnamese', 'vi-VN'),
-        'th-TH': ('Thai', 'th-TH'),
-        'id-ID': ('Indonesian', 'id-ID'),
-        'hi-IN': ('Hindi', 'hi-IN'),
-        'cs-CZ': ('Czech', 'cs-CZ'),
-        'hu-HU': ('Hungarian', 'hu-HU'),
-        'ro-RO': ('Romanian', 'ro-RO'),
-        'uk-UA': ('Ukrainian', 'uk-UA'),
-        'el-GR': ('Greek', 'el-GR'),
-        'bg-BG': ('Bulgarian', 'bg-BG'),
-        'hr-HR': ('Croatian', 'hr-HR'),
-        'sk-SK': ('Slovak', 'sk-SK'),
-        'sl-SI': ('Slovenian', 'sl-SI'),
-        'ca-CA': ('Catalan', 'ca-CA'),
+        "zh-CN": ("Simplified Chinese", "zh-CN"),
+        "es-ES": ("Spanish", "es-ES"),
+        "it-IT": ("Italian", "it-IT"),
+        "de-DE": ("German", "de-DE"),
+        "ar-AR": ("Arabic", "ar-AR"),
+        "pt-BR": ("Brazilian Portuguese", "pt-BR"),
+        "ru-RU": ("Russian", "ru-RU"),
+        "fr-FR": ("French", "fr-FR"),
+        "ja-JP": ("Japanese", "ja-JP"),
+        "ko-KR": ("Korean", "ko-KR"),
+        "nl-NL": ("Dutch", "nl-NL"),
+        "pl-PL": ("Polish", "pl-PL"),
+        "sv-SE": ("Swedish", "sv-SE"),
+        "da-DK": ("Danish", "da-DK"),
+        "no-NB": ("Norwegian", "no-NB"),
+        "fi-FI": ("Finnish", "fi-FI"),
+        "tr-TR": ("Turkish", "tr-TR"),
+        "vi-VN": ("Vietnamese", "vi-VN"),
+        "th-TH": ("Thai", "th-TH"),
+        "id-ID": ("Indonesian", "id-ID"),
+        "hi-IN": ("Hindi", "hi-IN"),
+        "cs-CZ": ("Czech", "cs-CZ"),
+        "hu-HU": ("Hungarian", "hu-HU"),
+        "ro-RO": ("Romanian", "ro-RO"),
+        "uk-UA": ("Ukrainian", "uk-UA"),
+        "el-GR": ("Greek", "el-GR"),
+        "bg-BG": ("Bulgarian", "bg-BG"),
+        "hr-HR": ("Croatian", "hr-HR"),
+        "sk-SK": ("Slovak", "sk-SK"),
+        "sl-SI": ("Slovenian", "sl-SI"),
+        "ca-CA": ("Catalan", "ca-CA"),
     }
 
     return languages.get(language_code, (language_code, language_code))
@@ -206,9 +215,11 @@ def get_language_info(language_code: str) -> tuple:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Translate JSON batch files using OpenAI API',
+        description="Translate JSON batch files using OpenAI API (output supports TOML and JSON)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
+Note: This script works with JSON batch files. The translation files it updates can be TOML or JSON.
+
 Examples:
   # Translate single batch file
   python batch_translator.py zh_CN_batch_1_of_4.json --api-key YOUR_KEY --language zh-CN
@@ -222,24 +233,51 @@ Examples:
 
   # Use different model
   python batch_translator.py file.json --api-key KEY --language es-ES --model gpt-4-turbo
-        """
+        """,
     )
 
-    parser.add_argument('input_files', nargs='+', help='Input batch JSON file(s) or pattern')
-    parser.add_argument('--api-key', help='OpenAI API key (or set OPENAI_API_KEY env var)')
-    parser.add_argument('--language', '-l', required=True, help='Target language code (e.g., zh-CN, es-ES)')
-    parser.add_argument('--model', default='gpt-5', help='OpenAI model to use (default: gpt-5, options: gpt-5-mini, gpt-5-nano)')
-    parser.add_argument('--output-suffix', default='_translated', help='Suffix for output files (default: _translated)')
-    parser.add_argument('--skip-validation', action='store_true', help='Skip validation checks')
-    parser.add_argument('--delay', type=float, default=1.0, help='Delay between API calls in seconds (default: 1.0)')
+    parser.add_argument(
+        "input_files", nargs="+", help="Input batch JSON file(s) or pattern"
+    )
+    parser.add_argument(
+        "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
+    )
+    parser.add_argument(
+        "--language",
+        "-l",
+        required=True,
+        help="Target language code (e.g., zh-CN, es-ES)",
+    )
+    parser.add_argument(
+        "--model",
+        default="gpt-5",
+        help="OpenAI model to use (default: gpt-5, options: gpt-5-mini, gpt-5-nano)",
+    )
+    parser.add_argument(
+        "--output-suffix",
+        default="_translated",
+        help="Suffix for output files (default: _translated)",
+    )
+    parser.add_argument(
+        "--skip-validation", action="store_true", help="Skip validation checks"
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=1.0,
+        help="Delay between API calls in seconds (default: 1.0)",
+    )
 
     args = parser.parse_args()
 
     # Get API key from args or environment
     import os
-    api_key = args.api_key or os.environ.get('OPENAI_API_KEY')
+
+    api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print("Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
+        print(
+            "Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable"
+        )
         sys.exit(1)
 
     # Get language info
@@ -247,6 +285,7 @@ Examples:
 
     # Expand file patterns
     import glob
+
     input_files = []
     for pattern in args.input_files:
         matched = glob.glob(pattern)
@@ -259,7 +298,7 @@ Examples:
         print("Error: No input files found")
         sys.exit(1)
 
-    print(f"Batch Translator")
+    print("Batch Translator")
     print(f"Target Language: {language_name} ({language_code})")
     print(f"Model: {args.model}")
     print(f"Files to translate: {len(input_files)}")
@@ -277,11 +316,13 @@ Examples:
 
         try:
             # Load input file
-            with open(input_file, 'r', encoding='utf-8') as f:
+            with open(input_file, "r", encoding="utf-8") as f:
                 batch_data = json.load(f)
 
             # Translate
-            translated_data = translator.translate_batch(batch_data, language_name, language_code)
+            translated_data = translator.translate_batch(
+                batch_data, language_name, language_code
+            )
 
             # Validate
             if not args.skip_validation:
@@ -291,8 +332,8 @@ Examples:
             input_path = Path(input_file)
             output_file = input_path.stem + args.output_suffix + input_path.suffix
 
-            with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump(translated_data, f, ensure_ascii=False, separators=(',', ':'))
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(translated_data, f, ensure_ascii=False, separators=(",", ":"))
 
             print(f"✓ Saved to: {output_file}")
             successful += 1
@@ -308,7 +349,7 @@ Examples:
 
     # Summary
     print("\n" + "=" * 60)
-    print(f"Translation complete!")
+    print("Translation complete!")
     print(f"Successful: {successful}/{len(input_files)}")
     if failed > 0:
         print(f"Failed: {failed}/{len(input_files)}")
@@ -317,5 +358,4 @@ Examples:
 
 
 if __name__ == "__main__":
-    import os
     main()

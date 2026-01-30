@@ -7,9 +7,10 @@
       ]
     }
   },
-  "exclude": [
-    "src/proprietary",
-    "src/desktop",
-    "node_modules"
+  "include": [
+    "src/*.js",
+    "src/*.ts",
+    "src/*.tsx",
+    "src/core"
   ]
 }

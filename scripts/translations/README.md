@@ -2,6 +2,12 @@
 
 This directory contains Python scripts for managing frontend translations in Stirling PDF. These tools help analyze, merge, validate, and manage translations against the en-GB golden truth file.
 
+## Current Format: TOML
+
+**Stirling PDF uses TOML format for translations** in `frontend/public/locales/{lang}/translation.toml`.
+
+**All scripts now support TOML format!**
+
 ## Quick Start - Automated Translation (RECOMMENDED)
 
 The **fastest and easiest way** to translate a language is using the automated pipeline:
@@ -165,11 +171,14 @@ Merges missing translations from en-GB into target language files and manages tr
 
 **Usage:**
 ```bash
+# Operate on all locales (except en-GB) when language is omitted
+python scripts/translations/translation_merger.py add-missing
+
 # Add missing translations from en-GB to French
 python scripts/translations/translation_merger.py fr-FR add-missing
 
-# Add without marking as [UNTRANSLATED]
-python scripts/translations/translation_merger.py fr-FR add-missing --no-mark-untranslated
+# Create backups before modifying files
+python scripts/translations/translation_merger.py fr-FR add-missing --backup
 
 # Extract untranslated entries to a file
 python scripts/translations/translation_merger.py fr-FR extract-untranslated --output fr_untranslated.json
@@ -179,14 +188,23 @@ python scripts/translations/translation_merger.py fr-FR create-template --output
 
 # Apply translations from a file
 python scripts/translations/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
+
+# Override default paths if needed
+python scripts/translations/translation_merger.py fr-FR add-missing --locales-dir ./frontend/public/locales --ignore-file ./scripts/ignore_translation.toml
+
+# Remove unused translations not present in en-GB
+python scripts/translations/translation_merger.py fr-FR remove-unused
 ```
 
 **Features:**
-- Adds missing keys from en-GB with optional [UNTRANSLATED] markers
+- Adds missing keys from en-GB (copies English text directly)
+- Runs across all locales for add-missing/remove-unused when language is omitted
 - Extracts untranslated entries for external translation
 - Creates structured templates for AI translation
-- Applies translated content back to language files
+- Applies translated content back to language files (template format or plain JSON)
+- Supports `--backup` on mutating commands
 - Automatic backup creation
+- Removes unused translations not present in en-GB
 
 ### 3. `ai_translation_helper.py`
 Specialized tool for AI-assisted translation workflows with batch processing and validation.
@@ -436,7 +454,7 @@ Repeat steps 2-5 until 100% complete.
 
 #### Step 1: Add Missing Translations
 ```bash
-python scripts/translations/translation_merger.py fr-FR add-missing --mark-untranslated
+python scripts/translations/translation_merger.py fr-FR add-missing
 ```
 
 #### Step 2: Create AI Template
@@ -451,18 +469,15 @@ python scripts/translations/translation_merger.py fr-FR apply-translations --tra
 
 ## Translation File Structure
 
-Translation files are located in `frontend/public/locales/{language}/translation.json` with nested JSON structure:
+Translation files are located in `frontend/public/locales/{language}/translation.toml` with TOML structure:
 
-```json
-{
-  "addPageNumbers": {
-    "title": "Add Page Numbers",
-    "selectText": {
-      "1": "Select PDF file:",
-      "2": "Margin Size"
-    }
-  }
-}
+```toml
+[addPageNumbers]
+title = "Add Page Numbers"
+
+[addPageNumbers.selectText]
+"1" = "Select PDF file:"
+"2" = "Margin Size"
 ```
 
 Keys use dot notation internally (e.g., `addPageNumbers.selectText.1`).
@@ -478,7 +493,7 @@ All scripts preserve placeholders like `{n}`, `{total}`, `{filename}` in transla
 ### Automatic Backups
 Scripts create timestamped backups before modifying files:
 ```
-translation.backup.20241201_143022.json
+translation.backup.20241201_143022.toml
 ```
 
 ### Context-Aware Translation
@@ -520,7 +535,7 @@ ignore = [
 
 ### Critical Rules for Translation
 
-1. **NEVER skip entries**: Translate ALL entries in each batch to avoid [UNTRANSLATED] pollution
+1. **NEVER skip entries**: Translate ALL entries in each batch to ensure completeness
 2. **Use appropriate batch sizes**: 100 entries for systematic translation, unlimited for compact method
 3. **Skip validation for placeholders**: Use `--skip-validation` when batch contains `{{variable}}` patterns
 4. **Check progress between batches**: Use `--summary` flag to track completion percentage
@@ -563,13 +578,6 @@ python scripts/translations/json_validator.py --all-batches ar_AR
 - Arabic/RTL text with embedded quotes: Always escape with backslash
 - Regex patterns: Double all backslashes (`\d` → `\\d`)
 - Check for missing/extra commas at line reported in error
-
-#### [UNTRANSLATED] Pollution
-**Problem**: Hundreds of [UNTRANSLATED] markers from incomplete translation attempts
-**Solution**:
-- Only translate complete batches of manageable size
-- Use analyzer that counts [UNTRANSLATED] as missing translations
-- Restore from backup if pollution occurs
 
 #### Validation False Positives
 **Problem**: Validator flags legitimate `{{variable}}` placeholders as artifacts
@@ -671,7 +679,7 @@ python scripts/translations/ai_translation_helper.py apply-batch de_batch_1.json
 - **Missing Files**: Scripts create new files when language directories don't exist
 - **Invalid JSON**: Clear error messages with line numbers
 - **Placeholder Mismatches**: Validation warnings for missing or extra placeholders
-- **[UNTRANSLATED] Entries**: Counted as missing translations to prevent pollution
+- **Legacy [UNTRANSLATED] Markers**: Detected and stripped for backwards compatibility
 - **Backup Failures**: Graceful handling with user notification
 
 ## Integration with Development

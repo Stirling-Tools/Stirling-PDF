@@ -18,7 +18,7 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
     formData.append("watermarkImage", parameters.watermarkImage);
   }
 
-  // Required parameters with correct formatting
+  // Required parameters with correct formatting (defaults merged in automationExecutor)
   formData.append("fontSize", parameters.fontSize.toString());
   formData.append("rotation", parameters.rotation.toString());
   formData.append("opacity", (parameters.opacity / 100).toString()); // Convert percentage to decimal
@@ -26,9 +26,9 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
   formData.append("heightSpacer", parameters.heightSpacer.toString());
 
   // Backend-expected parameters from user input
-  formData.append("alphabet", parameters.alphabet);
-  formData.append("customColor", parameters.customColor);
-  formData.append("convertPDFToImage", parameters.convertPDFToImage.toString());
+  formData.append("alphabet", parameters.alphabet || "");
+  formData.append("customColor", parameters.customColor || "");
+  formData.append("convertPDFToImage", (parameters.convertPDFToImage ?? false).toString());
 
   return formData;
 };

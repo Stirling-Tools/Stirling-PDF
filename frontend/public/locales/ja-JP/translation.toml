@@ -1,8 +1,11 @@
 unsavedChanges = "PDF に未保存の変更があります。"
+pendingRedactionsTitle = "未適用の墨消し"
+pendingRedactions = "未適用の墨消しがあります。失われます。"
 areYouSure = "本当に離れますか？"
 unsavedChangesTitle = "未保存の変更"
 keepWorking = "作業を続ける"
 discardChanges = "変更を破棄"
+discardRedactions = "破棄して離脱"
 applyAndContinue = "適用して続行"
 exportAndContinue = "エクスポートして続行"
 cancel = "キャンセル"
@@ -163,6 +166,11 @@ unfavorite = "お気に入りから削除"
 fullscreen = "フルスクリーンモードに切り替え"
 sidebar = "サイドバーモードに切り替え"
 
+[backendStartup]
+notFoundTitle = "バックエンドが見つかりません"
+retry = "再試行"
+unreachable = "現在、アプリケーションはバックエンドに接続できません。バックエンドの稼働状況とネットワーク接続を確認し、再度お試しください。"
+
 [zipWarning]
 title = "大きな ZIP ファイル"
 message = "このZIPには{{count}}個のファイルが含まれています。展開しますか？"
@@ -298,6 +306,7 @@ selectOperation = "動作の選択"
 addOperationButton = "動作の追加"
 pipelineHeader = "パイプライン:"
 saveButton = "ダウンロード"
+saveForFolderScanning = "フォルダー監視用に保存"
 validateButton = "検証"
 
 [enterpriseEdition]
@@ -335,6 +344,10 @@ advance = "アドバンスド"
 edit = "閲覧と編集"
 popular = "人気"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "環境設定"
 
@@ -355,6 +368,7 @@ advanced = "詳細設定"
 title = "セキュリティと認証"
 security = "セキュリティ"
 connections = "接続"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "ライセンスと分析"
@@ -429,6 +443,32 @@ currentVersion = "現在のバージョン"
 latestVersion = "最新バージョン"
 checkForUpdates = "更新を確認"
 viewDetails = "詳細を表示"
+serverNeedsUpdate = "サーバーは管理者による更新が必要です"
+
+[settings.general.versionInfo]
+title = "バージョン情報"
+description = "デスクトップ版とサーバー版の詳細"
+desktop = "デスクトップ版"
+server = "サーバー版"
+
+[settings.security]
+title = "セキュリティ"
+description = "アカウントを安全に保つため、パスワードを更新してください。"
+
+[settings.security.password]
+subtitle = "パスワードを変更します。更新後はログアウトされます。"
+required = "すべての項目は必須です。"
+mismatch = "新しいパスワードが一致しません。"
+error = "パスワードを更新できません。現在のパスワードを確認して再試行してください。"
+success = "パスワードを更新しました。再度サインインしてください。"
+ssoDisabled = "パスワードの変更はアイデンティティプロバイダーにより管理されています。"
+current = "現在のパスワード"
+currentPlaceholder = "現在のパスワードを入力"
+new = "新しいパスワード"
+newPlaceholder = "新しいパスワードを入力"
+confirm = "新しいパスワードの確認"
+confirmPlaceholder = "新しいパスワードを再入力"
+update = "パスワードを更新"
 
 [settings.hotkeys]
 title = "キーボードショートカット"
@@ -483,11 +523,16 @@ low = "低"
 title = "資格情報の変更"
 header = "アカウントの詳細を更新する"
 changePassword = "デフォルトのログイン認証情報を使用しています。新しいパスワードを入力してください"
+ssoManaged = "あなたのアカウントはアイデンティティプロバイダーにより管理されています。"
 newUsername = "新しいユーザー名"
 oldPassword = "現在のパスワード"
 newPassword = "新しいパスワード"
 confirmNewPassword = "新しいパスワードの確認"
 submit = "変更を送信"
+credsUpdated = "アカウントを更新しました"
+description = "変更を保存しました。再度ログインしてください。"
+error = "ユーザー名を更新できません。パスワードを確認して再試行してください。"
+changeUsername = "ユーザー名を更新します。更新後はログアウトされます。"
 
 [account]
 title = "アカウント設定"
@@ -495,6 +540,8 @@ accountSettings = "アカウント設定"
 adminSettings = "管理者設定 - ユーザーの表示と追加"
 userControlSettings = "ユーザー制御設定"
 changeUsername = "ユーザー名を変更"
+changeUsernameDescription = "ユーザー名を更新します。更新後はログアウトされます。"
+newUsernamePlaceholder = "新しいユーザー名を入力"
 newUsername = "新しいユーザーネーム"
 password = "確認用パスワード"
 oldPassword = "旧パスワード"
@@ -509,6 +556,30 @@ property = "プロパティ"
 webBrowserSettings = "Webブラウザ設定"
 syncToBrowser = "アカウントの同期 -> ブラウザ"
 syncToAccount = "アカウントの同期 <- ブラウザ"
+
+[account.mfa]
+title = "二要素認証"
+setupFailed = "二要素認証の設定を開始できません。もう一度お試しください。"
+codeRequired = "続行するには認証コードを入力してください。"
+enabled = "二要素認証を有効にしました。"
+enableFailed = "二要素認証を有効にできません。コードを確認して、もう一度お試しください。"
+disabled = "二要素認証を無効にしました。"
+disableFailed = "二要素認証を無効にできません。コードを確認して、もう一度お試しください。"
+description = "アカウントのセキュリティを強化します。"
+enableButton = "二要素認証を有効にする"
+disableButton = "二要素認証を無効にする"
+setupTitle = "二要素認証を設定"
+setupDescription = "認証アプリで QR コードをスキャンし、6 桁のコードを入力して確認してください。"
+manualKey = "手動設定用キー"
+secretWarning = "このキーは秘密に保管してください。アクセスできる人は有効な認証コードを生成できます。"
+codePlaceholder = "6 桁のコードを入力"
+confirmEnable = "有効化"
+disableTitle = "二要素認証を無効にする"
+disableDescription = "二要素認証を無効にするには、有効な認証コードを入力してください。"
+codeLabel = "認証コード"
+confirmDisable = "無効化"
+ssoDescription = "シングルサインオンのアカウントでは、二要素認証はアイデンティティプロバイダーによって管理されます。"
+ssoManaged = "MFA はアイデンティティプロバイダーで設定してください。"
 
 [adminUserSettings]
 title = "ユーザー制御設定"
@@ -703,6 +774,11 @@ tags = "署名,サイン"
 title = "署名"
 desc = "手書き、テキストまたは画像によってPDFに署名を追加します。"
 
+[home.annotate]
+tags = "注釈,ハイライト,描画"
+title = "注釈"
+desc = "ビューワーでハイライト、描画、ノートや図形の追加"
+
 [home.flatten]
 tags = "平坦化,削除,インタラクティブ除去"
 title = "平坦化"
@@ -874,6 +950,7 @@ title = "サイズ・数による自動分割"
 desc = "サイズ・ページ数またはドキュメント数に基づいて、1つのPDFを複数のドキュメントに分割します。"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "色の置換と反転"
 desc = "PDF 文書の色を置換または反転"
 
@@ -888,18 +965,22 @@ title = "自動フォルダスキャン"
 desc = "自動フォルダスキャン ガイドへのリンク"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO ガイド"
 desc = "SSO ガイドへのリンク"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "エアギャップ設定"
 desc = "エアギャップ環境のセットアップガイドへのリンク"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "パスワードの追加"
 desc = "PDFをパスワードで暗号化します。"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "権限の変更"
 desc = "文書の制限と権限を変更"
 
@@ -909,10 +990,12 @@ title = "自動化"
 desc = "PDF アクションを連結して複数ステップのワークフローを構築。繰り返し作業に最適です。"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDFテキストエディター"
 desc = "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
 
@@ -925,6 +1008,7 @@ desc = "PDFの任意の場所にテキストを追加"
 addFiles = "ファイルを追加"
 uploadFromComputer = "コンピュータからアップロード"
 openFromComputer = "コンピューターから開く"
+mobileUpload = "モバイルからアップロード"
 
 [viewPdf]
 tags = "view,read,annotate,text,image"
@@ -1212,7 +1296,10 @@ downloadHtml = "PDF の代わりに中間ファイル（HTML）をダウンロ�
 pdfaOptions = "PDF/A オプション"
 outputFormat = "出力形式"
 pdfaNote = "PDF/A-1b は互換性が高く、PDF/A-2b はより多くの機能をサポートします。"
+pdfaFormat = "PDF/A 形式"
 pdfaDigitalSignatureWarning = "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
+pdfxDigitalSignatureWarning = "PDF にはデジタル署名が含まれています。これは次のステップで削除されます。"
+pdfxDescription = "PDF/X は、信頼性の高い印刷とグラフィック交換のための ISO 規格の PDF サブセットです。"
 fileFormat = "ファイル形式"
 wordDoc = "Word 文書"
 wordDocExt = "Word 文書（.docx）"
@@ -1240,6 +1327,37 @@ cbzOptions = "CBZ から PDF へのオプション"
 optimizeForEbook = "PDF を eBook リーダー向けに最適化（Ghostscript 使用）"
 cbzOutputOptions = "PDF から CBZ へのオプション"
 cbzDpi = "画像レンダリングの DPI"
+cbrOptions = "CBR オプション"
+cbrOutputOptions = "PDF から CBR へのオプション"
+cbrDpi = "画像レンダリング用 DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "eBook から PDF へのオプション"
+ebookOptionsDesc = "eBook を PDF に変換するためのオプション"
+embedAllFonts = "すべてのフォントを埋め込む"
+embedAllFontsDesc = "eBook のすべてのフォントを生成される PDF に埋め込みます"
+includeTableOfContents = "目次を含める"
+includeTableOfContentsDesc = "生成した目次を結果の PDF に追加"
+includePageNumbers = "ページ番号を含める"
+includePageNumbersDesc = "生成される PDF にページ番号を追加"
+optimizeForEbookPdf = "電子書籍リーダー向けに最適化"
+optimizeForEbookPdfDesc = "PDF を eBook 読書向けに最適化します（ファイルサイズ縮小、eInk デバイスでの表示改善）"
+
+[convert.epubOptions]
+epubOptions = "PDF から eBook へのオプション"
+epubOptionsDesc = "PDF を EPUB/AZW3 に変換するためのオプション"
+detectChapters = "章を検出"
+detectChaptersDesc = "章のように見える見出しを検出し、EPUB の改ページを挿入します"
+targetDevice = "対象デバイス"
+targetDeviceDesc = "リーダーデバイス向けに最適化された出力プロファイルを選択"
+outputFormat = "出力形式"
+outputFormatDesc = "電子書籍の出力形式を選択"
+tabletPhone = "タブレット/スマートフォン（画像あり）"
+kindleEink = "Kindle e-Ink（テキスト最適化）"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo,psd,photoshop"
@@ -1317,6 +1435,7 @@ applySignatures = "画像を適用"
 name = "画像"
 placeholder = "画像をアップロード"
 label = "画像ファイル"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "画像を設定"
@@ -1356,6 +1475,11 @@ header = "添付ファイルの追加"
 add = "添付を追加"
 remove = "添付を削除"
 embed = "添付を埋め込む"
+convertToPdfA3b = "PDF/A-3b に変換"
+convertToPdfA3bDescription = "添付ファイルを埋め込んだアーカイブ用 PDF を作成します"
+convertToPdfA3bTooltip = "PDF/A-3b は長期保存を保証するアーカイブ形式です。任意のファイル形式を添付として埋め込めます。変換には Ghostscript が必要で、大きなファイルでは時間がかかる場合があります。"
+convertToPdfA3bTooltipHeader = "PDF/A-3b 変換について"
+convertToPdfA3bTooltipTitle = "機能"
 submit = "添付ファイルの追加"
 
 [watermark]
@@ -2108,6 +2232,16 @@ tip = "現在、一度に複数の入力に対して機能しません"
 outputFormat = "出力形式"
 pdfWithDigitalSignature = "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
 
+[pdfToPDFX]
+tags = "印刷,標準,変換,制作,プリプレス,アーカイブ"
+title = "PDF を PDF/X に"
+header = "PDF を PDF/X に"
+credit = "このサービスは PDF/X 変換に Ghostscript を使用しています"
+submit = "変換"
+tip = "現在、同時に複数の入力には対応していません"
+outputFormat = "出力形式"
+pdfWithDigitalSignature = "PDF にはデジタル署名が含まれています。これは次のステップで削除されます。"
+
 [PDFToWord]
 tags = "doc,docx,odt,word,変換,フォーマット,コンバージョン,オフィス,microsoft,docファイル"
 title = "PDFをWordに変換"
@@ -2262,8 +2396,16 @@ defaultCanvasLabel = "手書き署名"
 defaultImageLabel = "アップロードした署名"
 defaultTextLabel = "入力した署名"
 saveButton = "署名を保存"
+savePersonal = "個人用として保存"
+saveShared = "共有用として保存"
 saveUnavailable = "まず署名を作成してから保存してください。"
 noChanges = "現在の署名はすでに保存済みです。"
+tempStorageTitle = "ブラウザーの一時ストレージ"
+tempStorageDescription = "署名はブラウザー内のみに保存されます。ブラウザーのデータを消去するか、別のブラウザーに切り替えると失われます。"
+personalHeading = "個人用署名"
+sharedHeading = "共有署名"
+personalDescription = "これらの署名はあなただけが表示できます。"
+sharedDescription = "すべてのユーザーがこれらの署名を表示して使用できます。"
 
 [sign.saved.type]
 canvas = "描画"
@@ -2293,6 +2435,10 @@ saved = "保存済み"
 label = "署名画像をアップロード"
 placeholder = "画像ファイルを選択"
 hint = "署名の PNG または JPG 画像をアップロードしてください"
+removeBackground = "白背景を削除（透過化）"
+processing = "画像を処理中..."
+backgroundRemovalFailedTitle = "背景の削除に失敗"
+backgroundRemovalFailedMessage = "画像の背景を削除できませんでした。代わりに元の画像を使用します。"
 
 [sign.instructions]
 title = "署名の追加方法"
@@ -2337,6 +2483,11 @@ note = "フラット化すると PDF からインタラクティブ要素が削�
 [flatten.options.flattenOnlyForms]
 label = "フォームのみフラット化"
 desc = "フォームフィールドのみをフラット化し、その他のインタラクティブ要素は維持します"
+
+[flatten.renderDpi]
+label = "レンダリング DPI（任意、150 DPI 推奨）"
+help = "空欄の場合はシステムのデフォルトを使用します。DPI を上げると出力はシャープになりますが、処理時間とファイルサイズが増加します。"
+placeholder = "例: 150"
 
 [flatten.results]
 title = "フラット化の結果"
@@ -2912,6 +3063,7 @@ header = "PDFのトリミング"
 submit = "送信"
 noFileSelected = "トリミングを開始する PDF ファイルを選択してください"
 reset = "PDF 全体にリセット"
+autoCrop = "余白を自動トリミング"
 
 [crop.preview]
 title = "切り抜き範囲の選択"
@@ -3023,6 +3175,105 @@ title = "PDFの情報を入手"
 header = "PDFの情報を入手"
 submit = "情報を入手"
 downloadJson = "JSONでダウンロード"
+processing = "情報を抽出しています..."
+results = "結果"
+noResults = "レポートを生成するにはツールを実行してください。"
+downloads = "ダウンロード"
+noneDetected = "検出なし"
+indexTitle = "インデックス"
+
+[getPdfInfo.report]
+entryLabel = "全情報の概要"
+shortTitle = "PDF情報"
+
+[getPdfInfo.sections]
+metadata = "メタデータ"
+formFields = "フォームフィールド"
+basicInfo = "基本情報"
+documentInfo = "ドキュメント情報"
+compliance = "準拠"
+encryption = "暗号化"
+permissions = "権限"
+other = "その他"
+perPageInfo = "ページごとの情報"
+tableOfContents = "目次"
+
+[getPdfInfo.compliance]
+notDetected = "未検出"
+passed = "合格"
+failed = "不合格"
+compliant = "準拠"
+nonCompliant = "非準拠"
+none = "検出された標準はありません"
+passedCount = "合格"
+failedCount = "不合格"
+noVerification = "検証は実行されていません"
+noVerificationDesc = "このドキュメントの PDF 標準への準拠は検証されていません。"
+
+[getPdfInfo.other]
+attachments = "添付ファイル"
+embeddedFiles = "埋め込みファイル"
+javaScript = "JavaScript"
+layers = "レイヤー"
+structureTree = "構造ツリー"
+xmp = "XMPMetadata"
+
+[getPdfInfo.perPage]
+size = "サイズ"
+annotations = "注釈"
+images = "画像"
+links = "リンク"
+fonts = "フォント"
+xobjects = "XObject の数"
+multimedia = "マルチメディア"
+
+[getPdfInfo.summary]
+pages = "ページ数"
+fileSize = "ファイルサイズ"
+pdfVersion = "PDF バージョン"
+language = "言語"
+title = "PDF 概要"
+author = "作成者"
+created = "作成日"
+modified = "更新日"
+permsAll = "すべての権限が許可されています"
+permsRestricted = "{{count}} 件の制限"
+permsMixed = "一部の権限が制限されています"
+hasCompliance = "準拠規格あり"
+noCompliance = "準拠規格なし"
+compliancePassed = "{{standards}} に準拠"
+complianceChecked = "標準を検証済み（{{failed}} 件が不合格）"
+basic = "基本情報"
+documentInfo = "ドキュメント情報"
+securityTitle = "セキュリティ状態"
+technical = "技術情報"
+overviewTitle = "PDF 概要"
+
+[getPdfInfo.summary.security]
+encrypted = "暗号化された PDF - パスワード保護あり"
+unencrypted = "暗号化されていない PDF - パスワード保護なし"
+
+[getPdfInfo.summary.tech]
+images = "画像"
+fonts = "フォント"
+formFields = "フォームフィールド"
+embeddedFiles = "埋め込みファイル"
+javaScript = "JavaScript"
+layers = "レイヤー"
+bookmarks = "ブックマーク"
+multimedia = "マルチメディア"
+
+[getPdfInfo.summary.overview]
+untitled = "無題のドキュメント"
+unknown = "不明な作成者"
+text = "これは {{author}} によって作成された、タイトル {{title}} の {{pages}} ページの PDF です（PDF バージョン {{version}}）。"
+
+[getPdfInfo.error]
+partial = "一部のファイルを処理できませんでした。"
+unexpected = "抽出中に予期しないエラーが発生しました。"
+
+[getPdfInfo.status]
+complete = "抽出が完了しました"
 
 [extractPage]
 tags = "抽出"
@@ -3057,6 +3308,7 @@ title = "墨消し方法"
 mode = "モード"
 automatic = "自動"
 automaticDesc = "検索語に基づいてテキストを墨消し"
+automaticDisabledTooltip = "複数ファイルを一度に墨消しするには、ファイルマネージャーでファイルを選択してください"
 manual = "手動"
 manualDesc = "クリック＆ドラッグで特定領域を墨消し"
 manualComingSoon = "手動墨消しは近日対応"
@@ -3127,8 +3379,35 @@ text = "単語全体のみを一致させ、部分一致を除外します。有
 title = "PDF-Image に変換"
 text = "墨消し後に PDF を画像ベースの PDF に変換します。これにより、墨消しボックスの背後にあるテキストが完全に除去され、復元不能になります。"
 
+[redact.tooltip.manual.header]
+title = "手動墨消しコントロール"
+
+[redact.tooltip.manual.markText]
+title = "テキストマーキングツール"
+text = "PDF 上のテキストを直接選択して墨消し対象にマークします。クリックしてドラッグすることで、墨消ししたい特定のテキストをハイライトできます。"
+
+[redact.tooltip.manual.markArea]
+title = "領域マーキングツール"
+text = "PDF 上に長方形の領域を描画して墨消し対象にマークします。画像、署名、不規則な形状の墨消しに便利です。"
+
+[redact.tooltip.manual.apply]
+title = "墨消しを適用"
+text = "内容をマークしたら、「適用」をクリックしてすべてのマーク済み領域を永久に墨消しします。保留カウントは、適用待ちの墨消し数を示します。"
+bullet1 = "適用前に必要なだけ領域をマークできます"
+bullet2 = "保留中の墨消しは一括で適用されます"
+bullet3 = "適用後の墨消しは元に戻せません"
+
 [redact.manual]
+title = "墨消しツール"
+instructions = "PDF 上のテキストを選択するか領域を描画して、墨消し対象をマークします。"
+markText = "テキストをマーキング"
+markArea = "領域をマーキング"
+pendingLabel = "保留中:"
+applyWarning = "⚠️ 永久適用で元に戻せず、下のデータは削除されます"
+apply = "適用"
+noMarks = "墨消しマークがありません。上のツールで墨消しする内容をマーキングしてください。"
 header = "手動墨消し"
+controlsTitle = "手動墨消しコントロール"
 textBasedRedaction = "テキストベースの墨消し"
 pageBasedRedaction = "ページ単位の墨消し"
 convertPDFToImageLabel = "PDF を PDF-Image に変換（ボックス背後のテキスト除去用）"
@@ -3243,6 +3522,19 @@ placeholder = "水平方向の分割数を選択"
 [split-by-sections.vertical]
 label = "垂直方向"
 placeholder = "垂直方向の分割数を選択"
+
+[split-by-sections.splitMode]
+label = "分割モード"
+description = "ページの分割方法を選択"
+splitAll = "全ページを分割"
+splitAllExceptFirst = "先頭以外を分割"
+splitAllExceptLast = "末尾以外を分割"
+splitAllExceptFirstAndLast = "先頭と末尾以外を分割"
+custom = "カスタムページ"
+
+[split-by-sections.customPages]
+label = "カスタムページ番号"
+placeholder = "例: 2,4,6"
 
 [AddStampRequest]
 tags = "スタンプ, 画像を追加, 画像を中央に配置, 透かし, PDF, 埋め込み, カスタマイズ"
@@ -3441,6 +3733,9 @@ signinTitle = "サインインしてください"
 ssoSignIn = "シングルサインオンでログイン"
 oAuth2AutoCreateDisabled = "OAuth 2自動作成ユーザーが無効"
 oAuth2AdminBlockedUser = "現在、未登録ユーザーの登録またはログインはブロックされています。管理者にお問い合わせください。"
+oAuth2RequiresLicense = "OAuth/SSO ログインには有料ライセンス（Server または Enterprise）が必要です。プランのアップグレードについては管理者にお問い合わせください。"
+saml2RequiresLicense = "SAML ログインには有料ライセンス（Server または Enterprise）が必要です。プランのアップグレードについては管理者にお問い合わせください。"
+maxUsersReached = "現在のライセンスのユーザー数上限に達しました。プランのアップグレードまたはシート数の追加について、管理者にお問い合わせください。"
 oauth2RequestNotFound = "認証リクエストが見つかりません"
 oauth2InvalidUserInfoResponse = "無効なユーザー情報の応答"
 oauth2invalidRequest = "無効なリクエスト"
@@ -3487,6 +3782,13 @@ passwordChangedSuccess = "パスワードを変更しました。新しいパス
 credentialsUpdated = "認証情報を更新しました。もう一度サインインしてください。"
 defaultCredentials = "デフォルトのログイン資格情報"
 changePasswordWarning = "初回ログイン後にパスワードを変更してください"
+mfaRequired = "二要素認証コードが必要です"
+mfaCode = "認証コード"
+enterMfaCode = "6 桁のコードを入力"
+mfaPromptTitle = "二要素認証"
+mfaPromptBody = "認証アプリの認証コードを入力して続行してください。"
+verifyingMfa = "確認中..."
+verifyMfa = "コードを確認"
 
 [login.slides.overview]
 alt = "Stirling PDF の概要"
@@ -3602,6 +3904,19 @@ filesize = "ファイルサイズ"
 [compress.grayscale]
 label = "圧縮にグレースケールを適用する"
 
+[compress.linearize]
+label = "Web 表示を高速化するために PDF をリニアライズ"
+
+[compress.lineArt]
+label = "画像を線画に変換"
+description = "ImageMagick を使用し、ページを高コントラストの白黒にして最大限のサイズ削減を行います。"
+unavailable = "このサーバーに ImageMagick がインストールまたは有効化されていません"
+detailLevel = "詳細レベル"
+edgeEmphasis = "エッジ強調"
+edgeLow = "弱め"
+edgeMedium = "バランス"
+edgeHigh = "強め"
+
 [compress.tooltip.header]
 title = "圧縮設定の概要"
 
@@ -3619,6 +3934,10 @@ bullet2 = "値が大きいほどファイルサイズを削減"
 title = "グレースケール"
 text = "このオプションを選ぶと、すべての画像を白黒に変換します。特にスキャン PDF や画像の多い文書で大幅なサイズ削減が見込めます。"
 
+[compress.tooltip.lineArt]
+title = "線画"
+text = "ImageMagick を使ってページを高コントラストの白黒に変換します。詳細レベルで黒になる範囲を、エッジ強調でエッジ検出の強さを調整できます。"
+
 [compress.error]
 failed = "PDF の圧縮中にエラーが発生しました。"
 
@@ -3630,6 +3949,11 @@ failed = "PDF の圧縮中にエラーが発生しました。"
 [compress.selectText.1]
 _value = "圧縮設定"
 1 = "1-3 PDF圧縮、</br> 4-6 弱い画像圧縮、</br> 7-9 強い画像圧縮により画質が大幅に低下します"
+
+[compress.compressionLevel]
+range1to3 = "値が低いほど品質は保たれますが、ファイルサイズは大きくなります"
+range4to6 = "中程度の圧縮で、品質低下はほどほどです"
+range7to9 = "値が高いほどファイルサイズは大きく削減されますが、画像の鮮明さが低下する場合があります"
 
 [decrypt]
 passwordPrompt = "このファイルはパスワードで保護されています。パスワードを入力してください:"
@@ -3849,14 +4173,17 @@ fitToWidth = "幅に合わせる"
 actualSize = "原寸"
 
 [viewer]
+cannotPreviewFile = "ファイルをプレビューできません"
+dualPageView = "見開き表示"
 firstPage = "最初のページ"
 lastPage = "最後のページ"
-previousPage = "前のページ"
 nextPage = "次のページ"
+onlyPdfSupported = "このビューアは PDF ファイルのみをサポートしています。このファイルは別の形式のようです。"
+previousPage = "前のページ"
+singlePageView = "単一ページ表示"
+unknownFile = "不明なファイル"
 zoomIn = "拡大"
 zoomOut = "縮小"
-singlePageView = "単一ページ表示"
-dualPageView = "見開き表示"
 
 [rightRail]
 closeSelected = "選択したファイルを閉じる"
@@ -3867,21 +4194,97 @@ deleteSelected = "選択したページを削除"
 closePdf = "PDF を閉じる"
 exportAll = "PDF を書き出し"
 downloadSelected = "選択したファイルをダウンロード"
-downloadAll = "すべてをダウンロード"
-saveAll = "すべて保存"
+annotations = "注釈"
+exportSelected = "選択したページを書き出し"
+saveChanges = "変更を保存"
 toggleTheme = "テーマを切り替え"
-toggleBookmarks = "ブックマークを切り替え"
 language = "言語"
+toggleAnnotations = "注釈の表示を切り替え"
 search = "PDF を検索"
 panMode = "パンモード"
+applyRedactionsFirst = "先に墨消しを適用"
 rotateLeft = "左に回転"
 rotateRight = "右に回転"
 toggleSidebar = "サイドバーを切り替え"
-exportSelected = "選択したページを書き出し"
-toggleAnnotations = "注釈の表示を切り替え"
-annotationMode = "注釈モードを切り替え"
+toggleBookmarks = "ブックマークを切り替え"
+print = "PDFを印刷"
 draw = "描画"
+redact = "墨消し"
+exitRedaction = "墨消しモードを終了"
 save = "保存"
+downloadAll = "すべてをダウンロード"
+saveAll = "すべて保存"
+
+[textAlign]
+left = "左揃え"
+center = "中央揃え"
+right = "右揃え"
+
+[annotation]
+title = "注釈"
+desc = "ハイライト、ペン、テキスト、ノートを使用できます。変更はそのまま保持され、フラット化は不要です。"
+highlight = "ハイライト"
+pen = "ペン"
+text = "テキストボックス"
+note = "ノート"
+rectangle = "長方形"
+ellipse = "楕円"
+select = "選択"
+exit = "注釈モードを終了"
+strokeWidth = "線の太さ"
+opacity = "不透明度"
+strokeOpacity = "線の不透明度"
+fillOpacity = "塗りの不透明度"
+fontSize = "フォントサイズ"
+chooseColor = "色を選択"
+color = "色"
+strokeColor = "線の色"
+fillColor = "塗りの色"
+underline = "下線"
+strikeout = "取り消し線"
+squiggly = "波線"
+inkHighlighter = "フリーハンドハイライト"
+freehandHighlighter = "フリーハンドハイライト"
+square = "正方形"
+circle = "円"
+polygon = "多角形"
+line = "直線"
+stamp = "画像を追加"
+textMarkup = "テキストマークアップ"
+drawing = "描画"
+shapes = "図形"
+notesStamps = "ノートとスタンプ"
+settings = "設定"
+borderOn = "枠線: オン"
+borderOff = "枠線: オフ"
+editInk = "ペンを編集"
+editLine = "直線を編集"
+editNote = "ノートを編集"
+editText = "テキストボックスを編集"
+editTextMarkup = "テキストマークアップを編集"
+editSelected = "注釈を編集"
+editSquare = "正方形を編集"
+editCircle = "円を編集"
+editPolygon = "多角形を編集"
+unsupportedType = "この注釈タイプは編集に完全対応していません。"
+textAlignment = "テキストの配置"
+noteIcon = "ノートアイコン"
+imagePreview = "プレビュー"
+contents = "テキスト"
+backgroundColor = "背景色"
+clearBackground = "背景を削除"
+noBackground = "背景なし"
+stampSettings = "スタンプ設定"
+savingCopy = "ダウンロードを準備中..."
+saveFailed = "コピーを保存できません"
+saveReady = "ダウンロードの準備ができました"
+selectAndMove = "選択して編集"
+editSelectDescription = "既存の注釈をクリックして、色、不透明度、テキスト、サイズを編集します。"
+editStampHint = "画像を変更するには、このスタンプを削除して新規追加してください。"
+editSwitchToSelect = "この注釈を編集するには、選択して編集に切り替えてください。"
+undo = "元に戻す"
+redo = "やり直し"
+applyChanges = "変更を適用"
 saveChanges = "変更を保存"
 
 [search]
@@ -3933,12 +4336,20 @@ settings = "設定"
 adminSettings = "管理者設定"
 allTools = "All Tools"
 reader = "リーダー"
+tours = "ツアー"
+showMeAround = "案内して"
+
+[quickAccess.toursTooltip]
+admin = "ここで次のツアーを視聴できます: ツールのツアー、新しい V2 レイアウトのツアー、管理者ツアー。"
+user = "ここで次のツアーを視聴できます: ツールのツアー、新しい V2 レイアウトのツアー。"
 
 [quickAccess.helpMenu]
 toolsTour = "ツールツアー"
 toolsTourDesc = "ツールでできることを学ぶ"
 adminTour = "管理ツアー"
 adminTourDesc = "管理設定と機能を探索"
+whatsNewTour = "V2 の新機能を見る"
+whatsNewTourDesc = "更新されたレイアウトをツアー"
 
 [admin]
 error = "エラー"
@@ -3957,6 +4368,8 @@ fetchError = "設定の読み込みに失敗しました"
 saveError = "設定の保存に失敗しました"
 saved = "設定を正常に保存しました"
 saveSuccess = "設定を正常に保存しました"
+success = "設定を保存しました"
+error = "設定の保存に失敗しました"
 save = "変更を保存"
 discard = "破棄"
 restartRequired = "再起動が必要"
@@ -3976,6 +4389,10 @@ hint = "未保存の変更があります"
 title = "ログインモードが必要です"
 message = "管理者設定を変更するにはログインモードを有効にする必要があります。環境変数で SECURITY_ENABLELOGIN=true を設定するか、settings.yml の security.enableLogin: true を設定し、サーバーを再起動してください。"
 readOnly = "以下の設定は参照用の例です。ログインモードを有効にして実際の構成を表示・編集してください。"
+
+[admin.settings.enterpriseRequired]
+title = "Enterprise ライセンスが必要です"
+message = "{{featureName}} にアクセスするには Enterprise ライセンスが必要です。現在は参照用のデモデータを表示しています。"
 
 [admin.settings.restart]
 title = "再起動が必要です"
@@ -4080,6 +4497,13 @@ description = "HTML から PDF 変換用 WeasyPrint 実行ファイルのパス�
 label = "Unoconvert 実行ファイル"
 description = "ドキュメント変換用 LibreOffice unoconvert のパス（空欄で既定: /opt/venv/bin/unoconvert）"
 
+[admin.settings.general.frontendUrl]
+label = "フロントエンド URL"
+description = "フロントエンドのベース URL（例: https://pdf.example.com）。メール招待リンクとモバイルの QR コードアップロードで使用します。空欄の場合はバックエンドの URL を使用します。"
+
+[admin.settings.badge]
+clickToUpgrade = "クリックしてプラン詳細を表示"
+
 [admin.settings.security]
 title = "セキュリティ"
 description = "認証、ログイン動作、セキュリティポリシーを構成します。"
@@ -4108,6 +4532,13 @@ description = "アカウントロックまでの最大失敗回数"
 [admin.settings.security.loginResetTimeMinutes]
 label = "ログインリセット時間（分）"
 description = "失敗回数がリセットされるまでの時間"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF 保護を無効化"
@@ -4216,6 +4647,19 @@ connect = "接続"
 disconnect = "切断"
 disconnected = "プロバイダの切断に成功しました"
 disconnectError = "プロバイダの切断に失敗しました"
+mobileScannerConvertToPdf = "画像を PDF に変換"
+mobileScannerConvertToPdfDesc = "アップロードされた画像を自動的に PDF 形式に変換します。無効にすると、画像はそのまま保持されます。"
+mobileScannerImageResolution = "画像解像度"
+mobileScannerImageResolutionDesc = "アップロード画像の解像度。「縮小」は最大 1200px にスケーリングしてファイルサイズを削減します。"
+imageResolutionFull = "フル（元のサイズ）"
+imageResolutionReduced = "縮小（最大 1200px）"
+mobileScannerPageFormat = "ページ形式"
+mobileScannerPageFormatDesc = "変換画像の PDF ページサイズ。「保持」は元の画像サイズを使用します。"
+pageFormatKeep = "保持（元の寸法）"
+pageFormatA4 = "A4（210×297mm）"
+pageFormatLetter = "Letter（8.5×11in）"
+mobileScannerStretchToFit = "ページに合わせて拡大/縮小"
+mobileScannerStretchToFitDesc = "ページ全体を満たすように画像を伸縮します。無効にすると、アスペクト比を維持して中央配置します。"
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO 自動ログイン"
@@ -4284,10 +4728,168 @@ description = "初回の SAML2 ログイン時にユーザーアカウントを�
 label = "登録をブロック"
 description = "SAML2 による新規ユーザー登録を禁止"
 
+[admin.settings.connections.mobileScanner]
+label = "携帯電話からのアップロード"
+enable = "QR コードアップロードを有効化"
+description = "ユーザーが QR コードをスキャンしてモバイル端末からファイルをアップロードできるようにします"
+note = "注意: フロントエンド URL の設定が必要です。 "
+link = "システム設定で構成"
+mobileScannerConvertToPdf = "画像を PDF に変換"
+mobileScannerConvertToPdfDesc = "アップロードされた画像を自動的に PDF 形式に変換します。無効にすると、画像はそのまま保持されます。"
+mobileScannerImageResolution = "画像解像度"
+mobileScannerImageResolutionDesc = "アップロード画像の解像度。「縮小」は最大 1200px にスケーリングしてファイルサイズを削減します。"
+imageResolutionFull = "フル（元のサイズ）"
+imageResolutionReduced = "縮小（最大 1200px）"
+mobileScannerPageFormat = "ページ形式"
+mobileScannerPageFormatDesc = "変換画像の PDF ページサイズ。「保持」は元の画像サイズを使用します。"
+pageFormatKeep = "保持（元の寸法）"
+pageFormatA4 = "A4（210×297mm）"
+pageFormatLetter = "Letter（8.5×11in）"
+mobileScannerStretchToFit = "ページに合わせて拡大/縮小"
+mobileScannerStretchToFitDesc = "ページ全体を満たすように画像を伸縮します。無効にすると、アスペクト比を維持して中央配置します。"
+
+[admin.settings.telegram]
+title = "Telegram ボット"
+description = "Telegram ボットの接続、アクセス制御、フィードバック動作を構成します。"
+
+[admin.settings.telegram.enabled]
+label = "Telegram ボットを有効化"
+description = "設定済みの Telegram ボットを通じてユーザーが Stirling PDF とやり取りできるようにします。"
+
+[admin.settings.telegram.botUsername]
+label = "ボットのユーザー名"
+description = "Telegram ボットの公開ユーザー名。"
+
+[admin.settings.telegram.botToken]
+label = "ボットトークン"
+description = "Telegram ボット用の BotFather から提供される API トークン。"
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "受信フォルダー"
+description = "受信した Telegram ファイルを保存する、パイプラインディレクトリ配下のフォルダー。"
+
+[admin.settings.telegram.customFolderSuffix]
+label = "カスタムフォルダーサフィックスを使用"
+description = "チャット ID を受信フォルダー名に追加し、チャットごとのアップロードを分離します。"
+
+[admin.settings.telegram.accessControl]
+title = "アクセス制御"
+description = "ボットとやり取りできるユーザーやチャンネルを制限します。"
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "特定のユーザー ID を許可"
+description = "有効にすると、一覧のユーザー ID のみがボットを使用できます。"
+
+[admin.settings.telegram.allowUserIDs]
+label = "許可するユーザー ID"
+description = "ボットとのやり取りを許可する Telegram のユーザー ID を入力します。"
+placeholder = "ユーザー ID を追加して Enter を押す"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "特定のチャンネル ID を許可"
+description = "有効にすると、一覧のチャンネル ID のみがボットを使用できます。"
+
+[admin.settings.telegram.allowChannelIDs]
+label = "許可するチャンネル ID"
+description = "ボットとのやり取りを許可する Telegram のチャンネル ID を入力します。"
+placeholder = "チャンネル ID を追加して Enter を押す"
+
+[admin.settings.telegram.processing]
+title = "処理"
+description = "Telegram アップロードのポーリング間隔と処理タイムアウトを制御します。"
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "処理タイムアウト（秒）"
+description = "エラーを報告する前に処理ジョブを待機する最大時間。"
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "ポーリング間隔（ms）"
+description = "新しい Telegram 更新を確認する間隔。"
+
+[admin.settings.telegram.feedback]
+title = "フィードバックメッセージ"
+description = "ボットがユーザーやチャンネルにフィードバックを送信するタイミングを選択します。"
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "フィードバックを有効化"
+description = "ボットがフィードバックメッセージを送信するかどうかを制御します。"
+
+[admin.settings.telegram.feedback.channel]
+title = "チャンネルのフィードバックルール"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "「有効なドキュメントがありません」を表示（チャンネル）"
+description = "チャンネルへのアップロードで「有効なドキュメントがありません」の応答を抑制します。"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "処理エラーを表示（チャンネル）"
+description = "処理エラーメッセージをチャンネルに送信します。"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "エラーメッセージを表示（チャンネル）"
+description = "チャンネル向けの詳細なエラーメッセージを表示します。"
+
+[admin.settings.telegram.feedback.user]
+title = "ユーザーのフィードバックルール"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "「有効なドキュメントがありません」を表示（ユーザー）"
+description = "ユーザーのアップロードで「有効なドキュメントがありません」の応答を抑制します。"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "処理エラーを表示（ユーザー）"
+description = "処理エラーメッセージをユーザーに送信します。"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "エラーメッセージを表示（ユーザー）"
+description = "ユーザー向けの詳細なエラーメッセージを表示します。"
+
 [admin.settings.database]
 title = "データベース"
 description = "エンタープライズ導入向けのカスタムデータベース接続設定を構成します。"
 configuration = "データベース構成"
+backupTitle = "バックアップと復元"
+backupDescription = "管理者コンソールから H2 バックアップを直接管理します。"
+loadError = "データベースのバックアップの読み込みに失敗しました"
+backupCreated = "バックアップを正常に作成しました"
+backupFailed = "バックアップの作成に失敗しました"
+deleteTitle = "バックアップを削除"
+deleteConfirm = "このバックアップを削除しますか？この操作は元に戻せません。"
+deleteSuccess = "バックアップを削除しました"
+deleteFailed = "バックアップの削除に失敗しました"
+deleteConfirmAction = "バックアップを削除"
+downloadFailed = "バックアップのダウンロードに失敗しました"
+version = "H2 バージョン"
+embedded = "組み込み H2"
+external = "外部 DB"
+h2Only = "バックアップは組み込み H2 データベースでのみ利用できます。"
+h2Hint = "データベース種別を H2 に設定し、カスタムデータベースを無効にすると、バックアップと復元が有効になります。"
+manageBackups = "バックアップを管理"
+refresh = "更新"
+createBackup = "バックアップを作成"
+uploadTitle = "アップロードとインポート"
+chooseFile = ".sql バックアップファイルを選択"
+importFromUpload = "アップロードからインポート"
+confirmImportTitle = "データベースのインポートを確認"
+overwriteWarning = "警告: 現在のデータベースを上書きします。"
+overwriteWarningBody = "既存のすべてのデータはアップロードされたバックアップで置き換えられます。この操作は元に戻せません。"
+confirmCodeLabel = "続行するには確認コードを入力してください"
+enterCode = "上に表示されたコードを入力"
+confirmImport = "インポートを確認"
+codeMismatch = "確認コードが一致しません"
+codeMismatchBody = "続行するには、表示どおりに正確にコードを入力してください。"
+selectFile = "インポートする .sql ファイルを選択してください"
+importSuccess = "バックアップを正常にインポートしました"
+importFailed = "バックアップのインポートに失敗しました"
+noBackups = "まだバックアップが見つかりません。"
+unavailable = "現在のデータベース設定ではバックアップ一覧は利用できません。"
+fileName = "ファイル"
+created = "作成日"
+size = "サイズ"
+actions = "操作"
+download = "ダウンロード"
+import = "インポート"
+delete = "削除"
 
 [admin.settings.database.enableCustom]
 label = "カスタムデータベースを有効化"
@@ -4365,6 +4967,26 @@ description = "画像処理の最大 DPI（0 = 無制限）"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata ディレクトリ"
 description = "OCR 言語ファイル用 tessdata ディレクトリのパス"
+downloadMissingTitle = "言語が選択されていません"
+downloadMissingBody = "ダウンロードする言語を少なくとも 1 つ選択してください。"
+downloadSuccessTitle = "言語をダウンロードしました"
+downloadSuccessBody = "選択した tessdata 言語が保存されました。"
+downloadErrorTitle = "ダウンロードに失敗しました"
+loadingLanguages = "インストール済みの tessdata 言語を読み込み中..."
+installedLanguages = "インストール済みの tessdata 言語"
+noLanguages = "設定されたディレクトリに tessdata 言語が見つかりません。"
+downloadLabel = "追加の tessdata 言語をダウンロード"
+downloadPlaceholder = "言語を選択"
+downloadNothingFound = "追加の言語は見つかりません"
+permissionNotice = "tessdata パスに書き込めません。ダウンロードはブラウザで開かれます。.traineddata ファイルを手動で tessdata フォルダーに保存してください。"
+manualLinks = "手動ダウンロード: リンクをクリックし、ファイルを tessdata フォルダーに配置してください。"
+downloadButton = "選択した言語をダウンロード"
+downloadInvalidTitle = "無効な選択"
+downloadInvalidBody = "選択した言語の一部はダウンロードできません。更新してリストから選択してください。"
+downloadErrorNetwork = "ネットワークエラーによりダウンロードに失敗しました。接続を確認してもう一度お試しください。"
+downloadErrorServer = "サーバーで tessdata 言語のダウンロード中にエラーが発生しました。後でもう一度お試しください。"
+downloadErrorPermission = "tessdata ディレクトリに書き込めません: {{message}}。書き込み可能なディレクトリ（例: アプリケーションデータフォルダー配下）を選ぶか、権限を調整してください。"
+downloadErrorGeneric = "ダウンロードに失敗しました: {{message}}。後でもう一度お試しください。"
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML サニタイズを無効化"
@@ -4465,6 +5087,10 @@ description = "管理者が自動生成パスワード付きでメール招待�
 label = "フロントエンド URL"
 description = "フロントエンドのベース URL（例: https://pdf.example.com）。メール内の招待リンク生成に使用。空欄の場合はバックエンド URL を使用します。"
 
+[admin.settings.mail.frontendUrlNote]
+note = "注意: フロントエンド URL の設定が必要です。 "
+link = "システム設定で構成"
+
 [admin.settings.legal]
 title = "法的ドキュメント"
 description = "法的ドキュメントおよびポリシーへのリンクを構成します。"
@@ -4497,6 +5123,7 @@ description = "インプリントへの URL またはファイル名（地域に
 title = "プレミアムとエンタープライズ"
 description = "プレミアムまたはエンタープライズのライセンスキーを構成します。"
 license = "ライセンス設定"
+noInput = "ライセンスキーまたはファイルを入力してください"
 
 [admin.settings.premium.licenseKey]
 toggle = "ライセンスキーまたは証明書ファイルをお持ちですか？"
@@ -4513,6 +5140,25 @@ title = "⚠️ 警告: 既存のライセンスを検出"
 line1 = "現在のライセンスキーを上書きすると元に戻せません。"
 line2 = "別途バックアップしていない限り、以前のライセンスは永久に失われます。"
 line3 = "重要: ライセンスキーは秘密に安全に保管してください。公開で共有しないでください。"
+
+[admin.settings.premium.inputMethod]
+text = "ライセンスキー"
+file = "証明書ファイル"
+
+[admin.settings.premium.file]
+label = "ライセンス証明書ファイル"
+description = "オフライン購入の .lic または .cert ライセンスファイルをアップロードしてください"
+choose = "ライセンスファイルを選択"
+selected = "選択済み: {{filename}} ({{size}})"
+successMessage = "ライセンスファイルをアップロードして有効化しました。再起動は不要です。"
+
+[admin.settings.premium.currentLicense]
+title = "有効なライセンス"
+file = "ソース: ライセンスファイル ({{path}})"
+key = "ソース: ライセンスキー"
+type = "種類: {{type}}"
+noInput = "ライセンスキーを入力するか、証明書ファイルをアップロードしてください"
+success = "成功"
 
 [admin.settings.premium.enabled]
 label = "プレミアム機能を有効化"
@@ -4629,6 +5275,9 @@ googleDriveShort = "ドライブ"
 myFiles = "マイファイル"
 noRecentFiles = "最近のファイルは見つかりませんでした"
 googleDriveNotAvailable = "Google ドライブ連携は利用できません"
+mobileUpload = "モバイルアップロード"
+mobileShort = "モバイル"
+mobileUploadNotAvailable = "モバイルアップロードは有効になっていません"
 downloadSelected = "選択をダウンロード"
 saveSelected = "選択項目を保存"
 openFiles = "複数ファイルを開く"
@@ -4647,7 +5296,9 @@ selectedCount = "{{count}} 件選択"
 download = "ダウンロード"
 delete = "削除"
 unsupported = "未対応"
+active = "アクティブ"
 addToUpload = "アップロードに追加"
+closeFile = "ファイルを閉じる"
 deleteAll = "すべて削除"
 loadingFiles = "ファイルを読み込み中..."
 noFiles = "ファイルはありません"
@@ -4839,6 +5490,7 @@ desc = "PDF アクションを連結して複数ステップのワークフロ�
 invalidStep = "無効なステップ"
 reviewTitle = "自動処理の結果"
 copyToSaved = "保存済みにコピー"
+exportForFolderScanning = "フォルダー監視用にエクスポート"
 
 [automate.files]
 placeholder = "この自動処理で処理するファイルを選択"
@@ -4860,6 +5512,7 @@ createTitle = "自動処理を作成"
 editTitle = "自動処理を編集"
 intro = "自動処理はツールを順番に実行します。まずは実行したい順にツールを追加してください。"
 save = "自動処理を保存"
+exportForFolderScanning = "フォルダー監視用にエクスポート"
 
 [automate.creation.name]
 label = "自動処理名"
@@ -4942,6 +5595,7 @@ loading = "読み込み中..."
 back = "戻る"
 continue = "続行"
 error = "エラー"
+save = "保存"
 
 [config.overview]
 title = "アプリケーション構成"
@@ -5003,6 +5657,15 @@ warning = "⚠️ 警告：この操作は新しい API キーを生成し、以
 impact = "現在これらのキーを使用しているアプリやサービスは、新しいキーに更新するまで動作しなくなります。"
 confirmPrompt = "続行してよろしいですか？"
 confirmCta = "キーを更新"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API キーエラー"
+failedToCreateApiKey = "API キーの作成に失敗しました。"
+failedToRetrieveApiKey = "レスポンスから API キーを取得できませんでした。"
+failedToFetchApiKey = "API キーの取得に失敗しました。"
+apiKeyRefreshed = "API キーを更新しました"
+apiKeyRefreshedBody = "API キーが正常に更新されました。"
+failedToRefreshApiKey = "API キーの更新に失敗しました。"
 
 [AddAttachmentsRequest]
 attachments = "添付ファイルを選択"
@@ -5108,6 +5771,16 @@ finish = "完了"
 startTour = "ツアーを開始"
 startTourDescription = "Stirling PDF の主な機能をガイド付きで紹介します"
 
+[onboarding.whatsNew]
+quickAccess = "最初は <strong>Quick Access</strong> レールから始め、Reader、Automate、ファイル、各ツアーへ素早く移動できます。"
+leftPanel = "左側の <strong>ツール</strong> パネルにできることが一覧表示されています。カテゴリを閲覧するか、検索してツールを素早く見つけましょう。"
+fileUpload = "<strong>ファイル</strong> ボタンでアップロードするか最近の PDF を選択します。ワークスペースを確認できるようサンプルも読み込みます。"
+rightRail = "<strong>右レール</strong>では、ファイル選択、テーマや言語の変更、結果のダウンロードなどのクイックアクションができます。"
+topBar = "上部バーで <strong>ビューアー</strong>、<strong>ページエディター</strong>、<strong>アクティブファイル</strong> を切り替えられます。"
+pageEditorView = "ページエディターに切り替えて、ページの並べ替え、回転、削除を行います。"
+activeFilesView = "アクティブファイルで開いているすべてを確認し、作業対象を選択できます。"
+wrapUp = "V2 の新機能は以上です。いつでも <strong>ツアー</strong> メニューを開いて、これやツールのツアー、管理者ツアーを再生できます。"
+
 [onboarding.welcomeModal]
 title = "Stirling PDF へようこそ！"
 description = "主な機能と始め方を 1 分のクイックツアーで確認しますか？"
@@ -5127,6 +5800,10 @@ skipForNow = "今はスキップ"
 download = "ダウンロード →"
 showMeAround = "ツアーを見る"
 skipTheTour = "ツアーをスキップ"
+
+[onboarding.tourOverview]
+title = "ツアーの概要"
+body = "Stirling PDF V2 は多数のツールと刷新されたレイアウトを搭載しています。変更点と必要な機能の見つけ方を短いツアーで確認しましょう。"
 
 [onboarding.serverLicense]
 skip = "今はスキップ"
@@ -5210,9 +5887,11 @@ username = "ユーザー名（メール）"
 usernamePlaceholder = "user@example.com"
 password = "パスワード"
 passwordPlaceholder = "パスワードを入力"
+passwordRequired = "パスワードは必須です"
 role = "ロール"
 team = "チーム（任意）"
 teamPlaceholder = "チームを選択"
+authType = "認証タイプ"
 forcePasswordChange = "初回ログイン時にパスワード変更を強制"
 cancel = "キャンセル"
 submit = "メンバーを追加"
@@ -5220,6 +5899,13 @@ usernameRequired = "ユーザー名とパスワードは必須です"
 passwordTooShort = "パスワードは6文字以上である必要があります"
 success = "ユーザーを作成しました"
 error = "ユーザーの作成に失敗しました"
+forceMFA = "次回ログイン時に MFA の設定を必須にする"
+
+[workspace.people.authType]
+password = "パスワード"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "ユーザーは SSO プロバイダー経由で認証します"
 
 [workspace.people.editMember]
 title = "メンバーを編集"
@@ -5240,6 +5926,31 @@ error = "ユーザーのステータスの更新に失敗しました"
 success = "ユーザーを削除しました"
 error = "ユーザーの削除に失敗しました"
 
+[workspace.people.changePassword]
+action = "パスワードを変更"
+title = "パスワードを変更"
+subtitle = "のパスワードを更新"
+newPassword = "新しいパスワード"
+confirmPassword = "パスワードの確認"
+placeholder = "新しいパスワードを入力"
+confirmPlaceholder = "新しいパスワードを再入力"
+passwordRequired = "新しいパスワードを入力してください"
+passwordMismatch = "パスワードが一致しません"
+generateRandom = "安全なパスワードを生成"
+generatedPreview = "生成されたパスワード:"
+copyTooltip = "クリップボードにコピー"
+copiedToClipboard = "パスワードをクリップボードにコピーしました"
+copyFailed = "パスワードのコピーに失敗しました"
+sendEmail = "この変更についてユーザーにメールする"
+includePassword = "メールに新しいパスワードを含める"
+forcePasswordChange = "次回ログイン時にユーザーにパスワード変更を強制する"
+emailUnavailable = "このユーザーのメールは有効なメールアドレスではありません。通知は無効です。"
+smtpDisabled = "メール通知には設定で SMTP を有効にする必要があります。"
+notifyOnly = "パスワードを含めずにメールを送信し、管理者が変更したことをユーザーに知らせます。"
+submit = "パスワードを更新"
+success = "パスワードを更新しました"
+error = "パスワードの更新に失敗しました"
+
 [workspace.people.emailInvite]
 tab = "メール招待"
 description = "下にメールアドレスをカンマ区切りで入力または貼り付けてください。ユーザーにはメールでログイン情報が届きます。"
@@ -5248,7 +5959,7 @@ emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "少なくとも1件のメールアドレスが必要です"
 submit = "招待を送信"
 success = "ユーザーを招待しました"
-partialSuccess = "一部の招待に失敗しました"
+partialFailure = "一部の招待に失敗しました"
 allFailed = "ユーザーの招待に失敗しました"
 error = "招待の送信に失敗しました"
 
@@ -5297,6 +6008,11 @@ fromLicense = "ライセンスから"
 slotsAvailable = "{{count}} 件のユーザースロットが利用可能"
 noSlotsAvailable = "利用可能な枠がありません"
 currentUsage = "現在 {{max}} 件中 {{current}} 件のユーザーライセンスを使用"
+
+[workspace.people.mfa]
+adminDisableSuccess = "ユーザーの MFA を無効化しました"
+adminDisableError = "ユーザーの MFA を無効化できませんでした"
+disableByAdmin = "MFA を無効化"
 
 [workspace.teams]
 title = "チーム"
@@ -5416,6 +6132,28 @@ contactSales = "営業に問い合わせ"
 contactToUpgrade = "プランのアップグレードやカスタマイズはお問い合わせください"
 maxUsers = "最大ユーザー数"
 upTo = "最大"
+getLicense = "サーバーライセンスを取得"
+upgradeToEnterprise = "エンタープライズにアップグレード"
+selectPeriod = "課金期間を選択"
+monthlyBilling = "月額課金"
+yearlyBilling = "年額課金"
+checkoutOpened = "チェックアウトを開きました"
+checkoutInstructions = "Stripe のタブで購入手続きを完了してください。支払い後、ここに戻ってページを更新するとライセンスが有効化されます。ライセンスキーはメールでも送付されます。"
+activateLicense = "ライセンスを有効化"
+
+[plan.static.licenseActivation]
+checkoutOpened = "新しいタブでチェックアウトを開きました"
+instructions = "Stripe のタブで購入を完了してください。支払い完了後、ライセンスキーがメールで届きます。"
+enterKey = "プランを有効化するには以下にライセンスキーを入力してください:"
+keyDescription = "メールに記載のライセンスキーを貼り付け"
+activate = "ライセンスを有効化"
+doLater = "後で行う"
+success = "ライセンスを有効化しました！"
+successMessage = "ライセンスは正常に有効化されました。このウィンドウを閉じても構いません。"
+
+[plan.static.billingPortal]
+title = "メール認証が必要です"
+message = "Stripe の課金ポータルでメールアドレスの認証が必要です。メールのログインリンクを確認してください。"
 
 [plan.period]
 month = "月"
@@ -5619,6 +6357,8 @@ notAvailable = "監査システムは利用できません"
 notAvailableMessage = "監査システムが未設定または利用できません。"
 disabled = "監査ログは無効です"
 disabledMessage = "アプリケーション設定で監査ログを有効にして、システムイベントを記録してください。"
+enterpriseRequired = "エンタープライズライセンスが必要"
+enterpriseRequiredMessage = "監査ログシステムはエンタープライズ機能です。監査ログと分析にアクセスするには、エンタープライズライセンスにアップグレードしてください。"
 
 [audit.error]
 title = "監査システムの読み込みエラー"
@@ -5716,6 +6456,7 @@ endpoint = "エンドポイント"
 visits = "訪問数"
 percentage = "割合"
 noData = "利用可能なデータがありません"
+unknownEndpoint = "不明なエンドポイント"
 
 [backendHealth]
 checking = "バックエンドの状態を確認しています..."
@@ -5773,6 +6514,7 @@ subtitle = "Stirling アカウントでサインイン"
 [setup.selfhosted]
 title = "サーバーにサインイン"
 subtitle = "サーバーの認証情報を入力"
+link = "またはセルフホスト型アカウントに接続"
 
 [setup.server]
 title = "サーバーに接続"
@@ -5789,8 +6531,17 @@ description = "セルフホストの Stirling PDF サーバーの完全な URL �
 
 [setup.server.error]
 emptyUrl = "サーバー URL を入力してください"
+invalidUrl = "URL の形式が無効です。https://your-server.com のような有効な URL を入力してください"
 unreachable = "サーバーに接続できませんでした"
 testFailed = "接続テストに失敗しました"
+configFetch = "サーバー構成の取得に失敗しました。URL を確認して、もう一度お試しください。"
+
+[setup.server.error.securityDisabled]
+title = "ログインが有効になっていません"
+body = "このサーバーではログインが有効になっていません。このサーバーに接続するには、認証を有効にする必要があります:"
+step1 = "環境で DOCKER_ENABLE_SECURITY=true を設定する"
+step2 = "または settings.yml で security.enableLogin=true を設定する"
+step3 = "サーバーを再起動する"
 
 [setup.login]
 title = "サインイン"
@@ -5799,7 +6550,15 @@ connectingTo = "接続先:"
 submit = "ログイン"
 signInWith = "でサインイン"
 oauthPending = "認証のためブラウザーを開いています..."
+sso = "シングルサインオン"
 orContinueWith = "またはメールで続行"
+serverRequirement = "注: サーバーでログインを有効にする必要があります。"
+showInstructions = "有効化するには？"
+hideInstructions = "手順を非表示"
+instructions = "Stirling PDF サーバーでログインを有効にするには:"
+instructionsEnvVar = "環境変数を設定:"
+instructionsOrYml = "または settings.yml で:"
+instructionsRestart = "その後、サーバーを再起動して変更を反映させてください。"
 
 [setup.login.username]
 label = "ユーザー名"
@@ -5856,6 +6615,9 @@ earlyAccess = "早期アクセス"
 reset = "変更をリセット"
 downloadJson = "JSON をダウンロード"
 generatePdf = "PDF を生成"
+saveChanges = "変更を保存"
+applyChanges = "変更を適用"
+downloadCopy = "コピーをダウンロード"
 
 [pdfTextEditor.options.autoScaleText]
 title = "ボックスに収まるようテキストを自動スケール"
@@ -5873,6 +6635,24 @@ descriptionInline = "ヒント: Ctrl（Cmd）または Shift を押しながら�
 [pdfTextEditor.options.forceSingleElement]
 title = "編集したテキストを1つのPDF要素に固定"
 description = "有効にすると、編集した各テキストボックスを1つのPDFテキスト要素としてエクスポートし、グリフの重なりやフォント混在を避けます。"
+
+[pdfTextEditor.options.advanced]
+title = "詳細設定"
+
+[pdfTextEditor.tooltip.header]
+title = "プレビューの制限事項"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "テキストと画像のフォーカス"
+text = "このワークスペースはテキストの編集と埋め込み画像の位置調整に重点を置いています。複雑なページのアートワーク、フォームウィジェット、レイヤー化されたグラフィックは書き出し時に保持されますが、ここでは完全には編集できません。"
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "プレビュー差異"
+text = "表の罫線、図形、注釈の見た目など、一部のビジュアルはプレビューと完全には一致しない場合があります。書き出された PDF では可能な限り元の描画コマンドが保持されます。"
+
+[pdfTextEditor.tooltip.alpha]
+title = "アルファ版ビューアー"
+text = "このアルファ版ビューアーは発展途上のため、一部のフォント、色、透明効果、レイアウトがわずかに変化することがあります。共有前に生成された PDF を再確認してください。"
 
 [pdfTextEditor.manual]
 mergeTooltip = "選択ボックスを結合"
@@ -5893,6 +6673,8 @@ alpha = "このアルファ版ビューアは開発途上です。一部のフ�
 [pdfTextEditor.empty]
 title = "ドキュメントが読み込まれていません"
 subtitle = "テキスト編集を開始するにはPDFまたはJSONファイルを読み込んでください。"
+dropzone = "ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
+dropzoneWithFiles = "ファイルタブからファイルを選択するか、ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
 
 [pdfTextEditor.welcomeBanner]
 title = "PDF Text Editor（早期アクセス）へようこそ"
@@ -5993,3 +6775,58 @@ title = "テキスト追加の結果"
 
 [addText.error]
 failed = "PDFにテキストを追加中にエラーが発生しました。"
+
+[mobileUpload]
+title = "モバイルからアップロード"
+description = "スキャンして写真をアップロード。画像は自動で PDF に変換されます。"
+descriptionNoConvert = "モバイルデバイスから写真をアップロードするためにスキャンします。"
+error = "接続エラー"
+pollingError = "ファイル確認中にエラーが発生しました"
+sessionId = "セッション ID"
+sessionCreateError = "セッションの作成に失敗しました"
+expiryWarning = "セッションの有効期限が間もなく切れます"
+expiryWarningMessage = "この QR コードは {{seconds}} 秒で期限切れになります。新しいコードは自動生成されます。"
+filesReceived = "{{count}} 件のファイルを受信"
+connected = "モバイルデバイスが接続されました"
+instructions = "スマホのカメラでスキャン。画像は自動的に PDF に変換されます。"
+instructionsNoConvert = "スマホのカメラでスキャンしてファイルをアップロード。"
+
+[mobileScanner]
+title = "モバイルスキャナー"
+noSession = "無効なセッション"
+noSessionMessage = "有効な QR コードをスキャンしてこのページにアクセスしてください。"
+validating = "セッションを検証中..."
+sessionInvalid = "セッションエラー"
+sessionExpired = "このセッションの有効期限が切れました。更新して再試行してください。"
+sessionNotFound = "セッションが見つかりません。更新して再試行してください。"
+sessionValidationError = "セッションを検証できません。もう一度お試しください。"
+uploadSuccess = "アップロード成功！"
+uploadSuccessMessage = "画像の転送が完了しました。"
+httpsRequired = "カメラアクセスには HTTPS または localhost が必要です。HTTPS を使用するか、localhost からアクセスしてください。"
+uploadFailed = "アップロードに失敗しました。もう一度お試しください。"
+uploading = "アップロード中..."
+connected = "接続済み"
+connecting = "接続中..."
+chooseMethod = "アップロード方法を選択"
+chooseMethodDescription = "文書のスキャンとアップロード方法を選択してください"
+camera = "カメラ"
+cameraDescription = "自動エッジ検出付きでデバイスのカメラを使って文書をスキャン"
+fileUpload = "ファイルアップロード"
+fileDescription = "デバイス内の既存の写真や文書をアップロード"
+cameraAccessDenied = "カメラへのアクセスが拒否されました。カメラアクセスを有効にしてください。"
+back = "戻る"
+settings = "設定"
+edgeDetection = "エッジ検出"
+flashlight = "フラッシュライト"
+flash = "フラッシュ"
+processing = "処理中..."
+capture = "撮影"
+selectFilesPrompt = "アップロードするファイルを選択"
+selectImage = "画像を選択"
+preview = "プレビュー"
+retake = "撮り直し"
+addToBatch = "バッチに追加"
+upload = "アップロード"
+batchImages = "バッチ"
+clearBatch = "クリア"
+uploadAll = "すべてアップロード"

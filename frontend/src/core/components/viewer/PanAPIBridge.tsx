@@ -1,45 +1,70 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePan } from '@embedpdf/plugin-pan/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
-/**
- * Component that runs inside EmbedPDF context and updates pan state in ViewerContext
- */
 export function PanAPIBridge() {
-  const { provides: pan, isPanning } = usePan();
-  const { registerBridge } = useViewer();
+  const activeDocumentId = useActiveDocumentId();
   
-  // Store state locally
-  const [_localState, setLocalState] = useState({
-    isPanning: false
-  });
+  // Don't render the inner component until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return <PanAPIBridgeInner documentId={activeDocumentId} />;
+}
+
+function PanAPIBridgeInner({ documentId }: { documentId: string }) {
+  const { provides: pan, isPanning } = usePan(documentId);
+  const { registerBridge, triggerImmediatePanUpdate } = useViewer();
+  
+  // Keep pan ref updated to avoid re-running effect when object reference changes
+  const panRef = useRef(pan);
+  useEffect(() => {
+    panRef.current = pan;
+  }, [pan]);
+  
+  // Track previous isPanning value to detect changes
+  const prevIsPanningRef = useRef<boolean>(isPanning);
 
   useEffect(() => {
-    if (pan) {
-      // Update local state
+    const currentPan = panRef.current;
+    if (currentPan) {
       const newState = {
         isPanning
       };
-      setLocalState(newState);
 
       // Register this bridge with ViewerContext
       registerBridge('pan', {
         state: newState,
         api: {
           enable: () => {
-            pan.enablePan();
+            currentPan.enablePan();
           },
           disable: () => {
-            pan.disablePan();
+            currentPan.disablePan();
           },
           toggle: () => {
-            pan.togglePan();
+            currentPan.togglePan();
           },
-          makePanDefault: () => pan.makePanDefault(),
+          makePanDefault: () => {
+            // v2.3.0: makePanDefault may not exist, enable pan as fallback
+            if ('makePanDefault' in currentPan && typeof (currentPan as any).makePanDefault === 'function') {
+              (currentPan as any).makePanDefault();
+            } else {
+              currentPan.enablePan();
+            }
+          },
         }
       });
+      
+      // Trigger immediate pan update if the value changed
+      if (prevIsPanningRef.current !== isPanning) {
+        prevIsPanningRef.current = isPanning;
+        triggerImmediatePanUpdate(isPanning);
+      }
     }
-  }, [pan, isPanning]);
+  }, [isPanning, registerBridge, triggerImmediatePanUpdate]);
 
   return null;
 }

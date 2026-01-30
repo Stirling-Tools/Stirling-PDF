@@ -32,7 +32,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     "principal",
                     "startDate",
                     "endDate",
-                    "async");
+                    "async",
+                    "session");
 
     @Override
     public boolean preHandle(

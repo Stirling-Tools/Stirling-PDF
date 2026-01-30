@@ -84,93 +84,102 @@ public class MetadataController {
         if (allRequestParams == null) {
             allRequestParams = new java.util.HashMap<String, String>();
         }
-        // Load the PDF file into a PDDocument
-        PDDocument document = pdfDocumentFactory.load(pdfFile, true);
+        // Load the PDF file into a PDDocument with proper resource management
+        try (PDDocument document = pdfDocumentFactory.load(pdfFile, true)) {
 
-        // Get the document information from the PDF
-        PDDocumentInformation info = document.getDocumentInformation();
+            // Get the document information from the PDF
+            PDDocumentInformation info = document.getDocumentInformation();
 
-        // Check if each metadata value is "undefined" and set it to null if it is
-        author = checkUndefined(author);
-        creationDate = checkUndefined(creationDate);
-        creator = checkUndefined(creator);
-        keywords = checkUndefined(keywords);
-        modificationDate = checkUndefined(modificationDate);
-        producer = checkUndefined(producer);
-        subject = checkUndefined(subject);
-        title = checkUndefined(title);
-        trapped = checkUndefined(trapped);
+            // Check if each metadata value is "undefined" and set it to null if it is
+            author = checkUndefined(author);
+            creationDate = checkUndefined(creationDate);
+            creator = checkUndefined(creator);
+            keywords = checkUndefined(keywords);
+            modificationDate = checkUndefined(modificationDate);
+            producer = checkUndefined(producer);
+            subject = checkUndefined(subject);
+            title = checkUndefined(title);
+            trapped = checkUndefined(trapped);
 
-        // If the "deleteAll" flag is set, remove all metadata from the document
-        // information
-        if (deleteAll) {
-            for (String key : info.getMetadataKeys()) {
-                info.setCustomMetadataValue(key, null);
-            }
-            // Remove metadata from the PDF history
-            document.getDocumentCatalog().getCOSObject().removeItem(COSName.getPDFName("Metadata"));
-            document.getDocumentCatalog()
-                    .getCOSObject()
-                    .removeItem(COSName.getPDFName("PieceInfo"));
-            author = null;
-            creationDate = null;
-            creator = null;
-            keywords = null;
-            modificationDate = null;
-            producer = null;
-            subject = null;
-            title = null;
-            trapped = null;
-        } else {
-            // Iterate through the request parameters and set the metadata values
-            for (Entry<String, String> entry : allRequestParams.entrySet()) {
-                String key = entry.getKey();
-                // Check if the key is a standard metadata key
-                if (!"Author".equalsIgnoreCase(key)
-                        && !"CreationDate".equalsIgnoreCase(key)
-                        && !"Creator".equalsIgnoreCase(key)
-                        && !"Keywords".equalsIgnoreCase(key)
-                        && !"modificationDate".equalsIgnoreCase(key)
-                        && !"Producer".equalsIgnoreCase(key)
-                        && !"Subject".equalsIgnoreCase(key)
-                        && !"Title".equalsIgnoreCase(key)
-                        && !"Trapped".equalsIgnoreCase(key)
-                        && !key.contains("customKey")
-                        && !key.contains("customValue")) {
-                    info.setCustomMetadataValue(key, entry.getValue());
-                } else if (key.contains("customKey")) {
-                    int number =
-                            Integer.parseInt(
-                                    RegexPatternUtils.getInstance()
-                                            .getNumericExtractionPattern()
-                                            .matcher(key)
-                                            .replaceAll(""));
-                    String customKey = entry.getValue();
-                    String customValue = allRequestParams.get("customValue" + number);
-                    info.setCustomMetadataValue(customKey, customValue);
+            // If the "deleteAll" flag is set, remove all metadata from the document
+            // information
+            if (deleteAll) {
+                for (String key : info.getMetadataKeys()) {
+                    info.setCustomMetadataValue(key, null);
+                }
+                // Remove metadata from the PDF history
+                document.getDocumentCatalog()
+                        .getCOSObject()
+                        .removeItem(COSName.getPDFName("Metadata"));
+                document.getDocumentCatalog()
+                        .getCOSObject()
+                        .removeItem(COSName.getPDFName("PieceInfo"));
+                author = null;
+                creationDate = null;
+                creator = null;
+                keywords = null;
+                modificationDate = null;
+                producer = null;
+                subject = null;
+                title = null;
+                trapped = null;
+            } else {
+                // Iterate through the request parameters and set the metadata values
+                for (Entry<String, String> entry : allRequestParams.entrySet()) {
+                    String key = entry.getKey();
+                    // Check if the key is a standard metadata key
+                    if (!"Author".equalsIgnoreCase(key)
+                            && !"CreationDate".equalsIgnoreCase(key)
+                            && !"Creator".equalsIgnoreCase(key)
+                            && !"Keywords".equalsIgnoreCase(key)
+                            && !"modificationDate".equalsIgnoreCase(key)
+                            && !"Producer".equalsIgnoreCase(key)
+                            && !"Subject".equalsIgnoreCase(key)
+                            && !"Title".equalsIgnoreCase(key)
+                            && !"Trapped".equalsIgnoreCase(key)
+                            && !key.contains("customKey")
+                            && !key.contains("customValue")) {
+                        info.setCustomMetadataValue(key, entry.getValue());
+                    } else if (key.contains("customKey")) {
+                        try {
+                            int number =
+                                    Integer.parseInt(
+                                            RegexPatternUtils.getInstance()
+                                                    .getNumericExtractionPattern()
+                                                    .matcher(key)
+                                                    .replaceAll(""));
+                            String customKey = entry.getValue();
+                            String customValue = allRequestParams.get("customValue" + number);
+                            info.setCustomMetadataValue(customKey, customValue);
+                        } catch (NumberFormatException e) {
+                            // Skip invalid custom key entries that don't have valid numeric
+                            // suffixes
+                            log.warn("Skipping invalid custom key '{}': {}", key, e.getMessage());
+                        }
+                    }
                 }
             }
+            // Set creation date using utility method
+            Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
+            info.setCreationDate(creationDateCal);
+
+            // Set modification date using utility method
+            Calendar modificationDateCal = PdfMetadataService.parseToCalendar(modificationDate);
+            info.setModificationDate(modificationDateCal);
+            info.setCreator(creator);
+            info.setKeywords(keywords);
+            info.setAuthor(author);
+            info.setProducer(producer);
+            info.setSubject(subject);
+            info.setTitle(title);
+            info.setTrapped(trapped);
+
+            document.setDocumentInformation(info);
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.removeExtension(
+                                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
+                            + "_metadata.pdf");
         }
-        // Set creation date using utility method
-        Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
-        info.setCreationDate(creationDateCal);
-
-        // Set modification date using utility method
-        Calendar modificationDateCal = PdfMetadataService.parseToCalendar(modificationDate);
-        info.setModificationDate(modificationDateCal);
-        info.setCreator(creator);
-        info.setKeywords(keywords);
-        info.setAuthor(author);
-        info.setProducer(producer);
-        info.setSubject(subject);
-        info.setTitle(title);
-        info.setTrapped(trapped);
-
-        document.setDocumentInformation(info);
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.removeExtension(
-                                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
-                        + "_metadata.pdf");
     }
 }

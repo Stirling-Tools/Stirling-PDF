@@ -19,7 +19,11 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
     case SPLIT_METHODS.BY_SECTIONS:
       formData.append("horizontalDivisions", parameters.hDiv);
       formData.append("verticalDivisions", parameters.vDiv);
-      formData.append("merge", parameters.merge.toString());
+      formData.append("merge", (parameters.merge ?? false).toString());
+      formData.append("splitMode", parameters.splitMode || 'SPLIT_ALL');
+      if (parameters.splitMode === 'CUSTOM' && parameters.customPages) {
+        formData.append("pageNumbers", parameters.customPages);
+      }
       break;
     case SPLIT_METHODS.BY_SIZE:
       formData.append("splitType", "0");
@@ -35,11 +39,11 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
       break;
     case SPLIT_METHODS.BY_CHAPTERS:
       formData.append("bookmarkLevel", parameters.bookmarkLevel);
-      formData.append("includeMetadata", parameters.includeMetadata.toString());
-      formData.append("allowDuplicates", parameters.allowDuplicates.toString());
+      formData.append("includeMetadata", (parameters.includeMetadata ?? false).toString());
+      formData.append("allowDuplicates", (parameters.allowDuplicates ?? false).toString());
       break;
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
-      formData.append("duplexMode", parameters.duplexMode.toString());
+      formData.append("duplexMode", (parameters.duplexMode ?? false).toString());
       break;
     default:
       throw new Error(`Unknown split method: ${parameters.method}`);

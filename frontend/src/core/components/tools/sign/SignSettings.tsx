@@ -14,8 +14,9 @@ import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, MAX_SAVED_SIGNATURES, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
+import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
 import { SavedSignaturesSection } from '@app/components/tools/sign/SavedSignaturesSection';
+import { buildSignaturePreview } from '@app/utils/signaturePreview';
 
 type SignatureDrafts = {
   canvas?: string;
@@ -95,10 +96,13 @@ const SignSettings = ({
   const {
     savedSignatures,
     isAtCapacity: isSavedSignatureLimitReached,
+    maxLimit,
     addSignature,
     removeSignature,
     updateSignatureLabel,
     byTypeCounts,
+    storageType,
+    isAdmin,
   } = useSavedSignatures();
   const [signatureSource, setSignatureSource] = useState<SignatureSource>(() => {
     const paramSource = parameters.signatureType as SignatureSource;
@@ -157,11 +161,11 @@ const SignSettings = ({
   }, [canvasSignatureData, imageSignatureData, buildTextSignatureKey, parameters.signerName, parameters.fontSize, parameters.fontFamily, parameters.textColor]);
 
   const saveSignatureToLibrary = useCallback(
-    (payload: SavedSignaturePayload, type: SavedSignatureType): AddSignatureResult => {
+    async (payload: SavedSignaturePayload, type: SavedSignatureType, scope: 'personal' | 'shared'): Promise<AddSignatureResult> => {
       if (isSavedSignatureLimitReached) {
         return { success: false, reason: 'limit' };
       }
-      return addSignature(payload, getDefaultSavedLabel(type));
+      return await addSignature(payload, getDefaultSavedLabel(type), scope);
     },
     [addSignature, getDefaultSavedLabel, isSavedSignatureLimitReached]
   );
@@ -176,40 +180,57 @@ const SignSettings = ({
     [signatureKeysByType]
   );
 
-  const handleSaveCanvasSignature = useCallback(() => {
+  const handleSaveCanvasSignature = useCallback(async (scope: 'personal' | 'shared') => {
     if (!canvasSignatureData) {
       return;
     }
-    const result = saveSignatureToLibrary({ type: 'canvas', dataUrl: canvasSignatureData }, 'canvas');
+    const result = await saveSignatureToLibrary({ type: 'canvas', dataUrl: canvasSignatureData }, 'canvas', scope);
     if (result.success) {
       setLastSavedKeyForType('canvas');
     }
   }, [canvasSignatureData, saveSignatureToLibrary, setLastSavedKeyForType]);
 
-  const handleSaveImageSignature = useCallback(() => {
+  const handleSaveImageSignature = useCallback(async (scope: 'personal' | 'shared') => {
     if (!imageSignatureData) {
       return;
     }
-    const result = saveSignatureToLibrary({ type: 'image', dataUrl: imageSignatureData }, 'image');
+    const result = await saveSignatureToLibrary({ type: 'image', dataUrl: imageSignatureData }, 'image', scope);
     if (result.success) {
       setLastSavedKeyForType('image');
     }
   }, [imageSignatureData, saveSignatureToLibrary, setLastSavedKeyForType]);
 
-  const handleSaveTextSignature = useCallback(() => {
+  const handleSaveTextSignature = useCallback(async (scope: 'personal' | 'shared') => {
     const signerName = (parameters.signerName ?? '').trim();
     if (!signerName) {
       return;
     }
-    const result = saveSignatureToLibrary(
+
+    // Generate image from text signature
+    const preview = await buildSignaturePreview({
+      signatureType: 'text',
+      signerName,
+      fontFamily: parameters.fontFamily ?? 'Helvetica',
+      fontSize: parameters.fontSize ?? 16,
+      textColor: parameters.textColor ?? '#000000',
+    });
+
+    if (!preview?.dataUrl) {
+      console.error('Failed to generate text signature preview');
+      return;
+    }
+
+    const result = await saveSignatureToLibrary(
       {
         type: 'text',
+        dataUrl: preview.dataUrl,
         signerName,
         fontFamily: parameters.fontFamily ?? 'Helvetica',
         fontSize: parameters.fontSize ?? 16,
         textColor: parameters.textColor ?? '#000000',
       },
-      'text'
+      'text',
+      scope
     );
     if (result.success) {
       setLastSavedKeyForType('text');
@@ -227,16 +248,19 @@ const SignSettings = ({
     (signature: SavedSignature) => {
       setPlacementManuallyPaused(false);
 
+      // Use the data URL directly (already converted to base64 when loaded)
+      const dataUrlToUse = signature.dataUrl;
+
       if (signature.type === 'canvas') {
         if (parameters.signatureType !== 'canvas') {
           onParameterChange('signatureType', 'canvas');
         }
-        setCanvasSignatureData(signature.dataUrl);
+        setCanvasSignatureData(dataUrlToUse);
       } else if (signature.type === 'image') {
         if (parameters.signatureType !== 'image') {
           onParameterChange('signatureType', 'image');
         }
-        setImageSignatureData(signature.dataUrl);
+        setImageSignatureData(dataUrlToUse);
       } else if (signature.type === 'text') {
         if (parameters.signatureType !== 'text') {
           onParameterChange('signatureType', 'text');
@@ -250,7 +274,7 @@ const SignSettings = ({
       const savedKey =
         signature.type === 'text'
           ? buildTextSignatureKey(signature.signerName, signature.fontSize, signature.fontFamily, signature.textColor)
-          : signature.dataUrl;
+          : dataUrlToUse;
       setLastSavedKeyForType(signature.type, savedKey);
 
       const activate = () => onActivateSignaturePlacement?.();
@@ -286,15 +310,20 @@ const SignSettings = ({
     [updateSignatureLabel]
   );
 
-  const renderSaveButton = (type: SavedSignatureType, isReady: boolean, onClick: () => void) => {
+  const renderSaveButton = (type: SavedSignatureType, isReady: boolean, onClick: (scope: 'personal' | 'shared') => void, scope: 'personal' | 'shared', icon: string, label: string) => {
     if (!canUseSavedLibrary) {
       return null;
     }
-    const label = translate('saved.saveButton', 'Save signature');
     const currentKey = signatureKeysByType[type];
     const lastSavedKey = lastSavedSignatureKeys[type];
     const hasChanges = Boolean(currentKey && currentKey !== lastSavedKey);
     const isSaved = isReady && !hasChanges;
+
+    // Only show backend storage buttons when backend is available
+    const showButton = storageType === 'backend' || storageType === null;
+    if (!showButton) {
+      return null;
+    }
 
     let tooltipMessage: string | undefined;
     if (!isReady) {
@@ -302,8 +331,8 @@ const SignSettings = ({
     } else if (isSaved) {
       tooltipMessage = translate('saved.noChanges', 'Current signature is already saved.');
     } else if (isSavedSignatureLimitReached) {
-      tooltipMessage = translate('saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
-        max: MAX_SAVED_SIGNATURES,
+      tooltipMessage = translate('saved.limitDescription', 'You have reached the maximum limit of {{max}} saved signatures. Remove a saved signature before adding new ones.', {
+        max: maxLimit,
       });
     }
 
@@ -312,11 +341,11 @@ const SignSettings = ({
         size="xs"
         variant="outline"
         color={isSaved ? 'green' : undefined}
-        onClick={onClick}
+        onClick={() => onClick(scope)}
         disabled={!isReady || disabled || isSavedSignatureLimitReached || !hasChanges}
-        leftSection={<LocalIcon icon="material-symbols:save-rounded" width={16} height={16} />}
+        leftSection={<LocalIcon icon={icon} width={16} height={16} />}
       >
-        {isSaved ? translate('saved.status.saved', 'Saved') : label}
+        {label}
       </Button>
     );
 
@@ -331,15 +360,38 @@ const SignSettings = ({
     return button;
   };
 
-  const renderSaveButtonRow = (type: SavedSignatureType, isReady: boolean, onClick: () => void) => {
-    const button = renderSaveButton(type, isReady, onClick);
-    if (!button) {
+  const renderSaveButtonRow = (type: SavedSignatureType, isReady: boolean, onClick: (scope: 'personal' | 'shared') => void) => {
+    if (!canUseSavedLibrary) {
       return null;
     }
+
+    const personalButton = renderSaveButton(
+      type,
+      isReady,
+      onClick,
+      'personal',
+      'person-rounded',
+      translate('saved.savePersonal', 'Save Personal')
+    );
+
+    const sharedButton = renderSaveButton(
+      type,
+      isReady,
+      onClick,
+      'shared',
+      'groups-rounded',
+      translate('saved.saveShared', 'Save Shared')
+    );
+
+    if (!personalButton && !sharedButton) {
+      return null;
+    }
+
     return (
-      <Box style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
-        {button}
-      </Box>
+      <Group gap="xs" style={{ alignSelf: 'flex-start', marginTop: '0.4rem' }}>
+        {personalButton}
+        {sharedButton}
+      </Group>
     );
   };
 
@@ -409,23 +461,13 @@ const SignSettings = ({
   const handleImageChange = async (file: File | null) => {
     if (file && !disabled) {
       try {
-        const result = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              resolve(e.target.result as string);
-            } else {
-              reject(new Error('Failed to read file'));
-            }
-          };
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
-
         // Reset pause state and directly activate placement
         setPlacementManuallyPaused(false);
         lastAppliedPlacementKey.current = null;
-        setImageSignatureData(result);
+
+        // Image data will be set by onProcessedImageData callback in ImageUploader
+        // This avoids the race condition where both handleImageChange and onProcessedImageData
+        // try to set the image data, potentially with the wrong version
 
         // Directly activate placement on image upload
         if (typeof window !== 'undefined') {
@@ -439,8 +481,6 @@ const SignSettings = ({
     } else if (!file) {
       setImageSignatureData(undefined);
       onDeactivateSignature?.();
-      setImageSignatureData(undefined);
-      onDeactivateSignature?.();
     }
   };
 
@@ -448,7 +488,7 @@ const SignSettings = ({
   const handleCanvasSignatureChange = useCallback((data: string | null) => {
     const nextValue = data ?? undefined;
     setCanvasSignatureData(prevData => {
-      // Reset pause state and trigger placement for signature changes
+      // Reset pause-rounded state and trigger placement for signature changes
       // (onDrawingComplete handles initial activation)
       if (prevData && prevData !== nextValue && nextValue) {
         setPlacementManuallyPaused(false);
@@ -744,6 +784,9 @@ const SignSettings = ({
           signatures={savedSignatures}
           disabled={disabled}
           isAtCapacity={isSavedSignatureLimitReached}
+          maxLimit={maxLimit}
+          storageType={storageType}
+          isAdmin={isAdmin}
           onUseSignature={handleUseSavedSignature}
           onDeleteSignature={handleDeleteSavedSignature}
           onRenameSignature={handleRenameSavedSignature}
@@ -780,6 +823,12 @@ const SignSettings = ({
           <ImageUploader
             onImageChange={handleImageChange}
             disabled={disabled}
+            allowBackgroundRemoval={true}
+            onProcessedImageData={(dataUrl) => {
+              if (dataUrl) {
+                setImageSignatureData(dataUrl);
+              }
+            }}
           />
           {renderSaveButtonRow('image', hasImageSignature, handleSaveImageSignature)}
         </Stack>
@@ -798,6 +847,12 @@ const SignSettings = ({
           textColor={parameters.textColor || '#000000'}
           onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
+          label={translate('text.name', 'Text')}
+          placeholder={translate('text.placeholder', 'Enter text')}
+          fontLabel={translate('text.fontLabel', 'Font')}
+          fontSizeLabel={translate('text.fontSizeLabel', 'Font size')}
+          fontSizePlaceholder={translate('text.fontSizePlaceholder', 'Type or select font size (8-200)')}
+          colorLabel={translate('text.colorLabel', 'Text colour')}
           onAnyChange={() => {
             setPlacementManuallyPaused(false);
             lastAppliedPlacementKey.current = null;
@@ -844,7 +899,7 @@ const SignSettings = ({
         color: isPlacementMode ? 'blue' : 'teal',
         title: isPlacementMode
           ? translate('instructions.title', 'How to add your signature')
-          : translate('instructions.paused', 'Placement paused'),
+          : translate('instructions.pause-roundedd', 'Placement pause-roundedd'),
         message: isPlacementMode
           ? placementInstructions()
           : translate('instructions.resumeHint', 'Resume placement to click and add your signature.'),
@@ -865,7 +920,7 @@ const SignSettings = ({
     onActivateSignaturePlacement?.();
   };
 
-  // Handle Escape key to toggle pause/resume
+  // Handle Escape key to toggle pause-rounded/resume
   useEffect(() => {
     if (!isCurrentTypeReady) return;
 
@@ -888,11 +943,11 @@ const SignSettings = ({
     onActivateSignaturePlacement || onDeactivateSignature
       ? isPlacementMode
         ? (
-            <Tooltip label={translate('mode.pause', 'Pause placement')}>
+            <Tooltip label={translate('mode.pause-rounded', 'Pause placement')}>
               <ActionIcon
                 variant="default"
                 size="lg"
-                aria-label={translate('mode.pause', 'Pause placement')}
+                aria-label={translate('mode.pause-rounded', 'Pause placement')}
                 onClick={handlePausePlacement}
                 disabled={disabled || !onDeactivateSignature}
                 style={{
@@ -903,9 +958,9 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
+                <LocalIcon icon="pause-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
-                  {translate('mode.pause', 'Pause placement')}
+                  {translate('mode.pause-rounded', 'Pause placement')}
                 </Text>
               </ActionIcon>
             </Tooltip>
@@ -926,7 +981,7 @@ const SignSettings = ({
                   gap: '0.4rem',
                 }}
               >
-                <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
+                <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
                   {translate('mode.resume', 'Resume placement')}
                 </Text>

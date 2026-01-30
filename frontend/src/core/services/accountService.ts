@@ -1,3 +1,4 @@
+import { MfaSetupResponse } from '@app/responses/Mfa/MfaResponse';
 import apiClient from '@app/services/apiClient';
 
 export interface AccountData {
@@ -7,6 +8,13 @@ export interface AccountData {
   changeCredsFlag: boolean;
   oAuth2Login: boolean;
   saml2Login: boolean;
+  mfaEnabled?: boolean;
+}
+
+export interface LoginPageData {
+  showDefaultCredentials: boolean;
+  firstTimeSetup: boolean;
+  enableLogin: boolean;
 }
 
 /**
@@ -14,6 +22,15 @@ export interface AccountData {
  * Provides functions to interact with account-related backend APIs
  */
 export const accountService = {
+  /**
+   * Get login page data (includes showDefaultCredentials flag)
+   * This is a public endpoint - doesn't require authentication
+   */
+  async getLoginPageData(): Promise<LoginPageData> {
+    const response = await apiClient.get<LoginPageData>('/api/v1/proprietary/ui-data/login');
+    return response.data;
+  },
+
   /**
    * Get current user account data
    */
@@ -35,10 +52,38 @@ export const accountService = {
   /**
    * Change user password on first login (resets firstLogin flag)
    */
-  async changePasswordOnLogin(currentPassword: string, newPassword: string): Promise<void> {
+  async changePasswordOnLogin(currentPassword: string, newPassword: string, confirmPassword: string): Promise<void> {
     const formData = new FormData();
     formData.append('currentPassword', currentPassword);
     formData.append('newPassword', newPassword);
-    await apiClient.post('/api/v1/user/change-password-on-login', formData);
+    formData.append('confirmPassword', confirmPassword);
+    await apiClient.post('/api/v1/user/change-password-on-login', formData, { responseType: 'json'});
+  },
+
+  /**
+   * Change username
+   */
+  async changeUsername(newUsername: string, currentPassword: string): Promise<void> {
+    const formData = new FormData();
+    formData.append('currentPasswordChangeUsername', currentPassword);
+    formData.append('newUsername', newUsername);
+    await apiClient.post('/api/v1/user/change-username', formData);
+  },
+
+  async requestMfaSetup(): Promise<MfaSetupResponse> {
+    const response = await apiClient.get<MfaSetupResponse>('/api/v1/auth/mfa/setup', { suppressErrorToast: true });
+    return response.data;
+  },
+
+  async enableMfa(code: string): Promise<void> {
+    await apiClient.post('/api/v1/auth/mfa/enable', { code }, { skipAuthRedirect: true });
+  },
+
+  async disableMfa(code: string): Promise<void> {
+    await apiClient.post('/api/v1/auth/mfa/disable', { code }, { skipAuthRedirect: true });
+  },
+
+  async cancelMfaSetup(): Promise<void> {
+    await apiClient.post('/api/v1/auth/mfa/setup/cancel', undefined, { suppressErrorToast: true });
   },
 };

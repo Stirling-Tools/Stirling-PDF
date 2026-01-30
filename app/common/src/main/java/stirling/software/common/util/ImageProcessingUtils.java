@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.Locale;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -62,15 +63,16 @@ public class ImageProcessingUtils {
         } else {
             int width = image.getWidth();
             int height = image.getHeight();
+            int[] pixels = new int[width * height];
+
+            image.getRGB(0, 0, width, height, pixels, 0, width);
+
             byte[] data = new byte[width * height * 3];
             int index = 0;
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int rgb = image.getRGB(x, y);
-                    data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
-                    data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
-                    data[index++] = (byte) (rgb & 0xFF); // Blue
-                }
+            for (int rgb : pixels) {
+                data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
+                data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
+                data[index++] = (byte) (rgb & 0xFF); // Blue
             }
             return data;
         }
@@ -118,7 +120,7 @@ public class ImageProcessingUtils {
         BufferedImage image = null;
         String filename = file.getOriginalFilename();
 
-        if (filename != null && filename.toLowerCase().endsWith(".psd")) {
+        if (filename != null && filename.toLowerCase(Locale.ROOT).endsWith(".psd")) {
             // For PSD files, try explicit ImageReader
             Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("PSD");
             if (readers.hasNext()) {
@@ -134,7 +136,8 @@ public class ImageProcessingUtils {
                 throw new IOException(
                         "Unable to read image from file: "
                                 + filename
-                                + ". Supported PSD formats: RGB/CMYK/Gray 8-32 bit, RLE/ZIP compression");
+                                + ". Supported PSD formats: RGB/CMYK/Gray 8-32 bit, RLE/ZIP"
+                                + " compression");
             }
         } else {
             // For non-PSD files, use standard ImageIO
@@ -142,7 +145,7 @@ public class ImageProcessingUtils {
         }
 
         if (image == null) {
-            throw new IOException("Unable to read image from file: " + filename);
+            throw ExceptionUtils.createImageReadException(filename);
         }
 
         double orientation = extractImageOrientation(file.getInputStream());

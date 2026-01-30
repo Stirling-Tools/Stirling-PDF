@@ -1,6 +1,20 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { springAuth } from '@app/auth/springAuthClient';
-import type { Session, AuthError, AuthChangeEvent, AuthContextType } from '@app/auth/types';
+import { clearPlatformAuthOnLoginInit } from '@app/extensions/authSessionCleanup';
+import type { Session, User, AuthError, AuthChangeEvent } from '@app/auth/springAuthClient';
+
+/**
+ * Auth Context Type
+ * Simplified version without SaaS-specific features (credits, subscriptions)
+ */
+interface AuthContextType {
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+  error: AuthError | null;
+  signOut: () => Promise<void>;
+  refreshSession: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
@@ -66,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.debug('[Auth] Signed out successfully');
         setSession(null);
       }
+
     } catch (err) {
       console.error('[Auth] Unexpected error during sign out:', err);
       setError(err as AuthError);
@@ -81,6 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.debug('[Auth] Initializing auth...');
+        // Clear any platform-specific cached auth on login page init.
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
+          await clearPlatformAuthOnLoginInit();
+        }
 
         // Skip config check entirely - let the app handle login state
         // The config will be fetched by useAppConfig when needed

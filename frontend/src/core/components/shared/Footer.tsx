@@ -1,6 +1,7 @@
 import { Flex } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useCookieConsent } from '@app/hooks/useCookieConsent';
+import { useFooterInfo } from '@app/hooks/useFooterInfo';
 
 interface FooterProps {
   privacyPolicy?: string;
@@ -9,6 +10,7 @@ interface FooterProps {
   cookiePolicy?: string;
   impressum?: string;
   analyticsEnabled?: boolean;
+  forceLightMode?: boolean;
 }
 
 export default function Footer({
@@ -17,10 +19,31 @@ export default function Footer({
   accessibilityStatement,
   cookiePolicy,
   impressum,
-  analyticsEnabled = false
+  analyticsEnabled,
+  forceLightMode = false
 }: FooterProps) {
   const { t } = useTranslation();
-  const { showCookiePreferences } = useCookieConsent({ analyticsEnabled });
+  const { footerInfo } = useFooterInfo();
+
+  // Use props if provided, otherwise fall back to fetched footer info
+  const finalAnalyticsEnabled = analyticsEnabled ?? footerInfo?.analyticsEnabled ?? false;
+  const finalPrivacyPolicy = privacyPolicy ?? footerInfo?.privacyPolicy;
+  const finalTermsAndConditions = termsAndConditions ?? footerInfo?.termsAndConditions;
+  const finalAccessibilityStatement = accessibilityStatement ?? footerInfo?.accessibilityStatement;
+  const finalCookiePolicy = cookiePolicy ?? footerInfo?.cookiePolicy;
+  const finalImpressum = impressum ?? footerInfo?.impressum;
+
+  const { showCookiePreferences } = useCookieConsent({ analyticsEnabled: finalAnalyticsEnabled, forceLightMode });
+
+  // Default URLs
+  const defaultTermsUrl = "https://www.stirling.com/legal/terms-of-service";
+  const defaultPrivacyUrl = "https://www.stirling.com/legal/privacy-policy";
+  const defaultAccessibilityUrl = "https://www.stirling.com/accessibility";
+
+  // Use provided URLs or fall back to defaults
+  const finalTermsUrl = finalTermsAndConditions || defaultTermsUrl;
+  const finalPrivacyUrl = finalPrivacyPolicy || defaultPrivacyUrl;
+  const finalAccessibilityUrl = finalAccessibilityStatement || defaultAccessibilityUrl;
 
   // Helper to check if a value is valid (not null/undefined/empty string)
   const isValidLink = (link?: string) => link && link.trim().length > 0;
@@ -28,8 +51,8 @@ export default function Footer({
   return (
     <div style={{
       height: 'var(--footer-height)',
-      backgroundColor: 'var(--mantine-color-gray-1)',
-      borderTop: '1px solid var(--mantine-color-gray-2)',
+      backgroundColor: forceLightMode ? '#f1f3f5' : 'var(--mantine-color-gray-1)',
+      borderTop: forceLightMode ? '1px solid #e9ecef' : '1px solid var(--mantine-color-gray-2)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
@@ -38,7 +61,10 @@ export default function Footer({
           justify="center"
           align="center"
           direction="row"
-          style={{ fontSize: '0.75rem' }}>
+          style={{
+            fontSize: '0.75rem',
+            color: forceLightMode ? '#495057' : undefined
+          }}>
           <a
             className="footer-link px-3"
             id="survey"
@@ -48,57 +74,67 @@ export default function Footer({
           >
             {t('survey.nav', 'Survey')}
           </a>
-          {isValidLink(privacyPolicy) && (
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href={finalPrivacyUrl}
+          >
+            {t('legal.privacy', 'Privacy Policy')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href={finalTermsUrl}
+          >
+            {t('legal.terms', 'Terms and Conditions')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://discord.gg/Cn8pWhQRxZ"
+          >
+            {t('footer.discord', 'Discord')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/Stirling-Tools/Stirling-PDF"
+          >
+            {t('footer.issues', 'GitHub')}
+          </a>
+          <a
+            className="footer-link px-3"
+            target="_blank"
+            rel="noopener noreferrer"
+            href={finalAccessibilityUrl}
+          >
+            {t('legal.accessibility', 'Accessibility')}
+          </a>
+          {isValidLink(finalCookiePolicy) && (
             <a
               className="footer-link px-3"
               target="_blank"
               rel="noopener noreferrer"
-              href={privacyPolicy}
-            >
-              {t('legal.privacy', 'Privacy Policy')}
-            </a>
-          )}
-          {isValidLink(termsAndConditions) && (
-            <a
-              className="footer-link px-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={termsAndConditions}
-            >
-              {t('legal.terms', 'Terms and Conditions')}
-            </a>
-          )}
-          {isValidLink(accessibilityStatement) && (
-            <a
-              className="footer-link px-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={accessibilityStatement}
-            >
-              {t('legal.accessibility', 'Accessibility')}
-            </a>
-          )}
-          {isValidLink(cookiePolicy) && (
-            <a
-              className="footer-link px-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={cookiePolicy}
+              href={finalCookiePolicy}
             >
               {t('legal.cookie', 'Cookie Policy')}
             </a>
           )}
-          {isValidLink(impressum) && (
+          {isValidLink(finalImpressum) && (
             <a
               className="footer-link px-3"
               target="_blank"
               rel="noopener noreferrer"
-              href={impressum}
+              href={finalImpressum}
             >
               {t('legal.impressum', 'Impressum')}
             </a>
           )}
-          {analyticsEnabled && (
+          {finalAnalyticsEnabled && (
             <button
               className="footer-link px-3"
               id="cookieBanner"

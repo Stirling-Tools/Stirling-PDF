@@ -1,6 +1,8 @@
 # Backend ultra-lite Dockerfile - Java Spring Boot with minimal dependencies and build stage
-# Build the application
-FROM gradle:8.14-jdk21 AS build
+# ========================================
+# STAGE 1: Build stage - Gradle
+# ========================================
+FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
 
 COPY build.gradle .
 COPY settings.gradle .
@@ -19,18 +21,19 @@ COPY . .
 
 # Build the application with DISABLE_ADDITIONAL_FEATURES=true
 RUN DISABLE_ADDITIONAL_FEATURES=true \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
-# Main stage
-FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
+# ========================================
+# STAGE 2: Runtime stage - Alpine minimal
+# ========================================
+FROM alpine:3.23.2@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62
 
 ARG VERSION_TAG
 
 # Set Environment Variables
 ENV HOME=/home/stirlingpdfuser \
     VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \
     PUID=1000 \
     PGID=1000 \
@@ -43,13 +46,17 @@ ENV HOME=/home/stirlingpdfuser \
 # Copy necessary files
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
-COPY --from=build /app/app/core/build/libs/*.jar app.jar
-COPY --from=build /app/build/libs/restart-helper.jar restart-helper.jar
+COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
 
 # Set up necessary directories and permissions
-RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+RUN apk add --no-cache bash \
+    && ln -sf /bin/bash /bin/sh \
+    && printf '%s\n' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/main' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/community' \
+      'https://dl-cdn.alpinelinux.org/alpine/edge/testing' \
+      > /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
         ca-certificates \
@@ -63,11 +70,12 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         ghostscript \
         fontforge && \
     # User permissions
-    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
+    mkdir -p /configs /configs/heap_dumps /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar && \
+    ln -sf /bin/busybox /bin/sh
 
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
@@ -76,4 +84,4 @@ EXPOSE 8080/tcp
 
 # Run the application
 ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
-CMD ["java", "-Dfile.encoding=UTF-8", "-Djava.io.tmpdir=/tmp/stirling-pdf", "-jar", "/app.jar"]
+CMD []

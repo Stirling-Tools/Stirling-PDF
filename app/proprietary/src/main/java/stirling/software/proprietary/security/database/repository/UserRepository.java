@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
     Optional<User> findByUsernameIgnoreCaseWithSettings(@Param("username") String username);
+
+    @Query("FROM User u LEFT JOIN FETCH u.settings where u.id = :id")
+    Optional<User> findByIdWithSettings(@Param("id") Long id);
 
     Optional<User> findByUsername(String username);
 
@@ -57,10 +61,35 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllSsoUsers();
 
     /**
+     * Finds SSO users who have never created a session (pending activation) and are not yet
+     * grandfathered.
+     */
+    @Query(
+            "SELECT u FROM User u "
+                    + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
+                    + "WHERE (u.ssoProvider IS NOT NULL "
+                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')) "
+                    + "AND (u.oauthGrandfathered IS NULL OR u.oauthGrandfathered = false) "
+                    + "AND s.sessionId IS NULL")
+    List<User> findPendingSsoUsersWithoutSession();
+
+    /**
      * Counts all SSO users - those with sso_provider set OR authenticationType is sso/oauth2/saml2.
      */
     @Query(
             "SELECT COUNT(u) FROM User u WHERE u.ssoProvider IS NOT NULL "
                     + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
     long countSsoUsers();
+
+    @Query(
+            "SELECT COUNT(u) FROM User u JOIN u.settings settings "
+                    + "WHERE KEY(settings) = :key AND settings = :value")
+    long countUsersBySetting(@Param("key") String key, @Param("value") String value);
+
+    @Modifying
+    @Query(
+            value = "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN (:keys)",
+            nativeQuery = true)
+    void deleteSettingsByUserIdAndKeys(
+            @Param("userId") Long userId, @Param("keys") List<String> keys);
 }

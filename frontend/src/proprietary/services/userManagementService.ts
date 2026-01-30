@@ -18,6 +18,7 @@ export interface User {
   // Enriched client-side fields
   isActive?: boolean;
   lastRequest?: number; // timestamp in milliseconds
+  mfaEnabled?: boolean; // whether MFA is enabled for the user
 }
 
 export interface AdminSettingsData {
@@ -37,6 +38,8 @@ export interface AdminSettingsData {
   grandfatheredUserCount: number;
   licenseMaxUsers: number;
   premiumEnabled: boolean;
+  mailEnabled: boolean;
+  userSettings?: Record<string, any>;
 }
 
 export interface CreateUserRequest {
@@ -44,8 +47,9 @@ export interface CreateUserRequest {
   password?: string;
   role: string;
   teamId?: number;
-  authType: 'password' | 'SSO';
+  authType: 'WEB' | 'OAUTH2' | 'SAML2';
   forceChange?: boolean;
+  forceMFA?: boolean;
 }
 
 export interface UpdateUserRoleRequest {
@@ -97,6 +101,15 @@ export interface InviteToken {
   expiresAt: string;
 }
 
+export interface ChangeUserPasswordRequest {
+  username: string;
+  newPassword?: string;
+  generateRandom?: boolean;
+  sendEmail?: boolean;
+  includePassword?: boolean;
+  forcePasswordChange?: boolean;
+}
+
 /**
  * User Management Service
  * Provides functions to interact with user management backend APIs
@@ -134,6 +147,9 @@ export const userManagementService = {
     formData.append('authType', data.authType);
     if (data.forceChange !== undefined) {
       formData.append('forceChange', data.forceChange.toString());
+    }
+    if (data.forceMFA !== undefined) {
+      formData.append('forceMFA', data.forceMFA.toString());
     }
     await apiClient.post('/api/v1/user/admin/saveUser', formData, {
       suppressErrorToast: true, // Component will handle error display
@@ -254,4 +270,39 @@ export const userManagementService = {
     const response = await apiClient.post<{ deletedCount: number }>('/api/v1/invite/cleanup');
     return response.data;
   },
+
+  /**
+   * Change another user's password (admin only)
+   */
+  async changeUserPassword(data: ChangeUserPasswordRequest): Promise<void> {
+    const formData = new FormData();
+    formData.append('username', data.username);
+    if (data.newPassword) {
+      formData.append('newPassword', data.newPassword);
+    }
+    if (data.generateRandom !== undefined) {
+      formData.append('generateRandom', data.generateRandom.toString());
+    }
+    if (data.sendEmail !== undefined) {
+      formData.append('sendEmail', data.sendEmail.toString());
+    }
+    if (data.includePassword !== undefined) {
+      formData.append('includePassword', data.includePassword.toString());
+    }
+    if (data.forcePasswordChange !== undefined) {
+      formData.append('forcePasswordChange', data.forcePasswordChange.toString());
+    }
+
+    await apiClient.post('/api/v1/user/admin/changePasswordForUser', formData, {
+      suppressErrorToast: true, // Component will handle error display
+    } as any);
+  },
+
+  /**
+   * Disable MFA for a user (admin only)
+   */
+  async disableMfaByAdmin(username: string): Promise<void> {
+    await apiClient.post(`/api/v1/auth/mfa/disable/admin/${encodeURIComponent(username)}`, undefined);
+  },
+
 };

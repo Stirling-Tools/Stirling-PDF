@@ -5,8 +5,8 @@ import { usePdfiumEngine } from '@embedpdf/engines/react';
 
 // Import the essential plugins
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
-import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/react';
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
+import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react';
+import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
@@ -17,12 +17,11 @@ import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
-import { Rotation } from '@embedpdf/models';
+import { Rotation, PdfAnnotationSubtype } from '@embedpdf/models';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
 
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
@@ -35,6 +34,9 @@ import { SpreadAPIBridge } from '@app/components/viewer/SpreadAPIBridge';
 import { SearchAPIBridge } from '@app/components/viewer/SearchAPIBridge';
 import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
 import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
+import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
+
+const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
 
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
@@ -69,23 +71,20 @@ export function LocalEmbedPDFWithAnnotations({
     const viewportGap = rootFontSize * 3.5;
 
     return [
-      createPluginRegistration(LoaderPluginPackage, {
-        loadingOptions: {
-          type: 'url',
-          pdfFile: {
-            id: 'stirling-pdf-signing-viewer',
-            url: pdfUrl,
-          },
-        },
+      createPluginRegistration(DocumentManagerPluginPackage, {
+        initialDocuments: [{
+          url: pdfUrl,
+          name: DOCUMENT_NAME,
+        }],
       }),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap,
       }),
-      createPluginRegistration(ScrollPluginPackage, {
-        strategy: ScrollStrategy.Vertical,
-        initialPage: 0,
+      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(RenderPluginPackage, {
+        withForms: true,
+        withAnnotations: true,
       }),
-      createPluginRegistration(RenderPluginPackage),
 
       // Register interaction manager (required for annotations)
       createPluginRegistration(InteractionManagerPluginPackage),
@@ -188,7 +187,8 @@ export function LocalEmbedPDFWithAnnotations({
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={async (registry) => {
+        onInitialized={async (registry: any) => {
+          // v2.0: Use registry.getPlugin() to access plugin APIs
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
@@ -241,78 +241,71 @@ export function LocalEmbedPDFWithAnnotations({
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
-        <GlobalPointerProvider>
-          <Viewport
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              height: '100%',
-              width: '100%',
-              maxHeight: '100%',
-              maxWidth: '100%',
-              overflow: 'auto',
-              position: 'relative',
-              flex: 1,
-              minHeight: 0,
-              minWidth: 0,
-              contain: 'strict',
-            }}
-          >
-            <Scroller
-              renderPage={({ width, height, pageIndex, scale, rotation }: {
-                width: number;
-                height: number;
-                pageIndex: number;
-                scale: number;
-                rotation?: number;
-              }) => (
-                <Rotate pageSize={{ width, height }}>
-                  <PagePointerProvider {...{
-                    pageWidth: width,
-                    pageHeight: height,
-                    pageIndex,
-                    scale,
-                    rotation: rotation || 0
-                  }}>
-                    <div
-                      style={{
-                        width,
-                        height,
-                        position: 'relative',
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        MozUserSelect: 'none',
-                        msUserSelect: 'none'
-                      }}
-                      draggable={false}
-                      onDragStart={(e) => e.preventDefault()}
-                      onDrop={(e) => e.preventDefault()}
-                      onDragOver={(e) => e.preventDefault()}
-                    >
-                      {/* High-resolution tile layer */}
-                      <TilingLayer pageIndex={pageIndex} scale={scale} />
+        <DocumentReadyWrapper
+          fallback={
+            <Center style={{ height: '100%', width: '100%' }}>
+              <ToolLoadingFallback />
+            </Center>
+          }
+        >
+          {(documentId) => (
+            <GlobalPointerProvider documentId={documentId}>
+              <Viewport
+                documentId={documentId}
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  height: '100%',
+                  width: '100%',
+                  maxHeight: '100%',
+                  maxWidth: '100%',
+                  overflow: 'auto',
+                  position: 'relative',
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  contain: 'strict',
+                }}
+              >
+                <Scroller
+                  documentId={documentId}
+                  renderPage={({ width, height, pageIndex }) => (
+                    <Rotate key={`${documentId}-${pageIndex}`} documentId={documentId} pageIndex={pageIndex}>
+                      <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
+                        <div
+                          style={{
+                            width,
+                            height,
+                            position: 'relative',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none',
+                            MozUserSelect: 'none',
+                            msUserSelect: 'none'
+                          }}
+                          draggable={false}
+                          onDragStart={(e) => e.preventDefault()}
+                          onDrop={(e) => e.preventDefault()}
+                          onDragOver={(e) => e.preventDefault()}
+                        >
+                          <TilingLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      {/* Search highlight layer */}
-                      <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
+                          <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      {/* Selection layer for text interaction */}
-                      <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                          <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
 
-                      {/* Annotation layer for signatures */}
-                      <AnnotationLayer
-                        pageIndex={pageIndex}
-                        scale={scale}
-                        pageWidth={width}
-                        pageHeight={height}
-                        rotation={rotation || 0}
-                        selectionOutlineColor="#007ACC"
-                      />
-                    </div>
-                  </PagePointerProvider>
-                </Rotate>
-              )}
-            />
-          </Viewport>
-        </GlobalPointerProvider>
+                          <AnnotationLayer
+                            documentId={documentId}
+                            pageIndex={pageIndex}
+                            selectionOutlineColor="#007ACC"
+                          />
+                        </div>
+                      </PagePointerProvider>
+                    </Rotate>
+                  )}
+                />
+              </Viewport>
+            </GlobalPointerProvider>
+          )}
+        </DocumentReadyWrapper>
       </EmbedPDF>
     </div>
   );

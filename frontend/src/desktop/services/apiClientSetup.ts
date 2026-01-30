@@ -44,14 +44,26 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
         }
 
-        // Add auth token for all remote requests (self-hosted or SaaS auth endpoints)
-        // Skip if this is a retry - the response interceptor already set the correct header
-        const target = await operationRouter.getExecutionTarget(extendedConfig.url);
-        if (target === 'remote' && !extendedConfig._retry) {
+        localStorage.setItem('server_url', baseUrl);
+
+        // Debug logging
+        console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
+
+        // Add auth token for remote requests and enable credentials
+        const isRemote = await operationRouter.isSelfHostedMode();
+        if (isRemote) {
+          // Self-hosted mode: enable credentials for session management
+          extendedConfig.withCredentials = true;
+
           const token = await authService.getAuthToken();
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
+          } else {
+            console.warn('[apiClientSetup] Self-hosted mode but no auth token available');
           }
+        } else {
+          // SaaS mode: disable credentials (security disabled on local backend)
+          extendedConfig.withCredentials = false;
         }
       } catch (error) {
         console.error('[apiClientSetup] Error in request interceptor:', error);
@@ -87,12 +99,17 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
   // Response interceptor: Handle auth errors
   client.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      return response;
+    },
     async (error) => {
       const originalRequest = error.config as ExtendedRequestConfig;
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
+        if (originalRequest.skipAuthRedirect) {
+          return Promise.reject(error);
+        }
         originalRequest._retry = true;
 
         console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);

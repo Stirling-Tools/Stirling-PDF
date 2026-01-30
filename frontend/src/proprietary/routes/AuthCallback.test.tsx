@@ -172,6 +172,6 @@ describe('AuthCallback', () => {
       </BrowserRouter>
     );
 
-    expect(getByText('Completing authentication...')).toBeInTheDocument();
+    expect(getByText('Completing authentication')).toBeInTheDocument();
   });
 });

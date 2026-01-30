@@ -11,6 +11,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.api.Email;
@@ -20,6 +21,7 @@ import stirling.software.proprietary.security.model.api.Email;
  * JavaMailSender to send the email and is designed to handle both the message content and file
  * attachments.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
@@ -72,6 +74,40 @@ public class EmailService {
 
         // Sends the email via the configured mail sender
         mailSender.send(message);
+        log.debug(
+                "Email sent successfully to {} with subject: {} body: {}",
+                email.getTo(),
+                email.getSubject(),
+                email.getBody());
+    }
+
+    /**
+     * Sends a simple email without attachments asynchronously.
+     *
+     * @param to the recipient address
+     * @param subject subject line
+     * @param body message body
+     * @throws MessagingException if sending fails or address is invalid
+     */
+    @Async
+    public void sendSimpleMail(String to, String subject, String body) throws MessagingException {
+        if (to == null || to.trim().isEmpty()) {
+            throw new MessagingException("Invalid Addresses");
+        }
+
+        ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, false);
+        helper.addTo(to);
+        helper.setSubject(subject);
+        helper.setText(body, false);
+        helper.setFrom(mailProperties.getFrom());
+        mailSender.send(message);
+        log.debug(
+                "Simple email sent successfully to {} with subject: {} body: {}",
+                to,
+                subject,
+                body);
     }
 
     /**
@@ -115,10 +151,12 @@ public class EmailService {
      * @param to The recipient email address
      * @param username The username for the new account
      * @param temporaryPassword The temporary password
+     * @param loginUrl The URL to the login page
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
     @Async
-    public void sendInviteEmail(String to, String username, String temporaryPassword)
+    public void sendInviteEmail(
+            String to, String username, String temporaryPassword, String loginUrl)
             throws MessagingException {
         String subject = "Welcome to Stirling PDF";
 
@@ -144,6 +182,14 @@ public class EmailService {
                       <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
                         <p style="margin: 0; color: #856404;"><strong>⚠️ Important:</strong> You will be required to change your password upon first login for security reasons.</p>
                       </div>
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 5px; font-weight: bold;">Log In to Stirling PDF</a>
+                      </div>
+                      <p style="font-size: 14px; color: #666;">Or copy and paste this link in your browser:</p>
+                      <div style="background-color: #f8f9fa; padding: 12px; margin: 15px 0; border-radius: 4px; word-break: break-all; font-size: 13px; color: #555;">
+                        %s
+                      </div>
                       <p>Please keep these credentials secure and do not share them with anyone.</p>
                       <p style="margin-bottom: 0;">— The Stirling PDF Team</p>
                     </div>
@@ -155,7 +201,7 @@ public class EmailService {
                 </div>
                 </body></html>
                 """
-                        .formatted(username, temporaryPassword);
+                        .formatted(username, temporaryPassword, loginUrl, loginUrl);
 
         sendPlainEmail(to, subject, body, true);
     }
@@ -210,6 +256,56 @@ public class EmailService {
                 </body></html>
                 """
                         .formatted(inviteUrl, inviteUrl, expiresAt);
+
+        sendPlainEmail(to, subject, body, true);
+    }
+
+    @Async
+    public void sendPasswordChangedNotification(
+            String to, String username, String newPassword, String loginUrl)
+            throws MessagingException {
+        String subject = "Your Stirling PDF password has been updated";
+
+        String passwordSection =
+                newPassword == null
+                        ? ""
+                        : """
+                          <div style=\"background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0; border-radius: 4px;\">
+                            <p style=\"margin: 0;\"><strong>Temporary Password:</strong> %s</p>
+                          </div>
+                        """
+                                .formatted(newPassword);
+
+        String body =
+                """
+                <html><body style=\"margin: 0; padding: 0;\">
+                <div style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;\">
+                  <div style=\"max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;\">
+                    <div style=\"text-align: center; padding: 20px; background-color: #222;\">
+                      <img src=\"https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling-transparent.svg\" alt=\"Stirling PDF\" style=\"max-height: 60px;\">
+                    </div>
+                    <div style=\"padding: 30px; color: #333;\">
+                      <h2 style=\"color: #222; margin-top: 0;\">Your password was changed</h2>
+                      <p>Hello %s,</p>
+                      <p>An administrator has updated the password for your Stirling PDF account.</p>
+                      %s
+                      <p>If you did not expect this change, please contact your administrator immediately.</p>
+                      <div style=\"text-align: center; margin: 30px 0;\">
+                        <a href=\"%s\" style=\"display: inline-block; background-color: #007bff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 5px; font-weight: bold;\">Go to Stirling PDF</a>
+                      </div>
+                      <p style=\"font-size: 14px; color: #666;\">Or copy and paste this link in your browser:</p>
+                      <div style=\"background-color: #f8f9fa; padding: 12px; margin: 15px 0; border-radius: 4px; word-break: break-all; font-size: 13px; color: #555;\">
+                        %s
+                      </div>
+                    </div>
+                    <div style=\"text-align: center; padding: 15px; font-size: 12px; color: #777; background-color: #f0f0f0;\">
+                      &copy; 2025 Stirling PDF. All rights reserved.
+                    </div>
+                  </div>
+                </div>
+                </body></html>
+                """
+                        .formatted(username, passwordSection, loginUrl, loginUrl);
 
         sendPlainEmail(to, subject, body, true);
     }

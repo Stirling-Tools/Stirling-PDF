@@ -10,13 +10,10 @@
 import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
-import type {
-  Session,
-  AuthError,
-  AuthResponse,
-  AuthChangeEvent,
-  AuthChangeCallback,
-} from '@app/auth/types';
+import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { resetOAuthState } from '@app/auth/oauthStorage';
+import { clearPlatformAuthAfterSignOut } from '@app/extensions/authSessionCleanup';
+import { startOAuthNavigation } from '@app/extensions/oauthNavigation';
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -56,6 +53,47 @@ function persistRedirectPath(path: string): void {
     // console.warn('[SpringAuth] Failed to persist OAuth redirect path', _error);
   }
 }
+
+// Auth types
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  role: string;
+  enabled?: boolean;
+  is_anonymous?: boolean;
+  isFirstLogin?: boolean;
+  authenticationType?: string;
+  app_metadata?: Record<string, any>;
+}
+
+export interface Session {
+  user: User;
+  access_token: string;
+  expires_in: number;
+  expires_at?: number;
+}
+
+export interface AuthError {
+  message: string;
+  status?: number;
+  code?: string;
+  mfaRequired?: boolean;
+}
+
+export interface AuthResponse {
+  user: User | null;
+  session: Session | null;
+  error: AuthError | null;
+}
+
+export type AuthChangeEvent =
+  | 'SIGNED_IN'
+  | 'SIGNED_OUT'
+  | 'TOKEN_REFRESHED'
+  | 'USER_UPDATED';
+
+type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
 
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
@@ -145,11 +183,13 @@ class SpringAuthClient {
   async signInWithPassword(credentials: {
     email: string;
     password: string;
+    mfaCode?: string;
   }): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/api/v1/auth/login', {
         username: credentials.email,
-        password: credentials.password
+        password: credentials.password,
+        mfaCode: credentials.mfaCode,
       }, {
         withCredentials: true, // Include cookies for CSRF
       });
@@ -177,6 +217,24 @@ class SpringAuthClient {
       return { user: data.user, session, error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] signInWithPassword error:', error);
+      if (error instanceof AxiosError) {
+        const errorCode = error.response?.data?.error as string | undefined;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          'Login failed';
+        return {
+          user: null,
+          session: null,
+          error: {
+            message: errorMessage,
+            status: error.response?.status,
+            code: errorCode,
+            mfaRequired: errorCode === 'mfa_required',
+          },
+        };
+      }
       return {
         user: null,
         session: null,
@@ -217,26 +275,34 @@ class SpringAuthClient {
   }
 
   /**
-   * Sign in with OAuth provider (GitHub, Google, etc.)
-   * This redirects to the Spring OAuth2 authorization endpoint
+   * Sign in with OAuth/SAML provider (GitHub, Google, Authentik, etc.)
+   * This redirects to the Spring OAuth2/SAML2 authorization endpoint
+   *
+   * @param params.provider - Full auth path from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
+   *                          The backend provides the complete path including the auth type and provider ID
    */
   async signInWithOAuth(params: {
-    provider: 'github' | 'google' | 'apple' | 'azure' | 'keycloak' | 'oidc';
+    provider: OAuthProvider;
     options?: { redirectTo?: string; queryParams?: Record<string, any> };
   }): Promise<{ error: AuthError | null }> {
     try {
       const redirectPath = normalizeRedirectPath(params.options?.redirectTo);
       persistRedirectPath(redirectPath);
 
-      // Redirect to Spring OAuth2 endpoint (Vite will proxy to backend)
-      const redirectUrl = `/oauth2/authorization/${params.provider}`;
-      // console.log('[SpringAuth] Redirecting to OAuth:', redirectUrl);
+      // Use the full path provided by the backend
+      // This supports both OAuth2 (/oauth2/authorization/...) and SAML2 (/saml2/authenticate/...)
+      const redirectUrl = params.provider;
+      const handled = await startOAuthNavigation(redirectUrl);
+      if (handled) {
+        return { error: null };
+      }
+      // console.log('[SpringAuth] Redirecting to SSO:', redirectUrl);
       // Use window.location.assign for full page navigation
       window.location.assign(redirectUrl);
       return { error: null };
     } catch (error) {
       return {
-        error: { message: error instanceof Error ? error.message : 'OAuth redirect failed' },
+        error: { message: error instanceof Error ? error.message : 'SSO redirect failed' },
       };
     }
   }
@@ -259,6 +325,35 @@ class SpringAuthClient {
 
       // Clean up local storage
       localStorage.removeItem('stirling_jwt');
+      try {
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith('sb-') || key.includes('supabase'))
+          .forEach((key) => localStorage.removeItem(key));
+
+        // Clear any cached OAuth redirect/session state
+        resetOAuthState();
+      } catch (err) {
+        console.warn('[SpringAuth] Failed to clear Supabase/local auth tokens', err);
+      }
+
+      // Clear cookies that might hold refresh/session tokens
+      try {
+        document.cookie.split(';').forEach(cookie => {
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+          }
+        });
+      } catch (err) {
+        console.warn('[SpringAuth] Failed to clear cookies on sign out', err);
+      }
+
+      try {
+        await clearPlatformAuthAfterSignOut();
+      } catch (cleanupError) {
+        console.warn('[SpringAuth] Failed to run platform auth cleanup', cleanupError);
+      }
 
       // Notify listeners
       this.notifyListeners('SIGNED_OUT', null);
@@ -268,6 +363,11 @@ class SpringAuthClient {
       console.error('[SpringAuth] signOut error:', error);
       // Still remove token even if backend call fails
       localStorage.removeItem('stirling_jwt');
+      try {
+        await clearPlatformAuthAfterSignOut();
+      } catch (cleanupError) {
+        console.warn('[SpringAuth] Failed to run platform auth cleanup after error', cleanupError);
+      }
       return {
         error: { message: getErrorMessage(error, 'Logout failed') },
       };
@@ -395,6 +495,43 @@ export const springAuth = new SpringAuthClient();
 export const getCurrentUser = async () => {
   const { data } = await springAuth.getSession();
   return data.session?.user || null;
+};
+
+/**
+ * Check if user is anonymous
+ */
+export const isUserAnonymous = (user: User | null) => {
+  return user?.is_anonymous === true;
+};
+
+/**
+ * Create an anonymous user object for use when login is disabled
+ * This provides a consistent User interface throughout the app
+ */
+export const createAnonymousUser = (): User => {
+  return {
+    id: 'anonymous',
+    email: 'anonymous@local',
+    username: 'Anonymous User',
+    role: 'USER',
+    enabled: true,
+    is_anonymous: true,
+    app_metadata: {
+      provider: 'anonymous',
+    },
+  };
+};
+
+/**
+ * Create an anonymous session for use when login is disabled
+ */
+export const createAnonymousSession = (): Session => {
+  return {
+    user: createAnonymousUser(),
+    access_token: '',
+    expires_in: Number.MAX_SAFE_INTEGER,
+    expires_at: Number.MAX_SAFE_INTEGER,
+  };
 };
 
 // Export auth client as default for convenience

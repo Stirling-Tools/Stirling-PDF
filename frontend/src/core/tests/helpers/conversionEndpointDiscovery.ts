@@ -1,6 +1,6 @@
 /**
  * Conversion Endpoint Discovery for E2E Testing
- * 
+ *
  * Uses the backend's endpoint configuration API to discover available conversions
  */
 
@@ -120,6 +120,20 @@ const ALL_CONVERSION_ENDPOINTS: ConversionEndpoint[] = [
     toFormat: 'pdf',
     description: 'Convert email (EML) to PDF',
     apiPath: '/api/v1/convert/eml/pdf'
+  },
+  {
+    endpoint: 'pdf-to-epub',
+    fromFormat: 'pdf',
+    toFormat: 'epub',
+    description: 'Convert PDF to EPUB/AZW3',
+    apiPath: '/api/v1/convert/pdf/epub'
+  },
+  {
+    endpoint: 'eml-to-pdf', // MSG uses same endpoint as EML
+    fromFormat: 'msg',
+    toFormat: 'pdf',
+    description: 'Convert Outlook email (MSG) to PDF',
+    apiPath: '/api/v1/convert/eml/pdf'
   }
 ];
 
@@ -138,8 +152,8 @@ export class ConversionEndpointDiscovery {
    */
   async getAvailableConversions(): Promise<ConversionEndpoint[]> {
     const endpointStatuses = await this.getEndpointStatuses();
-    
-    return ALL_CONVERSION_ENDPOINTS.filter(conversion => 
+
+    return ALL_CONVERSION_ENDPOINTS.filter(conversion =>
       endpointStatuses.get(conversion.endpoint) === true
     );
   }
@@ -149,8 +163,8 @@ export class ConversionEndpointDiscovery {
    */
   async getUnavailableConversions(): Promise<ConversionEndpoint[]> {
     const endpointStatuses = await this.getEndpointStatuses();
-    
-    return ALL_CONVERSION_ENDPOINTS.filter(conversion => 
+
+    return ALL_CONVERSION_ENDPOINTS.filter(conversion =>
       endpointStatuses.get(conversion.endpoint) === false
     );
   }
@@ -168,16 +182,16 @@ export class ConversionEndpointDiscovery {
    */
   async getConversionsByFormat(): Promise<Record<string, ConversionEndpoint[]>> {
     const availableConversions = await this.getAvailableConversions();
-    
+
     const grouped: Record<string, ConversionEndpoint[]> = {};
-    
+
     availableConversions.forEach(conversion => {
       if (!grouped[conversion.fromFormat]) {
         grouped[conversion.fromFormat] = [];
       }
       grouped[conversion.fromFormat].push(conversion);
     });
-    
+
     return grouped;
   }
 
@@ -186,7 +200,7 @@ export class ConversionEndpointDiscovery {
    */
   async getSupportedTargetFormats(fromFormat: string): Promise<string[]> {
     const availableConversions = await this.getAvailableConversions();
-    
+
     return availableConversions
       .filter(conversion => conversion.fromFormat === fromFormat)
       .map(conversion => conversion.toFormat);
@@ -197,11 +211,11 @@ export class ConversionEndpointDiscovery {
    */
   async getSupportedSourceFormats(): Promise<string[]> {
     const availableConversions = await this.getAvailableConversions();
-    
+
     const sourceFormats = new Set(
       availableConversions.map(conversion => conversion.fromFormat)
     );
-    
+
     return Array.from(sourceFormats);
   }
 
@@ -217,33 +231,33 @@ export class ConversionEndpointDiscovery {
     try {
       const endpointNames = ALL_CONVERSION_ENDPOINTS.map(conv => conv.endpoint);
       const endpointsParam = endpointNames.join(',');
-      
+
       const response = await fetch(
         `${this.baseUrl}/api/v1/config/endpoints-enabled?endpoints=${encodeURIComponent(endpointsParam)}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch endpoint statuses: ${response.status} ${response.statusText}`);
       }
-      
+
       const statusMap: Record<string, boolean> = await response.json();
-      
+
       // Convert to Map and cache
       this.cache = new Map(Object.entries(statusMap));
       this.cacheExpiry = Date.now() + this.CACHE_DURATION;
-      
+
       console.log(`Retrieved status for ${Object.keys(statusMap).length} conversion endpoints`);
       return this.cache;
-      
+
     } catch (error) {
       console.error('Failed to get endpoint statuses:', error);
-      
+
       // Fallback: assume all endpoints are disabled
       const fallbackMap = new Map<string, boolean>();
       ALL_CONVERSION_ENDPOINTS.forEach(conv => {
         fallbackMap.set(conv.endpoint, false);
       });
-      
+
       return fallbackMap;
     }
   }
@@ -282,15 +296,15 @@ export const conversionDiscovery = new ConversionEndpointDiscovery();
 export function useConversionEndpoints() {
   const endpointNames = ALL_CONVERSION_ENDPOINTS.map(conv => conv.endpoint);
   const { endpointStatus, loading, error, refetch } = useMultipleEndpointsEnabled(endpointNames);
-  
+
   const availableConversions = ALL_CONVERSION_ENDPOINTS.filter(
     conv => endpointStatus[conv.endpoint] === true
   );
-  
+
   const unavailableConversions = ALL_CONVERSION_ENDPOINTS.filter(
     conv => endpointStatus[conv.endpoint] === false
   );
-  
+
   return {
     availableConversions,
     unavailableConversions,

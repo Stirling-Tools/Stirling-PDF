@@ -1,4 +1,4 @@
-use tauri::{Manager, RunEvent, WindowEvent, Emitter};
+use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 
 mod utils;
 mod commands;
@@ -31,6 +31,17 @@ use commands::{
 };
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
+use tauri_plugin_deep_link::DeepLinkExt;
+
+fn dispatch_deep_link(app: &AppHandle, url: &str) {
+  add_log(format!("🔗 Dispatching deep link: {}", url));
+  let _ = app.emit("deep-link", url.to_string());
+
+  if let Some(window) = app.get_webview_window("main") {
+    let _ = window.set_focus();
+    let _ = window.unminimize();
+  }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -45,6 +56,7 @@ pub fn run() {
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_store::Builder::new().build())
+    .plugin(tauri_plugin_deep_link::init())
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
       // This callback runs when a second instance tries to start
@@ -69,7 +81,7 @@ pub fn run() {
       // Emit a generic notification that files were added (frontend will re-read storage)
       let _ = app.emit("files-changed", ());
     }))
-    .setup(|_app| {
+    .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
       // Process command line arguments on first launch
@@ -80,6 +92,40 @@ pub fn run() {
           add_opened_file(arg.clone());
         }
       }
+
+      {
+        let app_handle = app.handle();
+        // On macOS the plugin registers schemes via bundle metadata, so runtime registration is required only on Windows/Linux
+        #[cfg(any(target_os = "linux", target_os = "windows"))]
+        if let Err(err) = app_handle.deep_link().register_all() {
+          add_log(format!("⚠️ Failed to register deep link handler: {}", err));
+        }
+
+        if let Ok(Some(urls)) = app_handle.deep_link().get_current() {
+          let initial_handle = app_handle.clone();
+          for url in urls {
+            dispatch_deep_link(&initial_handle, url.as_str());
+          }
+        }
+
+        let event_app_handle = app_handle.clone();
+        app_handle.deep_link().on_open_url(move |event| {
+          for url in event.urls() {
+            dispatch_deep_link(&event_app_handle, url.as_str());
+          }
+        });
+      }
+
+      // Start backend immediately, non-blocking
+      let app_handle = app.handle().clone();
+
+      tauri::async_runtime::spawn(async move {
+        add_log("🚀 Starting bundled backend in background".to_string());
+        let connection_state = app_handle.state::<AppConnectionState>();
+        if let Err(e) = commands::backend::start_backend(app_handle.clone(), connection_state).await {
+          add_log(format!("⚠️ Backend start failed: {}", e));
+        }
+      });
 
       add_log("🔍 DEBUG: Setup completed".to_string());
       Ok(())
@@ -147,15 +193,27 @@ pub fn run() {
         }
         #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
+          use urlencoding::decode;
+
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
           let mut added_files = false;
 
           for url in urls {
             let url_str = url.as_str();
             if url_str.starts_with("file://") {
-              let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
+              let encoded_path = url_str.strip_prefix("file://").unwrap_or(url_str);
+
+              // Decode URL-encoded characters (%20 -> space, etc.)
+              let file_path = match decode(encoded_path) {
+                Ok(decoded) => decoded.into_owned(),
+                Err(e) => {
+                  add_log(format!("⚠️ Failed to decode file path: {} - {}", encoded_path, e));
+                  encoded_path.to_string() // Fallback to encoded path
+                }
+              };
+
               add_log(format!("📂 Processing opened file: {}", file_path));
-              add_opened_file(file_path.to_string());
+              add_opened_file(file_path);
               added_files = true;
             }
           }

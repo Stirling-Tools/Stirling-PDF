@@ -20,6 +20,8 @@ if errorlevel 1 (
 echo ✅ Java and jlink detected
 
 echo ▶ Building Stirling-PDF JAR...
+
+set DISABLE_ADDITIONAL_FEATURES=true
 call gradlew.bat clean bootJar --no-daemon
 if errorlevel 1 (
     echo ❌ Failed to build Stirling-PDF JAR
@@ -94,7 +96,6 @@ echo REM Launch with bundled JRE >> "frontend\src-tauri\runtime\launch-stirling.
 echo "%%JRE_DIR%%\bin\java.exe" ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     -Xmx2g ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     -DBROWSER_OPEN=true ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
-echo     -DSTIRLING_PDF_DESKTOP_UI=false ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     -jar "%%STIRLING_JAR%%" ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     %%* >> "frontend\src-tauri\runtime\launch-stirling.bat"
 

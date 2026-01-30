@@ -1,9 +1,6 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.FileVisitResult;
@@ -19,11 +16,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -163,7 +160,8 @@ public class PipelineDirectoryProcessor {
             postHogService.captureEvent("pipeline_directory_event", properties);
 
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
-            runPipelineAgainstFiles(filesToProcess, config, dir, processingDir);
+            try (PipelineResult result =
+                    runPipelineAgainstFiles(filesToProcess, config, dir, processingDir)) {}
         }
     }
 
@@ -203,7 +201,7 @@ public class PipelineDirectoryProcessor {
                                                         ? filename.substring(
                                                                         filename.lastIndexOf(".")
                                                                                 + 1)
-                                                                .toLowerCase()
+                                                                .toLowerCase(Locale.ROOT)
                                                         : "";
 
                                         // Check against allowed extensions
@@ -213,7 +211,8 @@ public class PipelineDirectoryProcessor {
                                                                 extension.toLowerCase());
                                         if (!isAllowed) {
                                             log.info(
-                                                    "Skipping file with unsupported extension: {} ({})",
+                                                    "Skipping file with unsupported extension: {}"
+                                                            + " ({})",
                                                     filename,
                                                     extension);
                                         }
@@ -226,7 +225,8 @@ public class PipelineDirectoryProcessor {
                                                 fileMonitor.isFileReadyForProcessing(path);
                                         if (!isReady) {
                                             log.info(
-                                                    "File not ready for processing (locked/created last 5s): {}",
+                                                    "File not ready for processing (locked/created"
+                                                            + " last 5s): {}",
                                                     path);
                                         }
                                         return isReady;
@@ -300,14 +300,14 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    private void runPipelineAgainstFiles(
+    private PipelineResult runPipelineAgainstFiles(
             List<File> filesToProcess, PipelineConfig config, Path dir, Path processingDir)
             throws IOException {
         try {
             List<Resource> inputFiles =
                     processor.generateInputFiles(filesToProcess.toArray(new File[0]));
             if (inputFiles == null || inputFiles.isEmpty()) {
-                return;
+                return new PipelineResult();
             }
             PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
 
@@ -318,9 +318,11 @@ public class PipelineDirectoryProcessor {
                 moveAndRenameFiles(result.getOutputFiles(), config, dir);
                 deleteOriginalFiles(filesToProcess, processingDir);
             }
+            return result;
         } catch (Exception e) {
             log.error("Error during processing", e);
             moveFilesBack(filesToProcess, processingDir);
+            return new PipelineResult();
         }
     }
 
@@ -347,8 +349,9 @@ public class PipelineDirectoryProcessor {
                 log.info("Created directory: {}", outputPath);
             }
             Path outputFile = outputPath.resolve(outputFileName);
-            try (OutputStream os = new FileOutputStream(outputFile.toFile())) {
-                os.write(((ByteArrayResource) resource).getByteArray());
+            try (OutputStream os = new FileOutputStream(outputFile.toFile());
+                    InputStream is = resource.getInputStream()) {
+                is.transferTo(os);
             }
             log.info("File moved and renamed to {}", outputFile);
         }

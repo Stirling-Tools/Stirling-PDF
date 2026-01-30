@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import CardSelector from "@app/components/shared/CardSelector";
 import SplitSettings from "@app/components/tools/split/SplitSettings";
@@ -8,7 +9,8 @@ import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { useSplitMethodTips } from "@app/components/tooltips/useSplitMethodTips";
 import { useSplitSettingsTips } from "@app/components/tooltips/useSplitSettingsTips";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "@app/constants/splitConstants";
+import { type SplitMethod, METHOD_OPTIONS, type MethodOption, ENDPOINTS } from "@app/constants/splitConstants";
+import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -20,14 +22,22 @@ const Split = (props: BaseToolProps) => {
     props
   );
 
+  // Check which split endpoints are available
+  const allSplitEndpoints = useMemo(() => Object.values(ENDPOINTS), []);
+  const { endpointStatus } = useMultipleEndpointsEnabled(allSplitEndpoints);
+
+  // Filter METHOD_OPTIONS to only show methods with enabled endpoints
+  const availableMethodOptions = useMemo(() => {
+    return METHOD_OPTIONS.filter(option => {
+      const endpoint = ENDPOINTS[option.value];
+      // If endpoint status is not loaded yet, show all options (optimistic)
+      // If endpoint is explicitly disabled (false), hide the option
+      return endpointStatus[endpoint] !== false;
+    });
+  }, [endpointStatus]);
+
   const methodTips = useSplitMethodTips();
   const settingsTips = useSplitSettingsTips(base.params.parameters.method);
-
-  // Get tooltip content for a specific method
-  const getMethodTooltip = (option: MethodOption) => {
-    const tooltipContent = useSplitSettingsTips(option.value);
-    return tooltipContent?.tips || [];
-  };
 
   // Get the method name for the settings step title
   const getSettingsTitle = () => {
@@ -54,10 +64,9 @@ const Split = (props: BaseToolProps) => {
         tooltip: methodTips,
         content: (
           <CardSelector<SplitMethod, MethodOption>
-            options={METHOD_OPTIONS}
+            options={availableMethodOptions}
             onSelect={(method) => base.params.updateParameter('method', method)}
             disabled={base.endpointLoading}
-            getTooltipContent={getMethodTooltip}
           />
         ),
       },

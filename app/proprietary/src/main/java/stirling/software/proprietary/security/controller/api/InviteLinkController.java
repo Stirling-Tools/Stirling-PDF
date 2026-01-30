@@ -23,6 +23,7 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -90,7 +91,8 @@ public class InviteLinkController {
                             .body(
                                     Map.of(
                                             "error",
-                                            "An active invite already exists for this email address"));
+                                            "An active invite already exists for this email"
+                                                    + " address"));
                 }
 
                 // If sendEmail is requested but no email provided, reject
@@ -123,7 +125,8 @@ public class InviteLinkController {
                                                     + (currentUserCount + activeInvites)
                                                     + "/"
                                                     + maxUsers
-                                                    + " users). Contact your administrator to upgrade your license."));
+                                                    + " users). Contact your administrator to"
+                                                    + " upgrade your license."));
                 }
             }
 
@@ -457,12 +460,13 @@ public class InviteLinkController {
             }
 
             // Create the user account
-            userService.saveUser(
-                    effectiveEmail,
-                    password,
-                    invite.getTeamId(),
-                    invite.getRole(),
-                    false); // Don't force password change
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(effectiveEmail)
+                            .password(password)
+                            .teamId(invite.getTeamId())
+                            .role(invite.getRole());
+            userService.saveUserCore(builder.build());
 
             // Mark invite as used
             invite.setUsed(true);

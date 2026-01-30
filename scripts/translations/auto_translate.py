@@ -2,6 +2,7 @@
 """
 Automated Translation Pipeline
 Extracts, translates, merges, and beautifies translations for a language.
+TOML format only.
 """
 
 import json
@@ -12,13 +13,15 @@ import subprocess
 from pathlib import Path
 import time
 
+import tomllib
+
 
 def run_command(cmd, description=""):
     """Run a shell command and return success status."""
     if description:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Step: {description}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
@@ -30,27 +33,42 @@ def run_command(cmd, description=""):
     return result.returncode == 0
 
 
-def extract_untranslated(language_code, batch_size=500):
+def find_translation_file(lang_dir):
+    """Find translation file in language directory."""
+    toml_file = lang_dir / "translation.toml"
+    if toml_file.exists():
+        return toml_file
+    return None
+
+
+def load_translation_file(file_path):
+    """Load TOML translation file."""
+    with open(file_path, "rb") as f:
+        return tomllib.load(f)
+
+
+def extract_untranslated(language_code, batch_size=500, include_existing=False):
     """Extract untranslated entries and split into batches."""
-    print(f"\n🔍 Extracting untranslated entries for {language_code}...")
+    mode = (
+        "all untranslated (including existing)" if include_existing else "new (missing)"
+    )
+    print(f"\n🔍 Extracting {mode} entries for {language_code}...")
 
     # Load files
-    golden_path = Path(f'frontend/public/locales/en-GB/translation.json')
-    lang_path = Path(f'frontend/public/locales/{language_code}/translation.json')
+    golden_path = find_translation_file(Path("frontend/public/locales/en-GB"))
+    lang_path = find_translation_file(Path(f"frontend/public/locales/{language_code}"))
 
-    if not golden_path.exists():
-        print(f"Error: Golden truth file not found: {golden_path}")
+    if not golden_path:
+        print("Error: Golden truth file not found in frontend/public/locales/en-GB")
         return None
 
-    if not lang_path.exists():
-        print(f"Error: Language file not found: {lang_path}")
+    if not lang_path:
+        print(
+            f"Error: Language file not found in frontend/public/locales/{language_code}"
+        )
         return None
 
-    def load_json(path):
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-
-    def flatten_dict(d, parent_key='', separator='.'):
+    def flatten_dict(d, parent_key="", separator="."):
         items = []
         for k, v in d.items():
             new_key = f"{parent_key}{separator}{k}" if parent_key else k
@@ -60,8 +78,12 @@ def extract_untranslated(language_code, batch_size=500):
                 items.append((new_key, str(v)))
         return dict(items)
 
-    golden = load_json(golden_path)
-    lang_data = load_json(lang_path)
+    golden = load_translation_file(golden_path)
+    lang_data = load_translation_file(lang_path)
+
+    if not golden or not lang_data:
+        print("Error: Failed to load translation files")
+        return None
 
     golden_flat = flatten_dict(golden)
     lang_flat = flatten_dict(lang_data)
@@ -69,13 +91,24 @@ def extract_untranslated(language_code, batch_size=500):
     # Find untranslated
     untranslated = {}
     for key, value in golden_flat.items():
-        if (key not in lang_flat or
-            lang_flat.get(key) == value or
-            (isinstance(lang_flat.get(key), str) and lang_flat.get(key).startswith("[UNTRANSLATED]"))):
-            untranslated[key] = value
+        if include_existing:
+            # Include missing keys, keys with English values, and [UNTRANSLATED] keys
+            if (
+                key not in lang_flat
+                or lang_flat.get(key) == value
+                or (
+                    isinstance(lang_flat.get(key), str)
+                    and lang_flat.get(key).startswith("[UNTRANSLATED]")
+                )
+            ):
+                untranslated[key] = value
+        else:
+            # Only include missing keys (not in target file at all)
+            if key not in lang_flat:
+                untranslated[key] = value
 
     total = len(untranslated)
-    print(f"Found {total} untranslated entries")
+    print(f"Found {total} {mode} entries")
 
     if total == 0:
         print("✓ Language is already complete!")
@@ -86,16 +119,16 @@ def extract_untranslated(language_code, batch_size=500):
     num_batches = (total + batch_size - 1) // batch_size
 
     batch_files = []
-    lang_code_safe = language_code.replace('-', '_')
+    lang_code_safe = language_code.replace("-", "_")
 
     for i in range(num_batches):
         start = i * batch_size
         end = min((i + 1) * batch_size, total)
         batch = dict(entries[start:end])
 
-        filename = f'{lang_code_safe}_batch_{i+1}_of_{num_batches}.json'
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(batch, f, ensure_ascii=False, separators=(',', ':'))
+        filename = f"{lang_code_safe}_batch_{i + 1}_of_{num_batches}.json"
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(batch, f, ensure_ascii=False, separators=(",", ":"))
 
         batch_files.append(filename)
         print(f"  Created {filename} with {len(batch)} entries")
@@ -109,7 +142,7 @@ def translate_batches(batch_files, language_code, api_key, timeout=600):
         return []
 
     print(f"\n🤖 Translating {len(batch_files)} batches using GPT-5...")
-    print(f"Timeout: {timeout}s ({timeout//60} minutes) per batch")
+    print(f"Timeout: {timeout}s ({timeout // 60} minutes) per batch")
 
     translated_files = []
 
@@ -120,7 +153,9 @@ def translate_batches(batch_files, language_code, api_key, timeout=600):
         cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}"'
 
         # Run with timeout
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        result = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True, timeout=timeout
+        )
 
         if result.stdout:
             print(result.stdout)
@@ -131,7 +166,7 @@ def translate_batches(batch_files, language_code, api_key, timeout=600):
             print(f"✗ Failed to translate {batch_file}")
             return None
 
-        translated_file = batch_file.replace('.json', '_translated.json')
+        translated_file = batch_file.replace(".json", "_translated.json")
         translated_files.append(translated_file)
 
         # Small delay between batches
@@ -155,14 +190,14 @@ def merge_translations(translated_files, language_code):
             print(f"Error: Translated file not found: {filename}")
             return None
 
-        with open(filename, 'r', encoding='utf-8') as f:
+        with open(filename, "r", encoding="utf-8") as f:
             merged.update(json.load(f))
 
-    lang_code_safe = language_code.replace('-', '_')
-    merged_file = f'{lang_code_safe}_merged.json'
+    lang_code_safe = language_code.replace("-", "_")
+    merged_file = f"{lang_code_safe}_merged.json"
 
-    with open(merged_file, 'w', encoding='utf-8') as f:
-        json.dump(merged, f, ensure_ascii=False, separators=(',', ':'))
+    with open(merged_file, "w", encoding="utf-8") as f:
+        json.dump(merged, f, ensure_ascii=False, separators=(",", ":"))
 
     print(f"✓ Merged {len(merged)} translations into {merged_file}")
     return merged_file
@@ -172,13 +207,13 @@ def apply_translations(merged_file, language_code):
     """Apply merged translations to the language file."""
     print(f"\n📝 Applying translations to {language_code}...")
 
-    cmd = f'python3 scripts/translations/translation_merger.py {language_code} apply-translations --translations-file {merged_file}'
+    cmd = f"python3 scripts/translations/translation_merger.py {language_code} apply-translations --translations-file {merged_file}"
 
     if not run_command(cmd):
-        print(f"✗ Failed to apply translations")
+        print("✗ Failed to apply translations")
         return False
 
-    print(f"✓ Translations applied successfully")
+    print("✓ Translations applied successfully")
     return True
 
 
@@ -186,27 +221,25 @@ def beautify_translations(language_code):
     """Beautify translation file to match en-GB structure."""
     print(f"\n✨ Beautifying {language_code} translation file...")
 
-    cmd = f'python3 scripts/translations/json_beautifier.py --language {language_code}'
+    cmd = f"python3 scripts/translations/toml_beautifier.py --language {language_code}"
 
     if not run_command(cmd):
-        print(f"✗ Failed to beautify translations")
+        print("✗ Failed to beautify translations")
         return False
 
-    print(f"✓ Translation file beautified")
+    print("✓ Translation file beautified")
     return True
 
 
 def cleanup_temp_files(language_code):
     """Remove temporary batch files."""
-    print(f"\n🧹 Cleaning up temporary files...")
+    print("\n🧹 Cleaning up temporary files...")
 
-    lang_code_safe = language_code.replace('-', '_')
-    patterns = [
-        f'{lang_code_safe}_batch_*.json',
-        f'{lang_code_safe}_merged.json'
-    ]
+    lang_code_safe = language_code.replace("-", "_")
+    patterns = [f"{lang_code_safe}_batch_*.json", f"{lang_code_safe}_merged.json"]
 
     import glob
+
     removed = 0
     for pattern in patterns:
         for file in glob.glob(pattern):
@@ -218,17 +251,19 @@ def cleanup_temp_files(language_code):
 
 def verify_completion(language_code):
     """Check final completion percentage."""
-    print(f"\n📊 Verifying completion...")
+    print("\n📊 Verifying completion...")
 
-    cmd = f'python3 scripts/translations/translation_analyzer.py --language {language_code} --summary'
+    cmd = f"python3 scripts/translations/translation_analyzer.py --language {language_code} --summary"
     run_command(cmd)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Automated translation pipeline for Stirling PDF',
+        description="Automated translation pipeline for Stirling PDF",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
+Note: This script works with TOML translation files.
+
 Examples:
   # Translate Spanish with API key in environment
   export OPENAI_API_KEY=your_key_here
@@ -242,35 +277,57 @@ Examples:
 
   # Skip cleanup (keep temporary files for inspection)
   python3 scripts/translations/auto_translate.py fr-FR --no-cleanup
-        """
+        """,
     )
 
-    parser.add_argument('language', help='Language code (e.g., es-ES, de-DE, zh-CN)')
-    parser.add_argument('--api-key', help='OpenAI API key (or set OPENAI_API_KEY env var)')
-    parser.add_argument('--batch-size', type=int, default=500, help='Entries per batch (default: 500)')
-    parser.add_argument('--no-cleanup', action='store_true', help='Keep temporary batch files')
-    parser.add_argument('--skip-verification', action='store_true', help='Skip final completion check')
-    parser.add_argument('--timeout', type=int, default=600, help='Timeout per batch in seconds (default: 600 = 10 minutes)')
+    parser.add_argument("language", help="Language code (e.g., es-ES, de-DE, zh-CN)")
+    parser.add_argument(
+        "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=500, help="Entries per batch (default: 500)"
+    )
+    parser.add_argument(
+        "--no-cleanup", action="store_true", help="Keep temporary batch files"
+    )
+    parser.add_argument(
+        "--skip-verification", action="store_true", help="Skip final completion check"
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=600,
+        help="Timeout per batch in seconds (default: 600 = 10 minutes)",
+    )
+    parser.add_argument(
+        "--include-existing",
+        action="store_true",
+        help="Also retranslate existing keys that match English (default: only translate missing keys)",
+    )
 
     args = parser.parse_args()
 
     # Verify API key
-    api_key = args.api_key or os.environ.get('OPENAI_API_KEY')
+    api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print("Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
+        print(
+            "Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable"
+        )
         sys.exit(1)
 
-    print("="*60)
-    print(f"Automated Translation Pipeline")
+    print("=" * 60)
+    print("Automated Translation Pipeline")
     print(f"Language: {args.language}")
     print(f"Batch Size: {args.batch_size} entries")
-    print("="*60)
+    print("=" * 60)
 
     start_time = time.time()
 
     try:
         # Step 1: Extract and split
-        batch_files = extract_untranslated(args.language, args.batch_size)
+        batch_files = extract_untranslated(
+            args.language, args.batch_size, args.include_existing
+        )
         if batch_files is None:
             sys.exit(1)
 
@@ -279,7 +336,9 @@ Examples:
             sys.exit(0)
 
         # Step 2: Translate all batches
-        translated_files = translate_batches(batch_files, args.language, api_key, args.timeout)
+        translated_files = translate_batches(
+            batch_files, args.language, api_key, args.timeout
+        )
         if translated_files is None:
             sys.exit(1)
 
@@ -305,10 +364,10 @@ Examples:
             verify_completion(args.language)
 
         elapsed = time.time() - start_time
-        print("\n" + "="*60)
-        print(f"✅ Translation pipeline completed successfully!")
+        print("\n" + "=" * 60)
+        print("✅ Translation pipeline completed successfully!")
         print(f"Time elapsed: {elapsed:.1f} seconds")
-        print("="*60)
+        print("=" * 60)
 
     except KeyboardInterrupt:
         print("\n\n⚠ Translation interrupted by user")
@@ -316,6 +375,7 @@ Examples:
     except Exception as e:
         print(f"\n\n✗ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

@@ -26,6 +26,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -39,6 +40,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtServiceInterface jwtService;
@@ -46,19 +48,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final ApplicationProperties.Security securityProperties;
-
-    public JwtAuthenticationFilter(
-            JwtServiceInterface jwtService,
-            UserService userService,
-            CustomUserDetailsService userDetailsService,
-            AuthenticationEntryPoint authenticationEntryPoint,
-            ApplicationProperties.Security securityProperties) {
-        this.jwtService = jwtService;
-        this.userService = userService;
-        this.userDetailsService = userDetailsService;
-        this.authenticationEntryPoint = authenticationEntryPoint;
-        this.securityProperties = securityProperties;
-    }
 
     @Override
     protected void doFilterInternal(
@@ -68,7 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (isStaticResource(request.getContextPath(), request.getRequestURI())) {
+
+        String requestURI = request.getRequestURI();
+        String contextPath = request.getContextPath();
+
+        if (isStaticResource(contextPath, requestURI)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -77,10 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwtToken = jwtService.extractToken(request);
 
             if (jwtToken == null) {
-                // Allow specific auth endpoints to pass through without JWT
-                String requestURI = request.getRequestURI();
-                String contextPath = request.getContextPath();
-
+                // Allow auth endpoints to pass through without JWT
                 if (!isPublicAuthEndpoint(requestURI, contextPath)) {
                     // For API requests, return 401 JSON
                     String acceptHeader = request.getHeader("Accept");
@@ -105,22 +95,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             try {
-                log.debug("Validating JWT token");
                 jwtService.validateToken(jwtToken);
-                log.debug("JWT token validated successfully");
             } catch (AuthenticationFailureException e) {
-                log.warn("JWT validation failed: {}", e.getMessage());
+                log.debug("JWT validation failed: {}", e.getMessage());
                 handleAuthenticationFailure(request, response, e);
                 return;
             }
 
             Map<String, Object> claims = jwtService.extractClaims(jwtToken);
             String tokenUsername = claims.get("sub").toString();
-            log.debug("JWT token username: {}", tokenUsername);
 
             try {
                 authenticate(request, claims);
-                log.debug("Authentication successful for user: {}", tokenUsername);
             } catch (SQLException | UnsupportedProviderException e) {
                 log.error("Error processing user authentication for user: {}", tokenUsername, e);
                 handleAuthenticationFailure(

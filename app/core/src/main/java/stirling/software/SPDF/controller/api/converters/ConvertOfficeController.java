@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -30,6 +31,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -55,15 +57,16 @@ public class ConvertOfficeController {
         // Check for valid file extension and sanitize filename
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("Missing original filename");
+            throw ExceptionUtils.createFileNoNameException();
         }
 
         // Check for valid file extension
         String extension = FilenameUtils.getExtension(originalFilename);
         if (extension == null || !isValidFileExtension(extension)) {
-            throw new IllegalArgumentException("Invalid file extension");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalid.extension", "Invalid file extension: " + extension);
         }
-        String extensionLower = extension.toLowerCase();
+        String extensionLower = extension.toLowerCase(Locale.ROOT);
 
         String baseName = FilenameUtils.getBaseName(originalFilename);
         if (baseName == null || baseName.isBlank()) {
@@ -86,6 +89,7 @@ public class ConvertOfficeController {
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
+        Path libreOfficeProfile = null;
         try {
             ProcessExecutorResult result;
             // Run Unoconvert command
@@ -93,8 +97,6 @@ public class ConvertOfficeController {
                 // Unoconvert: schreibe direkt in outputPath innerhalb des workDir
                 List<String> command = new ArrayList<>();
                 command.add(runtimePathConfig.getUnoConvertPath());
-                command.add("--port");
-                command.add("2003");
                 command.add("--convert-to");
                 command.add("pdf");
                 command.add(inputPath.toString());
@@ -105,8 +107,10 @@ public class ConvertOfficeController {
                                 .runCommandWithOutputHandling(command);
             } // Run soffice command
             else {
+                libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
                 List<String> command = new ArrayList<>();
-                command.add("soffice");
+                command.add(runtimePathConfig.getSOfficePath());
+                command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
                 command.add("--headless");
                 command.add("--nologo");
                 command.add("--convert-to");
@@ -137,7 +141,7 @@ public class ConvertOfficeController {
                                             p ->
                                                     p.getFileName()
                                                             .toString()
-                                                            .toLowerCase()
+                                                            .toLowerCase(Locale.ROOT)
                                                             .endsWith(".pdf"))
                                     .findFirst()
                                     .orElse(null);
@@ -161,6 +165,9 @@ public class ConvertOfficeController {
                 Files.deleteIfExists(inputPath);
             } catch (IOException e) {
                 log.warn("Failed to delete temp input file: {}", inputPath, e);
+            }
+            if (libreOfficeProfile != null) {
+                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
             }
         }
     }
@@ -187,11 +194,12 @@ public class ConvertOfficeController {
         try {
             file = convertToPdf(inputFile);
 
-            PDDocument doc = pdfDocumentFactory.load(file);
-            return WebResponseUtils.pdfDocToWebResponse(
-                    doc,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+            try (PDDocument doc = pdfDocumentFactory.load(file)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        doc,
+                        GeneralUtils.generateFilename(
+                                inputFile.getOriginalFilename(), "_convertedToPDF.pdf"));
+            }
         } finally {
             if (file != null && file.getParent() != null) {
                 FileUtils.deleteDirectory(file.getParentFile());

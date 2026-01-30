@@ -1,9 +1,10 @@
+import { useCallback } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileState } from '@app/contexts/FileContext';
-import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
+import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -51,6 +52,21 @@ export default function Workbench() {
 
   // Get active file index from ViewerContext
   const { activeFileIndex, setActiveFileIndex } = useViewer();
+  
+  // Get navigation guard for unsaved changes check when switching files
+  const { requestNavigation } = useNavigationGuard();
+
+  // Wrap file selection to check for unsaved changes before switching
+  // requestNavigation will show the modal if there are unsaved changes, otherwise navigate immediately
+  const handleFileSelect = useCallback((index: number) => {
+    // Don't do anything if selecting the same file
+    if (index === activeFileIndex) return;
+    
+    // requestNavigation handles the unsaved changes check internally
+    requestNavigation(() => {
+      setActiveFileIndex(index);
+    });
+  }, [activeFileIndex, requestNavigation, setActiveFileIndex]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -71,6 +87,20 @@ export default function Workbench() {
   };
 
   const renderMainContent = () => {
+    // Check for custom workbench views first
+    if (!isBaseWorkbench(currentView)) {
+      const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+      if (customView) {
+        // PDF text editor handles its own empty state (shows dropzone when no document)
+        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor';
+        if (handlesOwnEmptyState || activeFiles.length > 0) {
+          const CustomComponent = customView.component;
+          return <CustomComponent data={customView.data} />;
+        }
+      }
+    }
+
+    // For base workbenches (or custom views that don't handle empty state), show landing page when no files
     if (activeFiles.length === 0) {
       return (
         <LandingPage
@@ -143,15 +173,6 @@ export default function Workbench() {
         );
 
       default:
-        if (!isBaseWorkbench(currentView)) {
-          const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
-            
-          
-          if (customView) {
-            const CustomComponent = customView.component;
-            return <CustomComponent data={customView.data} />;
-          }
-        }
         return <LandingPage />;
     }
   };
@@ -177,7 +198,7 @@ export default function Workbench() {
             return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
           })}
           currentFileIndex={activeFileIndex}
-          onFileSelect={setActiveFileIndex}
+          onFileSelect={handleFileSelect}
         />
       )}
 

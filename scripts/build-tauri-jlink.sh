@@ -60,6 +60,7 @@ fi
 
 # Clean and build the Stirling-PDF JAR
 print_step "Building Stirling-PDF JAR..."
+export DISABLE_ADDITIONAL_FEATURES=true
 ./gradlew clean bootJar --no-daemon
 
 if [ ! -f compgen -G "app/core/build/libs/stirling-pdf-*.jar" ]; then
@@ -158,7 +159,6 @@ fi
 "$JRE_DIR/bin/java" \
     -Xmx2g \
     -DBROWSER_OPEN=true \
-    -DSTIRLING_PDF_DESKTOP_UI=false \
     -jar "$STIRLING_JAR" \
     "$@"
 EOF
@@ -187,7 +187,6 @@ REM Launch with bundled JRE
 "%JRE_DIR%\bin\java.exe" ^
     -Xmx2g ^
     -DBROWSER_OPEN=true ^
-    -DSTIRLING_PDF_DESKTOP_UI=false ^
     -jar "%STIRLING_JAR%" ^
     %*
 EOF

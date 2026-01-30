@@ -104,12 +104,20 @@ const createTextStampImage = (
 
   ctx.fillStyle = textColor;
   ctx.font = `${fontSize}px ${fontFamily}`;
-  ctx.textAlign = 'left';
+  ctx.textAlign = config.textAlign || 'left';
   ctx.textBaseline = 'middle';
 
   const horizontalPadding = paddingX;
   const verticalCenter = naturalHeight / 2;
-  ctx.fillText(text, horizontalPadding, verticalCenter);
+
+  let xPosition = horizontalPadding;
+  if (config.textAlign === 'center') {
+    xPosition = naturalWidth / 2;
+  } else if (config.textAlign === 'right') {
+    xPosition = naturalWidth - horizontalPadding;
+  }
+
+  ctx.fillText(text, xPosition, verticalCenter);
 
   return {
     dataUrl: canvas.toDataURL('image/png'),
@@ -122,7 +130,7 @@ const createTextStampImage = (
 
 export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
-  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize } = useSignature();
+  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize, setSignaturesApplied } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
   const lastStampImageRef = useRef<string | null>(null);
@@ -199,12 +207,21 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     }
   }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
 
+
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
     // Always enable delete key when we have annotation API and are in sign mode
     if (!annotationApi || (isPlacementMode === undefined)) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const editable = target?.getAttribute?.('contenteditable');
+      if (tag === 'input' || tag === 'textarea' || editable === 'true') {
+        return;
+      }
+
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
@@ -389,6 +406,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return;
       }
 
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
       const directData =
         extractDataUrl(annotation.imageSrc) ||
         extractDataUrl(annotation.imageData) ||
@@ -408,7 +430,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData]);
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
 
   useEffect(() => {
     if (!isPlacementMode) {
@@ -443,6 +465,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return;
       }
 
+      // Mark signatures as not applied when a new signature is placed
+      if (event.type === 'create') {
+        setSignaturesApplied(false);
+      }
+
       const directData =
         extractDataUrl(annotation.imageSrc) ||
         extractDataUrl(annotation.imageData) ||
@@ -462,7 +489,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData]);
+  }, [annotationApi, storeImageData, setSignaturesApplied]);
 
   useEffect(() => {
     if (!isPlacementMode) {

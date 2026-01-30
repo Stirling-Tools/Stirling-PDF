@@ -50,7 +50,6 @@ public class JwtService implements JwtServiceInterface {
             KeyPersistenceServiceInterface keyPersistenceService) {
         this.v2Enabled = v2Enabled;
         this.keyPersistenceService = keyPersistenceService;
-        log.info("JwtService initialized");
     }
 
     @Override
@@ -256,11 +255,9 @@ public class JwtService implements JwtServiceInterface {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7); // Remove "Bearer " prefix
-            log.debug("JWT token extracted from Authorization header");
             return token;
         }
 
-        log.debug("No JWT token found in Authorization header");
         return null;
     }
 
@@ -283,10 +280,9 @@ public class JwtService implements JwtServiceInterface {
                                     .parse(token)
                                     .getHeader()
                                     .get("kid");
-            log.debug("Extracted key ID from token: {}", keyId);
             return keyId;
         } catch (Exception e) {
-            log.warn("Failed to extract key ID from token header: {}", e.getMessage());
+            log.debug("Failed to extract key ID from token header: {}", e.getMessage());
             return null;
         }
     }

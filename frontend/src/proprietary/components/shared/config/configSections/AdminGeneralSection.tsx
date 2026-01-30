@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl } from '@mantine/core';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl, Select } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -11,6 +12,8 @@ import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
+import { supportedLanguages, toUnderscoreFormat, toUnderscoreLanguages } from '@app/i18n';
+import { Z_INDEX_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface GeneralSettingsData {
   ui: {
@@ -24,6 +27,7 @@ interface GeneralSettingsData {
     showUpdateOnlyAdmin?: boolean;
     customHTMLFiles?: boolean;
     fileUploadLimit?: string;
+    frontendUrl?: string;
   };
   customPaths?: {
     pipeline?: {
@@ -45,10 +49,18 @@ interface GeneralSettingsData {
 
 export default function AdminGeneralSection() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
   const { preferences, updatePreference } = usePreferences();
   const { setIsDirty, markClean } = useUnsavedChanges();
+  const languageOptions = useMemo(
+    () => Object.entries(supportedLanguages)
+      .map(([code, label]) => ({ value: toUnderscoreFormat(code), label: `${label} (${code})` }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+    []
+  );
   
   // Track original settings for dirty detection
   const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
@@ -73,9 +85,11 @@ export default function AdminGeneralSection() {
         apiClient.get('/api/v1/admin/settings/section/premium')
       ]);
 
-      const ui = uiResponse.data || {};
-      const system = systemResponse.data || {};
-      const premium = premiumResponse.data || {};
+      const ui = { ...(uiResponse.data || {}) };
+      const system = { ...(systemResponse.data || {}) };
+      const premium = { ...(premiumResponse.data || {}) };
+
+      ui.languages = Array.isArray(ui.languages) ? toUnderscoreLanguages(ui.languages) : [];
 
       const result: any = {
         ui,
@@ -131,6 +145,7 @@ export default function AdminGeneralSection() {
         'system.showUpdateOnlyAdmin': settings.system?.showUpdateOnlyAdmin,
         'system.customHTMLFiles': settings.system?.customHTMLFiles,
         'system.fileUploadLimit': settings.system?.fileUploadLimit,
+        'system.frontendUrl': settings.system?.frontendUrl,
         // Premium custom metadata
         'premium.proFeatures.customMetadata.autoUpdateMetadata': settings.customMetadata?.autoUpdateMetadata,
         'premium.proFeatures.customMetadata.author': settings.customMetadata?.author,
@@ -151,6 +166,21 @@ export default function AdminGeneralSection() {
       };
     }
   });
+
+  const selectedLanguages = useMemo(
+    () => toUnderscoreLanguages(settings.ui?.languages || []),
+    [settings.ui?.languages]
+  );
+
+  // Filter default locale options based on available languages setting
+  const defaultLocaleOptions = useMemo(() => {
+    // If no languages are selected (empty), show all languages
+    if (!selectedLanguages || selectedLanguages.length === 0) {
+      return languageOptions;
+    }
+    // Otherwise, only show languages that are in the selected list
+    return languageOptions.filter(option => selectedLanguages.includes(option.value));
+  }, [selectedLanguages, languageOptions]);
 
   useEffect(() => {
     // Only fetch real settings if login is enabled
@@ -202,6 +232,19 @@ export default function AdminGeneralSection() {
       setIsDirty(false);
     };
   }, [setIsDirty]);
+
+  // Handle hash navigation for deep linking to specific fields
+  useEffect(() => {
+    if (location.hash && !loading) {
+      const elementId = location.hash.substring(1); // Remove the #
+      const element = document.getElementById(elementId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [location.hash, loading]);
 
   const handleDiscard = useCallback(() => {
     if (originalSettingsSnapshot) {
@@ -335,7 +378,7 @@ export default function AdminGeneralSection() {
                   label: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
-                        src="/classic-logo/favicon.ico"
+                        src="classic-logo/favicon.ico"
                         alt={t('admin.settings.general.logoStyle.classicAlt', 'Classic logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
@@ -348,7 +391,7 @@ export default function AdminGeneralSection() {
                   label: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' }}>
                       <img
-                        src="/modern-logo/StirlingPDFLogoNoTextLight.svg"
+                        src="modern-logo/StirlingPDFLogoNoTextLight.svg"
                         alt={t('admin.settings.general.logoStyle.modernAlt', 'Modern logo')}
                         style={{ width: '24px', height: '24px' }}
                       />
@@ -369,30 +412,19 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.languages.description', 'Limit which languages are available (empty = all languages)')}
-              value={settings.ui?.languages || []}
+              value={selectedLanguages}
               onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, languages: value } })}
-              data={[
-                { value: 'de_DE', label: 'Deutsch' },
-                { value: 'es_ES', label: 'Español' },
-                { value: 'fr_FR', label: 'Français' },
-                { value: 'it_IT', label: 'Italiano' },
-                { value: 'pl_PL', label: 'Polski' },
-                { value: 'pt_BR', label: 'Português (Brasil)' },
-                { value: 'ru_RU', label: 'Русский' },
-                { value: 'zh_CN', label: '简体中文' },
-                { value: 'ja_JP', label: '日本語' },
-                { value: 'ko_KR', label: '한국어' },
-              ]}
+              data={languageOptions}
               searchable
               clearable
               placeholder={t('admin.settings.general.languages.placeholder', 'Select languages')}
-              comboboxProps={{ zIndex: 1400 }}
+              comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
               disabled={!loginEnabled}
             />
           </div>
 
           <div>
-            <TextInput
+            <Select
               label={
                 <Group gap="xs">
                   <span>{t('admin.settings.general.defaultLocale.label', 'Default Locale')}</span>
@@ -400,9 +432,13 @@ export default function AdminGeneralSection() {
                 </Group>
               }
               description={t('admin.settings.general.defaultLocale.description', 'The default language for new users (e.g., en_US, es_ES)')}
-              value={ settings.system?.defaultLocale || ''}
-              onChange={(e) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: e.target.value } })}
-              placeholder="en_US"
+              value={settings.system?.defaultLocale || ''}
+              onChange={(value) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: value || '' } })}
+              data={defaultLocaleOptions}
+              searchable
+              clearable
+              placeholder="en_GB"
+              comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
               disabled={!loginEnabled}
             />
           </div>
@@ -419,6 +455,22 @@ export default function AdminGeneralSection() {
               value={ settings.system?.fileUploadLimit || ''}
               onChange={(e) => setSettings({ ...settings, system: { ...settings.system, fileUploadLimit: e.target.value } })}
               placeholder="100MB"
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div id="frontendUrl">
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>{t('admin.settings.general.frontendUrl.label', 'Frontend URL')}</span>
+                  <PendingBadge show={isFieldPending('system.frontendUrl')} />
+                </Group>
+              }
+              description={t('admin.settings.general.frontendUrl.description', 'Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL.')}
+              value={settings.system?.frontendUrl || ''}
+              onChange={(e) => setSettings({ ...settings, system: { ...settings.system, frontendUrl: e.target.value } })}
+              placeholder="https://pdf.example.com"
               disabled={!loginEnabled}
             />
           </div>
@@ -481,7 +533,15 @@ export default function AdminGeneralSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.general.customMetadata.label', 'Custom Metadata')}</Text>
-            <Badge color="yellow" size="sm">PRO</Badge>
+            <Badge
+              color="grape"
+              size="sm"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/settings/adminPlan')}
+              title={t('admin.settings.badge.clickToUpgrade', 'Click to view plan details')}
+            >
+              PRO
+            </Badge>
           </Group>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

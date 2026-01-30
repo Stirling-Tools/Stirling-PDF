@@ -8,10 +8,16 @@ import AuditEventsTable from '@app/components/shared/config/configSections/audit
 import AuditExportSection from '@app/components/shared/config/configSections/audit/AuditExportSection';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
+import EnterpriseRequiredBanner from '@app/components/shared/config/EnterpriseRequiredBanner';
 
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
   const { loginEnabled } = useLoginRequired();
+  const { config } = useAppConfig();
+  const licenseType = config?.license ?? 'NORMAL';
+  const hasEnterpriseLicense = licenseType === 'ENTERPRISE';
+  const showDemoData = !loginEnabled || !hasEnterpriseLicense;
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,17 +29,24 @@ const AdminAuditSection: React.FC = () => {
         setError(null);
         const status = await auditService.getSystemStatus();
         setSystemStatus(status);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load audit system status');
+      } catch (err: any) {
+        // Check if this is a permission/license error (403/404)
+        const status = err?.response?.status;
+        if (status === 403 || status === 404) {
+          setError('enterprise-license-required');
+        } else {
+          setError(err instanceof Error ? err.message : 'Failed to load audit system status');
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    if (loginEnabled) {
+    if (!showDemoData) {
       fetchSystemStatus();
     } else {
-      // Provide example audit system status when login is disabled
+      // Provide example audit system status when running in demo mode
+      setError(null);
       setSystemStatus({
         enabled: true,
         level: 'INFO',
@@ -42,10 +55,10 @@ const AdminAuditSection: React.FC = () => {
       });
       setLoading(false);
     }
-  }, [loginEnabled]);
+  }, [loginEnabled, showDemoData]);
 
-  // Override loading state when login is disabled
-  const actualLoading = loginEnabled ? loading : false;
+  // Override loading state when showing demo data
+  const actualLoading = showDemoData ? false : loading;
 
   if (actualLoading) {
     return (
@@ -56,6 +69,16 @@ const AdminAuditSection: React.FC = () => {
   }
 
   if (error) {
+    if (error === 'enterprise-license-required') {
+      return (
+        <Alert color="blue" title={t('audit.enterpriseRequired', 'Enterprise License Required')}>
+          {t(
+            'audit.enterpriseRequiredMessage',
+            'The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics.'
+          )}
+        </Alert>
+      );
+    }
     return (
       <Alert color="red" title={t('audit.error.title', 'Error loading audit system')}>
         {error}
@@ -74,32 +97,36 @@ const AdminAuditSection: React.FC = () => {
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
+      <EnterpriseRequiredBanner
+        show={!hasEnterpriseLicense}
+        featureName={t('settings.licensingAnalytics.audit', 'Audit')}
+      />
       <AuditSystemStatus status={systemStatus} />
 
       {systemStatus.enabled ? (
         <Tabs defaultValue="dashboard">
           <Tabs.List>
-            <Tabs.Tab value="dashboard" disabled={!loginEnabled}>
+            <Tabs.Tab value="dashboard" disabled={!loginEnabled || !hasEnterpriseLicense}>
               {t('audit.tabs.dashboard', 'Dashboard')}
             </Tabs.Tab>
-            <Tabs.Tab value="events" disabled={!loginEnabled}>
+            <Tabs.Tab value="events" disabled={!loginEnabled || !hasEnterpriseLicense}>
               {t('audit.tabs.events', 'Audit Events')}
             </Tabs.Tab>
-            <Tabs.Tab value="export" disabled={!loginEnabled}>
+            <Tabs.Tab value="export" disabled={!loginEnabled || !hasEnterpriseLicense}>
               {t('audit.tabs.export', 'Export')}
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="dashboard" pt="md">
-            <AuditChartsSection loginEnabled={loginEnabled} />
+            <AuditChartsSection loginEnabled={loginEnabled && hasEnterpriseLicense} />
           </Tabs.Panel>
 
           <Tabs.Panel value="events" pt="md">
-            <AuditEventsTable loginEnabled={loginEnabled} />
+            <AuditEventsTable loginEnabled={loginEnabled && hasEnterpriseLicense} />
           </Tabs.Panel>
 
           <Tabs.Panel value="export" pt="md">
-            <AuditExportSection loginEnabled={loginEnabled} />
+            <AuditExportSection loginEnabled={loginEnabled && hasEnterpriseLicense} />
           </Tabs.Panel>
         </Tabs>
       ) : (

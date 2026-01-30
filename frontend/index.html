@@ -3,21 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <base href="%BASE_URL%" />
-    <link rel="icon" href="/modern-logo/favicon.ico" />
+    <link rel="icon" href="modern-logo/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
       content="The Free Adobe Acrobat alternative (10M+ Downloads)"
     />
-    <link rel="apple-touch-icon" href="/modern-logo/logo192.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="modern-logo/logo192.png" />
+    <link rel="manifest" href="manifest.json" />
 
     <title>Stirling PDF</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <script type="module" src="/src/index.tsx"></script>
+    <script type="module" src="src/index.tsx"></script>
+    <!-- jscanify and OpenCV for mobile scanner - loaded after React for non-blocking page load -->
+    <script src="/vendor/jscanify/opencv.js" async></script>
+    <script src="/vendor/jscanify/jscanify.js" async></script>
   </body>
 </html>
