@@ -11,8 +11,8 @@ export default defineConfig(({ mode }) => {
     process.env.STIRLING_DESKTOP === 'true' ||
     process.env.VITE_DESKTOP === 'true';
 
-  const baseProject = isProprietary ? './tsconfig.proprietary.json' : './tsconfig.core.json';
-  const desktopProject = isProprietary ? './tsconfig.desktop.json' : baseProject;
+  const baseProject = isProprietary ? './tsconfig.proprietary.vite.json' : './tsconfig.core.vite.json';
+  const desktopProject = isProprietary ? './tsconfig.desktop.vite.json' : baseProject;
   const tsconfigProject = isDesktopMode ? desktopProject : baseProject;
 
   return {

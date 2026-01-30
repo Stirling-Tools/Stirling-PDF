@@ -5,7 +5,7 @@ import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
 import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
-import { connectionModeService } from '@desktop/services/connectionModeService';
+import { connectionModeService } from '@app/services/connectionModeService';
 import type { AppConfig } from '@app/contexts/AppConfigContext';
 
 
