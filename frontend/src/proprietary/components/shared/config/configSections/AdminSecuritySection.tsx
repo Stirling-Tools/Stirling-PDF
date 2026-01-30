@@ -17,6 +17,10 @@ interface SecuritySettingsData {
   loginAttemptCount?: number;
   loginResetTimeMinutes?: number;
   xFrameOptions?: string;
+  mfaRequired?: {
+    enforceForAdmins?: boolean;
+    enforceForUsers?: boolean;
+  }
   jwt?: {
     persistence?: boolean;
     enableKeyRotation?: boolean;
@@ -127,6 +131,9 @@ export default function AdminSecuritySection() {
         'security.loginAttemptCount': securitySettings.loginAttemptCount,
         'security.loginResetTimeMinutes': securitySettings.loginResetTimeMinutes,
         'security.xFrameOptions': securitySettings.xFrameOptions,
+        // MFA settings
+        'security.mfaRequired.enforceForAdmins': securitySettings.mfaRequired?.enforceForAdmins,
+        'security.mfaRequired.enforceForUsers': securitySettings.mfaRequired?.enforceForUsers,
         // JWT settings
         'security.jwt.persistence': securitySettings.jwt?.persistence,
         'security.jwt.enableKeyRotation': securitySettings.jwt?.enableKeyRotation,
@@ -302,6 +309,44 @@ export default function AdminSecuritySection() {
               comboboxProps={{ zIndex: 1400 }}
               disabled={!loginEnabled}
             />
+          </div>
+
+          {/* MFA Enforcement Settings */}
+          <div>
+            <Stack gap="md">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <Text fw={500} size="sm">{t('admin.settings.security.mfaEnforcement.enforceForAdmins.label', 'Enforce Multi-Factor Authentication for Admins')}</Text>
+                  <Text size="xs" c="dimmed" mt={4}>
+                    {t('admin.settings.security.mfaEnforcement.enforceForAdmins.description', 'Require multi-factor authentication for all admin users')}
+                  </Text>
+                </div>
+                <Group gap="xs">
+                  <Switch
+                    checked={settings?.mfaRequired?.enforceForAdmins || false}
+                    onChange={(e) => setSettings({ ...settings, mfaRequired: { ...settings?.mfaRequired, enforceForAdmins: e.target.checked } })}
+                    disabled={!loginEnabled}
+                  />
+                  <PendingBadge show={isFieldPending('mfaRequired.enforceForAdmins')} />
+                </Group>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <Text fw={500} size="sm">{t('admin.settings.security.mfaEnforcement.enforceForUsers.label', 'Enforce Multi-Factor Authentication for Users')}</Text>
+                  <Text size="xs" c="dimmed" mt={4}>
+                    {t('admin.settings.security.mfaEnforcement.enforceForUsers.description', 'Require multi-factor authentication for all non-admin users')}
+                  </Text>
+                </div>
+                <Group gap="xs">
+                  <Switch
+                    checked={settings?.mfaRequired?.enforceForUsers || false}
+                    onChange={(e) => setSettings({ ...settings, mfaRequired: { ...settings?.mfaRequired, enforceForUsers: e.target.checked } })}
+                    disabled={!loginEnabled}
+                  />
+                  <PendingBadge show={isFieldPending('mfaRequired.enforceForUsers')} />
+                </Group>
+              </div>
+            </Stack>
           </div>
         </Stack>
       </Paper>

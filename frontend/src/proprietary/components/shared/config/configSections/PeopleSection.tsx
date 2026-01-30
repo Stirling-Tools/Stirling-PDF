@@ -99,25 +99,18 @@ export default function PeopleSection() {
     }
   }, [config]);
 
-  const handleClickButton = async (user: User) => {
-    // Warte auf fetchData Abschluss
-
-    console.log(
-      "[PeopleSection] klick1",
-      user.mfaRequired,
-      users.find((u) => u.username === user.username),
-    );
+  const handleSetMfaButton = async (user: User) => {
     try {
       if (!user.mfaRequired) {
         await userManagementService.requireMfaByAdmin(user.username, true);
-        console.log("[PeopleSection] klick3");
+        console.log("[PeopleSection] set require maf to mandatory");
         alert({
           alertType: "success",
           title: t("workspace.people.mfa.adminEnableSuccess", "MFA enabled successfully for user"),
         });
       } else {
         await userManagementService.requireMfaByAdmin(user.username, false);
-        console.log("[PeopleSection] klick4");
+        console.log("[PeopleSection] set require maf to optional");
 
         alert({
           alertType: "success",
@@ -134,7 +127,6 @@ export default function PeopleSection() {
       alert({ alertType: "error", title: errorMessage });
     }
     await fetchData();
-    console.log("[PeopleSection] klick1", user.mfaRequired);
   };
 
   const fetchData = async () => {
@@ -721,7 +713,7 @@ export default function PeopleSection() {
                                   <LocalIcon icon="person-check" width="1rem" height="1rem" />
                                 )
                               }
-                              onClick={() => handleToggleEnabled(user)}
+                              onClick={async () => handleToggleEnabled(user)}
                               disabled={!loginEnabled}
                             >
                               {user.enabled ? t("workspace.people.disable") : t("workspace.people.enable")}
@@ -746,7 +738,7 @@ export default function PeopleSection() {
                               <Menu.Item
                                 color="red"
                                 leftSection={<LocalIcon icon="key" width="1rem" height="1rem" />}
-                                onClick={() => handleClickButton(user)}
+                                onClick={async () => handleSetMfaButton(user)}
                                 disabled={!loginEnabled}
                               >
                                 {user.mfaRequired
@@ -761,7 +753,7 @@ export default function PeopleSection() {
                               <Menu.Item
                                 color="red"
                                 leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />}
-                                onClick={() => handleDeleteUser(user)}
+                                onClick={async () => handleDeleteUser(user)}
                                 disabled={!loginEnabled}
                               >
                                 {t("workspace.people.deleteUser")}
