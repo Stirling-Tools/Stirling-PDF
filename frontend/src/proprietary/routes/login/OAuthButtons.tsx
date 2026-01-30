@@ -17,11 +17,15 @@ export const oauthProviderConfig: Record<string, { label: string; file: string }
   keycloak: { label: 'Keycloak', file: 'keycloak.svg' },
   cloudron: { label: 'Cloudron', file: 'cloudron.svg' },
   authentik: { label: 'Authentik', file: 'authentik.svg' },
-  oidc: { label: 'OIDC', file: 'oidc.svg' }
+  intune: { label: 'Intune', file: 'intune.svg' },
+  pocketId: { label: 'Pocket ID', file: 'pocketid.svg' },
+  oidc: { label: 'OIDC', file: 'oidc.svg' },
+  saml: { label: 'SAML', file: 'saml.svg' },
 };
 
-// Generic fallback for unknown providers
-const GENERIC_PROVIDER_ICON = 'oidc.svg';
+// Generic fallback icons for unknown providers
+const GENERIC_OAUTH_ICON = 'oidc.svg';
+const GENERIC_SAML_ICON = 'saml.svg';
 
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void
@@ -42,6 +46,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
   const providers = providersToShow.map(pathOrId => {
     // Extract provider ID from full path (e.g., '/saml2/authenticate/stirling' -> 'stirling')
     const providerId = pathOrId.split('/').pop() || pathOrId;
+    const isSamlProvider = pathOrId.includes('/saml2/');
 
     if (providerId in oauthProviderConfig) {
       // Known provider - use predefined icon and label
@@ -51,12 +56,12 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         ...oauthProviderConfig[providerId]
       };
     }
-    // Unknown provider - use generic icon and capitalize ID for label
+    // Unknown provider - use appropriate generic icon based on auth type
     return {
       id: pathOrId,  // Keep full path for redirect
       providerId,    // Store extracted ID for display lookup
       label: providerId.charAt(0).toUpperCase() + providerId.slice(1),
-      file: GENERIC_PROVIDER_ICON
+      file: isSamlProvider ? GENERIC_SAML_ICON : GENERIC_OAUTH_ICON
     };
   });
 

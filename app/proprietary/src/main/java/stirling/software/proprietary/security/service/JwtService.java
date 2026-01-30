@@ -79,13 +79,14 @@ public class JwtService implements JwtServiceInterface {
             }
 
             KeyPair keyPair = keyPairOpt.get();
-
+            Date now = new Date();
             var builder =
                     Jwts.builder()
                             .claims(claims)
                             .subject(username)
                             .issuer(ISSUER)
-                            .issuedAt(new Date())
+                            .issuedAt(now)
+                            .notBefore(now)
                             .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                             .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
@@ -251,11 +252,28 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String extractToken(HttpServletRequest request) {
-        // Extract from Authorization header Bearer token
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7); // Remove "Bearer " prefix
             return token;
+        }
+
+        // Check for logout cookie (set by frontend before redirecting to /logout for SAML SLO)
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("stirling_logout_token".equals(cookie.getName())) {
+                    String value = cookie.getValue();
+                    if (value != null && !value.isBlank()) {
+                        try {
+                            return java.net.URLDecoder.decode(
+                                    value, java.nio.charset.StandardCharsets.UTF_8);
+                        } catch (Exception e) {
+                            log.debug("Failed to decode logout token cookie", e);
+                            return value;
+                        }
+                    }
+                }
+            }
         }
 
         return null;

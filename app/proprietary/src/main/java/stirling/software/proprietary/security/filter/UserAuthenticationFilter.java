@@ -4,6 +4,7 @@ import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,6 +33,7 @@ import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
@@ -43,16 +45,19 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
+    private final JwtServiceInterface jwtService;
 
     public UserAuthenticationFilter(
             @Lazy ApplicationProperties.Security securityProp,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
-            @Qualifier("loginEnabled") boolean loginEnabledValue) {
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Lazy JwtServiceInterface jwtService) {
         this.securityProp = securityProp;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -135,7 +140,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication.isAuthenticated()) {
 
             UserLoginType loginMethod = UserLoginType.UNKNOWN;
 
@@ -146,7 +151,14 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String username = null;
             if (principal instanceof UserDetails detailsUser) {
                 username = detailsUser.getUsername();
-                loginMethod = UserLoginType.USERDETAILS;
+                loginMethod = resolveLoginTypeFromJwt(request);
+                if (loginMethod == UserLoginType.SAML2USER) {
+                    SAML2 saml2 = securityProp.getSaml2();
+                    blockRegistration = saml2 != null && saml2.getBlockRegistration();
+                } else if (loginMethod == UserLoginType.OAUTH2USER) {
+                    OAUTH2 oAuth = securityProp.getOauth2();
+                    blockRegistration = oAuth != null && oAuth.getBlockRegistration();
+                }
             } else if (principal instanceof OAuth2User oAuth2User) {
                 username = oAuth2User.getName();
                 loginMethod = UserLoginType.OAUTH2USER;
@@ -239,6 +251,30 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private UserLoginType resolveLoginTypeFromJwt(HttpServletRequest request) {
+        if (jwtService == null) {
+            return UserLoginType.USERDETAILS;
+        }
+        try {
+            String token = jwtService.extractToken(request);
+            if (token != null && !token.isBlank()) {
+                Map<String, Object> claims = jwtService.extractClaims(token);
+                Object authType = claims.get("authType");
+                if (authType != null) {
+                    String type = authType.toString().toUpperCase();
+                    if ("SAML2".equals(type)) {
+                        return UserLoginType.SAML2USER;
+                    } else if ("OAUTH2".equals(type)) {
+                        return UserLoginType.OAUTH2USER;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Unable to resolve login type from JWT claims", e);
+        }
+        return UserLoginType.USERDETAILS;
     }
 
     private enum UserLoginType {

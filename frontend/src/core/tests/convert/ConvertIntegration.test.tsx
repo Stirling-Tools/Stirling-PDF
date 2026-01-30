@@ -100,12 +100,21 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </MantineProvider>
 );
 
+// Helper to create mock API responses with full response structure
+const _createMockResponse = <T,>(data: T, status = 200, statusText = 'OK') => ({
+  data,
+  status,
+  statusText,
+  headers: {},
+  config: {},
+});
+
 describe('Convert Tool Integration Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Setup default apiClient mock
-    mockedApiClient.post = vi.fn();
+    // Reset the post mock - use type assertion for compatibility with both axios and TauriHttpClient
+    (mockedApiClient.post as ReturnType<typeof vi.fn>).mockReset();
   });
 
   afterEach(() => {

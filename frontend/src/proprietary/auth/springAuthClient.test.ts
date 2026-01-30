@@ -251,40 +251,63 @@ describe('SpringAuthClient', () => {
   });
 
   describe('signOut', () => {
+    let mockForm: { method: string; action: string; style: { display: string }; submit: ReturnType<typeof vi.fn> };
+    let appendChildSpy: any;
+
+    beforeEach(() => {
+      // Mock form creation and submission
+      mockForm = {
+        method: '',
+        action: '',
+        style: { display: '' },
+        submit: vi.fn(),
+      };
+      vi.spyOn(document, 'createElement').mockReturnValue(mockForm as unknown as HTMLElement);
+      appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it('should successfully sign out and clear JWT', async () => {
       const mockToken = 'jwt-to-clear';
       localStorage.setItem('stirling_jwt', mockToken);
 
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        status: 200,
-        data: {},
-      } as any);
-
       const result = await springAuth.signOut();
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/auth/logout',
-        null,
-        expect.objectContaining({ withCredentials: true })
-      );
+      // JWT should be cleared from localStorage
       expect(localStorage.getItem('stirling_jwt')).toBeNull();
+      // Should submit POST form to /logout for Spring Security logout handler
+      expect(mockForm.method).toBe('POST');
+      expect(mockForm.action).toBe('/logout');
+      expect(mockForm.submit).toHaveBeenCalled();
+      // Should return no error on successful signOut
       expect(result.error).toBeNull();
     });
 
-    it('should clear JWT even if logout request fails', async () => {
+    it('should create hidden form and submit POST to /logout', async () => {
       const mockToken = 'jwt-to-clear';
       localStorage.setItem('stirling_jwt', mockToken);
 
-      vi.mocked(apiClient.post).mockRejectedValueOnce({
-        isAxiosError: true,
-        response: { status: 500 },
-        message: 'Server error',
-      });
+      await springAuth.signOut();
+
+      // Verify form was created with correct attributes
+      expect(document.createElement).toHaveBeenCalledWith('form');
+      expect(mockForm.style.display).toBe('none');
+      expect(appendChildSpy).toHaveBeenCalled();
+    });
+
+    it('should handle signOut when no JWT is present', async () => {
+      localStorage.removeItem('stirling_jwt');
 
       const result = await springAuth.signOut();
 
-      expect(localStorage.getItem('stirling_jwt')).toBeNull();
-      expect(result.error).toBeTruthy();
+      // Should still submit POST form to /logout
+      expect(mockForm.method).toBe('POST');
+      expect(mockForm.action).toBe('/logout');
+      expect(mockForm.submit).toHaveBeenCalled();
+      expect(result.error).toBeNull();
     });
   });
 

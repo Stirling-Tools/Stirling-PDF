@@ -8,11 +8,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
@@ -22,8 +24,12 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml4LogoutRequestResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2RelyingPartyInitiatedLogoutSuccessHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -33,7 +39,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
@@ -56,7 +61,6 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
 @Slf4j
 @Configuration
@@ -72,12 +76,10 @@ public class SecurityConfiguration {
 
     private final ApplicationProperties applicationProperties;
     private final ApplicationProperties.Security securityProperties;
-    private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final JwtServiceInterface jwtService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final LoginAttemptService loginAttemptService;
-    private final SessionPersistentRegistry sessionRegistry;
     private final PersistentLoginRepository persistentLoginRepository;
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
@@ -92,14 +94,12 @@ public class SecurityConfiguration {
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            AppConfig appConfig,
             ApplicationProperties applicationProperties,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
             JwtServiceInterface jwtService,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             LoginAttemptService loginAttemptService,
-            SessionPersistentRegistry sessionRegistry,
             @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
@@ -112,14 +112,12 @@ public class SecurityConfiguration {
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
-        this.appConfig = appConfig;
         this.applicationProperties = applicationProperties;
         this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.jwtService = jwtService;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.loginAttemptService = loginAttemptService;
-        this.sessionRegistry = sessionRegistry;
         this.persistentLoginRepository = persistentLoginRepository;
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
@@ -196,7 +194,7 @@ public class SecurityConfiguration {
             http.cors(cors -> cors.configurationSource(corsSource));
         } else {
             // Explicitly disable CORS when no origins are configured
-            http.cors(cors -> cors.disable());
+            http.cors(AbstractHttpConfigurer::disable);
         }
 
         http.csrf(CsrfConfigurer::disable);
@@ -227,10 +225,10 @@ public class SecurityConfiguration {
 
         if (loginEnabledValue) {
 
-            http.addFilterBefore(
-                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
+            http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter, LogoutFilter.class)
+                    .addFilterAfter(
+                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
             http.sessionManagement(
                     sessionManagement ->
@@ -250,17 +248,36 @@ public class SecurityConfiguration {
                                         return requestURI.startsWith(contextPath + "/api/");
                                     }));
 
+            // Create SAML logout handler if SAML SLO is enabled
+            final LogoutSuccessHandler samlLogoutHandler;
+            if (securityProperties.isSaml2Active()
+                    && Boolean.TRUE.equals(securityProperties.getSaml2().getEnableSingleLogout())
+                    && saml2RelyingPartyRegistrations != null) {
+                log.info("Creating SAML2 SLO handler for SP-initiated logout");
+                OpenSaml4LogoutRequestResolver logoutRequestResolver =
+                        new OpenSaml4LogoutRequestResolver(saml2RelyingPartyRegistrations);
+                samlLogoutHandler =
+                        new Saml2RelyingPartyInitiatedLogoutSuccessHandler(logoutRequestResolver);
+            } else {
+                samlLogoutHandler = null;
+            }
+
             http.logout(
                     logout ->
+                            // Require POST to prevent logout CSRF attacks
                             logout.logoutRequestMatcher(
                                             PathPatternRequestMatcher.withDefaults()
-                                                    .matcher("/logout"))
+                                                    .matcher(HttpMethod.POST, "/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    securityProperties, appConfig, jwtService))
+                                                    securityProperties, samlLogoutHandler))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
-                                    .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
+                                    .deleteCookies(
+                                            "JSESSIONID",
+                                            "remember-me",
+                                            "stirling_jwt",
+                                            "stirling_logout_token"));
             http.rememberMe(
                     rememberMeConfigurer -> // Use the configurator directly
                     rememberMeConfigurer
@@ -384,9 +401,18 @@ public class SecurityConfiguration {
                                     }
                                 })
                         .saml2Metadata(metadata -> {});
+
+                // Configure SAML2 Single Logout if enabled
+                // This sets up endpoints for:
+                // - IdP-initiated logout: IdP sends LogoutRequest to /logout/saml2/slo
+                // - SP-initiated logout response: IdP sends LogoutResponse to /logout/saml2/slo
+                if (Boolean.TRUE.equals(securityProperties.getSaml2().getEnableSingleLogout())) {
+                    log.debug("SAML2 Single Logout (SLO) is enabled");
+                    http.saml2Logout(logout -> logout.logoutUrl("/logout/saml2/slo"));
+                }
             }
         } else {
-            log.debug("Login is not enabled.");
+            log.info("Login is not enabled.");
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
         return http.build();
