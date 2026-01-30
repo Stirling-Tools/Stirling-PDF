@@ -4672,6 +4672,14 @@ description = "Block link-local addresses (169.254.x.x, fe80::/10)"
 label = "Block Cloud Metadata Endpoints"
 description = "Block cloud provider metadata endpoints (169.254.169.254)"
 
+[admin.settings.security.mfaEnforcement.enforceForAdmins]
+label = "Enforce Multi-Factor Authentication for Admins"
+description = "Require multi-factor authentication for all admin users"
+
+[admin.settings.security.mfaEnforcement.enforceForUsers]
+label = "Enforce Multi-Factor Authentication for Users"
+description = "Require multi-factor authentication for all non-admin users"
+
 [admin.settings.connections]
 title = "Connections"
 description = "Configure external authentication providers like OAuth2 and SAML."
@@ -5891,6 +5899,7 @@ deleteUserError = "Failed to delete user"
 confirmDelete = "Are you sure you want to delete this user? This action cannot be undone."
 loginRequired = "Enable login mode first"
 mfaTitle = "MFA"
+viewProfile = "View your profile"
 
 [workspace.people.inviteMembers]
 label = "Invite Members"
@@ -6034,9 +6043,16 @@ noSlotsAvailable = "No slots available"
 currentUsage = "Currently using {{current}} of {{max}} user licences"
 
 [workspace.people.mfa]
+adminEnableSuccess = "MFA enabled successfully for user"
+adminEnableError = "Failed to enable MFA for user"
 adminDisableSuccess = "MFA disabled successfully for user"
 adminDisableError = "Failed to disable MFA for user"
 disableByAdmin = "Disable MFA"
+required = "MFA Required"
+notRequired = "MFA Not Required"
+enabled = "MFA Enabled"
+setOptional = "Set MFA Optional"
+setRequired = "Set MFA Require"
 
 [workspace.teams]
 title = "Teams"
