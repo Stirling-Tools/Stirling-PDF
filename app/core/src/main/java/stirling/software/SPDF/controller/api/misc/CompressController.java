@@ -1224,6 +1224,19 @@ public class CompressController {
             command.add("-dQUIET");
             command.add("-dBATCH");
 
+            // Grayscale
+            if (Boolean.TRUE.equals(request.getGrayscale())) {
+                command.add("-sColorConversionStrategy=Gray");
+                command.add("-dProcessColorModel=/DeviceGray");
+            }
+
+            // Normalization (Force sRGB if not grayscale)
+            if (Boolean.TRUE.equals(request.getNormalize())
+                    && !Boolean.TRUE.equals(request.getGrayscale())) {
+                command.add("-dColorConversionStrategy=/sRGB");
+                command.add("-dProcessColorModel=/DeviceRGB");
+            }
+
             // Map optimization levels to Ghostscript settings
             switch (optimizeLevel) {
                 case 1:
