@@ -9,13 +9,14 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import ThumbUpRoundedIcon from '@mui/icons-material/ThumbUpRounded';
 import Badge from '@app/components/shared/Badge';
+import { RankedSearchItem } from '@app/utils/toolSearch';
 import '@app/components/tools/ToolPanel.css';
 import DetailedToolItem from '@app/components/tools/fullscreen/DetailedToolItem';
 import CompactToolItem from '@app/components/tools/fullscreen/CompactToolItem';
 import { useFavoriteToolItems } from '@app/hooks/tools/useFavoriteToolItems';
 
 interface FullscreenToolListProps {
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: RankedSearchItem[];
   searchQuery: string;
   showDescriptions: boolean;
   selectedToolKey: string | null;
@@ -34,7 +35,14 @@ const FullscreenToolList = ({
   const { t } = useTranslation();
   const { toolRegistry, favoriteTools } = useToolWorkflow();
 
-  const { sections, searchGroups } = useToolSections(filteredTools, searchQuery);
+  // Filter to only parent tools for category grouping (sub-tools not shown in fullscreen mode)
+  const parentToolsOnly = useMemo(() =>
+    filteredTools
+      .filter(item => item.type === 'parent')
+      .map(item => ({ item: item.item as [ToolId, ToolRegistryEntry], matchedText: item.matchedText }))
+  , [filteredTools]);
+
+  const { sections, searchGroups } = useToolSections(parentToolsOnly, searchQuery);
 
   const tooltipPortalTarget = typeof document !== 'undefined' ? document.body : undefined;
 

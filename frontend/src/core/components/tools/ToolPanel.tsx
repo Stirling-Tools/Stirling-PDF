@@ -10,6 +10,7 @@ import { useSidebarContext } from "@app/contexts/SidebarContext";
 import rainbowStyles from '@app/styles/rainbow.module.css';
 import { ActionIcon, ScrollArea } from '@mantine/core';
 import { ToolId } from '@app/types/toolId';
+import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
@@ -90,15 +91,26 @@ export default function ToolPanel() {
     return '18.5rem';
   };
 
+  const parentFilteredTools = useMemo(
+    () => filteredTools
+      .filter(item => item.type === 'parent')
+      .map(item => ({
+        item: item.item as [ToolId, ToolRegistryEntry],
+        matchedText: item.matchedText
+      })),
+    [filteredTools]
+  );
+
   const matchedTextMap = useMemo(() => {
     const map = new Map<string, string>();
-    filteredTools.forEach(({ item: [id], matchedText }) => {
+    parentFilteredTools.forEach(({ item, matchedText }) => {
+      const [id] = item;
       if (matchedText) {
-        map.set(id, matchedText);
+        map.set(id as string, matchedText);
       }
     });
     return map;
-  }, [filteredTools]);
+  }, [parentFilteredTools]);
 
   return (
     <div
@@ -173,7 +185,7 @@ export default function ToolPanel() {
                     <ToolPicker
                       selectedToolKey={selectedToolKey}
                       onSelect={(id) => handleToolSelect(id as ToolId)}
-                      filteredTools={filteredTools}
+                      filteredTools={parentFilteredTools}
                       isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
                     />
                   </div>
