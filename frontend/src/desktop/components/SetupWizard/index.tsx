@@ -6,9 +6,9 @@ import { SaaSSignupScreen } from '@app/components/SetupWizard/SaaSSignupScreen';
 import { ServerSelectionScreen } from '@app/components/SetupWizard/ServerSelectionScreen';
 import { SelfHostedLoginScreen } from '@app/components/SetupWizard/SelfHostedLoginScreen';
 import { ServerConfig, connectionModeService } from '@app/services/connectionModeService';
-import { authService, UserInfo } from '@app/services/authService';
+import { AuthServiceError, authService, UserInfo } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';
@@ -30,6 +30,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>({ url: STIRLING_SAAS_URL });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selfHostedMfaCode, setSelfHostedMfaCode] = useState('');
+  const [selfHostedMfaRequired, setSelfHostedMfaRequired] = useState(false);
 
   const handleSaaSLogin = async (username: string, password: string) => {
     if (!serverConfig) {
@@ -97,11 +99,18 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const handleServerSelection = (config: ServerConfig) => {
     setServerConfig(config);
     setError(null);
+    setSelfHostedMfaCode('');
+    setSelfHostedMfaRequired(false);
     setActiveStep(SetupStep.SelfHostedLogin);
   };
 
   const handleSelfHostedLogin = async (username: string, password: string) => {
+    console.log('[SetupWizard] 🔐 Starting self-hosted login');
+    console.log(`[SetupWizard] Server: ${serverConfig?.url}`);
+    console.log(`[SetupWizard] Username: ${username}`);
+
     if (!serverConfig) {
+      console.error('[SetupWizard] ❌ No server configured');
       setError('No server configured');
       return;
     }
@@ -110,19 +119,53 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
-      await authService.login(serverConfig.url, username, password);
+      console.log('[SetupWizard] Step 1: Authenticating with server...');
+      const trimmedMfa = selfHostedMfaCode.trim();
+      const mfaCode = trimmedMfa ? trimmedMfa : undefined;
+      await authService.login(serverConfig.url, username, password, mfaCode);
+      console.log('[SetupWizard] ✅ Authentication successful');
+
+      setSelfHostedMfaRequired(false);
+      setSelfHostedMfaCode('');
+
+      console.log('[SetupWizard] Step 2: Switching to self-hosted mode...');
       await connectionModeService.switchToSelfHosted(serverConfig);
+      console.log('[SetupWizard] ✅ Switched to self-hosted mode');
+
+      console.log('[SetupWizard] Step 3: Initializing external backend...');
       await tauriBackendService.initializeExternalBackend();
+      console.log('[SetupWizard] ✅ External backend initialized');
+
+      console.log('[SetupWizard] ✅ Setup complete, calling onComplete()');
       onComplete();
     } catch (err) {
-      console.error('Self-hosted login failed:', err);
-      setError(err instanceof Error ? err.message : 'Self-hosted login failed');
+      console.error('[SetupWizard] ❌ Self-hosted login failed:', err);
+      let errorMessage = 'Self-hosted login failed';
+      if (err instanceof AuthServiceError) {
+        if (err.code === 'mfa_required' || err.code === 'invalid_mfa_code') {
+          setSelfHostedMfaRequired(true);
+        }
+        errorMessage = err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      if (errorMessage.toLowerCase().includes('mfa_required') || errorMessage.toLowerCase().includes('invalid_mfa_code')) {
+        setSelfHostedMfaRequired(true);
+      }
+      console.error('[SetupWizard] Error message:', errorMessage);
+      setError(errorMessage);
       setLoading(false);
     }
   };
 
   const handleSelfHostedOAuthSuccess = async (_userInfo: UserInfo) => {
+    console.log('[SetupWizard] 🔐 OAuth login successful, completing setup');
+    console.log(`[SetupWizard] Server: ${serverConfig?.url}`);
+
     if (!serverConfig) {
+      console.error('[SetupWizard] ❌ No server configured');
       setError('No server configured');
       return;
     }
@@ -131,13 +174,22 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setLoading(true);
       setError(null);
 
-      // OAuth already completed by authService.loginWithOAuth
+      console.log('[SetupWizard] Step 1: OAuth already completed');
+      console.log('[SetupWizard] Step 2: Switching to self-hosted mode...');
       await connectionModeService.switchToSelfHosted(serverConfig);
+      console.log('[SetupWizard] ✅ Switched to self-hosted mode');
+
+      console.log('[SetupWizard] Step 3: Initializing external backend...');
       await tauriBackendService.initializeExternalBackend();
+      console.log('[SetupWizard] ✅ External backend initialized');
+
+      console.log('[SetupWizard] ✅ Setup complete, calling onComplete()');
       onComplete();
     } catch (err) {
-      console.error('Self-hosted OAuth login completion failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to complete login');
+      console.error('[SetupWizard] ❌ Self-hosted OAuth login completion failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to complete login';
+      console.error('[SetupWizard] Error message:', errorMessage);
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -155,6 +207,28 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         const params = new URLSearchParams(hash);
         const accessToken = params.get('access_token');
         const type = params.get('type') || parsed.searchParams.get('type');
+        const accessTokenFromHash = params.get('access_token');
+        const accessTokenFromQuery = parsed.searchParams.get('access_token');
+        const serverFromQuery = parsed.searchParams.get('server');
+
+        // Handle self-hosted SSO deep link
+        if (type === 'sso' || type === 'sso-selfhosted') {
+          const token = accessTokenFromHash || accessTokenFromQuery;
+          const serverUrl = serverFromQuery || serverConfig?.url || STIRLING_SAAS_URL;
+          if (!token || !serverUrl) {
+            console.error('[SetupWizard] Deep link missing token or server for SSO completion');
+            return;
+          }
+
+          setLoading(true);
+          setError(null);
+
+          await authService.completeSelfHostedSession(serverUrl, token);
+          await connectionModeService.switchToSelfHosted({ url: serverUrl });
+          await tauriBackendService.initializeExternalBackend();
+          onComplete();
+          return;
+        }
 
         if (!type || (type !== 'signup' && type !== 'recovery' && type !== 'magiclink')) {
           return;
@@ -187,6 +261,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const handleBack = () => {
     setError(null);
     if (activeStep === SetupStep.SelfHostedLogin) {
+      setSelfHostedMfaCode('');
+      setSelfHostedMfaRequired(false);
       setActiveStep(SetupStep.ServerSelection);
     } else if (activeStep === SetupStep.ServerSelection) {
       setActiveStep(SetupStep.SaaSLogin);
@@ -234,6 +310,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           enabledOAuthProviders={serverConfig?.enabledOAuthProviders}
           onLogin={handleSelfHostedLogin}
           onOAuthSuccess={handleSelfHostedOAuthSuccess}
+          mfaCode={selfHostedMfaCode}
+          setMfaCode={setSelfHostedMfaCode}
+          requiresMfa={selfHostedMfaRequired}
           loading={loading}
           error={error}
         />

@@ -55,7 +55,7 @@ public class SPDFApplicationTest {
 
         sPDFApplication.init();
 
-        assertEquals("http://localhost", SPDFApplication.getStaticBaseUrl());
+        assertEquals("http://localhost:8080", SPDFApplication.getStaticBaseUrl());
         assertEquals("/app", SPDFApplication.getStaticContextPath());
         assertEquals("8080", SPDFApplication.getStaticPort());
     }

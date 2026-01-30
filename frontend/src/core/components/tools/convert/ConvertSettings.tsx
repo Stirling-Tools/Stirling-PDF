@@ -17,9 +17,12 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
 import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
+import ConvertFromSvgSettings from "@app/components/tools/convert/ConvertFromSvgSettings";
+import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -145,6 +148,9 @@ const ConvertSettings = ({
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
     });
+    onParameterChange('pdfxOptions', {
+      outputFormat: 'pdfx',
+    });
     onParameterChange('cbrOptions', {
       optimizeForEbook: false,
     });
@@ -162,6 +168,11 @@ const ConvertSettings = ({
       includeTableOfContents: false,
       includePageNumbers: false,
       optimizeForEbook: false,
+    });
+    onParameterChange('epubOptions', {
+      detectChapters: true,
+      targetDevice: 'TABLET_PHONE_IMAGES',
+      outputFormat: 'EPUB',
     });
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
@@ -224,6 +235,9 @@ const ConvertSettings = ({
     });
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
+    });
+    onParameterChange('pdfxOptions', {
+      outputFormat: 'pdfx',
     });
     onParameterChange('cbrOptions', {
       optimizeForEbook: false,
@@ -325,6 +339,18 @@ const ConvertSettings = ({
         </>
       ) : null}
 
+      {/* SVG to PDF options */}
+      {parameters.fromExtension === 'svg' && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <ConvertFromSvgSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
       {/* Web to PDF options */}
       {((isWebFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') ||
        (parameters.isSmartDetection && parameters.smartDetectionType === 'web')) ? (
@@ -338,8 +364,8 @@ const ConvertSettings = ({
         </>
       ) : null}
 
-      {/* Email to PDF options */}
-      {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (
+      {/* Email to PDF options (EML and MSG formats) */}
+      {(parameters.fromExtension === 'eml' || parameters.fromExtension === 'msg') && parameters.toExtension === 'pdf' && (
         <>
           <Divider />
           <ConvertFromEmailSettings
@@ -387,6 +413,19 @@ const ConvertSettings = ({
         </>
       )}
 
+      {/* PDF to PDF/X options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfx' && (
+        <>
+          <Divider />
+          <ConvertToPdfxSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            selectedFiles={selectedFiles}
+            disabled={disabled}
+          />
+        </>
+      )}
+
       {/* eBook to PDF options */}
       {['epub', 'mobi', 'azw3', 'fb2'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf' && (
         <>
@@ -416,6 +455,18 @@ const ConvertSettings = ({
         <>
           <Divider />
           <ConvertToCbrSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to EPUB/AZW3 options */}
+      {parameters.fromExtension === 'pdf' && ['epub', 'azw3'].includes(parameters.toExtension) && (
+        <>
+          <Divider />
+          <ConvertToEpubSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
             disabled={disabled}

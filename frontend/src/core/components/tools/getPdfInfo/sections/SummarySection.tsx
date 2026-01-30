@@ -1,9 +1,55 @@
 import React, { useMemo } from 'react';
 import { Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { ParsedPdfSections, PdfFontInfo } from '@app/types/getPdfInfo';
+import type { ParsedPdfSections, PdfFontInfo, PdfComplianceSummary } from '@app/types/getPdfInfo';
 import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
 import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
+
+interface SummarySectionProps {
+  sections: ParsedPdfSections;
+  hideSectionTitle?: boolean;
+}
+
+/**
+ * Get a summary of compliance status from VeraPDF results.
+ * Uses the authoritative complianceSummary data when available.
+ */
+const getComplianceSummaryInfo = (
+  complianceSummary?: PdfComplianceSummary[] | null
+): { hasCompliance: boolean; passedStandards: string[]; failedCount: number } => {
+  if (!complianceSummary || complianceSummary.length === 0) {
+    return { hasCompliance: false, passedStandards: [], failedCount: 0 };
+  }
+
+  // Filter out informational markers like "not-pdfa"
+  const actualChecks = complianceSummary.filter(
+    item => item.Standard.toLowerCase() !== 'not-pdfa'
+  );
+
+  if (actualChecks.length === 0) {
+    return { hasCompliance: false, passedStandards: [], failedCount: 0 };
+  }
+
+  const passedStandards = actualChecks
+    .filter(item => item.Compliant)
+    .map(item => {
+      // Format standard ID to display name (e.g., "pdfa-3b" -> "PDF/A-3B")
+      const id = item.Standard.toLowerCase();
+      const pdfaMatch = id.match(/^pdf[_-]?a[_-]?(\d+)([abuf])?$/i);
+      if (pdfaMatch) {
+        return `PDF/A-${pdfaMatch[1]}${pdfaMatch[2]?.toUpperCase() || ''}`;
+      }
+      const pdfuaMatch = id.match(/^pdf[_-]?ua[_-]?(\d+)?$/i);
+      if (pdfuaMatch) {
+        return `PDF/UA-${pdfuaMatch[1] || '1'}`;
+      }
+      return item.Standard.toUpperCase();
+    });
+
+  const failedCount = actualChecks.filter(item => !item.Compliant).length;
+
+  return { hasCompliance: true, passedStandards, failedCount };
+};
 
 interface SummarySectionProps {
   sections: ParsedPdfSections;
@@ -54,8 +100,16 @@ const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTi
         ? t('getPdfInfo.summary.permsRestricted', '{{count}} restrictions', { count: restrictedCount })
         : t('getPdfInfo.summary.permsMixed', 'Some permissions restricted');
 
-    const complianceText = sections.compliance && Object.values(sections.compliance).some(Boolean)
-      ? t('getPdfInfo.summary.hasCompliance', 'Has compliance standards')
+    // Use authoritative VeraPDF results for compliance summary
+    const complianceInfo = getComplianceSummaryInfo(summary.Compliance);
+    const complianceText = complianceInfo.hasCompliance
+      ? complianceInfo.passedStandards.length > 0
+        ? t('getPdfInfo.summary.compliancePassed', '{{standards}} compliant', { 
+            standards: complianceInfo.passedStandards.join(', ') 
+          })
+        : t('getPdfInfo.summary.complianceChecked', 'Standards verified ({{failed}} failed)', { 
+            failed: complianceInfo.failedCount 
+          })
       : t('getPdfInfo.summary.noCompliance', 'No Compliance Standards');
 
     // Helper to get first page data

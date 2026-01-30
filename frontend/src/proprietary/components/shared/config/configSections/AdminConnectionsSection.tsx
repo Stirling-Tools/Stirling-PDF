@@ -1,21 +1,46 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge, Anchor } from '@mantine/core';
+import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge, Anchor, Select, Collapse } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { Z_INDEX_CONFIG_MODAL } from '@app/styles/zIndex';
 import ProviderCard from '@app/components/shared/config/configSections/ProviderCard';
-import {
-  ALL_PROVIDERS,
-  Provider,
-} from '@app/components/shared/config/configSections/providerDefinitions';
+import { Provider, useAllProviders } from '@app/components/shared/config/configSections/providerDefinitions';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+
+interface FeedbackFlags {
+  noValidDocument?: boolean;
+  errorProcessing?: boolean;
+  errorMessage?: boolean;
+}
+
+interface FeedbackSettings {
+  general?: { enabled?: boolean };
+  channel?: FeedbackFlags;
+  user?: FeedbackFlags;
+}
+
+interface TelegramSettingsData {
+  enabled?: boolean;
+  botToken?: string;
+  botUsername?: string;
+  pipelineInboxFolder?: string;
+  customFolderSuffix?: boolean;
+  enableAllowUserIDs?: boolean;
+  allowUserIDs?: number[];
+  enableAllowChannelIDs?: boolean;
+  allowChannelIDs?: number[];
+  processingTimeoutSeconds?: number;
+  pollingIntervalMillis?: number;
+  feedback?: FeedbackSettings;
+}
 
 interface ConnectionsSettingsData {
   oauth2?: {
@@ -44,8 +69,13 @@ interface ConnectionsSettingsData {
     password?: string;
     from?: string;
   };
+  telegram?: TelegramSettingsData;
   ssoAutoLogin?: boolean;
   enableMobileScanner?: boolean;
+  mobileScannerConvertToPdf?: boolean;
+  mobileScannerImageResolution?: string;
+  mobileScannerPageFormat?: string;
+  mobileScannerStretchToFit?: boolean;
 }
 
 export default function AdminConnectionsSection() {
@@ -53,6 +83,7 @@ export default function AdminConnectionsSection() {
   const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const allProviders = useAllProviders();
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
@@ -69,6 +100,10 @@ export default function AdminConnectionsSection() {
       const premiumResponse = await apiClient.get('/api/v1/admin/settings/section/premium');
       const premiumData = premiumResponse.data || {};
 
+      // Fetch Telegram settings
+      const telegramResponse = await apiClient.get('/api/v1/admin/settings/section/telegram');
+      const telegramData = telegramResponse.data || {};
+
       // Fetch system settings for enableMobileScanner
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
@@ -77,8 +112,13 @@ export default function AdminConnectionsSection() {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
+        telegram: telegramData || {},
         ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false,
-        enableMobileScanner: systemData.enableMobileScanner || false
+        enableMobileScanner: systemData.enableMobileScanner || false,
+        mobileScannerConvertToPdf: systemData.mobileScannerSettings?.convertToPdf !== false,
+        mobileScannerImageResolution: systemData.mobileScannerSettings?.imageResolution || 'full',
+        mobileScannerPageFormat: systemData.mobileScannerSettings?.pageFormat || 'A4',
+        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false
       };
 
       // Merge pending blocks from all four endpoints
@@ -92,11 +132,26 @@ export default function AdminConnectionsSection() {
       if (mailData._pending) {
         pendingBlock.mail = mailData._pending;
       }
+      if (telegramData._pending) {
+        pendingBlock.telegram = telegramData._pending;
+      }
       if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
         pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
       }
       if (systemData._pending?.enableMobileScanner !== undefined) {
         pendingBlock.enableMobileScanner = systemData._pending.enableMobileScanner;
+      }
+      if (systemData._pending?.mobileScannerSettings?.convertToPdf !== undefined) {
+        pendingBlock.mobileScannerConvertToPdf = systemData._pending.mobileScannerSettings.convertToPdf;
+      }
+      if (systemData._pending?.mobileScannerSettings?.imageResolution !== undefined) {
+        pendingBlock.mobileScannerImageResolution = systemData._pending.mobileScannerSettings.imageResolution;
+      }
+      if (systemData._pending?.mobileScannerSettings?.pageFormat !== undefined) {
+        pendingBlock.mobileScannerPageFormat = systemData._pending.mobileScannerSettings.pageFormat;
+      }
+      if (systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined) {
+        pendingBlock.mobileScannerStretchToFit = systemData._pending.mobileScannerSettings.stretchToFit;
       }
 
       if (Object.keys(pendingBlock).length > 0) {
@@ -141,6 +196,10 @@ export default function AdminConnectionsSection() {
       return settings?.mail?.enabled === true;
     }
 
+    if (provider.id === 'telegram') {
+      return settings?.telegram?.enabled === true;
+    }
+
     if (provider.id === 'oauth2-generic') {
       return settings?.oauth2?.enabled === true;
     }
@@ -157,6 +216,10 @@ export default function AdminConnectionsSection() {
 
     if (provider.id === 'smtp') {
       return settings?.mail || {};
+    }
+
+    if (provider.id === 'telegram') {
+      return settings?.telegram || {};
     }
 
     if (provider.id === 'oauth2-generic') {
@@ -188,6 +251,35 @@ export default function AdminConnectionsSection() {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
         const response = await apiClient.put('/api/v1/admin/settings/section/mail', providerSettings);
+
+        if (response.status === 200) {
+          await fetchSettings(); // Refresh settings
+          alert({
+            alertType: 'success',
+            title: t('admin.success', 'Success'),
+            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
+          });
+          showRestartModal();
+        } else {
+          throw new Error('Failed to save');
+        }
+      } else if (provider.id === 'telegram') {
+        const parseToNumberArray = (values: any) =>
+          (Array.isArray(values) ? values : [])
+            .map((value) => Number(value))
+            .filter((value) => !Number.isNaN(value));
+
+        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
+          ...providerSettings,
+          allowUserIDs: parseToNumberArray(providerSettings.allowUserIDs),
+          allowChannelIDs: parseToNumberArray(providerSettings.allowChannelIDs),
+          processingTimeoutSeconds: providerSettings.processingTimeoutSeconds
+            ? Number(providerSettings.processingTimeoutSeconds)
+            : undefined,
+          pollingIntervalMillis: providerSettings.pollingIntervalMillis
+            ? Number(providerSettings.pollingIntervalMillis)
+            : undefined,
+        });
 
         if (response.status === 200) {
           await fetchSettings(); // Refresh settings
@@ -250,10 +342,26 @@ export default function AdminConnectionsSection() {
       return;
     }
 
-    try{
+    try {
       if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
         const response = await apiClient.put('/api/v1/admin/settings/section/mail', { enabled: false });
+
+        if (response.status === 200) {
+          await fetchSettings();
+          alert({
+            alertType: 'success',
+            title: t('admin.success', 'Success'),
+            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
+          });
+          showRestartModal();
+        } else {
+          throw new Error('Failed to disconnect');
+        }
+      } else if (provider.id === 'telegram') {
+        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
+          enabled: false,
+        });
 
         if (response.status === 200) {
           await fetchSettings();
@@ -359,6 +467,35 @@ export default function AdminConnectionsSection() {
       if (response.status === 200) {
         alert({
           alertType: 'success',
+          title: t('admin.settings.success', 'Settings saved successfully')
+        });
+        fetchSettings();
+      }
+    } catch (error) {
+      console.error('Failed to save mobile scanner setting:', error);
+      alert({
+        alertType: 'error',
+        title: t('admin.settings.error', 'Failed to save settings')
+      });
+    }
+  };
+
+  const handleMobileScannerSettingsSave = async (settingKey: string, newValue: string | boolean) => {
+    // Block save if login is disabled or mobile scanner is not enabled
+    if (!validateLoginEnabled() || !settings?.enableMobileScanner) {
+      return;
+    }
+
+    try {
+      const deltaSettings = {
+        [`system.mobileScannerSettings.${settingKey}`]: newValue
+      };
+
+      const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
+
+      if (response.status === 200) {
+        alert({
+          alertType: 'success',
           title: t('admin.success', 'Success'),
           body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
         });
@@ -375,8 +512,8 @@ export default function AdminConnectionsSection() {
     }
   };
 
-  const linkedProviders = ALL_PROVIDERS.filter((p) => isProviderConfigured(p));
-  const availableProviders = ALL_PROVIDERS.filter((p) => !isProviderConfigured(p));
+  const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
+  const availableProviders = allProviders.filter((p) => !isProviderConfigured(p));
 
   return (
     <Stack gap="xl">
@@ -471,6 +608,119 @@ export default function AdminConnectionsSection() {
               <PendingBadge show={isFieldPending('enableMobileScanner')} />
             </Group>
           </div>
+
+          {/* Mobile Scanner Settings - Only show when enabled */}
+          <Collapse in={settings?.enableMobileScanner || false}>
+            <Stack gap="md" mt="md" ml="lg" style={{ borderLeft: '2px solid var(--mantine-color-gray-3)', paddingLeft: '1rem' }}>
+              {/* Convert to PDF */}
+              <div>
+                <Text size="sm" fw={500} mb="xs">
+                  {t('admin.settings.connections.mobileScannerConvertToPdf', 'Convert Images to PDF')}
+                </Text>
+                <Text size="xs" c="dimmed" mb="sm">
+                  {t('admin.settings.connections.mobileScannerConvertToPdfDesc', 'Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is.')}
+                </Text>
+                <Group gap="xs">
+                  <Switch
+                    checked={settings?.mobileScannerConvertToPdf !== false}
+                    onChange={(e) => {
+                      if (!loginEnabled) return;
+                      const newValue = e.target.checked;
+                      setSettings({ ...settings, mobileScannerConvertToPdf: newValue });
+                      handleMobileScannerSettingsSave('convertToPdf', newValue);
+                    }}
+                    disabled={!loginEnabled}
+                  />
+                  <PendingBadge show={isFieldPending('mobileScannerConvertToPdf')} />
+                </Group>
+              </div>
+
+              {/* PDF Conversion Settings - Only show when convertToPdf is enabled */}
+              {settings?.mobileScannerConvertToPdf !== false && (
+                <>
+                  {/* Image Resolution */}
+                  <div>
+                    <Text size="sm" fw={500} mb="xs">
+                      {t('admin.settings.connections.mobileScannerImageResolution', 'Image Resolution')}
+                    </Text>
+                    <Text size="xs" c="dimmed" mb="sm">
+                      {t('admin.settings.connections.mobileScannerImageResolutionDesc', 'Resolution of uploaded images. "Reduced" scales images to max 1200px to reduce file size.')}
+                    </Text>
+                    <Group gap="xs">
+                      <Select
+                        value={settings?.mobileScannerImageResolution || 'full'}
+                        onChange={(value) => {
+                          if (!loginEnabled) return;
+                          setSettings({ ...settings, mobileScannerImageResolution: value || 'full' });
+                          handleMobileScannerSettingsSave('imageResolution', value || 'full');
+                        }}
+                        data={[
+                          { value: 'full', label: t('admin.settings.connections.imageResolutionFull', 'Full (Original Size)') },
+                          { value: 'reduced', label: t('admin.settings.connections.imageResolutionReduced', 'Reduced (Max 1200px)') }
+                        ]}
+                        disabled={!loginEnabled}
+                        style={{ width: '250px' }}
+                        comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                      />
+                      <PendingBadge show={isFieldPending('mobileScannerImageResolution')} />
+                    </Group>
+                  </div>
+
+                  {/* Page Format */}
+                  <div>
+                    <Text size="sm" fw={500} mb="xs">
+                      {t('admin.settings.connections.mobileScannerPageFormat', 'Page Format')}
+                    </Text>
+                    <Text size="xs" c="dimmed" mb="sm">
+                      {t('admin.settings.connections.mobileScannerPageFormatDesc', 'PDF page size for converted images. "Keep" uses original image dimensions.')}
+                    </Text>
+                    <Group gap="xs">
+                      <Select
+                        value={settings?.mobileScannerPageFormat || 'A4'}
+                        onChange={(value) => {
+                          if (!loginEnabled) return;
+                          setSettings({ ...settings, mobileScannerPageFormat: value || 'A4' });
+                          handleMobileScannerSettingsSave('pageFormat', value || 'A4');
+                        }}
+                        data={[
+                          { value: 'keep', label: t('admin.settings.connections.pageFormatKeep', 'Keep (Original Dimensions)') },
+                          { value: 'A4', label: t('admin.settings.connections.pageFormatA4', 'A4 (210×297mm)') },
+                          { value: 'letter', label: t('admin.settings.connections.pageFormatLetter', 'Letter (8.5×11in)') }
+                        ]}
+                        disabled={!loginEnabled}
+                        style={{ width: '250px' }}
+                        comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                      />
+                      <PendingBadge show={isFieldPending('mobileScannerPageFormat')} />
+                    </Group>
+                  </div>
+
+                  {/* Stretch to Fit */}
+                  <div>
+                    <Text size="sm" fw={500} mb="xs">
+                      {t('admin.settings.connections.mobileScannerStretchToFit', 'Stretch to Fit')}
+                    </Text>
+                    <Text size="xs" c="dimmed" mb="sm">
+                      {t('admin.settings.connections.mobileScannerStretchToFitDesc', 'Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio.')}
+                    </Text>
+                    <Group gap="xs">
+                      <Switch
+                        checked={settings?.mobileScannerStretchToFit || false}
+                        onChange={(e) => {
+                          if (!loginEnabled) return;
+                          const newValue = e.target.checked;
+                          setSettings({ ...settings, mobileScannerStretchToFit: newValue });
+                          handleMobileScannerSettingsSave('stretchToFit', newValue);
+                        }}
+                        disabled={!loginEnabled}
+                      />
+                      <PendingBadge show={isFieldPending('mobileScannerStretchToFit')} />
+                    </Group>
+                  </div>
+                </>
+              )}
+            </Stack>
+          </Collapse>
         </Stack>
       </Paper>
 

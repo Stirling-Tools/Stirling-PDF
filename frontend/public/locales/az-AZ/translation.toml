@@ -1,8 +1,11 @@
 unsavedChanges = "PDF-də saxlanmamış dəyişiklikləriniz var."
+pendingRedactionsTitle = "Tətbiq olunmamış məxfiləşdirmələr"
+pendingRedactions = "Tətbiq olunmamış məxfiləşdirmələriniz var; onlar itiriləcək."
 areYouSure = "Çıxmaq istədiyinizə əminsiniz?"
 unsavedChangesTitle = "Saxlanmamış dəyişikliklər"
 keepWorking = "İşə davam et"
 discardChanges = "Ləğv et və çıx"
+discardRedactions = "İmtina et və çıx"
 applyAndContinue = "Saxla və çıx"
 exportAndContinue = "İxrac et və davam et"
 cancel = "Ləğv et"
@@ -303,6 +306,7 @@ selectOperation = "Əməliyyat seç"
 addOperationButton = "Əməliyyat əlavə et"
 pipelineHeader = "Boru xətti:"
 saveButton = "Endir"
+saveForFolderScanning = "Qovluq skanı üçün saxla"
 validateButton = "Doğrula"
 
 [enterpriseEdition]
@@ -340,6 +344,10 @@ advance = "Qabaqcıl"
 edit = "Bax & Redaktə et"
 popular = "Populyar"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Seçimlər"
 
@@ -360,6 +368,7 @@ advanced = "Qabaqcıl"
 title = "Təhlükəsizlik və Autentifikasiya"
 security = "Təhlükəsizlik"
 connections = "Bağlantılar"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Lisenziyalaşdırma və Analitika"
@@ -434,6 +443,32 @@ currentVersion = "Cari versiya"
 latestVersion = "Ən son versiya"
 checkForUpdates = "Yeniləmələri yoxla"
 viewDetails = "Ətraflı bax"
+serverNeedsUpdate = "Server administrator tərəfindən yenilənməlidir"
+
+[settings.general.versionInfo]
+title = "Versiya məlumatı"
+description = "Masaüstü və server versiya detalları"
+desktop = "Masaüstü versiyası"
+server = "Server versiyası"
+
+[settings.security]
+title = "Təhlükəsizlik"
+description = "Hesabınızı təhlükəsiz saxlamaq üçün parolunuzu yeniləyin."
+
+[settings.security.password]
+subtitle = "Parolunuzu dəyişin. Yenilədikdən sonra çıxış ediləcəksiniz."
+required = "Bütün sahələr tələb olunur."
+mismatch = "Yeni parollar uyğun gəlmir."
+error = "Parolu yeniləmək mümkün olmadı. Cari parolunuzu yoxlayın və yenidən cəhd edin."
+success = "Parol uğurla yeniləndi. Zəhmət olmasa yenidən daxil olun."
+ssoDisabled = "Parol dəyişiklikləri kimlik təminatçınız tərəfindən idarə olunur."
+current = "Cari parol"
+currentPlaceholder = "Cari parolunuzu daxil edin"
+new = "Yeni parol"
+newPlaceholder = "Yeni parol daxil edin"
+confirm = "Yeni parolu təsdiqləyin"
+confirmPlaceholder = "Yeni parolunuzu yenidən daxil edin"
+update = "Parolu yenilə"
 
 [settings.hotkeys]
 title = "Klaviatura qısayolları"
@@ -488,11 +523,16 @@ low = "Aşağı"
 title = "Məlumatları dəyişdirin"
 header = "Hesab Məlumatlarınızı Yeniləyin"
 changePassword = "Siz standart giriş məlumatlarından istifadə edirsiniz. Zəhmət olmasa, yeni şifr daxil edin"
+ssoManaged = "Hesabınız kimlik təminatçınız tərəfindən idarə olunur."
 newUsername = "Yeni İstifadəçi Adı"
 oldPassword = "Cari Şifr"
 newPassword = "Yeni Şifr"
 confirmNewPassword = "Yeni Şifri Təsdiqləyin"
 submit = "Dəyişiklikləri Təsdiqlə"
+credsUpdated = "Hesab yeniləndi"
+description = "Dəyişikliklər yadda saxlanıldı. Zəhmət olmasa yenidən daxil olun."
+error = "İstifadəçi adını yeniləmək mümkün olmadı. Zəhmət olmasa parolunuzu yoxlayın və yenidən cəhd edin."
+changeUsername = "İstifadəçi adınızı yeniləyin. Yenilədikdən sonra çıxış ediləcəksiniz."
 
 [account]
 title = "Hesab Parametrləri"
@@ -500,6 +540,8 @@ accountSettings = "Hesab Parametrləri"
 adminSettings = "Admin Paramterləri - İstifadəçilər Əlavə Et və Onlara Bax"
 userControlSettings = "İstifadəçi İdarəetmə Parametrləri"
 changeUsername = "İstifadəçi Adını Dəyiş"
+changeUsernameDescription = "İstifadəçi adınızı yeniləyin. Yenilədikdən sonra çıxış ediləcəksiniz."
+newUsernamePlaceholder = "Yeni istifadəçi adınızı daxil edin"
 newUsername = "Yeni İstifadəçi Adı"
 password = "Təsdiqləmə Şifri"
 oldPassword = "Keçmiş Şifr"
@@ -514,6 +556,30 @@ property = "Xüsusiyyət"
 webBrowserSettings = "Veb Brauzer Parametrləri"
 syncToBrowser = "Hesabı Sinxronlaşdır -> Brauzer"
 syncToAccount = "Hesabı Sinxronlaşdır <- Brauzer"
+
+[account.mfa]
+title = "İki faktorlu doğrulama"
+setupFailed = "İki faktorlu doğrulamanın quraşdırılmasına başlamaq mümkün olmadı. Zəhmət olmasa yenidən cəhd edin."
+codeRequired = "Davam etmək üçün doğrulama kodunu daxil edin."
+enabled = "İki faktorlu doğrulama aktiv edildi."
+enableFailed = "İki faktorlu doğrulamanı aktiv etmək mümkün olmadı. Kodu yoxlayın və yenidən cəhd edin."
+disabled = "İki faktorlu doğrulama deaktiv edildi."
+disableFailed = "İki faktorlu doğrulamanı deaktiv etmək mümkün olmadı. Kodu yoxlayın və yenidən cəhd edin."
+description = "Hesabınıza əlavə təhlükəsizlik qatı əlavə edin."
+enableButton = "İki faktorlu doğrulamanı aktiv et"
+disableButton = "İki faktorlu doğrulamanı deaktiv et"
+setupTitle = "İki faktorlu doğrulamanı quraşdırın"
+setupDescription = "Doğrulama tətbiqinizlə QR kodunu skan edin, sonra təsdiqləmək üçün 6 rəqəmli kodu daxil edin."
+manualKey = "Əl ilə quraşdırma açarı"
+secretWarning = "Bu açarı məxfi saxlayın. Girişi olan hər kəs etibarlı doğrulama kodları yarada bilər."
+codePlaceholder = "6 rəqəmli kodu daxil edin"
+confirmEnable = "Aktiv et"
+disableTitle = "İki faktorlu doğrulamanı deaktiv et"
+disableDescription = "İki faktorlu doğrulamanı deaktiv etmək üçün etibarlı doğrulama kodunu daxil edin."
+codeLabel = "Doğrulama kodu"
+confirmDisable = "Deaktiv et"
+ssoDescription = "Single sign-on hesabları üçün iki faktorlu doğrulama şəxsiyyət provayderiniz tərəfindən idarə olunur."
+ssoManaged = "MFA-nı şəxsiyyət provayderiniz vasitəsilə konfiqurasiya edin."
 
 [adminUserSettings]
 title = "İstifadəçi İdarəetmə Parametrləri"
@@ -708,6 +774,11 @@ tags = "imza,avtoqraf"
 title = "İmzala"
 desc = "Mətn, şəkil və ya əllə çəkmə üsulu ilə PDF-ə imza əlavə edir"
 
+[home.annotate]
+tags = "annotasiya,vurğulama,çəkmə"
+title = "Annotasiya"
+desc = "Vurğulayın, çəkin, qeydlər və fiqurlar əlavə edin görüntüləyicidə"
+
 [home.flatten]
 tags = "sadələşdir,sil,interaktiv"
 title = "Sadələşdir"
@@ -879,6 +950,7 @@ title = "Say/Ölçüyə Əsasən Avtomatik Ayır"
 desc = "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Rəngi əvəz et və invert et"
 desc = "PDF sənədlərində rəngləri əvəz edin və ya invert edin"
 
@@ -893,18 +965,22 @@ title = "Avtomatik qovluq skanı"
 desc = "Avtomatlaşdırılmış qovluq skan təlimatına keçid"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO təlimatı"
 desc = "SSO təlimatına keçid"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Şəbəkəsiz quraşdırma"
 desc = "Təcrid edilmiş quraşdırma təlimatına keçid"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Şifr Əlavə Et"
 desc = "Sənədini şifr ilə kilidlə."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "İcazələri Dəyişdir"
 desc = "Sənəd məhdudiyyətlərini və icazələrini dəyişin"
 
@@ -914,12 +990,14 @@ title = "Avtomatlaşdır"
 desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları qurun. Təkrarlanan tapşırıqlar üçün idealdır."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Bir PDF-i digərinin üstünə qoyur"
 title = "Üst-Üstə Qoy"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Mətn Redaktoru"
-desc = "PDF-lərin içindəki mövcud mətn və şəkilləri redaktə edin"
+desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
 
 [home.addText]
 tags = "mətn,şərh,etiket"
@@ -930,6 +1008,7 @@ desc = "PDF faylınıza istənilən yerə mətn əlavə edin"
 addFiles = "Fayllar əlavə et"
 uploadFromComputer = "Kompüterdən yüklə"
 openFromComputer = "Komputerdən aç"
+mobileUpload = "Mobil cihazdan yüklə"
 
 [viewPdf]
 tags = "bax,oxu,sitat götür,mətn,şəkil"
@@ -1217,7 +1296,10 @@ downloadHtml = "PDF əvəzinə ara HTML faylını endir"
 pdfaOptions = "PDF/A seçimləri"
 outputFormat = "Çıxış formatı"
 pdfaNote = "PDF/A-1b daha uyğundur, PDF/A-2b daha çox funksiyanı dəstəkləyir."
+pdfaFormat = "PDF/A formatı"
 pdfaDigitalSignatureWarning = "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
+pdfxDigitalSignatureWarning = "PDF rəqəmsal imza ehtiva edir. Bu imza növbəti addımda silinəcək."
+pdfxDescription = "PDF/X etibarlı çap və qrafika mübadiləsi üçün ISO standartlı PDF alt dəstidir."
 fileFormat = "Fayl formatı"
 wordDoc = "Word sənədi"
 wordDocExt = "Word sənədi (.docx)"
@@ -1245,6 +1327,37 @@ cbzOptions = "CBZ to PDF seçimləri"
 optimizeForEbook = "PDF-i e-oxuyucular üçün optimallaşdır (Ghostscript istifadə olunur)"
 cbzOutputOptions = "PDF to CBZ seçimləri"
 cbzDpi = "Şəkil göstərilməsi üçün DPI"
+cbrOptions = "CBR seçimləri"
+cbrOutputOptions = "PDF-dən CBR-ə seçimlər"
+cbrDpi = "Şəkil göstərilməsi üçün DPI"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "eBook-dan PDF-ə seçimlər"
+ebookOptionsDesc = "eBook-ları PDF-ə çevirmə üçün seçimlər"
+embedAllFonts = "Bütün şriftləri daxil et"
+embedAllFontsDesc = "eBook-dakı bütün şriftləri yaradılan PDF-ə daxil et"
+includeTableOfContents = "Mündəricatı daxil et"
+includeTableOfContentsDesc = "Nəticə PDF-ə yaradılmış mündəricat əlavə edin"
+includePageNumbers = "Səhifə nömrələrini daxil et"
+includePageNumbersDesc = "Yaradılan PDF-ə səhifə nömrələri əlavə edin"
+optimizeForEbookPdf = "eBook oxuyucular üçün optimallaşdır"
+optimizeForEbookPdfDesc = "PDF-i eBook oxuma üçün optimallaşdır (kiçik fayl ölçüsü, eInk cihazlarda daha yaxşı göstərmə)"
+
+[convert.epubOptions]
+epubOptions = "PDF-dən eBook-a seçimlər"
+epubOptionsDesc = "PDF-i EPUB/AZW3-ə çevirmə üçün seçimlər"
+detectChapters = "Fəsilləri aşkar et"
+detectChaptersDesc = "Fəsilə bənzər başlıqları aşkar edib EPUB səhifə qırılmaları əlavə et"
+targetDevice = "Hədəf cihaz"
+targetDeviceDesc = "Oxuyucu cihaz üçün optimallaşdırılmış çıxış profilini seçin"
+outputFormat = "Çıxış formatı"
+outputFormatDesc = "eBook üçün çıxış formatını seçin"
+tabletPhone = "Planşet/Telefon (şəkillərlə)"
+kindleEink = "Kindle e-Ink (mətn üçün optimallaşdırılıb)"
 
 [imageToPdf]
 tags = "çevirmə,şəkil,jpg,fotoşəkil,foto"
@@ -1322,6 +1435,7 @@ applySignatures = "Şəkilləri tətbiq et"
 name = "Şəkil"
 placeholder = "Şəkil yükləyin"
 label = "Şəkil faylı"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Şəkili tənzimlə"
@@ -1361,6 +1475,11 @@ header = "Add attachments"
 add = "Əlavə et"
 remove = "Əlavəni sil"
 embed = "Əlavəni yerləşdir"
+convertToPdfA3b = "PDF/A-3b-ə çevir"
+convertToPdfA3bDescription = "Daxil edilmiş qoşmalarla arxivləmə üçün PDF yaradır"
+convertToPdfA3bTooltip = "PDF/A-3b uzunmüddətli saxlanmanı təmin edən arxiv formatıdır. Qoşma kimi istənilən fayl formatlarının əlavə edilməsinə imkan verir. Çevirmə üçün Ghostscript tələb olunur və böyük fayllar üçün daha uzun çəkə bilər."
+convertToPdfA3bTooltipHeader = "PDF/A-3b çevirməsi haqqında"
+convertToPdfA3bTooltipTitle = "Nə edir"
 submit = "Add attachments"
 
 [watermark]
@@ -2113,6 +2232,16 @@ tip = "Hazırda Birdən Çox Giriş Üçün İşləmir"
 outputFormat = "Çıxış Formatı"
 pdfWithDigitalSignature = "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
 
+[pdfToPDFX]
+tags = "çap,standart,çevrilmə,istehsal,prepress,arxiv"
+title = "PDF-dən PDF/X-ə"
+header = "PDF-dən PDF/X-ə"
+credit = "Bu xidmət PDF/X çevrilməsi üçün Ghostscript-dən istifadə edir"
+submit = "Çevir"
+tip = "Hazırda eyni anda bir neçə girişi dəstəkləmir"
+outputFormat = "Çıxış formatı"
+pdfWithDigitalSignature = "PDF rəqəmsal imza ehtiva edir. Bu imza növbəti addımda silinəcək."
+
 [PDFToWord]
 tags = "doc,docx,odt,word,dəyişmə,format,çevirmə,ofis,microsoft,docfile"
 title = "PDF-i Word-ə"
@@ -2306,6 +2435,10 @@ saved = "Saxlanmış"
 label = "İmza şəklini yüklə"
 placeholder = "Şəkil faylı seç"
 hint = "İmzanızın PNG və ya JPG şəklini yükləyin"
+removeBackground = "Ağ arxa fonu sil (şəffaf et)"
+processing = "Şəkil emal edilir..."
+backgroundRemovalFailedTitle = "Arxa fonun silinməsi alınmadı"
+backgroundRemovalFailedMessage = "Şəkildən arxa fonu silmək mümkün olmadı. Əvəzində orijinal şəkildən istifadə ediləcək."
 
 [sign.instructions]
 title = "İmza necə əlavə olunur"
@@ -2350,6 +2483,11 @@ note = "Yastılaşdırma PDF-dəki interaktiv elementləri silir və onları red
 [flatten.options.flattenOnlyForms]
 label = "Yalnız formaları düzəldin"
 desc = "Yalnız forma sahələrini yastılaşdırın, digər interaktiv elementlər toxunulmaz qalsın"
+
+[flatten.renderDpi]
+label = "Render DPI-si (ixtiyari, tövsiyə 150 DPI)"
+help = "Sistem susmaya görə dəyərini istifadə etmək üçün boş buraxın. Yüksək DPI çıxışı kəskinləşdirir, lakin emal vaxtını və fayl ölçüsünü artırır."
+placeholder = "məs. 150"
 
 [flatten.results]
 title = "Yastılaşdırma nəticələri"
@@ -2925,6 +3063,7 @@ header = "Pdf-ləri Kəs"
 submit = "Təsdiq Et"
 noFileSelected = "Kəsməyə başlamaq üçün bir PDF faylı seçin"
 reset = "Tam PDF-ə sıfırla"
+autoCrop = "Boşluqları avtomatik qırp"
 
 [crop.preview]
 title = "Kəsmə sahəsinin seçimi"
@@ -3059,6 +3198,18 @@ other = "Digər"
 perPageInfo = "Hər səhifə üzrə məlumat"
 tableOfContents = "Mündəricat"
 
+[getPdfInfo.compliance]
+notDetected = "Aşkarlanmadı"
+passed = "Keçdi"
+failed = "Keçmədi"
+compliant = "Uyğun"
+nonCompliant = "Uyğun deyil"
+none = "Heç bir standart aşkarlanmadı"
+passedCount = "keçdi"
+failedCount = "keçmədi"
+noVerification = "Yoxlama aparılmadı"
+noVerificationDesc = "Bu sənəd üçün PDF standartlarına uyğunluq yoxlanılmadı."
+
 [getPdfInfo.other]
 attachments = "Əlavələr"
 embeddedFiles = "Gömülü fayllar"
@@ -3090,6 +3241,8 @@ permsRestricted = "{{count}} məhdudiyyət"
 permsMixed = "Bəzi icazələr məhdudlaşdırılıb"
 hasCompliance = "Uyğunluq standartları mövcuddur"
 noCompliance = "Uyğunluq standartları yoxdur"
+compliancePassed = "{{standards}} uyğundur"
+complianceChecked = "Standartlar yoxlanıldı ({{failed}} keçmədi)"
 basic = "Əsas Məlumat"
 documentInfo = "Sənəd Məlumatı"
 securityTitle = "Təhlükəsizlik Vəziyyəti"
@@ -3155,6 +3308,7 @@ title = "Məxfiləşdirmə üsulu"
 mode = "Rejim"
 automatic = "Avtomatik"
 automaticDesc = "Axtarış terminlərinə əsasən mətni məxfiləşdirin"
+automaticDisabledTooltip = "Birdən çox faylı birdən məxfiləşdirmək üçün fayl idarəçisində faylları seçin"
 manual = "Əl ilə"
 manualDesc = "Müəyyən sahələri məxfiləşdirmək üçün klikləyin və sürüşdürün"
 manualComingSoon = "Əl ilə məxfiləşdirmə tezliklə"
@@ -3225,8 +3379,35 @@ text = "Yalnız tam sözlərə uyğun gəlsin, qismən uyğunluqları tutmasın.
 title = "PDF-Image-ə çevir"
 text = "Məxfiləşdirmədən sonra PDF-i şəkil əsaslı PDF-ə çevirir. Bu, məxfiləşdirmə qutularının arxasındakı mətnin tamamilə silinib bərpaolunmaz olmasını təmin edir."
 
+[redact.tooltip.manual.header]
+title = "Əl ilə məxfiləşdirmə idarələri"
+
+[redact.tooltip.manual.markText]
+title = "Mətni işarələmə aləti"
+text = "Məxfiləşdirmək üçün mətni PDF üzərində birbaşa seçin. Məxfiləşdirmək istədiyiniz konkret mətni vurğulamaq üçün klikləyib sürüşdürün."
+
+[redact.tooltip.manual.markArea]
+title = "Sahəni işarələmə aləti"
+text = "Məxfiləşdirmə üçün PDF üzərində düzbucaqlı sahələr çəkin. Şəkillər, imzalar və ya nizamsız fiqurları məxfiləşdirmək üçün faydalıdır."
+
+[redact.tooltip.manual.apply]
+title = "Məxfiləşdirmələri tətbiq et"
+text = "Məzmunu işarələdikdən sonra 'Tətbiq et' düyməsinə klikləyin ki, bütün işarəli sahələr daimi məxfiləşdirilsin. Gözləyən say neçə məxfiləşdirmənin tətbiqə hazır olduğunu göstərir."
+bullet1 = "Tətbiq etməzdən əvvəl lazım olduğu qədər sahə işarələyin"
+bullet2 = "Bütün gözləyən məxfiləşdirmələr eyni anda tətbiq olunur"
+bullet3 = "Tətbiqdən sonra məxfiləşdirmələri geri qaytarmaq olmur"
+
 [redact.manual]
+title = "Məxfiləşdirmə alətləri"
+instructions = "Məxfiləşdirmə üçün məzmunu işarələmək məqsədilə PDF-də mətn seçin və ya sahələr çəkin."
+markText = "Mətni işarələ"
+markArea = "Sahəni işarələ"
+pendingLabel = "Gözləyir:"
+applyWarning = "⚠️ Daimi tətbiqdir, geri qaytarıla bilməz və altındakı məlumat silinəcək"
+apply = "Tətbiq et"
+noMarks = "Məxfiləşdirmə işarələri yoxdur. Məxfiləşdirmək üçün yuxarıdakı alətlərdən istifadə edin."
 header = "Əl ilə məxfiləşdirmə"
+controlsTitle = "Əl ilə məxfiləşdirmə idarələri"
 textBasedRedaction = "Mətn əsaslı məxfiləşdirmə"
 pageBasedRedaction = "Səhifə əsaslı məxfiləşdirmə"
 convertPDFToImageLabel = "PDF-i PDF-Image-ə çevir (Qutunun arxasındakı mətni silmək üçün istifadə olunur)"
@@ -3341,6 +3522,19 @@ placeholder = "Üfüqi bölmələrin sayını daxil edin"
 [split-by-sections.vertical]
 label = "Şaquli bölmələr"
 placeholder = "Şaquli bölmələrin sayını daxil edin"
+
+[split-by-sections.splitMode]
+label = "Bölmə rejimi"
+description = "Səhifələri necə bölmək istədiyinizi seçin"
+splitAll = "Bütün səhifələri böl"
+splitAllExceptFirst = "Birincidən başqa hamısını böl"
+splitAllExceptLast = "Sonuncudan başqa hamısını böl"
+splitAllExceptFirstAndLast = "Birinci və sonuncudan başqa hamısını böl"
+custom = "Fərdi səhifələr"
+
+[split-by-sections.customPages]
+label = "Fərdi səhifə nömrələri"
+placeholder = "məs. 2,4,6"
 
 [AddStampRequest]
 tags = "Möhür, Şəkil əlavə et, şəkli ortala, Watermark, PDF, Embed, Fərdiləşdir"
@@ -3588,6 +3782,13 @@ passwordChangedSuccess = "Parol uğurla dəyişdirildi! Zəhmət olmasa yeni par
 credentialsUpdated = "Giriş məlumatlarınız yeniləndi. Zəhmət olmasa yenidən daxil olun."
 defaultCredentials = "Standart giriş məlumatları"
 changePasswordWarning = "İlk dəfə daxil olduqdan sonra şifrənizi dəyişin"
+mfaRequired = "İki faktorlu doğrulama kodu tələb olunur"
+mfaCode = "Doğrulama kodu"
+enterMfaCode = "6 rəqəmli kodu daxil edin"
+mfaPromptTitle = "İki faktorlu doğrulama"
+mfaPromptBody = "Davam etmək üçün doğrulama tətbiqinizdən doğrulama kodunu daxil edin."
+verifyingMfa = "Yoxlanılır..."
+verifyMfa = "Kodu doğrula"
 
 [login.slides.overview]
 alt = "Stirling PDF icmalı"
@@ -3703,6 +3904,19 @@ filesize = "Fayl Ölçüsü"
 [compress.grayscale]
 label = "Sıxma üçün Boz Rəng Tətbiq Edin"
 
+[compress.linearize]
+label = "Sürətli veb görüntüləmə üçün PDF-i linearlaşdır"
+
+[compress.lineArt]
+label = "Şəkilləri xətt qrafikasına çevir"
+description = "Maksimum ölçü azaldılması üçün ImageMagick istifadə edərək səhifələri yüksək kontrastlı ağ-qara edir."
+unavailable = "ImageMagick bu serverdə quraşdırılmayıb və ya aktiv deyil"
+detailLevel = "Detallar səviyyəsi"
+edgeEmphasis = "Kənar vurğulaması"
+edgeLow = "Yumşaq"
+edgeMedium = "Balanslı"
+edgeHigh = "Güclü"
+
 [compress.tooltip.header]
 title = "Sıxma ayarlarına ümumi baxış"
 
@@ -3720,6 +3934,10 @@ bullet2 = "Yüksək dəyərlər fayl ölçüsünü azaldır"
 title = "Boz tonlama"
 text = "Bütün şəkilləri ağ-qara çevirmək üçün bu seçimi seçin; xüsusilə skan edilmiş PDF-lər və ya şəkil çox olan sənədlər üçün fayl ölçüsünü əhəmiyyətli dərəcədə azalda bilər."
 
+[compress.tooltip.lineArt]
+title = "Xətt qrafikası"
+text = "ImageMagick vasitəsilə səhifələri yüksək kontrastlı ağ-qara rəngə çevirir. Detallar səviyyəsi ilə nə qədər məzmunun qara olacağını, kənar vurğulaması ilə isə kənarların nə dərəcədə aqressiv aşkarlanacağını idarə edin."
+
 [compress.error]
 failed = "PDF sıxılarkən xəta baş verdi."
 
@@ -3731,6 +3949,11 @@ failed = "PDF sıxılarkən xəta baş verdi."
 [compress.selectText.1]
 _value = "Sıxma ayarları"
 1 = "1-3 PDF sıxılması,</br> 4-6 yüngül şəkil sıxması,</br> 7-9 güclü şəkil sıxması Şəkil keyfiyyətini əhəmiyyətli dərəcədə azaldacaq"
+
+[compress.compressionLevel]
+range1to3 = "Aşağı dəyərlər keyfiyyəti qoruyur, lakin daha böyük fayl ölçüsü yaradır"
+range4to6 = "Orta sıxma, orta keyfiyyət azalması ilə"
+range7to9 = "Yüksək dəyərlər fayl ölçüsünü əhəmiyyətli dərəcədə azaldır, lakin şəkil aydınlığını azalda bilər"
 
 [decrypt]
 passwordPrompt = "Bu fayl parol ilə qorunub. Zəhmət olmasa parolu daxil edin:"
@@ -3971,22 +4194,97 @@ deleteSelected = "Seçilmiş səhifələri sil"
 closePdf = "PDF-i bağla"
 exportAll = "PDF-i ixrac et"
 downloadSelected = "Seçilmiş faylları yüklə"
-downloadAll = "Hamısını yüklə"
-saveAll = "Hamısını saxla"
+annotations = "Annotasiyalar"
+exportSelected = "Seçilmiş səhifələri ixrac et"
+saveChanges = "Dəyişiklikləri yadda saxla"
 toggleTheme = "Mövzunu dəyiş"
-toggleBookmarks = "Əlfəcinləri aç/bağla"
 language = "Dil"
+toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
 search = "PDF-də axtar"
 panMode = "Sürüşdürmə rejimi"
+applyRedactionsFirst = "Əvvəlcə məxfiləşdirmələri tətbiq edin"
 rotateLeft = "Sola döndər"
 rotateRight = "Sağa döndər"
 toggleSidebar = "Yan paneli aç/bağla"
-exportSelected = "Seçilmiş səhifələri ixrac et"
-toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
-annotationMode = "Annotasiya rejimini dəyiş"
+toggleBookmarks = "Əlfəcinləri aç/bağla"
 print = "PDF-i çap et"
 draw = "Rəsm çək"
+redact = "Məxfiləşdir"
+exitRedaction = "Məxfiləşdirmə rejimindən çıx"
 save = "Yadda saxla"
+downloadAll = "Hamısını yüklə"
+saveAll = "Hamısını saxla"
+
+[textAlign]
+left = "Sol"
+center = "Mərkəz"
+right = "Sağ"
+
+[annotation]
+title = "Annotasiya"
+desc = "Vurğulama, qələm, mətn və qeydlərdən istifadə edin. Dəyişikliklər canlı qalır — düzləndirməyə ehtiyac yoxdur."
+highlight = "Vurğula"
+pen = "Qələm"
+text = "Mətn qutusu"
+note = "Qeyd"
+rectangle = "Düzbucaqlı"
+ellipse = "Ellips"
+select = "Seç"
+exit = "Annotasiya rejimindən çıx"
+strokeWidth = "Qalınlıq"
+opacity = "Şəffaflıq"
+strokeOpacity = "Kontur şəffaflığı"
+fillOpacity = "Doldurma şəffaflığı"
+fontSize = "Şrift ölçüsü"
+chooseColor = "Rəng seçin"
+color = "Rəng"
+strokeColor = "Kontur rəngi"
+fillColor = "Doldurma rəngi"
+underline = "Altını cız"
+strikeout = "Üstündən xətt çək"
+squiggly = "Dalğalı"
+inkHighlighter = "Sərbəst vurğulayıcı"
+freehandHighlighter = "Sərbəst vurğulayıcı"
+square = "Kvadrat"
+circle = "Dairə"
+polygon = "Çoxbucaqlı"
+line = "Xətt"
+stamp = "Şəkil əlavə et"
+textMarkup = "Mətn işarələmə"
+drawing = "Rəsm"
+shapes = "Fiqurlar"
+notesStamps = "Qeydlər və möhürlər"
+settings = "Ayarlar"
+borderOn = "Kənarlıq: Açıq"
+borderOff = "Kənarlıq: Bağlı"
+editInk = "Qələmi redaktə et"
+editLine = "Xətti redaktə et"
+editNote = "Qeydi redaktə et"
+editText = "Mətn qutusunu redaktə et"
+editTextMarkup = "Mətn işarələməni redaktə et"
+editSelected = "Annotasiyanı redaktə et"
+editSquare = "Kvadratı redaktə et"
+editCircle = "Dairəni redaktə et"
+editPolygon = "Çoxbucaqlını redaktə et"
+unsupportedType = "Bu annotasiya növü redaktə üçün tam dəstəklənmir."
+textAlignment = "Mətnin hizalanması"
+noteIcon = "Qeyd ikonu"
+imagePreview = "Ön baxış"
+contents = "Mətn"
+backgroundColor = "Arxa fon rəngi"
+clearBackground = "Arxa fonu sil"
+noBackground = "Arxa fon yoxdur"
+stampSettings = "Möhür ayarları"
+savingCopy = "Endirmə hazırlanır..."
+saveFailed = "Nüsxəni saxlamaq mümkün olmadı"
+saveReady = "Endirmə hazırdır"
+selectAndMove = "Seç və redaktə et"
+editSelectDescription = "Mövcud annotasiyanın rəngini, şəffaflığını, mətnini və ya ölçüsünü redaktə etmək üçün onu klikləyin."
+editStampHint = "Şəkli dəyişmək üçün bu möhürü silin və yenisini əlavə edin."
+editSwitchToSelect = "Bu annotasiyanı redaktə etmək üçün Seç və Redaktə et rejiminə keçin."
+undo = "Geri al"
+redo = "Yenidən et"
+applyChanges = "Dəyişiklikləri tətbiq et"
 saveChanges = "Dəyişiklikləri yadda saxla"
 
 [search]
@@ -4038,12 +4336,20 @@ settings = "Ayarlar"
 adminSettings = "Admin Ayarları"
 allTools = "All Tools"
 reader = "Oxuyucu"
+tours = "Turlar"
+showMeAround = "Məni gəzdir"
+
+[quickAccess.toursTooltip]
+admin = "Bələdçiləri buradan izləyin: Alətlər turu, Yeni V2 tərtibat turu və Admin turu."
+user = "Bələdçiləri buradan izləyin: Alətlər turu və Yeni V2 tərtibat turu."
 
 [quickAccess.helpMenu]
 toolsTour = "Alətlər Turu"
 toolsTourDesc = "Alətlərin nələr etdiyini öyrənin"
 adminTour = "Admin Turu"
 adminTourDesc = "Admin ayarlarını və funksiyaları kəşf edin"
+whatsNewTour = "V2-də yeniliklərə baxın"
+whatsNewTourDesc = "Yenilənmiş tərtibat turu"
 
 [admin]
 error = "Xəta"
@@ -4062,6 +4368,8 @@ fetchError = "Ayarları yükləmək mümkün olmadı"
 saveError = "Ayarları saxlamaq mümkün olmadı"
 saved = "Ayarlar uğurla yadda saxlanıldı"
 saveSuccess = "Ayarlar uğurla yadda saxlanıldı"
+success = "Ayarlar uğurla yadda saxlanıldı"
+error = "Ayarları yadda saxlamaq mümkün olmadı"
 save = "Dəyişiklikləri yadda saxla"
 discard = "Ləğv et"
 restartRequired = "Yenidən başlatmaq tələb olunur"
@@ -4081,6 +4389,10 @@ hint = "Yadda saxlanmamış dəyişiklikləriniz var"
 title = "Giriş rejimi tələb olunur"
 message = "Admin ayarlarını dəyişmək üçün giriş rejimi aktiv olmalıdır. Zəhmət olmasa mühitinizdə SECURITY_ENABLELOGIN=true və ya settings.yml faylında security.enableLogin: true olaraq təyin edin, sonra serveri yenidən başladın."
 readOnly = "Aşağıdakı ayarlar yalnız nümunə dəyərlər üçün göstərilir. Giriş rejimini aktiv edin ki, real konfiqurasiyaya baxa və redaktə edə biləsiniz."
+
+[admin.settings.enterpriseRequired]
+title = "Enterprise lisenziyası tələb olunur"
+message = "{{featureName}} funksiyasına daxil olmaq üçün Enterprise lisenziyası tələb olunur. Siz istinad üçün demo məlumatlarına baxırsınız."
 
 [admin.settings.restart]
 title = "Yenidən başlatmaq tələb olunur"
@@ -4185,6 +4497,13 @@ description = "HTML-dən PDF-ə çevirmə üçün WeasyPrint icra faylına yol (
 label = "Unoconvert İcra faylı"
 description = "Sənəd çevirmələri üçün LibreOffice unoconvert yolunun göstərilməsi (defolt üçün boş saxlayın: /opt/venv/bin/unoconvert)"
 
+[admin.settings.general.frontendUrl]
+label = "Frontend URL"
+description = "Frontend üçün əsas URL (məs., https://pdf.example.com). E-poçt dəvət linkləri və mobil QR kod yükləmələri üçün istifadə olunur. Boş saxlayın ki, backend URL istifadə edilsin."
+
+[admin.settings.badge]
+clickToUpgrade = "Plan detalları üçün klikləyin"
+
 [admin.settings.security]
 title = "Təhlükəsizlik"
 description = "Autentifikasiya, giriş davranışı və təhlükəsizlik siyasətlərini konfiqurasiya edin."
@@ -4213,6 +4532,13 @@ description = "Hesabın bloklanmasından əvvəl maksimal uğursuz giriş cəhdl
 [admin.settings.security.loginResetTimeMinutes]
 label = "Girişi sıfırlama vaxtı (dəqiqə)"
 description = "Uğursuz giriş cəhdlərinin sıfırlanmasına qədər olan vaxt"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF mühafizəsini söndür"
@@ -4321,6 +4647,19 @@ connect = "Qoşul"
 disconnect = "Ayır"
 disconnected = "Provayder uğurla ayrıldı"
 disconnectError = "Provayderi ayırmaq alınmadı"
+mobileScannerConvertToPdf = "Şəkilləri PDF-ə çevir"
+mobileScannerConvertToPdfDesc = "Yüklənən şəkilləri avtomatik olaraq PDF formatına çevir. Deaktiv edilsə, şəkillər olduğu kimi saxlanılacaq."
+mobileScannerImageResolution = "Şəkil rezolyusiyası"
+mobileScannerImageResolutionDesc = "Yüklənən şəkillərin rezolyusiyası. \"Azaldılmış\" ölçü fayl ölçüsünü azaltmaq üçün şəkilləri maksimum 1200px-ə miqyaslayır."
+imageResolutionFull = "Tam (Orijinal ölçü)"
+imageResolutionReduced = "Azaldılmış (Maks 1200px)"
+mobileScannerPageFormat = "Səhifə formatı"
+mobileScannerPageFormatDesc = "Çevrilmiş şəkillər üçün PDF səhifə ölçüsü. \"Saxla\" orijinal şəkil ölçülərindən istifadə edir."
+pageFormatKeep = "Saxla (Orijinal ölçülər)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Səhifəyə sığdır"
+mobileScannerStretchToFitDesc = "Şəkilləri bütün səhifəni dolduracaq şəkildə uzat. Deaktiv edilsə, şəkillər nisbət qorunmaqla mərkəzləşdirilir."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO Avto Giriş"
@@ -4389,10 +4728,168 @@ description = "İlk SAML2 girişi zamanı istifadəçi hesablarını avtomatik y
 label = "Qeydiyyatı blokla"
 description = "SAML2 vasitəsilə yeni istifadəçi qeydiyyatının qarşısını al"
 
+[admin.settings.connections.mobileScanner]
+label = "Mobil telefondan yükləmə"
+enable = "QR kod yükləməsini aktiv et"
+description = "İstifadəçilərə QR kodu skan edərək mobil cihazlardan fayl yükləməyə icazə verin"
+note = "Qeyd: Frontend URL konfiqurasiyası tələb olunur. "
+link = "Sistem ayarlarında konfiqurasiya et"
+mobileScannerConvertToPdf = "Şəkilləri PDF-ə çevir"
+mobileScannerConvertToPdfDesc = "Yüklənən şəkilləri avtomatik olaraq PDF formatına çevir. Deaktiv edilsə, şəkillər olduğu kimi saxlanılacaq."
+mobileScannerImageResolution = "Şəkil rezolyusiyası"
+mobileScannerImageResolutionDesc = "Yüklənən şəkillərin rezolyusiyası. \"Azaldılmış\" ölçü fayl ölçüsünü azaltmaq üçün şəkilləri maksimum 1200px-ə miqyaslayır."
+imageResolutionFull = "Tam (Orijinal ölçü)"
+imageResolutionReduced = "Azaldılmış (Maks 1200px)"
+mobileScannerPageFormat = "Səhifə formatı"
+mobileScannerPageFormatDesc = "Çevrilmiş şəkillər üçün PDF səhifə ölçüsü. \"Saxla\" orijinal şəkil ölçülərindən istifadə edir."
+pageFormatKeep = "Saxla (Orijinal ölçülər)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Səhifəyə sığdır"
+mobileScannerStretchToFitDesc = "Şəkilləri bütün səhifəni dolduracaq şəkildə uzat. Deaktiv edilsə, şəkillər nisbət qorunmaqla mərkəzləşdirilir."
+
+[admin.settings.telegram]
+title = "Telegram botu"
+description = "Telegram bot bağlantısını, giriş nəzarətlərini və geribildirim davranışını konfiqurasiya edin."
+
+[admin.settings.telegram.enabled]
+label = "Telegram botunu aktiv et"
+description = "İstifadəçilərin Stirling PDF ilə konfiqurasiya etdiyiniz Telegram botu vasitəsilə qarşılıqlı əlaqə qurmasına icazə verin."
+
+[admin.settings.telegram.botUsername]
+label = "Bot istifadəçi adı"
+description = "Telegram botunuzun ictimai istifadəçi adı."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "Telegram botunuz üçün BotFather tərəfindən verilmiş API tokeni."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Gələnlər qovluğu"
+description = "Gələn Telegram fayllarının saxlanıldığı pipeline qovluğu altındakı qovluq."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Fərdi qovluq sonluğu istifadə et"
+description = "Yükləmələri hər söhbət üçün təcrid etmək üçün gələn fayl qovluqlarına söhbət ID-sini əlavə et."
+
+[admin.settings.telegram.accessControl]
+title = "Girişə nəzarət"
+description = "Bot ilə hansı istifadəçi və ya kanalların qarşılıqlı əlaqədə ola biləcəyini məhdudlaşdırın."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Xüsusi istifadəçi ID-lərinə icazə ver"
+description = "Aktiv edildikdə, yalnız siyahıdakı istifadəçi ID-ləri botdan istifadə edə bilər."
+
+[admin.settings.telegram.allowUserIDs]
+label = "İcazə verilmiş istifadəçi ID-ləri"
+description = "Bot ilə qarşılıqlı əlaqəyə icazə verilən Telegram istifadəçi ID-lərini daxil edin."
+placeholder = "İstifadəçi ID əlavə edin və enter basın"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Xüsusi kanal ID-lərinə icazə ver"
+description = "Aktiv edildikdə, yalnız siyahıdakı kanal ID-ləri botdan istifadə edə bilər."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "İcazə verilmiş kanal ID-ləri"
+description = "Bot ilə qarşılıqlı əlaqəyə icazə verilən Telegram kanal ID-lərini daxil edin."
+placeholder = "Kanal ID əlavə edin və enter basın"
+
+[admin.settings.telegram.processing]
+title = "Emal"
+description = "Telegram yükləmələri üçün sorğu intervallarını və emal vaxtı limitlərini idarə edin."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Emal vaxt limiti (saniyə)"
+description = "Xətanı bildirməzdən əvvəl emal işini gözləmək üçün maksimum vaxt."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Sorğu intervalı (ms)"
+description = "Yeni Telegram yeniləmələrini yoxlama arasındakı interval."
+
+[admin.settings.telegram.feedback]
+title = "Geribildirim mesajları"
+description = "Botun istifadəçilərə və kanallara nə vaxt geribildirim göndərməli olduğunu seçin."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Geribildirimi aktiv et"
+description = "Botun ümumiyyətlə geribildirim mesajları göndərib-göndərməməsinə nəzarət edin."
+
+[admin.settings.telegram.feedback.channel]
+title = "Kanal geribildirim qaydaları"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "\"No valid document\" göstərin (Kanal)"
+description = "Kanal yükləmələri üçün 'keçərli sənəd yoxdur' cavabını susdurun."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Emal xətalarını göstərin (Kanal)"
+description = "Emal xətası mesajlarını kanallara göndərin."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Xəta mesajlarını göstərin (Kanal)"
+description = "Kanallar üçün ətraflı xəta mesajlarını göstərin."
+
+[admin.settings.telegram.feedback.user]
+title = "İstifadəçi geribildirim qaydaları"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "\"No valid document\" göstərin (İstifadəçi)"
+description = "İstifadəçi yükləmələri üçün 'keçərli sənəd yoxdur' cavabını susdurun."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Emal xətalarını göstərin (İstifadəçi)"
+description = "Emal xətası mesajlarını istifadəçilərə göndərin."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Xəta mesajlarını göstərin (İstifadəçi)"
+description = "İstifadəçilər üçün ətraflı xəta mesajlarını göstərin."
+
 [admin.settings.database]
 title = "Məlumat Bazası"
 description = "Müəssisə yerləşdirmələri üçün fərdi məlumat bazası bağlantı ayarlarını konfiqurasiya edin."
 configuration = "Məlumat Bazası Konfiqurasiyası"
+backupTitle = "Ehtiyat nüsxələr və Bərpa"
+backupDescription = "H2 ehtiyat nüsxələrini birbaşa admin konsolundan idarə edin."
+loadError = "Məlumat bazası ehtiyat nüsxələrini yükləmək alınmadı"
+backupCreated = "Ehtiyat nüsxə uğurla yaradıldı"
+backupFailed = "Ehtiyat nüsxə yaratmaq alınmadı"
+deleteTitle = "Ehtiyat nüsxəni sil"
+deleteConfirm = "Bu ehtiyat nüsxəni silmək istəyirsiniz? Bu əməliyyat geri alına bilməz."
+deleteSuccess = "Ehtiyat nüsxə silindi"
+deleteFailed = "Ehtiyat nüsxəni silmək alınmadı"
+deleteConfirmAction = "Ehtiyat nüsxəni sil"
+downloadFailed = "Ehtiyat nüsxəni endirmək alınmadı"
+version = "H2 Versiyası"
+embedded = "Gömülü H2"
+external = "Xarici DB"
+h2Only = "Ehtiyat nüsxələr yalnız gömülü H2 məlumat bazası üçün mövcuddur."
+h2Hint = "Ehtiyat nüsxə və bərpanı aktivləşdirmək üçün məlumat bazası növünü H2 olaraq təyin edin və xüsusi məlumat bazasını söndürün."
+manageBackups = "Ehtiyat nüsxələri idarə et"
+refresh = "Yenilə"
+createBackup = "Ehtiyat nüsxə yarat"
+uploadTitle = "Yüklə və idxal et"
+chooseFile = ".sql ehtiyat nüsxə faylı seçin"
+importFromUpload = "Yüklənəni idxal et"
+confirmImportTitle = "Məlumat bazasının idxalını təsdiqlə"
+overwriteWarning = "Xəbərdarlıq: Bu, cari məlumat bazasının üzərinə yazacaq."
+overwriteWarningBody = "Mövcud bütün məlumatlar yüklənən ehtiyat nüsxə ilə əvəz olunacaq. Bu əməl geri alına bilməz."
+confirmCodeLabel = "Davam etmək üçün təsdiq kodunu daxil edin"
+enterCode = "Yuxarıda göstərilən kodu daxil edin"
+confirmImport = "İdxalı təsdiqlə"
+codeMismatch = "Təsdiq kodu uyğun gəlmir"
+codeMismatchBody = "Davam etmək üçün kodu göstərildiyi kimi daxil edin."
+selectFile = "İdxal üçün .sql faylı seçin"
+importSuccess = "Ehtiyat nüsxə uğurla idxal edildi"
+importFailed = "Ehtiyat nüsxənin idxalı alınmadı"
+noBackups = "Hələ ehtiyat nüsxə tapılmadı."
+unavailable = "Cari məlumat bazası konfiqurasiyası üçün ehtiyat nüsxə siyahısı əlçatan deyil."
+fileName = "Fayl"
+created = "Yaradılma"
+size = "Ölçü"
+actions = "Əməliyyatlar"
+download = "Endir"
+import = "İdxal et"
+delete = "Sil"
 
 [admin.settings.database.enableCustom]
 label = "Fərdi Məlumat Bazasını aktiv et"
@@ -4470,6 +4967,26 @@ description = "Şəkil emalı üçün maksimal DPI (0 = limitsiz)"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata Qovluğu"
 description = "OCR dil faylları üçün tessdata qovluğuna yol"
+downloadMissingTitle = "Heç bir dil seçilməyib"
+downloadMissingBody = "Endirmək üçün ən azı bir dil seçin, zəhmət olmasa."
+downloadSuccessTitle = "Dillər endirildi"
+downloadSuccessBody = "Seçilmiş tessdata dilləri yadda saxlanıldı."
+downloadErrorTitle = "Endirmə alınmadı"
+loadingLanguages = "Quraşdırılmış tessdata dilləri yüklənir..."
+installedLanguages = "Quraşdırılmış tessdata dilləri"
+noLanguages = "Konfiqurasiya edilmiş qovluqda tessdata dilləri tapılmadı."
+downloadLabel = "Əlavə tessdata dillərini endir"
+downloadPlaceholder = "Dilləri seçin"
+downloadNothingFound = "Əlavə dillər tapılmadı"
+permissionNotice = "tessdata yolu yazıla bilən deyil. Endirmələr brauzerdə açılacaq; .traineddata fayllarını əl ilə tessdata qovluğuna yadda saxlayın."
+manualLinks = "Əl ilə endirmələr: keçidlərə klikləyin və faylları tessdata qovluğuna yerləşdirin."
+downloadButton = "Seçilmiş dilləri endir"
+downloadInvalidTitle = "Etibarsız seçim"
+downloadInvalidBody = "Seçilən dillərin bəziləri endirmə üçün əlçatan deyil. Zəhmət olmasa yeniləyin və siyahıdan seçin."
+downloadErrorNetwork = "Şəbəkə xətasına görə endirmə alınmadı. Bağlantınızı yoxlayın və yenidən cəhd edin."
+downloadErrorServer = "tessdata dillərini endirərkən server xətası baş verdi. Zəhmət olmasa bir az sonra yenidən cəhd edin."
+downloadErrorPermission = "tessdata qovluğu yazıla bilən deyil: {{message}}. Yazıla bilən qovluq seçin (məs., tətbiqin məlumat qovluğu altında) və ya icazələri tənzimləyin."
+downloadErrorGeneric = "Endirmə alınmadı: {{message}}. Zəhmət olmasa bir az sonra yenidən cəhd edin."
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML Təmizlənməsini söndür"
@@ -4515,7 +5032,7 @@ description = "Daha geniş sistem müvəqqəti qovluğunu təmizləyib-təmizlə
 label = "Proses İcraedicisi Limitləri"
 description = "Hər icraedici üçün sessiya limitlərini və taym-outları konfiqurasiya edin"
 libreOffice = "LibreOffice"
-pdfToHtml = "PDF-dən HTML-ə"
+pdfToHtml = "PDF to HTML"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
 pythonOpenCv = "Python OpenCV"
@@ -4569,6 +5086,10 @@ description = "Adminlərə avtomatik parollarla istifadəçiləri e-poçt vasit�
 [admin.settings.mail.frontendUrl]
 label = "Frontend URL"
 description = "Frontend üçün baza URL (məs. https://pdf.example.com). E-poçtlarda dəvət linklərini yaratmaq üçün istifadə olunur. Boş saxlayın ki, backend URL-i istifadə olunsun."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Qeyd: Frontend URL konfiqurasiyası tələb olunur. "
+link = "Sistem ayarlarında konfiqurasiya et"
 
 [admin.settings.legal]
 title = "Hüquqi Sənədlər"
@@ -4754,6 +5275,9 @@ googleDriveShort = "Drive"
 myFiles = "Fayllarım"
 noRecentFiles = "Son fayl tapılmadı"
 googleDriveNotAvailable = "Google Drive inteqrasiyası mövcud deyil"
+mobileUpload = "Mobil yükləmə"
+mobileShort = "Mobil"
+mobileUploadNotAvailable = "Mobil yükləmə aktiv deyil"
 downloadSelected = "Seçilmişləri yüklə"
 saveSelected = "Seçilənləri saxla"
 openFiles = "Faylları aç"
@@ -4966,6 +5490,7 @@ desc = "PDF əməliyyatlarını birləşdirərək çoxaddımlı iş axınları y
 invalidStep = "Yanlış addım"
 reviewTitle = "Avtomatlaşdırma Nəticələri"
 copyToSaved = "Saxlananlara kopyala"
+exportForFolderScanning = "Qovluq skanı üçün ixrac et"
 
 [automate.files]
 placeholder = "Bu avtomatlaşdırma ilə emal etmək üçün faylları seçin"
@@ -4987,6 +5512,7 @@ createTitle = "Avtomatlaşdırma Yaradın"
 editTitle = "Avtomatlaşdırmanı Redaktə edin"
 intro = "Avtomatlaşdırmalar alətləri ardıcıl işlədir. Başlamaq üçün, işləməsini istədiyiniz ardıcıllıqla alətlər əlavə edin."
 save = "Avtomatlaşdırmanı Yadda saxla"
+exportForFolderScanning = "Qovluq skanı üçün ixrac et"
 
 [automate.creation.name]
 label = "Avtomatlaşdırmanın Adı"
@@ -5069,6 +5595,7 @@ loading = "Yüklənir..."
 back = "Geri"
 continue = "Davam et"
 error = "Xəta"
+save = "Yadda saxla"
 
 [config.overview]
 title = "Tətbiq Konfiqurasiyası"
@@ -5130,6 +5657,15 @@ warning = "⚠️ Xəbərdarlıq: Bu əməliyyat yeni API açarları yaradacaq v
 impact = "Hazırda bu açarlardan istifadə edən bütün tətbiqlər və xidmətlər, onları yeni açarlarla yeniləyənədək işləməyəcək."
 confirmPrompt = "Davam etmək istədiyinizə əminsiniz?"
 confirmCta = "Açarları yenilə"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API açarı xətası"
+failedToCreateApiKey = "API açarı yaratmaq alınmadı."
+failedToRetrieveApiKey = "Cavabdan API açarını əldə etmək alınmadı."
+failedToFetchApiKey = "API açarını gətirmək alınmadı."
+apiKeyRefreshed = "API açarı yeniləndi"
+apiKeyRefreshedBody = "API açarınız uğurla yeniləndi."
+failedToRefreshApiKey = "API açarını yeniləmək alınmadı."
 
 [AddAttachmentsRequest]
 attachments = "Qoşmaları seçin"
@@ -5235,6 +5771,16 @@ finish = "Bitir"
 startTour = "Tura başla"
 startTourDescription = "Stirling PDF-in əsas xüsusiyyətləri üzrə bələdçili tura başlayın"
 
+[onboarding.whatsNew]
+quickAccess = "Reader, Automate, fayllarınız və bütün turlar arasında keçmək üçün <strong>Tez Giriş</strong> panelindən başlayın."
+leftPanel = "Sol <strong>Alətlər</strong> paneli edə biləcəyiniz hər şeyi siyahıya alır. Kateqoriyalara baxın və ya tez alət tapmaq üçün axtarın."
+fileUpload = "<strong>Fayllar</strong> düyməsindən PDF yükləyin və ya son faylı seçin. İş sahəsini görə bilməyiniz üçün nümunə yükləyəcəyik."
+rightRail = "<strong>Sağ Panel</strong> fayl seçimi, mövzu və dili dəyişmək və nəticələri endirmək üçün sürətli hərəkətləri saxlayır."
+topBar = "Yuxarı panel <strong>Görüntüləyici</strong>, <strong>Səhifə Redaktoru</strong> və <strong>Aktiv Fayllar</strong> arasında keçməyə imkan verir."
+pageEditorView = "Səhifələri yenidən sıralamaq, çevirmək və ya silmək üçün Səhifə Redaktoruna keçin."
+activeFilesView = "Açıq olan hər şeyə baxmaq və işləyəcəyinizi seçmək üçün Aktiv Fayllardan istifadə edin."
+wrapUp = "V2-də yeniliklər bunlardır. <strong>Turlar</strong> menyusunu istənilən vaxt açaraq bunu, Alətlər turunu və ya Admin turunu yenidən izləyə bilərsiniz."
+
 [onboarding.welcomeModal]
 title = "Stirling PDF-ə xoş gəlmisiniz!"
 description = "Əsas xüsusiyyətləri və necə başlamağı öyrənmək üçün 1 dəqiqəlik qısa tura baxmaq istəyirsiniz?"
@@ -5255,6 +5801,10 @@ download = "Yüklə →"
 showMeAround = "Turu göstər"
 skipTheTour = "Turu keç"
 
+[onboarding.tourOverview]
+title = "Tur icmalı"
+body = "Stirling PDF V2 onlarca alət və yenilənmiş tərtibatla gəlir. Sürətli turla nələrin dəyişdiyini və lazım olan funksiyaları harada tapacağınızı görün."
+
 [onboarding.serverLicense]
 skip = "Hələlik ötür"
 seePlans = "Planlara baxın →"
@@ -5262,7 +5812,7 @@ upgrade = "İndi yüksəlt →"
 freeTitle = "Server lisenziyası"
 overLimitTitle = "Server lisenziyası tələb olunur"
 overLimitBody = "Lisenziyalaşmamız hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Sizdə <strong>{{overLimitUserCopy}}</strong> Stirling istifadəçisi var. Fasiləsiz davam etmək üçün Stirling Server planına yüksəldin - <strong>limitsiz yerlər</strong>, PDF mətn redaktəsi və tam admin nəzarəti cəmi $99/server/ay."
-freeBody = "Bizim <strong>Open-Core</strong> lisenziyalaşdırmamız hər server üçün pulsuz olaraq ən çox <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslama üçün Stirling Server planını tövsiyə edirik - <strong>limitsiz yerlər</strong> və <strong>SSO dəstəyi</strong> $99/server/ay."
+freeBody = "Bizim <strong>Open-Core</strong> lisenziyası hər server üçün pulsuz olaraq maksimum <strong>{{freeTierLimit}}</strong> istifadəçiyə icazə verir. Fasiləsiz miqyaslanmaq və yeni <strong>PDF mətn redaktəsi alətimizə</strong> erkən çıxış əldə etmək üçün Stirling Server planını tövsiyə edirik — tam redaktə və <strong>limitsiz yerlər</strong> $99/server/ay."
 
 [onboarding.desktopInstall]
 title = "Yüklə"
@@ -5337,9 +5887,11 @@ username = "İstifadəçi adı (E-poçt)"
 usernamePlaceholder = "user@example.com"
 password = "Parol"
 passwordPlaceholder = "Parolu daxil edin"
+passwordRequired = "Şifrə tələb olunur"
 role = "Rol"
 team = "Komanda (İstəyə bağlı)"
 teamPlaceholder = "Komanda seçin"
+authType = "Doğrulama növü"
 forcePasswordChange = "İlk girişdə parol dəyişikliyi tələb olunsun"
 cancel = "Ləğv et"
 submit = "Üzv əlavə et"
@@ -5347,6 +5899,13 @@ usernameRequired = "İstifadəçi adı və parol tələb olunur"
 passwordTooShort = "Parol ən azı 6 simvol olmalıdır"
 success = "İstifadəçi uğurla yaradıldı"
 error = "İstifadəçi yaratmaq alınmadı"
+forceMFA = "Növbəti daxilolmada MFA quraşdırılmasını məcbur et"
+
+[workspace.people.authType]
+password = "Şifrə"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "İstifadəçi SSO provayderi vasitəsilə doğrulanacaq"
 
 [workspace.people.editMember]
 title = "Üzvü redaktə et"
@@ -5443,12 +6002,17 @@ emailDisabled = "E-poçt dəvətləri üçün ayarlarda SMTP konfiqurasiyası v�
 [workspace.people.license]
 users = "istifadəçi"
 availableSlots = "Mövcud yerlər"
-grandfathered = "Əvvəlki şərtlərlə"
-grandfatheredShort = "{{count}} əvvəlki şərtlərlə"
+grandfathered = "Grandfathered"
+grandfatheredShort = "{{count}} grandfathered"
 fromLicense = "lisenziyadan"
 slotsAvailable = "{{count}} istifadəçi yeri mövcuddur"
 noSlotsAvailable = "Mövcud yer yoxdur"
 currentUsage = "Hazırda {{max}} istifadəçi lisenziyasından {{current}} istifadə olunur"
+
+[workspace.people.mfa]
+adminDisableSuccess = "İstifadəçi üçün MFA uğurla deaktiv edildi"
+adminDisableError = "İstifadəçi üçün MFA-nı deaktiv etmək mümkün olmadı"
+disableByAdmin = "MFA-nı deaktiv et"
 
 [workspace.teams]
 title = "Komandalar"
@@ -5568,6 +6132,28 @@ contactSales = "Satışla əlaqə"
 contactToUpgrade = "Planınızı yüksəltmək və ya fərdiləşdirmək üçün bizimlə əlaqə saxlayın"
 maxUsers = "Maksimum İstifadəçi"
 upTo = "Maksimum"
+getLicense = "Server lisenziyası al"
+upgradeToEnterprise = "Enterprise-a yüksəlt"
+selectPeriod = "Faktura dövrünü seçin"
+monthlyBilling = "Aylıq ödəniş"
+yearlyBilling = "İllik ödəniş"
+checkoutOpened = "Ödəniş səhifəsi açıldı"
+checkoutInstructions = "Ödənişi Stripe vərəqəsində tamamlayın. Ödənişdən sonra buraya qayıdın və lisenziyanı aktivləşdirmək üçün səhifəni yeniləyin. Lisenziya açarı olan e-poçt da alacaqsınız."
+activateLicense = "Lisenziyanızı aktivləşdirin"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Yeni vərəqədə ödəniş açıldı"
+instructions = "Ödənişi Stripe vərəqəsində tamamlayın. Ödəniş tamamlandıqdan sonra lisenziya açarı e-poçtunu alacaqsınız."
+enterKey = "Planınızı aktivləşdirmək üçün aşağıya lisenziya açarınızı daxil edin:"
+keyDescription = "E-poçtunuzdakı lisenziya açarını yapışdırın"
+activate = "Lisenziyanı aktivləşdir"
+doLater = "Bunu sonra edəcəyəm"
+success = "Lisenziya aktivləşdirildi!"
+successMessage = "Lisenziyanız uğurla aktivləşdirildi. Bu pəncərəni indi bağlaya bilərsiniz."
+
+[plan.static.billingPortal]
+title = "E-poçtun təsdiqi tələb olunur"
+message = "Stripe ödəniş portalında e-poçt ünvanınızı təsdiqləməyiniz lazım olacaq. Giriş linki üçün e-poçtunuzu yoxlayın."
 
 [plan.period]
 month = "ay"
@@ -5771,6 +6357,8 @@ notAvailable = "Audit sistemi əlçatan deyil"
 notAvailableMessage = "Audit sistemi konfiqurasiya edilməyib və ya əlçatan deyil."
 disabled = "Audit jurnalı deaktiv edilib"
 disabledMessage = "Sistem hadisələrini izləmək üçün tətbiqin konfiqurasiyasında audit jurnalını aktivləşdirin."
+enterpriseRequired = "Enterprise lisenziyası tələb olunur"
+enterpriseRequiredMessage = "Audit jurnalı sistemi enterprise funksiyadır. Audit qeydləri və analitikaya giriş üçün zəhmət olmasa enterprise lisenziyaya yüksəldin."
 
 [audit.error]
 title = "Audit sistemi yüklənərkən xəta"
@@ -5868,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Ziyarətlər"
 percentage = "Faiz"
 noData = "Məlumat yoxdur"
+unknownEndpoint = "Naməlum endpoint"
 
 [backendHealth]
 checking = "Backend vəziyyəti yoxlanılır..."
@@ -5942,6 +6531,7 @@ description = "Öz Stirling PDF serverinizin tam URL ünvanını daxil edin"
 
 [setup.server.error]
 emptyUrl = "Zəhmət olmasa server URL-i daxil edin"
+invalidUrl = "Yanlış URL formatı. Zəhmət olmasa https://your-server.com kimi düzgün URL daxil edin"
 unreachable = "Serverə qoşulmaq mümkün olmadı"
 testFailed = "Bağlantı testi uğursuz oldu"
 configFetch = "Server konfiqurasiyasını əldə etmək mümkün olmadı. URL-i yoxlayın və yenidən cəhd edin."
@@ -5960,6 +6550,7 @@ connectingTo = "Qoşulur:"
 submit = "Daxil ol"
 signInWith = "Bununla daxil ol"
 oauthPending = "Təsdiqləmə üçün brauzer açılır..."
+sso = "Single Sign-On"
 orContinueWith = "Və ya e-poçt ilə davam edin"
 serverRequirement = "Qeyd: Serverdə giriş funksiyası aktiv olmalıdır."
 showInstructions = "Necə aktivləşdirmək olar?"
@@ -6025,6 +6616,8 @@ reset = "Dəyişiklikləri sıfırla"
 downloadJson = "JSON-u endir"
 generatePdf = "PDF yarat"
 saveChanges = "Dəyişiklikləri yadda saxla"
+applyChanges = "Dəyişiklikləri tətbiq et"
+downloadCopy = "Nüsxəni endir"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Mətni avtomatik miqyasla"
@@ -6042,6 +6635,24 @@ descriptionInline = "Məsləhət: Mətn qutularını çoxseçim üçün Ctrl (Cm
 [pdfTextEditor.options.forceSingleElement]
 title = "Redaktə olunmuş mətni tək PDF elementinə kilidlə"
 description = "Aktiv olduqda, redaktor hər redaktə edilmiş mətn qutusunu üst-üstə düşən qliflərdən və ya qarışıq şriftlərdən qaçmaq üçün bir PDF mətn elementi kimi ixrac edir."
+
+[pdfTextEditor.options.advanced]
+title = "Qabaqcıl ayarlar"
+
+[pdfTextEditor.tooltip.header]
+title = "Ön baxış məhdudiyyətləri"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Mətn və şəkil fokuslanması"
+text = "Bu iş sahəsi mətni redaktə etməyə və daxil edilmiş şəkilləri yenidən yerləşdirməyə fokuslanır. Mürəkkəb səhifə qrafikası, forma vidcetləri və laylı qrafika ixrac üçün qorunur, lakin burada tam redaktə edilə bilmir."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Ön baxış fərqliliyi"
+text = "Bəzi vizuallar (məsələn, cədvəl haşiyələri, fiqurlar və ya annotasiya görünüşləri) ön baxışda dəqiq göstərilməyə bilər. İxrac olunan PDF mümkün olduqda orijinal cızma əmrlərini saxlayır."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alfa görüntüləyici"
+text = "Bu alfa görüntüləyici hələ inkişaf edir—bəzi şriftlər, rənglər, şəffaflıq effektləri və maket detalları bir qədər dəyişə bilər. Zəhmət olmasa paylaşmazdan əvvəl yaradılan PDF-i iki dəfə yoxlayın."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Seçilmiş qutuları birləşdir"
@@ -6164,3 +6775,58 @@ title = "Mətn əlavə etmə nəticələri"
 
 [addText.error]
 failed = "PDF-ə mətn əlavə edilərkən xəta baş verdi."
+
+[mobileUpload]
+title = "Mobil cihazdan yüklə"
+description = "Skan edib fotoları yükləyin. Şəkillər avtomatik olaraq PDF-ə çevrilir."
+descriptionNoConvert = "Mobil cihazınızdan fotoları yükləmək üçün skan edin."
+error = "Bağlantı xətası"
+pollingError = "Faylları yoxlayarkən xəta"
+sessionId = "Sessiya ID-si"
+sessionCreateError = "Sessiya yaratmaq alınmadı"
+expiryWarning = "Sessiya tezliklə bitir"
+expiryWarningMessage = "Bu QR kodu {{seconds}} saniyəyə müddəti bitəcək. Yeni kod avtomatik yaradılacaq."
+filesReceived = "{{count}} fayl alındı"
+connected = "Mobil cihaz qoşuldu"
+instructions = "Telefon kameranızla skan edin. Şəkillər avtomatik olaraq PDF-ə çevrilir."
+instructionsNoConvert = "Fayl yükləmək üçün telefon kameranızla skan edin."
+
+[mobileScanner]
+title = "Mobil skaner"
+noSession = "Yalnış sessiya"
+noSessionMessage = "Bu səhifəyə daxil olmaq üçün etibarlı QR kodunu skan edin."
+validating = "Sessiya yoxlanılır..."
+sessionInvalid = "Sessiya xətası"
+sessionExpired = "Bu sessiyanın vaxtı bitib. Yeniləyib yenidən cəhd edin."
+sessionNotFound = "Sessiya tapılmadı. Yeniləyib yenidən cəhd edin."
+sessionValidationError = "Sessiyanı doğrulamaq mümkün olmadı. Yenidən cəhd edin."
+uploadSuccess = "Uğurla yükləndi!"
+uploadSuccessMessage = "Şəkilləriniz köçürüldü."
+httpsRequired = "Kameraya çıxış üçün HTTPS və ya localhost tələb olunur. Zəhmət olmasa HTTPS istifadə edin və ya localhost vasitəsilə daxil olun."
+uploadFailed = "Yükləmə alınmadı. Yenidən cəhd edin."
+uploading = "Yüklənir..."
+connected = "Qoşuldu"
+connecting = "Qoşulur..."
+chooseMethod = "Yükləmə üsulunu seçin"
+chooseMethodDescription = "Sənədləri necə skan edib yükləmək istədiyinizi seçin"
+camera = "Kamera"
+cameraDescription = "Cihazınızın kamerası ilə avtomatik kənar aşkarlanması ilə sənədləri skan edin"
+fileUpload = "Fayl yükləmə"
+fileDescription = "Cihazınızdan mövcud fotoları və ya sənədləri yükləyin"
+cameraAccessDenied = "Kameraya giriş rədd edildi. Zəhmət olmasa kameraya icazə verin."
+back = "Geri"
+settings = "Ayarlar"
+edgeDetection = "Kənar aşkarlanması"
+flashlight = "Fənər"
+flash = "Flaş"
+processing = "Emal olunur..."
+capture = "Foto çəkin"
+selectFilesPrompt = "Yükləmək üçün faylları seçin"
+selectImage = "Şəkil seçin"
+preview = "Ön baxış"
+retake = "Yenidən çəkin"
+addToBatch = "Paketə əlavə et"
+upload = "Yüklə"
+batchImages = "Paket"
+clearBatch = "Təmizlə"
+uploadAll = "Hamısını yüklə"

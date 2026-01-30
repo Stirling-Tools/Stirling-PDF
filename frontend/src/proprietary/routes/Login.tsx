@@ -33,9 +33,12 @@ export default function Login() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [requiresMfa, setRequiresMfa] = useState(false);
   const [enabledProviders, setEnabledProviders] = useState<OAuthProvider[]>([]);
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
+  const [loginMethod, setLoginMethod] = useState<string>('all');
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
@@ -115,6 +118,7 @@ export default function Login() {
         const providerPaths = Object.keys(data.providerList || {});
 
         setEnabledProviders(providerPaths);
+        setLoginMethod(data.loginMethod || 'all');
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
       }
@@ -125,18 +129,25 @@ export default function Login() {
     }
   }, [navigate, backendProbe.status, backendProbe.loginDisabled]);
 
-  // Update hasSSOProviders and showEmailForm when enabledProviders changes
+  // Update hasSSOProviders and showEmailForm when enabledProviders or loginMethod changes
   useEffect(() => {
     // In debug mode, check if any providers exist in the config
     const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
       ? Object.keys(oauthProviderConfig).length > 0
       : enabledProviders.length > 0;
     setHasSSOProviders(hasProviders);
-    // If no SSO providers, show email form by default
-    if (!hasProviders) {
+
+    // Check if username/password authentication is allowed
+    const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
+
+    // Show email form if no SSO providers exist AND username/password is allowed
+    if (!hasProviders && isUserPassAllowed) {
       setShowEmailForm(true);
+    } else if (!isUserPassAllowed) {
+      // Hide email form if username/password auth is not allowed
+      setShowEmailForm(false);
     }
-  }, [enabledProviders]);
+  }, [enabledProviders, loginMethod]);
 
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
@@ -264,6 +275,11 @@ export default function Login() {
       return;
     }
 
+    if (requiresMfa && !mfaCode.trim()) {
+      setError(t('login.mfaRequired', 'Two-factor code required'));
+      return;
+    }
+
     try {
       setIsSigningIn(true);
       setError(null);
@@ -272,14 +288,20 @@ export default function Login() {
 
       const { user, session, error } = await springAuth.signInWithPassword({
         email: email.trim(),
-        password: password
+        password: password,
+        mfaCode: requiresMfa ? mfaCode.trim() : undefined,
       });
 
       if (error) {
         console.error('[Login] Email sign in error:', error);
         setError(error.message);
+        if (error.mfaRequired || error.code === 'invalid_mfa_code') {
+          setRequiresMfa(true);
+        }
       } else if (user && session) {
         console.log('[Login] Email sign in successful');
+        setRequiresMfa(false);
+        setMfaCode('');
         // Auth state will update automatically and Landing will redirect to home
         // No need to navigate manually here
       }
@@ -326,13 +348,13 @@ export default function Login() {
         enabledProviders={enabledProviders}
       />
 
-      {/* Divider between OAuth and Email - only show if SSO is available */}
-      {hasSSOProviders && (
+      {/* Divider between OAuth and Email - only show if SSO is available and username/password is allowed */}
+      {hasSSOProviders && (loginMethod === 'all' || loginMethod === 'normal') && (
         <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
       )}
 
-      {/* Sign in with email button - only show if SSO providers exist */}
-      {hasSSOProviders && !showEmailForm && (
+      {/* Sign in with email button - only show if SSO providers exist and username/password is allowed */}
+      {hasSSOProviders && !showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
         <div className="auth-section">
           <button
             type="button"
@@ -345,14 +367,18 @@ export default function Login() {
         </div>
       )}
 
-      {/* Email form - show by default if no SSO, or when button clicked */}
-      {showEmailForm && (
+      {/* Email form - show by default if no SSO, or when button clicked, but ONLY if username/password is allowed */}
+      {showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
         <div style={{ marginTop: hasSSOProviders ? '1rem' : '0' }}>
           <EmailPasswordForm
             email={email}
             password={password}
             setEmail={setEmail}
             setPassword={setPassword}
+            mfaCode={mfaCode}
+            setMfaCode={setMfaCode}
+            showMfaField={requiresMfa || Boolean(mfaCode)}
+            requiresMfa={requiresMfa}
             onSubmit={signInWithEmail}
             isSubmitting={isSigningIn}
             submitButtonText={isSigningIn ? (t('login.loggingIn') || 'Signing in...') : (t('login.login') || 'Sign in')}
@@ -360,8 +386,8 @@ export default function Login() {
         </div>
       )}
 
-      {/* Help section - only show on first-time setup with default credentials */}
-      {isFirstTimeSetup && showDefaultCredentials && (
+      {/* Help section - only show on first-time setup with default credentials and username/password auth allowed */}
+      {isFirstTimeSetup && showDefaultCredentials && (loginMethod === 'all' || loginMethod === 'normal') && (
         <Alert
           color="blue"
           variant="light"

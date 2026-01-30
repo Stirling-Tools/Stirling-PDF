@@ -1,6 +1,7 @@
 import { Stack, NumberInput, ColorInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface RedactAdvancedSettingsProps {
   parameters: RedactParameters;
@@ -21,6 +22,7 @@ const RedactAdvancedSettings = ({ parameters, onParameterChange, disabled = fals
         disabled={disabled}
         size="sm"
         format="hex"
+        popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
       {/* Box Padding */}

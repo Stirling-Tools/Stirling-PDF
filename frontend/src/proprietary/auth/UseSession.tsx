@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { springAuth } from '@app/auth/springAuthClient';
+import { clearPlatformAuthOnLoginInit } from '@app/extensions/authSessionCleanup';
 import type { Session, User, AuthError, AuthChangeEvent } from '@app/auth/springAuthClient';
 
 /**
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.debug('[Auth] Signed out successfully');
         setSession(null);
       }
+
     } catch (err) {
       console.error('[Auth] Unexpected error during sign out:', err);
       setError(err as AuthError);
@@ -94,6 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.debug('[Auth] Initializing auth...');
+        // Clear any platform-specific cached auth on login page init.
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
+          await clearPlatformAuthOnLoginInit();
+        }
 
         // Skip config check entirely - let the app handle login state
         // The config will be fetched by useAppConfig when needed

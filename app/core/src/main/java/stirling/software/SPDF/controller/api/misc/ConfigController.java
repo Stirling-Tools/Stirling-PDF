@@ -75,10 +75,25 @@ public class ConfigController {
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
             configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
 
-            // Add mobile scanner setting
+            // Add mobile scanner settings
             configData.put(
                     "enableMobileScanner",
                     applicationProperties.getSystem().isEnableMobileScanner());
+            configData.put(
+                    "mobileScannerConvertToPdf",
+                    applicationProperties.getSystem().getMobileScannerSettings().isConvertToPdf());
+            configData.put(
+                    "mobileScannerImageResolution",
+                    applicationProperties
+                            .getSystem()
+                            .getMobileScannerSettings()
+                            .getImageResolution());
+            configData.put(
+                    "mobileScannerPageFormat",
+                    applicationProperties.getSystem().getMobileScannerSettings().getPageFormat());
+            configData.put(
+                    "mobileScannerStretchToFit",
+                    applicationProperties.getSystem().getMobileScannerSettings().isStretchToFit());
 
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
@@ -96,6 +111,16 @@ public class ConfigController {
             configData.put(
                     "showSettingsWhenNoLogin",
                     applicationProperties.getSystem().isShowSettingsWhenNoLogin());
+
+            // SSO Provider settings
+            boolean enableOAuth =
+                    applicationProperties.getSecurity().getOauth2() != null
+                            && applicationProperties.getSecurity().getOauth2().getEnabled();
+            boolean enableSaml =
+                    applicationProperties.getSecurity().getSaml2() != null
+                            && applicationProperties.getSecurity().getSaml2().getEnabled();
+            configData.put("enableOAuth", enableOAuth);
+            configData.put("enableSaml", enableSaml);
 
             // Mail settings - check both SMTP enabled AND invites enabled
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();

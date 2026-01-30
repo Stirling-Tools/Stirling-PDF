@@ -6,7 +6,7 @@
 # ========================================
 # STAGE 1: Build stage - Gradle
 # ========================================
-FROM gradle:8.14-jdk21 AS build
+FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
 
 COPY build.gradle .
 COPY settings.gradle .
@@ -25,7 +25,6 @@ COPY . .
 
 # Build the application (server-only JAR - no UI, includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # ========================================
@@ -127,7 +126,8 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, conver
 # ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
     DISABLE_ADDITIONAL_FEATURES=true \
-    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps \
+    -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
     -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
     -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
     -Djava.awt.headless=true" \
@@ -167,7 +167,7 @@ ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 # ==============================================================================
 RUN set -eux; \
     chmod +x /scripts/*; \
-    mkdir -p /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
+    mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
     /home/stirlingpdfuser /configs /logs /customFiles /pipeline /tmp/stirling-pdf \
     /app.jar /restart-helper.jar /usr/share/fonts/truetype /scripts; \

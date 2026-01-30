@@ -306,6 +306,7 @@ selectOperation = "Select Operation"
 addOperationButton = "Add operation"
 pipelineHeader = "Pipeline:"
 saveButton = "Download"
+saveForFolderScanning = "Save for Folder Scanning"
 validateButton = "Validate"
 
 [enterpriseEdition]
@@ -367,6 +368,7 @@ advanced = "Advanced"
 title = "Security & Authentication"
 security = "Security"
 connections = "Connections"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licensing & Analytics"
@@ -441,6 +443,13 @@ currentVersion = "Current Version"
 latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+
+[settings.general.versionInfo]
+title = "Version Information"
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
 
 [settings.security]
 title = "Security"
@@ -531,6 +540,8 @@ accountSettings = "Account Settings"
 adminSettings = "Admin Settings - View and Add Users"
 userControlSettings = "User Control Settings"
 changeUsername = "Change Username"
+changeUsernameDescription = "Update your username. You will be logged out after updating."
+newUsernamePlaceholder = "Enter your new username"
 newUsername = "New Username"
 password = "Confirmation Password"
 oldPassword = "Old password"
@@ -545,6 +556,30 @@ property = "Property"
 webBrowserSettings = "Web Browser Setting"
 syncToBrowser = "Sync Account -> Browser"
 syncToAccount = "Sync Account <- Browser"
+
+[account.mfa]
+title = "Two-factor authentication"
+setupFailed = "Unable to start two-factor setup. Please try again."
+codeRequired = "Enter the authentication code to continue."
+enabled = "Two-factor authentication enabled."
+enableFailed = "Unable to enable two-factor authentication. Check the code and try again."
+disabled = "Two-factor authentication disabled."
+disableFailed = "Unable to disable two-factor authentication. Check the code and try again."
+description = "Add an extra layer of security to your account."
+enableButton = "Enable two-factor authentication"
+disableButton = "Disable two-factor authentication"
+setupTitle = "Set up two-factor authentication"
+setupDescription = "Scan the QR code with your authenticator app, then enter the 6-digit code to confirm."
+manualKey = "Manual setup key"
+secretWarning = "Keep this key private. Anyone with access can generate valid authentication codes."
+codePlaceholder = "Enter 6-digit code"
+confirmEnable = "Enable"
+disableTitle = "Disable two-factor authentication"
+disableDescription = "Enter a valid authentication code to disable two-factor authentication."
+codeLabel = "Authentication code"
+confirmDisable = "Disable"
+ssoDescription = "Two-factor authentication is managed by your identity provider for single sign-on accounts."
+ssoManaged = "Configure MFA through your identity provider."
 
 [adminUserSettings]
 title = "User Control Settings"
@@ -655,257 +690,257 @@ workbenchSlide = "Workspace panel"
 workspace = "Workspace"
 
 [home.multiTool]
-tags = "multiple,tools"
+tags = "multiple,tools,multi-tool,all-in-one,swiss army,page organizer,page editor,edit pages,manage pages,organize,reorganize"
 title = "PDF Multi Tool"
 desc = "Merge, Rotate, Rearrange, Split, and Remove pages"
 
 [home.merge]
-tags = "combine,join,unite"
+tags = "combine,join,unite,merge,merge PDFs,combine PDFs,join PDFs,concatenate,append,stitch,combine files,join files,merge documents"
 title = "Merge"
 desc = "Easily merge multiple PDFs into one."
 
 [home.split]
-tags = "divide,separate,break"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Split"
 desc = "Split PDFs into multiple documents"
 
 [home.rotate]
-tags = "turn,flip,orient"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotate"
 desc = "Easily rotate your PDFs."
 
 [home.convert]
-tags = "transform,change"
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 title = "Convert"
 desc = "Convert files between different formats"
 
 [home.pdfOrganiser]
-tags = "organize,rearrange,reorder"
+tags = "organize,rearrange,reorder,organise,arrange pages,sort,move pages,delete pages,remove pages,page management,page organizer,page organiser,resequence"
 title = "Organise"
 desc = "Remove/Rearrange pages in any order"
 
 [home.addImage]
-tags = "insert,embed,place"
+tags = "insert,embed,place,add image,insert image,place image,embed image,add photo,add picture,add logo,graphics,insert picture,place photo,PNG,JPG,JPEG"
 title = "Add image"
 desc = "Adds a image onto a set location on the PDF"
 
 [home.addAttachments]
-tags = "embed,attach,include"
+tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
 title = "Add Attachments"
 desc = "Add or remove embedded files (attachments) to/from a PDF"
 
 [home.watermark]
-tags = "stamp,mark,overlay"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "Add Watermark"
 desc = "Add a custom watermark to your PDF document."
 
 [home.removePassword]
-tags = "unlock"
+tags = "unlock,remove password,unlock PDF,decrypt,remove encryption,unprotect,open protected PDF,password removal,unlock protected,disable password,remove security,remove owner password"
 title = "Remove Password"
 desc = "Remove password protection from your PDF document."
 
 [home.compress]
-tags = "shrink,reduce,optimize"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Compress"
 desc = "Compress PDFs to reduce their file size."
 
 [home.unlockPDFForms]
-tags = "unlock,enable,edit"
+tags = "unlock,enable,edit,unlock forms,enable forms,editable forms,remove read only,make editable,unlock fields,enable editing,form fields,fillable,unprotect forms"
 title = "Unlock PDF Forms"
 desc = "Remove read-only property of form fields in a PDF document."
 
 [home.changeMetadata]
-tags = "edit,modify,update"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 title = "Change Metadata"
 desc = "Change/Remove/Add metadata from a PDF document"
 
 [home.ocr]
-tags = "extract,scan"
+tags = "extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognize text,read scanned"
 title = "OCR / Cleanup scans"
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
 
 [home.extractImages]
-tags = "pull,save,export"
+tags = "pull,save,export,extract images,get images,save images,export images,extract photos,extract pictures,pull images,download images,rip images,extract graphics,save photos"
 title = "Extract Images"
 desc = "Extracts all images from a PDF and saves them to zip"
 
 [home.scannerImageSplit]
-tags = "detect,split,photos"
+tags = "detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
 title = "Detect & Split Scanned Photos"
 desc = "Detect and split scanned photos into separate pages"
 
 [home.sign]
-tags = "signature,autograph"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
 desc = "Adds signature to PDF by drawing, text or image"
 
 [home.annotate]
-tags = "annotate,highlight,draw"
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
 desc = "Highlight, draw, add notes and shapes in the viewer"
 
 [home.flatten]
-tags = "simplify,remove,interactive"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
 desc = "Remove all interactive elements and forms from a PDF"
 
 [home.certSign]
-tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
+tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto,digital certificate,certificate signature,PKI,cryptographic signature,trusted signature"
 title = "Sign with Certificate"
 desc = "Signs a PDF with a Certificate/Key (PEM/P12)"
 
 [home.repair]
-tags = "fix,restore"
+tags = "fix,restore,repair,fix PDF,fix broken,fix corrupt,repair PDF,repair corrupt,broken PDF,corrupt PDF,damaged PDF,recover,fix errors,PDF won't open,can't open PDF,PDF errors,troubleshoot,restore PDF,rebuild,corrupted"
 title = "Repair"
 desc = "Tries to repair a corrupt/broken PDF"
 
 [home.removeBlanks]
-tags = "delete,clean,empty"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Remove Blank pages"
 desc = "Detects and removes blank pages from a document"
 
 [home.removeAnnotations]
-tags = "delete,clean,strip"
+tags = "delete,clean,strip,remove annotations,remove comments,delete comments,remove markup,remove highlights,clean annotations,strip comments,remove notes,delete markup,clear comments"
 title = "Remove Annotations"
 desc = "Removes all comments/annotations from a PDF"
 
 [home.compare]
-tags = "difference"
+tags = "difference,compare,diff,compare PDFs,compare documents,find differences,show differences,changes,what changed,track changes,revisions,version compare,side by side,contrast,delta"
 title = "Compare"
 desc = "Compares and shows the differences between 2 PDF Documents"
 
 [home.removeCertSign]
-tags = "remove,delete,unlock"
+tags = "remove,delete,unlock,remove certificate,remove signature,delete signature,unsigned,remove digital signature,strip signature,remove cert,unsign"
 title = "Remove Certificate Sign"
 desc = "Remove certificate signature from PDF"
 
 [home.pageLayout]
-tags = "layout,arrange,combine"
+tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "Multi-Page Layout"
 desc = "Merge multiple pages of a PDF document into a single page"
 
 [home.bookletImposition]
-tags = "booklet,print,binding"
+tags = "booklet,print,binding,imposition,booklet printing,saddle stitch,fold,pamphlet,brochure,print booklet,duplex,two-sided,signature,book layout,page imposition,print layout"
 title = "Booklet Imposition"
 desc = "Create booklets with proper page ordering and multi-page layout for printing and binding"
 
 [home.scalePages]
-tags = "resize,adjust,scale"
+tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page size/scale"
 desc = "Change the size/scale of a page and/or its contents."
 
 [home.addPageNumbers]
-tags = "number,pagination,count"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Add Page Numbers"
 desc = "Add Page numbers throughout a document in a set location"
 
 [home.autoRename]
-tags = "auto-detect,header-based,organize,relabel"
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
 desc = "Auto renames a PDF file based on its detected header"
 
 [home.adjustContrast]
-tags = "contrast,brightness,saturation"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Adjust Colours/Contrast"
 desc = "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
 
 [home.crop]
-tags = "trim,cut,resize"
+tags = "trim,cut,resize,crop,crop PDF,trim PDF,trim margins,remove margins,cut edges,trim borders,remove white space,crop pages,trim pages,reduce margins,set margins"
 title = "Crop PDF"
 desc = "Crop a PDF to reduce its size (maintains text!)"
 
 [home.autoSplitPDF]
-tags = "auto,split,QR"
+tags = "auto,split,QR,auto split,QR code,QR split,barcode,automatic split,divider page,separator page,scan divider,batch scanning"
 title = "Auto Split Pages"
 desc = "Auto Split Scanned PDF with physical scanned page splitter QR Code"
 
 [home.sanitize]
-tags = "clean,purge,remove"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Sanitise"
 desc = "Remove potentially harmful elements from PDF files"
 
 [home.getPdfInfo]
-tags = "info,metadata,details"
+tags = "info,metadata,details,PDF info,document info,properties,file info,get info,show info,view properties,document properties,statistics,page count,file details,inspect"
 title = "Get ALL Info on PDF"
 desc = "Grabs any and all information possible on PDFs"
 
 [home.pdfToSinglePage]
-tags = "combine,merge,single"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF to Single Large Page"
 desc = "Merges all PDF pages into one large single page"
 
 [home.showJS]
-tags = "javascript,code,script"
+tags = "javascript,code,script,show javascript,show JS,find javascript,detect javascript,view javascript,embedded scripts,malware,security,inspect,debug"
 title = "Show Javascript"
 desc = "Searches and displays any JS injected into a PDF"
 
 [home.redact]
-tags = "censor,blackout,hide"
+tags = "censor,blackout,hide,redact,redaction,black out,block out,remove sensitive,hide text,privacy,confidential,GDPR,PII,sensitive data,permanently remove,cover up,legal redaction"
 title = "Redact"
 desc = "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or selected page(s)"
 
 [home.splitBySections]
-tags = "split,sections,divide"
+tags = "split,sections,divide,split by sections,grid split,divide pages,split into sections,cut pages,divide grid,section split,horizontal split,vertical split"
 title = "Split PDF by Sections"
 desc = "Divide each page of a PDF into smaller horizontal and vertical sections"
 
 [home.addStamp]
-tags = "stamp,mark,seal"
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 title = "Add Stamp to PDF"
 desc = "Add text or add image stamps at set locations"
 
 [home.removeImage]
-tags = "remove,delete,clean"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Remove image"
 desc = "Remove image from PDF to reduce file size"
 
 [home.splitByChapters]
-tags = "split,chapters,structure"
+tags = "split,chapters,structure,split by chapters,split by bookmarks,bookmarks,outline,table of contents,TOC split,chapter split,divide by sections"
 title = "Split PDF by Chapters"
 desc = "Split a PDF into multiple files based on its chapter structure."
 
 [home.validateSignature]
-tags = "validate,verify,certificate"
+tags = "validate,verify,certificate,validate signature,verify signature,check signature,digital signature,certificate verification,signature validation,authentic,trust,signed,verify certificate"
 title = "Validate PDF Signature"
 desc = "Verify digital signatures and certificates in PDF documents"
 
 [home.swagger]
-tags = "API,documentation,test"
+tags = "API,documentation,test,swagger,API docs,REST API,endpoints,developer,API reference,API testing,OpenAPI,integration,developer docs"
 title = "API Documentation"
 desc = "View API documentation and test endpoints"
 
 [home.scannerEffect]
-tags = "scan,simulate,create"
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 title = "Scanner Effect"
 desc = "Create a PDF that looks like it was scanned"
 
 [home.editTableOfContents]
-tags = "bookmarks,contents,edit"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 title = "Edit Table of Contents"
 desc = "Add or edit bookmarks and table of contents in PDF documents"
 
 [home.manageCertificates]
-tags = "certificates,import,export"
+tags = "certificates,import,export,manage certificates,digital certificates,certificate management,PFX,P12,keystore,import certificate,export certificate,certificate store,PKI"
 title = "Manage Certificates"
 desc = "Import, export, or delete digital certificate files used for signing PDFs."
 
 [home.read]
-tags = "view,open,display"
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 title = "Read"
 desc = "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
 
 [home.reorganizePages]
-tags = "rearrange,reorder,organize"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 title = "Reorganize Pages"
 desc = "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
 
 [home.extractPages]
-tags = "pull,select,copy"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Extract Pages"
 desc = "Extract specific pages from a PDF document"
 
 [home.removePages]
-tags = "delete,extract,exclude"
+tags = "delete,extract,exclude,remove pages,delete pages,remove page,delete page,exclude pages,take out pages,discard pages,drop pages"
 title = "Remove Pages"
 desc = "Remove specific pages from a PDF document"
 
@@ -915,50 +950,57 @@ title = "Auto Split by Size/Count"
 desc = "Automatically split PDFs by file size or page count"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Replace & Invert Colour"
 desc = "Replace or invert colours in PDF documents"
 
 [home.devApi]
-tags = "API,development,documentation"
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
 title = "API"
 desc = "Link to API documentation"
 
 [home.devFolderScanning]
-tags = "automation,folder,scanning"
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
 title = "Automated Folder Scanning"
 desc = "Link to automated folder scanning guide"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO Guide"
 desc = "Link to SSO guide"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped Setup"
 desc = "Link to air-gapped setup guide"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Add Password"
 desc = "Add password protection and restrictions to PDF files"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
 desc = "Change document restrictions and permissions"
 
 [home.automate]
-tags = "workflow,sequence,automation"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automate"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Overlay one PDF on top of another"
 title = "Overlay PDFs"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 desc = "Edit existing text and images inside PDFs"
 
 [home.addText]
-tags = "text,annotation,label"
+tags = "text,annotation,label,add text,insert text,place text,text box,add label,add caption,type on PDF,write on PDF,add words,add note,text overlay,typewriter"
 title = "Add Text"
 desc = "Add custom text anywhere in your PDF"
 
@@ -1254,7 +1296,10 @@ downloadHtml = "Download HTML intermediate file instead of PDF"
 pdfaOptions = "PDF/A Options"
 outputFormat = "Output Format"
 pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
+pdfaFormat = "PDF/A Format"
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
+pdfxDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
+pdfxDescription = "PDF/X is an ISO standard PDF subset for reliable printing and graphics exchange."
 fileFormat = "File Format"
 wordDoc = "Word Document"
 wordDocExt = "Word Document (.docx)"
@@ -1285,6 +1330,10 @@ cbzDpi = "DPI for image rendering"
 cbrOptions = "CBR Options"
 cbrOutputOptions = "PDF to CBR Options"
 cbrDpi = "DPI for image rendering"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -1297,6 +1346,18 @@ includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 optimizeForEbookPdf = "Optimize for ebook readers"
 optimizeForEbookPdfDesc = "Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)"
+
+[convert.epubOptions]
+epubOptions = "PDF to eBook Options"
+epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChapters = "Detect chapters"
+detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
+targetDevice = "Target device"
+targetDeviceDesc = "Choose an output profile optimized for the reader device"
+outputFormat = "Output format"
+outputFormatDesc = "Choose the output format for the ebook"
+tabletPhone = "Tablet/Phone (with images)"
+kindleEink = "Kindle e-Ink (text optimized)"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
@@ -1374,6 +1435,7 @@ applySignatures = "Apply Images"
 name = "Image"
 placeholder = "Upload an image"
 label = "Image file"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Configure Image"
@@ -2165,6 +2227,16 @@ tags = "archive,long-term,standard,conversion,storage,preservation"
 title = "PDF To PDF/A"
 header = "PDF To PDF/A"
 credit = "This service uses libreoffice for PDF/A conversion"
+submit = "Convert"
+tip = "Currently does not work for multiple inputs at once"
+outputFormat = "Output format"
+pdfWithDigitalSignature = "The PDF contains a digital signature. This will be removed in the next step."
+
+[pdfToPDFX]
+tags = "print,standard,conversion,production,prepress,archive"
+title = "PDF To PDF/X"
+header = "PDF To PDF/X"
+credit = "This service uses Ghostscript for PDF/X conversion"
 submit = "Convert"
 tip = "Currently does not work for multiple inputs at once"
 outputFormat = "Output format"
@@ -3126,6 +3198,18 @@ other = "Other"
 perPageInfo = "Per Page Info"
 tableOfContents = "Table of Contents"
 
+[getPdfInfo.compliance]
+notDetected = "Not Detected"
+passed = "Passed"
+failed = "Failed"
+compliant = "Compliant"
+nonCompliant = "Non-Compliant"
+none = "No standards detected"
+passedCount = "passed"
+failedCount = "failed"
+noVerification = "No Verification Performed"
+noVerificationDesc = "PDF standards compliance was not verified for this document."
+
 [getPdfInfo.other]
 attachments = "Attachments"
 embeddedFiles = "Embedded Files"
@@ -3157,6 +3241,8 @@ permsRestricted = "{{count}} restrictions"
 permsMixed = "Some permissions restricted"
 hasCompliance = "Has compliance standards"
 noCompliance = "No Compliance Standards"
+compliancePassed = "{{standards}} compliant"
+complianceChecked = "Standards verified ({{failed}} failed)"
 basic = "Basic Information"
 documentInfo = "Document Information"
 securityTitle = "Security Status"
@@ -3474,6 +3560,39 @@ imageSize = "Image Size"
 margin = "Margin"
 positionAndFormatting = "Position & Formatting"
 quickPosition = "Select a position on the page to place the stamp."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
 
 [AddStampRequest.error]
 failed = "An error occurred while adding stamp to the PDF."
@@ -3696,6 +3815,14 @@ passwordChangedSuccess = "Password changed successfully! Please sign in with you
 credentialsUpdated = "Your credentials have been updated. Please sign in again."
 defaultCredentials = "Default Login Credentials"
 changePasswordWarning = "Please change your password after logging in for the first time"
+mfaRequired = "Two-factor code required"
+mfaCode = "Authentication Code"
+enterMfaCode = "Enter 6-digit code"
+mfaPromptTitle = "Two-factor authentication"
+mfaPromptBody = "Enter the authentication code from your authenticator app to continue."
+verifyingMfa = "Verifying..."
+verifyMfa = "Verify code"
+
 
 [login.slides.overview]
 alt = "Stirling PDF overview"
@@ -4275,6 +4402,8 @@ fetchError = "Failed to load settings"
 saveError = "Failed to save settings"
 saved = "Settings saved successfully"
 saveSuccess = "Settings saved successfully"
+success = "Settings saved successfully"
+error = "Failed to save settings"
 save = "Save Changes"
 discard = "Discard"
 restartRequired = "Restart Required"
@@ -4294,6 +4423,10 @@ hint = "You have unsaved changes"
 title = "Login Mode Required"
 message = "Login mode must be enabled to modify admin settings. Please set SECURITY_ENABLELOGIN=true in your environment or security.enableLogin: true in settings.yml, then restart the server."
 readOnly = "The settings below show example values for reference. Enable login mode to view and edit actual configuration."
+
+[admin.settings.enterpriseRequired]
+title = "Enterprise License Required"
+message = "An Enterprise license is required to access {{featureName}}. You are viewing demo data for reference."
 
 [admin.settings.restart]
 title = "Restart Required"
@@ -4434,6 +4567,13 @@ description = "Maximum number of failed login attempts before account lockout"
 label = "Login Reset Time (minutes)"
 description = "Time before failed login attempts are reset"
 
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
+
 [admin.settings.security.csrfDisabled]
 label = "Disable CSRF Protection"
 description = "Disable Cross-Site Request Forgery protection (not recommended)"
@@ -4541,6 +4681,19 @@ connect = "Connect"
 disconnect = "Disconnect"
 disconnected = "Provider disconnected successfully"
 disconnectError = "Failed to disconnect provider"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "SSO Auto Login"
@@ -4609,17 +4762,156 @@ description = "Automatically create user accounts on first SAML2 login"
 label = "Block Registration"
 description = "Prevent new user registration via SAML2"
 
+[admin.settings.telegram]
+title = "Telegram Bot"
+description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+
+[admin.settings.telegram.enabled]
+label = "Enable Telegram Bot"
+description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
+
+[admin.settings.telegram.botUsername]
+label = "Bot Username"
+description = "The public username of your Telegram bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot Token"
+description = "API token provided by BotFather for your Telegram bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inbox Folder"
+description = "Folder under the pipeline directory where incoming Telegram files are stored."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Use Custom Folder Suffix"
+description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+
+[admin.settings.telegram.accessControl]
+title = "Access Control"
+description = "Restrict which users or channels can interact with the bot."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Allow Specific User IDs"
+description = "When enabled, only listed user IDs can use the bot."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Allowed User IDs"
+description = "Enter Telegram user IDs allowed to interact with the bot."
+placeholder = "Add user ID and press enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Allow Specific Channel IDs"
+description = "When enabled, only listed channel IDs can use the bot."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Allowed Channel IDs"
+description = "Enter Telegram channel IDs allowed to interact with the bot."
+placeholder = "Add channel ID and press enter"
+
+[admin.settings.telegram.processing]
+title = "Processing"
+description = "Control polling intervals and processing timeouts for Telegram uploads."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Processing Timeout (seconds)"
+description = "Maximum time to wait for a processing job before reporting an error."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Polling Interval (ms)"
+description = "Interval between checks for new Telegram updates."
+
+[admin.settings.telegram.feedback]
+title = "Feedback Messages"
+description = "Choose when the bot should send feedback to users and channels."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Enable Feedback"
+description = "Control whether the bot sends feedback messages at all."
+
+[admin.settings.telegram.feedback.channel]
+title = "Channel Feedback Rules"
+noValidDocument.label = "Show \"No valid document\" (Channel)"
+noValidDocument.description = "Suppress the no valid document response for channel uploads."
+errorProcessing.label = "Show processing errors (Channel)"
+errorProcessing.description = "Send processing error messages to channels."
+errorMessage.label = "Show error messages (Channel)"
+errorMessage.description = "Show detailed error messages for channels."
+
+[admin.settings.telegram.feedback.user]
+title = "User Feedback Rules"
+noValidDocument.label = "Show \"No valid document\" (User)"
+noValidDocument.description = "Suppress the no valid document response for user uploads."
+errorProcessing.label = "Show processing errors (User)"
+errorProcessing.description = "Send processing error messages to users."
+errorMessage.label = "Show error messages (User)"
+errorMessage.description = "Show detailed error messages for users."
+
 [admin.settings.connections.mobileScanner]
 label = "Mobile Phone Upload"
 enable = "Enable QR Code Upload"
 description = "Allow users to upload files from mobile devices by scanning a QR code"
 note = "Note: Requires Frontend URL to be configured. "
 link = "Configure in System Settings"
+mobileScannerConvertToPdf = "Convert Images to PDF"
+mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
+mobileScannerImageResolution = "Image Resolution"
+mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
+imageResolutionFull = "Full (Original Size)"
+imageResolutionReduced = "Reduced (Max 1200px)"
+mobileScannerPageFormat = "Page Format"
+mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
+pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Stretch to Fit"
+mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
 
 [admin.settings.database]
 title = "Database"
 description = "Configure custom database connection settings for enterprise deployments."
 configuration = "Database Configuration"
+backupTitle = "Backups & Restore"
+backupDescription = "Manage H2 backups directly from the admin console."
+loadError = "Failed to load database backups"
+backupCreated = "Backup created successfully"
+backupFailed = "Failed to create backup"
+deleteTitle = "Delete backup"
+deleteConfirm = "Delete this backup? This cannot be undone."
+deleteSuccess = "Backup deleted"
+deleteFailed = "Failed to delete backup"
+deleteConfirmAction = "Delete backup"
+downloadFailed = "Failed to download backup"
+version = "H2 Version"
+embedded = "Embedded H2"
+external = "External DB"
+h2Only = "Backups are available only for the embedded H2 database."
+h2Hint = "Set the database type to H2 and disable custom database to enable backup and restore."
+manageBackups = "Manage backups"
+refresh = "Refresh"
+createBackup = "Create backup"
+uploadTitle = "Upload & import"
+chooseFile = "Choose a .sql backup file"
+importFromUpload = "Import upload"
+confirmImportTitle = "Confirm database import"
+overwriteWarning = "Warning: This will overwrite the current database."
+overwriteWarningBody = "All existing data will be replaced by the uploaded backup. This action cannot be undone."
+confirmCodeLabel = "Enter the confirmation code to proceed"
+enterCode = "Enter the code shown above"
+confirmImport = "Confirm import"
+codeMismatch = "Confirmation code does not match"
+codeMismatchBody = "Please enter the code exactly as shown to proceed."
+selectFile = "Please select a .sql file to import"
+importSuccess = "Backup imported successfully"
+importFailed = "Failed to import backup"
+noBackups = "No backups found yet."
+unavailable = "Backup list unavailable for the current database configuration."
+fileName = "File"
+created = "Created"
+size = "Size"
+actions = "Actions"
+download = "Download"
+import = "Import"
+delete = "Delete"
 
 [admin.settings.database.enableCustom]
 label = "Enable Custom Database"
@@ -4697,6 +4989,26 @@ description = "Maximum DPI for image processing (0 = unlimited)"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata Directory"
 description = "Path to the tessdata directory for OCR language files"
+downloadMissingTitle = "No language selected"
+downloadMissingBody = "Please select at least one language to download."
+downloadSuccessTitle = "Languages downloaded"
+downloadSuccessBody = "The selected tessdata languages have been saved."
+downloadErrorTitle = "Download Failed"
+loadingLanguages = "Loading installed tessdata languages..."
+installedLanguages = "Installed tessdata languages"
+noLanguages = "No tessdata languages found in the configured directory."
+downloadLabel = "Download additional tessdata languages"
+downloadPlaceholder = "Select languages"
+downloadNothingFound = "No additional languages found"
+permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
+manualLinks = "Manual downloads: click the links and place the files into the tessdata folder."
+downloadButton = "Download selected languages"
+downloadInvalidTitle = "Invalid selection"
+downloadInvalidBody = "Some selected languages are not available to download. Please refresh and choose from the list."
+downloadErrorNetwork = "Download failed due to a network error. Please check your connection and try again."
+downloadErrorServer = "The server encountered an error while downloading tessdata languages. Please try again later."
+downloadErrorPermission = "Tessdata directory is not writable: {{message}}. Please choose a writable directory (e.g. under the application data folder) or adjust permissions."
+downloadErrorGeneric = "Download failed: {{message}}. Please try again later."
 
 [admin.settings.advanced.disableSanitize]
 label = "Disable HTML Sanitization"
@@ -4988,6 +5300,7 @@ noRecentFiles = "No recent files found"
 googleDriveNotAvailable = "Google Drive integration not available"
 mobileUpload = "Mobile Upload"
 mobileShort = "Mobile"
+mobileUploadNotAvailable = "Mobile upload not enabled"
 downloadSelected = "Download Selected"
 saveSelected = "Save Selected"
 openFiles = "Open Files"
@@ -5200,6 +5513,7 @@ desc = "Build multi-step workflows by chaining together PDF actions. Ideal for r
 invalidStep = "Invalid step"
 reviewTitle = "Automation Results"
 copyToSaved = "Copy to Saved"
+exportForFolderScanning = "Export for Folder Scanning"
 
 [automate.files]
 placeholder = "Select files to process with this automation"
@@ -5221,6 +5535,7 @@ createTitle = "Create Automation"
 editTitle = "Edit Automation"
 intro = "Automations run tools sequentially. To get started, add tools in the order you want them to run."
 save = "Save Automation"
+exportForFolderScanning = "Export for Folder Scanning"
 
 [automate.creation.name]
 label = "Automation Name"
@@ -5365,6 +5680,15 @@ warning = "⚠️ Warning: This action will generate new API keys and make your 
 impact = "Any applications or services currently using these keys will stop working until you update them with the new keys."
 confirmPrompt = "Are you sure you want to continue?"
 confirmCta = "Refresh Keys"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "API Key Error"
+failedToCreateApiKey = "Failed to create API key."
+failedToRetrieveApiKey = "Failed to retrieve API key from response."
+failedToFetchApiKey = "Failed to fetch API key."
+apiKeyRefreshed = "API Key Refreshed"
+apiKeyRefreshedBody = "Your API key has been successfully refreshed."
+failedToRefreshApiKey = "Failed to refresh API key."
 
 [AddAttachmentsRequest]
 attachments = "Select Attachments"
@@ -5586,9 +5910,11 @@ username = "Username (Email)"
 usernamePlaceholder = "user@example.com"
 password = "Password"
 passwordPlaceholder = "Enter password"
+passwordRequired = "Password is required"
 role = "Role"
 team = "Team (Optional)"
 teamPlaceholder = "Select a team"
+authType = "Authentication Type"
 forcePasswordChange = "Force password change on first login"
 cancel = "Cancel"
 submit = "Add Member"
@@ -5596,6 +5922,13 @@ usernameRequired = "Username and password are required"
 passwordTooShort = "Password must be at least 6 characters"
 success = "User created successfully"
 error = "Failed to create user"
+forceMFA = "Force MFA setup on next login"
+
+[workspace.people.authType]
+password = "Password"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "User will authenticate via SSO provider"
 
 [workspace.people.editMember]
 title = "Edit Member"
@@ -5698,6 +6031,11 @@ fromLicense = "from license"
 slotsAvailable = "{{count}} user slot(s) available"
 noSlotsAvailable = "No slots available"
 currentUsage = "Currently using {{current}} of {{max}} user licences"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA disabled successfully for user"
+adminDisableError = "Failed to disable MFA for user"
+disableByAdmin = "Disable MFA"
 
 [workspace.teams]
 title = "Teams"
@@ -6141,6 +6479,7 @@ endpoint = "Endpoint"
 visits = "Visits"
 percentage = "Percentage"
 noData = "No data available"
+unknownEndpoint = "Unknown endpoint"
 
 [backendHealth]
 checking = "Checking backend status..."
@@ -6215,6 +6554,7 @@ description = "Enter the full URL of your self-hosted Stirling PDF server"
 
 [setup.server.error]
 emptyUrl = "Please enter a server URL"
+invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 unreachable = "Could not connect to server"
 testFailed = "Connection test failed"
 configFetch = "Failed to fetch server configuration. Please check the URL and try again."
@@ -6233,6 +6573,7 @@ connectingTo = "Connecting to:"
 submit = "Login"
 signInWith = "Sign in with"
 oauthPending = "Opening browser for authentication..."
+sso = "Single Sign-On"
 orContinueWith = "Or continue with email"
 serverRequirement = "Note: The server must have login enabled."
 showInstructions = "How to enable?"
@@ -6460,7 +6801,8 @@ failed = "An error occurred while adding text to the PDF."
 
 [mobileUpload]
 title = "Upload from Mobile"
-description = "Scan this QR code with your mobile device to upload photos directly to this page."
+description = "Scan to upload photos. Images auto-convert to PDF."
+descriptionNoConvert = "Scan to upload photos from your mobile device."
 error = "Connection Error"
 pollingError = "Error checking for files"
 sessionId = "Session ID"
@@ -6469,7 +6811,8 @@ expiryWarning = "Session Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
 filesReceived = "{{count}} file(s) received"
 connected = "Mobile device connected"
-instructions = "Open the camera app on your phone and scan this code. Files will be transferred directly between devices."
+instructions = "Scan with your phone camera. Images convert to PDF automatically."
+instructionsNoConvert = "Scan with your phone camera to upload files."
 
 [mobileScanner]
 title = "Mobile Scanner"

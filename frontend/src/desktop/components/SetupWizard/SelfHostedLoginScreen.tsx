@@ -5,15 +5,19 @@ import LoginHeader from '@app/routes/login/LoginHeader';
 import ErrorMessage from '@app/routes/login/ErrorMessage';
 import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
 import DividerWithText from '@app/components/shared/DividerWithText';
-import { DesktopOAuthButtons, OAuthProvider } from '@app/components/SetupWizard/DesktopOAuthButtons';
+import { DesktopOAuthButtons } from '@app/components/SetupWizard/DesktopOAuthButtons';
 import { UserInfo } from '@app/services/authService';
+import { SSOProviderConfig } from '@app/services/connectionModeService';
 import '@app/routes/authShared/auth.css';
 
 interface SelfHostedLoginScreenProps {
   serverUrl: string;
-  enabledOAuthProviders?: string[];
+  enabledOAuthProviders?: SSOProviderConfig[];
   onLogin: (username: string, password: string) => Promise<void>;
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
+  mfaCode: string;
+  setMfaCode: (value: string) => void;
+  requiresMfa: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -23,6 +27,9 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   enabledOAuthProviders,
   onLogin,
   onOAuthSuccess,
+  mfaCode,
+  setMfaCode,
+  requiresMfa,
   loading,
   error,
 }) => {
@@ -40,6 +47,11 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
 
     if (!password) {
       setValidationError(t('setup.login.error.emptyPassword', 'Please enter your password'));
+      return;
+    }
+
+    if (requiresMfa && !mfaCode.trim()) {
+      setValidationError(t('login.mfaRequired', 'Two-factor code required'));
       return;
     }
 
@@ -74,7 +86,8 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
             onError={handleOAuthError}
             isDisabled={loading}
             serverUrl={serverUrl}
-            providers={enabledOAuthProviders as OAuthProvider[]}
+            mode="selfHosted"
+            providers={enabledOAuthProviders}
           />
 
           <DividerWithText
@@ -96,6 +109,13 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
           setPassword(value);
           setValidationError(null);
         }}
+        mfaCode={mfaCode}
+        setMfaCode={(value) => {
+          setMfaCode(value);
+          setValidationError(null);
+        }}
+        showMfaField={requiresMfa || Boolean(mfaCode)}
+        requiresMfa={requiresMfa}
         onSubmit={handleSubmit}
         isSubmitting={loading}
         submitButtonText={t('setup.login.submit', 'Login')}

@@ -9,6 +9,8 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { withBasePath } from '@app/constants/app';
+import { convertImageToPdf, isImageFile } from '@app/utils/imageToPdfUtils';
+import apiClient from '@app/services/apiClient';
 
 interface MobileUploadModalProps {
   opened: boolean;
@@ -74,26 +76,27 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
 
   // Use configured frontendUrl if set, otherwise use current origin
   // Combine with base path and mobile-scanner route
-  const frontendUrl = config?.frontendUrl || window.location.origin;
+  const baseUrl = localStorage.getItem('server_url') || '';
+  const frontendUrl = baseUrl || config?.frontendUrl || window.location.origin;
   const mobileUrl = `${frontendUrl}${withBasePath('/mobile-scanner')}?session=${sessionId}`;
 
   // Create session on backend
   const createSession = useCallback(async (newSessionId: string) => {
     try {
-      const response = await fetch(`/api/v1/mobile-scanner/create-session/${newSessionId}`, {
-        method: 'POST'
+      const response = await apiClient.post<SessionInfo>(`/api/v1/mobile-scanner/create-session/${newSessionId}`, undefined, {
+        responseType: 'json',
       });
 
-      if (!response.ok) {
+      if (!response.status || response.status !== 200) {
         throw new Error('Failed to create session');
       }
 
-      const data = await response.json();
+      const data = response.data;
       setSessionInfo(data);
       setError(null);
-      console.log('Session created:', data);
+      console.log('[MobileUploadModal] Session created:', data);
     } catch (err) {
-      console.error('Failed to create session:', err);
+      console.error('[MobileUploadModal] Failed to create session:', err);
       setError(t('mobileUpload.sessionCreateError', 'Failed to create session'));
     }
   }, [t]);
@@ -112,12 +115,12 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
     if (!opened) return;
 
     try {
-      const response = await fetch(`/api/v1/mobile-scanner/files/${sessionId}`);
-      if (!response.ok) {
+      const response = await apiClient.get(`/api/v1/mobile-scanner/files/${sessionId}`);
+      if (!response.status || response.status !== 200) {
         throw new Error('Failed to check for files');
       }
 
-      const data = await response.json();
+      const data = response.data;
       const files = data.files || [];
 
       // Download only files we haven't processed yet
@@ -126,36 +129,53 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
       if (newFiles.length > 0) {
         for (const fileMetadata of newFiles) {
           try {
-            const downloadResponse = await fetch(
-              `/api/v1/mobile-scanner/download/${sessionId}/${fileMetadata.filename}`
+            const downloadResponse = await apiClient.get(
+              `/api/v1/mobile-scanner/download/${sessionId}/${fileMetadata.filename}`, {
+                responseType: 'blob',
+              }
             );
 
-            if (downloadResponse.ok) {
-              const blob = await downloadResponse.blob();
-              const file = new File([blob], fileMetadata.filename, {
+            if (downloadResponse.status === 200) {
+              const blob = downloadResponse.data;
+              let file = new File([blob], fileMetadata.filename, {
                 type: fileMetadata.contentType || 'image/jpeg'
               });
+
+              // Convert images to PDF if enabled
+              if (isImageFile(file) && config?.mobileScannerConvertToPdf !== false) {
+                try {
+                  file = await convertImageToPdf(file, {
+                    imageResolution: config?.mobileScannerImageResolution as 'full' | 'reduced' | undefined,
+                    pageFormat: config?.mobileScannerPageFormat as 'keep' | 'A4' | 'letter' | undefined,
+                    stretchToFit: config?.mobileScannerStretchToFit,
+                  });
+                  console.log('[MobileUploadModal] Converted image to PDF:', file.name);
+                } catch (convertError) {
+                  console.warn('[MobileUploadModal] Failed to convert image to PDF, using original file:', convertError);
+                  // Continue with original image file if conversion fails
+                }
+              }
 
               processedFiles.current.add(fileMetadata.filename);
               setFilesReceived((prev) => prev + 1);
               onFilesReceived([file]);
             }
           } catch (err) {
-            console.error('Failed to download file:', fileMetadata.filename, err);
+            console.error('[MobileUploadModal] Failed to download file:', fileMetadata.filename, err);
           }
         }
 
         // Delete the entire session immediately after downloading all files
         // This ensures files are only on server for ~1 second
         try {
-          await fetch(`/api/v1/mobile-scanner/session/${sessionId}`, { method: 'DELETE' });
-          console.log('Session cleaned up after file download');
+          await apiClient.delete(`/api/v1/mobile-scanner/session/${sessionId}`);
+          console.log('[MobileUploadModal] Session cleaned up after file download');
         } catch (cleanupErr) {
-          console.warn('Failed to cleanup session after download:', cleanupErr);
+          console.warn('[MobileUploadModal] Failed to cleanup session after download:', cleanupErr);
         }
       }
     } catch (err) {
-      console.error('Error polling for files:', err);
+      console.error('[MobileUploadModal] Error polling for files:', err);
       setError(t('mobileUpload.pollingError', 'Error checking for files'));
     }
   }, [opened, sessionId, onFilesReceived, t]);
@@ -168,14 +188,24 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
       setError(null);
       setShowExpiryWarning(false);
       processedFiles.current.clear();
-    } else {
-      // Clean up session when modal closes
-      if (sessionId) {
-        fetch(`/api/v1/mobile-scanner/session/${sessionId}`, { method: 'DELETE' })
-          .catch(err => console.warn('Failed to cleanup session on close:', err));
-      }
     }
-  }, [opened]); // Only run when opened changes
+  }, [opened, sessionId]); // Only run when opened changes
+
+  useEffect(() => {
+    if (!opened) return;
+
+    createSession(sessionId);
+    setFilesReceived(0);
+    setError(null);
+    setShowExpiryWarning(false);
+    processedFiles.current.clear();
+
+    return () => {
+      console.log('Cleaning up session on unmount/close:', sessionId);
+      apiClient.delete(`/api/v1/mobile-scanner/session/${sessionId}`)
+        .catch(err => console.warn('[MobileUploadModal] Cleanup failed:', err));
+    };
+  }, [opened, sessionId, createSession]);
 
   // Start polling for files when modal opens
   useEffect(() => {
@@ -256,10 +286,15 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
           variant="light"
         >
           <Text size="sm">
-            {t(
-              'mobileUpload.description',
-              'Scan this QR code with your mobile device to upload photos directly to this page.'
-            )}
+            {config?.mobileScannerConvertToPdf !== false
+              ? t(
+                  'mobileUpload.description',
+                  'Scan this QR code with your mobile device to upload photos. Images will be automatically converted to PDF.'
+                )
+              : t(
+                  'mobileUpload.descriptionNoConvert',
+                  'Scan this QR code with your mobile device to upload photos.'
+                )}
           </Text>
         </Alert>
 
@@ -308,10 +343,15 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
           )}
 
           <Text size="xs" c="dimmed" ta="center" style={{ maxWidth: '300px' }}>
-            {t(
-              'mobileUpload.instructions',
-              'Open the camera app on your phone and scan this code. Files will be uploaded through the server.'
-            )}
+            {config?.mobileScannerConvertToPdf !== false
+              ? t(
+                  'mobileUpload.instructions',
+                  'Open the camera app on your phone and scan this code. Images will be automatically converted to PDF.'
+                )
+              : t(
+                  'mobileUpload.instructionsNoConvert',
+                  'Open the camera app on your phone and scan this code. Files will be uploaded through the server.'
+                )}
           </Text>
 
           <Text

@@ -1,8 +1,11 @@
 unsavedChanges = "Du har osparade ändringar i din PDF."
+pendingRedactionsTitle = "Ej tillämpade maskningar"
+pendingRedactions = "Du har ej tillämpade maskningar som kommer att gå förlorade."
 areYouSure = "Är du säker på att du vill lämna?"
 unsavedChangesTitle = "Osparade ändringar"
 keepWorking = "Fortsätt arbeta"
 discardChanges = "Förkasta och lämna"
+discardRedactions = "Kasta och lämna"
 applyAndContinue = "Spara och lämna"
 exportAndContinue = "Exportera och fortsätt"
 cancel = "Avbryt"
@@ -303,6 +306,7 @@ selectOperation = "Välj operation"
 addOperationButton = "Lägg till operation"
 pipelineHeader = "Pipeline:"
 saveButton = "Ladda ner"
+saveForFolderScanning = "Spara för mappskanning"
 validateButton = "Validera"
 
 [enterpriseEdition]
@@ -340,6 +344,10 @@ advance = "Avancerat"
 edit = "Visa & Redigera"
 popular = "Populära"
 
+[footer]
+discord = "Discord"
+issues = "GitHub"
+
 [settings.preferences]
 title = "Preferenser"
 
@@ -360,6 +368,7 @@ advanced = "Avancerat"
 title = "Säkerhet och autentisering"
 security = "Säkerhet"
 connections = "Anslutningar"
+telegram = "Telegram"
 
 [settings.licensingAnalytics]
 title = "Licensiering och analys"
@@ -434,6 +443,32 @@ currentVersion = "Aktuell version"
 latestVersion = "Senaste version"
 checkForUpdates = "Sök efter uppdateringar"
 viewDetails = "Visa detaljer"
+serverNeedsUpdate = "Servern måste uppdateras av administratören"
+
+[settings.general.versionInfo]
+title = "Versionsinformation"
+description = "Information om skrivbords- och serverversioner"
+desktop = "Skrivbordsversion"
+server = "Serverversion"
+
+[settings.security]
+title = "Säkerhet"
+description = "Uppdatera ditt lösenord för att hålla ditt konto säkert."
+
+[settings.security.password]
+subtitle = "Byt ditt lösenord. Du loggas ut efter uppdateringen."
+required = "Alla fält är obligatoriska."
+mismatch = "Nya lösenord matchar inte."
+error = "Det gick inte att uppdatera lösenordet. Verifiera ditt nuvarande lösenord och försök igen."
+success = "Lösenordet har uppdaterats. Logga in igen."
+ssoDisabled = "Lösenordsändringar hanteras av din identitetsleverantör."
+current = "Nuvarande lösenord"
+currentPlaceholder = "Ange ditt nuvarande lösenord"
+new = "Nytt lösenord"
+newPlaceholder = "Ange ett nytt lösenord"
+confirm = "Bekräfta nytt lösenord"
+confirmPlaceholder = "Ange ditt nya lösenord igen"
+update = "Uppdatera lösenord"
 
 [settings.hotkeys]
 title = "Kortkommandon"
@@ -488,11 +523,16 @@ low = "Låg"
 title = "Ändra inloggningsuppgifter"
 header = "Uppdatera dina kontouppgifter"
 changePassword = "Du använder standardinloggningsuppgifter. Vänligen ange ett nytt lösenord"
+ssoManaged = "Ditt konto hanteras av din identitetsleverantör."
 newUsername = "Nytt användarnamn"
 oldPassword = "Nuvarande lösenord"
 newPassword = "Nytt lösenord"
 confirmNewPassword = "Bekräfta nytt lösenord"
 submit = "Skicka ändringar"
+credsUpdated = "Konto uppdaterat"
+description = "Ändringarna har sparats. Logga in igen."
+error = "Det gick inte att uppdatera användarnamn. Kontrollera ditt lösenord och försök igen."
+changeUsername = "Uppdatera ditt användarnamn. Du loggas ut efter uppdateringen."
 
 [account]
 title = "Kontoinställningar"
@@ -500,6 +540,8 @@ accountSettings = "Kontoinställningar"
 adminSettings = "Admininställningar - Visa och lägg till användare"
 userControlSettings = "Användarhanteringsinställningar"
 changeUsername = "Ändra användarnamn"
+changeUsernameDescription = "Uppdatera ditt användarnamn. Du loggas ut efter uppdateringen."
+newUsernamePlaceholder = "Ange ditt nya användarnamn"
 newUsername = "Nytt användarnamn"
 password = "Bekräftelselösenord"
 oldPassword = "Gammalt lösenord"
@@ -514,6 +556,30 @@ property = "Egenskap"
 webBrowserSettings = "Webbläsarinställning"
 syncToBrowser = "Synkronisera konto -> webbläsare"
 syncToAccount = "Synkronisera konto <- webbläsare"
+
+[account.mfa]
+title = "Tvåfaktorsautentisering"
+setupFailed = "Det gick inte att starta konfiguration av tvåfaktorsautentisering. Försök igen."
+codeRequired = "Ange autentiseringskoden för att fortsätta."
+enabled = "Tvåfaktorsautentisering aktiverad."
+enableFailed = "Det gick inte att aktivera tvåfaktorsautentisering. Kontrollera koden och försök igen."
+disabled = "Tvåfaktorsautentisering inaktiverad."
+disableFailed = "Det gick inte att inaktivera tvåfaktorsautentisering. Kontrollera koden och försök igen."
+description = "Lägg till ett extra säkerhetslager till ditt konto."
+enableButton = "Aktivera tvåfaktorsautentisering"
+disableButton = "Inaktivera tvåfaktorsautentisering"
+setupTitle = "Konfigurera tvåfaktorsautentisering"
+setupDescription = "Skanna QR-koden med din autentiseringsapp och ange sedan den 6-siffriga koden för att bekräfta."
+manualKey = "Manuell konfigurationsnyckel"
+secretWarning = "Håll denna nyckel privat. Alla med åtkomst kan generera giltiga autentiseringskoder."
+codePlaceholder = "Ange 6-siffrig kod"
+confirmEnable = "Aktivera"
+disableTitle = "Inaktivera tvåfaktorsautentisering"
+disableDescription = "Ange en giltig autentiseringskod för att inaktivera tvåfaktorsautentisering."
+codeLabel = "Autentiseringskod"
+confirmDisable = "Inaktivera"
+ssoDescription = "Tvåfaktorsautentisering hanteras av din identitetsleverantör för single sign-on-konton."
+ssoManaged = "Konfigurera MFA via din identitetsleverantör."
 
 [adminUserSettings]
 title = "Användarhanteringsinställningar"
@@ -708,6 +774,11 @@ tags = "signatur,autograf"
 title = "Signera"
 desc = "Lägger till signatur till PDF genom ritning, text eller bild"
 
+[home.annotate]
+tags = "annotera,markera,rita"
+title = "Annotera"
+desc = "Markera, rita, lägg till anteckningar och former i visaren"
+
 [home.flatten]
 tags = "förenkla,ta bort,interaktiv"
 title = "Platta till"
@@ -879,6 +950,7 @@ title = "Auto-dela efter storlek/antal"
 desc = "Dela en enda PDF till flera dokument baserat på storlek, sidantal eller dokumentantal"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ersätt och invertera färg"
 desc = "Ersätt eller invertera färger i PDF‑dokument"
 
@@ -893,18 +965,22 @@ title = "Automatiserad mappskanning"
 desc = "Länk till guide för automatiserad mappskanning"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO‑guide"
 desc = "Länk till SSO‑guide"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Isolerad installation"
 desc = "Länk till guide för isolerad installation"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Lägg till lösenord"
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Ändra behörigheter"
 desc = "Ändra dokumentrestriktioner och behörigheter"
 
@@ -914,12 +990,14 @@ title = "Automatisera"
 desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. Perfekt för återkommande uppgifter."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Överlagrar PDF:er ovanpå en annan PDF"
 title = "Överlagra PDF:er"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-textredigerare"
-desc = "Redigera befintlig text och bilder i PDF-filer"
+desc = "Granska och redigera Stirling PDF JSON-exporter med grupperad textredigering och PDF-återgenerering"
 
 [home.addText]
 tags = "text,kommentar,etikett"
@@ -930,6 +1008,7 @@ desc = "Lägg till egen text var som helst i din PDF"
 addFiles = "Lägg till filer"
 uploadFromComputer = "Ladda upp från datorn"
 openFromComputer = "Öppna från dator"
+mobileUpload = "Ladda upp från mobil"
 
 [viewPdf]
 tags = "visa,läs,kommentera,text,bild"
@@ -1217,7 +1296,10 @@ downloadHtml = "Ladda ner HTML‑mellanfil i stället för PDF"
 pdfaOptions = "PDF/A‑alternativ"
 outputFormat = "Utdataformat"
 pdfaNote = "PDF/A-1b är mer kompatibel, PDF/A-2b stöder fler funktioner."
+pdfaFormat = "PDF/A-format"
 pdfaDigitalSignatureWarning = "PDF:en innehåller en digital signatur. Denna kommer att tas bort i nästa steg."
+pdfxDigitalSignatureWarning = "PDF-filen innehåller en digital signatur. Detta kommer att tas bort i nästa steg."
+pdfxDescription = "PDF/X är en ISO-standardiserad PDF-delmängd för tillförlitlig tryckning och grafikutbyte."
 fileFormat = "Filformat"
 wordDoc = "Word‑dokument"
 wordDocExt = "Word‑dokument (.docx)"
@@ -1245,6 +1327,37 @@ cbzOptions = "CBZ till PDF‑alternativ"
 optimizeForEbook = "Optimera PDF för e‑boksläsare (använder Ghostscript)"
 cbzOutputOptions = "PDF till CBZ‑alternativ"
 cbzDpi = "DPI för bildrendering"
+cbrOptions = "CBR-alternativ"
+cbrOutputOptions = "Alternativ för PDF till CBR"
+cbrDpi = "DPI för bildrendering"
+svgPdfOptions = "SVG to PDF Options"
+combineSvgs = "Combine SVGs into single PDF"
+combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+
+[convert.ebookOptions]
+ebookOptions = "Alternativ för e-bok till PDF"
+ebookOptionsDesc = "Alternativ för att konvertera e-böcker till PDF"
+embedAllFonts = "Bädda in alla typsnitt"
+embedAllFontsDesc = "Bädda in alla typsnitt från e-boken i den genererade PDF-filen"
+includeTableOfContents = "Inkludera innehållsförteckning"
+includeTableOfContentsDesc = "Lägg till en genererad innehållsförteckning i den resulterande PDF-filen"
+includePageNumbers = "Inkludera sidnummer"
+includePageNumbersDesc = "Lägg till sidnummer i den genererade PDF-filen"
+optimizeForEbookPdf = "Optimera för e-boksläsare"
+optimizeForEbookPdfDesc = "Optimera PDF:en för e-boksläsning (mindre filstorlek, bättre rendering på eInk-enheter)"
+
+[convert.epubOptions]
+epubOptions = "Alternativ för PDF till e-bok"
+epubOptionsDesc = "Alternativ för att konvertera PDF till EPUB/AZW3"
+detectChapters = "Identifiera kapitel"
+detectChaptersDesc = "Identifiera rubriker som liknar kapitel och infoga EPUB-sidbrytningar"
+targetDevice = "Målenhet"
+targetDeviceDesc = "Välj en utmatningsprofil optimerad för läsarenheten"
+outputFormat = "Utdataformat"
+outputFormatDesc = "Välj utdataformat för e-boken"
+tabletPhone = "Surfplatta/telefon (med bilder)"
+kindleEink = "Kindle e‑Ink (textoptimerad)"
 
 [imageToPdf]
 tags = "konvertering,img,jpg,bild,foto"
@@ -1322,6 +1435,7 @@ applySignatures = "Använd bilder"
 name = "Bild"
 placeholder = "Ladda upp en bild"
 label = "Bildfil"
+hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
 
 [addImage.steps]
 configure = "Konfigurera bild"
@@ -1361,6 +1475,11 @@ header = "Add attachments"
 add = "Lägg till bilaga"
 remove = "Ta bort bilaga"
 embed = "Bädda in bilaga"
+convertToPdfA3b = "Konvertera till PDF/A-3b"
+convertToPdfA3bDescription = "Skapar en arkiv-PDF med inbäddade bilagor"
+convertToPdfA3bTooltip = "PDF/A-3b är ett arkivformat som säkerställer långsiktig bevaring. Det tillåter inbäddning av godtyckliga filformat som bilagor. Konverteringen kräver Ghostscript och kan ta längre tid för stora filer."
+convertToPdfA3bTooltipHeader = "Om konvertering till PDF/A-3b"
+convertToPdfA3bTooltipTitle = "Vad den gör"
 submit = "Add attachments"
 
 [watermark]
@@ -2113,6 +2232,16 @@ tip = "Fungerar för närvarande inte för flera inmatningar samtidigt"
 outputFormat = "Utdataformat"
 pdfWithDigitalSignature = "PDF:en innehåller en digital signatur. Denna kommer att tas bort i nästa steg."
 
+[pdfToPDFX]
+tags = "tryck,standard,konvertering,produktion,prepress,arkiv"
+title = "PDF till PDF/X"
+header = "PDF till PDF/X"
+credit = "Denna tjänst använder Ghostscript för PDF/X-konvertering"
+submit = "Konvertera"
+tip = "Fungerar för närvarande inte med flera indata samtidigt"
+outputFormat = "Utdataformat"
+pdfWithDigitalSignature = "PDF-filen innehåller en digital signatur. Detta kommer att tas bort i nästa steg."
+
 [PDFToWord]
 tags = "doc,docx,odt,word,transformation,format,konvertering,kontor,microsoft,docfil"
 title = "PDF till Word"
@@ -2297,7 +2426,7 @@ placeDesc = "Placera signaturen på din PDF"
 [sign.type]
 title = "Signaturtyp"
 draw = "Rita"
-canvas = "Rityta"
+canvas = "Canvas"
 image = "Bild"
 text = "Text"
 saved = "Sparad"
@@ -2306,6 +2435,10 @@ saved = "Sparad"
 label = "Ladda upp signaturbild"
 placeholder = "Välj bildfil"
 hint = "Ladda upp en PNG- eller JPG-bild av din signatur"
+removeBackground = "Ta bort vit bakgrund (gör transparent)"
+processing = "Bearbetar bild..."
+backgroundRemovalFailedTitle = "Borttagning av bakgrund misslyckades"
+backgroundRemovalFailedMessage = "Kunde inte ta bort bakgrunden från bilden. Använder originalbilden i stället."
 
 [sign.instructions]
 title = "Så här lägger du till signatur"
@@ -2350,6 +2483,11 @@ note = "Utplattning tar bort interaktiva element från PDF:en, vilket gör dem i
 [flatten.options.flattenOnlyForms]
 label = "Platta till endast formulär"
 desc = "Platta endast ut formulärfält, låt andra interaktiva element vara intakta"
+
+[flatten.renderDpi]
+label = "Renderings-DPI (valfritt, rekommenderas 150 DPI)"
+help = "Lämna tomt för att använda systemets standard. Högre DPI ger skarpare resultat men ökar bearbetningstid och filstorlek."
+placeholder = "t.ex. 150"
 
 [flatten.results]
 title = "Resultat för utplattning"
@@ -2925,6 +3063,7 @@ header = "Beskär PDF"
 submit = "Skicka"
 noFileSelected = "Välj en PDF-fil för att börja beskära"
 reset = "Återställ till full PDF"
+autoCrop = "Auto-beskär tomrum"
 
 [crop.preview]
 title = "Val av beskärningsområde"
@@ -3059,6 +3198,18 @@ other = "Övrigt"
 perPageInfo = "Information per sida"
 tableOfContents = "Innehållsförteckning"
 
+[getPdfInfo.compliance]
+notDetected = "Inte upptäckt"
+passed = "Godkänd"
+failed = "Underkänd"
+compliant = "Överensstämmande"
+nonCompliant = "Ej överensstämmande"
+none = "Inga standarder upptäckta"
+passedCount = "godkända"
+failedCount = "underkända"
+noVerification = "Ingen verifiering utförd"
+noVerificationDesc = "Efterlevnad av PDF-standarder verifierades inte för detta dokument."
+
 [getPdfInfo.other]
 attachments = "Bilagor"
 embeddedFiles = "Inbäddade filer"
@@ -3090,6 +3241,8 @@ permsRestricted = "{{count}} begränsningar"
 permsMixed = "Vissa behörigheter begränsade"
 hasCompliance = "Har efterlevnadsstandarder"
 noCompliance = "Inga efterlevnadsstandarder"
+compliancePassed = "Överensstämmer med {{standards}}"
+complianceChecked = "Standarder verifierade ({{failed}} underkända)"
 basic = "Grundläggande information"
 documentInfo = "Dokumentinformation"
 securityTitle = "Säkerhetsstatus"
@@ -3155,6 +3308,7 @@ title = "Maskningsmetod"
 mode = "Läge"
 automatic = "Automatisk"
 automaticDesc = "Maskera text baserat på söktermer"
+automaticDisabledTooltip = "Välj filer i filhanteraren för att maskera flera filer samtidigt"
 manual = "Manuell"
 manualDesc = "Klicka och dra för att maskera specifika områden"
 manualComingSoon = "Manuell maskning kommer snart"
@@ -3225,8 +3379,35 @@ text = "Matcha endast kompletta ord, inte delträffar. 'John' matchar inte 'John
 title = "Konvertera till PDF-bild"
 text = "Konverterar PDF:en till en bildbaserad PDF efter maskning. Detta säkerställer att text bakom maskeringsrutorna är helt borttagen och inte kan återskapas."
 
+[redact.tooltip.manual.header]
+title = "Manuella maskeringskontroller"
+
+[redact.tooltip.manual.markText]
+title = "Verktyg för att markera text"
+text = "Markera text direkt på PDF-filen för maskering. Klicka och dra för att markera specifik text som du vill maskera."
+
+[redact.tooltip.manual.markArea]
+title = "Verktyg för att markera område"
+text = "Rita rektangulära områden på PDF-filen för att markera regioner som ska maskeras. Användbart för att maskera bilder, signaturer eller oregelbundna former."
+
+[redact.tooltip.manual.apply]
+title = "Tillämpa maskningar"
+text = "Efter att ha markerat innehåll klickar du på \"Tillämpa\" för att permanent maskera alla markerade områden. Räknaren visar hur många maskningar som är redo att tillämpas."
+bullet1 = "Markera så många områden som behövs innan du tillämpar"
+bullet2 = "Alla väntande maskningar tillämpas samtidigt"
+bullet3 = "Maskningar kan inte ångras efter tillämpning"
+
 [redact.manual]
+title = "Maskeringsverktyg"
+instructions = "Markera text eller rita områden på PDF-filen för att markera innehåll för maskering."
+markText = "Markera text"
+markArea = "Markera område"
+pendingLabel = "Väntande:"
+applyWarning = "⚠️ Permanent åtgärd, kan inte ångras och underliggande data raderas"
+apply = "Tillämpa"
+noMarks = "Inga maskeringsmarkeringar. Använd verktygen ovan för att markera innehåll för maskering."
 header = "Manuell maskning"
+controlsTitle = "Manuella maskeringskontroller"
 textBasedRedaction = "Textbaserad maskning"
 pageBasedRedaction = "Sidbaserad maskning"
 convertPDFToImageLabel = "Konvertera PDF till PDF-bild (Används för att ta bort text bakom rutan)"
@@ -3341,6 +3522,19 @@ placeholder = "Ange antal horisontella indelningar"
 [split-by-sections.vertical]
 label = "Vertikala indelningar"
 placeholder = "Ange antal vertikala indelningar"
+
+[split-by-sections.splitMode]
+label = "Delningsläge"
+description = "Välj hur sidorna ska delas"
+splitAll = "Dela alla sidor"
+splitAllExceptFirst = "Dela alla utom första"
+splitAllExceptLast = "Dela alla utom sista"
+splitAllExceptFirstAndLast = "Dela alla utom första och sista"
+custom = "Anpassade sidor"
+
+[split-by-sections.customPages]
+label = "Anpassade sidnummer"
+placeholder = "t.ex. 2,4,6"
 
 [AddStampRequest]
 tags = "Stämpel,Lägg till bild,centrera bild,Vattenstämpel,PDF,Bädda in,Anpassa"
@@ -3588,6 +3782,13 @@ passwordChangedSuccess = "Lösenordet har ändrats. Logga in med ditt nya lösen
 credentialsUpdated = "Dina uppgifter har uppdaterats. Logga in igen."
 defaultCredentials = "Standardinloggningsuppgifter"
 changePasswordWarning = "Byt ditt lösenord efter att du loggat in första gången"
+mfaRequired = "Tvåfaktorskod krävs"
+mfaCode = "Autentiseringskod"
+enterMfaCode = "Ange 6-siffrig kod"
+mfaPromptTitle = "Tvåfaktorsautentisering"
+mfaPromptBody = "Ange autentiseringskoden från din autentiseringsapp för att fortsätta."
+verifyingMfa = "Verifierar..."
+verifyMfa = "Verifiera kod"
 
 [login.slides.overview]
 alt = "Översikt över Stirling PDF"
@@ -3703,6 +3904,19 @@ filesize = "Filstorlek"
 [compress.grayscale]
 label = "Tillämpa gråskala för komprimering"
 
+[compress.linearize]
+label = "Lineariserad PDF för snabb webbvisning"
+
+[compress.lineArt]
+label = "Konvertera bilder till linjegrafik"
+description = "Använder ImageMagick för att reducera sidor till högkontrast svartvitt för maximal storleksminskning."
+unavailable = "ImageMagick är inte installerat eller aktiverat på denna server"
+detailLevel = "Detaljnivå"
+edgeEmphasis = "Kantbetoning"
+edgeLow = "Mjuk"
+edgeMedium = "Balanserad"
+edgeHigh = "Stark"
+
 [compress.tooltip.header]
 title = "Översikt över komprimeringsinställningar"
 
@@ -3720,6 +3934,10 @@ bullet2 = "Högre värden minskar filstorleken"
 title = "Gråskala"
 text = "Välj detta alternativ för att konvertera alla bilder till svartvitt, vilket kan minska filstorleken avsevärt, särskilt för skannade PDF:er eller bildtunga dokument."
 
+[compress.tooltip.lineArt]
+title = "Linjegrafik"
+text = "Konvertera sidor till högkontrast svartvitt med ImageMagick. Använd detaljnivå för att styra hur mycket innehåll som blir svart och kantbetoning för hur aggressivt kanter upptäcks."
+
 [compress.error]
 failed = "Ett fel inträffade vid komprimering av PDF:en."
 
@@ -3731,6 +3949,11 @@ failed = "Ett fel inträffade vid komprimering av PDF:en."
 [compress.selectText.1]
 _value = "Komprimeringsinställningar"
 1 = "1–3 PDF-komprimering,</br> 4–6 lätt bildkomprimering,</br> 7–9 kraftig bildkomprimering Försämrar bildkvaliteten avsevärt"
+
+[compress.compressionLevel]
+range1to3 = "Lägre värden bevarar kvalitet men ger större filer"
+range4to6 = "Måttlig komprimering med måttlig kvalitetsminskning"
+range7to9 = "Högre värden minskar filstorleken avsevärt men kan försämra bildskärpan"
 
 [decrypt]
 passwordPrompt = "Denna fil är lösenordsskyddad. Fyll i lösenord:"
@@ -3971,22 +4194,97 @@ deleteSelected = "Ta bort markerade sidor"
 closePdf = "Stäng PDF"
 exportAll = "Exportera PDF"
 downloadSelected = "Ladda ner markerade filer"
-downloadAll = "Ladda ner alla"
-saveAll = "Spara alla"
+annotations = "Annoteringar"
+exportSelected = "Exportera markerade sidor"
+saveChanges = "Spara ändringar"
 toggleTheme = "Växla tema"
-toggleBookmarks = "Visa/dölj bokmärken"
 language = "Språk"
+toggleAnnotations = "Växla synlighet för anteckningar"
 search = "Sök i PDF"
 panMode = "Panoreringsläge"
+applyRedactionsFirst = "Tillämpa maskningar först"
 rotateLeft = "Rotera åt vänster"
 rotateRight = "Rotera åt höger"
 toggleSidebar = "Växla sidofält"
-exportSelected = "Exportera markerade sidor"
-toggleAnnotations = "Växla synlighet för anteckningar"
-annotationMode = "Växla anteckningsläge"
+toggleBookmarks = "Visa/dölj bokmärken"
 print = "Skriv ut PDF"
 draw = "Rita"
+redact = "Maskera"
+exitRedaction = "Avsluta maskeringsläge"
 save = "Spara"
+downloadAll = "Ladda ner alla"
+saveAll = "Spara alla"
+
+[textAlign]
+left = "Vänster"
+center = "Centrerat"
+right = "Höger"
+
+[annotation]
+title = "Annotera"
+desc = "Använd överstrykning, penna, text och anteckningar. Ändringar förblir live — ingen utplattning krävs."
+highlight = "Överstrykning"
+pen = "Penna"
+text = "Textruta"
+note = "Anteckning"
+rectangle = "Rektangel"
+ellipse = "Ellips"
+select = "Välj"
+exit = "Avsluta annoteringsläge"
+strokeWidth = "Bredd"
+opacity = "Opacitet"
+strokeOpacity = "Konturopacitet"
+fillOpacity = "Fyllnadsopacitet"
+fontSize = "Teckenstorlek"
+chooseColor = "Välj färg"
+color = "Färg"
+strokeColor = "Konturfärg"
+fillColor = "Fyllnadsfärg"
+underline = "Understrykning"
+strikeout = "Genomstrykning"
+squiggly = "Vågig"
+inkHighlighter = "Frihandsöverstrykning"
+freehandHighlighter = "Frihandsöverstrykning"
+square = "Kvadrat"
+circle = "Cirkel"
+polygon = "Polygon"
+line = "Linje"
+stamp = "Lägg till bild"
+textMarkup = "Textmarkering"
+drawing = "Ritning"
+shapes = "Former"
+notesStamps = "Anteckningar och stämplar"
+settings = "Inställningar"
+borderOn = "Ram: På"
+borderOff = "Ram: Av"
+editInk = "Redigera penna"
+editLine = "Redigera linje"
+editNote = "Redigera anteckning"
+editText = "Redigera textruta"
+editTextMarkup = "Redigera textmarkering"
+editSelected = "Redigera annotering"
+editSquare = "Redigera kvadrat"
+editCircle = "Redigera cirkel"
+editPolygon = "Redigera polygon"
+unsupportedType = "Denna annoteringstyp stöds inte fullt ut för redigering."
+textAlignment = "Textjustering"
+noteIcon = "Ikon för anteckning"
+imagePreview = "Förhandsvisning"
+contents = "Text"
+backgroundColor = "Bakgrundsfärg"
+clearBackground = "Ta bort bakgrund"
+noBackground = "Ingen bakgrund"
+stampSettings = "Stämpelinställningar"
+savingCopy = "Förbereder nedladdning..."
+saveFailed = "Kunde inte spara kopia"
+saveReady = "Nedladdning klar"
+selectAndMove = "Välj och redigera"
+editSelectDescription = "Klicka på en befintlig annotering för att redigera dess färg, opacitet, text eller storlek."
+editStampHint = "För att byta bild, ta bort denna stämpel och lägg till en ny."
+editSwitchToSelect = "Byt till Välj och redigera för att redigera denna annotering."
+undo = "Ångra"
+redo = "Gör om"
+applyChanges = "Verkställ ändringar"
 saveChanges = "Spara ändringar"
 
 [search]
@@ -4038,12 +4336,20 @@ settings = "Inst."
 adminSettings = "Admin inst."
 allTools = "All Tools"
 reader = "Läsare"
+tours = "Guider"
+showMeAround = "Visa mig runt"
+
+[quickAccess.toursTooltip]
+admin = "Se genomgångar här: Verktygsturen, turen för nya V2-layouten och administratörsturen."
+user = "Se genomgångar här: Verktygsturen och turen för nya V2-layouten."
 
 [quickAccess.helpMenu]
 toolsTour = "Verktygsrundtur"
 toolsTourDesc = "Lär dig vad verktygen kan göra"
 adminTour = "Adminrundtur"
 adminTourDesc = "Utforska admininställningar och funktioner"
+whatsNewTour = "Se vad som är nytt i V2"
+whatsNewTourDesc = "Gå igenom den uppdaterade layouten"
 
 [admin]
 error = "Fel"
@@ -4062,6 +4368,8 @@ fetchError = "Kunde inte läsa in inställningar"
 saveError = "Kunde inte spara inställningar"
 saved = "Inställningarna sparades"
 saveSuccess = "Inställningarna sparades"
+success = "Inställningarna har sparats"
+error = "Det gick inte att spara inställningarna"
 save = "Spara ändringar"
 discard = "Förkasta"
 restartRequired = "Omstart krävs"
@@ -4081,6 +4389,10 @@ hint = "Du har osparade ändringar"
 title = "Inloggningsläge krävs"
 message = "Inloggningsläge måste vara aktiverat för att ändra admininställningar. Ställ in SECURITY_ENABLELOGIN=true i din miljö eller security.enableLogin: true i settings.yml och starta sedan om servern."
 readOnly = "Inställningarna nedan visar exempelvärden som referens. Aktivera inloggningsläge för att visa och redigera faktisk konfiguration."
+
+[admin.settings.enterpriseRequired]
+title = "Företagslicens krävs"
+message = "En företagslicens krävs för att få åtkomst till {{featureName}}. Du ser demodata som referens."
 
 [admin.settings.restart]
 title = "Omstart krävs"
@@ -4185,6 +4497,13 @@ description = "Sökväg till WeasyPrint-körbar fil för konvertering från HTML
 label = "Unoconvert-körbar fil"
 description = "Sökväg till LibreOffice unoconvert för dokumentkonverteringar (lämna tomt för standard: /opt/venv/bin/unoconvert)"
 
+[admin.settings.general.frontendUrl]
+label = "Frontend-URL"
+description = "Bas-URL för frontend (t.ex. https://pdf.example.com). Används för e-postinbjudningslänkar och mobila QR-koduppladdningar. Lämna tomt för att använda backend-URL."
+
+[admin.settings.badge]
+clickToUpgrade = "Klicka för att visa plandetaljer"
+
 [admin.settings.security]
 title = "Säkerhet"
 description = "Konfigurera autentisering, inloggningsbeteende och säkerhetspolicys."
@@ -4213,6 +4532,13 @@ description = "Maximalt antal misslyckade inloggningsförsök innan kontot låse
 [admin.settings.security.loginResetTimeMinutes]
 label = "Återställningstid för inloggning (minuter)"
 description = "Tid innan misslyckade inloggningsförsök nollställs"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Inaktivera CSRF-skydd"
@@ -4321,6 +4647,19 @@ connect = "Anslut"
 disconnect = "Koppla från"
 disconnected = "Leverantör frånkopplad"
 disconnectError = "Det gick inte att koppla från leverantören"
+mobileScannerConvertToPdf = "Konvertera bilder till PDF"
+mobileScannerConvertToPdfDesc = "Konvertera automatiskt uppladdade bilder till PDF-format. Om inaktiverat behålls bilderna som de är."
+mobileScannerImageResolution = "Bildupplösning"
+mobileScannerImageResolutionDesc = "Upplösning för uppladdade bilder. \"Reducerad\" skalar bilder till max 1200px för att minska filstorleken."
+imageResolutionFull = "Full (originalstorlek)"
+imageResolutionReduced = "Reducerad (max 1200px)"
+mobileScannerPageFormat = "Sidformat"
+mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behåll\" använder bildens ursprungliga dimensioner."
+pageFormatKeep = "Behåll (ursprungliga dimensioner)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Sträck för att passa"
+mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
 
 [admin.settings.connections.ssoAutoLogin]
 label = "Automatisk SSO-inloggning"
@@ -4389,10 +4728,168 @@ description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
 label = "Blockera registrering"
 description = "Förhindra ny användarregistrering via SAML2"
 
+[admin.settings.connections.mobileScanner]
+label = "Uppladdning från mobiltelefon"
+enable = "Aktivera QR-koduppladdning"
+description = "Tillåt användare att ladda upp filer från mobila enheter genom att skanna en QR-kod"
+note = "Obs! Kräver att Frontend-URL är konfigurerad. "
+link = "Konfigurera i systeminställningarna"
+mobileScannerConvertToPdf = "Konvertera bilder till PDF"
+mobileScannerConvertToPdfDesc = "Konvertera automatiskt uppladdade bilder till PDF-format. Om inaktiverat behålls bilderna som de är."
+mobileScannerImageResolution = "Bildupplösning"
+mobileScannerImageResolutionDesc = "Upplösning för uppladdade bilder. \"Reducerad\" skalar bilder till max 1200px för att minska filstorleken."
+imageResolutionFull = "Full (originalstorlek)"
+imageResolutionReduced = "Reducerad (max 1200px)"
+mobileScannerPageFormat = "Sidformat"
+mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behåll\" använder bildens ursprungliga dimensioner."
+pageFormatKeep = "Behåll (ursprungliga dimensioner)"
+pageFormatA4 = "A4 (210×297mm)"
+pageFormatLetter = "Letter (8.5×11in)"
+mobileScannerStretchToFit = "Sträck för att passa"
+mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
+
+[admin.settings.telegram]
+title = "Telegram-bot"
+description = "Konfigurera anslutning till Telegram-bot, åtkomstkontroller och feedbackbeteende."
+
+[admin.settings.telegram.enabled]
+label = "Aktivera Telegram-bot"
+description = "Låt användare interagera med Stirling PDF via din konfigurerade Telegram-bot."
+
+[admin.settings.telegram.botUsername]
+label = "Botens användarnamn"
+description = "Det offentliga användarnamnet för din Telegram-bot."
+
+[admin.settings.telegram.botToken]
+label = "Bot-token"
+description = "API-token från BotFather för din Telegram-bot."
+
+[admin.settings.telegram.pipelineInboxFolder]
+label = "Inkorgsmapp"
+description = "Mapp under pipeline-katalogen där inkommande Telegram-filer lagras."
+
+[admin.settings.telegram.customFolderSuffix]
+label = "Använd anpassat mappsuffix"
+description = "Lägg till chatt-ID som suffix i mappar för inkommande filer för att isolera uppladdningar per chatt."
+
+[admin.settings.telegram.accessControl]
+title = "Åtkomstkontroll"
+description = "Begränsa vilka användare eller kanaler som kan interagera med boten."
+
+[admin.settings.telegram.enableAllowUserIDs]
+label = "Tillåt specifika användar-ID:n"
+description = "När aktiverat kan endast listade användar-ID:n använda boten."
+
+[admin.settings.telegram.allowUserIDs]
+label = "Tillåtna användar-ID:n"
+description = "Ange Telegram-användar-ID:n som får interagera med boten."
+placeholder = "Lägg till användar-ID och tryck Enter"
+
+[admin.settings.telegram.enableAllowChannelIDs]
+label = "Tillåt specifika kanal-ID:n"
+description = "När aktiverat kan endast listade kanal-ID:n använda boten."
+
+[admin.settings.telegram.allowChannelIDs]
+label = "Tillåtna kanal-ID:n"
+description = "Ange Telegram-kanal-ID:n som får interagera med boten."
+placeholder = "Lägg till kanal-ID och tryck Enter"
+
+[admin.settings.telegram.processing]
+title = "Bearbetning"
+description = "Styr pollingintervall och tidsgränser för bearbetning av Telegram-uppladdningar."
+
+[admin.settings.telegram.processingTimeoutSeconds]
+label = "Tidsgräns för bearbetning (sekunder)"
+description = "Maximal väntetid för ett bearbetningsjobb innan fel rapporteras."
+
+[admin.settings.telegram.pollingIntervalMillis]
+label = "Pollingintervall (ms)"
+description = "Intervall mellan kontroller av nya Telegram-uppdateringar."
+
+[admin.settings.telegram.feedback]
+title = "Feedbackmeddelanden"
+description = "Välj när boten ska skicka feedback till användare och kanaler."
+
+[admin.settings.telegram.feedback.general.enabled]
+label = "Aktivera feedback"
+description = "Styr om boten överhuvudtaget skickar feedbackmeddelanden."
+
+[admin.settings.telegram.feedback.channel]
+title = "Feedbackregler för kanaler"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+label = "Visa \"Inget giltigt dokument\" (Kanal)"
+description = "Undertryck svaret \"inget giltigt dokument\" för kanaluppladdningar."
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+label = "Visa bearbetningsfel (Kanal)"
+description = "Skicka bearbetningsfelmeddelanden till kanaler."
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+label = "Visa felmeddelanden (Kanal)"
+description = "Visa detaljerade felmeddelanden för kanaler."
+
+[admin.settings.telegram.feedback.user]
+title = "Feedbackregler för användare"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+label = "Visa \"Inget giltigt dokument\" (Användare)"
+description = "Undertryck svaret \"inget giltigt dokument\" för användaruppladdningar."
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+label = "Visa bearbetningsfel (Användare)"
+description = "Skicka bearbetningsfelmeddelanden till användare."
+
+[admin.settings.telegram.feedback.user.errorMessage]
+label = "Visa felmeddelanden (Användare)"
+description = "Visa detaljerade felmeddelanden för användare."
+
 [admin.settings.database]
 title = "Databas"
 description = "Konfigurera anpassade databasanslutningar för företagsinstallationer."
 configuration = "Databaskonfiguration"
+backupTitle = "Säkerhetskopior och återställning"
+backupDescription = "Hantera H2-säkerhetskopior direkt från admin-konsolen."
+loadError = "Det gick inte att läsa in databassäkerhetskopior"
+backupCreated = "Säkerhetskopian har skapats"
+backupFailed = "Det gick inte att skapa säkerhetskopia"
+deleteTitle = "Ta bort säkerhetskopia"
+deleteConfirm = "Ta bort denna säkerhetskopia? Detta kan inte ångras."
+deleteSuccess = "Säkerhetskopia borttagen"
+deleteFailed = "Det gick inte att ta bort säkerhetskopian"
+deleteConfirmAction = "Ta bort säkerhetskopia"
+downloadFailed = "Det gick inte att ladda ner säkerhetskopian"
+version = "H2-version"
+embedded = "Inbäddad H2"
+external = "Extern databas"
+h2Only = "Säkerhetskopior är endast tillgängliga för den inbäddade H2-databasen."
+h2Hint = "Ställ in databastypen på H2 och inaktivera anpassad databas för att aktivera säkerhetskopiering och återställning."
+manageBackups = "Hantera säkerhetskopior"
+refresh = "Uppdatera"
+createBackup = "Skapa säkerhetskopia"
+uploadTitle = "Ladda upp och importera"
+chooseFile = "Välj en .sql-säkerhetskopiefil"
+importFromUpload = "Importera uppladdad fil"
+confirmImportTitle = "Bekräfta databasimport"
+overwriteWarning = "Varning: Detta kommer att skriva över den aktuella databasen."
+overwriteWarningBody = "All befintlig data ersätts av den uppladdade säkerhetskopian. Denna åtgärd kan inte ångras."
+confirmCodeLabel = "Ange bekräftelsekoden för att fortsätta"
+enterCode = "Ange koden som visas ovan"
+confirmImport = "Bekräfta import"
+codeMismatch = "Bekräftelsekoden matchar inte"
+codeMismatchBody = "Ange koden exakt som den visas för att fortsätta."
+selectFile = "Välj en .sql-fil att importera"
+importSuccess = "Säkerhetskopian har importerats"
+importFailed = "Det gick inte att importera säkerhetskopian"
+noBackups = "Inga säkerhetskopior hittades ännu."
+unavailable = "Listan över säkerhetskopior är inte tillgänglig för den aktuella databaskonfigurationen."
+fileName = "Fil"
+created = "Skapad"
+size = "Storlek"
+actions = "Åtgärder"
+download = "Ladda ner"
+import = "Importera"
+delete = "Ta bort"
 
 [admin.settings.database.enableCustom]
 label = "Aktivera anpassad databas"
@@ -4470,6 +4967,26 @@ description = "Maximal DPI för bildbehandling (0 = obegränsad)"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata-katalog"
 description = "Sökväg till tessdata-katalogen för OCR-språkfiler"
+downloadMissingTitle = "Inget språk valt"
+downloadMissingBody = "Välj minst ett språk att ladda ner."
+downloadSuccessTitle = "Språk har laddats ner"
+downloadSuccessBody = "De valda tessdata-språken har sparats."
+downloadErrorTitle = "Nedladdning misslyckades"
+loadingLanguages = "Läser in installerade tessdata-språk..."
+installedLanguages = "Installerade tessdata-språk"
+noLanguages = "Inga tessdata-språk hittades i den konfigurerade katalogen."
+downloadLabel = "Ladda ner fler tessdata-språk"
+downloadPlaceholder = "Välj språk"
+downloadNothingFound = "Inga ytterligare språk hittades"
+permissionNotice = "tessdata-sökvägen är inte skrivbar. Nedladdningar öppnas i webbläsaren; spara .traineddata-filerna manuellt i tessdata-mappen."
+manualLinks = "Manuella nedladdningar: klicka på länkarna och placera filerna i tessdata-mappen."
+downloadButton = "Ladda ner valda språk"
+downloadInvalidTitle = "Ogiltigt val"
+downloadInvalidBody = "Vissa valda språk är inte tillgängliga för nedladdning. Uppdatera och välj från listan."
+downloadErrorNetwork = "Nedladdningen misslyckades på grund av ett nätverksfel. Kontrollera din anslutning och försök igen."
+downloadErrorServer = "Servern stötte på ett fel vid nedladdning av tessdata-språk. Försök igen senare."
+downloadErrorPermission = "tessdata-katalogen är inte skrivbar: {{message}}. Välj en skrivbar katalog (t.ex. under programdata-mappen) eller justera behörigheterna."
+downloadErrorGeneric = "Nedladdningen misslyckades: {{message}}. Försök igen senare."
 
 [admin.settings.advanced.disableSanitize]
 label = "Inaktivera HTML-sanering"
@@ -4569,6 +5086,10 @@ description = "Tillåt administratörer att bjuda in användare via e-post med a
 [admin.settings.mail.frontendUrl]
 label = "Frontend-URL"
 description = "Bas-URL för frontend (t.ex. https://pdf.example.com). Används för att generera inbjudningslänkar i e-post. Lämna tomt för att använda backend-URL."
+
+[admin.settings.mail.frontendUrlNote]
+note = "Obs! Kräver att Frontend-URL är konfigurerad. "
+link = "Konfigurera i systeminställningarna"
 
 [admin.settings.legal]
 title = "Juridiska dokument"
@@ -4754,6 +5275,9 @@ googleDriveShort = "Drive"
 myFiles = "Mina filer"
 noRecentFiles = "Inga senaste filer hittades"
 googleDriveNotAvailable = "Google Drive-integration är inte tillgänglig"
+mobileUpload = "Mobiluppladdning"
+mobileShort = "Mobil"
+mobileUploadNotAvailable = "Mobiluppladdning inte aktiverad"
 downloadSelected = "Ladda ner markerade"
 saveSelected = "Spara markerade"
 openFiles = "Öppna filer"
@@ -4966,6 +5490,7 @@ desc = "Bygg arbetsflöden i flera steg genom att kedja samman PDF-verktyg. Idea
 invalidStep = "Ogiltigt steg"
 reviewTitle = "Resultat av automatisering"
 copyToSaved = "Kopiera till Sparade"
+exportForFolderScanning = "Exportera för mappskanning"
 
 [automate.files]
 placeholder = "Välj filer att bearbeta med denna automatisering"
@@ -4987,6 +5512,7 @@ createTitle = "Skapa automatisering"
 editTitle = "Redigera automatisering"
 intro = "Automatiseringar kör verktyg sekventiellt. Lägg till verktyg i den ordning du vill att de ska köras för att komma igång."
 save = "Spara automatisering"
+exportForFolderScanning = "Exportera för mappskanning"
 
 [automate.creation.name]
 label = "Namn på automatisering"
@@ -5069,6 +5595,7 @@ loading = "Läser in..."
 back = "Tillbaka"
 continue = "Fortsätt"
 error = "Fel"
+save = "Spara"
 
 [config.overview]
 title = "Programkonfiguration"
@@ -5130,6 +5657,15 @@ warning = "⚠️ Varning: Denna åtgärd kommer att generera nya API-nycklar oc
 impact = "Alla applikationer eller tjänster som för närvarande använder dessa nycklar kommer att sluta fungera tills du uppdaterar dem med de nya nycklarna."
 confirmPrompt = "Är du säker på att du vill fortsätta?"
 confirmCta = "Uppdatera nycklar"
+
+[config.apiKeys.alert]
+apiKeyErrorTitle = "Fel på API-nyckel"
+failedToCreateApiKey = "Det gick inte att skapa API-nyckel."
+failedToRetrieveApiKey = "Det gick inte att hämta API-nyckel från svaret."
+failedToFetchApiKey = "Det gick inte att hämta API-nyckel."
+apiKeyRefreshed = "API-nyckel förnyad"
+apiKeyRefreshedBody = "Din API-nyckel har förnyats."
+failedToRefreshApiKey = "Det gick inte att förnya API-nyckeln."
 
 [AddAttachmentsRequest]
 attachments = "Välj bilagor"
@@ -5235,6 +5771,16 @@ finish = "Slutför"
 startTour = "Starta rundtur"
 startTourDescription = "Ta en guidad tur av Stirling PDFs nyckelfunktioner"
 
+[onboarding.whatsNew]
+quickAccess = "Börja i panelen <strong>Snabbåtkomst</strong> för att hoppa mellan Reader, Automate, dina filer och alla guider."
+leftPanel = "Den vänstra panelen <strong>Verktyg</strong> listar allt du kan göra. Bläddra i kategorier eller sök för att snabbt hitta ett verktyg."
+fileUpload = "Använd knappen <strong>Filer</strong> för att ladda upp eller välja en senaste PDF. Vi laddar ett exempel så att du kan se arbetsytan."
+rightRail = "Den <strong>Högra panelen</strong> innehåller snabba åtgärder för att välja filer, byta tema eller språk och ladda ned resultat."
+topBar = "I översta listen kan du växla mellan <strong>Visare</strong>, <strong>Sidredigerare</strong> och <strong>Aktiva filer</strong>."
+pageEditorView = "Byt till Sidredigerare för att ordna om, rotera eller ta bort sidor."
+activeFilesView = "Använd Aktiva filer för att se allt du har öppet och välja vad du vill arbeta med."
+wrapUp = "Detta är nytt i V2. Öppna menyn <strong>Guider</strong> när som helst för att spela upp detta, verktygsturen eller administratörsturen igen."
+
 [onboarding.welcomeModal]
 title = "Välkommen till Stirling PDF!"
 description = "Vill du ta en snabb 1-minutsrundtur för att lära dig nyckelfunktionerna och hur du kommer igång?"
@@ -5255,6 +5801,10 @@ download = "Ladda ner →"
 showMeAround = "Visa mig runt"
 skipTheTour = "Hoppa över rundturen"
 
+[onboarding.tourOverview]
+title = "Översikt över rundtur"
+body = "Stirling PDF V2 levereras med dussintals verktyg och en uppdaterad layout. Ta en snabb tur för att se vad som ändrats och var du hittar de funktioner du behöver."
+
 [onboarding.serverLicense]
 skip = "Hoppa över nu"
 seePlans = "Se planer →"
@@ -5262,7 +5812,7 @@ upgrade = "Uppgradera nu →"
 freeTitle = "Serverlicens"
 overLimitTitle = "Serverlicens krävs"
 overLimitBody = "Vår licensiering tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-användare. För att fortsätta utan avbrott, uppgradera till Stirling Server-planen - <strong>obegränsade platser</strong>, PDF-textredigering och full adminkontroll för $99/server/mån."
-freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott rekommenderar vi Stirling Server plan - <strong>obegränsat antal platser</strong> och <strong>SSO-stöd</strong> för $99/server/månad."
+freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott och få tidig åtkomst till vårt nya <strong>PDF-textredigeringsverktyg</strong> rekommenderar vi Stirling Server-planen - full redigering och <strong>obegränsade platser</strong> för $99/server/mån."
 
 [onboarding.desktopInstall]
 title = "Ladda ner"
@@ -5337,9 +5887,11 @@ username = "Användarnamn (e-post)"
 usernamePlaceholder = "user@example.com"
 password = "Lösenord"
 passwordPlaceholder = "Ange lösenord"
+passwordRequired = "Lösenord krävs"
 role = "Roll"
 team = "Team (valfritt)"
 teamPlaceholder = "Välj ett team"
+authType = "Autentiseringstyp"
 forcePasswordChange = "Tvinga lösenordsbyte vid första inloggningen"
 cancel = "Avbryt"
 submit = "Lägg till medlem"
@@ -5347,6 +5899,13 @@ usernameRequired = "Användarnamn och lösenord krävs"
 passwordTooShort = "Lösenordet måste vara minst 6 tecken"
 success = "Användare skapad"
 error = "Misslyckades med att skapa användare"
+forceMFA = "Kräv att MFA konfigureras vid nästa inloggning"
+
+[workspace.people.authType]
+password = "Lösenord"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Användaren kommer att autentisera sig via SSO-leverantör"
 
 [workspace.people.editMember]
 title = "Redigera medlem"
@@ -5449,6 +6008,11 @@ fromLicense = "från licens"
 slotsAvailable = "{{count}} användarplatser tillgängliga"
 noSlotsAvailable = "Inga platser tillgängliga"
 currentUsage = "Använder för närvarande {{current}} av {{max}} användarlicenser"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA inaktiverades för användaren"
+adminDisableError = "Det gick inte att inaktivera MFA för användaren"
+disableByAdmin = "Inaktivera MFA"
 
 [workspace.teams]
 title = "Team"
@@ -5568,6 +6132,28 @@ contactSales = "Kontakta sälj"
 contactToUpgrade = "Kontakta oss för att uppgradera eller anpassa din plan"
 maxUsers = "Max antal användare"
 upTo = "Upp till"
+getLicense = "Skaffa serverlicens"
+upgradeToEnterprise = "Uppgradera till Enterprise"
+selectPeriod = "Välj faktureringsperiod"
+monthlyBilling = "Månadsvis fakturering"
+yearlyBilling = "Årsvis fakturering"
+checkoutOpened = "Kassan öppnad"
+checkoutInstructions = "Slutför ditt köp i Stripe-fliken. Efter betalning, återvänd hit och uppdatera sidan för att aktivera din licens. Du får även ett e-postmeddelande med din licensnyckel."
+activateLicense = "Aktivera din licens"
+
+[plan.static.licenseActivation]
+checkoutOpened = "Kassan öppnad i ny flik"
+instructions = "Slutför ditt köp i Stripe-fliken. När betalningen är klar får du ett e-postmeddelande med din licensnyckel."
+enterKey = "Ange din licensnyckel nedan för att aktivera din plan:"
+keyDescription = "Klistra in licensnyckeln från ditt e‑postmeddelande"
+activate = "Aktivera licens"
+doLater = "Jag gör detta senare"
+success = "Licens aktiverad!"
+successMessage = "Din licens har aktiverats. Du kan nu stänga detta fönster."
+
+[plan.static.billingPortal]
+title = "E-postverifiering krävs"
+message = "Du måste verifiera din e-postadress i Stripes faktureringsportal. Kontrollera din e-post för en inloggningslänk."
 
 [plan.period]
 month = "månad"
@@ -5771,6 +6357,8 @@ notAvailable = "Granskningssystemet är inte tillgängligt"
 notAvailableMessage = "Granskningssystemet är inte konfigurerat eller inte tillgängligt."
 disabled = "Granskningsloggning är inaktiverad"
 disabledMessage = "Aktivera granskningsloggning i din applikationskonfiguration för att spåra systemhändelser."
+enterpriseRequired = "Enterprise-licens krävs"
+enterpriseRequiredMessage = "Revisionsloggningen är en Enterprise-funktion. Uppgradera till en Enterprise-licens för att få åtkomst till revisionsloggar och analys."
 
 [audit.error]
 title = "Fel vid inläsning av granskningssystemet"
@@ -5868,6 +6456,7 @@ endpoint = "Slutpunkt"
 visits = "Besök"
 percentage = "Procent"
 noData = "Ingen data tillgänglig"
+unknownEndpoint = "Okänd slutpunkt"
 
 [backendHealth]
 checking = "Kontrollerar backendstatus..."
@@ -5942,6 +6531,7 @@ description = "Ange den fullständiga URL:en till din självhostade Stirling PDF
 
 [setup.server.error]
 emptyUrl = "Ange en server-URL"
+invalidUrl = "Ogiltigt URL-format. Ange en giltig URL som https://your-server.com"
 unreachable = "Kunde inte ansluta till servern"
 testFailed = "Anslutningstest misslyckades"
 configFetch = "Det gick inte att hämta serverkonfigurationen. Kontrollera URL:en och försök igen."
@@ -5960,6 +6550,7 @@ connectingTo = "Ansluter till:"
 submit = "Logga in"
 signInWith = "Logga in med"
 oauthPending = "Öppnar webbläsaren för autentisering..."
+sso = "Single Sign-On"
 orContinueWith = "Eller fortsätt med e-post"
 serverRequirement = "Observera: Servern måste ha inloggning aktiverad."
 showInstructions = "Hur aktiverar man?"
@@ -6025,6 +6616,8 @@ reset = "Återställ ändringar"
 downloadJson = "Ladda ner JSON"
 generatePdf = "Skapa PDF"
 saveChanges = "Spara ändringar"
+applyChanges = "Verkställ ändringar"
+downloadCopy = "Ladda ned kopia"
 
 [pdfTextEditor.options.autoScaleText]
 title = "Skala text automatiskt för att passa rutor"
@@ -6042,6 +6635,24 @@ descriptionInline = "Tips: Håll Ctrl (Cmd) eller Shift för att markera flera t
 [pdfTextEditor.options.forceSingleElement]
 title = "Lås redigerad text till ett enda PDF-element"
 description = "När detta är aktiverat exporterar editorn varje redigerad textruta som ett PDF-textelement för att undvika överlappande tecken eller blandade typsnitt."
+
+[pdfTextEditor.options.advanced]
+title = "Avancerade inställningar"
+
+[pdfTextEditor.tooltip.header]
+title = "Begränsningar i förhandsvisningen"
+
+[pdfTextEditor.tooltip.textFocus]
+title = "Fokus på text och bild"
+text = "Denna arbetsyta fokuserar på att redigera text och flytta inbäddade bilder. Komplex sidgrafik, formulärwidgets och lagergrafik bevaras för export men kan inte redigeras fullt ut här."
+
+[pdfTextEditor.tooltip.previewVariance]
+title = "Avvikelser i förhandsvisning"
+text = "Vissa visuella element (t.ex. tabellramar, former eller annoteringsutseenden) kanske inte visas exakt i förhandsvisningen. Den exporterade PDF:en behåller de ursprungliga ritkommandona när det är möjligt."
+
+[pdfTextEditor.tooltip.alpha]
+title = "Alfa-visare"
+text = "Denna alfa‑visare utvecklas fortfarande — vissa typsnitt, färger, transparenteffekter och layoutdetaljer kan avvika något. Kontrollera den genererade PDF:en noggrant innan du delar den."
 
 [pdfTextEditor.manual]
 mergeTooltip = "Slå ihop markerade textrutor"
@@ -6164,3 +6775,58 @@ title = "Resultat för Lägg till text"
 
 [addText.error]
 failed = "Ett fel inträffade när text lades till i PDF:en."
+
+[mobileUpload]
+title = "Ladda upp från mobil"
+description = "Skanna för att ladda upp foton. Bilder konverteras automatiskt till PDF."
+descriptionNoConvert = "Skanna för att ladda upp foton från din mobila enhet."
+error = "Anslutningsfel"
+pollingError = "Fel vid kontroll av filer"
+sessionId = "Sessions-ID"
+sessionCreateError = "Det gick inte att skapa session"
+expiryWarning = "Sessionen går snart ut"
+expiryWarningMessage = "Denna QR-kod upphör att gälla om {{seconds}} sekunder. En ny kod genereras automatiskt."
+filesReceived = "{{count}} fil(er) mottagna"
+connected = "Mobil enhet ansluten"
+instructions = "Skanna med din mobilkamera. Bilder konverteras automatiskt till PDF."
+instructionsNoConvert = "Skanna med din mobilkamera för att ladda upp filer."
+
+[mobileScanner]
+title = "Mobilskanner"
+noSession = "Ogiltig session"
+noSessionMessage = "Skanna en giltig QR-kod för att komma åt denna sida."
+validating = "Validerar session..."
+sessionInvalid = "Sessionsfel"
+sessionExpired = "Denna session har löpt ut. Uppdatera och försök igen."
+sessionNotFound = "Sessionen hittades inte. Uppdatera och försök igen."
+sessionValidationError = "Det går inte att verifiera sessionen. Försök igen."
+uploadSuccess = "Uppladdning lyckades!"
+uploadSuccessMessage = "Dina bilder har överförts."
+httpsRequired = "Kameraåtkomst kräver HTTPS eller localhost. Använd HTTPS eller anslut via localhost."
+uploadFailed = "Uppladdningen misslyckades. Försök igen."
+uploading = "Laddar upp..."
+connected = "Ansluten"
+connecting = "Ansluter..."
+chooseMethod = "Välj uppladdningsmetod"
+chooseMethodDescription = "Välj hur du vill skanna och ladda upp dokument"
+camera = "Kamera"
+cameraDescription = "Skanna dokument med din enhets kamera med automatisk kantdetektering"
+fileUpload = "Filuppladdning"
+fileDescription = "Ladda upp befintliga foton eller dokument från din enhet"
+cameraAccessDenied = "Kameraåtkomst nekades. Aktivera kameraåtkomst."
+back = "Tillbaka"
+settings = "Inställningar"
+edgeDetection = "Kantdetektering"
+flashlight = "Ficklampa"
+flash = "Blixt"
+processing = "Bearbetar..."
+capture = "Ta foto"
+selectFilesPrompt = "Välj filer att ladda upp"
+selectImage = "Välj bild"
+preview = "Förhandsgranska"
+retake = "Ta om"
+addToBatch = "Lägg till i batch"
+upload = "Ladda upp"
+batchImages = "Batch"
+clearBatch = "Rensa"
+uploadAll = "Ladda upp alla"

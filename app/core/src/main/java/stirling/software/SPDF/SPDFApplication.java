@@ -20,7 +20,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +27,6 @@ import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.UrlUtils;
 
 @Slf4j
 @EnableScheduling
@@ -59,19 +57,6 @@ public class SPDFApplication {
         SpringApplication app = new SpringApplication(SPDFApplication.class);
 
         Properties props = new Properties();
-
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            System.setProperty("java.awt.headless", "false");
-            app.setHeadless(false);
-            props.put("java.awt.headless", "false");
-            props.put("spring.main.web-application-type", "servlet");
-
-            int desiredPort = 8080;
-            String port = UrlUtils.findAvailablePort(desiredPort);
-            props.put("server.port", port);
-            System.setProperty("server.port", port);
-            log.info("Desktop UI mode: Using port {}", port);
-        }
 
         app.setAdditionalProfiles(getActiveProfile(args));
 
@@ -141,10 +126,10 @@ public class SPDFApplication {
         String backendUrl = appConfig.getBackendUrl();
         String contextPath = appConfig.getContextPath();
         String serverPort = appConfig.getServerPort();
-        baseUrlStatic = backendUrl;
+        baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = backendUrl + ":" + getStaticPort() + contextPath;
+        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
@@ -153,13 +138,6 @@ public class SPDFApplication {
                     "Running in Tauri mode. Parent process PID: {}",
                     parentPid != null ? parentPid : "not set");
         }
-        // Desktop UI initialization removed - webBrowser dependency eliminated
-        // Keep backwards compatibility for STIRLING_PDF_DESKTOP_UI system property
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            log.info("Desktop UI mode enabled, but WebBrowser functionality has been removed");
-            // webBrowser.initWebUI(url); // Removed - desktop UI eliminated
-        }
-
         // Standard browser opening logic
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
@@ -192,14 +170,6 @@ public class SPDFApplication {
         }
     }
 
-    @PreDestroy
-    public void cleanup() {
-        // webBrowser cleanup removed - desktop UI eliminated
-        // if (webBrowser != null) {
-        //     webBrowser.cleanup();
-        // }
-    }
-
     @EventListener
     public void onWebServerInitialized(WebServerInitializedEvent event) {
         int actualPort = event.getWebServer().getPort();
@@ -210,7 +180,7 @@ public class SPDFApplication {
 
     private static void printStartupLogs() {
         log.info("Stirling-PDF Started.");
-        String url = baseUrlStatic + ":" + getStaticPort() + contextPathStatic;
+        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
         log.info("Navigate to {}", url);
     }
 
@@ -257,5 +227,80 @@ public class SPDFApplication {
 
     public static String getStaticContextPath() {
         return contextPathStatic;
+    }
+
+    private static String buildFullUrl(String backendUrl, String port, String contextPath) {
+        String normalizedBase = normalizeBackendUrl(backendUrl, port);
+
+        String normalizedContextPath =
+                (contextPath == null || contextPath.isBlank() || "/".equals(contextPath))
+                        ? "/"
+                        : (contextPath.startsWith("/") ? contextPath : "/" + contextPath);
+
+        return normalizedBase + normalizedContextPath;
+    }
+
+    private static String normalizeBackendUrl(String backendUrl, String port) {
+        String trimmedBase =
+                (backendUrl == null || backendUrl.isBlank())
+                        ? "http://localhost"
+                        : backendUrl.trim().replaceAll("/+$", "");
+        boolean hasScheme = trimmedBase.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+        String baseForParsing = hasScheme ? trimmedBase : "http://" + trimmedBase;
+        Integer parsedPort = parsePort(port);
+
+        try {
+            java.net.URI uri = new java.net.URI(baseForParsing);
+            String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
+            String host = uri.getHost();
+            if (host == null) {
+                return appendPortFallback(trimmedBase, parsedPort);
+            }
+
+            boolean defaultHttp =
+                    "http".equalsIgnoreCase(scheme) && Integer.valueOf(80).equals(parsedPort);
+            boolean defaultHttps =
+                    "https".equalsIgnoreCase(scheme) && Integer.valueOf(443).equals(parsedPort);
+
+            int effectivePort = uri.getPort();
+            if (effectivePort == -1 && parsedPort != null && !defaultHttp && !defaultHttps) {
+                effectivePort = parsedPort;
+            }
+
+            java.net.URI rebuilt =
+                    new java.net.URI(
+                            scheme,
+                            uri.getUserInfo(),
+                            host,
+                            effectivePort,
+                            uri.getPath(),
+                            uri.getQuery(),
+                            uri.getFragment());
+            return rebuilt.toString();
+        } catch (java.net.URISyntaxException e) {
+            return appendPortFallback(trimmedBase, parsedPort);
+        }
+    }
+
+    private static Integer parsePort(String port) {
+        if (port == null || port.isBlank()) {
+            return null;
+        }
+        try {
+            int parsed = Integer.parseInt(port);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static String appendPortFallback(String trimmedBase, Integer port) {
+        if (port == null) {
+            return trimmedBase;
+        }
+        if (trimmedBase.matches(".+:\\d+$")) {
+            return trimmedBase;
+        }
+        return trimmedBase + ":" + port;
     }
 }

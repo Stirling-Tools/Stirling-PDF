@@ -5,6 +5,42 @@ set -euo pipefail
 log() { printf '%s\n' "$*" >&2; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
+run_with_timeout() {
+  local secs=$1; shift
+  if command_exists timeout; then
+    timeout "${secs}s" "$@"
+  else
+    "$@"
+  fi
+}
+
+tcp_port_check() {
+  local host=$1
+  local port=$2
+  local timeout_secs=${3:-5}
+
+  # Try nc first (most portable)
+  if command_exists nc; then
+    run_with_timeout "$timeout_secs" nc -z "$host" "$port" 2>/dev/null
+    return $?
+  fi
+
+  # Fallback to /dev/tcp (bash-specific)
+  if [ -n "${BASH_VERSION:-}" ] && command_exists bash; then
+    run_with_timeout "$timeout_secs" bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null
+    local result=$?
+    exec 3>&- 2>/dev/null || true
+    return $result
+  fi
+
+  # No TCP check method available
+  return 2
+}
+
+UNOSERVER_PIDS=()
+UNOSERVER_PORTS=()
+UNOSERVER_UNO_PORTS=()
+
 SU_EXEC_BIN=""
 if command_exists su-exec; then
   SU_EXEC_BIN="su-exec"
@@ -32,6 +68,170 @@ run_as_runtime_user() {
     warn_switch_user_once
     "$@"
   fi
+}
+
+run_as_runtime_user_with_timeout() {
+  local secs=$1; shift
+  if command_exists timeout; then
+    run_as_runtime_user timeout "${secs}s" "$@"
+  else
+    run_as_runtime_user "$@"
+  fi
+}
+
+CONFIG_FILE=${CONFIG_FILE:-/configs/settings.yml}
+
+read_setting_value() {
+  local key=$1
+  if [ ! -f "$CONFIG_FILE" ]; then
+    return
+  fi
+  awk -F: -v key="$key" '
+    $1 ~ "^[[:space:]]*"key"[[:space:]]*$" {
+      val=$2
+      sub(/#.*/, "", val)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
+      gsub(/^["'"'"']|["'"'"']$/, "", val)
+      print val
+      exit
+    }
+  ' "$CONFIG_FILE"
+}
+
+get_unoserver_auto() {
+  if [ -n "${PROCESS_EXECUTOR_AUTO_UNO_SERVER:-}" ]; then
+    echo "$PROCESS_EXECUTOR_AUTO_UNO_SERVER"
+    return
+  fi
+  if [ -n "${UNO_SERVER_AUTO:-}" ]; then
+    echo "$UNO_SERVER_AUTO"
+    return
+  fi
+  read_setting_value "autoUnoServer"
+}
+
+get_unoserver_count() {
+  if [ -n "${PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT:-}" ]; then
+    echo "$PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT"
+    return
+  fi
+  if [ -n "${UNO_SERVER_COUNT:-}" ]; then
+    echo "$UNO_SERVER_COUNT"
+    return
+  fi
+  read_setting_value "libreOfficeSessionLimit"
+}
+
+start_unoserver_instance() {
+  local port=$1
+  local uno_port=$2
+  run_as_runtime_user "$UNOSERVER_BIN" \
+    --interface 127.0.0.1 \
+    --port "$port" \
+    --uno-port "$uno_port" \
+    &
+  LAST_UNOSERVER_PID=$!
+}
+
+start_unoserver_watchdog() {
+  local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
+  case "$interval" in
+    ''|*[!0-9]*) interval=30 ;;
+  esac
+  (
+    while true; do
+      local i=0
+      while [ "$i" -lt "${#UNOSERVER_PIDS[@]}" ]; do
+        local pid=${UNOSERVER_PIDS[$i]}
+        local port=${UNOSERVER_PORTS[$i]}
+        local uno_port=${UNOSERVER_UNO_PORTS[$i]}
+        local needs_restart=false
+
+        # Check 1: PID exists
+        if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+          log "unoserver PID ${pid} not found for port ${port}"
+          needs_restart=true
+        else
+          # PID exists, now check if server is actually healthy
+          local health_ok=false
+
+          # Check 2A: Health check with unoping (best - checks actual server health)
+          if [ -n "$UNOPING_BIN" ]; then
+            if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
+              health_ok=true
+            else
+              log "unoserver health check failed (unoping) for port ${port}, trying TCP fallback"
+            fi
+          fi
+
+          # Check 2B: Fallback to TCP port check (verifies service is listening)
+          if [ "$health_ok" = false ]; then
+            tcp_port_check "127.0.0.1" "$port" 5
+            local tcp_rc=$?
+            if [ $tcp_rc -eq 0 ]; then
+              health_ok=true
+            elif [ $tcp_rc -eq 2 ]; then
+              log "No TCP check available; falling back to PID-only for port ${port}"
+              health_ok=true
+            else
+              log "unoserver TCP check failed for port ${port}"
+              needs_restart=true
+            fi
+          fi
+        fi
+
+        if [ "$needs_restart" = true ]; then
+          log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+          # Kill the old process if it exists
+          if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            kill -TERM "$pid" 2>/dev/null || true
+            sleep 1
+            kill -KILL "$pid" 2>/dev/null || true
+          fi
+          start_unoserver_instance "$port" "$uno_port"
+          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+        fi
+        i=$((i + 1))
+      done
+      sleep "$interval"
+    done
+  ) &
+}
+
+start_unoserver_pool() {
+  local auto
+  auto="$(get_unoserver_auto)"
+  auto="${auto,,}"
+  if [ -z "$auto" ]; then
+    auto="true"
+  fi
+  if [ "$auto" != "true" ]; then
+    log "Skipping local unoserver pool (autoUnoServer=$auto)"
+    return 0
+  fi
+
+  local count
+  count="$(get_unoserver_count)"
+  case "$count" in
+    ''|*[!0-9]*) count=1 ;;
+  esac
+  if [ "$count" -le 0 ]; then
+    count=1
+  fi
+
+  local i=0
+  while [ "$i" -lt "$count" ]; do
+    local port=$((2003 + (i * 2)))
+    local uno_port=$((2004 + (i * 2)))
+    log "Starting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
+    UNOSERVER_PORTS+=("$port")
+    UNOSERVER_UNO_PORTS+=("$uno_port")
+    start_unoserver_instance "$port" "$uno_port"
+    UNOSERVER_PIDS+=("$LAST_UNOSERVER_PID")
+    i=$((i + 1))
+  done
+
+  start_unoserver_watchdog
 }
 
 # ---------- VERSION_TAG ----------
@@ -105,7 +305,7 @@ fi
 # ---------- Permissions ----------
 # Ensure required directories exist and set correct permissions.
 log "Setting permissions..."
-mkdir -p /tmp/stirling-pdf /logs /configs /customFiles /pipeline || true
+mkdir -p /tmp/stirling-pdf /logs /configs /configs/heap_dumps /customFiles /pipeline || true
 CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
 CHOWN_OK=true
@@ -131,37 +331,65 @@ fi
 # Start LibreOffice UNO server for document conversions.
 UNOSERVER_BIN="$(command -v unoserver || true)"
 UNOCONVERT_BIN="$(command -v unoconvert || true)"
-UNOSERVER_PID=""
-
+UNOPING_BIN="$(command -v unoping || true)"
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
   run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
 
-  log "Starting unoserver on 127.0.0.1:2003"
-  run_as_runtime_user "$UNOSERVER_BIN" \
-    --interface 127.0.0.1 \
-    --port 2003 \
-    --uno-port 2004 \
-    &
-  UNOSERVER_PID=$!
-  log "unoserver PID: $UNOSERVER_PID (Profile: $LIBREOFFICE_PROFILE)"
+  start_unoserver_pool
+  log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE)"
+
+  check_unoserver_port_ready() {
+    local port=$1
+
+    # Try unoping first (best - checks actual server health)
+    if [ -n "$UNOPING_BIN" ]; then
+      if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
+        return 0
+      fi
+    fi
+
+    # Fallback to TCP port check (verifies service is listening)
+    tcp_port_check "127.0.0.1" "$port" 5
+    local tcp_rc=$?
+    if [ $tcp_rc -eq 0 ] || [ $tcp_rc -eq 2 ]; then
+      # Success or unsupported (assume ready if can't check)
+      return 0
+    fi
+
+    return 1
+  }
+
+  check_unoserver_ready() {
+    if [ "${#UNOSERVER_PORTS[@]}" -eq 0 ]; then
+      log "Skipping unoserver readiness check (no local ports started)"
+      return 0
+    fi
+    for port in "${UNOSERVER_PORTS[@]}"; do
+      if ! check_unoserver_port_ready "$port"; then
+        return 1
+      fi
+    done
+    return 0
+  }
 
   # Wait until UNO server is ready.
   log "Waiting for unoserver..."
   for _ in {1..20}; do
-    if run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1; then
+    if check_unoserver_ready; then
       log "unoserver is ready!"
       break
     fi
+    log "unoserver not ready yet; retrying..."
     sleep 1
   done
 
-  if ! run_as_runtime_user "$UNOCONVERT_BIN" --version >/dev/null 2>&1; then
+  if ! check_unoserver_ready; then
     log "ERROR: unoserver failed!"
-    if [ -n "$UNOSERVER_PID" ]; then
-      kill "$UNOSERVER_PID" 2>/dev/null || true
-      wait "$UNOSERVER_PID" 2>/dev/null || true
-    fi
+    for pid in "${UNOSERVER_PIDS[@]}"; do
+      kill "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+    done
     exit 1
   fi
 else

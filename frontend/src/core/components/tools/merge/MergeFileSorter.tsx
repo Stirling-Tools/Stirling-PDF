@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import SortIcon from '@mui/icons-material/Sort';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface MergeFileSorterProps {
   onSortFiles: (sortType: 'filename' | 'dateModified', ascending: boolean) => void;
@@ -46,6 +47,7 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
             label={t('merge.sortBy.label', 'Sort By')}
             size='xs'
             style={{ flex: 1 }}
+            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
           />
 
           <ActionIcon
