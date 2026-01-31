@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useRef, useEffect } from 'react';
 import { FileId } from '@app/types/file';
 import { useFileActions, useFileState } from '@app/contexts/FileContext';
-import { PDFPage } from '@app/types/pageEditor';
+import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 import { MAX_PAGE_EDITOR_FILES } from '@app/components/pageEditor/fileColors';
 
 // PageEditorFile is now defined locally in consuming components
@@ -129,6 +129,10 @@ interface PageEditorContextValue {
 
   // Update file order based on page positions (when pages are manually reordered)
   updateFileOrderFromPages: (pages: PDFPage[]) => void;
+  persistedDocument: PDFDocument | null;
+  persistedDocumentSignature: string | null;
+  savePersistedDocument: (document: PDFDocument, signature: string) => void;
+  clearPersistedDocument: () => void;
 }
 
 const PageEditorContext = createContext<PageEditorContextValue | undefined>(undefined);
@@ -141,12 +145,39 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   const [currentPages, setCurrentPages] = useState<PDFPage[] | null>(null);
   const [reorderedPages, setReorderedPages] = useState<PDFPage[] | null>(null);
 
+  const [persistedDocument, setPersistedDocument] = useState<PDFDocument | null>(null);
+  const [persistedDocumentSignature, setPersistedDocumentSignature] = useState<string | null>(null);
+
+  const savePersistedDocument = useCallback((document: PDFDocument, signature: string) => {
+    setPersistedDocument(document);
+    setPersistedDocumentSignature(signature);
+  }, []);
+
+  const clearPersistedDocument = useCallback(() => {
+    setPersistedDocument(null);
+    setPersistedDocumentSignature(null);
+  }, []);
+
   // Page editor's own file order (independent of FileContext)
   const [fileOrder, setFileOrder] = useState<FileId[]>([]);
 
   // Read from FileContext (for file metadata only, not order)
   const { actions: fileActions } = useFileActions();
   const { state } = useFileState();
+
+  const fileContextSignature = useMemo(() => {
+    return state.files.ids
+      .map(id => `${id}:${state.files.byId[id]?.versionNumber ?? 0}`)
+      .join(',');
+  }, [state.files.ids, state.files.byId]);
+
+  const prevFileContextSignature = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevFileContextSignature.current !== fileContextSignature) {
+      prevFileContextSignature.current = fileContextSignature;
+      clearPersistedDocument();
+    }
+  }, [fileContextSignature, clearPersistedDocument]);
 
   // Keep a ref to always read latest state in stable callbacks
   const stateRef = useRef(state);
@@ -203,7 +234,7 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
         }
       });
     }, 100);
-  }, [state.files.ids, state.files.byId, fileActions]);
+    }, [state.files.ids, state.files.byId, fileActions]);
 
   const updateCurrentPages = useCallback((pages: PDFPage[] | null) => {
     setCurrentPages(pages);
@@ -329,6 +360,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     deselectAll,
     reorderFiles,
     updateFileOrderFromPages,
+    persistedDocument,
+    persistedDocumentSignature,
+    savePersistedDocument,
+    clearPersistedDocument,
   }), [
     currentPages,
     updateCurrentPages,
@@ -341,6 +376,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     deselectAll,
     reorderFiles,
     updateFileOrderFromPages,
+    persistedDocument,
+    persistedDocumentSignature,
+    savePersistedDocument,
+    clearPersistedDocument,
   ]);
 
   return (

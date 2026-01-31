@@ -20,10 +20,13 @@ let batchTimer: number | null = null;
 // Track active thumbnail requests to prevent duplicates across components
 const activeRequests = new Map<string, Promise<string | null>>();
 
+// Cache ArrayBuffers to avoid reading the same file multiple times
+const fileArrayBufferCache = new Map<File, ArrayBuffer>();
+
 // Batch processing configuration
-const BATCH_SIZE = 20; // Process thumbnails in batches of 20 for better UI responsiveness
-const BATCH_DELAY = 100; // Wait 100ms to collect requests before processing
-const PRIORITY_BATCH_DELAY = 50; // Faster processing for the first batch (visible pages)
+const BATCH_SIZE = 10; // Process thumbnails in batches of 10 for faster initial load
+const BATCH_DELAY = 50; // Wait 50ms to collect requests before processing
+const PRIORITY_BATCH_DELAY = 10; // Very fast processing for the first batch (visible pages)
 
 // Process the queue in batches for better performance
 async function processRequestQueue() {
@@ -68,8 +71,13 @@ async function processRequestQueue() {
 
         try {
           const pageNumbers = requests.map(req => req.pageNumber);
-          const arrayBuffer = await file.arrayBuffer();
 
+          // Get or create cached ArrayBuffer to avoid reading file multiple times
+          let arrayBuffer = fileArrayBufferCache.get(file);
+          if (!arrayBuffer) {
+            arrayBuffer = await file.arrayBuffer();
+            fileArrayBufferCache.set(file, arrayBuffer);
+          }
 
           // Use quickKey for PDF document caching (same metadata, consistent format)
           const fileId = createQuickKey(file) as FileId;
@@ -106,6 +114,10 @@ async function processRequestQueue() {
     }
   } finally {
     isProcessingQueue = false;
+    // Clean up ArrayBuffer cache when queue is empty
+    if (requestQueue.length === 0) {
+      fileArrayBufferCache.clear();
+    }
   }
 }
 
@@ -162,6 +174,9 @@ export function useThumbnailGeneration() {
     requestQueue.length = 0;
     activeRequests.clear();
     isProcessingQueue = false;
+
+    // Clear ArrayBuffer cache
+    fileArrayBufferCache.clear();
 
     thumbnailGenerationService.destroy();
   }, []);

@@ -37,6 +37,7 @@ interface DragDropGridProps<T extends DragDropItem> {
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   zoomLevel?: number;
   selectedFileIds?: string[];
+  onVisibleItemsChange?: (items: T[]) => void;
 }
 
 type DropSide = 'left' | 'right' | null;
@@ -198,7 +199,7 @@ interface DraggableItemProps<T extends DragDropItem> {
   zoomLevel: number;
 }
 
-const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
+const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
   const isPlaceholder = Boolean(item.isPlaceholder);
   const pageNumber = (item as any).pageNumber ?? index + 1;
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
@@ -252,6 +253,31 @@ const DraggableItem = <T extends DragDropItem>({ item, index, itemRefs, boxSelec
   );
 };
 
+// Memoize to prevent unnecessary re-renders and hook thrashing
+const DraggableItem = React.memo(DraggableItemInner, (prevProps, nextProps) => {
+  // Return true to SKIP re-render (props are equal)
+  // Return false to RE-RENDER (props changed)
+
+  // Check if item reference or content changed (including thumbnail)
+  const itemChanged = prevProps.item !== nextProps.item;
+
+  // If item object reference changed, we need to re-render
+  if (itemChanged) {
+    return false; // Props changed, re-render needed
+  }
+
+  // Item reference is same, check other props
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.index === nextProps.index &&
+    prevProps.activeId === nextProps.activeId &&
+    prevProps.justMoved === nextProps.justMoved &&
+    prevProps.zoomLevel === nextProps.zoomLevel &&
+    prevProps.activeDragIds.length === nextProps.activeDragIds.length &&
+    prevProps.boxSelectedPageIds.length === nextProps.boxSelectedPageIds.length
+  );
+}) as typeof DraggableItemInner;
+
 const DragDropGrid = <T extends DragDropItem>({
   items,
   renderItem,
@@ -259,6 +285,7 @@ const DragDropGrid = <T extends DragDropItem>({
   getThumbnailData,
   zoomLevel = 1.0,
   selectedFileIds,
+  onVisibleItemsChange,
 }: DragDropGridProps<T>) => {
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -420,6 +447,21 @@ const DragDropGrid = <T extends DragDropItem>({
     },
     overscan: OVERSCAN,
   });
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+
+  useEffect(() => {
+    if (!onVisibleItemsChange) return;
+
+    const visibleItemsForCallback: T[] = [];
+    virtualRows.forEach((row) => {
+      const startIndex = row.index * itemsPerRow;
+      const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
+      visibleItemsForCallback.push(...visibleItems.slice(startIndex, endIndex));
+    });
+
+    onVisibleItemsChange(visibleItemsForCallback);
+  }, [virtualRows, visibleItems, itemsPerRow, onVisibleItemsChange]);
 
   // Re-measure virtualizer when zoom or items per row changes
   useEffect(() => {
@@ -719,7 +761,7 @@ const DragDropGrid = <T extends DragDropItem>({
             margin: '0 auto',
           }}
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          {virtualRows.map((virtualRow) => {
             const startIndex = virtualRow.index * itemsPerRow;
             const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
             const rowItems = visibleItems.slice(startIndex, endIndex);
