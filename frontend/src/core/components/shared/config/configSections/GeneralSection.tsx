@@ -203,7 +203,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               )}
             </Text>
             <Anchor
-              href="https://docs.stirlingpdf.com/Advanced%20Configuration/System%20and%20Security"
+              href="https://docs.stirlingpdf.com/Configuration/System%20and%20Security/"
               target="_blank"
               size="sm"
               style={{ color: "var(--mantine-color-blue-6)" }}
