@@ -50,6 +50,71 @@ import { useFileContext } from "@proprietary/contexts/FileContext";
 
 The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/desktop) and handles the fallback cascade.
 
+#### Component Override Pattern (Stub/Shadow)
+Use this pattern for desktop-specific or proprietary-specific features WITHOUT runtime checks or conditionals.
+
+**How it works:**
+1. Core defines stub component (returns null or no-op)
+2. Desktop/proprietary overrides with same path/name
+3. Core imports via `@app/*` - higher layer "shadows" core in those builds
+4. No `@ts-ignore`, no `isTauri()` checks, no runtime conditionals!
+
+**Example - Desktop-specific footer:**
+
+```typescript
+// core/components/rightRail/RightRailFooterExtensions.tsx (stub)
+interface RightRailFooterExtensionsProps {
+  className?: string;
+}
+
+export function RightRailFooterExtensions(_props: RightRailFooterExtensionsProps) {
+  return null; // Stub - does nothing in web builds
+}
+```
+
+```typescript
+// desktop/components/rightRail/RightRailFooterExtensions.tsx (real implementation)
+import { Box } from '@mantine/core';
+import { BackendHealthIndicator } from '@app/components/BackendHealthIndicator';
+
+interface RightRailFooterExtensionsProps {
+  className?: string;
+}
+
+export function RightRailFooterExtensions({ className }: RightRailFooterExtensionsProps) {
+  return (
+    <Box className={className}>
+      <BackendHealthIndicator />
+    </Box>
+  );
+}
+```
+
+```typescript
+// core/components/shared/RightRail.tsx (usage - works in ALL builds)
+import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
+
+export function RightRail() {
+  return (
+    <div>
+      {/* In web builds: renders nothing (stub returns null) */}
+      {/* In desktop builds: renders BackendHealthIndicator */}
+      <RightRailFooterExtensions className="right-rail-footer" />
+    </div>
+  );
+}
+```
+
+**Build resolution:**
+- **Core build**: `@app/*` → `core/*` → Gets stub (returns null)
+- **Desktop build**: `@app/*` → `desktop/*` → Gets real implementation (shadows core)
+
+**Benefits:**
+- No runtime checks or feature flags
+- Type-safe across all builds
+- Clean, readable code
+- Build-time optimization (dead code elimination)
+
 #### Multi-Tool Workflow Architecture
 Frontend designed for **stateful document processing**:
 - Users upload PDFs once, then chain tools (split → merge → compress → view)

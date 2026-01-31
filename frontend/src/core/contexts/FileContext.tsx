@@ -43,6 +43,7 @@ import apiClient from '@app/services/apiClient';
 import { processResponse } from '@app/utils/toolResponseProcessor';
 import { ToolOperation } from '@app/types/file';
 import { handlePasswordError } from '@app/utils/toolErrorHandler';
+import { deleteLocalFile } from '@app/services/localFileSaveService';
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -351,19 +352,13 @@ function FileContextInner({
         const shouldDeleteFromDisk = window.confirm(message);
 
         if (shouldDeleteFromDisk) {
-          try {
-            const { deleteLocalFile } = await import('@app/services/localFileSaveService');
-
-            for (const file of filesWithLocalPaths) {
-              const result = await deleteLocalFile(file.path);
-              if (result.success) {
-                console.log(`[FileContext] Deleted from disk: ${file.name}`);
-              } else {
-                console.warn(`[FileContext] Failed to delete from disk: ${file.name}`, result.error);
-              }
+          for (const file of filesWithLocalPaths) {
+            const result = await deleteLocalFile(file.path);
+            if (result.success) {
+              console.log(`[FileContext] Deleted from disk: ${file.name}`);
+            } else if (result.error && !result.error.includes('not available in web mode')) {
+              console.warn(`[FileContext] Failed to delete from disk: ${file.name}`, result.error);
             }
-          } catch (error) {
-            console.error('[FileContext] Failed to delete files from disk:', error);
           }
         }
       }

@@ -22,7 +22,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
-import { isTauri } from '@tauri-apps/api/core';
+import { showSaveDialog, saveToLocalPath } from '@app/services/localFileSaveService';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
@@ -154,38 +154,24 @@ export default function RightRail() {
 
     const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
 
-    // Desktop mode: Show "Save As" dialog for each file
-    if (isTauri()) {
-      try {
-        const { showSaveDialog, saveToLocalPath } = await import('@app/services/localFileSaveService');
-
-        for (const file of filesToExport) {
-          const savePath = await showSaveDialog(file.name);
-          if (savePath) {
-            const result = await saveToLocalPath(file, savePath);
-            if (result.success) {
-              console.log(`[RightRail] Saved to: ${savePath}`);
-            } else {
-              console.error(`[RightRail] Failed to save: ${result.error}`);
-              alert(`Failed to save ${file.name}: ${result.error}`);
-            }
-          }
+    // Try desktop "Save As" dialog first (will be no-op in web mode)
+    let usedDesktopSave = false;
+    for (const file of filesToExport) {
+      const savePath = await showSaveDialog(file.name);
+      if (savePath) {
+        usedDesktopSave = true;
+        const result = await saveToLocalPath(file, savePath);
+        if (result.success) {
+          console.log(`[RightRail] Saved to: ${savePath}`);
+        } else if (result.error && !result.error.includes('not available in web mode')) {
+          console.error(`[RightRail] Failed to save: ${result.error}`);
+          alert(`Failed to save ${file.name}: ${result.error}`);
         }
-      } catch (error) {
-        console.error('[RightRail] Save As error:', error);
-        // Fallback to browser download
-        filesToExport.forEach(file => {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(file);
-          link.download = file.name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-        });
       }
-    } else {
-      // Web mode: Regular download
+    }
+
+    // Fallback to browser download if desktop save wasn't used
+    if (!usedDesktopSave) {
       filesToExport.forEach(file => {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(file);
@@ -210,12 +196,11 @@ export default function RightRail() {
       return t('rightRail.exportAll', 'Export PDF');
     }
 
-    // Desktop mode: "Save As" instead of "Download"
-    if (isTauri()) {
-      if (selectedCount > 0) {
-        return selectedCount === 1 ? 'Save As...' : `Save ${selectedCount} Files As...`;
-      }
-      return 'Save As...';
+    // In both desktop and web modes, keep consistent terminology
+    if (selectedCount > 0) {
+      return selectedCount === 1
+        ? t('rightRail.export', 'Export')
+        : t('rightRail.exportSelected', `Export ${selectedCount}`);
     }
 
     // Web mode: "Download"
