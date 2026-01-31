@@ -195,14 +195,6 @@ export default function RightRail() {
       return t('rightRail.exportAll', 'Export PDF');
     }
 
-    // In both desktop and web modes, keep consistent terminology
-    if (selectedCount > 0) {
-      return selectedCount === 1
-        ? t('rightRail.export', 'Export')
-        : t('rightRail.exportSelected', `Export ${selectedCount}`);
-    }
-
-    // Web mode: "Download"
     if (selectedCount > 0) {
       return terminology.downloadSelected;
     }
