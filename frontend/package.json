@@ -49,7 +49,7 @@
     "@tauri-apps/plugin-http": "^2.5.6",
     "@tauri-apps/plugin-shell": "^2.3.4",
     "autoprefixer": "^10.4.21",
-    "axios": "^1.13.2",
+    "axios": "^1.13.4",
     "globals": "^17.1.0",
     "i18next": "^25.5.2",
     "i18next-browser-languagedetector": "^8.2.0",
