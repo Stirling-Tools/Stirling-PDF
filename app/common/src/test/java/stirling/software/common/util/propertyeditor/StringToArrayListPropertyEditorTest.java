@@ -1,9 +1,12 @@
 package stirling.software.common.util.propertyeditor;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -149,5 +152,35 @@ class StringToArrayListPropertyEditorTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> editor.setAsText(json));
+    }
+
+    //added by Jason Wang
+    @Test
+    void testSetAsText_WhitespaceOnlyString() {
+        // Arrange
+        String json = "   \n\t   ";
+
+        // Act
+        editor.setAsText(json);
+        Object value = editor.getValue();
+
+        // Assert
+        assertNotNull(value);
+        assertInstanceOf(List.class, value);
+
+        @SuppressWarnings("unchecked")
+        List<RedactionArea> list = (List<RedactionArea>) value;
+        assertTrue(list.isEmpty(), "Whitespace-only input should produce empty list");
+    }
+
+    @Test
+    void testSetAsText_ValidJsonButWrongType() {
+        // Arrange
+        String json = "123";
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class,
+                () -> editor.setAsText(json),
+                "Valid JSON of wrong type should throw IllegalArgumentException");
     }
 }

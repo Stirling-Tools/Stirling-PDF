@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.api.security.RedactionArea;
 
 @Slf4j
@@ -34,4 +35,3 @@ public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
         }
     }
 }
-//testing
