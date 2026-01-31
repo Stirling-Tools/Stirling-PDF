@@ -92,6 +92,7 @@ export function usePageDocument(): PageDocumentHook {
           rotation: 0,
           selected: false,
           originalFileId: primaryFileId,
+          originalPageNumber: index + 1,
         }));
 
         setPlaceholderDocument({
