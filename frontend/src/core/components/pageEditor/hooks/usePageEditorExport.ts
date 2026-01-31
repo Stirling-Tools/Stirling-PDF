@@ -285,8 +285,7 @@ export const usePageEditorExport = ({
         const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
         if (sourceStub?.localFilePath && renamedFiles[0]) {
           try {
-            // @ts-ignore - Desktop module not available in proprietary build
-            const { saveToLocalPath } = await import("@desktop/services/localFileSaveService");
+            const { saveToLocalPath } = await import("@app/services/localFileSaveService");
             const result = await saveToLocalPath(renamedFiles[0], sourceStub.localFilePath);
             if (result.success) {
               console.log(`[PageEditor] Auto-saved to ${sourceStub.localFilePath}`);
@@ -308,8 +307,7 @@ export const usePageEditorExport = ({
         const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
         if (sourceStub?.localFilePath && renamedFiles.length > 0) {
           try {
-            // @ts-ignore - Desktop module not available in proprietary build
-            const { saveMultipleFilesWithPrompt } = await import("@desktop/services/localFileSaveService");
+            const { saveMultipleFilesWithPrompt } = await import("@app/services/localFileSaveService");
             const { dirname } = await import("@tauri-apps/api/path");
 
             // Get directory of original file as default

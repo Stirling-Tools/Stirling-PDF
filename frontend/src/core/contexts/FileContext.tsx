@@ -352,8 +352,7 @@ function FileContextInner({
 
         if (shouldDeleteFromDisk) {
           try {
-            // @ts-ignore - Desktop module not available in proprietary build
-            const { deleteLocalFile } = await import('@desktop/services/localFileSaveService');
+            const { deleteLocalFile } = await import('@app/services/localFileSaveService');
 
             for (const file of filesWithLocalPaths) {
               const result = await deleteLocalFile(file.path);

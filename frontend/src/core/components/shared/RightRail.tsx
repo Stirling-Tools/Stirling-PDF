@@ -157,8 +157,7 @@ export default function RightRail() {
     // Desktop mode: Show "Save As" dialog for each file
     if (isTauri()) {
       try {
-        // @ts-ignore - Desktop module not available in proprietary build
-        const { showSaveDialog, saveToLocalPath } = await import('@desktop/services/localFileSaveService');
+        const { showSaveDialog, saveToLocalPath } = await import('@app/services/localFileSaveService');
 
         for (const file of filesToExport) {
           const savePath = await showSaveDialog(file.name);

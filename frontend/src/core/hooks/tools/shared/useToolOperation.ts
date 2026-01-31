@@ -451,8 +451,7 @@ export const useToolOperation = <TParams>(
           if (inputStub?.localFilePath) {
             try {
               console.log('[Tool] Attempting auto-save to:', inputStub.localFilePath);
-              // @ts-ignore - Desktop module not available in proprietary build
-              const { saveToLocalPath } = await import('@desktop/services/localFileSaveService');
+              const { saveToLocalPath } = await import('@app/services/localFileSaveService');
               const result = await saveToLocalPath(outputStirlingFiles[0], inputStub.localFilePath);
               if (result.success) {
                 console.log(`[Tool] ✓ Auto-saved to ${inputStub.localFilePath}`);
@@ -478,8 +477,7 @@ export const useToolOperation = <TParams>(
           const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
           if (inputStub?.localFilePath) {
             try {
-              // @ts-ignore - Desktop module not available in proprietary build
-              const { saveMultipleFilesWithPrompt } = await import('@desktop/services/localFileSaveService');
+              const { saveMultipleFilesWithPrompt } = await import('@app/services/localFileSaveService');
               const { dirname } = await import('@tauri-apps/api/path');
 
               // Get directory of original file as default
@@ -608,8 +606,7 @@ export const useToolOperation = <TParams>(
         const inputStub = inputStirlingFileStubs[0];
         if (inputStub?.localFilePath) {
           try {
-            // @ts-ignore - Desktop module not available in proprietary build
-            const { saveToLocalPath } = await import('@desktop/services/localFileSaveService');
+            const { saveToLocalPath } = await import('@app/services/localFileSaveService');
             const result = await saveToLocalPath(inputFiles[0], inputStub.localFilePath);
             if (result.success) {
               console.log(`[Undo] Restored original file to ${inputStub.localFilePath}`);
