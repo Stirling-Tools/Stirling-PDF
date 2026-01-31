@@ -25,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   determine-matrix:
@@ -638,6 +639,81 @@ jobs:
               fi
             fi
           done
+
+  pr-comment:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - name: Post/Update PR Comment with Download Links
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = context.issue.number;
+            const runId = context.runId;
+
+            // Build download URLs for each platform
+            const artifacts = [
+              { name: 'windows-x86_64', icon: '🪟', files: ['.exe', '.msi'] },
+              { name: 'macos-aarch64', icon: '🍎', files: ['.dmg'] },
+              { name: 'macos-x86_64', icon: '🍎', files: ['.dmg'] },
+              { name: 'linux-x86_64', icon: '🐧', files: ['.deb', '.AppImage'] }
+            ];
+
+            let commentBody = `## 📦 Tauri Desktop Builds Ready!\n\n`;
+            commentBody += `The desktop applications have been built and are ready for testing.\n\n`;
+            commentBody += `### Download Artifacts:\n\n`;
+
+            for (const artifact of artifacts) {
+              const artifactUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
+              commentBody += `${artifact.icon} **${artifact.name}**: [Download](${artifactUrl}) `;
+              commentBody += `(${artifact.files.join(', ')})\n`;
+            }
+
+            commentBody += `\n---\n`;
+            commentBody += `_Built from commit ${context.sha.substring(0, 7)}_\n`;
+            commentBody += `_Artifacts expire in 7 days_`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('📦 Tauri Desktop Builds Ready!')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+              console.log('Updated existing comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+              console.log('Created new comment');
+            }
 
   report:
     needs: build
