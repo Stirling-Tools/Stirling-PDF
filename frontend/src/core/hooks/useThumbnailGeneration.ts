@@ -76,6 +76,16 @@ async function processRequestQueue() {
           let arrayBuffer = fileArrayBufferCache.get(file);
           if (!arrayBuffer) {
             arrayBuffer = await file.arrayBuffer();
+
+            // Validate ArrayBuffer is not empty before caching
+            if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+              console.warn(`Skipping thumbnail generation for ${file.name}: file is empty or not loaded yet`);
+              // Don't cache empty buffers - allow retry later when file is loaded
+              // Resolve all requests with null (no thumbnail)
+              requests.forEach(request => request.resolve(null));
+              continue;
+            }
+
             fileArrayBufferCache.set(file, arrayBuffer);
           }
 
