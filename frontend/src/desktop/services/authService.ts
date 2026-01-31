@@ -40,6 +40,7 @@ export class AuthService {
   private userInfo: UserInfo | null = null;
   private cachedToken: string | null = null;
   private authListeners = new Set<(status: AuthStatus, userInfo: UserInfo | null) => void>();
+  private refreshPromise: Promise<boolean> | null = null;
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -51,15 +52,17 @@ export class AuthService {
   /**
    * Save token to all storage locations and notify listeners
    */
-  private async saveTokenEverywhere(token: string): Promise<void> {
+  private async saveTokenEverywhere(token: string, refreshToken?: string | null): Promise<void> {
     // Validate token before caching
     if (!token || token.trim().length === 0) {
       console.warn('[Desktop AuthService] Attempted to save invalid/empty token');
       throw new Error('Invalid token');
     }
 
+    console.log(`[Desktop AuthService] Saving token (length: ${token.length})`);
+
+    // Save access token to Tauri secure store (primary)
     try {
-      // Save to Tauri store
       await invoke('save_auth_token', { token });
       console.log('[Desktop AuthService] ✅ Token saved to Tauri store');
     } catch (error) {
@@ -67,8 +70,8 @@ export class AuthService {
       // Don't throw - we can still use localStorage
     }
 
+    // Sync to localStorage for web layer (fallback)
     try {
-      // Sync to localStorage for web layer
       localStorage.setItem('stirling_jwt', token);
       console.log('[Desktop AuthService] ✅ Token saved to localStorage');
     } catch (error) {
@@ -78,6 +81,19 @@ export class AuthService {
     // Cache the valid token in memory
     this.cachedToken = token;
     console.log('[Desktop AuthService] ✅ Token cached in memory');
+
+    // Save refresh token if provided (keyring with Tauri Store fallback)
+    if (refreshToken) {
+      console.log('[Desktop AuthService] Saving refresh token to secure storage...');
+      try {
+        await invoke('save_refresh_token', { token: refreshToken });
+        console.log('[Desktop AuthService] ✅ Refresh token saved to secure storage');
+        // Only remove from localStorage after successful save
+        localStorage.removeItem('stirling_refresh_token');
+      } catch (error) {
+        console.error('[Desktop AuthService] ❌ Failed to save refresh token:', error);
+      }
+    }
 
     // Notify other parts of the system
     window.dispatchEvent(new CustomEvent('jwt-available'));
@@ -113,6 +129,19 @@ export class AuthService {
   }
 
   /**
+   * Get refresh token from secure storage (keyring or Tauri Store fallback)
+   */
+  private async getRefreshToken(): Promise<string | null> {
+    const token = await invoke<string | null>('get_refresh_token');
+    if (token) {
+      console.log('[Desktop AuthService] ✅ Refresh token retrieved from secure storage');
+    } else {
+      console.log('[Desktop AuthService] No refresh token in secure storage');
+    }
+    return token;
+  }
+
+  /**
    * Clear token from all storage locations
    */
   private async clearTokenEverywhere(): Promise<void> {
@@ -120,20 +149,28 @@ export class AuthService {
     this.cachedToken = null;
     console.log('[Desktop AuthService] Cache invalidated');
 
-    // Best effort: clear Tauri keyring
+    // Best effort: clear Tauri keyring (both access and refresh tokens)
     try {
       await invoke('clear_auth_token');
-      console.log('[Desktop AuthService] Cleared Tauri keyring token');
+      console.log('[Desktop AuthService] Cleared Tauri keyring access token');
     } catch (error) {
-      console.warn('[Desktop AuthService] Failed to clear Tauri keyring token', error);
+      console.warn('[Desktop AuthService] Failed to clear Tauri keyring access token', error);
+    }
+
+    try {
+      await invoke('clear_refresh_token');
+      console.log('[Desktop AuthService] Cleared Tauri keyring refresh token');
+    } catch (error) {
+      console.warn('[Desktop AuthService] Failed to clear Tauri keyring refresh token', error);
     }
 
     // Best effort: clear web storage
     try {
       localStorage.removeItem('stirling_jwt');
-      console.log('[Desktop AuthService] Cleared localStorage token');
+      localStorage.removeItem('stirling_refresh_token');
+      console.log('[Desktop AuthService] Cleared localStorage tokens');
     } catch (error) {
-      console.warn('[Desktop AuthService] Failed to clear localStorage token', error);
+      console.warn('[Desktop AuthService] Failed to clear localStorage tokens', error);
     }
   }
 
@@ -469,6 +506,21 @@ export class AuthService {
   }
 
   async refreshToken(serverUrl: string): Promise<boolean> {
+    // Prevent concurrent refresh attempts - reuse in-flight refresh
+    if (this.refreshPromise) {
+      console.log('[Desktop AuthService] Refresh already in progress, awaiting existing refresh');
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = this._doRefreshToken(serverUrl);
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  private async _doRefreshToken(serverUrl: string): Promise<boolean> {
     try {
       console.log('[Desktop AuthService] Refreshing auth token');
       this.setAuthStatus('refreshing', this.userInfo);
@@ -511,6 +563,68 @@ export class AuthService {
     }
   }
 
+  async refreshSupabaseToken(authServerUrl: string): Promise<boolean> {
+    // Prevent concurrent refresh attempts - reuse in-flight refresh
+    if (this.refreshPromise) {
+      console.log('[Desktop AuthService] Refresh already in progress, awaiting existing refresh');
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = this._doRefreshSupabaseToken(authServerUrl);
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  private async _doRefreshSupabaseToken(authServerUrl: string): Promise<boolean> {
+    try {
+      console.log('[Desktop AuthService] Refreshing Supabase token');
+      this.setAuthStatus('refreshing', this.userInfo);
+
+      const refreshToken = await this.getRefreshToken();
+      if (!refreshToken) {
+        console.error('[Desktop AuthService] No refresh token available');
+        this.setAuthStatus('unauthenticated', null);
+        return false;
+      }
+
+      // Call Supabase refresh endpoint
+      const response = await axios.post(
+        `${authServerUrl}/auth/v1/token?grant_type=refresh_token`,
+        {
+          refresh_token: refreshToken,
+        },
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const { access_token, refresh_token: newRefreshToken } = response.data;
+
+      // Save new tokens
+      await this.saveTokenEverywhere(access_token, newRefreshToken);
+
+      const userInfo = await this.getUserInfo();
+      this.setAuthStatus('authenticated', userInfo);
+
+      console.log('[Desktop AuthService] Supabase token refreshed successfully');
+      return true;
+    } catch (error) {
+      console.error('[Desktop AuthService] Supabase token refresh failed:', error);
+      this.setAuthStatus('unauthenticated', null);
+
+      // Clear stored credentials on refresh failure
+      await this.logout();
+
+      return false;
+    }
+  }
+
   async initializeAuthState(): Promise<void> {
     console.log('[Desktop AuthService] Initializing auth state...');
     // If we are on the login/setup screen, don't auto-restore a previous session; clear instead
@@ -532,11 +646,7 @@ export class AuthService {
     const userInfo = await this.getUserInfo();
 
     if (token && userInfo) {
-      console.log('[Desktop AuthService] Found token, syncing to all storage locations');
-
-      // Ensure token is in both Tauri store and localStorage
-      await this.saveTokenEverywhere(token);
-
+      console.log('[Desktop AuthService] Found existing token and user info');
       this.setAuthStatus('authenticated', userInfo);
       console.log('[Desktop AuthService] Auth state initialized as authenticated');
     } else {
@@ -576,9 +686,12 @@ export class AuthService {
       });
 
       console.log('[Desktop AuthService] OAuth authentication successful, storing tokens');
+      console.log('[Desktop AuthService] OAuth result - has access_token:', !!result.access_token);
+      console.log('[Desktop AuthService] OAuth result - has refresh_token:', !!result.refresh_token);
+      console.log('[Desktop AuthService] OAuth result - expires_in:', result.expires_in);
 
-      // Save token to all storage locations
-      await this.saveTokenEverywhere(result.access_token);
+      // Save token and refresh token to all storage locations
+      await this.saveTokenEverywhere(result.access_token, result.refresh_token);
 
       // Fetch user info from Supabase using the access token
       const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);
