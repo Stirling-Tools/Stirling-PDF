@@ -63,7 +63,6 @@ export default function RightRail() {
   const { signaturesApplied } = useSignature();
 
   const activeFiles = selectors.getFiles();
-  const activeFileIndex = viewerContext?.activeFileIndex ?? 0;
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
   const exportState = viewerContext?.getExportState?.();
