@@ -63,7 +63,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
@@ -138,7 +138,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: "21"
           distribution: "temurin"
@@ -210,7 +210,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: "21"
           distribution: "temurin"
@@ -264,7 +264,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: "21"
           distribution: "temurin"
@@ -335,7 +335,7 @@ jobs:
           echo "Disk space after cleanup:" && df -h
 
       - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: "21"
           distribution: "temurin"
