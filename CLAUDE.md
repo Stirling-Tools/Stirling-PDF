@@ -30,6 +30,26 @@ Set `DOCKER_ENABLE_SECURITY=true` environment variable to enable security featur
   - **Web Server**: `npm run build` then serve dist/ folder
   - **Development**: `npm run tauri-dev` for desktop dev mode
 
+#### Import Paths - CRITICAL
+**ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
+
+```typescript
+// ✅ CORRECT - Use @app/* for all imports
+import { AppLayout } from "@app/components/AppLayout";
+import { useFileContext } from "@app/contexts/FileContext";
+import { FileContext } from "@app/contexts/FileContext";
+
+// ❌ WRONG - Do not use @core/* or @proprietary/* in normal code
+import { AppLayout } from "@core/components/AppLayout";
+import { useFileContext } from "@proprietary/contexts/FileContext";
+```
+
+**Only use explicit aliases when:**
+- Building layer-specific override that wraps a lower layer's component
+- Example: `import { AppProviders as CoreAppProviders } from "@core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
+
+The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/desktop) and handles the fallback cascade.
+
 #### Multi-Tool Workflow Architecture
 Frontend designed for **stateful document processing**:
 - Users upload PDFs once, then chain tools (split → merge → compress → view)
@@ -37,7 +57,7 @@ Frontend designed for **stateful document processing**:
 - No file reloading between tools - performance critical for large PDFs (up to 100GB+)
 
 #### FileContext - Central State Management
-**Location**: `src/contexts/FileContext.tsx`
+**Location**: `frontend/src/core/contexts/FileContext.tsx`
 - **Active files**: Currently loaded PDFs and their variants
 - **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)
 - **Memory management**: PDF document cleanup, blob URL lifecycle, Web Worker management
@@ -62,7 +82,7 @@ Without cleanup: browser crashes with memory leaks.
 
 **Architecture**: Modular hook-based system with clear separation of concerns:
 
-- **useToolOperation** (`frontend/src/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
+- **useToolOperation** (`frontend/src/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
   - Coordinates all tool operations with consistent interface
   - Integrates with FileContext for operation tracking
   - Handles validation, error handling, and UI state management
@@ -147,8 +167,34 @@ return useToolOperation({
 - **Pipeline System**: Automated PDF processing workflows via `PipelineController`
 - **Security Layer**: Authentication, authorization, and user management (when enabled)
 
+### Frontend Directory Structure
+The frontend is organized with a clear separation of concerns:
+
+- **`frontend/src/core/`**: Main application code (shared, production-ready components)
+  - **`core/components/`**: React components organized by feature
+    - `core/components/tools/`: Individual PDF tool implementations
+    - `core/components/viewer/`: PDF viewer components
+    - `core/components/pageEditor/`: Page manipulation UI
+    - `core/components/tooltips/`: Help tooltips for tools
+    - `core/components/shared/`: Reusable UI components
+  - **`core/contexts/`**: React Context providers
+    - `FileContext.tsx`: Central file state management
+    - `file/`: File reducer and selectors
+    - `toolWorkflow/`: Tool workflow state
+  - **`core/hooks/`**: Custom React hooks
+    - `hooks/tools/`: Tool-specific operation hooks (one directory per tool)
+    - `hooks/tools/shared/`: Shared hook utilities (useToolOperation, etc.)
+  - **`core/constants/`**: Application constants and configuration
+  - **`core/data/`**: Static data (tool taxonomy, etc.)
+  - **`core/services/`**: Business logic services (PDF processing, storage, etc.)
+
+- **`frontend/src/desktop/`**: Desktop-specific (Tauri) code
+- **`frontend/src/proprietary/`**: Proprietary/licensed features
+- **`frontend/src-tauri/`**: Tauri (Rust) native desktop application code
+- **`frontend/public/`**: Static assets served directly
+  - `public/locales/`: Translation JSON files
+
 ### Component Architecture
-- **React Components**: Located in `frontend/src/components/` and `frontend/src/tools/`
 - **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/public/` (modern)
 - **Internationalization**:
   - Backend: `messages_*.properties` files
@@ -203,6 +249,7 @@ return useToolOperation({
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
   - **Frontend**: Uses IndexedDB for client-side file storage and caching (with thumbnails)
 - **Security**: When `DOCKER_ENABLE_SECURITY=false`, security-related classes are excluded from compilation
+- **Import Paths**: ALWAYS use `@app/*` for imports - never use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer
 - **FileContext**: All file operations MUST go through FileContext - never bypass with direct File handling
 - **Memory Management**: Manual cleanup required for PDF.js documents and blob URLs - don't remove cleanup code
 - **Tool Development**: New tools should follow `useToolOperation` hook pattern (see `useCompressOperation.ts`)
