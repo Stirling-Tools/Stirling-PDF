@@ -306,6 +306,7 @@ selectOperation = "Əməliyyat seç"
 addOperationButton = "Əməliyyat əlavə et"
 pipelineHeader = "Boru xətti:"
 saveButton = "Endir"
+saveForFolderScanning = "Qovluq skanı üçün saxla"
 validateButton = "Doğrula"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Xüsusiyyət"
 webBrowserSettings = "Veb Brauzer Parametrləri"
 syncToBrowser = "Hesabı Sinxronlaşdır -> Brauzer"
 syncToAccount = "Hesabı Sinxronlaşdır <- Brauzer"
+
+[account.mfa]
+title = "İki faktorlu doğrulama"
+setupFailed = "İki faktorlu doğrulamanın quraşdırılmasına başlamaq mümkün olmadı. Zəhmət olmasa yenidən cəhd edin."
+codeRequired = "Davam etmək üçün doğrulama kodunu daxil edin."
+enabled = "İki faktorlu doğrulama aktiv edildi."
+enableFailed = "İki faktorlu doğrulamanı aktiv etmək mümkün olmadı. Kodu yoxlayın və yenidən cəhd edin."
+disabled = "İki faktorlu doğrulama deaktiv edildi."
+disableFailed = "İki faktorlu doğrulamanı deaktiv etmək mümkün olmadı. Kodu yoxlayın və yenidən cəhd edin."
+description = "Hesabınıza əlavə təhlükəsizlik qatı əlavə edin."
+enableButton = "İki faktorlu doğrulamanı aktiv et"
+disableButton = "İki faktorlu doğrulamanı deaktiv et"
+setupTitle = "İki faktorlu doğrulamanı quraşdırın"
+setupDescription = "Doğrulama tətbiqinizlə QR kodunu skan edin, sonra təsdiqləmək üçün 6 rəqəmli kodu daxil edin."
+manualKey = "Əl ilə quraşdırma açarı"
+secretWarning = "Bu açarı məxfi saxlayın. Girişi olan hər kəs etibarlı doğrulama kodları yarada bilər."
+codePlaceholder = "6 rəqəmli kodu daxil edin"
+confirmEnable = "Aktiv et"
+disableTitle = "İki faktorlu doğrulamanı deaktiv et"
+disableDescription = "İki faktorlu doğrulamanı deaktiv etmək üçün etibarlı doğrulama kodunu daxil edin."
+codeLabel = "Doğrulama kodu"
+confirmDisable = "Deaktiv et"
+ssoDescription = "Single sign-on hesabları üçün iki faktorlu doğrulama şəxsiyyət provayderiniz tərəfindən idarə olunur."
+ssoManaged = "MFA-nı şəxsiyyət provayderiniz vasitəsilə konfiqurasiya edin."
 
 [adminUserSettings]
 title = "İstifadəçi İdarəetmə Parametrləri"
@@ -925,6 +950,7 @@ title = "Say/Ölçüyə Əsasən Avtomatik Ayır"
 desc = "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Rəngi əvəz et və invert et"
 desc = "PDF sənədlərində rəngləri əvəz edin və ya invert edin"
 
@@ -939,18 +965,22 @@ title = "Avtomatik qovluq skanı"
 desc = "Avtomatlaşdırılmış qovluq skan təlimatına keçid"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO təlimatı"
 desc = "SSO təlimatına keçid"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Şəbəkəsiz quraşdırma"
 desc = "Təcrid edilmiş quraşdırma təlimatına keçid"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Şifr Əlavə Et"
 desc = "Sənədini şifr ilə kilidlə."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "İcazələri Dəyişdir"
 desc = "Sənəd məhdudiyyətlərini və icazələrini dəyişin"
 
@@ -960,10 +990,12 @@ title = "Avtomatlaşdır"
 desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları qurun. Təkrarlanan tapşırıqlar üçün idealdır."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Bir PDF-i digərinin üstünə qoyur"
 title = "Üst-Üstə Qoy"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Mətn Redaktoru"
 desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "PDF əvəzinə ara HTML faylını endir"
 pdfaOptions = "PDF/A seçimləri"
 outputFormat = "Çıxış formatı"
 pdfaNote = "PDF/A-1b daha uyğundur, PDF/A-2b daha çox funksiyanı dəstəkləyir."
+pdfaFormat = "PDF/A formatı"
 pdfaDigitalSignatureWarning = "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
+pdfxDigitalSignatureWarning = "PDF rəqəmsal imza ehtiva edir. Bu imza növbəti addımda silinəcək."
+pdfxDescription = "PDF/X etibarlı çap və qrafika mübadiləsi üçün ISO standartlı PDF alt dəstidir."
 fileFormat = "Fayl formatı"
 wordDoc = "Word sənədi"
 wordDocExt = "Word sənədi (.docx)"
@@ -2196,6 +2231,16 @@ submit = "Çevir"
 tip = "Hazırda Birdən Çox Giriş Üçün İşləmir"
 outputFormat = "Çıxış Formatı"
 pdfWithDigitalSignature = "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
+
+[pdfToPDFX]
+tags = "çap,standart,çevrilmə,istehsal,prepress,arxiv"
+title = "PDF-dən PDF/X-ə"
+header = "PDF-dən PDF/X-ə"
+credit = "Bu xidmət PDF/X çevrilməsi üçün Ghostscript-dən istifadə edir"
+submit = "Çevir"
+tip = "Hazırda eyni anda bir neçə girişi dəstəkləmir"
+outputFormat = "Çıxış formatı"
+pdfWithDigitalSignature = "PDF rəqəmsal imza ehtiva edir. Bu imza növbəti addımda silinəcək."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,dəyişmə,format,çevirmə,ofis,microsoft,docfile"
@@ -3153,6 +3198,18 @@ other = "Digər"
 perPageInfo = "Hər səhifə üzrə məlumat"
 tableOfContents = "Mündəricat"
 
+[getPdfInfo.compliance]
+notDetected = "Aşkarlanmadı"
+passed = "Keçdi"
+failed = "Keçmədi"
+compliant = "Uyğun"
+nonCompliant = "Uyğun deyil"
+none = "Heç bir standart aşkarlanmadı"
+passedCount = "keçdi"
+failedCount = "keçmədi"
+noVerification = "Yoxlama aparılmadı"
+noVerificationDesc = "Bu sənəd üçün PDF standartlarına uyğunluq yoxlanılmadı."
+
 [getPdfInfo.other]
 attachments = "Əlavələr"
 embeddedFiles = "Gömülü fayllar"
@@ -3184,6 +3241,8 @@ permsRestricted = "{{count}} məhdudiyyət"
 permsMixed = "Bəzi icazələr məhdudlaşdırılıb"
 hasCompliance = "Uyğunluq standartları mövcuddur"
 noCompliance = "Uyğunluq standartları yoxdur"
+compliancePassed = "{{standards}} uyğundur"
+complianceChecked = "Standartlar yoxlanıldı ({{failed}} keçmədi)"
 basic = "Əsas Məlumat"
 documentInfo = "Sənəd Məlumatı"
 securityTitle = "Təhlükəsizlik Vəziyyəti"
@@ -3723,6 +3782,13 @@ passwordChangedSuccess = "Parol uğurla dəyişdirildi! Zəhmət olmasa yeni par
 credentialsUpdated = "Giriş məlumatlarınız yeniləndi. Zəhmət olmasa yenidən daxil olun."
 defaultCredentials = "Standart giriş məlumatları"
 changePasswordWarning = "İlk dəfə daxil olduqdan sonra şifrənizi dəyişin"
+mfaRequired = "İki faktorlu doğrulama kodu tələb olunur"
+mfaCode = "Doğrulama kodu"
+enterMfaCode = "6 rəqəmli kodu daxil edin"
+mfaPromptTitle = "İki faktorlu doğrulama"
+mfaPromptBody = "Davam etmək üçün doğrulama tətbiqinizdən doğrulama kodunu daxil edin."
+verifyingMfa = "Yoxlanılır..."
+verifyMfa = "Kodu doğrula"
 
 [login.slides.overview]
 alt = "Stirling PDF icmalı"
@@ -4324,6 +4390,10 @@ title = "Giriş rejimi tələb olunur"
 message = "Admin ayarlarını dəyişmək üçün giriş rejimi aktiv olmalıdır. Zəhmət olmasa mühitinizdə SECURITY_ENABLELOGIN=true və ya settings.yml faylında security.enableLogin: true olaraq təyin edin, sonra serveri yenidən başladın."
 readOnly = "Aşağıdakı ayarlar yalnız nümunə dəyərlər üçün göstərilir. Giriş rejimini aktiv edin ki, real konfiqurasiyaya baxa və redaktə edə biləsiniz."
 
+[admin.settings.enterpriseRequired]
+title = "Enterprise lisenziyası tələb olunur"
+message = "{{featureName}} funksiyasına daxil olmaq üçün Enterprise lisenziyası tələb olunur. Siz istinad üçün demo məlumatlarına baxırsınız."
+
 [admin.settings.restart]
 title = "Yenidən başlatmaq tələb olunur"
 message = "Ayarlar uğurla yadda saxlanıldı. Dəyişikliklərin qüvvəyə minməsi üçün serverin yenidən başlaması tələb olunur."
@@ -4462,6 +4532,13 @@ description = "Hesabın bloklanmasından əvvəl maksimal uğursuz giriş cəhdl
 [admin.settings.security.loginResetTimeMinutes]
 label = "Girişi sıfırlama vaxtı (dəqiqə)"
 description = "Uğursuz giriş cəhdlərinin sıfırlanmasına qədər olan vaxt"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF mühafizəsini söndür"
@@ -4771,6 +4848,48 @@ description = "İstifadəçilər üçün ətraflı xəta mesajlarını göstəri
 title = "Məlumat Bazası"
 description = "Müəssisə yerləşdirmələri üçün fərdi məlumat bazası bağlantı ayarlarını konfiqurasiya edin."
 configuration = "Məlumat Bazası Konfiqurasiyası"
+backupTitle = "Ehtiyat nüsxələr və Bərpa"
+backupDescription = "H2 ehtiyat nüsxələrini birbaşa admin konsolundan idarə edin."
+loadError = "Məlumat bazası ehtiyat nüsxələrini yükləmək alınmadı"
+backupCreated = "Ehtiyat nüsxə uğurla yaradıldı"
+backupFailed = "Ehtiyat nüsxə yaratmaq alınmadı"
+deleteTitle = "Ehtiyat nüsxəni sil"
+deleteConfirm = "Bu ehtiyat nüsxəni silmək istəyirsiniz? Bu əməliyyat geri alına bilməz."
+deleteSuccess = "Ehtiyat nüsxə silindi"
+deleteFailed = "Ehtiyat nüsxəni silmək alınmadı"
+deleteConfirmAction = "Ehtiyat nüsxəni sil"
+downloadFailed = "Ehtiyat nüsxəni endirmək alınmadı"
+version = "H2 Versiyası"
+embedded = "Gömülü H2"
+external = "Xarici DB"
+h2Only = "Ehtiyat nüsxələr yalnız gömülü H2 məlumat bazası üçün mövcuddur."
+h2Hint = "Ehtiyat nüsxə və bərpanı aktivləşdirmək üçün məlumat bazası növünü H2 olaraq təyin edin və xüsusi məlumat bazasını söndürün."
+manageBackups = "Ehtiyat nüsxələri idarə et"
+refresh = "Yenilə"
+createBackup = "Ehtiyat nüsxə yarat"
+uploadTitle = "Yüklə və idxal et"
+chooseFile = ".sql ehtiyat nüsxə faylı seçin"
+importFromUpload = "Yüklənəni idxal et"
+confirmImportTitle = "Məlumat bazasının idxalını təsdiqlə"
+overwriteWarning = "Xəbərdarlıq: Bu, cari məlumat bazasının üzərinə yazacaq."
+overwriteWarningBody = "Mövcud bütün məlumatlar yüklənən ehtiyat nüsxə ilə əvəz olunacaq. Bu əməl geri alına bilməz."
+confirmCodeLabel = "Davam etmək üçün təsdiq kodunu daxil edin"
+enterCode = "Yuxarıda göstərilən kodu daxil edin"
+confirmImport = "İdxalı təsdiqlə"
+codeMismatch = "Təsdiq kodu uyğun gəlmir"
+codeMismatchBody = "Davam etmək üçün kodu göstərildiyi kimi daxil edin."
+selectFile = "İdxal üçün .sql faylı seçin"
+importSuccess = "Ehtiyat nüsxə uğurla idxal edildi"
+importFailed = "Ehtiyat nüsxənin idxalı alınmadı"
+noBackups = "Hələ ehtiyat nüsxə tapılmadı."
+unavailable = "Cari məlumat bazası konfiqurasiyası üçün ehtiyat nüsxə siyahısı əlçatan deyil."
+fileName = "Fayl"
+created = "Yaradılma"
+size = "Ölçü"
+actions = "Əməliyyatlar"
+download = "Endir"
+import = "İdxal et"
+delete = "Sil"
 
 [admin.settings.database.enableCustom]
 label = "Fərdi Məlumat Bazasını aktiv et"
@@ -4848,6 +4967,26 @@ description = "Şəkil emalı üçün maksimal DPI (0 = limitsiz)"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata Qovluğu"
 description = "OCR dil faylları üçün tessdata qovluğuna yol"
+downloadMissingTitle = "Heç bir dil seçilməyib"
+downloadMissingBody = "Endirmək üçün ən azı bir dil seçin, zəhmət olmasa."
+downloadSuccessTitle = "Dillər endirildi"
+downloadSuccessBody = "Seçilmiş tessdata dilləri yadda saxlanıldı."
+downloadErrorTitle = "Endirmə alınmadı"
+loadingLanguages = "Quraşdırılmış tessdata dilləri yüklənir..."
+installedLanguages = "Quraşdırılmış tessdata dilləri"
+noLanguages = "Konfiqurasiya edilmiş qovluqda tessdata dilləri tapılmadı."
+downloadLabel = "Əlavə tessdata dillərini endir"
+downloadPlaceholder = "Dilləri seçin"
+downloadNothingFound = "Əlavə dillər tapılmadı"
+permissionNotice = "tessdata yolu yazıla bilən deyil. Endirmələr brauzerdə açılacaq; .traineddata fayllarını əl ilə tessdata qovluğuna yadda saxlayın."
+manualLinks = "Əl ilə endirmələr: keçidlərə klikləyin və faylları tessdata qovluğuna yerləşdirin."
+downloadButton = "Seçilmiş dilləri endir"
+downloadInvalidTitle = "Etibarsız seçim"
+downloadInvalidBody = "Seçilən dillərin bəziləri endirmə üçün əlçatan deyil. Zəhmət olmasa yeniləyin və siyahıdan seçin."
+downloadErrorNetwork = "Şəbəkə xətasına görə endirmə alınmadı. Bağlantınızı yoxlayın və yenidən cəhd edin."
+downloadErrorServer = "tessdata dillərini endirərkən server xətası baş verdi. Zəhmət olmasa bir az sonra yenidən cəhd edin."
+downloadErrorPermission = "tessdata qovluğu yazıla bilən deyil: {{message}}. Yazıla bilən qovluq seçin (məs., tətbiqin məlumat qovluğu altında) və ya icazələri tənzimləyin."
+downloadErrorGeneric = "Endirmə alınmadı: {{message}}. Zəhmət olmasa bir az sonra yenidən cəhd edin."
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML Təmizlənməsini söndür"
@@ -5351,6 +5490,7 @@ desc = "PDF əməliyyatlarını birləşdirərək çoxaddımlı iş axınları y
 invalidStep = "Yanlış addım"
 reviewTitle = "Avtomatlaşdırma Nəticələri"
 copyToSaved = "Saxlananlara kopyala"
+exportForFolderScanning = "Qovluq skanı üçün ixrac et"
 
 [automate.files]
 placeholder = "Bu avtomatlaşdırma ilə emal etmək üçün faylları seçin"
@@ -5372,6 +5512,7 @@ createTitle = "Avtomatlaşdırma Yaradın"
 editTitle = "Avtomatlaşdırmanı Redaktə edin"
 intro = "Avtomatlaşdırmalar alətləri ardıcıl işlədir. Başlamaq üçün, işləməsini istədiyiniz ardıcıllıqla alətlər əlavə edin."
 save = "Avtomatlaşdırmanı Yadda saxla"
+exportForFolderScanning = "Qovluq skanı üçün ixrac et"
 
 [automate.creation.name]
 label = "Avtomatlaşdırmanın Adı"
@@ -5746,9 +5887,11 @@ username = "İstifadəçi adı (E-poçt)"
 usernamePlaceholder = "user@example.com"
 password = "Parol"
 passwordPlaceholder = "Parolu daxil edin"
+passwordRequired = "Şifrə tələb olunur"
 role = "Rol"
 team = "Komanda (İstəyə bağlı)"
 teamPlaceholder = "Komanda seçin"
+authType = "Doğrulama növü"
 forcePasswordChange = "İlk girişdə parol dəyişikliyi tələb olunsun"
 cancel = "Ləğv et"
 submit = "Üzv əlavə et"
@@ -5756,6 +5899,13 @@ usernameRequired = "İstifadəçi adı və parol tələb olunur"
 passwordTooShort = "Parol ən azı 6 simvol olmalıdır"
 success = "İstifadəçi uğurla yaradıldı"
 error = "İstifadəçi yaratmaq alınmadı"
+forceMFA = "Növbəti daxilolmada MFA quraşdırılmasını məcbur et"
+
+[workspace.people.authType]
+password = "Şifrə"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "İstifadəçi SSO provayderi vasitəsilə doğrulanacaq"
 
 [workspace.people.editMember]
 title = "Üzvü redaktə et"
@@ -5858,6 +6008,11 @@ fromLicense = "lisenziyadan"
 slotsAvailable = "{{count}} istifadəçi yeri mövcuddur"
 noSlotsAvailable = "Mövcud yer yoxdur"
 currentUsage = "Hazırda {{max}} istifadəçi lisenziyasından {{current}} istifadə olunur"
+
+[workspace.people.mfa]
+adminDisableSuccess = "İstifadəçi üçün MFA uğurla deaktiv edildi"
+adminDisableError = "İstifadəçi üçün MFA-nı deaktiv etmək mümkün olmadı"
+disableByAdmin = "MFA-nı deaktiv et"
 
 [workspace.teams]
 title = "Komandalar"
@@ -6301,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Ziyarətlər"
 percentage = "Faiz"
 noData = "Məlumat yoxdur"
+unknownEndpoint = "Naməlum endpoint"
 
 [backendHealth]
 checking = "Backend vəziyyəti yoxlanılır..."

@@ -306,6 +306,7 @@ selectOperation = "Chọn thao tác"
 addOperationButton = "Thêm thao tác"
 pipelineHeader = "Pipeline:"
 saveButton = "Tải xuống"
+saveForFolderScanning = "Lưu cho quét thư mục"
 validateButton = "Xác thực"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Thuộc tính"
 webBrowserSettings = "Cài đặt trình duyệt web"
 syncToBrowser = "Đồng bộ hóa Tài khoản -> Trình duyệt"
 syncToAccount = "Đồng bộ hóa Tài khoản <- Trình duyệt"
+
+[account.mfa]
+title = "Xác thực hai yếu tố"
+setupFailed = "Không thể bắt đầu thiết lập xác thực hai yếu tố. Vui lòng thử lại."
+codeRequired = "Nhập mã xác thực để tiếp tục."
+enabled = "Đã bật xác thực hai yếu tố."
+enableFailed = "Không thể bật xác thực hai yếu tố. Hãy kiểm tra mã và thử lại."
+disabled = "Đã tắt xác thực hai yếu tố."
+disableFailed = "Không thể tắt xác thực hai yếu tố. Hãy kiểm tra mã và thử lại."
+description = "Thêm một lớp bảo mật bổ sung cho tài khoản của bạn."
+enableButton = "Bật xác thực hai yếu tố"
+disableButton = "Tắt xác thực hai yếu tố"
+setupTitle = "Thiết lập xác thực hai yếu tố"
+setupDescription = "Quét mã QR bằng ứng dụng xác thực của bạn, sau đó nhập mã 6 chữ số để xác nhận."
+manualKey = "Khóa thiết lập thủ công"
+secretWarning = "Giữ khóa này bí mật. Bất kỳ ai có quyền truy cập đều có thể tạo mã xác thực hợp lệ."
+codePlaceholder = "Nhập mã 6 chữ số"
+confirmEnable = "Bật"
+disableTitle = "Tắt xác thực hai yếu tố"
+disableDescription = "Nhập mã xác thực hợp lệ để tắt xác thực hai yếu tố."
+codeLabel = "Mã xác thực"
+confirmDisable = "Tắt"
+ssoDescription = "Xác thực hai yếu tố được quản lý bởi nhà cung cấp danh tính của bạn cho các tài khoản SSO."
+ssoManaged = "Cấu hình MFA thông qua nhà cung cấp danh tính của bạn."
 
 [adminUserSettings]
 title = "Cài đặt kiểm soát người dùng"
@@ -925,6 +950,7 @@ title = "Tự động chia theo kích thước/số lượng"
 desc = "Chia một tệp PDF thành nhiều tài liệu dựa trên kích thước, số trang hoặc số lượng tài liệu"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Thay thế & Đảo ngược Màu"
 desc = "Thay thế hoặc đảo ngược màu trong tài liệu PDF"
 
@@ -939,18 +965,22 @@ title = "Quét thư mục tự động"
 desc = "Liên kết tới hướng dẫn quét thư mục tự động"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Hướng dẫn SSO"
 desc = "Liên kết tới hướng dẫn SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Thiết lập cách ly mạng"
 desc = "Liên kết tới hướng dẫn thiết lập cách ly mạng"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Thêm mật khẩu"
 desc = "Mã hóa tài liệu PDF của bạn bằng mật khẩu."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Thay đổi quyền"
 desc = "Thay đổi hạn chế và quyền của tài liệu"
 
@@ -960,10 +990,12 @@ title = "Tự động hóa"
 desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các thao tác PDF. Lý tưởng cho các tác vụ lặp lại."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Chồng lớp PDF lên trên PDF khác"
 title = "Chồng lớp PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Trình chỉnh sửa văn bản PDF"
 desc = "Xem và chỉnh sửa xuất JSON của Stirling PDF với chỉnh sửa văn bản theo nhóm và tái tạo PDF"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Tải xuống tệp HTML trung gian thay vì PDF"
 pdfaOptions = "Tùy chọn PDF/A"
 outputFormat = "Định dạng đầu ra"
 pdfaNote = "PDF/A-1b tương thích hơn, PDF/A-2b hỗ trợ nhiều tính năng hơn."
+pdfaFormat = "Định dạng PDF/A"
 pdfaDigitalSignatureWarning = "PDF chứa chữ ký số. Điều này sẽ bị xóa trong bước tiếp theo."
+pdfxDigitalSignatureWarning = "PDF chứa chữ ký số. Chữ ký này sẽ bị xóa ở bước tiếp theo."
+pdfxDescription = "PDF/X là một tập hợp con tiêu chuẩn ISO của PDF dành cho in ấn và trao đổi đồ họa đáng tin cậy."
 fileFormat = "Định dạng tệp"
 wordDoc = "Tài liệu Word"
 wordDocExt = "Tài liệu Word (.docx)"
@@ -2196,6 +2231,16 @@ submit = "Chuyển đổi"
 tip = "Hiện tại không hoạt động với nhiều đầu vào cùng lúc"
 outputFormat = "Định dạng đầu ra"
 pdfWithDigitalSignature = "PDF chứa chữ ký số. Điều này sẽ bị xóa trong bước tiếp theo."
+
+[pdfToPDFX]
+tags = "in ấn,tiêu chuẩn,chuyển đổi,sản xuất,tiền in,lưu trữ"
+title = "PDF sang PDF/X"
+header = "PDF sang PDF/X"
+credit = "Dịch vụ này sử dụng Ghostscript để chuyển đổi PDF/X"
+submit = "Chuyển đổi"
+tip = "Hiện không hoạt động với nhiều đầu vào cùng lúc"
+outputFormat = "Định dạng đầu ra"
+pdfWithDigitalSignature = "PDF chứa chữ ký số. Chữ ký này sẽ bị xóa ở bước tiếp theo."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,chuyển đổi,định dạng,chuyển đổi,văn phòng,microsoft,tệp doc"
@@ -3153,6 +3198,18 @@ other = "Khác"
 perPageInfo = "Thông tin theo trang"
 tableOfContents = "Mục lục"
 
+[getPdfInfo.compliance]
+notDetected = "Không phát hiện"
+passed = "Đạt"
+failed = "Không đạt"
+compliant = "Tuân thủ"
+nonCompliant = "Không tuân thủ"
+none = "Không phát hiện tiêu chuẩn nào"
+passedCount = "đạt"
+failedCount = "không đạt"
+noVerification = "Không thực hiện xác minh"
+noVerificationDesc = "Tài liệu này chưa được xác minh tuân thủ các tiêu chuẩn PDF."
+
 [getPdfInfo.other]
 attachments = "Tệp đính kèm"
 embeddedFiles = "Tệp nhúng"
@@ -3184,6 +3241,8 @@ permsRestricted = "{{count}} giới hạn"
 permsMixed = "Một số quyền bị hạn chế"
 hasCompliance = "Có tiêu chuẩn tuân thủ"
 noCompliance = "Không có tiêu chuẩn tuân thủ"
+compliancePassed = "Tuân thủ {{standards}}"
+complianceChecked = "Đã xác minh tiêu chuẩn ({{failed}} không đạt)"
 basic = "Thông tin cơ bản"
 documentInfo = "Thông tin tài liệu"
 securityTitle = "Trạng thái bảo mật"
@@ -3723,6 +3782,13 @@ passwordChangedSuccess = "Đổi mật khẩu thành công! Vui lòng đăng nh�
 credentialsUpdated = "Thông tin xác thực của bạn đã được cập nhật. Vui lòng đăng nhập lại."
 defaultCredentials = "Thông tin đăng nhập mặc định"
 changePasswordWarning = "Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu"
+mfaRequired = "Yêu cầu mã hai yếu tố"
+mfaCode = "Mã xác thực"
+enterMfaCode = "Nhập mã 6 chữ số"
+mfaPromptTitle = "Xác thực hai yếu tố"
+mfaPromptBody = "Nhập mã xác thực từ ứng dụng xác thực của bạn để tiếp tục."
+verifyingMfa = "Đang xác minh..."
+verifyMfa = "Xác minh mã"
 
 [login.slides.overview]
 alt = "Tổng quan Stirling PDF"
@@ -4324,6 +4390,10 @@ title = "Yêu cầu chế độ đăng nhập"
 message = "Phải bật chế độ đăng nhập để chỉnh sửa cài đặt quản trị. Vui lòng đặt SECURITY_ENABLELOGIN=true trong môi trường của bạn hoặc security.enableLogin: true trong settings.yml, sau đó khởi động lại máy chủ."
 readOnly = "Các cài đặt bên dưới hiển thị giá trị ví dụ để tham khảo. Bật chế độ đăng nhập để xem và sửa cấu hình thực tế."
 
+[admin.settings.enterpriseRequired]
+title = "Yêu cầu giấy phép Enterprise"
+message = "Yêu cầu giấy phép Enterprise để truy cập {{featureName}}. Bạn đang xem dữ liệu demo để tham khảo."
+
 [admin.settings.restart]
 title = "Cần khởi động lại"
 message = "Cài đặt đã được lưu thành công. Cần khởi động lại máy chủ để các thay đổi có hiệu lực."
@@ -4462,6 +4532,13 @@ description = "Số lần đăng nhập thất bại tối đa trước khi khó
 [admin.settings.security.loginResetTimeMinutes]
 label = "Thời gian đặt lại đăng nhập (phút)"
 description = "Thời gian trước khi đặt lại số lần đăng nhập thất bại"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Tắt bảo vệ CSRF"
@@ -4771,6 +4848,48 @@ description = "Hiển thị thông báo lỗi chi tiết cho người dùng."
 title = "Cơ sở dữ liệu"
 description = "Cấu hình cài đặt kết nối cơ sở dữ liệu tùy chỉnh cho triển khai doanh nghiệp."
 configuration = "Cấu hình cơ sở dữ liệu"
+backupTitle = "Sao lưu & Khôi phục"
+backupDescription = "Quản lý bản sao lưu H2 trực tiếp từ bảng điều khiển quản trị."
+loadError = "Không tải được các bản sao lưu cơ sở dữ liệu"
+backupCreated = "Tạo bản sao lưu thành công"
+backupFailed = "Không tạo được bản sao lưu"
+deleteTitle = "Xóa bản sao lưu"
+deleteConfirm = "Xóa bản sao lưu này? Hành động này không thể hoàn tác."
+deleteSuccess = "Đã xóa bản sao lưu"
+deleteFailed = "Không xóa được bản sao lưu"
+deleteConfirmAction = "Xóa bản sao lưu"
+downloadFailed = "Không tải xuống được bản sao lưu"
+version = "Phiên bản H2"
+embedded = "H2 nhúng"
+external = "CSDL bên ngoài"
+h2Only = "Sao lưu chỉ khả dụng cho cơ sở dữ liệu H2 nhúng."
+h2Hint = "Đặt loại cơ sở dữ liệu là H2 và tắt cơ sở dữ liệu tùy chỉnh để bật chức năng sao lưu và khôi phục."
+manageBackups = "Quản lý sao lưu"
+refresh = "Làm mới"
+createBackup = "Tạo bản sao lưu"
+uploadTitle = "Tải lên & nhập"
+chooseFile = "Chọn tệp sao lưu .sql"
+importFromUpload = "Nhập từ tải lên"
+confirmImportTitle = "Xác nhận nhập cơ sở dữ liệu"
+overwriteWarning = "Cảnh báo: Thao tác này sẽ ghi đè cơ sở dữ liệu hiện tại."
+overwriteWarningBody = "Mọi dữ liệu hiện có sẽ được thay thế bằng bản sao lưu đã tải lên. Hành động này không thể hoàn tác."
+confirmCodeLabel = "Nhập mã xác nhận để tiếp tục"
+enterCode = "Nhập mã hiển thị ở trên"
+confirmImport = "Xác nhận nhập"
+codeMismatch = "Mã xác nhận không khớp"
+codeMismatchBody = "Vui lòng nhập chính xác mã như hiển thị để tiếp tục."
+selectFile = "Vui lòng chọn một tệp .sql để nhập"
+importSuccess = "Nhập bản sao lưu thành công"
+importFailed = "Không nhập được bản sao lưu"
+noBackups = "Chưa tìm thấy bản sao lưu nào."
+unavailable = "Danh sách sao lưu không khả dụng với cấu hình cơ sở dữ liệu hiện tại."
+fileName = "Tệp"
+created = "Ngày tạo"
+size = "Kích thước"
+actions = "Thao tác"
+download = "Tải xuống"
+import = "Nhập"
+delete = "Xóa"
 
 [admin.settings.database.enableCustom]
 label = "Bật cơ sở dữ liệu tùy chỉnh"
@@ -4848,6 +4967,26 @@ description = "DPI tối đa cho xử lý hình ảnh (0 = không giới hạn)"
 [admin.settings.advanced.tessdataDir]
 label = "Thư mục Tessdata"
 description = "Đường dẫn đến thư mục tessdata cho các tệp ngôn ngữ OCR"
+downloadMissingTitle = "Chưa chọn ngôn ngữ"
+downloadMissingBody = "Vui lòng chọn ít nhất một ngôn ngữ để tải xuống."
+downloadSuccessTitle = "Đã tải xuống các ngôn ngữ"
+downloadSuccessBody = "Các ngôn ngữ tessdata đã chọn đã được lưu."
+downloadErrorTitle = "Tải xuống không thành công"
+loadingLanguages = "Đang tải các ngôn ngữ tessdata đã cài đặt..."
+installedLanguages = "Ngôn ngữ tessdata đã cài đặt"
+noLanguages = "Không tìm thấy ngôn ngữ tessdata trong thư mục đã cấu hình."
+downloadLabel = "Tải thêm ngôn ngữ tessdata"
+downloadPlaceholder = "Chọn ngôn ngữ"
+downloadNothingFound = "Không tìm thấy ngôn ngữ bổ sung"
+permissionNotice = "Đường dẫn tessdata không thể ghi. Tệp tải xuống sẽ được mở trong trình duyệt; vui lòng lưu các tệp .traineddata thủ công vào thư mục tessdata."
+manualLinks = "Tải xuống thủ công: nhấp vào các liên kết và đặt các tệp vào thư mục tessdata."
+downloadButton = "Tải xuống các ngôn ngữ đã chọn"
+downloadInvalidTitle = "Lựa chọn không hợp lệ"
+downloadInvalidBody = "Một số ngôn ngữ đã chọn không khả dụng để tải xuống. Vui lòng làm mới và chọn từ danh sách."
+downloadErrorNetwork = "Tải xuống không thành công do lỗi mạng. Vui lòng kiểm tra kết nối và thử lại."
+downloadErrorServer = "Máy chủ gặp lỗi khi tải xuống các ngôn ngữ tessdata. Vui lòng thử lại sau."
+downloadErrorPermission = "Thư mục tessdata không thể ghi: {{message}}. Vui lòng chọn một thư mục có thể ghi (ví dụ: trong thư mục dữ liệu ứng dụng) hoặc điều chỉnh quyền."
+downloadErrorGeneric = "Tải xuống không thành công: {{message}}. Vui lòng thử lại sau."
 
 [admin.settings.advanced.disableSanitize]
 label = "Tắt làm sạch HTML"
@@ -5351,6 +5490,7 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 invalidStep = "Bước không hợp lệ"
 reviewTitle = "Kết quả tự động hóa"
 copyToSaved = "Sao chép vào Đã lưu"
+exportForFolderScanning = "Xuất cho quét thư mục"
 
 [automate.files]
 placeholder = "Chọn tệp để xử lý với tự động hóa này"
@@ -5372,6 +5512,7 @@ createTitle = "Tạo tự động hóa"
 editTitle = "Chỉnh sửa tự động hóa"
 intro = "Tự động hóa chạy các công cụ tuần tự. Để bắt đầu, hãy thêm công cụ theo thứ tự bạn muốn chạy."
 save = "Lưu tự động hóa"
+exportForFolderScanning = "Xuất cho quét thư mục"
 
 [automate.creation.name]
 label = "Tên tự động hóa"
@@ -5746,9 +5887,11 @@ username = "Tên đăng nhập (Email)"
 usernamePlaceholder = "user@example.com"
 password = "Mật khẩu"
 passwordPlaceholder = "Nhập mật khẩu"
+passwordRequired = "Mật khẩu là bắt buộc"
 role = "Vai trò"
 team = "Nhóm (Tùy chọn)"
 teamPlaceholder = "Chọn một nhóm"
+authType = "Loại xác thực"
 forcePasswordChange = "Buộc đổi mật khẩu khi đăng nhập lần đầu"
 cancel = "Hủy"
 submit = "Thêm thành viên"
@@ -5756,6 +5899,13 @@ usernameRequired = "Yêu cầu tên đăng nhập và mật khẩu"
 passwordTooShort = "Mật khẩu phải có ít nhất 6 ký tự"
 success = "Tạo người dùng thành công"
 error = "Tạo người dùng thất bại"
+forceMFA = "Bắt buộc thiết lập MFA ở lần đăng nhập tiếp theo"
+
+[workspace.people.authType]
+password = "Mật khẩu"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Người dùng sẽ xác thực thông qua nhà cung cấp SSO"
 
 [workspace.people.editMember]
 title = "Chỉnh sửa thành viên"
@@ -5858,6 +6008,11 @@ fromLicense = "từ giấy phép"
 slotsAvailable = "Còn {{count}} chỗ người dùng khả dụng"
 noSlotsAvailable = "Không còn chỗ khả dụng"
 currentUsage = "Đang dùng {{current}}/{{max}} giấy phép người dùng"
+
+[workspace.people.mfa]
+adminDisableSuccess = "Đã tắt MFA cho người dùng thành công"
+adminDisableError = "Tắt MFA cho người dùng không thành công"
+disableByAdmin = "Tắt MFA"
 
 [workspace.teams]
 title = "Nhóm"
@@ -6301,6 +6456,7 @@ endpoint = "Điểm cuối"
 visits = "Lượt truy cập"
 percentage = "Phần trăm"
 noData = "Không có dữ liệu"
+unknownEndpoint = "Điểm cuối không xác định"
 
 [backendHealth]
 checking = "Đang kiểm tra trạng thái backend..."

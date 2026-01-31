@@ -306,6 +306,7 @@ selectOperation = "動作の選択"
 addOperationButton = "動作の追加"
 pipelineHeader = "パイプライン:"
 saveButton = "ダウンロード"
+saveForFolderScanning = "フォルダー監視用に保存"
 validateButton = "検証"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "プロパティ"
 webBrowserSettings = "Webブラウザ設定"
 syncToBrowser = "アカウントの同期 -> ブラウザ"
 syncToAccount = "アカウントの同期 <- ブラウザ"
+
+[account.mfa]
+title = "二要素認証"
+setupFailed = "二要素認証の設定を開始できません。もう一度お試しください。"
+codeRequired = "続行するには認証コードを入力してください。"
+enabled = "二要素認証を有効にしました。"
+enableFailed = "二要素認証を有効にできません。コードを確認して、もう一度お試しください。"
+disabled = "二要素認証を無効にしました。"
+disableFailed = "二要素認証を無効にできません。コードを確認して、もう一度お試しください。"
+description = "アカウントのセキュリティを強化します。"
+enableButton = "二要素認証を有効にする"
+disableButton = "二要素認証を無効にする"
+setupTitle = "二要素認証を設定"
+setupDescription = "認証アプリで QR コードをスキャンし、6 桁のコードを入力して確認してください。"
+manualKey = "手動設定用キー"
+secretWarning = "このキーは秘密に保管してください。アクセスできる人は有効な認証コードを生成できます。"
+codePlaceholder = "6 桁のコードを入力"
+confirmEnable = "有効化"
+disableTitle = "二要素認証を無効にする"
+disableDescription = "二要素認証を無効にするには、有効な認証コードを入力してください。"
+codeLabel = "認証コード"
+confirmDisable = "無効化"
+ssoDescription = "シングルサインオンのアカウントでは、二要素認証はアイデンティティプロバイダーによって管理されます。"
+ssoManaged = "MFA はアイデンティティプロバイダーで設定してください。"
 
 [adminUserSettings]
 title = "ユーザー制御設定"
@@ -925,6 +950,7 @@ title = "サイズ・数による自動分割"
 desc = "サイズ・ページ数またはドキュメント数に基づいて、1つのPDFを複数のドキュメントに分割します。"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "色の置換と反転"
 desc = "PDF 文書の色を置換または反転"
 
@@ -939,18 +965,22 @@ title = "自動フォルダスキャン"
 desc = "自動フォルダスキャン ガイドへのリンク"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO ガイド"
 desc = "SSO ガイドへのリンク"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "エアギャップ設定"
 desc = "エアギャップ環境のセットアップガイドへのリンク"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "パスワードの追加"
 desc = "PDFをパスワードで暗号化します。"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "権限の変更"
 desc = "文書の制限と権限を変更"
 
@@ -960,10 +990,12 @@ title = "自動化"
 desc = "PDF アクションを連結して複数ステップのワークフローを構築。繰り返し作業に最適です。"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDFテキストエディター"
 desc = "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "PDF の代わりに中間ファイル（HTML）をダウンロ�
 pdfaOptions = "PDF/A オプション"
 outputFormat = "出力形式"
 pdfaNote = "PDF/A-1b は互換性が高く、PDF/A-2b はより多くの機能をサポートします。"
+pdfaFormat = "PDF/A 形式"
 pdfaDigitalSignatureWarning = "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
+pdfxDigitalSignatureWarning = "PDF にはデジタル署名が含まれています。これは次のステップで削除されます。"
+pdfxDescription = "PDF/X は、信頼性の高い印刷とグラフィック交換のための ISO 規格の PDF サブセットです。"
 fileFormat = "ファイル形式"
 wordDoc = "Word 文書"
 wordDocExt = "Word 文書（.docx）"
@@ -2196,6 +2231,16 @@ submit = "変換"
 tip = "現在、一度に複数の入力に対して機能しません"
 outputFormat = "出力形式"
 pdfWithDigitalSignature = "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
+
+[pdfToPDFX]
+tags = "印刷,標準,変換,制作,プリプレス,アーカイブ"
+title = "PDF を PDF/X に"
+header = "PDF を PDF/X に"
+credit = "このサービスは PDF/X 変換に Ghostscript を使用しています"
+submit = "変換"
+tip = "現在、同時に複数の入力には対応していません"
+outputFormat = "出力形式"
+pdfWithDigitalSignature = "PDF にはデジタル署名が含まれています。これは次のステップで削除されます。"
 
 [PDFToWord]
 tags = "doc,docx,odt,word,変換,フォーマット,コンバージョン,オフィス,microsoft,docファイル"
@@ -3153,6 +3198,18 @@ other = "その他"
 perPageInfo = "ページごとの情報"
 tableOfContents = "目次"
 
+[getPdfInfo.compliance]
+notDetected = "未検出"
+passed = "合格"
+failed = "不合格"
+compliant = "準拠"
+nonCompliant = "非準拠"
+none = "検出された標準はありません"
+passedCount = "合格"
+failedCount = "不合格"
+noVerification = "検証は実行されていません"
+noVerificationDesc = "このドキュメントの PDF 標準への準拠は検証されていません。"
+
 [getPdfInfo.other]
 attachments = "添付ファイル"
 embeddedFiles = "埋め込みファイル"
@@ -3184,6 +3241,8 @@ permsRestricted = "{{count}} 件の制限"
 permsMixed = "一部の権限が制限されています"
 hasCompliance = "準拠規格あり"
 noCompliance = "準拠規格なし"
+compliancePassed = "{{standards}} に準拠"
+complianceChecked = "標準を検証済み（{{failed}} 件が不合格）"
 basic = "基本情報"
 documentInfo = "ドキュメント情報"
 securityTitle = "セキュリティ状態"
@@ -3723,6 +3782,13 @@ passwordChangedSuccess = "パスワードを変更しました。新しいパス
 credentialsUpdated = "認証情報を更新しました。もう一度サインインしてください。"
 defaultCredentials = "デフォルトのログイン資格情報"
 changePasswordWarning = "初回ログイン後にパスワードを変更してください"
+mfaRequired = "二要素認証コードが必要です"
+mfaCode = "認証コード"
+enterMfaCode = "6 桁のコードを入力"
+mfaPromptTitle = "二要素認証"
+mfaPromptBody = "認証アプリの認証コードを入力して続行してください。"
+verifyingMfa = "確認中..."
+verifyMfa = "コードを確認"
 
 [login.slides.overview]
 alt = "Stirling PDF の概要"
@@ -4324,6 +4390,10 @@ title = "ログインモードが必要です"
 message = "管理者設定を変更するにはログインモードを有効にする必要があります。環境変数で SECURITY_ENABLELOGIN=true を設定するか、settings.yml の security.enableLogin: true を設定し、サーバーを再起動してください。"
 readOnly = "以下の設定は参照用の例です。ログインモードを有効にして実際の構成を表示・編集してください。"
 
+[admin.settings.enterpriseRequired]
+title = "Enterprise ライセンスが必要です"
+message = "{{featureName}} にアクセスするには Enterprise ライセンスが必要です。現在は参照用のデモデータを表示しています。"
+
 [admin.settings.restart]
 title = "再起動が必要です"
 message = "設定は正常に保存されました。変更を反映するにはサーバーの再起動が必要です。"
@@ -4462,6 +4532,13 @@ description = "アカウントロックまでの最大失敗回数"
 [admin.settings.security.loginResetTimeMinutes]
 label = "ログインリセット時間（分）"
 description = "失敗回数がリセットされるまでの時間"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF 保護を無効化"
@@ -4771,6 +4848,48 @@ description = "ユーザー向けの詳細なエラーメッセージを表示�
 title = "データベース"
 description = "エンタープライズ導入向けのカスタムデータベース接続設定を構成します。"
 configuration = "データベース構成"
+backupTitle = "バックアップと復元"
+backupDescription = "管理者コンソールから H2 バックアップを直接管理します。"
+loadError = "データベースのバックアップの読み込みに失敗しました"
+backupCreated = "バックアップを正常に作成しました"
+backupFailed = "バックアップの作成に失敗しました"
+deleteTitle = "バックアップを削除"
+deleteConfirm = "このバックアップを削除しますか？この操作は元に戻せません。"
+deleteSuccess = "バックアップを削除しました"
+deleteFailed = "バックアップの削除に失敗しました"
+deleteConfirmAction = "バックアップを削除"
+downloadFailed = "バックアップのダウンロードに失敗しました"
+version = "H2 バージョン"
+embedded = "組み込み H2"
+external = "外部 DB"
+h2Only = "バックアップは組み込み H2 データベースでのみ利用できます。"
+h2Hint = "データベース種別を H2 に設定し、カスタムデータベースを無効にすると、バックアップと復元が有効になります。"
+manageBackups = "バックアップを管理"
+refresh = "更新"
+createBackup = "バックアップを作成"
+uploadTitle = "アップロードとインポート"
+chooseFile = ".sql バックアップファイルを選択"
+importFromUpload = "アップロードからインポート"
+confirmImportTitle = "データベースのインポートを確認"
+overwriteWarning = "警告: 現在のデータベースを上書きします。"
+overwriteWarningBody = "既存のすべてのデータはアップロードされたバックアップで置き換えられます。この操作は元に戻せません。"
+confirmCodeLabel = "続行するには確認コードを入力してください"
+enterCode = "上に表示されたコードを入力"
+confirmImport = "インポートを確認"
+codeMismatch = "確認コードが一致しません"
+codeMismatchBody = "続行するには、表示どおりに正確にコードを入力してください。"
+selectFile = "インポートする .sql ファイルを選択してください"
+importSuccess = "バックアップを正常にインポートしました"
+importFailed = "バックアップのインポートに失敗しました"
+noBackups = "まだバックアップが見つかりません。"
+unavailable = "現在のデータベース設定ではバックアップ一覧は利用できません。"
+fileName = "ファイル"
+created = "作成日"
+size = "サイズ"
+actions = "操作"
+download = "ダウンロード"
+import = "インポート"
+delete = "削除"
 
 [admin.settings.database.enableCustom]
 label = "カスタムデータベースを有効化"
@@ -4848,6 +4967,26 @@ description = "画像処理の最大 DPI（0 = 無制限）"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata ディレクトリ"
 description = "OCR 言語ファイル用 tessdata ディレクトリのパス"
+downloadMissingTitle = "言語が選択されていません"
+downloadMissingBody = "ダウンロードする言語を少なくとも 1 つ選択してください。"
+downloadSuccessTitle = "言語をダウンロードしました"
+downloadSuccessBody = "選択した tessdata 言語が保存されました。"
+downloadErrorTitle = "ダウンロードに失敗しました"
+loadingLanguages = "インストール済みの tessdata 言語を読み込み中..."
+installedLanguages = "インストール済みの tessdata 言語"
+noLanguages = "設定されたディレクトリに tessdata 言語が見つかりません。"
+downloadLabel = "追加の tessdata 言語をダウンロード"
+downloadPlaceholder = "言語を選択"
+downloadNothingFound = "追加の言語は見つかりません"
+permissionNotice = "tessdata パスに書き込めません。ダウンロードはブラウザで開かれます。.traineddata ファイルを手動で tessdata フォルダーに保存してください。"
+manualLinks = "手動ダウンロード: リンクをクリックし、ファイルを tessdata フォルダーに配置してください。"
+downloadButton = "選択した言語をダウンロード"
+downloadInvalidTitle = "無効な選択"
+downloadInvalidBody = "選択した言語の一部はダウンロードできません。更新してリストから選択してください。"
+downloadErrorNetwork = "ネットワークエラーによりダウンロードに失敗しました。接続を確認してもう一度お試しください。"
+downloadErrorServer = "サーバーで tessdata 言語のダウンロード中にエラーが発生しました。後でもう一度お試しください。"
+downloadErrorPermission = "tessdata ディレクトリに書き込めません: {{message}}。書き込み可能なディレクトリ（例: アプリケーションデータフォルダー配下）を選ぶか、権限を調整してください。"
+downloadErrorGeneric = "ダウンロードに失敗しました: {{message}}。後でもう一度お試しください。"
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML サニタイズを無効化"
@@ -5351,6 +5490,7 @@ desc = "PDF アクションを連結して複数ステップのワークフロ�
 invalidStep = "無効なステップ"
 reviewTitle = "自動処理の結果"
 copyToSaved = "保存済みにコピー"
+exportForFolderScanning = "フォルダー監視用にエクスポート"
 
 [automate.files]
 placeholder = "この自動処理で処理するファイルを選択"
@@ -5372,6 +5512,7 @@ createTitle = "自動処理を作成"
 editTitle = "自動処理を編集"
 intro = "自動処理はツールを順番に実行します。まずは実行したい順にツールを追加してください。"
 save = "自動処理を保存"
+exportForFolderScanning = "フォルダー監視用にエクスポート"
 
 [automate.creation.name]
 label = "自動処理名"
@@ -5746,9 +5887,11 @@ username = "ユーザー名（メール）"
 usernamePlaceholder = "user@example.com"
 password = "パスワード"
 passwordPlaceholder = "パスワードを入力"
+passwordRequired = "パスワードは必須です"
 role = "ロール"
 team = "チーム（任意）"
 teamPlaceholder = "チームを選択"
+authType = "認証タイプ"
 forcePasswordChange = "初回ログイン時にパスワード変更を強制"
 cancel = "キャンセル"
 submit = "メンバーを追加"
@@ -5756,6 +5899,13 @@ usernameRequired = "ユーザー名とパスワードは必須です"
 passwordTooShort = "パスワードは6文字以上である必要があります"
 success = "ユーザーを作成しました"
 error = "ユーザーの作成に失敗しました"
+forceMFA = "次回ログイン時に MFA の設定を必須にする"
+
+[workspace.people.authType]
+password = "パスワード"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "ユーザーは SSO プロバイダー経由で認証します"
 
 [workspace.people.editMember]
 title = "メンバーを編集"
@@ -5858,6 +6008,11 @@ fromLicense = "ライセンスから"
 slotsAvailable = "{{count}} 件のユーザースロットが利用可能"
 noSlotsAvailable = "利用可能な枠がありません"
 currentUsage = "現在 {{max}} 件中 {{current}} 件のユーザーライセンスを使用"
+
+[workspace.people.mfa]
+adminDisableSuccess = "ユーザーの MFA を無効化しました"
+adminDisableError = "ユーザーの MFA を無効化できませんでした"
+disableByAdmin = "MFA を無効化"
 
 [workspace.teams]
 title = "チーム"
@@ -6301,6 +6456,7 @@ endpoint = "エンドポイント"
 visits = "訪問数"
 percentage = "割合"
 noData = "利用可能なデータがありません"
+unknownEndpoint = "不明なエンドポイント"
 
 [backendHealth]
 checking = "バックエンドの状態を確認しています..."

@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Stirling-PDF",
-    "version": "2.3.1",
+    "version": "2.4.2",
     "identifier": "stirling.pdf.dev",
     "build": {
         "frontendDist": "../dist",
@@ -16,7 +16,8 @@
                 "width": 1280,
                 "height": 800,
                 "resizable": true,
-                "fullscreen": false
+                "fullscreen": false,
+                "additionalBrowserArgs": "--enable-features=CertVerifierBuiltinFeature"
             }
         ]
     },

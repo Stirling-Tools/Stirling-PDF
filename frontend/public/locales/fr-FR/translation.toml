@@ -306,6 +306,7 @@ selectOperation = "Sélectionner une opération"
 addOperationButton = "Ajouter une opération"
 pipelineHeader = "Pipeline :"
 saveButton = "Télécharger"
+saveForFolderScanning = "Enregistrer pour l'analyse de dossier"
 validateButton = "Valider"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Propriété"
 webBrowserSettings = "Paramètres du navigateur"
 syncToBrowser = "Synchroniser : Compte → Navigateur"
 syncToAccount = "Synchroniser : Compte ← Navigateur"
+
+[account.mfa]
+title = "Authentification à deux facteurs"
+setupFailed = "Impossible de démarrer la configuration de l'authentification à deux facteurs. Veuillez réessayer."
+codeRequired = "Saisissez le code d'authentification pour continuer."
+enabled = "Authentification à deux facteurs activée."
+enableFailed = "Impossible d'activer l'authentification à deux facteurs. Vérifiez le code et réessayez."
+disabled = "Authentification à deux facteurs désactivée."
+disableFailed = "Impossible de désactiver l'authentification à deux facteurs. Vérifiez le code et réessayez."
+description = "Ajoutez une couche de sécurité supplémentaire à votre compte."
+enableButton = "Activer l'authentification à deux facteurs"
+disableButton = "Désactiver l'authentification à deux facteurs"
+setupTitle = "Configurer l'authentification à deux facteurs"
+setupDescription = "Scannez le code QR avec votre application d'authentification, puis saisissez le code à 6 chiffres pour confirmer."
+manualKey = "Clé de configuration manuelle"
+secretWarning = "Conservez cette clé privée. Toute personne y ayant accès peut générer des codes d'authentification valides."
+codePlaceholder = "Saisir le code à 6 chiffres"
+confirmEnable = "Activer"
+disableTitle = "Désactiver l'authentification à deux facteurs"
+disableDescription = "Saisissez un code d'authentification valide pour désactiver l'authentification à deux facteurs."
+codeLabel = "Code d'authentification"
+confirmDisable = "Désactiver"
+ssoDescription = "L'authentification à deux facteurs est gérée par votre fournisseur d'identité pour les comptes à authentification unique."
+ssoManaged = "Configurez la MFA via votre fournisseur d'identité."
 
 [adminUserSettings]
 title = "Administration des paramètres des utilisateurs"
@@ -925,6 +950,7 @@ title = "Scinder auto taille/pages"
 desc = "Séparer un PDF unique en plusieurs documents en fonction de la taille, du nombre de pages ou du nombre de documents."
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Remplacer & inverser couleurs"
 desc = "Remplacer ou inverser les couleurs dans les documents PDF"
 
@@ -939,18 +965,22 @@ title = "Scan auto de dossiers"
 desc = "Lien vers le guide d’analyse de dossier automatisée"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Guide SSO"
 desc = "Lien vers le guide SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Installation isolée"
 desc = "Lien vers le guide d’installation isolée (air-gapped)"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Ajouter un mot de passe"
 desc = "Chiffrez votre PDF avec un mot de passe."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Modifier les permissions"
 desc = "Modifier les restrictions et permissions du document"
 
@@ -960,10 +990,12 @@ title = "Automatiser"
 desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéal pour les tâches récurrentes."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Superposer un PDF sur un autre"
 title = "Superposer des PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Éditeur de texte PDF"
 desc = "Afficher et modifier les exports JSON de Stirling PDF avec édition de texte groupée et régénération du PDF"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Télécharger le fichier HTML intermédiaire au lieu du PDF"
 pdfaOptions = "Options PDF/A"
 outputFormat = "Format de sortie"
 pdfaNote = "PDF/A-1b est plus compatible, PDF/A-2b prend en charge davantage de fonctionnalités."
+pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante."
+pdfxDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée à l'étape suivante."
+pdfxDescription = "PDF/X est un sous-ensemble PDF conforme à l'ISO pour une impression fiable et un échange graphique."
 fileFormat = "Format de fichier"
 wordDoc = "Document Word"
 wordDocExt = "Document Word (.docx)"
@@ -2196,6 +2231,16 @@ submit = "Convertir"
 tip = "Ne fonctionne actuellement pas pour plusieurs entrées à la fois"
 outputFormat = "Format de sortie"
 pdfWithDigitalSignature = "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante."
+
+[pdfToPDFX]
+tags = "impression,standard,conversion,production,prépresse,archive"
+title = "PDF vers PDF/X"
+header = "PDF vers PDF/X"
+credit = "Ce service utilise Ghostscript pour la conversion PDF/X"
+submit = "Convertir"
+tip = "Ne fonctionne actuellement pas avec plusieurs entrées à la fois"
+outputFormat = "Format de sortie"
+pdfWithDigitalSignature = "Le PDF contient une signature numérique. Elle sera supprimée à l'étape suivante."
 
 [PDFToWord]
 tags = "doc, docx, odt, word, transformation, format, conversion, office, microsoft, docfile"
@@ -3153,6 +3198,18 @@ other = "Autre"
 perPageInfo = "Informations par page"
 tableOfContents = "Table des matières"
 
+[getPdfInfo.compliance]
+notDetected = "Non détecté"
+passed = "Réussi"
+failed = "Échec"
+compliant = "Conforme"
+nonCompliant = "Non conforme"
+none = "Aucune norme détectée"
+passedCount = "réussis"
+failedCount = "échoués"
+noVerification = "Aucune vérification effectuée"
+noVerificationDesc = "La conformité aux normes PDF n'a pas été vérifiée pour ce document."
+
 [getPdfInfo.other]
 attachments = "Pièces jointes"
 embeddedFiles = "Fichiers intégrés"
@@ -3184,6 +3241,8 @@ permsRestricted = "{{count}} restrictions"
 permsMixed = "Certaines autorisations sont restreintes"
 hasCompliance = "Respecte des normes de conformité"
 noCompliance = "Aucune norme de conformité"
+compliancePassed = "Conforme à {{standards}}"
+complianceChecked = "Normes vérifiées ({{failed}} échoués)"
 basic = "Informations de base"
 documentInfo = "Informations sur le document"
 securityTitle = "État de sécurité"
@@ -3723,6 +3782,13 @@ passwordChangedSuccess = "Mot de passe modifié avec succès ! Veuillez vous co
 credentialsUpdated = "Vos identifiants ont été mis à jour. Veuillez vous reconnecter."
 defaultCredentials = "Identifiants de connexion par défaut"
 changePasswordWarning = "Veuillez changer votre mot de passe après votre première connexion"
+mfaRequired = "Code à deux facteurs requis"
+mfaCode = "Code d'authentification"
+enterMfaCode = "Saisir le code à 6 chiffres"
+mfaPromptTitle = "Authentification à deux facteurs"
+mfaPromptBody = "Saisissez le code d'authentification provenant de votre application d'authentification pour continuer."
+verifyingMfa = "Vérification..."
+verifyMfa = "Vérifier le code"
 
 [login.slides.overview]
 alt = "Aperçu de Stirling PDF"
@@ -4324,6 +4390,10 @@ title = "Mode de connexion requis"
 message = "Le mode de connexion doit être activé pour modifier les paramètres d’administration. Veuillez définir SECURITY_ENABLELOGIN=true dans votre environnement ou security.enableLogin: true dans settings.yml, puis redémarrer le serveur."
 readOnly = "Les paramètres ci-dessous affichent des valeurs d’exemple à titre de référence. Activez le mode de connexion pour afficher et modifier la configuration réelle."
 
+[admin.settings.enterpriseRequired]
+title = "Licence Entreprise requise"
+message = "Une licence Entreprise est requise pour accéder à {{featureName}}. Vous consultez des données de démonstration à titre de référence."
+
 [admin.settings.restart]
 title = "Redémarrage requis"
 message = "Les paramètres ont été enregistrés avec succès. Un redémarrage du serveur est requis pour que les changements prennent effet."
@@ -4462,6 +4532,13 @@ description = "Nombre maximal de tentatives de connexion échouées avant le ver
 [admin.settings.security.loginResetTimeMinutes]
 label = "Délai de réinitialisation (minutes)"
 description = "Délai avant la réinitialisation du compteur de tentatives de connexion échouées"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Désactiver la protection CSRF"
@@ -4771,6 +4848,48 @@ description = "Afficher des messages d’erreur détaillés pour les utilisateur
 title = "Base de données"
 description = "Configurer des paramètres de connexion à une base de données personnalisée pour les déploiements d’entreprise."
 configuration = "Configuration de la base de données"
+backupTitle = "Sauvegardes & restauration"
+backupDescription = "Gérez les sauvegardes H2 directement depuis la console d'administration."
+loadError = "Échec du chargement des sauvegardes de la base de données"
+backupCreated = "Sauvegarde créée avec succès"
+backupFailed = "Échec de la création de la sauvegarde"
+deleteTitle = "Supprimer la sauvegarde"
+deleteConfirm = "Supprimer cette sauvegarde ? Cette action est irréversible."
+deleteSuccess = "Sauvegarde supprimée"
+deleteFailed = "Échec de la suppression de la sauvegarde"
+deleteConfirmAction = "Supprimer la sauvegarde"
+downloadFailed = "Échec du téléchargement de la sauvegarde"
+version = "Version H2"
+embedded = "H2 intégré"
+external = "Base de données externe"
+h2Only = "Les sauvegardes ne sont disponibles que pour la base de données H2 intégrée."
+h2Hint = "Définissez le type de base de données sur H2 et désactivez la base de données personnalisée pour activer la sauvegarde et la restauration."
+manageBackups = "Gérer les sauvegardes"
+refresh = "Actualiser"
+createBackup = "Créer une sauvegarde"
+uploadTitle = "Téléversement & import"
+chooseFile = "Choisir un fichier de sauvegarde .sql"
+importFromUpload = "Importer le téléversement"
+confirmImportTitle = "Confirmer l’importation de la base de données"
+overwriteWarning = "Avertissement : ceci écrasera la base de données actuelle."
+overwriteWarningBody = "Toutes les données existantes seront remplacées par la sauvegarde téléversée. Cette action est irréversible."
+confirmCodeLabel = "Saisissez le code de confirmation pour continuer"
+enterCode = "Saisissez le code affiché ci-dessus"
+confirmImport = "Confirmer l’importation"
+codeMismatch = "Le code de confirmation ne correspond pas"
+codeMismatchBody = "Veuillez saisir le code exactement tel qu’affiché pour continuer."
+selectFile = "Veuillez sélectionner un fichier .sql à importer"
+importSuccess = "Sauvegarde importée avec succès"
+importFailed = "Échec de l’importation de la sauvegarde"
+noBackups = "Aucune sauvegarde trouvée pour le moment."
+unavailable = "La liste des sauvegardes est indisponible pour la configuration actuelle de la base de données."
+fileName = "Fichier"
+created = "Créé"
+size = "Taille"
+actions = "Actions"
+download = "Télécharger"
+import = "Importer"
+delete = "Supprimer"
 
 [admin.settings.database.enableCustom]
 label = "Activer la base de données personnalisée"
@@ -4848,6 +4967,26 @@ description = "DPI maximum pour le traitement d’images (0 = illimité)"
 [admin.settings.advanced.tessdataDir]
 label = "Répertoire tessdata"
 description = "Chemin vers le répertoire tessdata pour les fichiers de langue OCR"
+downloadMissingTitle = "Aucune langue sélectionnée"
+downloadMissingBody = "Veuillez sélectionner au moins une langue à télécharger."
+downloadSuccessTitle = "Langues téléchargées"
+downloadSuccessBody = "Les langues tessdata sélectionnées ont été enregistrées."
+downloadErrorTitle = "Échec du téléchargement"
+loadingLanguages = "Chargement des langues tessdata installées..."
+installedLanguages = "Langues tessdata installées"
+noLanguages = "Aucune langue tessdata trouvée dans le répertoire configuré."
+downloadLabel = "Télécharger des langues tessdata supplémentaires"
+downloadPlaceholder = "Sélectionner des langues"
+downloadNothingFound = "Aucune langue supplémentaire trouvée"
+permissionNotice = "Le chemin tessdata n’est pas accessible en écriture. Les téléchargements seront ouverts dans le navigateur ; veuillez enregistrer manuellement les fichiers .traineddata dans le dossier tessdata."
+manualLinks = "Téléchargements manuels : cliquez sur les liens et placez les fichiers dans le dossier tessdata."
+downloadButton = "Télécharger les langues sélectionnées"
+downloadInvalidTitle = "Sélection invalide"
+downloadInvalidBody = "Certaines des langues sélectionnées ne sont pas disponibles au téléchargement. Veuillez actualiser et choisir dans la liste."
+downloadErrorNetwork = "Échec du téléchargement en raison d’une erreur réseau. Veuillez vérifier votre connexion et réessayer."
+downloadErrorServer = "Le serveur a rencontré une erreur lors du téléchargement des langues tessdata. Veuillez réessayer plus tard."
+downloadErrorPermission = "Le répertoire tessdata n’est pas accessible en écriture : {{message}}. Veuillez choisir un répertoire accessible en écriture (par exemple dans le dossier de données de l’application) ou ajuster les autorisations."
+downloadErrorGeneric = "Échec du téléchargement : {{message}}. Veuillez réessayer plus tard."
 
 [admin.settings.advanced.disableSanitize]
 label = "Désactiver la sanitisation HTML"
@@ -5351,6 +5490,7 @@ desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéa
 invalidStep = "Étape invalide"
 reviewTitle = "Résultats de l’automatisation"
 copyToSaved = "Copier vers Enregistré"
+exportForFolderScanning = "Exporter pour l'analyse de dossier"
 
 [automate.files]
 placeholder = "Sélectionnez des fichiers à traiter avec cette automatisation"
@@ -5372,6 +5512,7 @@ createTitle = "Créer une automatisation"
 editTitle = "Modifier l’automatisation"
 intro = "Les automatisations exécutent les outils séquentiellement. Pour commencer, ajoutez les outils dans l’ordre d’exécution souhaité."
 save = "Enregistrer l’automatisation"
+exportForFolderScanning = "Exporter pour l'analyse de dossier"
 
 [automate.creation.name]
 label = "Nom de l’automatisation"
@@ -5746,9 +5887,11 @@ username = "Nom d’utilisateur (e-mail)"
 usernamePlaceholder = "user@example.com"
 password = "Mot de passe"
 passwordPlaceholder = "Saisir le mot de passe"
+passwordRequired = "Le mot de passe est requis"
 role = "Rôle"
 team = "Équipe (facultatif)"
 teamPlaceholder = "Sélectionner une équipe"
+authType = "Type d’authentification"
 forcePasswordChange = "Forcer le changement de mot de passe à la première connexion"
 cancel = "Annuler"
 submit = "Ajouter le membre"
@@ -5756,6 +5899,13 @@ usernameRequired = "Le nom d’utilisateur et le mot de passe sont obligatoires"
 passwordTooShort = "Le mot de passe doit comporter au moins 6 caractères"
 success = "Utilisateur créé avec succès"
 error = "Échec de la création de l’utilisateur"
+forceMFA = "Forcer la configuration MFA à la prochaine connexion"
+
+[workspace.people.authType]
+password = "Mot de passe"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "L’utilisateur s’authentifiera via le fournisseur SSO"
 
 [workspace.people.editMember]
 title = "Modifier le membre"
@@ -5858,6 +6008,11 @@ fromLicense = "de la licence"
 slotsAvailable = "{{count}} place(s) utilisateur disponibles"
 noSlotsAvailable = "Aucune place disponible"
 currentUsage = "Utilise actuellement {{current}} sur {{max}} licences utilisateur"
+
+[workspace.people.mfa]
+adminDisableSuccess = "MFA désactivée avec succès pour l'utilisateur"
+adminDisableError = "Échec de la désactivation de la MFA pour l'utilisateur"
+disableByAdmin = "Désactiver la MFA"
 
 [workspace.teams]
 title = "Équipes"
@@ -6301,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Visites"
 percentage = "Pourcentage"
 noData = "Aucune donnée disponible"
+unknownEndpoint = "Point de terminaison inconnu"
 
 [backendHealth]
 checking = "Vérification de l’état du backend..."

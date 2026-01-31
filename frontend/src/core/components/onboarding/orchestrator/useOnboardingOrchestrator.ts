@@ -89,6 +89,18 @@ function clearRuntimeStateSession(): void {
   }
 }
 
+function parseMfaRequired(settings: string | null | undefined): boolean {
+  if (!settings) return false;
+
+  try {
+    const parsed = JSON.parse(settings) as { mfaRequired?: string };
+    return parsed.mfaRequired?.toLowerCase() === 'true';
+  } catch (error) {
+    console.warn('[useOnboardingOrchestrator] Failed to parse account settings JSON:', error);
+    return false;
+  }
+}
+
 export interface OnboardingOrchestratorState {
   /** Whether onboarding is currently active */
   isActive: boolean;
@@ -205,8 +217,10 @@ export function useOnboardingOrchestrator(
           requiresPasswordChange: accountData.changeCredsFlag,
           firstLoginUsername: accountData.username,
           usingDefaultCredentials: loginPageData.showDefaultCredentials,
+          requiresMfaSetup: parseMfaRequired(accountData.settings),
         }));
-      } catch {
+      } catch (error) {
+        console.log('[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:', error);
         // Account endpoint failed - user not logged in or security disabled
       }
     };
@@ -230,12 +244,8 @@ export function useOnboardingOrchestrator(
   }), [serverExperience, runtimeState]);
 
   const activeFlow = useMemo(() => {
-    // If password change is required, ONLY show the first-login step
-    if (runtimeState.requiresPasswordChange) {
-      return ONBOARDING_STEPS.filter((step) => step.id === 'first-login');
-    }
     return ONBOARDING_STEPS.filter((step) => step.condition(conditionContext));
-  }, [conditionContext, runtimeState.requiresPasswordChange]);
+  }, [conditionContext]);
 
   // Wait for config AND admin status before calculating initial step
   const adminStatusResolved = !configLoading && (
@@ -255,7 +265,7 @@ export function useOnboardingOrchestrator(
     }
 
     // If onboarding has been completed, don't show it
-    if (isOnboardingCompleted() && !runtimeState.requiresPasswordChange) {
+    if (isOnboardingCompleted()) {
       setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;
       return;
@@ -266,7 +276,7 @@ export function useOnboardingOrchestrator(
       setCurrentStepIndex(0);
       initialIndexSet.current = true;
     }
-  }, [activeFlow, configLoading, adminStatusResolved, runtimeState.requiresPasswordChange]);
+  }, [activeFlow, configLoading, adminStatusResolved]);
 
   const totalSteps = activeFlow.length;
 

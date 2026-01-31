@@ -306,6 +306,7 @@ selectOperation = "Aukeratu eragiketa"
 addOperationButton = "Gehitu eragiketa"
 pipelineHeader = "Pipeline:"
 saveButton = "Distira"
+saveForFolderScanning = "Gorde karpeta-eskaneatzerako"
 validateButton = "Balidatu"
 
 [enterpriseEdition]
@@ -555,6 +556,30 @@ property = "Propietatea"
 webBrowserSettings = "Web nabigatzailearen ezarpenak"
 syncToBrowser = "Sync Kontua -> Nabigatzailea"
 syncToAccount = "Sync Kontua <- Nabigatzailea"
+
+[account.mfa]
+title = "Bi faktoreko autentifikazioa"
+setupFailed = "Ezin izan da bi faktoreko autentifikazioaren konfigurazioa abiarazi. Saiatu berriro."
+codeRequired = "Jarraitzeko, sartu autentifikazio-kodea."
+enabled = "Bi faktoreko autentifikazioa gaituta."
+enableFailed = "Ezin izan da bi faktoreko autentifikazioa gaitu. Egiaztatu kodea eta saiatu berriro."
+disabled = "Bi faktoreko autentifikazioa desgaituta."
+disableFailed = "Ezin izan da bi faktoreko autentifikazioa desgaitu. Egiaztatu kodea eta saiatu berriro."
+description = "Gehitu segurtasun-geruza gehigarria zure kontuari."
+enableButton = "Gaitu bi faktoreko autentifikazioa"
+disableButton = "Desgaitu bi faktoreko autentifikazioa"
+setupTitle = "Konfiguratu bi faktoreko autentifikazioa"
+setupDescription = "Eskaneatu QR kodea zure autentifikazio-aplikazioarekin, eta ondoren sartu 6 digituko kodea berresteko."
+manualKey = "Eskuzko konfigurazio-gakoa"
+secretWarning = "Mantendu gako hau pribatua. Sarbidea duen edonork autentifikazio-kode baliodunak sor ditzake."
+codePlaceholder = "Sartu 6 digituko kodea"
+confirmEnable = "Gaitu"
+disableTitle = "Desgaitu bi faktoreko autentifikazioa"
+disableDescription = "Sartu baliozko autentifikazio-kode bat bi faktoreko autentifikazioa desgaitzeko."
+codeLabel = "Autentifikazio-kodea"
+confirmDisable = "Desgaitu"
+ssoDescription = "Bi faktoreko autentifikazioa zure identitate-hornitzaileak kudeatzen du single sign-on kontuentzat."
+ssoManaged = "Konfiguratu MFA zure identitate-hornitzailearen bidez."
 
 [adminUserSettings]
 title = "Erabiltzailearen Ezarpenen Kontrolak"
@@ -925,6 +950,7 @@ title = "Autom. zatitu tamaina/kop."
 desc = "Split a single PDF into multiple documents based on size, page count, or document count"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ordeztu eta inbertitu kolorea"
 desc = "Ordeztu edo alderantzikatu koloreak PDF dokumentuetan"
 
@@ -939,18 +965,22 @@ title = "Karpeta eskaneatze autom."
 desc = "Esteka karpeta eskaneatze automatizatuaren gidara"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO gida"
 desc = "Esteka SSO gidara"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Sare isolatuko konfigurazioa"
 desc = "Esteka sare isolatutako konfigurazio gidara"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Gehitu pasahitza"
 desc = "Enkriptatu PDF dokumentua pasahitz batekin"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Aldatu baimenak"
 desc = "Aldatu dokumentuaren murrizketak eta baimenak"
 
@@ -960,10 +990,12 @@ title = "Automatizatu"
 desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregin errepikakorretarako."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Overlays PDFs on-top of another PDF"
 title = "Gainjarri PDFak"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF testu-editorea"
 desc = "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
 
@@ -1264,7 +1296,10 @@ downloadHtml = "Deskargatu HTML bitarteko fitxategia PDFaren ordez"
 pdfaOptions = "PDF/A aukerak"
 outputFormat = "Irteerako formatua"
 pdfaNote = "PDF/A-1b bateragarriagoa da; PDF/A-2b-k ezaugarri gehiago onartzen ditu."
+pdfaFormat = "PDF/A formatua"
 pdfaDigitalSignatureWarning = "PDFak sinadura digitala dauka. Hurrengo urratsean kenduko da."
+pdfxDigitalSignatureWarning = "PDFak sinadura digital bat dauka. Hurrengo urratsean kenduko da."
+pdfxDescription = "PDF/X inprimaketa eta grafikoen truke fidagarrirako ISO estandarreko PDF azpimultzoa da."
 fileFormat = "Fitxategi formatua"
 wordDoc = "Word dokumentua"
 wordDocExt = "Word dokumentua (.docx)"
@@ -2196,6 +2231,16 @@ submit = "Bihurtu"
 tip = "Une honetan ez dabil aldi berean sarrera anitzekin"
 outputFormat = "Irteerako formatua"
 pdfWithDigitalSignature = "PDFak sinadura digitala dauka. Hurrengo urratsean kenduko da."
+
+[pdfToPDFX]
+tags = "inprimaketa,estandarra,bihurketa,produkzioa,aurre-inprimaketa,artxiboa"
+title = "PDFtik PDF/Xera"
+header = "PDFtik PDF/Xera"
+credit = "Zerbitzu honek Ghostscript erabiltzen du PDF/X bihurketarako"
+submit = "Bihurtu"
+tip = "Une honetan ez dabil hainbat sarrera aldi berean"
+outputFormat = "Irteera-formatua"
+pdfWithDigitalSignature = "PDFak sinadura digital bat dauka. Hurrengo urratsean kenduko da."
 
 [PDFToWord]
 tags = "doc,docx,odt,word,eraldaketa,formatua,bihurketa,office,microsoft,doc-fitxategia"
@@ -3153,6 +3198,18 @@ other = "Bestelakoak"
 perPageInfo = "Orrialdeko informazioa"
 tableOfContents = "Aurkibidea"
 
+[getPdfInfo.compliance]
+notDetected = "Ez da detektatu"
+passed = "Gaindituta"
+failed = "Huts eginda"
+compliant = "Bateragarria"
+nonCompliant = "Ez da bateragarria"
+none = "Ez da estandarrik detektatu"
+passedCount = "gaindituta"
+failedCount = "huts eginda"
+noVerification = "Ez da egiaztapenik egin"
+noVerificationDesc = "Dokumentu honen PDF estandarren betetzea ez da egiaztatu."
+
 [getPdfInfo.other]
 attachments = "Eranskinak"
 embeddedFiles = "Txertatutako fitxategiak"
@@ -3184,6 +3241,8 @@ permsRestricted = "{{count}} murrizketa"
 permsMixed = "Zenbait baimen murriztuta"
 hasCompliance = "Betetze-estandarrak ditu"
 noCompliance = "Ez dago betetze-estandarrik"
+compliancePassed = "{{standards}} bateragarria"
+complianceChecked = "Estandarrak egiaztatuta ({{failed}} huts)"
 basic = "Oinarrizko informazioa"
 documentInfo = "Dokumentuaren informazioa"
 securityTitle = "Segurtasun-egoera"
@@ -3723,6 +3782,13 @@ passwordChangedSuccess = "Pasahitza ongi aldatu da! Hasi saioa pasahitz berriare
 credentialsUpdated = "Zure kredentzialak eguneratu dira. Hasi saioa berriro."
 defaultCredentials = "Saio-hasierako kredentzial lehenetsiak"
 changePasswordWarning = "Mesedez, aldatu pasahitza lehen aldiz saioa hasi ondoren"
+mfaRequired = "Bi faktoreko kodea behar da"
+mfaCode = "Autentifikazio-kodea"
+enterMfaCode = "Sartu 6 digituko kodea"
+mfaPromptTitle = "Bi faktoreko autentifikazioa"
+mfaPromptBody = "Sartu jarraitzeko zure autentifikazio-aplikazioak emandako autentifikazio-kodea."
+verifyingMfa = "Egiaztatzen..."
+verifyMfa = "Egiaztatu kodea"
 
 [login.slides.overview]
 alt = "Stirling PDF ikuspegi orokorra"
@@ -4324,6 +4390,10 @@ title = "Saio-hasiera modua beharrezkoa da"
 message = "Saio-hasiera modua gaitu behar da admin ezarpenak aldatzeko. Ezarri SECURITY_ENABLELOGIN=true zure ingurunean edo security.enableLogin: true settings.yml, eta berrabiarazi zerbitzaria."
 readOnly = "Azpiko ezarpenek adibide-balioak erakusten dituzte erreferentziarako. Gaitu saio-hasiera modua benetako konfigurazioa ikusi eta editatzeko."
 
+[admin.settings.enterpriseRequired]
+title = "Enterprise lizentzia behar da"
+message = "{{featureName}} atzitzeko Enterprise lizentzia behar da. Erreferentzia gisa demo datuak ikusten ari zara."
+
 [admin.settings.restart]
 title = "Berrabiarazi behar da"
 message = "Ezarpenak ongi gorde dira. Zerbitzaria berrabiaraztea beharrezkoa da aldaketek eragina izan dezaten."
@@ -4462,6 +4532,13 @@ description = "Kontua blokeatu aurretik huts egindako saio-saiakeren gehienezko 
 [admin.settings.security.loginResetTimeMinutes]
 label = "Saio-hasieraren berrezartze denbora (minutuak)"
 description = "Huts egindako saio-saiakerak berrezarri aurreko denbora"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF babesa desgaitu"
@@ -4771,6 +4848,48 @@ description = "Erakutsi errore-mezu zehatzak erabiltzaileentzat."
 title = "Datu-basea"
 description = "Konfiguratu datu-base konexio pertsonalizatuak enpresa-hedapenetarako."
 configuration = "Datu-basearen konfigurazioa"
+backupTitle = "Babeskopiak eta leheneratzea"
+backupDescription = "Kudeatu H2 babeskopiak administrazio-kontsolatik bertatik."
+loadError = "Huts egin du datu-basearen babeskopiak kargatzean"
+backupCreated = "Babeskopia arrakastaz sortu da"
+backupFailed = "Huts egin du babeskopia sortzean"
+deleteTitle = "Babeskopia ezabatu"
+deleteConfirm = "Ezabatu babeskopia hau? Hau ezin da desegin."
+deleteSuccess = "Babeskopia ezabatu da"
+deleteFailed = "Huts egin du babeskopia ezabatzean"
+deleteConfirmAction = "Babeskopia ezabatu"
+downloadFailed = "Huts egin du babeskopia deskargatzean"
+version = "H2 bertsioa"
+embedded = "Txertatutako H2"
+external = "Kanpoko DB"
+h2Only = "Babeskopiak H2 txertatutako datu-basearentzat bakarrik daude eskuragarri."
+h2Hint = "Ezarri datu-base mota H2 gisa eta desgaitu datu-base pertsonalizatua babeskopia eta leheneratzea gaitzeko."
+manageBackups = "Babeskopiak kudeatu"
+refresh = "Freskatu"
+createBackup = "Babeskopia sortu"
+uploadTitle = "Igo eta inportatu"
+chooseFile = "Aukeratu .sql babeskopia-fitxategi bat"
+importFromUpload = "Igotakoa inportatu"
+confirmImportTitle = "Datu-base inportazioa berretsi"
+overwriteWarning = "Abisua: honek uneko datu-basea gainidatziko du."
+overwriteWarningBody = "Existitzen den datu guztia igotako babeskopiak ordezkatuko du. Ekintza hau ezin da desegin."
+confirmCodeLabel = "Jarraitzeko, sartu berrespen-kodea"
+enterCode = "Sartu goian erakutsitako kodea"
+confirmImport = "Inportazioa berretsi"
+codeMismatch = "Berrespen-kodea ez dator bat"
+codeMismatchBody = "Mesedez, sartu kodea zehazki ageri den bezala jarraitzeko."
+selectFile = "Mesedez, hautatu inportatzeko .sql fitxategi bat"
+importSuccess = "Babeskopia arrakastaz inportatu da"
+importFailed = "Huts egin du babeskopia inportatzean"
+noBackups = "Oraindik ez da babeskopiarik aurkitu."
+unavailable = "Uneko datu-base konfigurazioarentzat babeskopien zerrenda ez dago erabilgarri."
+fileName = "Fitxategia"
+created = "Sortze-data"
+size = "Tamaina"
+actions = "Ekintzak"
+download = "Deskargatu"
+import = "Inportatu"
+delete = "Ezabatu"
 
 [admin.settings.database.enableCustom]
 label = "Datu-base pertsonalizatua gaitu"
@@ -4848,6 +4967,26 @@ description = "Irudien prozesaketarako gehienezko DPI (0 = mugarik ez)"
 [admin.settings.advanced.tessdataDir]
 label = "Tessdata direktorioa"
 description = "OCR hizkuntza-fitxategietarako tessdata direktorioaren bide-izena"
+downloadMissingTitle = "Ez da hizkuntzarik hautatu"
+downloadMissingBody = "Hautatu gutxienez hizkuntza bat deskargatzeko."
+downloadSuccessTitle = "Hizkuntzak deskargatu dira"
+downloadSuccessBody = "Hautatutako tessdata hizkuntzak gorde dira."
+downloadErrorTitle = "Deskargak huts egin du"
+loadingLanguages = "Instalatutako tessdata hizkuntzak kargatzen..."
+installedLanguages = "Instalatutako tessdata hizkuntzak"
+noLanguages = "Ez da tessdata hizkuntzarik aurkitu konfiguratutako direktorioan."
+downloadLabel = "Deskargatu tessdata hizkuntza gehigarriak"
+downloadPlaceholder = "Hautatu hizkuntzak"
+downloadNothingFound = "Ez da hizkuntza gehigarririk aurkitu"
+permissionNotice = "tessdata bidea ez da idazgarria. Deskargak nabigatzailean irekiko dira; gorde .traineddata fitxategiak eskuz tessdata direktorioan."
+manualLinks = "Deskarga manualak: egin klik esteketan eta jarri fitxategiak tessdata direktorioan."
+downloadButton = "Hautatutako hizkuntzak deskargatu"
+downloadInvalidTitle = "Hautapen baliogabea"
+downloadInvalidBody = "Hautatutako hizkuntza batzuk ez daude deskargatzeko erabilgarri. Freskatu eta aukeratu zerrendatik."
+downloadErrorNetwork = "Sareko errore baten ondorioz deskargak huts egin du. Egiaztatu konexioa eta saiatu berriro."
+downloadErrorServer = "Zerbitzarian errorea gertatu da tessdata hizkuntzak deskargatzean. Saiatu berriro geroago."
+downloadErrorPermission = "tessdata direktorioa ez da idazgarria: {{message}}. Aukeratu idazgarri den direktorio bat (adib. aplikazioaren datu-karpetaren azpian) edo egokitu baimenak."
+downloadErrorGeneric = "Deskargak huts egin du: {{message}}. Saiatu berriro geroago."
 
 [admin.settings.advanced.disableSanitize]
 label = "HTML saneamendua desgaitu"
@@ -5351,6 +5490,7 @@ desc = "Eraiki hainbat pausoko lan-fluxuak PDF ekintzak kateatuz. Egokia zeregin
 invalidStep = "Urrats baliogabea"
 reviewTitle = "Automatizazioaren emaitzak"
 copyToSaved = "Gordetakoetara kopiatu"
+exportForFolderScanning = "Karpeta-eskaneatzerako esportatu"
 
 [automate.files]
 placeholder = "Hautatu automatizazio honekin prozesatuko diren fitxategiak"
@@ -5372,6 +5512,7 @@ createTitle = "Automatizazioa sortu"
 editTitle = "Automatizazioa editatu"
 intro = "Automatizazioek tresnak sekuentzialki exekutatzen dituzte. Hasteko, gehitu tresnak exekutatu nahi dituzun ordenan."
 save = "Automatizazioa gorde"
+exportForFolderScanning = "Karpeta-eskaneatzerako esportatu"
 
 [automate.creation.name]
 label = "Automatizazioaren izena"
@@ -5746,9 +5887,11 @@ username = "Erabiltzaile-izena (Helbide elektronikoa)"
 usernamePlaceholder = "user@example.com"
 password = "Pasahitza"
 passwordPlaceholder = "Sartu pasahitza"
+passwordRequired = "Pasahitza beharrezkoa da"
 role = "Rola"
 team = "Taldea (aukerakoa)"
 teamPlaceholder = "Aukeratu talde bat"
+authType = "Autentifikazio mota"
 forcePasswordChange = "Behartu pasahitza aldatzera lehen saio-hasieran"
 cancel = "Utzi"
 submit = "Gehitu kidea"
@@ -5756,6 +5899,13 @@ usernameRequired = "Erabiltzaile-izena eta pasahitza beharrezkoak dira"
 passwordTooShort = "Pasahitzak gutxienez 6 karaktere izan behar ditu"
 success = "Erabiltzailea ongi sortu da"
 error = "Ezin izan da erabiltzailea sortu"
+forceMFA = "Behartu MFA konfigurazioa hurrengo saio-hasieran"
+
+[workspace.people.authType]
+password = "Pasahitza"
+oauth = "OAuth2"
+saml = "SAML2"
+ssoDescription = "Erabiltzailea SSO hornitzailearen bidez autentifikatuko da"
 
 [workspace.people.editMember]
 title = "Kidea editatu"
@@ -5858,6 +6008,11 @@ fromLicense = "lizentziatik"
 slotsAvailable = "{{count}} erabiltzaile-slot erabilgarri"
 noSlotsAvailable = "Ez dago slot erabilgarririk"
 currentUsage = "Une honetan {{current}}/{{max}} erabiltzaile-lizentzia erabiltzen"
+
+[workspace.people.mfa]
+adminDisableSuccess = "Erabiltzailearentzat MFA behar bezala desgaitu da"
+adminDisableError = "Erabiltzailearentzat MFA desgaitzea huts egin du"
+disableByAdmin = "Desgaitu MFA"
 
 [workspace.teams]
 title = "Taldeak"
@@ -6301,6 +6456,7 @@ endpoint = "Endpoint"
 visits = "Bisitak"
 percentage = "Ehunekoa"
 noData = "Ez dago daturik eskuragarri"
+unknownEndpoint = "Amaiera-puntu ezezaguna"
 
 [backendHealth]
 checking = "Atzeko zerbitzuaren egoera egiaztatzen..."

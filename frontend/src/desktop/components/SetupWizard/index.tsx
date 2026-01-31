@@ -6,9 +6,9 @@ import { SaaSSignupScreen } from '@app/components/SetupWizard/SaaSSignupScreen';
 import { ServerSelectionScreen } from '@app/components/SetupWizard/ServerSelectionScreen';
 import { SelfHostedLoginScreen } from '@app/components/SetupWizard/SelfHostedLoginScreen';
 import { ServerConfig, connectionModeService } from '@app/services/connectionModeService';
-import { authService, UserInfo } from '@app/services/authService';
+import { AuthServiceError, authService, UserInfo } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';
@@ -30,6 +30,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>({ url: STIRLING_SAAS_URL });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selfHostedMfaCode, setSelfHostedMfaCode] = useState('');
+  const [selfHostedMfaRequired, setSelfHostedMfaRequired] = useState(false);
 
   const handleSaaSLogin = async (username: string, password: string) => {
     if (!serverConfig) {
@@ -97,6 +99,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const handleServerSelection = (config: ServerConfig) => {
     setServerConfig(config);
     setError(null);
+    setSelfHostedMfaCode('');
+    setSelfHostedMfaRequired(false);
     setActiveStep(SetupStep.SelfHostedLogin);
   };
 
@@ -116,8 +120,13 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setError(null);
 
       console.log('[SetupWizard] Step 1: Authenticating with server...');
-      await authService.login(serverConfig.url, username, password);
+      const trimmedMfa = selfHostedMfaCode.trim();
+      const mfaCode = trimmedMfa ? trimmedMfa : undefined;
+      await authService.login(serverConfig.url, username, password, mfaCode);
       console.log('[SetupWizard] ✅ Authentication successful');
+
+      setSelfHostedMfaRequired(false);
+      setSelfHostedMfaCode('');
 
       console.log('[SetupWizard] Step 2: Switching to self-hosted mode...');
       await connectionModeService.switchToSelfHosted(serverConfig);
@@ -131,7 +140,20 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       onComplete();
     } catch (err) {
       console.error('[SetupWizard] ❌ Self-hosted login failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Self-hosted login failed';
+      let errorMessage = 'Self-hosted login failed';
+      if (err instanceof AuthServiceError) {
+        if (err.code === 'mfa_required' || err.code === 'invalid_mfa_code') {
+          setSelfHostedMfaRequired(true);
+        }
+        errorMessage = err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      if (errorMessage.toLowerCase().includes('mfa_required') || errorMessage.toLowerCase().includes('invalid_mfa_code')) {
+        setSelfHostedMfaRequired(true);
+      }
       console.error('[SetupWizard] Error message:', errorMessage);
       setError(errorMessage);
       setLoading(false);
@@ -239,6 +261,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const handleBack = () => {
     setError(null);
     if (activeStep === SetupStep.SelfHostedLogin) {
+      setSelfHostedMfaCode('');
+      setSelfHostedMfaRequired(false);
       setActiveStep(SetupStep.ServerSelection);
     } else if (activeStep === SetupStep.ServerSelection) {
       setActiveStep(SetupStep.SaaSLogin);
@@ -286,6 +310,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           enabledOAuthProviders={serverConfig?.enabledOAuthProviders}
           onLogin={handleSelfHostedLogin}
           onOAuthSuccess={handleSelfHostedOAuthSuccess}
+          mfaCode={selfHostedMfaCode}
+          setMfaCode={setSelfHostedMfaCode}
+          requiresMfa={selfHostedMfaRequired}
           loading={loading}
           error={error}
         />
