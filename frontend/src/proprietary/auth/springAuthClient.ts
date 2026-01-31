@@ -406,6 +406,8 @@ class SpringAuthClient {
       // Notify listeners
       this.notifyListeners('TOKEN_REFRESHED', session);
 
+      console.debug('[SpringAuth] Token refreshed successfully');
+
       return { data: { session }, error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] refreshSession error:', error);

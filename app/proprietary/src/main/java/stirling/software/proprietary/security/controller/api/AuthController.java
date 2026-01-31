@@ -286,7 +286,10 @@ public class AuthController {
 
             log.debug("Token refreshed for user: {}", username);
 
-            return ResponseEntity.ok(Map.of("access_token", newToken, "expires_in", 3600));
+            return ResponseEntity.ok(
+                    Map.of(
+                            "user", buildUserResponse(user),
+                            "session", Map.of("access_token", newToken, "expires_in", 3600)));
 
         } catch (Exception e) {
             log.error("Token refresh error", e);

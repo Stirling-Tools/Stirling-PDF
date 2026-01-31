@@ -182,8 +182,8 @@ class AuthControllerLoginTest {
 
         mockMvc.perform(post("/api/v1/auth/refresh"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.access_token").value("new-token"))
-                .andExpect(jsonPath("$.expires_in").value(3600));
+                .andExpect(jsonPath("$.session.access_token").value("new-token"))
+                .andExpect(jsonPath("$.session.expires_in").value(3600));
     }
 
     @Test
