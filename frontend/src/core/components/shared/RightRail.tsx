@@ -22,6 +22,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
+import { showSaveDialog, saveToLocalPath } from '@app/services/localFileSaveService';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
@@ -141,7 +142,7 @@ export default function RightRail() {
         alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
         return;
       }
-      viewerContext?.exportActions?.download();
+      viewerContext?.exportActions?.download?.();
       return;
     }
 
@@ -150,34 +151,55 @@ export default function RightRail() {
       return;
     }
 
-    const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-    filesToDownload.forEach(file => {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(file);
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    });
+    const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+
+    // Try desktop "Save As" dialog first (will be no-op in web mode)
+    let usedDesktopSave = false;
+    for (const file of filesToExport) {
+      const savePath = await showSaveDialog(file.name);
+      if (savePath) {
+        usedDesktopSave = true;
+        const result = await saveToLocalPath(file, savePath);
+        if (result.success) {
+          console.log(`[RightRail] Saved to: ${savePath}`);
+        } else if (result.error && !result.error.includes('not available in web mode')) {
+          console.error(`[RightRail] Failed to save: ${result.error}`);
+          alert(`Failed to save ${file.name}: ${result.error}`);
+        }
+      }
+    }
+
+    // Fallback to browser download if desktop save wasn't used
+    if (!usedDesktopSave) {
+      filesToExport.forEach(file => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      });
+    }
   }, [
     currentView,
     selectedFiles,
     activeFiles,
     pageEditorFunctions,
     viewerContext,
-    signaturesApplied
+    signaturesApplied,
   ]);
 
   const downloadTooltip = useMemo(() => {
     if (currentView === 'pageEditor') {
       return t('rightRail.exportAll', 'Export PDF');
     }
+
     if (selectedCount > 0) {
       return terminology.downloadSelected;
     }
     return terminology.downloadAll;
-  }, [currentView, selectedCount, t]);
+  }, [currentView, selectedCount, t, terminology]);
 
   return (
     <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail">
