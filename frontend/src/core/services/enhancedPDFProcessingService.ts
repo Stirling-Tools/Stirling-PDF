@@ -265,17 +265,13 @@ export class EnhancedPDFProcessingService {
       this.notifyListeners();
     }
 
-    // Create placeholder pages for remaining pages
+    // Create placeholder pages for remaining pages without touching PDF.js
     for (let i = priorityCount + 1; i <= totalPages; i++) {
-      // Load page just to get rotation
-      const page = await pdf.getPage(i);
-      const rotation = page.rotate || 0;
-
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null, // Will be loaded lazily
-        rotation,
+        rotation: 0,
         selected: false
       });
     }
@@ -337,17 +333,13 @@ export class EnhancedPDFProcessingService {
       }
     }
 
-    // Create placeholders for remaining pages
+    // Create placeholders for remaining pages without invoking PDF.js
     for (let i = firstChunkEnd + 1; i <= totalPages; i++) {
-      // Load page just to get rotation
-      const page = await pdf.getPage(i);
-      const rotation = page.rotate || 0;
-
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null,
-        rotation,
+        rotation: 0,
         selected: false
       });
     }
@@ -377,15 +369,11 @@ export class EnhancedPDFProcessingService {
     // Create placeholder pages without thumbnails
     const pages: PDFPage[] = [];
     for (let i = 1; i <= totalPages; i++) {
-      // Load page just to get rotation
-      const page = await pdf.getPage(i);
-      const rotation = page.rotate || 0;
-
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail: null,
-        rotation,
+        rotation: 0,
         selected: false
       });
     }
