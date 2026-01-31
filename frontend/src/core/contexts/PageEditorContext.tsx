@@ -154,8 +154,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   }, []);
 
   const clearPersistedDocument = useCallback(() => {
+    console.log('[PageEditorContext] Clearing persisted document and currentPages');
     setPersistedDocument(null);
     setPersistedDocumentSignature(null);
+    setCurrentPages(null); // Also clear currentPages to avoid stale signature comparison
   }, []);
 
   // Page editor's own file order (independent of FileContext)
@@ -166,14 +168,23 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   const { state } = useFileState();
 
   const fileContextSignature = useMemo(() => {
-    return state.files.ids
+    const sig = state.files.ids
       .map(id => `${id}:${state.files.byId[id]?.versionNumber ?? 0}`)
       .join(',');
+    console.log('[PageEditorContext] File signature computed:', {
+      fileCount: state.files.ids.length,
+      signature: sig.substring(0, 100),
+    });
+    return sig;
   }, [state.files.ids, state.files.byId]);
 
   const prevFileContextSignature = useRef<string | null>(null);
   useEffect(() => {
     if (prevFileContextSignature.current !== fileContextSignature) {
+      console.log('[PageEditorContext] File signature changed, clearing persisted document:', {
+        prev: prevFileContextSignature.current?.substring(0, 50),
+        current: fileContextSignature.substring(0, 50),
+      });
       prevFileContextSignature.current = fileContextSignature;
       clearPersistedDocument();
     }
@@ -201,6 +212,13 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     if (!fileContextChanged) {
       return;
     }
+
+    console.log('[PageEditorContext] FileContext files changed:', {
+      prevCount: prevFileIds.length,
+      currentCount: currentFileIds.length,
+      added: currentFileIds.filter(id => !prevFileIds.includes(id)).length,
+      removed: prevFileIds.filter(id => !currentFileIds.includes(id)).length,
+    });
 
     prevFileContextIdsRef.current = currentFileIds;
 

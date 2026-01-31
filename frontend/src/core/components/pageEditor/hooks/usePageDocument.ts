@@ -43,6 +43,11 @@ export function usePageDocument(): PageDocumentHook {
       return [];
     }
     const selectedSet = new Set(state.ui.selectedFileIds);
+    console.log('[usePageDocument] File selection:', {
+      totalActive: activeFileIds.length,
+      selectedInContext: selectedSet.size,
+      selectedActive: activeFileIds.filter((id) => selectedSet.has(id)).length,
+    });
     if (selectedSet.size === 0) {
       return [];
     }
@@ -122,7 +127,18 @@ export function usePageDocument(): PageDocumentHook {
   }, [currentPages]);
 
   const mergedPdfDocument = useMemo((): PDFDocument | null => {
-    if (activeFileIds.length === 0) return null;
+    console.log('[usePageDocument] Building document:', {
+      activeFileIds: activeFileIds.length,
+      selectedActiveFileIds: selectedActiveFileIds.length,
+      hasPersistedDoc: !!persistedDocument,
+      persistedSig: persistedDocumentSignature?.substring(0, 50),
+      currentSig: currentPagesSignature.substring(0, 50),
+    });
+
+    if (activeFileIds.length === 0) {
+      console.log('[usePageDocument] No active files, returning null');
+      return null;
+    }
 
   if (
     persistedDocument &&
@@ -130,6 +146,7 @@ export function usePageDocument(): PageDocumentHook {
       persistedDocumentSignature === currentPagesSignature &&
       currentPagesSignature.length > 0
     ) {
+    console.log('[usePageDocument] Using persisted document');
     return persistedDocument;
   }
 
