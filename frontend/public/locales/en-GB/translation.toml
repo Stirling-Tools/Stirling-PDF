@@ -2642,6 +2642,7 @@ label = "Original PDF"
 
 [compare.edited]
 label = "Edited PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Re-run comparison?"
@@ -3595,6 +3596,11 @@ europeanDate = "European Date"
 timestamp = "Timestamp"
 draftWatermark = "Draft Watermark"
 custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "An error occurred while adding stamp to the PDF."
