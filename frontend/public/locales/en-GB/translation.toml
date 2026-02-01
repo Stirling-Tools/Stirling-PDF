@@ -219,6 +219,9 @@ pagesAndStarting = "Pages & Starting Number"
 positionAndPages = "Position & Pages"
 preview = "Position Selection"
 previewDisclaimer = "Preview is approximate. Final output may vary due to PDF font metrics."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+
 
 [addPageNumbers.selectText]
 1 = "Select PDF file:"
