@@ -661,22 +661,41 @@ jobs:
             const prNumber = context.issue.number;
             const runId = context.runId;
 
-            // Build download URLs for each platform
-            const artifacts = [
-              { name: 'windows-x86_64', icon: '🪟', files: ['.exe', '.msi'] },
-              { name: 'macos-aarch64', icon: '🍎', files: ['.dmg'] },
-              { name: 'macos-x86_64', icon: '🍎', files: ['.dmg'] },
-              { name: 'linux-x86_64', icon: '🐧', files: ['.deb', '.AppImage'] }
-            ];
+            // Fetch artifacts for this workflow run
+            const { data: artifactsList } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner,
+              repo,
+              run_id: runId
+            });
+
+            // Map of expected artifact names to display info
+            const artifactMap = {
+              'Stirling-PDF-windows-x86_64': { icon: '🪟', platform: 'Windows x64', files: '.exe, .msi' },
+              'Stirling-PDF-macos-aarch64': { icon: '🍎', platform: 'macOS ARM64', files: '.dmg' },
+              'Stirling-PDF-macos-x86_64': { icon: '🍎', platform: 'macOS Intel', files: '.dmg' },
+              'Stirling-PDF-linux-x86_64': { icon: '🐧', platform: 'Linux x64', files: '.deb, .AppImage' }
+            };
 
             let commentBody = `## 📦 Tauri Desktop Builds Ready!\n\n`;
             commentBody += `The desktop applications have been built and are ready for testing.\n\n`;
             commentBody += `### Download Artifacts:\n\n`;
 
-            for (const artifact of artifacts) {
-              const artifactUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
-              commentBody += `${artifact.icon} **${artifact.name}**: [Download](${artifactUrl}) `;
-              commentBody += `(${artifact.files.join(', ')})\n`;
+            // Add links for each found artifact
+            let foundArtifacts = 0;
+            for (const artifact of artifactsList.artifacts) {
+              const info = artifactMap[artifact.name];
+              if (info) {
+                foundArtifacts++;
+                // GitHub doesn't provide direct download URLs via API, but we can link to the artifact on the Actions page
+                const artifactUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${artifact.id}`;
+                commentBody += `${info.icon} **${info.platform}**: [Download ${artifact.name}](${artifactUrl}) `;
+                commentBody += `(${info.files}) - ${(artifact.size_in_bytes / 1024 / 1024).toFixed(1)} MB\n`;
+              }
+            }
+
+            if (foundArtifacts === 0) {
+              commentBody += `⚠️ **Warning**: No artifacts found in workflow run.\n`;
+              commentBody += `[View workflow run](https://github.com/${owner}/${repo}/actions/runs/${runId})\n`;
             }
 
             commentBody += `\n---\n`;
