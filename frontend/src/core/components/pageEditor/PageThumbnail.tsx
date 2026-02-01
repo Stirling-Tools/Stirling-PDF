@@ -9,7 +9,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import AddIcon from '@mui/icons-material/Add';
 import { PDFPage, PDFDocument } from '@app/types/pageEditor';
-import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import styles from '@app/components/pageEditor/PageEditor.module.css';
@@ -22,7 +21,6 @@ interface PageThumbnailProps {
   page: PDFPage;
   index: number;
   totalPages: number;
-  originalFile?: File;
   fileColorIndex: number;
   selectedPageIds: string[];
   selectionMode: boolean;
@@ -55,7 +53,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   page,
   index: _index,
   totalPages,
-  originalFile,
   fileColorIndex,
   selectedPageIds,
   selectionMode,
@@ -90,7 +87,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const elementRef = useRef<HTMLDivElement | null>(null);
-  const { getThumbnailFromCache, requestThumbnail} = useThumbnailGeneration();
   const { openFilesModal } = useFilesModalContext();
 
   // Check if this page is currently being dragged
@@ -114,43 +110,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       setThumbnailUrl(page.thumbnail);
     }
   }, [page.thumbnail, thumbnailUrl]);
-
-  // Request thumbnail if missing (on-demand, virtualized approach)
-  useEffect(() => {
-    let isCancelled = false;
-
-    // If we already have a thumbnail, use it
-    if (page.thumbnail) {
-      setThumbnailUrl(page.thumbnail);
-      return;
-    }
-
-    // Check cache first
-    const cachedThumbnail = getThumbnailFromCache(page.id);
-    if (cachedThumbnail) {
-      setThumbnailUrl(cachedThumbnail);
-      return;
-    }
-
-    // Request thumbnail generation if we have the original file
-    if (originalFile) {
-      const pageNumber = page.originalPageNumber;
-
-      requestThumbnail(page.id, originalFile, pageNumber)
-        .then(thumbnail => {
-          if (!isCancelled && thumbnail) {
-            setThumbnailUrl(thumbnail);
-          }
-        })
-        .catch(error => {
-          console.warn(`Failed to generate thumbnail for ${page.id}:`, error);
-        });
-    }
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [page.id, page.thumbnail, originalFile, getThumbnailFromCache, requestThumbnail]);
 
   // Merge refs - combine our ref tracking with dnd-kit's ref
   const mergedRef = useCallback((element: HTMLDivElement | null) => {

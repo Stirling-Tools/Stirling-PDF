@@ -1,15 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { Paper, Stack, Switch, Text, Tooltip, NumberInput, SegmentedControl, Code, Group, Anchor, ActionIcon, Button, Badge, Alert } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { usePreferences } from '@app/contexts/PreferencesContext';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import type { ToolPanelMode } from '@app/constants/toolPanel';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { updateService, UpdateSummary } from '@app/services/updateService';
-import UpdateModal from '@app/components/shared/UpdateModal';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Paper,
+  Stack,
+  Switch,
+  Text,
+  Tooltip,
+  NumberInput,
+  SegmentedControl,
+  Code,
+  Group,
+  Anchor,
+  ActionIcon,
+  Button,
+  Badge,
+  Alert,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { usePreferences } from "@app/contexts/PreferencesContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import type { ToolPanelMode } from "@app/constants/toolPanel";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { updateService, UpdateSummary } from "@app/services/updateService";
+import UpdateModal from "@app/components/shared/UpdateModal";
+import { getVersion } from "@tauri-apps/api/app";
+import { isTauri } from "@tauri-apps/api/core";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
-const BANNER_DISMISSED_KEY = 'stirlingpdf_features_banner_dismissed';
+const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
 
 interface GeneralSectionProps {
   hideTitle?: boolean;
@@ -22,11 +39,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(preferences.autoUnzipFileLimit);
   const [bannerDismissed, setBannerDismissed] = useState(() => {
     // Check localStorage on mount
-    return localStorage.getItem(BANNER_DISMISSED_KEY) === 'true';
+    return localStorage.getItem(BANNER_DISMISSED_KEY) === "true";
   });
   const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [mismatchVersion, setMismatchVersion] = useState(false);
+  const isTauriApp = useMemo(() => isTauri(), []);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading...");
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -49,7 +70,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
     const machineInfo = {
       machineType: config.machineType,
       activeSecurity: config.activeSecurity ?? false,
-      licenseType: config.license ?? 'NORMAL',
+      licenseType: config.license ?? "NORMAL",
     };
 
     const summary = await updateService.getUpdateSummary(config.appVersion, machineInfo);
@@ -68,67 +89,126 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
     setCheckingUpdate(false);
   };
 
+  useEffect(() => {
+    if (!isTauriApp) {
+      setMismatchVersion(false);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchFrontendVersion = async () => {
+      try {
+        const frontendVersion = await getVersion();
+        if (!cancelled) {
+          setAppVersion(frontendVersion);
+        }
+      } catch (error) {
+        console.error("[GeneralSection] Failed to fetch frontend version:", error);
+      }
+    };
+
+    fetchFrontendVersion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isTauriApp]);
+
+  useEffect(() => {
+    if (!isTauriApp) {
+      return;
+    }
+
+    if (!appVersion || !config?.appVersion) {
+      setMismatchVersion(false);
+      return;
+    }
+
+    if (appVersion !== config.appVersion) {
+      console.warn("[GeneralSection] Mismatch between Tauri version and AppConfig version:", {
+        backendVersion: config.appVersion,
+        frontendVersion: appVersion,
+      });
+      setMismatchVersion(true);
+    } else {
+      setMismatchVersion(false);
+    }
+  }, [isTauriApp, appVersion, config?.appVersion]);
+
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
 
   const handleDismissBanner = () => {
     setBannerDismissed(true);
-    localStorage.setItem(BANNER_DISMISSED_KEY, 'true');
+    localStorage.setItem(BANNER_DISMISSED_KEY, "true");
   };
 
   return (
     <Stack gap="lg">
       {!hideTitle && (
         <div>
-          <Text fw={600} size="lg">{t('settings.general.title', 'General')}</Text>
+          <Text fw={600} size="lg">
+            {t("settings.general.title", "General")}
+          </Text>
           <Text size="sm" c="dimmed">
-            {t('settings.general.description', 'Configure general application preferences.')}
+            {t("settings.general.description", "Configure general application preferences.")}
           </Text>
         </div>
       )}
 
       {loginDisabled && !bannerDismissed && (
-        <Paper withBorder p="md" radius="md" style={{ background: 'var(--mantine-color-blue-0)', position: 'relative' }}>
+        <Paper withBorder p="md" radius="md" style={{ background: "var(--mantine-color-blue-0)", position: "relative" }}>
           <ActionIcon
             variant="subtle"
             color="gray"
             size="sm"
-            style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}
+            style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
             onClick={handleDismissBanner}
-            aria-label={t('settings.general.enableFeatures.dismiss', 'Dismiss')}
+            aria-label={t("settings.general.enableFeatures.dismiss", "Dismiss")}
           >
             <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
           </ActionIcon>
           <Stack gap="sm">
             <Group gap="xs">
-              <LocalIcon icon="admin-panel-settings-rounded" width="1.2rem" height="1.2rem" style={{ color: 'var(--mantine-color-blue-6)' }} />
-              <Text fw={600} size="sm" style={{ color: 'var(--mantine-color-blue-9)' }}>
-                {t('settings.general.enableFeatures.title', 'For System Administrators')}
+              <LocalIcon
+                icon="admin-panel-settings-rounded"
+                width="1.2rem"
+                height="1.2rem"
+                style={{ color: "var(--mantine-color-blue-6)" }}
+              />
+              <Text fw={600} size="sm" style={{ color: "var(--mantine-color-blue-9)" }}>
+                {t("settings.general.enableFeatures.title", "For System Administrators")}
               </Text>
             </Group>
             <Text size="sm" c="dimmed">
-              {t('settings.general.enableFeatures.intro', 'Enable user authentication, team management, and workspace features for your organization.')}
+              {t(
+                "settings.general.enableFeatures.intro",
+                "Enable user authentication, team management, and workspace features for your organization.",
+              )}
             </Text>
             <Group gap="xs" wrap="wrap">
               <Text size="sm" c="dimmed">
-                {t('settings.general.enableFeatures.action', 'Configure')}
+                {t("settings.general.enableFeatures.action", "Configure")}
               </Text>
               <Code>SECURITY_ENABLELOGIN=true</Code>
               <Text size="sm" c="dimmed">
-                {t('settings.general.enableFeatures.and', 'and')}
+                {t("settings.general.enableFeatures.and", "and")}
               </Text>
               <Code>DISABLE_ADDITIONAL_FEATURES=false</Code>
             </Group>
             <Text size="xs" c="dimmed" fs="italic">
-              {t('settings.general.enableFeatures.benefit', 'Enables user roles, team collaboration, admin controls, and enterprise features.')}
+              {t(
+                "settings.general.enableFeatures.benefit",
+                "Enables user roles, team collaboration, admin controls, and enterprise features.",
+              )}
             </Text>
             <Anchor
               href="https://docs.stirlingpdf.com/Configuration/System%20and%20Security/"
               target="_blank"
               size="sm"
-              style={{ color: 'var(--mantine-color-blue-6)' }}
+              style={{ color: "var(--mantine-color-blue-6)" }}
             >
-              {t('settings.general.enableFeatures.learnMore', 'Learn more in documentation')} →
+              {t("settings.general.enableFeatures.learnMore", "Learn more in documentation")} →
             </Anchor>
           </Stack>
         </Paper>
@@ -142,36 +222,52 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               <Group justify="space-between" align="center">
                 <div>
                   <Text fw={600} size="sm">
-                    {t('settings.general.updates.title', 'Software Updates')}
+                    {t("settings.general.updates.title", "Software Updates")}
                   </Text>
                   <Text size="xs" c="dimmed" mt={4}>
-                    {t('settings.general.updates.description', 'Check for updates and view version information')}
+                    {t("settings.general.updates.description", "Check for updates and view version information")}
                   </Text>
                 </div>
                 {updateSummary && (
-                  <Badge
-                    color={updateSummary.max_priority === 'urgent' ? 'red' : 'blue'}
-                    variant="filled"
-                  >
-                    {updateSummary.max_priority === 'urgent'
-                      ? t('update.urgentUpdateAvailable', 'Urgent Update')
-                      : t('update.updateAvailable', 'Update Available')}
+                  <Badge color={updateSummary.max_priority === "urgent" ? "red" : "blue"} variant="filled">
+                    {updateSummary.max_priority === "urgent"
+                      ? t("update.urgentUpdateAvailable", "Urgent Update")
+                      : t("update.updateAvailable", "Update Available")}
                   </Badge>
                 )}
               </Group>
             </div>
-
+            {isTauriApp && (
+              <Group justify="space-between" align="center">
+                <div>
+                  <Text size="sm" c="dimmed">
+                    {t("settings.general.updates.currentFrontendVersion", "Current Frontend Version")}:{" "}
+                    <Text component="span" fw={500}>
+                      {frontendVersionLabel}
+                    </Text>
+                  </Text>
+                  {mismatchVersion && (
+                    <Text size="sm" c="red" mt={4}>
+                      {t(
+                        "settings.general.updates.versionMismatch",
+                        "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version.",
+                      )}
+                    </Text>
+                  )}
+                </div>
+              </Group>
+            )}
             <Group justify="space-between" align="center">
               <div>
                 <Text size="sm" c="dimmed">
-                  {t('settings.general.updates.currentVersion', 'Current Version')}:{' '}
+                  {t("settings.general.updates.currentBackendVersion", "Current Backend Version")}:{" "}
                   <Text component="span" fw={500}>
                     {config.appVersion}
                   </Text>
                 </Text>
                 {updateSummary && (
                   <Text size="sm" c="dimmed" mt={4}>
-                    {t('settings.general.updates.latestVersion', 'Latest Version')}:{' '}
+                    {t("settings.general.updates.latestVersion", "Latest Version")}:{" "}
                     <Text component="span" fw={500} c="blue">
                       {updateSummary.latest_version}
                     </Text>
@@ -186,16 +282,16 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
                   loading={checkingUpdate}
                   leftSection={<LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />}
                 >
-                  {t('settings.general.updates.checkForUpdates', 'Check for Updates')}
+                  {t("settings.general.updates.checkForUpdates", "Check for Updates")}
                 </Button>
                 {updateSummary && (
                   <Button
                     size="sm"
-                    color={updateSummary.max_priority === 'urgent' ? 'red' : 'blue'}
+                    color={updateSummary.max_priority === "urgent" ? "red" : "blue"}
                     onClick={() => setUpdateModalOpened(true)}
                     leftSection={<LocalIcon icon="system-update-alt-rounded" width="1rem" height="1rem" />}
                   >
-                    {t('settings.general.updates.viewDetails', 'View Details')}
+                    {t("settings.general.updates.viewDetails", "View Details")}
                   </Button>
                 )}
               </Group>
@@ -204,15 +300,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
             {updateSummary?.any_breaking && (
               <Alert
                 color="orange"
-                title={t('update.breakingChangesDetected', 'Breaking Changes Detected')}
+                title={t("update.breakingChangesDetected", "Breaking Changes Detected")}
                 styles={{
-                  title: { fontWeight: 600 }
+                  title: { fontWeight: 600 },
                 }}
               >
                 <Text size="sm">
                   {t(
-                    'update.breakingChangesMessage',
-                    'Some versions contain breaking changes. Please review the migration guides before updating.'
+                    "update.breakingChangesMessage",
+                    "Some versions contain breaking changes. Please review the migration guides before updating.",
                   )}
                 </Text>
               </Alert>
@@ -223,87 +319,102 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <Text fw={500} size="sm">
-                {t('settings.general.defaultToolPickerMode', 'Default tool picker mode')}
+                {t("settings.general.defaultToolPickerMode", "Default tool picker mode")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
-                {t('settings.general.defaultToolPickerModeDescription', 'Choose whether the tool picker opens in fullscreen or sidebar by default')}
+                {t(
+                  "settings.general.defaultToolPickerModeDescription",
+                  "Choose whether the tool picker opens in fullscreen or sidebar by default",
+                )}
               </Text>
             </div>
             <SegmentedControl
               value={preferences.defaultToolPanelMode}
-              onChange={(val: string) => updatePreference('defaultToolPanelMode', val as ToolPanelMode)}
+              onChange={(val: string) => updatePreference("defaultToolPanelMode", val as ToolPanelMode)}
               data={[
-                { label: t('settings.general.mode.sidebar', 'Sidebar'), value: 'sidebar' },
-                { label: t('settings.general.mode.fullscreen', 'Fullscreen'), value: 'fullscreen' },
+                { label: t("settings.general.mode.sidebar", "Sidebar"), value: "sidebar" },
+                { label: t("settings.general.mode.fullscreen", "Fullscreen"), value: "fullscreen" },
               ]}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <Text fw={500} size="sm">
-                {t('settings.general.hideUnavailableTools', 'Hide unavailable tools')}
+                {t("settings.general.hideUnavailableTools", "Hide unavailable tools")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
-                {t('settings.general.hideUnavailableToolsDescription', 'Remove tools that have been disabled by your server instead of showing them greyed out.')}
+                {t(
+                  "settings.general.hideUnavailableToolsDescription",
+                  "Remove tools that have been disabled by your server instead of showing them greyed out.",
+                )}
               </Text>
             </div>
             <Switch
               checked={preferences.hideUnavailableTools}
-              onChange={(event) => updatePreference('hideUnavailableTools', event.currentTarget.checked)}
+              onChange={(event) => updatePreference("hideUnavailableTools", event.currentTarget.checked)}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <Text fw={500} size="sm">
-                {t('settings.general.hideUnavailableConversions', 'Hide unavailable conversions')}
+                {t("settings.general.hideUnavailableConversions", "Hide unavailable conversions")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
-                {t('settings.general.hideUnavailableConversionsDescription', 'Remove disabled conversion options in the Convert tool instead of showing them greyed out.')}
+                {t(
+                  "settings.general.hideUnavailableConversionsDescription",
+                  "Remove disabled conversion options in the Convert tool instead of showing them greyed out.",
+                )}
               </Text>
             </div>
             <Switch
               checked={preferences.hideUnavailableConversions}
-              onChange={(event) => updatePreference('hideUnavailableConversions', event.currentTarget.checked)}
+              onChange={(event) => updatePreference("hideUnavailableConversions", event.currentTarget.checked)}
             />
           </div>
           <Tooltip
-            label={t('settings.general.autoUnzipTooltip', 'Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.')}
+            label={t(
+              "settings.general.autoUnzipTooltip",
+              "Automatically extract ZIP files returned from API operations. Disable to keep ZIP files intact. This does not affect automation workflows.",
+            )}
             multiline
             w={300}
             withArrow
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "help" }}>
               <div>
                 <Text fw={500} size="sm">
-                  {t('settings.general.autoUnzip', 'Auto-unzip API responses')}
+                  {t("settings.general.autoUnzip", "Auto-unzip API responses")}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
-                  {t('settings.general.autoUnzipDescription', 'Automatically extract files from ZIP responses')}
+                  {t("settings.general.autoUnzipDescription", "Automatically extract files from ZIP responses")}
                 </Text>
               </div>
               <Switch
                 checked={preferences.autoUnzip}
-                onChange={(event) => updatePreference('autoUnzip', event.currentTarget.checked)}
+                onChange={(event) => updatePreference("autoUnzip", event.currentTarget.checked)}
               />
             </div>
           </Tooltip>
 
           <Tooltip
-            label={t('settings.general.autoUnzipFileLimitTooltip', 'Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.')}
+            label={t(
+              "settings.general.autoUnzipFileLimitTooltip",
+              "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs.",
+            )}
             multiline
             w={300}
             withArrow
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'help' }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "help" }}>
               <div>
                 <Text fw={500} size="sm">
-                  {t('settings.general.autoUnzipFileLimit', 'Auto-unzip file limit')}
+                  {t("settings.general.autoUnzipFileLimit", "Auto-unzip file limit")}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
-                  {t('settings.general.autoUnzipFileLimitDescription', 'Maximum number of files to extract from ZIP')}
+                  {t("settings.general.autoUnzipFileLimitDescription", "Maximum number of files to extract from ZIP")}
                 </Text>
               </div>
               <NumberInput
@@ -311,9 +422,12 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
                 onChange={setFileLimitInput}
                 onBlur={() => {
                   const numValue = Number(fileLimitInput);
-                  const finalValue = (!fileLimitInput || isNaN(numValue) || numValue < 1 || numValue > 100) ? DEFAULT_AUTO_UNZIP_FILE_LIMIT : numValue;
+                  const finalValue =
+                    !fileLimitInput || isNaN(numValue) || numValue < 1 || numValue > 100
+                      ? DEFAULT_AUTO_UNZIP_FILE_LIMIT
+                      : numValue;
                   setFileLimitInput(finalValue);
-                  updatePreference('autoUnzipFileLimit', finalValue);
+                  updatePreference("autoUnzipFileLimit", finalValue);
                 }}
                 min={1}
                 max={100}
@@ -336,7 +450,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
           machineInfo={{
             machineType: config.machineType,
             activeSecurity: config.activeSecurity ?? false,
-            licenseType: config.license ?? 'NORMAL',
+            licenseType: config.license ?? "NORMAL",
           }}
         />
       )}
