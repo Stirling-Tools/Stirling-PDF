@@ -439,7 +439,9 @@ fullscreen = "Vollbild"
 [settings.general.updates]
 title = "Software-Updates"
 description = "Nach Updates suchen und Versionsinformationen anzeigen"
-currentVersion = "Aktuelle Version"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Neueste Version"
 checkForUpdates = "Nach Updates suchen"
 viewDetails = "Details anzeigen"
@@ -950,6 +952,7 @@ title = "Teilen nach Größe/Anzahl"
 desc = "Teilen Sie ein einzelnes PDF basierend auf Größe, Seitenanzahl oder Dokumentanzahl in mehrere Dokumente auf"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Farbe ersetzen & invertieren"
 desc = "Farben in PDF-Dokumenten ersetzen oder invertieren"
 
@@ -964,18 +967,22 @@ title = "Autom. Ordner-Scan"
 desc = "Link zum Leitfaden für automatisches Ordner-Scannen"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO-Anleitung"
 desc = "Link zum SSO-Leitfaden"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Offline-Setup"
 desc = "Link zum Air-Gap-Einrichtungsleitfaden"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Passwort hinzufügen"
 desc = "Das PDF mit einem Passwort verschlüsseln"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Berechtigungen ändern"
 desc = "Dokumentbeschränkungen und -berechtigungen ändern"
 
@@ -985,10 +992,12 @@ title = "Automatisieren"
 desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen. Ideal für wiederkehrende Aufgaben."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Ein PDF über ein anderes legen"
 title = "PDFs überlagern"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-Texteditor"
 desc = "Vorhandenen Text und Bilder in PDFs bearbeiten"
 
@@ -3553,12 +3562,45 @@ imageSize = "Bildgröße"
 margin = "Rand"
 positionAndFormatting = "Position & Formatierung"
 quickPosition = "Wählen Sie eine Position auf der Seite, um den Stempel zu platzieren."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "Beim Hinzufügen des Stempels zum PDF ist ein Fehler aufgetreten."
 
 [AddStampRequest.results]
 title = "Stempel-Ergebnisse"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "bild entfernen,seitenoperationen,back end,server side"
@@ -4525,6 +4567,13 @@ description = "Maximale Anzahl fehlgeschlagener Anmeldeversuche vor Kontosperre"
 [admin.settings.security.loginResetTimeMinutes]
 label = "Zurücksetzungszeit für Anmeldungen (Minuten)"
 description = "Zeit, nach der fehlgeschlagene Anmeldeversuche zurückgesetzt werden"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF-Schutz deaktivieren"

@@ -439,7 +439,9 @@ fullscreen = "フルスクリーン"
 [settings.general.updates]
 title = "ソフトウェア更新"
 description = "更新の確認とバージョン情報の表示"
-currentVersion = "現在のバージョン"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "最新バージョン"
 checkForUpdates = "更新を確認"
 viewDetails = "詳細を表示"
@@ -950,6 +952,7 @@ title = "サイズ・数による自動分割"
 desc = "サイズ・ページ数またはドキュメント数に基づいて、1つのPDFを複数のドキュメントに分割します。"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "色の置換と反転"
 desc = "PDF 文書の色を置換または反転"
 
@@ -964,18 +967,22 @@ title = "自動フォルダスキャン"
 desc = "自動フォルダスキャン ガイドへのリンク"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO ガイド"
 desc = "SSO ガイドへのリンク"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "エアギャップ設定"
 desc = "エアギャップ環境のセットアップガイドへのリンク"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "パスワードの追加"
 desc = "PDFをパスワードで暗号化します。"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "権限の変更"
 desc = "文書の制限と権限を変更"
 
@@ -985,10 +992,12 @@ title = "自動化"
 desc = "PDF アクションを連結して複数ステップのワークフローを構築。繰り返し作業に最適です。"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "1つのPDFを別のPDFの上に重ねます"
 title = "PDFを重ね合わせ"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDFテキストエディター"
 desc = "グループ化されたテキスト編集とPDF再生成で、Stirling PDF の JSON エクスポートをレビュー・編集します。"
 
@@ -3553,12 +3562,45 @@ imageSize = "画像サイズ"
 margin = "余白"
 positionAndFormatting = "位置と書式"
 quickPosition = "ページ上の配置位置を選択してください。"
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "PDF にスタンプを追加中にエラーが発生しました。"
 
 [AddStampRequest.results]
 title = "スタンプ結果"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "画像削除,ページ操作,バックエンド,サーバー側"
@@ -4525,6 +4567,13 @@ description = "アカウントロックまでの最大失敗回数"
 [admin.settings.security.loginResetTimeMinutes]
 label = "ログインリセット時間（分）"
 description = "失敗回数がリセットされるまでの時間"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF 保護を無効化"

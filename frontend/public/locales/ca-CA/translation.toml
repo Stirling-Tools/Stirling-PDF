@@ -439,7 +439,9 @@ fullscreen = "Pantalla completa"
 [settings.general.updates]
 title = "Actualitzacions de programari"
 description = "Comprova actualitzacions i informació de la versió"
-currentVersion = "Versió actual"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Última versió"
 checkForUpdates = "Comprova actualitzacions"
 viewDetails = "Veure detalls"
@@ -950,6 +952,7 @@ title = "Divideix auto per mida/pàg."
 desc = "Divideix un únic PDF en múltiples documents basant-se en la mida, el nombre de pàgines o el nombre de documents"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Substitueix i inverteix el color"
 desc = "Substitueix o inverteix colors en documents PDF"
 
@@ -964,18 +967,22 @@ title = "Escaneig automàtic de carpeta"
 desc = "Enllaç a la guia d'escaneig automàtic de carpetes"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Guia d'SSO"
 desc = "Enllaç a la guia d'SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Configuració air-gapped"
 desc = "Enllaç a la guia de configuració en entorn air-gapped"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Afegir Contrasenya"
 desc = "Xifra el document PDF amb contrasenya."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Canviar Permissos"
 desc = "Canvia les restriccions i els permisos del document"
 
@@ -985,10 +992,12 @@ title = "Automatitza"
 desc = "Construeix fluxos de treball multietapa enllaçant accions PDF. Ideal per a tasques recurrents."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Superposa PDFs sobre un altre PDF"
 title = "Superposar PDFs"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor de text PDF"
 desc = "Revisa i edita exportacions JSON de Stirling PDF amb edició de text agrupada i regeneració del PDF"
 
@@ -3553,12 +3562,45 @@ imageSize = "Mida de la imatge"
 margin = "Marge"
 positionAndFormatting = "Posició i format"
 quickPosition = "Seleccioneu una posició a la pàgina per col·locar el segell."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "S'ha produït un error en afegir el segell al PDF."
 
 [AddStampRequest.results]
 title = "Resultats del segell"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Elimina imatge,Operacions de pàgina,Back-end,Servidor"
@@ -4525,6 +4567,13 @@ description = "Nombre màxim d'intents d'inici de sessió fallits abans de bloqu
 [admin.settings.security.loginResetTimeMinutes]
 label = "Temps de reinicialització d'inici de sessió (minuts)"
 description = "Temps abans que es restableixin els intents d'inici de sessió fallits"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Desactiva la protecció CSRF"

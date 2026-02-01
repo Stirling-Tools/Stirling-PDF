@@ -439,7 +439,9 @@ fullscreen = "Цял екран"
 [settings.general.updates]
 title = "Актуализации на софтуера"
 description = "Проверете за актуализации и вижте информация за версията"
-currentVersion = "Текуща версия"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Последна версия"
 checkForUpdates = "Провери за актуализации"
 viewDetails = "Виж подробности"
@@ -950,6 +952,7 @@ title = "Авто делене по размер/брой"
 desc = "Разделете един PDF на множество документи въз основа на размер, брой страници или брой документи"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Смени/обърни цветове"
 desc = "Заместване или инвертиране на цветове в PDF документи"
 
@@ -964,18 +967,22 @@ title = "Авто сканиране на папки"
 desc = "Връзка към ръководство за автоматизирано сканиране на папки"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Ръководство за SSO"
 desc = "Връзка към SSO ръководство"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Настройка за air‑gapped среда"
 desc = "Връзка към ръководство за air‑gapped настройка"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Добавете парола"
 desc = "Шифровайте вашия PDF документ с парола."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Промяна на правата"
 desc = "Промяна на ограниченията и разрешенията на документа"
 
@@ -985,10 +992,12 @@ title = "Автоматизация"
 desc = "Създавайте многостъпкови работни процеси чрез свързване на PDF действия. Идеално за повтарящи се задачи."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Наслагва PDF файлове върху друг PDF"
 title = "Наслагване PDF-и"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF текстов редактор"
 desc = "Преглеждайте и редактирайте JSON експорти на Stirling PDF с групово редактиране на текст и повторно генериране на PDF"
 
@@ -3553,12 +3562,45 @@ imageSize = "Размер на изображението"
 margin = "Отстъп"
 positionAndFormatting = "Позиция и форматиране"
 quickPosition = "Изберете позиция на страницата, където да поставите печата."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "Възникна грешка при добавяне на печат към PDF."
 
 [AddStampRequest.results]
 title = "Резултати от печата"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Премахване на изображение, операции на страници, админ страна, страна на сървъра"
@@ -4525,6 +4567,13 @@ description = "Максимален брой неуспешни опити за 
 [admin.settings.security.loginResetTimeMinutes]
 label = "Време за нулиране на входа (минути)"
 description = "Време, преди неуспешните опити за вход да се нулират"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Деактивирай CSRF защита"

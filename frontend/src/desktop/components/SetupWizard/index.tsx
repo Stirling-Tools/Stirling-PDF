@@ -8,7 +8,7 @@ import { SelfHostedLoginScreen } from '@app/components/SetupWizard/SelfHostedLog
 import { ServerConfig, connectionModeService } from '@app/services/connectionModeService';
 import { AuthServiceError, authService, UserInfo } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';

@@ -439,7 +439,9 @@ fullscreen = "Helskärm"
 [settings.general.updates]
 title = "Programuppdateringar"
 description = "Sök efter uppdateringar och visa versionsinfo"
-currentVersion = "Aktuell version"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Senaste version"
 checkForUpdates = "Sök efter uppdateringar"
 viewDetails = "Visa detaljer"
@@ -950,6 +952,7 @@ title = "Auto-dela efter storlek/antal"
 desc = "Dela en enda PDF till flera dokument baserat på storlek, sidantal eller dokumentantal"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ersätt och invertera färg"
 desc = "Ersätt eller invertera färger i PDF‑dokument"
 
@@ -964,18 +967,22 @@ title = "Automatiserad mappskanning"
 desc = "Länk till guide för automatiserad mappskanning"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO‑guide"
 desc = "Länk till SSO‑guide"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Isolerad installation"
 desc = "Länk till guide för isolerad installation"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Lägg till lösenord"
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Ändra behörigheter"
 desc = "Ändra dokumentrestriktioner och behörigheter"
 
@@ -985,10 +992,12 @@ title = "Automatisera"
 desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. Perfekt för återkommande uppgifter."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Överlagrar PDF:er ovanpå en annan PDF"
 title = "Överlagra PDF:er"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-textredigerare"
 desc = "Granska och redigera Stirling PDF JSON-exporter med grupperad textredigering och PDF-återgenerering"
 
@@ -3553,12 +3562,45 @@ imageSize = "Bildstorlek"
 margin = "Marginal"
 positionAndFormatting = "Position och formatering"
 quickPosition = "Välj en position på sidan för att placera stämpeln."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "Ett fel inträffade när stämpeln skulle läggas till i PDF:en."
 
 [AddStampRequest.results]
 title = "Resultat av stämpling"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Ta bort bild,Sidoperationer,Backend,serversida"
@@ -4525,6 +4567,13 @@ description = "Maximalt antal misslyckade inloggningsförsök innan kontot låse
 [admin.settings.security.loginResetTimeMinutes]
 label = "Återställningstid för inloggning (minuter)"
 description = "Tid innan misslyckade inloggningsförsök nollställs"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Inaktivera CSRF-skydd"

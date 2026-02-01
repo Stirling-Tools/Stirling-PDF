@@ -439,7 +439,9 @@ fullscreen = "全屏"
 [settings.general.updates]
 title = "软件更新"
 description = "检查更新并查看版本信息"
-currentVersion = "当前版本"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "最新版本"
 checkForUpdates = "检查更新"
 viewDetails = "查看详情"
@@ -950,6 +952,7 @@ title = "按大小/页数自动拆分"
 desc = "按文件大小或页数自动拆分 PDF"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "替换与反转颜色"
 desc = "替换或反转 PDF 文档中的颜色"
 
@@ -964,18 +967,22 @@ title = "自动化文件夹扫描"
 desc = "链接到自动化文件夹扫描指南"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO 指南"
 desc = "链接到 SSO 指南"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "离线隔离部署"
 desc = "链接到离线隔离部署指南"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "གསང་ཚིག་སྣོན་པ།"
 desc = "PDF ཡིག་ཆར་གསང་ཚིག་གིས་གསང་སྡོམ་བྱེད་པ།"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "更改权限"
 desc = "更改文档限制与权限"
 
@@ -985,10 +992,12 @@ title = "自动化"
 desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF གཞན་ཞིག་གི་སྟེང་དུ་ PDF བརྩེགས་པ།"
 title = "PDF སྟེང་བརྩེགས།"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF 文本编辑器"
 desc = "审阅并编辑 Stirling PDF 的 JSON 导出，支持分组文本编辑与 PDF 再生成"
 
@@ -3553,12 +3562,45 @@ imageSize = "图像大小"
 margin = "边距"
 positionAndFormatting = "位置与格式"
 quickPosition = "选择页面上的位置以放置印章。"
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "将印章添加到 PDF 时发生错误。"
 
 [AddStampRequest.results]
 title = "印章结果"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "པར་རིས་སུབ་པ།,ཤོག་ངོས་བཀོལ་སྤྱོད།,རྒྱབ་ངོས།,ཞབས་ཞུ་ཕྱོགས།"
@@ -4525,6 +4567,13 @@ description = "在账户锁定前允许的最大失败登录次数"
 [admin.settings.security.loginResetTimeMinutes]
 label = "登录重置时间（分钟）"
 description = "失败登录尝试被重置前的时间"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "禁用 CSRF 保护"

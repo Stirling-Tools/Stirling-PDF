@@ -141,14 +141,15 @@ export default function Workbench() {
         );
 
       case "pageEditor":
-        
+
         return (
-          <>
+          <div style={{ position: 'relative', flex: '1 1 0', height: 0 }}>
             <PageEditor
               onFunctionsReady={setPageEditorFunctions}
             />
             {pageEditorFunctions && (
-              <PageEditorControls
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
+                <PageEditorControls
                 onClosePdf={pageEditorFunctions.closePdf}
                 onUndo={pageEditorFunctions.handleUndo}
                 onRedo={pageEditorFunctions.handleRedo}
@@ -168,8 +169,9 @@ export default function Workbench() {
                 splitPositions={pageEditorFunctions.splitPositions}
                 totalPages={pageEditorFunctions.totalPages}
               />
+              </div>
             )}
-          </>
+          </div>
         );
 
       default:
@@ -207,9 +209,10 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
+        className={`flex-1 min-h-0 z-10 ${currentView === 'pageEditor' ? 'relative flex flex-col' : `relative ${styles.workbenchScrollable}`}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',
+          ...(currentView === 'pageEditor' && { height: 0 }),
         }}
       >
         {renderMainContent()}

@@ -439,7 +439,9 @@ fullscreen = "Pantaila osoa"
 [settings.general.updates]
 title = "Software eguneratzeak"
 description = "Egiaztatu eguneratzeak eta ikusi bertsio-informazioa"
-currentVersion = "Uneko bertsioa"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Azken bertsioa"
 checkForUpdates = "Egiaztatu eguneratzeak"
 viewDetails = "Xehetasunak ikusi"
@@ -950,6 +952,7 @@ title = "Autom. zatitu tamaina/kop."
 desc = "Split a single PDF into multiple documents based on size, page count, or document count"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Ordeztu eta inbertitu kolorea"
 desc = "Ordeztu edo alderantzikatu koloreak PDF dokumentuetan"
 
@@ -964,18 +967,22 @@ title = "Karpeta eskaneatze autom."
 desc = "Esteka karpeta eskaneatze automatizatuaren gidara"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO gida"
 desc = "Esteka SSO gidara"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Sare isolatuko konfigurazioa"
 desc = "Esteka sare isolatutako konfigurazio gidara"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Gehitu pasahitza"
 desc = "Enkriptatu PDF dokumentua pasahitz batekin"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Aldatu baimenak"
 desc = "Aldatu dokumentuaren murrizketak eta baimenak"
 
@@ -985,10 +992,12 @@ title = "Automatizatu"
 desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregin errepikakorretarako."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Overlays PDFs on-top of another PDF"
 title = "Gainjarri PDFak"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF testu-editorea"
 desc = "Berrikusi eta editatu Stirling PDF JSON esportazioak taldekatutako testu-edizioarekin eta PDF birsorkuntzarekin"
 
@@ -3553,12 +3562,45 @@ imageSize = "Irudiaren tamaina"
 margin = "Marjina"
 positionAndFormatting = "Kokapena eta formatua"
 quickPosition = "Hautatu orrian zigiloa kokatzeko posizio bat."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "Errore bat gertatu da zigilua PDFari gehitzean."
 
 [AddStampRequest.results]
 title = "Zigiluaren emaitzak"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Irudia kendu,Orrialde eragiketak,Back end,server side"
@@ -4525,6 +4567,13 @@ description = "Kontua blokeatu aurretik huts egindako saio-saiakeren gehienezko 
 [admin.settings.security.loginResetTimeMinutes]
 label = "Saio-hasieraren berrezartze denbora (minutuak)"
 description = "Huts egindako saio-saiakerak berrezarri aurreko denbora"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF babesa desgaitu"

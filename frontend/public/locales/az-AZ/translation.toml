@@ -439,7 +439,9 @@ fullscreen = "Tam ekran"
 [settings.general.updates]
 title = "Proqram yeniləmələri"
 description = "Yeniləmələri yoxlayın və versiya məlumatlarını görün"
-currentVersion = "Cari versiya"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Ən son versiya"
 checkForUpdates = "Yeniləmələri yoxla"
 viewDetails = "Ətraflı bax"
@@ -950,6 +952,7 @@ title = "Say/Ölçüyə Əsasən Avtomatik Ayır"
 desc = "PDF-i ölçüyə, səhifə sayına və ya sənəd sayına əsasən bir neçə PDF-ə ayır."
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Rəngi əvəz et və invert et"
 desc = "PDF sənədlərində rəngləri əvəz edin və ya invert edin"
 
@@ -964,18 +967,22 @@ title = "Avtomatik qovluq skanı"
 desc = "Avtomatlaşdırılmış qovluq skan təlimatına keçid"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO təlimatı"
 desc = "SSO təlimatına keçid"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Şəbəkəsiz quraşdırma"
 desc = "Təcrid edilmiş quraşdırma təlimatına keçid"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Şifr Əlavə Et"
 desc = "Sənədini şifr ilə kilidlə."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "İcazələri Dəyişdir"
 desc = "Sənəd məhdudiyyətlərini və icazələrini dəyişin"
 
@@ -985,10 +992,12 @@ title = "Avtomatlaşdır"
 desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları qurun. Təkrarlanan tapşırıqlar üçün idealdır."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Bir PDF-i digərinin üstünə qoyur"
 title = "Üst-Üstə Qoy"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Mətn Redaktoru"
 desc = "Qruplaşdırılmış mətn redaktəsi və PDF yenidən yaradılması ilə Stirling PDF JSON ixraclarını nəzərdən keçirin və redaktə edin"
 
@@ -3553,12 +3562,45 @@ imageSize = "Şəkil ölçüsü"
 margin = "Kənar boşluğu"
 positionAndFormatting = "Mövqe və formatlama"
 quickPosition = "Möhürü yerləşdirmək üçün səhifədə bir mövqe seçin."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "PDF-ə möhür əlavə edilərkən xəta baş verdi."
 
 [AddStampRequest.results]
 title = "Möhür nəticələri"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Şəkil Sil,Səhifə Əməliyyatları,Back end,server-tərəf"
@@ -4525,6 +4567,13 @@ description = "Hesabın bloklanmasından əvvəl maksimal uğursuz giriş cəhdl
 [admin.settings.security.loginResetTimeMinutes]
 label = "Girişi sıfırlama vaxtı (dəqiqə)"
 description = "Uğursuz giriş cəhdlərinin sıfırlanmasına qədər olan vaxt"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF mühafizəsini söndür"

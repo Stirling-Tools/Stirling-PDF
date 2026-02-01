@@ -439,7 +439,9 @@ fullscreen = "ملء الشاشة"
 [settings.general.updates]
 title = "تحديثات البرنامج"
 description = "التحقق من التحديثات وعرض معلومات الإصدار"
-currentVersion = "الإصدار الحالي"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "أحدث إصدار"
 checkForUpdates = "التحقق من التحديثات"
 viewDetails = "عرض التفاصيل"
@@ -950,6 +952,7 @@ title = "تقسيم تلقائي بالحجم/العدد"
 desc = "تقسيم ملف PDF واحد إلى مستندات متعددة بناءً على الحجم أو عدد الصفحات أو عدد المستندات"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "استبدال وعكس الألوان"
 desc = "استبدال الألوان أو عكسها في مستندات PDF"
 
@@ -964,18 +967,22 @@ title = "المسح الآلي للمجلدات"
 desc = "رابط إلى دليل المسح الآلي للمجلدات"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "دليل SSO"
 desc = "رابط إلى دليل SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "إعداد معزول"
 desc = "رابط إلى دليل الإعداد المعزول"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "إضافة كلمة مرور"
 desc = "تشفير مستند PDF الخاص بك بكلمة مرور."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "تغيير الأذونات"
 desc = "تغيير قيود المستند وأذوناته"
 
@@ -985,10 +992,12 @@ title = "أتمتة"
 desc = "ابنِ تدفّقات عمل متعددة الخطوات بسلسلة إجراءات PDF. مثالي للمهام المتكررة."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "تراكب ملف PDF فوق آخر"
 title = "تراكب ملفات PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "محرر نصوص PDF"
 desc = "مراجعة وتحرير صادرات Stirling PDF بصيغة JSON مع تحرير نصوص مجمّعة وإعادة إنشاء PDF"
 
@@ -3553,12 +3562,45 @@ imageSize = "حجم الصورة"
 margin = "الهامش"
 positionAndFormatting = "الموضع والتنسيق"
 quickPosition = "اختر موضعًا على الصفحة لوضع الختم."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "حدث خطأ أثناء إضافة الختم إلى ملف PDF."
 
 [AddStampRequest.results]
 title = "نتائج إضافة الختم"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "إزالة الصورة,عمليات الصفحة,الخلفية,جانب الخادم"
@@ -4525,6 +4567,13 @@ description = "الحد الأقصى لعدد محاولات تسجيل الدخ
 [admin.settings.security.loginResetTimeMinutes]
 label = "وقت إعادة التعيين لتسجيل الدخول (بالدقائق)"
 description = "المدة قبل إعادة تعيين عدد المحاولات الفاشلة"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "تعطيل حماية CSRF"

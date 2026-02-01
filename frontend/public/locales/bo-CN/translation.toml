@@ -439,7 +439,9 @@ fullscreen = "བརྙན་ཤེལ་ཆ་ཚང་།"
 [settings.general.updates]
 title = "མཉེན་ཆས་གསར་བརྗེ།"
 description = "གསར་བརྗེའི་གནས་ཚུལ་ལ་ཞིབ་བཤེར་དང་ཐོན་རིམ་གྱི་ཆ་འཕྲིན་ལ་ལྟོས།"
-currentVersion = "ད་ལྟའི་ཐོན་རིམ།"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "ཐོན་རིམ་གསར་ཤོས།"
 checkForUpdates = "གསར་བརྗེ་ལ་ཞིབ་བཤེར།"
 viewDetails = "ཞིབ་ཕྲའི་གནས་ཚུལ་ལ་ལྟོས།"
@@ -950,6 +952,7 @@ title = "ཆེ་ཆུང་/གྲངས་ཚད་ཀྱིས་རང་�
 desc = "རང་འགུལ་གྱིས་ཡིག་ཆའི་ཆེ་ཆུང་དང་ཡང་ན་ཤོག་ངོས་གྲངས་ལ་གཞིགས་ནས་PDFsབགོད་དགོས།"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "ཁ་དོག་བརྗེ་ལེན་དང་བསྒྱུར་བ།"
 desc = "PDFཡིག་ཆའི་ནང་ཁ་དོག་བརྗེ་ལེན་བྱེད་པའམ་ཡང་ན་བསྒྱུར་བ།"
 
@@ -964,18 +967,22 @@ title = "རང་འགུལ་ཅན་གྱི་སྣོད་བཅུ�
 desc = "རང་འགུལ་སྣོད་ཀྱི་པར་བཤེར་ལམ་སྟོན་ལ་འབྲེལ་མཐུད་བྱེད།"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO ལམ་སྟོན།"
 desc = "SSO ལམ་སྟོན་ལ་འབྲེལ་མཐུད་བྱེད།"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "མཁའ་དབྱིངས་ཀྱི་ཆ་སྒྲིག་སྒྲིག་བཀོད།"
 desc = "མཁའ་རླུང་གི་བར་ཐག་གིས་སྒྲིག་པའི་སྒྲིག་ལམ་ལ་འབྲེལ་མཐུད་བྱེད་པ།"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "གསང་གྲངས་ཁ་སྣོན་བྱེད།"
 desc = "གསང་གྲངས་སྲུང་སྐྱོབ་དང་ཚད་བཀག་PDFཡིག་ཆ་ལ་ཁ་སྣོན་བྱེད་པ།"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "འཕོ་འགྱུར།"
 desc = "ཡིག་ཆའི་ཚད་བཀག་དང་ཆོག་མཆན་བསྒྱུར་བ།"
 
@@ -985,10 +992,12 @@ title = "རང་འགུལ་ཅན།"
 desc = "གོམ་པ་མང་པོའི་ལས་ཀའི་འགྲོ་ལུགས་དེ་PDFབྱ་སྤྱོད་མཉམ་དུ་སྒྲིག་ནས་བཟོས། ལས་འགན་ཡང་བསྐྱར་འཚོག་པར་འཚམ་པོ་ཡོད།"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "གཞན་ཞིག་གི་སྟེང་དུ་PDFགཅིག་བཀབ་དགོས།"
 title = "བཀབ་པའི་PDFs"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDFཡིག་འབྲིའི་རྩོམ་སྒྲིག་པ།"
 desc = "ད་ཡོད་ཀྱི་ཡིག་ཆ་དང་པར་རིས་PDFནང་དུ་རྩོམ་སྒྲིག་བྱས།"
 
@@ -3553,12 +3562,45 @@ imageSize = "པར་རིས་ཚད་གཞི།"
 margin = "མཐའ་ཤོག"
 positionAndFormatting = "ལས་གནས་དང་རྩ་སྒྲིག།"
 quickPosition = "ཤོག་ངོས་སྟེང་དུ་གནས་ཡུལ་ཞིག་འདེམས་ནས་མཚོན་རྟགས་འཇོག་དགོས།"
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "PDF ལ་མཚོན་རྟགས་ཁ་སྣོན་བྱེད་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
 
 [AddStampRequest.results]
 title = "མཚོན་རྟགས་གྲུབ་འབྲས།"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "པར་རིས་མེད་པར་བཟོས་པ། ཤོག་ངོས་བཀོལ་སྤྱོད། རྒྱབ་མཇུག་། ཞབས་ཞུ་པ།"
@@ -4525,6 +4567,13 @@ description = "རྩིས་ཁྲའི་བཀག་སྡོམ་མ་�
 [admin.settings.security.loginResetTimeMinutes]
 label = "ནང་འཇུག་བསྐྱར་སྒྲིག་དུས་ཚོད།"
 description = "ནང་འཇུག་ཚོད་ལྟ་འཐུས་ཤོར་མ་བྱུང་གོང་གི་དུས་ཚོད།"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF སྲུང་སྐྱོབ།"

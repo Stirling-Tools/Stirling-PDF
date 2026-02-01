@@ -67,7 +67,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.4.0'
+    version = '2.4.3'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'

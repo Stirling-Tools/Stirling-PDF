@@ -439,7 +439,9 @@ fullscreen = "เต็มหน้าจอ"
 [settings.general.updates]
 title = "อัปเดตซอฟต์แวร์"
 description = "ตรวจสอบอัปเดตและดูข้อมูลเวอร์ชัน"
-currentVersion = "เวอร์ชันปัจจุบัน"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "เวอร์ชันล่าสุด"
 checkForUpdates = "ตรวจสอบอัปเดต"
 viewDetails = "ดูรายละเอียด"
@@ -950,6 +952,7 @@ title = "แยกตามขนาด/จำนวน"
 desc = "แยก PDF เป็นเอกสารหลายฉบับตามขนาด จำนวนหน้า หรือจำนวนเอกสาร"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "แทนที่และกลับสี"
 desc = "แทนที่หรือกลับสีในเอกสาร PDF"
 
@@ -964,18 +967,22 @@ title = "สแกน โฟลเดอร์ อัตโนมัติ"
 desc = "ลิงก์ไปยังคู่มือการสแกนโฟลเดอร์อัตโนมัติ"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "คู่มือ SSO"
 desc = "ลิงก์ไปยังคู่มือ SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "การตั้งค่า Air-gapped"
 desc = "ลิงก์ไปยังคู่มือการตั้งค่า Air-gapped"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "เพิ่มรหัสผ่าน"
 desc = "เข้ารหัสเอกสาร PDF ของคุณด้วยรหัสผ่าน"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "เปลี่ยนสิทธิ์"
 desc = "เปลี่ยนข้อจำกัดและสิทธิ์ของเอกสาร"
 
@@ -985,10 +992,12 @@ title = "ทำให้อัตโนมัติ"
 desc = "สร้างเวิร์กโฟลว์หลายขั้นตอนโดยเชื่อมโยงการกระทำ PDF เข้าด้วยกัน เหมาะสำหรับงานที่เกิดซ้ำ"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "ซ้อนทับ PDF บน PDF อีกไฟล์หนึ่ง"
 title = "ซ้อนทับ PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "แก้ไขข้อความ PDF"
 desc = "ตรวจทานและแก้ไขไฟล์ JSON ที่ส่งออกจาก Stirling PDF ด้วยการแก้ไขข้อความแบบกลุ่มและการสร้าง PDF ใหม่"
 
@@ -3553,12 +3562,45 @@ imageSize = "ขนาดรูปภาพ"
 margin = "ระยะขอบ"
 positionAndFormatting = "ตำแหน่งและการจัดรูปแบบ"
 quickPosition = "เลือกตำแหน่งบนหน้าสำหรับวางตราประทับ"
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "เกิดข้อผิดพลาดขณะเพิ่มตราประทับลงใน PDF"
 
 [AddStampRequest.results]
 title = "ผลการประทับตรา"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "ลบรูปภาพ,การจัดการหน้า,แบ็กเอนด์,ฝั่งเซิร์ฟเวอร์"
@@ -4525,6 +4567,13 @@ description = "จำนวนครั้งสูงสุดของกา�
 [admin.settings.security.loginResetTimeMinutes]
 label = "เวลาล้างจำนวนครั้ง (นาที)"
 description = "ระยะเวลาก่อนที่จะรีเซ็ตจำนวนครั้งที่เข้าสู่ระบบล้มเหลว"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "ปิดการป้องกัน CSRF"

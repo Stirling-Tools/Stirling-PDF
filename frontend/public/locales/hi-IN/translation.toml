@@ -439,7 +439,9 @@ fullscreen = "फुलस्क्रीन"
 [settings.general.updates]
 title = "सॉफ़्टवेयर अपडेट्स"
 description = "अपडेट्स जाँचें और वर्ज़न जानकारी देखें"
-currentVersion = "वर्तमान संस्करण"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "नवीनतम संस्करण"
 checkForUpdates = "अपडेट्स जाँचें"
 viewDetails = "विवरण देखें"
@@ -950,6 +952,7 @@ title = "आकार/गिनती से ऑटो बाँटें"
 desc = "एक PDF को आकार, पृष्ठ संख्या, या दस्तावेज़ संख्या के आधार पर कई दस्तावेज़ों में विभाजित करें"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "रंग बदलें/उलटें"
 desc = "PDF दस्तावेज़ों में रंगों को प्रतिस्थापित या उलटें"
 
@@ -964,18 +967,22 @@ title = "स्वचालित फ़ोल्डर स्कैनिंग
 desc = "स्वचालित फ़ोल्डर स्कैनिंग गाइड के लिए लिंक"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO गाइड"
 desc = "SSO गाइड के लिए लिंक"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "एयर-गैप्ड सेटअप"
 desc = "एयर-गैप्ड सेटअप गाइड के लिए लिंक"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "पासवर्ड जोड़ें"
 desc = "पासवर्ड के साथ अपने PDF दस्तावेज को एन्क्रिप्ट करें।"
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "अनुमतियां बदलें"
 desc = "दस्तावेज़ प्रतिबंध और अनुमतियाँ बदलें"
 
@@ -985,10 +992,12 @@ title = "स्वचालित करें"
 desc = "PDF क्रियाओं को जोड़कर बहु-चरणीय वर्कफ़्लो बनाएँ। बार-बार होने वाले कार्यों के लिए उपयुक्त।"
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "PDF को दूसरी PDF के ऊपर ओवरले करें"
 title = "PDF ओवरले करें"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF टेक्स्ट एडिटर"
 desc = "ग्रुप्ड टेक्स्ट एडिटिंग और PDF पुनर्जनन के साथ Stirling PDF JSON एक्सपोर्ट की समीक्षा व संपादन करें"
 
@@ -3553,12 +3562,45 @@ imageSize = "छवि आकार"
 margin = "हाशिया"
 positionAndFormatting = "स्थिति और फ़ॉर्मैटिंग"
 quickPosition = "मुहर रखने के लिए पृष्ठ पर एक स्थान चुनें।"
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "PDF में मुहर जोड़ते समय त्रुटि हुई।"
 
 [AddStampRequest.results]
 title = "मुहर के परिणाम"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "छवि हटाएं,पृष्ठ कार्य,बैक एंड,सर्वर साइड"
@@ -4525,6 +4567,13 @@ description = "खाते को लॉक करने से पहले �
 [admin.settings.security.loginResetTimeMinutes]
 label = "लॉगिन रीसेट समय (मिनट)"
 description = "वह समय जिसके बाद असफल लॉगिन प्रयास रीसेट हो जाते हैं"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "CSRF सुरक्षा निष्क्रिय करें"

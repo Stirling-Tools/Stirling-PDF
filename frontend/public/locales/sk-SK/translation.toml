@@ -439,7 +439,9 @@ fullscreen = "Celá obrazovka"
 [settings.general.updates]
 title = "Aktualizácie softvéru"
 description = "Skontrolujte aktualizácie a zobrazte informácie o verzii"
-currentVersion = "Aktuálna verzia"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Najnovšia verzia"
 checkForUpdates = "Skontrolovať aktualizácie"
 viewDetails = "Zobraziť podrobnosti"
@@ -950,6 +952,7 @@ title = "Auto rozdeliť veľkosť/počet"
 desc = "Rozdelí jeden PDF na viacero dokumentov na základe veľkosti, počtu stránok alebo počtu dokumentov"
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Nahradiť a invertovať farby"
 desc = "Nahradiť alebo invertovať farby v dokumentoch PDF"
 
@@ -964,18 +967,22 @@ title = "Auto skenovanie priečinkov"
 desc = "Odkaz na príručku k automatizovanému skenovaniu priečinkov"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO príručka"
 desc = "Odkaz na SSO príručku"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Air-gapped nastavenie"
 desc = "Odkaz na príručku k air-gapped nastaveniu"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Pridať heslo"
 desc = "Šifrovať váš PDF dokument heslom."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Zmeniť povolenia"
 desc = "Zmeniť obmedzenia a povolenia dokumentu"
 
@@ -985,10 +992,12 @@ title = "Automatizovať"
 desc = "Stavať viacstupňové pracovné postupy spájaním akcií PDF. Ideálne pre opakované úlohy."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Prekrýva PDF súbory na iný PDF"
 title = "Prekrývanie PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor textu PDF"
 desc = "Kontrolujte a upravujte Stirling PDF JSON exporty so skupinovými úpravami textu a opätovným vytvorením PDF"
 
@@ -3553,12 +3562,45 @@ imageSize = "Veľkosť obrázka"
 margin = "Okraj"
 positionAndFormatting = "Poloha a formátovanie"
 quickPosition = "Vyberte polohu na stránke pre umiestnenie pečiatky."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "Počas pridávania pečiatky do PDF došlo k chybe."
 
 [AddStampRequest.results]
 title = "Výsledky pečiatky"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Odstrániť obrázok,Operácie so stranami,Back end,server side"
@@ -4525,6 +4567,13 @@ description = "Maximálny počet neúspešných pokusov o prihlásenie pred zabl
 [admin.settings.security.loginResetTimeMinutes]
 label = "Reset prihlásenia (minúty)"
 description = "Čas, po ktorom sa zlyhané pokusy o prihlásenie vynulujú"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Zakázať ochranu CSRF"

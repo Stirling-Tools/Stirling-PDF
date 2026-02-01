@@ -81,6 +81,7 @@ security:
     revocation:
       mode: none # Revocation checking mode: 'none' (disabled), 'ocsp' (OCSP only), 'crl' (CRL only), 'ocsp+crl' (OCSP with CRL fallback)
       hardFail: false # Fail validation if revocation status cannot be determined (true=strict, false=soft-fail)
+  xFrameOptions: DENY # X-Frame-Options header value. Options: 'DENY' (default, prevents all framing), 'SAMEORIGIN' (allows framing from same domain), 'DISABLED' (no X-Frame-Options header sent). Note: automatically set to DISABLED when login is disabled
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
@@ -202,7 +203,9 @@ system:
     name: postgres # set the name of your database. Should match the name of the database you create
   customPaths:
     pipeline:
+      pipelineDir: "" # Defaults to /pipeline
       watchedFoldersDir: "" # Defaults to /pipeline/watchedFolders
+      watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
       weasyprint: "" # Defaults to /opt/venv/bin/weasyprint

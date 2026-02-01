@@ -439,7 +439,9 @@ fullscreen = "Plein écran"
 [settings.general.updates]
 title = "Mises à jour logicielles"
 description = "Rechercher des mises à jour et voir les informations de version"
-currentVersion = "Version actuelle"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Dernière version"
 checkForUpdates = "Rechercher des mises à jour"
 viewDetails = "Voir les détails"
@@ -950,6 +952,7 @@ title = "Scinder auto taille/pages"
 desc = "Séparer un PDF unique en plusieurs documents en fonction de la taille, du nombre de pages ou du nombre de documents."
 
 [home.replaceColor]
+tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "Remplacer & inverser couleurs"
 desc = "Remplacer ou inverser les couleurs dans les documents PDF"
 
@@ -964,18 +967,22 @@ title = "Scan auto de dossiers"
 desc = "Lien vers le guide d’analyse de dossier automatisée"
 
 [home.devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "Guide SSO"
 desc = "Lien vers le guide SSO"
 
 [home.devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "Installation isolée"
 desc = "Lien vers le guide d’installation isolée (air-gapped)"
 
 [home.addPassword]
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Ajouter un mot de passe"
 desc = "Chiffrez votre PDF avec un mot de passe."
 
 [home.changePermissions]
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Modifier les permissions"
 desc = "Modifier les restrictions et permissions du document"
 
@@ -985,10 +992,12 @@ title = "Automatiser"
 desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéal pour les tâches récurrentes."
 
 [home.overlay-pdfs]
+tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 desc = "Superposer un PDF sur un autre"
 title = "Superposer des PDF"
 
 [home.pdfTextEditor]
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Éditeur de texte PDF"
 desc = "Afficher et modifier les exports JSON de Stirling PDF avec édition de texte groupée et régénération du PDF"
 
@@ -3553,12 +3562,45 @@ imageSize = "Taille de l’image"
 margin = "Marge"
 positionAndFormatting = "Position et mise en forme"
 quickPosition = "Sélectionnez une position sur la page pour placer le tampon."
+clickToExpand = "Click to expand"
+customDateDesc = "Custom format"
+dateDesc = "Current date"
+dateTimeVars = "Date & Time"
+datetimeDesc = "Date and time combined"
+dynamicVariables = "Dynamic Variables"
+examples = "Examples"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataDesc = "From PDF document properties"
+metadataVars = "Document Metadata"
+multiLine = "multi-line"
+otherVars = "Other"
+pageNumberDesc = "Current page number"
+pageVars = "Page Information"
+preview = "Preview:"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+timeDesc = "Current time"
+totalPagesDesc = "Total number of pages"
+useTemplate = "Use Template"
+uuidDesc = "Short unique identifier (8 chars)"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+yearMonthDayDesc = "Individual date parts"
 
 [AddStampRequest.error]
 failed = "Une erreur s’est produite lors de l’ajout du tampon au PDF."
 
 [AddStampRequest.results]
 title = "Résultats du tampon"
+
+[AddStampRequest.template]
+custom = "Custom"
+dateHeader = "Date Header"
+draftWatermark = "Draft Watermark"
+europeanDate = "European Date"
+pageNumberFooter = "Page Number Footer"
+timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Images,Remove Image,Page operations,Back end,server side"
@@ -4525,6 +4567,13 @@ description = "Nombre maximal de tentatives de connexion échouées avant le ver
 [admin.settings.security.loginResetTimeMinutes]
 label = "Délai de réinitialisation (minutes)"
 description = "Délai avant la réinitialisation du compteur de tentatives de connexion échouées"
+
+[admin.settings.security.xFrameOptions]
+label = "X-Frame-Options"
+description = "Controls whether the application can be embedded in iframes"
+deny = "Deny (Prevents all framing)"
+sameorigin = "Same Origin (Allow framing from same domain)"
+disabled = "Disabled (No X-Frame-Options header)"
 
 [admin.settings.security.csrfDisabled]
 label = "Désactiver la protection CSRF"
