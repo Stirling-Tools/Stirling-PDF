@@ -261,7 +261,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 )
                 report.append("")
                 report.append("    Use the following command to remove them:")
-                report.append(f"    `python scripts/translations/translation_merger.py  {locale_dir} remove-unused`")
+                report.append(f"    `python scripts/translations/translation_merger.py {locale_dir} remove-unused`")
                 report.append("")
             if extra_keys_list:
                 report.append(
@@ -269,7 +269,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 )
                 report.append("")
                 report.append("    Use the following command to add them:")
-                report.append(f"    `python scripts/translations/translation_merger.py  {locale_dir} add-missing`")
+                report.append(f"    `python scripts/translations/translation_merger.py {locale_dir} add-missing`")
                 report.append("")
 
             if missing_keys_list or extra_keys_list:
