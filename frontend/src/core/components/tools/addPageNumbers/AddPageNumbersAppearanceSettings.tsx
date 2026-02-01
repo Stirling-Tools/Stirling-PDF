@@ -49,6 +49,16 @@ const AddPageNumbersAppearanceSettings = ({
         />
       </Tooltip>
 
+      <Tooltip content={t('addPageNumbers.zeroPadTooltip', 'Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.')}>
+        <NumberInput
+          label={t('addPageNumbers.zeroPad', 'Zero-pad Width (Bates Stamping)')}
+          value={parameters.zeroPad}
+          onChange={(v) => onParameterChange('zeroPad', typeof v === 'number' ? v : 0)}
+          min={0}
+          disabled={disabled}
+        />
+      </Tooltip>
+
       <Tooltip content={t('fontTypeTooltip', 'Font family for the page numbers. Choose based on your document style.')}>
         <Select
           label={t('addPageNumbers.fontName', 'Font Type')}
