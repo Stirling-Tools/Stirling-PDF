@@ -1,6 +1,7 @@
 import apiClient from '@app/services/apiClient';
 
 export interface User {
+  mfaRequired: boolean;
   id: number;
   username: string;
   email?: string;
@@ -40,6 +41,7 @@ export interface AdminSettingsData {
   premiumEnabled: boolean;
   mailEnabled: boolean;
   userSettings?: Record<string, any>;
+  mfaRequired: boolean;
 }
 
 export interface CreateUserRequest {
@@ -303,6 +305,17 @@ export const userManagementService = {
    */
   async disableMfaByAdmin(username: string): Promise<void> {
     await apiClient.post(`/api/v1/auth/mfa/disable/admin/${encodeURIComponent(username)}`, undefined);
+  },
+
+  /**
+   * Require MFA for a user (admin only)
+   */
+  async requireMfaByAdmin(username: string, active: boolean): Promise<void> {
+    if (!active) {
+      await apiClient.post(`/api/v1/auth/mfa/optional/admin/${encodeURIComponent(username)}`, undefined);
+      return;
+    }
+    await apiClient.post(`/api/v1/auth/mfa/require/admin/${encodeURIComponent(username)}`, undefined);
   },
 
 };
