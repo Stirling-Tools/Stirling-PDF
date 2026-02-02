@@ -3,19 +3,7 @@ import { rgb } from 'pdf-lib';
 type RgbTuple = [number, number, number];
 type PdfRgb = ReturnType<typeof rgb>;
 
-const defaultLightPalette: Record<
-  | 'headerBackground'
-  | 'accent'
-  | 'textPrimary'
-  | 'textMuted'
-  | 'boxBackground'
-  | 'boxBorder'
-  | 'warning'
-  | 'danger'
-  | 'success'
-  | 'neutral',
-  RgbTuple
-> = {
+const defaultLightPalette: Record<'headerBackground' | 'accent' | 'textPrimary' | 'textMuted' | 'boxBackground' | 'boxBorder' | 'warning' | 'danger' | 'success' | 'neutral', RgbTuple> = {
   headerBackground: [239, 246, 255],
   accent: [59, 130, 246],
   textPrimary: [30, 41, 59],
@@ -71,11 +59,15 @@ const pdfCssVariables: Record<keyof typeof defaultLightPalette, string> = {
   neutral: '--pdf-light-neutral',
 };
 
+const paletteKeys = Object.keys(pdfCssVariables) as Array<keyof typeof defaultLightPalette>;
 const paletteCache: Partial<ColorPalette> = {};
 let paletteInitialized = false;
 let lastWindowAvailable = typeof window !== 'undefined';
 
-const paletteKeys = Object.keys(pdfCssVariables) as Array<keyof typeof defaultLightPalette>;
+const paletteDefaults: ColorPalette = paletteKeys.reduce((acc, key) => {
+  acc[key] = toRgb(defaultLightPalette[key]);
+  return acc;
+}, {} as ColorPalette);
 
 const ensurePaletteInitialized = () => {
   const windowIsAvailable = typeof window !== 'undefined';
@@ -87,7 +79,15 @@ const ensurePaletteInitialized = () => {
   lastWindowAvailable = windowIsAvailable;
 
   paletteKeys.forEach((key) => {
-    paletteCache[key] = getCssVariableAsRgb(pdfCssVariables[key], defaultLightPalette[key]);
+    try {
+      paletteCache[key] = getCssVariableAsRgb(pdfCssVariables[key], defaultLightPalette[key]);
+    } catch (error) {
+      console.error(`Failed to resolve ${pdfCssVariables[key]}`, error);
+      paletteCache[key] = paletteDefaults[key];
+    }
+    if (!paletteCache[key]) {
+      paletteCache[key] = paletteDefaults[key];
+    }
   });
 };
 
@@ -98,7 +98,7 @@ paletteKeys.forEach((key) => {
     enumerable: true,
     get() {
       ensurePaletteInitialized();
-      return paletteCache[key]!;
+      return paletteCache[key] ?? paletteDefaults[key];
     },
   });
 });
