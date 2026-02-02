@@ -9,7 +9,6 @@ export const getSynonyms = (t: TFunction, toolId: string): string[] => {
 
     for (const key of candidateKeys) {
       const value = t(key) as unknown as string;
-      console.warn(`[Tags] Trying key "${key}" for tool "${toolId}": got value "${value}"`);
       if (value && value !== key) {
         tags = value;
         usedKey = key;
