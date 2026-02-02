@@ -23,6 +23,36 @@ class SecretMaskerTest {
     @Nested
     @DisplayName("mask(Map<String,Object>) method")
     class MaskMethod {
+        @Test
+        @DisplayName("should not mutate the original input map (no side effects)")
+        void shouldNotMutateOriginalInputMap() {
+            Map<String, Object> nested = new HashMap<>();
+            nested.put("token", "t1");
+            nested.put("username", "jason");
+
+            Map<String, Object> input = new HashMap<>();
+            input.put("password", "mySecret");
+            input.put("nested", nested);
+
+            String beforePassword = (String) input.get("password");
+            Map<String, Object> beforeNested = (Map<String, Object>) input.get("nested");
+            String beforeToken = (String) beforeNested.get("token");
+
+            // use mask
+            Map<String, Object> result = SecretMasker.mask(input);
+
+            // check the result
+            assertEquals("***REDACTED***", result.get("password"));
+            Map<String, Object> resultNested = (Map<String, Object>) result.get("nested");
+            assertEquals("***REDACTED***", resultNested.get("token"));
+            assertEquals("jason", resultNested.get("username"));
+
+            // check the input
+            assertEquals(beforePassword, input.get("password"));
+            Map<String, Object> afterNested = (Map<String, Object>) input.get("nested");
+            assertEquals(beforeToken, afterNested.get("token"));
+            assertEquals("jason", afterNested.get("username"));
+        }
 
         @Test
         @DisplayName("should return null when input map is null")
@@ -102,6 +132,28 @@ class SecretMaskerTest {
             Map<String, Object> second = (Map<String, Object>) list.get(1);
             assertEquals("john", second.get("username"));
             assertEquals("stringValue", list.get(2));
+        }
+
+
+        @Test
+        @DisplayName(
+            "should NOT mask keys that merely contain 'key' as a substring (false positives)")
+        void shouldNotMaskFalsePositiveKeySubstrings() {
+            Map<String, Object> input =
+                Map.of(
+                    "monkey", "v1",
+                    "hockey", "v2",
+                    "turkey", "v3",
+                    "keynote", "v4",
+                    "donkey", "v5");
+
+            Map<String, Object> result = SecretMasker.mask(input);
+
+            assertEquals("v1", result.get("monkey"));
+            assertEquals("v2", result.get("hockey"));
+            assertEquals("v3", result.get("turkey"));
+            assertEquals("v4", result.get("keynote"));
+            assertEquals("v5", result.get("donkey"));
         }
 
         @Test
