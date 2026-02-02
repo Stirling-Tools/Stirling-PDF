@@ -5,6 +5,19 @@ set -euo pipefail
 log() { printf '%s\n' "$*" >&2; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
+if [ -d /scripts ] && [[ ":${PATH}:" != *":/scripts:"* ]]; then
+  export PATH="/scripts:${PATH}"
+fi
+
+if [ -x /scripts/stirling-diagnostics.sh ]; then
+  mkdir -p /usr/local/bin
+  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostics
+  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/stirling-diagnostics
+  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diag
+  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/debug
+  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostic
+fi
+
 run_with_timeout() {
   local secs=$1; shift
   if command_exists timeout; then
