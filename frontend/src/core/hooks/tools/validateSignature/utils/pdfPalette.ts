@@ -1,10 +1,19 @@
 import { rgb } from 'pdf-lib';
-import '@app/styles/theme.css';
 
 type RgbTuple = [number, number, number];
+type PdfRgb = ReturnType<typeof rgb>;
 
 const defaultLightPalette: Record<
-  'headerBackground' | 'accent' | 'textPrimary' | 'textMuted' | 'boxBackground' | 'boxBorder' | 'warning' | 'danger' | 'success' | 'neutral',
+  | 'headerBackground'
+  | 'accent'
+  | 'textPrimary'
+  | 'textMuted'
+  | 'boxBackground'
+  | 'boxBorder'
+  | 'warning'
+  | 'danger'
+  | 'success'
+  | 'neutral',
   RgbTuple
 > = {
   headerBackground: [239, 246, 255],
@@ -47,15 +56,46 @@ function getCssVariableAsRgb(variableName: string, fallback: RgbTuple) {
   return rgb(r / 255, g / 255, b / 255);
 }
 
-export const colorPalette = {
-  headerBackground: getCssVariableAsRgb('--pdf-light-header-bg', defaultLightPalette.headerBackground),
-  accent: getCssVariableAsRgb('--pdf-light-accent', defaultLightPalette.accent),
-  textPrimary: getCssVariableAsRgb('--pdf-light-text-primary', defaultLightPalette.textPrimary),
-  textMuted: getCssVariableAsRgb('--pdf-light-text-muted', defaultLightPalette.textMuted),
-  boxBackground: getCssVariableAsRgb('--pdf-light-box-bg', defaultLightPalette.boxBackground),
-  boxBorder: getCssVariableAsRgb('--pdf-light-box-border', defaultLightPalette.boxBorder),
-  warning: getCssVariableAsRgb('--pdf-light-warning', defaultLightPalette.warning),
-  danger: getCssVariableAsRgb('--pdf-light-danger', defaultLightPalette.danger),
-  success: getCssVariableAsRgb('--pdf-light-success', defaultLightPalette.success),
-  neutral: getCssVariableAsRgb('--pdf-light-neutral', defaultLightPalette.neutral),
+type ColorPalette = Record<keyof typeof defaultLightPalette, PdfRgb>;
+
+const pdfCssVariables: Record<keyof typeof defaultLightPalette, string> = {
+  headerBackground: '--pdf-light-header-bg',
+  accent: '--pdf-light-accent',
+  textPrimary: '--pdf-light-text-primary',
+  textMuted: '--pdf-light-text-muted',
+  boxBackground: '--pdf-light-box-bg',
+  boxBorder: '--pdf-light-box-border',
+  warning: '--pdf-light-warning',
+  danger: '--pdf-light-danger',
+  success: '--pdf-light-success',
+  neutral: '--pdf-light-neutral',
 };
+
+const paletteCache: Partial<ColorPalette> = {};
+let paletteInitialized = false;
+
+const paletteKeys = Object.keys(pdfCssVariables) as Array<keyof typeof defaultLightPalette>;
+
+const ensurePaletteInitialized = () => {
+  if (paletteInitialized) {
+    return;
+  }
+
+  paletteInitialized = true;
+
+  paletteKeys.forEach((key) => {
+    paletteCache[key] = getCssVariableAsRgb(pdfCssVariables[key], defaultLightPalette[key]);
+  });
+};
+
+export const colorPalette = {} as ColorPalette;
+
+paletteKeys.forEach((key) => {
+  Object.defineProperty(colorPalette, key, {
+    enumerable: true,
+    get() {
+      ensurePaletteInitialized();
+      return paletteCache[key]!;
+    },
+  });
+});
