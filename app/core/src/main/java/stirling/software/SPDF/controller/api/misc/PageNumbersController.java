@@ -52,9 +52,17 @@ public class PageNumbersController {
         int pageNumber = request.getStartingNumber();
         String pagesToNumber = request.getPagesToNumber();
         String customText = request.getCustomText();
+        int zeroPad = request.getZeroPad();
         float fontSize = request.getFontSize();
         String fontType = request.getFontType();
         String fontColor = request.getFontColor();
+        // compute padded number string where requested
+        String formatN;
+        if (zeroPad > 0) {
+            formatN = String.format("%%0%dd", Math.max(0, zeroPad));
+        } else {
+            formatN = "%d";
+        }
 
         Color color = Color.BLACK;
         if (fontColor != null && !fontColor.trim().isEmpty()) {
@@ -93,9 +101,10 @@ public class PageNumbersController {
                 PDPage page = document.getPage(i);
                 PDRectangle pageSize = page.getMediaBox();
 
+                String nFormatted = String.format(formatN, pageNumber);
                 String text =
                         customText
-                                .replace("{n}", String.valueOf(pageNumber))
+                                .replace("{n}", nFormatted)
                                 .replace("{total}", String.valueOf(document.getNumberOfPages()))
                                 .replace(
                                         "{filename}",
