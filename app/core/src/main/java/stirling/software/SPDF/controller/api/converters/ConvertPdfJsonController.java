@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -56,6 +57,7 @@ public class ConvertPdfJsonController {
         }
 
         byte[] jsonBytes = pdfJsonConversionService.convertPdfToJson(inputFile, lightweight);
+        logJsonResponse("pdf/text-editor", jsonBytes);
         String originalName = inputFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
@@ -112,6 +114,7 @@ public class ConvertPdfJsonController {
 
         byte[] jsonBytes =
                 pdfJsonConversionService.extractDocumentMetadata(inputFile, scopedJobKey);
+        logJsonResponse("pdf/text-editor/metadata", jsonBytes);
         String originalName = inputFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
@@ -175,6 +178,7 @@ public class ConvertPdfJsonController {
         validateJobAccess(jobId);
 
         byte[] jsonBytes = pdfJsonConversionService.extractSinglePage(jobId, pageNumber);
+        logJsonResponse("pdf/text-editor/page", jsonBytes);
         String docName = "page_" + pageNumber + ".json";
         return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
     }
@@ -207,6 +211,182 @@ public class ConvertPdfJsonController {
         }
         // Security disabled, return unsecured job key
         return baseJobId;
+    }
+
+    private void logJsonResponse(String label, byte[] jsonBytes) {
+        if (jsonBytes == null) {
+            log.warn("Returning {} JSON response: null bytes", label);
+            return;
+        }
+        int length = jsonBytes.length;
+        boolean endsWithJson =
+                length > 0 && (jsonBytes[length - 1] == '}' || jsonBytes[length - 1] == ']');
+        String tail = "";
+        if (length > 0) {
+            int start = Math.max(0, length - 64);
+            tail = new String(jsonBytes, start, length - start, StandardCharsets.UTF_8);
+            tail = tail.replaceAll("[\\r\\n\\t]+", " ").replaceAll("[^\\x20-\\x7E]", "?");
+        }
+        log.info(
+                "Returning {} JSON response ({} bytes, endsWithJson={}, tail='{}')",
+                label,
+                length,
+                endsWithJson,
+                tail);
+
+        if (isPdfJsonDebugDumpEnabled()) {
+            try {
+                String tmpDir = System.getProperty("java.io.tmpdir");
+                String customDir = System.getenv("SPDF_PDFJSON_DUMP_DIR");
+                java.nio.file.Path dumpDir =
+                        customDir != null && !customDir.isBlank()
+                                ? java.nio.file.Path.of(customDir)
+                                : java.nio.file.Path.of(tmpDir);
+                java.nio.file.Path dumpPath =
+                        java.nio.file.Files.createTempFile(dumpDir, "pdfjson_", ".json");
+                java.nio.file.Files.write(dumpPath, jsonBytes);
+                log.info("PDF JSON debug dump ({}): {}", label, dumpPath);
+            } catch (Exception ex) {
+                log.warn("Failed to write PDF JSON debug dump ({}): {}", label, ex.getMessage());
+            }
+        }
+
+        if (isPdfJsonRepeatScanEnabled()) {
+            logRepeatedJsonStrings(label, jsonBytes);
+        }
+    }
+
+    private boolean isPdfJsonDebugDumpEnabled() {
+        String env = System.getenv("SPDF_PDFJSON_DUMP");
+        if (env != null && env.equalsIgnoreCase("true")) {
+            return true;
+        }
+        return Boolean.getBoolean("spdf.pdfjson.dump");
+    }
+
+    private boolean isPdfJsonRepeatScanEnabled() {
+        String env = System.getenv("SPDF_PDFJSON_REPEAT_SCAN");
+        if (env != null && env.equalsIgnoreCase("true")) {
+            return true;
+        }
+        return Boolean.getBoolean("spdf.pdfjson.repeatScan");
+    }
+
+    private void logRepeatedJsonStrings(String label, byte[] jsonBytes) {
+        final int minLen = 12;
+        final int maxLen = 200;
+        final int maxUnique = 50000;
+        java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+        boolean inString = false;
+        boolean escape = false;
+        boolean tooLong = false;
+        StringBuilder current = new StringBuilder(64);
+        boolean capped = false;
+
+        for (byte b : jsonBytes) {
+            char ch = (char) (b & 0xFF);
+            if (!inString) {
+                if (ch == '"') {
+                    inString = true;
+                    escape = false;
+                    tooLong = false;
+                    current.setLength(0);
+                }
+                continue;
+            }
+
+            if (escape) {
+                escape = false;
+                if (!tooLong && current.length() < maxLen) {
+                    current.append(ch);
+                }
+                continue;
+            }
+            if (ch == '\\') {
+                escape = true;
+                continue;
+            }
+            if (ch == '"') {
+                inString = false;
+                if (!tooLong) {
+                    int len = current.length();
+                    if (len >= minLen && len <= maxLen) {
+                        String value = current.toString();
+                        if (!looksLikeBase64(value)) {
+                            if (!capped || counts.containsKey(value)) {
+                                counts.merge(value, 1, Integer::sum);
+                                if (!capped && counts.size() >= maxUnique) {
+                                    capped = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                continue;
+            }
+            if (!tooLong) {
+                if (current.length() < maxLen) {
+                    current.append(ch);
+                } else {
+                    tooLong = true;
+                }
+            }
+        }
+
+        java.util.List<java.util.Map.Entry<String, Integer>> top =
+                counts.entrySet().stream()
+                        .filter(e -> e.getValue() > 1)
+                        .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                        .limit(20)
+                        .toList();
+
+        if (!top.isEmpty()) {
+            String summary =
+                    top.stream()
+                            .map(
+                                    e ->
+                                            String.format(
+                                                    "\"%s\"(len=%d,count=%d)",
+                                                    truncateForLog(e.getKey()),
+                                                    e.getKey().length(),
+                                                    e.getValue()))
+                            .collect(java.util.stream.Collectors.joining("; "));
+            log.info(
+                    "PDF JSON repeat scan ({}): top strings -> {}{}",
+                    label,
+                    summary,
+                    capped ? " (capped)" : "");
+        } else {
+            log.info(
+                    "PDF JSON repeat scan ({}): no repeated strings found{}", label, capped ? " (capped)" : "");
+        }
+    }
+
+    private boolean looksLikeBase64(String value) {
+        if (value.length() < 32) {
+            return false;
+        }
+        int base64Chars = 0;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if ((c >= 'A' && c <= 'Z')
+                    || (c >= 'a' && c <= 'z')
+                    || (c >= '0' && c <= '9')
+                    || c == '+'
+                    || c == '/'
+                    || c == '=') {
+                base64Chars++;
+            }
+        }
+        return base64Chars >= value.length() * 0.9;
+    }
+
+    private String truncateForLog(String value) {
+        int max = 64;
+        if (value.length() <= max) {
+            return value.replaceAll("[\\r\\n\\t]+", " ");
+        }
+        return value.substring(0, max).replaceAll("[\\r\\n\\t]+", " ") + "...";
     }
 
     /**
