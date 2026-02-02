@@ -283,16 +283,36 @@ export const usePageEditorCommands = ({
       insertAfterPage: number,
       isFromStorage?: boolean
     ) => {
+      console.log('[PageEditor] handleInsertFiles called:', {
+        fileCount: files.length,
+        insertAfterPage,
+        isFromStorage,
+      });
+
       const workingDocument = getEditedDocument();
-      if (!workingDocument || files.length === 0) return;
+      if (!workingDocument || files.length === 0) {
+        console.log('[PageEditor] handleInsertFiles early return:', {
+          hasDocument: !!workingDocument,
+          fileCount: files.length,
+        });
+        return;
+      }
 
       try {
         const targetPage = workingDocument.pages.find(
           (p) => p.pageNumber === insertAfterPage
         );
-        if (!targetPage) return;
+        if (!targetPage) {
+          console.log('[PageEditor] Target page not found:', insertAfterPage);
+          return;
+        }
 
         const insertAfterPageId = targetPage.id;
+        console.log('[PageEditor] Inserting files after page:', {
+          pageNumber: insertAfterPage,
+          pageId: insertAfterPageId,
+        });
+
         let addedFileIds: FileId[] = [];
         if (isFromStorage) {
           const stubs = files as StirlingFileStub[];
@@ -307,6 +327,10 @@ export const usePageEditorCommands = ({
             insertAfterPageId,
           });
           addedFileIds = result.map((file) => file.fileId);
+          console.log('[PageEditor] Files added to context:', {
+            addedCount: addedFileIds.length,
+            fileIds: addedFileIds,
+          });
         }
 
         await new Promise((resolve) => setTimeout(resolve, 100));
