@@ -1,4 +1,5 @@
 import { rgb } from 'pdf-lib';
+import '@app/styles/theme.css';
 
 type RgbTuple = [number, number, number];
 
