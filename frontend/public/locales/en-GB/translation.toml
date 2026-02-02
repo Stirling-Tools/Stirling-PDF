@@ -219,6 +219,9 @@ pagesAndStarting = "Pages & Starting Number"
 positionAndPages = "Position & Pages"
 preview = "Position Selection"
 previewDisclaimer = "Preview is approximate. Final output may vary due to PDF font metrics."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+
 
 [addPageNumbers.selectText]
 1 = "Select PDF file:"
@@ -4514,9 +4517,17 @@ description = "Configure custom file system paths for pipeline processing and ex
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Directories"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Watched Folders Directory"
 description = "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Finished Folders Directory"

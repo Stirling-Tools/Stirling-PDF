@@ -6,6 +6,7 @@ import { createBackendNotReadyError } from '@app/constants/backendErrors';
 import { operationRouter } from '@app/services/operationRouter';
 import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import i18n from '@app/i18n';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
@@ -34,37 +35,40 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     async (config: InternalAxiosRequestConfig) => {
       const extendedConfig = config as ExtendedRequestConfig;
 
-      // Get the operation name from config if provided
-      const operation = extendedConfig.operationName;
+      try {
+        // Get the appropriate base URL for this request
+        const baseUrl = await operationRouter.getBaseUrl(extendedConfig.url);
 
-      // Get the appropriate base URL for this operation
-      const baseUrl = await operationRouter.getBaseUrl(operation);
-
-      // Build the full URL
-      if (extendedConfig.url && !extendedConfig.url.startsWith('http')) {
-        extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
-      }
-
-      localStorage.setItem('server_url', baseUrl);
-
-      // Debug logging
-      console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
-
-      // Add auth token for remote requests and enable credentials
-      const isRemote = await operationRouter.isSelfHostedMode();
-      if (isRemote) {
-        // Self-hosted mode: enable credentials for session management
-        extendedConfig.withCredentials = true;
-
-        const token = await authService.getAuthToken();
-        if (token) {
-          extendedConfig.headers.Authorization = `Bearer ${token}`;
-        } else {
-          console.warn('[apiClientSetup] Self-hosted mode but no auth token available');
+        // Build the full URL
+        if (extendedConfig.url && !extendedConfig.url.startsWith('http')) {
+          extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
         }
-      } else {
-        // SaaS mode: disable credentials (security disabled on local backend)
-        extendedConfig.withCredentials = false;
+
+        localStorage.setItem('server_url', baseUrl);
+
+        // Debug logging
+        console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
+
+        // Add auth token for remote requests and enable credentials
+        const isRemote = await operationRouter.isSelfHostedMode();
+        if (isRemote) {
+          // Self-hosted mode: enable credentials for session management
+          extendedConfig.withCredentials = true;
+
+          const token = await authService.getAuthToken();
+          if (token) {
+            extendedConfig.headers.Authorization = `Bearer ${token}`;
+          } else {
+            console.warn('[apiClientSetup] Self-hosted mode but no auth token available');
+          }
+        } else {
+          // SaaS mode: disable credentials (security disabled on local backend)
+          extendedConfig.withCredentials = false;
+        }
+      } catch (error) {
+        console.error('[apiClientSetup] Error in request interceptor:', error);
+        // Continue with request even if routing/auth logic fails
+        // This ensures requests aren't blocked by interceptor errors
       }
 
       // Backend readiness check (for local backend)
@@ -108,23 +112,37 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         }
         originalRequest._retry = true;
 
+        console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);
+
         const isRemote = await operationRouter.isSelfHostedMode();
+        let refreshed = false;
+
         if (isRemote) {
+          // Self-hosted mode: use Spring Boot refresh endpoint
           const serverConfig = await connectionModeService.getServerConfig();
           if (serverConfig) {
-            const refreshed = await authService.refreshToken(serverConfig.url);
-            if (refreshed) {
-              // Retry the original request with new token
-              const token = await authService.getAuthToken();
-              if (token) {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
-              }
-              return client(originalRequest);
-            }
+            refreshed = await authService.refreshToken(serverConfig.url);
           }
+        } else {
+          // SaaS mode: use Supabase refresh endpoint
+          refreshed = await authService.refreshSupabaseToken(STIRLING_SAAS_URL);
         }
 
-        // Refresh failed or not in remote mode - user needs to login again
+        if (refreshed) {
+          // Retry the original request with new token
+          const token = await authService.getAuthToken();
+          console.debug(`[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`);
+
+          if (token) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+          } else {
+            console.error(`[apiClientSetup] No token available after successful refresh!`);
+          }
+
+          return client.request(originalRequest);
+        }
+
+        // Refresh failed - user needs to login again
         alert({
           alertType: 'error',
           title: i18n.t('auth.sessionExpired', 'Session Expired'),
