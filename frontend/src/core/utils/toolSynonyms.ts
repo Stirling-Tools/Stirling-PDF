@@ -4,17 +4,11 @@ import { TFunction } from "i18next";
 export const getSynonyms = (t: TFunction, toolId: string): string[] => {
   try {
     const candidateKeys = [`home.${toolId}.tags`, `${toolId}.tags`];
-    let tags: string | undefined;
-    let usedKey: string | undefined;
-
-    for (const key of candidateKeys) {
-      const value = t(key) as unknown as string;
-      if (value && value !== key) {
-        tags = value;
-        usedKey = key;
-        break;
-      }
-    }
+    const match = candidateKeys
+      .map((key) => ({ key, value: t(key) as unknown as string }))
+      .find(({ key, value }) => value && value !== key);
+    const tags = match?.value;
+    const usedKey = match?.key;
 
     if (!tags) {
       console.warn(`[Tags] Missing tags for tool: ${toolId}`);
