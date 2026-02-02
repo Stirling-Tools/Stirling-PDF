@@ -3,6 +3,7 @@ import { FileId } from '@app/types/file';
 import { useFileActions, useFileState } from '@app/contexts/FileContext';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 import { MAX_PAGE_EDITOR_FILES } from '@app/components/pageEditor/fileColors';
+import { useNavigationState } from '@app/contexts/NavigationContext';
 
 // PageEditorFile is now defined locally in consuming components
 // Components should derive file list directly from FileContext
@@ -154,10 +155,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   }, []);
 
   const clearPersistedDocument = useCallback(() => {
-    console.log('[PageEditorContext] Clearing persisted document and currentPages');
+    console.log('[PageEditorContext] Clearing persisted document');
     setPersistedDocument(null);
     setPersistedDocumentSignature(null);
-    setCurrentPages(null); // Also clear currentPages to avoid stale signature comparison
+    setCurrentPages(null);
   }, []);
 
   // Page editor's own file order (independent of FileContext)
@@ -166,6 +167,42 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   // Read from FileContext (for file metadata only, not order)
   const { actions: fileActions } = useFileActions();
   const { state } = useFileState();
+
+  const navigationState = useNavigationState();
+  const prevWorkbenchRef = useRef(navigationState.workbench);
+  useEffect(() => {
+    const prevWorkbench = prevWorkbenchRef.current;
+    const nextWorkbench = navigationState.workbench;
+    const isLeavingPageEditor = prevWorkbench === 'pageEditor' && nextWorkbench !== 'pageEditor';
+    const isEnteringPageEditor = prevWorkbench !== 'pageEditor' && nextWorkbench === 'pageEditor';
+
+    if (isLeavingPageEditor) {
+      clearPersistedDocument();
+    }
+
+    if (isEnteringPageEditor) {
+      prevFileContextIdsRef.current = state.files.ids;
+      setReorderedPages(null);
+      setCurrentPages(null); // Force clear current pages when entering
+      setFileOrder(currentOrder => {
+        const validOrder = currentOrder.filter(id => state.files.ids.includes(id));
+        const newIds = state.files.ids.filter(id => !validOrder.includes(id));
+        if (newIds.length === 0 && validOrder.length === currentOrder.length) {
+          return currentOrder;
+        }
+        return [...validOrder, ...newIds];
+      });
+      clearPersistedDocument();
+    }
+
+    prevWorkbenchRef.current = nextWorkbench;
+  }, [
+    navigationState.workbench,
+    clearPersistedDocument,
+    state.files.ids,
+    setFileOrder,
+    setReorderedPages,
+  ]);
 
   const fileContextSignature = useMemo(() => {
     const sig = state.files.ids
@@ -179,16 +216,41 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   }, [state.files.ids, state.files.byId]);
 
   const prevFileContextSignature = useRef<string | null>(null);
-  useEffect(() => {
-    if (prevFileContextSignature.current !== fileContextSignature) {
-      console.log('[PageEditorContext] File signature changed, clearing persisted document:', {
-        prev: prevFileContextSignature.current?.substring(0, 50),
-        current: fileContextSignature.substring(0, 50),
-      });
-      prevFileContextSignature.current = fileContextSignature;
-      clearPersistedDocument();
+  const haveFileIdSetsChanged = (prevIds: FileId[], currentIds: FileId[]) => {
+    if (prevIds.length !== currentIds.length) {
+      return true;
     }
-  }, [fileContextSignature, clearPersistedDocument]);
+    const prevSet = new Set(prevIds);
+    for (const id of currentIds) {
+      if (!prevSet.has(id)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  useEffect(() => {
+    const currentFileIds = state.files.ids;
+    const prevFileIds = prevFileContextIdsRef.current;
+    const idsChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
+
+    if (!idsChanged && prevFileContextSignature.current === fileContextSignature) {
+      return;
+    }
+
+    const previousSignature = prevFileContextSignature.current;
+    prevFileContextSignature.current = fileContextSignature;
+
+    if (!idsChanged) {
+      // Signature changed due to metadata/version updates but file set is unchanged.
+      return;
+    }
+
+    console.log('[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:', {
+      prev: previousSignature?.substring(0, 50),
+      current: fileContextSignature.substring(0, 50),
+    });
+    clearPersistedDocument();
+  }, [fileContextSignature, clearPersistedDocument, state.files.ids]);
 
   // Keep a ref to always read latest state in stable callbacks
   const stateRef = useRef(state);
@@ -205,9 +267,7 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const prevFileIds = prevFileContextIdsRef.current;
 
     // Only react to FileContext changes, not our own fileOrder changes
-    const fileContextChanged =
-      currentFileIds.length !== prevFileIds.length ||
-      !currentFileIds.every((id, idx) => id === prevFileIds[idx]);
+    const fileContextChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
 
     if (!fileContextChanged) {
       return;
@@ -219,6 +279,8 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       added: currentFileIds.filter(id => !prevFileIds.includes(id)).length,
       removed: prevFileIds.filter(id => !currentFileIds.includes(id)).length,
     });
+
+    clearPersistedDocument();
 
     prevFileContextIdsRef.current = currentFileIds;
 

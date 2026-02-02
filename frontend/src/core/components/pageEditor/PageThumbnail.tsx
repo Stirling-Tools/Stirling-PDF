@@ -78,6 +78,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   justMoved = false,
 }: PageThumbnailProps) => {
   const pageIndex = page.pageNumber - 1;
+  const isSelected = Array.isArray(selectedPageIds) ? selectedPageIds.includes(page.id) : false;
 
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
@@ -365,7 +366,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           }}
         >
           <Checkbox
-            checked={Array.isArray(selectedPageIds) ? selectedPageIds.includes(page.id) : false}
+            checked={isSelected}
             onChange={() => {
               // Selection is handled by container mouseDown
             }}

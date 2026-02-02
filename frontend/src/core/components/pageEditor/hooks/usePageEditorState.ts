@@ -51,12 +51,13 @@ export function usePageEditorState(): PageEditorState {
   
   // Helper functions
   const togglePage = useCallback((pageId: string) => {
-    setSelectedPageIds(prev => 
-      prev.includes(pageId)
+    setSelectedPageIds(prev => {
+      const newSelection = prev.includes(pageId)
         ? prev.filter(id => id !== pageId)
-        : [...prev, pageId]
-    );
-  }, []);
+        : [...prev, pageId];
+      return newSelection;
+    });
+  }, []); // Empty deps - uses updater function so always has latest state
 
   const toggleSelectAll = useCallback((allPageIds: string[]) => {
     if (!allPageIds.length) return;

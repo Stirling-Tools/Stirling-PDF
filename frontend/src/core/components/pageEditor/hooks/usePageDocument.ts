@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { useFileState } from '@app/contexts/FileContext';
 import { usePageEditor } from '@app/contexts/PageEditorContext';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
@@ -64,22 +64,26 @@ export function usePageDocument(): PageDocumentHook {
   const processedFilePages = primaryStirlingFileStub?.processedFile?.pages;
   const processedFileTotalPages = primaryStirlingFileStub?.processedFile?.totalPages;
 
-  const [placeholderDocument, setPlaceholderDocument] = useState<PDFDocument | null>(null);
+  const placeholderDocumentRef = useRef<PDFDocument | null>(null);
+  const [placeholderVersion, setPlaceholderVersion] = useState(0);
 
   useEffect(() => {
     if (!primaryFileId) {
-      setPlaceholderDocument(null);
+      placeholderDocumentRef.current = null;
+      setPlaceholderVersion(v => v + 1);
       return;
     }
 
     if (primaryStirlingFileStub?.processedFile) {
-      setPlaceholderDocument(null);
+      placeholderDocumentRef.current = null;
+      setPlaceholderVersion(v => v + 1);
       return;
     }
 
     const file = selectors.getFile(primaryFileId);
     if (!file) {
-      setPlaceholderDocument(null);
+      placeholderDocumentRef.current = null;
+      setPlaceholderVersion(v => v + 1);
       return;
     }
 
@@ -100,16 +104,20 @@ export function usePageDocument(): PageDocumentHook {
           originalPageNumber: index + 1,
         }));
 
-        setPlaceholderDocument({
-          id: `placeholder-${primaryFileId}`,
-          name: selectors.getStirlingFileStub(primaryFileId)?.name ?? file.name,
-          file,
-          pages,
-          totalPages,
-        });
+        if (!canceled) {
+          placeholderDocumentRef.current = {
+            id: `placeholder-${primaryFileId}`,
+            name: selectors.getStirlingFileStub(primaryFileId)?.name ?? file.name,
+            file,
+            pages,
+            totalPages,
+          };
+          setPlaceholderVersion(v => v + 1);
+        }
       } catch {
         if (!canceled) {
-          setPlaceholderDocument(null);
+          placeholderDocumentRef.current = null;
+          setPlaceholderVersion(v => v + 1);
         }
       }
     };
@@ -131,6 +139,7 @@ export function usePageDocument(): PageDocumentHook {
       activeFileIds: activeFileIds.length,
       selectedActiveFileIds: selectedActiveFileIds.length,
       hasPersistedDoc: !!persistedDocument,
+      persistedDocPages: persistedDocument?.pages.length,
       persistedSig: persistedDocumentSignature?.substring(0, 50),
       currentSig: currentPagesSignature.substring(0, 50),
     });
@@ -140,18 +149,31 @@ export function usePageDocument(): PageDocumentHook {
       return null;
     }
 
-  if (
+  // Check if persisted document is still valid
+  // Must match signature AND have the same number of source files
+  const persistedFileIds = persistedDocument
+    ? Array.from(new Set(persistedDocument.pages.map(p => p.originalFileId).filter(Boolean)))
+    : [];
+  const persistedIsValid =
     persistedDocument &&
     persistedDocumentSignature &&
-      persistedDocumentSignature === currentPagesSignature &&
-      currentPagesSignature.length > 0
-    ) {
+    persistedDocumentSignature === currentPagesSignature &&
+    currentPagesSignature.length > 0 &&
+    persistedFileIds.length === activeFileIds.length; // Ensure file count matches
+
+  if (persistedIsValid) {
     console.log('[usePageDocument] Using persisted document');
     return persistedDocument;
+  } else if (persistedDocument) {
+    console.log('[usePageDocument] Persisted document invalid - rebuilding:', {
+      sigMatch: persistedDocumentSignature === currentPagesSignature,
+      persistedFiles: persistedFileIds.length,
+      activeFiles: activeFileIds.length,
+    });
   }
 
-  if (!primaryStirlingFileStub?.processedFile && placeholderDocument) {
-    return placeholderDocument;
+  if (!primaryStirlingFileStub?.processedFile && placeholderDocumentRef.current) {
+    return placeholderDocumentRef.current;
   }
 
   const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
@@ -180,6 +202,10 @@ export function usePageDocument(): PageDocumentHook {
     activeFileIds.forEach(fileId => {
       const record = selectors.getStirlingFileStub(fileId);
       if (record?.insertAfterPageId !== undefined) {
+        console.log('[usePageDocument] File has insertAfterPageId:', {
+          fileId,
+          insertAfterPageId: record.insertAfterPageId,
+        });
         if (!insertionMap.has(record.insertAfterPageId)) {
           insertionMap.set(record.insertAfterPageId, []);
         }
@@ -187,6 +213,12 @@ export function usePageDocument(): PageDocumentHook {
       } else {
         originalFileIds.push(fileId);
       }
+    });
+
+    console.log('[usePageDocument] File categorization:', {
+      originalFiles: originalFileIds.length,
+      filesToInsert: insertionMap.size,
+      totalActive: activeFileIds.length,
     });
 
     // Build pages by interleaving original pages with insertions
@@ -243,6 +275,20 @@ export function usePageDocument(): PageDocumentHook {
           splitAfter: false,
           isPlaceholder: false,
         }));
+      } else {
+        // No processedFile yet - create a single loading placeholder
+        // This will be replaced when processing completes
+        filePages = [{
+          id: `${fileId}-loading`,
+          pageNumber: startPageNumber,
+          originalPageNumber: 1,
+          originalFileId: fileId,
+          rotation: 0,
+          thumbnail: null,
+          selected: false,
+          splitAfter: false,
+          isPlaceholder: true,
+        }];
       }
 
       return filePages;
@@ -344,12 +390,13 @@ export function usePageDocument(): PageDocumentHook {
     activeFilesSignature,
     selectedFileIdsKey,
     state.ui.selectedFileIds,
+    state.files.byId, // Force recompute when any file stub changes (including processedFile updates)
     allFileIds,
     currentPagesSignature,
     currentPages,
     persistedDocument,
     persistedDocumentSignature,
-    placeholderDocument,
+    placeholderVersion,
   ]);
 
   // Large document detection for smart loading
