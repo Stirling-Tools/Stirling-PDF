@@ -73,15 +73,18 @@ const pdfCssVariables: Record<keyof typeof defaultLightPalette, string> = {
 
 const paletteCache: Partial<ColorPalette> = {};
 let paletteInitialized = false;
+let lastWindowAvailable = typeof window !== 'undefined';
 
 const paletteKeys = Object.keys(pdfCssVariables) as Array<keyof typeof defaultLightPalette>;
 
 const ensurePaletteInitialized = () => {
-  if (paletteInitialized) {
+  const windowIsAvailable = typeof window !== 'undefined';
+  if (paletteInitialized && windowIsAvailable && lastWindowAvailable) {
     return;
   }
 
   paletteInitialized = true;
+  lastWindowAvailable = windowIsAvailable;
 
   paletteKeys.forEach((key) => {
     paletteCache[key] = getCssVariableAsRgb(pdfCssVariables[key], defaultLightPalette[key]);
