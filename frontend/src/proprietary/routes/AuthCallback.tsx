@@ -118,7 +118,6 @@ export default function AuthCallback() {
     };
 
     handleCallback();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only run once on mount. navigate is stable, processingRef prevents double execution
 
   return (
