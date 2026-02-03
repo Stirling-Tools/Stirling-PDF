@@ -1,20 +1,30 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
 import { RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
 import { useNavigationGuard } from '@app/contexts/NavigationContext';
+import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 /**
  * API interface that the EmbedPDF bridge will implement
+ * Updated for embedPDF v2.4.0 with unified redaction mode support
  */
 export interface RedactionAPI {
+  // Legacy methods (still supported for backward compatibility)
   toggleRedactSelection: () => void;
   toggleMarqueeRedact: () => void;
+  // New unified redaction methods (v2.4.0)
+  toggleRedact: () => void;
+  enableRedact: () => void;
+  isRedactActive: () => boolean;
+  endRedact: () => void;
+  // Common methods
   commitAllPending: () => void;
-  getActiveType: () => 'redactSelection' | 'marqueeRedact' | null;
+  getActiveType: () => RedactionMode | null;
   getPendingCount: () => number;
 }
 
 /**
  * State interface for redaction operations
+ * Updated for embedPDF v2.4.0 with unified redaction mode support
  */
 interface RedactionState {
   // Current redaction configuration from the tool
@@ -25,7 +35,8 @@ interface RedactionState {
   redactionsApplied: boolean;
   // Synced state from EmbedPDF
   pendingCount: number;
-  activeType: 'redactSelection' | 'marqueeRedact' | null;
+  // Updated to use RedactionMode enum from v2.4.0
+  activeType: RedactionMode | null;
   isRedacting: boolean;
   // Whether the redaction API bridge is ready (API ref is populated)
   isBridgeReady: boolean;
@@ -33,6 +44,7 @@ interface RedactionState {
 
 /**
  * Actions interface for redaction operations
+ * Updated for embedPDF v2.4.0 with unified redaction mode support
  */
 interface RedactionActions {
   setRedactionConfig: (config: RedactParameters | null) => void;
@@ -40,12 +52,15 @@ interface RedactionActions {
   setRedactionsApplied: (applied: boolean) => void;
   // Synced state setters (called from inside EmbedPDF)
   setPendingCount: (count: number) => void;
-  setActiveType: (type: 'redactSelection' | 'marqueeRedact' | null) => void;
+  setActiveType: (type: RedactionMode | null) => void;
   setIsRedacting: (isRedacting: boolean) => void;
   setBridgeReady: (ready: boolean) => void;
-  // Actions that call through to EmbedPDF API
+  // Legacy actions (still supported for backward compatibility)
   activateTextSelection: () => void;
   activateMarquee: () => void;
+  // New unified redaction actions (v2.4.0)
+  activateRedact: () => void;
+  deactivateRedact: () => void;
   commitAllPending: () => void;
 }
 
@@ -110,7 +125,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }));
   }, []);
 
-  const setActiveType = useCallback((type: 'redactSelection' | 'marqueeRedact' | null) => {
+  const setActiveType = useCallback((type: RedactionMode | null) => {
     setState(prev => ({
       ...prev,
       activeType: type,
@@ -143,7 +158,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [state.pendingCount, state.redactionsApplied, state.isRedactionMode, setHasUnsavedChanges]);
 
-  // Actions that call through to EmbedPDF API
+  // Legacy actions that call through to EmbedPDF API (for backward compatibility)
   const activateTextSelection = useCallback(() => {
     if (redactionApiRef.current) {
       redactionApiRef.current.toggleRedactSelection();
@@ -153,6 +168,19 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
   const activateMarquee = useCallback(() => {
     if (redactionApiRef.current) {
       redactionApiRef.current.toggleMarqueeRedact();
+    }
+  }, []);
+
+  // New unified redaction actions (v2.4.0)
+  const activateRedact = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.enableRedact();
+    }
+  }, []);
+
+  const deactivateRedact = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.endRedact();
     }
   }, []);
 
@@ -177,6 +205,8 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setBridgeReady,
     activateTextSelection,
     activateMarquee,
+    activateRedact,
+    deactivateRedact,
     commitAllPending,
   };
 

@@ -6,6 +6,7 @@ import CropFreeIcon from '@mui/icons-material/CropFree';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
+import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 interface ManualRedactionControlsProps {
   disabled?: boolean;
@@ -30,8 +31,11 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   const { signatureApiRef } = useSignature();
   
   // Check which tool is active based on activeType
-  const isSelectionActive = activeType === 'redactSelection';
-  const isMarqueeActive = activeType === 'marqueeRedact';
+  // Use RedactionMode enum values from embedPDF v2.4.0
+  const isSelectionActive = activeType === RedactionMode.RedactSelection;
+  const isMarqueeActive = activeType === RedactionMode.MarqueeRedact;
+  // New unified mode also counts as having redaction active
+  const _isUnifiedRedactActive = activeType === RedactionMode.Redact;
   
   // Track if we've auto-activated
   const hasAutoActivated = useRef(false);

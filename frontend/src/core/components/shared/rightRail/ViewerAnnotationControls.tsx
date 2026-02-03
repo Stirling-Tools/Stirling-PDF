@@ -13,6 +13,7 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 import { useRedactionMode, useRedaction } from '@app/contexts/RedactionContext';
 import { defaultParameters, RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
+import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -116,7 +117,8 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
         // Activate text selection mode after a short delay
         setTimeout(() => {
           const currentType = redactionApiRef.current?.getActiveType?.();
-          if (currentType !== 'redactSelection') {
+          // Use RedactionMode enum from embedPDF v2.4.0
+          if (currentType !== RedactionMode.RedactSelection && currentType !== RedactionMode.Redact) {
             activateTextSelection();
           }
         }, 200);
