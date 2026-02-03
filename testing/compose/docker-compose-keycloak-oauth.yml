@@ -1,0 +1,126 @@
+services:
+  keycloak-oauth:
+    container_name: stirling-keycloak-oauth
+    image: quay.io/keycloak/keycloak:24.0
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-oauth-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: host.docker.internal
+      KC_HOSTNAME_PORT: 9080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+      KC_HTTP_RELATIVE_PATH: "/"
+    ports:
+      - "9080:8080"
+    volumes:
+      - ./keycloak-realm-oauth.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      keycloak-oauth-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /realms/stirling-oauth HTTP/1.1\\nHost: localhost\\nConnection: close\\n\\n' >&3 && timeout 2 cat <&3 | head -n 1 | grep -q '200'"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    networks:
+      - stirling-oauth-test
+
+  keycloak-oauth-db:
+    container_name: stirling-keycloak-oauth-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - stirling-oauth-test
+
+  stirling-pdf-oauth:
+    container_name: stirling-pdf-oauth-test
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    build:
+      context: ../../..
+      dockerfile: docker/embedded/Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../../stirling/keycloak-oauth-test/data:/usr/share/tessdata:rw
+      - ../../../stirling/keycloak-oauth-test/config:/configs:rw
+      - ../../../stirling/keycloak-oauth-test/logs:/logs:rw
+    environment:
+      # Basic settings
+      DOCKER_ENABLE_SECURITY: "true"
+      SECURITY_ENABLELOGIN: "true"
+      SECURITY_LOGINMETHOD: "all"
+      SYSTEM_DEFAULTLOCALE: en-US
+      SYSTEM_BACKENDURL: "http://localhost:8080"
+      PREMIUM_KEY: "${PREMIUM_KEY:-00000000-0000-0000-0000-000000000000}"
+      PREMIUM_ENABLED: "true"
+      UI_APPNAME: Stirling-PDF OAuth Test
+      UI_HOMEDESCRIPTION: Keycloak OAuth2/OIDC Test Instance
+      UI_APPNAMENAVBAR: Stirling-PDF OAuth
+      SYSTEM_MAXFILESIZE: "100"
+
+      # OAuth2 Configuration (Keycloak)
+      SECURITY_OAUTH2_ENABLED: "true"
+      SECURITY_OAUTH2_AUTOCREATEUSER: "true"
+      SECURITY_OAUTH2_ISSUER: "http://host.docker.internal:9080/realms/stirling-oauth"
+      SECURITY_OAUTH2_CLIENTID: "stirling-pdf-client"
+      SECURITY_OAUTH2_CLIENTSECRET: "test-client-secret-change-in-production"
+      SECURITY_OAUTH2_USEASUSERNAME: "email"
+      SECURITY_OAUTH2_SCOPES: "openid,profile,email"
+      SECURITY_OAUTH2_PROVIDER: "keycloak"
+
+      # Disable SAML (OAuth only)
+      SECURITY_SAML2_ENABLED: "false"
+
+      # Debug Logging
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY_OAUTH2: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+
+      # LibreOffice settings
+      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "true"
+      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "1"
+
+      # Permissions
+      PUID: 1002
+      PGID: 1002
+      UMASK: "022"
+
+      # Features
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "false"
+      SHOW_SURVEY: "false"
+
+    depends_on:
+      keycloak-oauth:
+        condition: service_healthy
+    networks:
+      - stirling-oauth-test
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: on-failure:5
+
+networks:
+  stirling-oauth-test:
+    driver: bridge
