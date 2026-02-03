@@ -590,7 +590,6 @@ const PageEditor = ({
 
       {displayDocument && (
         <Box ref={gridContainerRef} p={0} pt="2rem" pb="4rem" style={{ position: 'relative' }}>
-
             {/* Split Lines Overlay */}
             <div
               style={{
@@ -682,7 +681,6 @@ const PageEditor = ({
         </Box>
       )}
 
-
       <NavigationWarningModal
         onApplyAndContinue={async () => {
           await applyChanges();
@@ -691,7 +689,6 @@ const PageEditor = ({
           await onExportAll();
         }}
       />
-
     </div>
   );
 };
