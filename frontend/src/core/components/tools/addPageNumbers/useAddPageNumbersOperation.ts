@@ -13,6 +13,7 @@ export const buildAddPageNumbersFormData = (parameters: AddPageNumbersParameters
   formData.append('startingNumber', String(parameters.startingNumber));
   formData.append('pagesToNumber', parameters.pagesToNumber);
   formData.append('customText', parameters.customText);
+  formData.append('zeroPad', String(parameters.zeroPad));
 
   return formData;
 };
