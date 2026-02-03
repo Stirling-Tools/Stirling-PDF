@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
@@ -39,10 +39,12 @@ export default function Login() {
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const [loginMethod, setLoginMethod] = useState<string>('all');
+  const [ssoAutoLogin, setSsoAutoLogin] = useState(false);
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
   const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
+  const autoLoginAttempted = useRef(false);
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -102,6 +104,7 @@ export default function Login() {
         }
 
         setEnableLogin(data.enableLogin ?? true);
+        setSsoAutoLogin(Boolean(data.ssoAutoLogin));
 
         // Set first-time setup flags
         setIsFirstTimeSetup(data.firstTimeSetup ?? false);
@@ -148,6 +151,64 @@ export default function Login() {
       setShowEmailForm(false);
     }
   }, [enabledProviders, loginMethod]);
+
+  const signInWithProvider = async (provider: OAuthProvider) => {
+    try {
+      setIsSigningIn(true);
+      setError(null);
+
+      console.log(`[Login] Signing in with provider: ${provider}`);
+
+      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
+      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
+      const { error } = await springAuth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: `${BASE_PATH}/auth/callback` }
+      });
+
+      if (error) {
+        console.error(`[Login] ${provider} error:`, error);
+        setError(t('login.failedToSignIn', { provider, message: error.message }) || `Failed to sign in with ${provider}`);
+      }
+    } catch (err) {
+      console.error(`[Login] Unexpected error:`, err);
+      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }) || 'An unexpected error occurred');
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  // Auto-login to SSO when enabled and only one SSO option exists
+  useEffect(() => {
+    if (autoLoginAttempted.current) {
+      return;
+    }
+
+    if (!ssoAutoLogin || loginDisabled || loading || session || backendProbe.status !== 'up') {
+      return;
+    }
+
+    const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
+    if (isUserPassAllowed) {
+      return;
+    }
+
+    if (enabledProviders.length !== 1) {
+      return;
+    }
+
+    autoLoginAttempted.current = true;
+    void signInWithProvider(enabledProviders[0]);
+  }, [
+    ssoAutoLogin,
+    loginDisabled,
+    loading,
+    session,
+    backendProbe.status,
+    loginMethod,
+    enabledProviders,
+    signInWithProvider,
+  ]);
 
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
@@ -242,32 +303,6 @@ export default function Login() {
       </AuthLayout>
     );
   }
-
-  const signInWithProvider = async (provider: OAuthProvider) => {
-    try {
-      setIsSigningIn(true);
-      setError(null);
-
-      console.log(`[Login] Signing in with provider: ${provider}`);
-
-      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
-      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
-      const { error } = await springAuth.signInWithOAuth({
-        provider: provider,
-        options: { redirectTo: `${BASE_PATH}/auth/callback` }
-      });
-
-      if (error) {
-        console.error(`[Login] ${provider} error:`, error);
-        setError(t('login.failedToSignIn', { provider, message: error.message }) || `Failed to sign in with ${provider}`);
-      }
-    } catch (err) {
-      console.error(`[Login] Unexpected error:`, err);
-      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }) || 'An unexpected error occurred');
-    } finally {
-      setIsSigningIn(false);
-    }
-  };
 
   const signInWithEmail = async () => {
     if (!email || !password) {

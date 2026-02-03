@@ -139,6 +139,8 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
+        data.setSsoAutoLogin(
+                applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -218,9 +220,7 @@ public class ProprietaryUIDataController {
             String backendUrl = getBackendBaseUrl();
             String fullSamlPath = backendUrl + saml2AuthenticationPath;
 
-            if (!applicationProperties.getPremium().getProFeatures().isSsoAutoLogin()) {
-                providerList.put(fullSamlPath, samlIdp + " (SAML 2)");
-            }
+            providerList.put(fullSamlPath, samlIdp + " (SAML 2)");
         }
 
         // Remove null entries
@@ -533,6 +533,7 @@ public class ProprietaryUIDataController {
     @Data
     public static class LoginData {
         private Boolean enableLogin;
+        private boolean ssoAutoLogin;
         private Map<String, String> providerList;
         private String loginMethod;
         private boolean altLogin;

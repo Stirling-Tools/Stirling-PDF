@@ -53,7 +53,7 @@ services:
     container_name: stirling-pdf-oauth-test
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
     build:
-      context: ../../..
+      context: ../..
       dockerfile: docker/embedded/Dockerfile
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
@@ -70,11 +70,12 @@ services:
       # Basic settings
       DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
-      SECURITY_LOGINMETHOD: "all"
+      SECURITY_LOGINMETHOD: "${SECURITY_LOGINMETHOD:-all}"
       SYSTEM_DEFAULTLOCALE: en-US
       SYSTEM_BACKENDURL: "http://localhost:8080"
       PREMIUM_KEY: "${PREMIUM_KEY:-00000000-0000-0000-0000-000000000000}"
       PREMIUM_ENABLED: "true"
+      PREMIUM_PROFEATURES_SSOAUTOLOGIN: "${PREMIUM_PROFEATURES_SSOAUTOLOGIN:-false}"
       UI_APPNAME: Stirling-PDF OAuth Test
       UI_HOMEDESCRIPTION: Keycloak OAuth2/OIDC Test Instance
       UI_APPNAMENAVBAR: Stirling-PDF OAuth

@@ -12,6 +12,26 @@ echo -e "${BLUE}║  Stirling PDF + Keycloak OAuth Test Environment  ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════╝${NC}"
 echo ""
 
+AUTO_LOGIN=false
+COMPOSE_UP_ARGS=(-d --build)
+for arg in "$@"; do
+    case "$arg" in
+        --auto)
+            AUTO_LOGIN=true
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--auto]"
+            echo ""
+            echo "  --auto   Enable SSO auto-login and force OAuth-only login method"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $arg${NC}"
+            exit 1
+            ;;
+    esac
+done
+
 if ! docker info > /dev/null 2>&1; then
     echo -e "${RED}✗ Docker is not running${NC}"
     exit 1
@@ -33,8 +53,16 @@ if [ -z "$PREMIUM_KEY" ]; then
     echo ""
 fi
 
+if [ "$AUTO_LOGIN" = true ]; then
+    export PREMIUM_PROFEATURES_SSOAUTOLOGIN=true
+    export SECURITY_LOGINMETHOD=oauth2
+    COMPOSE_UP_ARGS+=(--force-recreate)
+    echo -e "${GREEN}✓ SSO auto-login enabled (OAuth-only)${NC}"
+    echo ""
+fi
+
 echo -e "${YELLOW}▶ Starting OAuth test containers...${NC}"
-docker-compose -f docker-compose-keycloak-oauth.yml up -d
+docker-compose -f docker-compose-keycloak-oauth.yml up "${COMPOSE_UP_ARGS[@]}"
 
 echo ""
 echo -e "${YELLOW}▶ Waiting for Keycloak (OAuth)...${NC}"

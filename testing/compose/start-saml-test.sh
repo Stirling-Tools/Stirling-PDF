@@ -12,6 +12,26 @@ echo -e "${BLUE}║  Stirling PDF + Keycloak SAML Test Environment   ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════╝${NC}"
 echo ""
 
+AUTO_LOGIN=false
+COMPOSE_UP_ARGS=(-d --build)
+for arg in "$@"; do
+    case "$arg" in
+        --auto)
+            AUTO_LOGIN=true
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--auto]"
+            echo ""
+            echo "  --auto   Enable SSO auto-login and force SAML-only login method"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $arg${NC}"
+            exit 1
+            ;;
+    esac
+done
+
 if ! docker info > /dev/null 2>&1; then
     echo -e "${RED}✗ Docker is not running${NC}"
     exit 1
@@ -33,8 +53,16 @@ if [ -z "$PREMIUM_KEY" ]; then
     echo ""
 fi
 
+if [ "$AUTO_LOGIN" = true ]; then
+    export PREMIUM_PROFEATURES_SSOAUTOLOGIN=true
+    export SECURITY_LOGINMETHOD=saml2
+    COMPOSE_UP_ARGS+=(--force-recreate)
+    echo -e "${GREEN}✓ SSO auto-login enabled (SAML-only)${NC}"
+    echo ""
+fi
+
 echo -e "${YELLOW}▶ Starting Keycloak (SAML) containers...${NC}"
-docker-compose -f docker-compose-keycloak-saml.yml up -d keycloak-saml-db keycloak-saml
+docker-compose -f docker-compose-keycloak-saml.yml up "${COMPOSE_UP_ARGS[@]}" keycloak-saml-db keycloak-saml
 
 echo ""
 echo -e "${YELLOW}▶ Waiting for Keycloak (SAML)...${NC}"
@@ -75,7 +103,7 @@ echo -e "${GREEN}✓ Keycloak SAML certificate updated${NC}"
 
 echo ""
 echo -e "${YELLOW}▶ Starting Stirling PDF...${NC}"
-docker-compose -f docker-compose-keycloak-saml.yml up -d stirling-pdf-saml
+docker-compose -f docker-compose-keycloak-saml.yml up "${COMPOSE_UP_ARGS[@]}" stirling-pdf-saml
 
 echo ""
 echo -e "${YELLOW}▶ Waiting for Stirling PDF...${NC}"
