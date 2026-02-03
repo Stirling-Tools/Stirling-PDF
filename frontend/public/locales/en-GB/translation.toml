@@ -219,6 +219,9 @@ pagesAndStarting = "Pages & Starting Number"
 positionAndPages = "Position & Pages"
 preview = "Position Selection"
 previewDisclaimer = "Preview is approximate. Final output may vary due to PDF font metrics."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+
 
 [addPageNumbers.selectText]
 1 = "Select PDF file:"
@@ -439,7 +442,9 @@ fullscreen = "Fullscreen"
 [settings.general.updates]
 title = "Software Updates"
 description = "Check for updates and view version information"
-currentVersion = "Current Version"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Latest Version"
 checkForUpdates = "Check for Updates"
 viewDetails = "View Details"
@@ -4512,9 +4517,17 @@ description = "Configure custom file system paths for pipeline processing and ex
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Directories"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Watched Folders Directory"
 description = "Directory where pipeline monitors for incoming PDFs (leave empty for default: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Finished Folders Directory"
