@@ -492,11 +492,8 @@ const PageEditor = ({
     refs: React.MutableRefObject<Map<string, HTMLDivElement>>,
     boxSelectedIds: string[],
     clearBoxSelection: () => void,
-    getBoxSelection: () => string[],
-    activeId: string | null,
     activeDragIds: string[],
     justMoved: boolean,
-    isOver: boolean,
     dragHandleProps?: any,
     zoomLevelParam?: number
   ) => {
