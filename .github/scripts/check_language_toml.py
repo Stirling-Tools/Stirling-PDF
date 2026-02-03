@@ -59,8 +59,8 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     return duplicates
 
 
-# Maximum size for TOML files (e.g., 570 KB)
-MAX_FILE_SIZE = 570 * 1024
+# Maximum size for TOML files (e.g., 1 MB)
+MAX_FILE_SIZE = 1000 * 1024
 
 
 def parse_toml_file(file_path):

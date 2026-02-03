@@ -479,6 +479,21 @@ const DragDropGrid = <T extends DragDropItem>({
     onVisibleItemsChange(visibleItemsForCallback);
   }, [virtualRows, visibleItems, itemsPerRow, onVisibleItemsChange]);
 
+  const virtualRows = rowVirtualizer.getVirtualItems();
+
+  useEffect(() => {
+    if (!onVisibleItemsChange) return;
+
+    const visibleItemsForCallback: T[] = [];
+    virtualRows.forEach((row) => {
+      const startIndex = row.index * itemsPerRow;
+      const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
+      visibleItemsForCallback.push(...visibleItems.slice(startIndex, endIndex));
+    });
+
+    onVisibleItemsChange(visibleItemsForCallback);
+  }, [virtualRows, visibleItems, itemsPerRow, onVisibleItemsChange]);
+
   // Re-measure virtualizer when zoom or items per row changes
   // Also remeasure when items change (not just length) to handle item additions/removals
   const visibleItemsSignature = useMemo(() => visibleItems.map(item => item.id).join(','), [visibleItems]);
@@ -774,6 +789,7 @@ const DragDropGrid = <T extends DragDropItem>({
             margin: '0 auto',
           }}
         >
+          {virtualRows.map((virtualRow) => {
           {virtualRows.map((virtualRow) => {
             const startIndex = virtualRow.index * itemsPerRow;
             const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
