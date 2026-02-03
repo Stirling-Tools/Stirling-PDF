@@ -4,7 +4,6 @@ import { usePageEditor } from '@app/contexts/PageEditorContext';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 import { FileId } from '@app/types/file';
 import { FileAnalyzer } from '@app/services/fileAnalyzer';
-import { FileAnalyzer } from '@app/services/fileAnalyzer';
 
 export interface PageDocumentHook {
   document: PDFDocument | null;
@@ -18,7 +17,6 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
-  const { fileOrder, currentPages, persistedDocument, persistedDocumentSignature } = usePageEditor();
   const { fileOrder, currentPages, persistedDocument, persistedDocumentSignature } = usePageEditor();
 
   // Use PageEditorContext's fileOrder instead of FileContext's global order

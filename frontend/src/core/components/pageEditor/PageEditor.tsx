@@ -4,7 +4,6 @@ import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { useNavigationGuard, useNavigationState } from "@app/contexts/NavigationContext";
 import { usePageEditor } from "@app/contexts/PageEditorContext";
 import { PageEditorFunctions, PDFPage } from "@app/types/pageEditor";
-import { PageEditorFunctions, PDFPage } from "@app/types/pageEditor";
 // Thumbnail generation is now handled by individual PageThumbnail components
 import '@app/components/pageEditor/PageEditor.module.css';
 import PageThumbnail from '@app/components/pageEditor/PageThumbnail';
@@ -25,7 +24,6 @@ import { usePageSelectionManager } from "@app/components/pageEditor/hooks/usePag
 import { usePageEditorCommands } from "@app/components/pageEditor/hooks/useEditorCommands";
 import { usePageEditorExport } from "@app/components/pageEditor/hooks/usePageEditorExport";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
-import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -44,27 +42,6 @@ const PageEditor = ({
   const navigationState = useNavigationState();
 
   // Get PageEditor coordination functions
-  const {
-    updateFileOrderFromPages,
-    fileOrder,
-    reorderedPages,
-    clearReorderedPages,
-    updateCurrentPages,
-    savePersistedDocument,
-  } = usePageEditor();
-
-  const [visiblePageIds, setVisiblePageIds] = useState<string[]>([]);
-  const thumbnailRequestsRef = useRef<Set<string>>(new Set());
-  const { requestThumbnail, getThumbnailFromCache } = useThumbnailGeneration();
-  const handleVisibleItemsChange = useCallback((items: PDFPage[]) => {
-    setVisiblePageIds(prev => {
-      const ids = items.map(item => item.id);
-      if (prev.length === ids.length && prev.every((id, index) => id === ids[index])) {
-        return prev;
-      }
-      return ids;
-    });
-  }, []);
   const {
     updateFileOrderFromPages,
     fileOrder,
@@ -581,17 +558,10 @@ const PageEditor = ({
 
   return (
     <div
-    <div
       ref={containerRef}
       data-scrolling-container="true"
       onMouseEnter={() => setIsContainerHovered(true)}
       onMouseLeave={() => setIsContainerHovered(false)}
-      style={{
-        height: '100%',
-        overflow: 'auto',
-        position: 'relative',
-        width: '100%',
-      }}
       style={{
         height: '100%',
         overflow: 'auto',
@@ -620,8 +590,6 @@ const PageEditor = ({
 
       {displayDocument && (
         <Box ref={gridContainerRef} p={0} pt="2rem" pb="4rem" style={{ position: 'relative' }}>
-        <Box ref={gridContainerRef} p={0} pt="2rem" pb="4rem" style={{ position: 'relative' }}>
-
             {/* Split Lines Overlay */}
             <div
               style={{
@@ -713,7 +681,6 @@ const PageEditor = ({
         </Box>
       )}
 
-
       <NavigationWarningModal
         onApplyAndContinue={async () => {
           await applyChanges();
@@ -722,8 +689,6 @@ const PageEditor = ({
           await onExportAll();
         }}
       />
-
-    </div>
     </div>
   );
 };

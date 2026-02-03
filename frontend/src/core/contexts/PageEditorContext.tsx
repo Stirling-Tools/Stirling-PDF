@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 import { FileId } from '@app/types/file';
 import { useFileActions, useFileState } from '@app/contexts/FileContext';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 import { MAX_PAGE_EDITOR_FILES } from '@app/components/pageEditor/fileColors';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 
@@ -131,10 +130,6 @@ interface PageEditorContextValue {
 
   // Update file order based on page positions (when pages are manually reordered)
   updateFileOrderFromPages: (pages: PDFPage[]) => void;
-  persistedDocument: PDFDocument | null;
-  persistedDocumentSignature: string | null;
-  savePersistedDocument: (document: PDFDocument, signature: string) => void;
-  clearPersistedDocument: () => void;
   persistedDocument: PDFDocument | null;
   persistedDocumentSignature: string | null;
   savePersistedDocument: (document: PDFDocument, signature: string) => void;
@@ -320,7 +315,6 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       });
     }, 100);
     }, [state.files.ids, state.files.byId, fileActions]);
-    }, [state.files.ids, state.files.byId, fileActions]);
 
   const updateCurrentPages = useCallback((pages: PDFPage[] | null) => {
     setCurrentPages(pages);
@@ -446,10 +440,6 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     deselectAll,
     reorderFiles,
     updateFileOrderFromPages,
-    persistedDocument,
-    persistedDocumentSignature,
-    savePersistedDocument,
-    clearPersistedDocument,
     persistedDocument,
     persistedDocumentSignature,
     savePersistedDocument,

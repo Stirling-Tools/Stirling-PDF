@@ -23,13 +23,7 @@ const activeRequests = new Map<string, Promise<string | null>>();
 // Cache ArrayBuffers to avoid reading the same file multiple times
 const fileArrayBufferCache = new Map<File, ArrayBuffer>();
 
-// Cache ArrayBuffers to avoid reading the same file multiple times
-const fileArrayBufferCache = new Map<File, ArrayBuffer>();
-
 // Batch processing configuration
-const BATCH_SIZE = 10; // Process thumbnails in batches of 10 for faster initial load
-const BATCH_DELAY = 50; // Wait 50ms to collect requests before processing
-const PRIORITY_BATCH_DELAY = 10; // Very fast processing for the first batch (visible pages)
 const BATCH_SIZE = 10; // Process thumbnails in batches of 10 for faster initial load
 const BATCH_DELAY = 50; // Wait 50ms to collect requests before processing
 const PRIORITY_BATCH_DELAY = 10; // Very fast processing for the first batch (visible pages)
