@@ -85,10 +85,12 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(result);
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        List<Map<String, Object>> result = response.getBody();
         assertEquals(1, result.size());
 
         Map<String, Object> bookmark = result.get(0);
@@ -107,10 +109,12 @@ class EditTableOfContentsControllerTest {
         when(mockCatalog.getDocumentOutline()).thenReturn(null);
 
         // When
-        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(result);
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        List<Map<String, Object>> result = response.getBody();
         assertTrue(result.isEmpty());
         verify(mockDocument).close();
     }
@@ -141,10 +145,12 @@ class EditTableOfContentsControllerTest {
         when(childItem.getNextSibling()).thenReturn(null);
 
         // When
-        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(result);
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        List<Map<String, Object>> result = response.getBody();
         assertEquals(1, result.size());
 
         Map<String, Object> parentBookmark = result.get(0);
@@ -177,10 +183,12 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        List<Map<String, Object>> result = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
-        assertNotNull(result);
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        List<Map<String, Object>> result = response.getBody();
         assertEquals(1, result.size());
 
         Map<String, Object> bookmark = result.get(0);

@@ -11,7 +11,7 @@ export interface PageEditorState {
   isAnimating: boolean;
 
   // Split state
-  splitPositions: Set<number>;
+  splitPositions: Set<string>;
 
   // Export state
   exportLoading: boolean;
@@ -21,7 +21,7 @@ export interface PageEditorState {
   setSelectedPageIds: (pages: string[]) => void;
   setMovingPage: (pageNumber: number | null) => void;
   setIsAnimating: (animating: boolean) => void;
-  setSplitPositions: React.Dispatch<React.SetStateAction<Set<number>>>;
+  setSplitPositions: React.Dispatch<React.SetStateAction<Set<string>>>;
   setExportLoading: (loading: boolean) => void;
   
   // Helper functions
@@ -44,19 +44,20 @@ export function usePageEditorState(): PageEditorState {
   const [isAnimating, setIsAnimating] = useState(false);
   
   // Split state - position-based split tracking (replaces page-based splitAfter)
-  const [splitPositions, setSplitPositions] = useState<Set<number>>(new Set());
+  const [splitPositions, setSplitPositions] = useState<Set<string>>(new Set());
   
   // Export state
   const [exportLoading, setExportLoading] = useState(false);
   
   // Helper functions
   const togglePage = useCallback((pageId: string) => {
-    setSelectedPageIds(prev => 
-      prev.includes(pageId)
+    setSelectedPageIds(prev => {
+      const newSelection = prev.includes(pageId)
         ? prev.filter(id => id !== pageId)
-        : [...prev, pageId]
-    );
-  }, []);
+        : [...prev, pageId];
+      return newSelection;
+    });
+  }, []); // Empty deps - uses updater function so always has latest state
 
   const toggleSelectAll = useCallback((allPageIds: string[]) => {
     if (!allPageIds.length) return;
