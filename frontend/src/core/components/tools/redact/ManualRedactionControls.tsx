@@ -18,7 +18,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
 
   // Use our RedactionContext which bridges to EmbedPDF
   const { redactionsApplied, setActiveType } = useRedaction();
-  const { pendingCount, activeType, isRedacting, isBridgeReady } = useRedactionMode();
+  const { pendingCount, isRedacting, isBridgeReady } = useRedactionMode();
   
   // Get viewer context to manage annotation mode and save changes
   const { setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
@@ -109,9 +109,6 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // Check if there are unsaved changes to save (pending redactions OR applied redactions)
   // Save Changes button will apply pending redactions and then save everything
   const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
-  
-  // Check if API is available - use isBridgeReady state instead of ref (refs don't trigger re-renders)
-  const isApiReady = isBridgeReady;
 
   return (
     <>
