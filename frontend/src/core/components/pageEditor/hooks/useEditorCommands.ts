@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import {
   BulkRotateCommand,
@@ -51,6 +51,12 @@ export const usePageEditorCommands = ({
   setSelectionMode,
   clearUndoHistory,
 }: UsePageEditorCommandsParams) => {
+  const splitPositionsRef = useRef(splitPositions);
+
+  useEffect(() => {
+    splitPositionsRef.current = splitPositions;
+  }, [splitPositions]);
+
   const closePdf = useCallback(() => {
     actions.clearAllFiles();
     clearUndoHistory();
@@ -123,13 +129,13 @@ export const usePageEditorCommands = ({
         const splitCommand = new SplitCommand(
           pageId,
           pageNumber,
-          () => splitPositions,
+          () => splitPositionsRef.current,
           setSplitPositions
         );
         executeCommandWithTracking(splitCommand);
       },
     }),
-    [splitPositions, executeCommandWithTracking, setSplitPositions]
+    [executeCommandWithTracking, setSplitPositions]
   );
 
   const executeCommand = useCallback((command: any) => {
