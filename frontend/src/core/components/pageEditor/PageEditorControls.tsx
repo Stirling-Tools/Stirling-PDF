@@ -54,7 +54,6 @@ const PageEditorControls = ({
   selectedPageIds,
   displayDocument,
   splitPositions,
-  totalPages
 }: PageEditorControlsProps) => {
   // Calculate split tooltip text using smart toggle logic
   const getSplitTooltip = () => {
