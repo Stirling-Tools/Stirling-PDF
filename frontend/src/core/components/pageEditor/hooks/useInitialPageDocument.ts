@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
 import { PDFDocument } from '@app/types/pageEditor';
 
@@ -9,13 +9,29 @@ import { PDFDocument } from '@app/types/pageEditor';
 export function useInitialPageDocument(): PDFDocument | null {
   const { document: liveDocument } = usePageDocument();
   const [initialDocument, setInitialDocument] = useState<PDFDocument | null>(null);
+  const lastDocumentIdRef = useRef<string | null>(null);
+  const liveDocumentId = liveDocument?.id ?? null;
 
   useEffect(() => {
-    // Only set once when we get the first non-null document
-    if (liveDocument && !initialDocument) {
-      console.log('📄 useInitialPageDocument: Captured initial document with', liveDocument.pages.length, 'pages');
-      setInitialDocument(liveDocument);
+    if (!liveDocumentId) {
+      lastDocumentIdRef.current = null;
+      setInitialDocument(null);
+      return;
     }
+
+    if (liveDocumentId !== lastDocumentIdRef.current) {
+      lastDocumentIdRef.current = liveDocumentId;
+      setInitialDocument(null);
+    }
+  }, [liveDocumentId]);
+
+  useEffect(() => {
+    if (!liveDocument || initialDocument) {
+      return;
+    }
+
+    console.log('📄 useInitialPageDocument: Captured initial document with', liveDocument.pages.length, 'pages');
+    setInitialDocument(liveDocument);
   }, [liveDocument, initialDocument]);
 
   return initialDocument;
