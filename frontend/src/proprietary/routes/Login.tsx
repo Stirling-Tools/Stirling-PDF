@@ -48,6 +48,7 @@ export default function Login() {
   const autoLoginAttempted = useRef(false);
   const autoLoginErrorRecorded = useRef(false);
   const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
+  const isSsoOnlyMode = loginMethod !== 'all' && loginMethod !== 'normal';
   const isSingleSsoOnly = !isUserPassAllowed && enabledProviders.length === 1;
 
   const AUTO_LOGIN_ATTEMPTS_KEY = 'stirling_sso_auto_login_attempts';
@@ -481,7 +482,9 @@ export default function Login() {
         isSubmitting={isSigningIn}
         layout="vertical"
         enabledProviders={enabledProviders}
-        ctaPrefix={isSingleSsoOnly ? (t('login.loginWith', 'Login with')) : undefined}
+        ctaPrefix={isSsoOnlyMode ? t('login.signInWith', 'Sign in with') : undefined}
+        styleVariant="light"
+        useNewStyle={isSsoOnlyMode}
       />
 
       {/* Divider between OAuth and Email - only show if SSO is available and username/password is allowed */}

@@ -13,11 +13,15 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 AUTO_LOGIN=false
+FORCE_ALL_LOGIN=false
 COMPOSE_UP_ARGS=(-d --build)
 for arg in "$@"; do
     case "$arg" in
         --auto)
             AUTO_LOGIN=true
+            ;;
+        --all)
+            FORCE_ALL_LOGIN=true
             ;;
         --nobuild)
             COMPOSE_UP_ARGS=(-d)
@@ -26,6 +30,7 @@ for arg in "$@"; do
             echo "Usage: $0 [--auto] [--nobuild]"
             echo ""
             echo "  --auto     Enable SSO auto-login and force OAuth-only login method"
+            echo "  --all      Force login method to allow all providers (overrides --auto)"
             echo "  --nobuild  Skip building images (use existing images)"
             exit 0
             ;;
@@ -74,7 +79,12 @@ if [ -z "$PREMIUM_KEY" ]; then
     echo ""
 fi
 
-if [ "$AUTO_LOGIN" = true ]; then
+if [ "$FORCE_ALL_LOGIN" = true ]; then
+    AUTO_LOGIN=false
+    export SECURITY_LOGINMETHOD=all
+    echo -e "${GREEN}✓ Login method forced to all providers${NC}"
+    echo ""
+elif [ "$AUTO_LOGIN" = true ]; then
     export PREMIUM_PROFEATURES_SSOAUTOLOGIN=true
     export SECURITY_LOGINMETHOD=oauth2
     COMPOSE_UP_ARGS+=(--force-recreate)
