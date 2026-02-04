@@ -6556,6 +6556,7 @@ link = "or connect to a self-hosted account"
 title = "Connect to Server"
 subtitle = "Enter your self-hosted server URL"
 testing = "Testing connection..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"
