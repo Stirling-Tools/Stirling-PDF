@@ -33,10 +33,11 @@ interface DragDropItem {
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
   onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, activeDragIds: string[], justMoved: boolean, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, activeDragIds: string[], justMoved: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   zoomLevel?: number;
   selectedFileIds?: string[];
+  selectedPageIds?: string[];
   onVisibleItemsChange?: (items: T[]) => void;
 }
 
@@ -189,17 +190,16 @@ interface DraggableItemProps<T extends DragDropItem> {
   itemRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   boxSelectedPageIds: string[];
   clearBoxSelection: () => void;
-  getBoxSelection: () => string[];
-  activeId: string | null;
   activeDragIds: string[];
   justMoved: boolean;
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   onUpdateDropTarget: (itemId: string | null) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, getBoxSelection: () => string[], activeId: string | null, activeDragIds: string[], justMoved: boolean, isOver: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
+  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, activeDragIds: string[], justMoved: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
   zoomLevel: number;
+  selectedPageIds?: string[];
 }
 
-const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
+const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
   const isPlaceholder = Boolean(item.isPlaceholder);
   const pageNumber = (item as any).pageNumber ?? index + 1;
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
@@ -248,7 +248,7 @@ const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, box
 
   return (
     <>
-      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, isOver, { ref: setNodeRef, ...attributes, ...listeners }, zoomLevel)}
+      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, activeDragIds, justMoved, { ref: setNodeRef, ...attributes, ...listeners }, zoomLevel)}
     </>
   );
 };
@@ -266,11 +266,22 @@ const DraggableItem = React.memo(DraggableItemInner, (prevProps, nextProps) => {
     return false; // Props changed, re-render needed
   }
 
+  // Check if page selection changed (for checkbox selection, not box selection)
+  const prevSelectedSet = prevProps.selectedPageIds ? new Set(prevProps.selectedPageIds) : null;
+  const nextSelectedSet = nextProps.selectedPageIds ? new Set(nextProps.selectedPageIds) : null;
+
+  if (prevSelectedSet && nextSelectedSet) {
+    const prevSelected = prevSelectedSet.has(prevProps.item.id);
+    const nextSelected = nextSelectedSet.has(nextProps.item.id);
+    if (prevSelected !== nextSelected) {
+      return false; // Selection state changed for this item, re-render needed
+    }
+  }
+
   // Item reference is same, check other props
   return (
     prevProps.item.id === nextProps.item.id &&
     prevProps.index === nextProps.index &&
-    prevProps.activeId === nextProps.activeId &&
     prevProps.justMoved === nextProps.justMoved &&
     prevProps.zoomLevel === nextProps.zoomLevel &&
     prevProps.activeDragIds.length === nextProps.activeDragIds.length &&
@@ -285,6 +296,7 @@ const DragDropGrid = <T extends DragDropItem>({
   getThumbnailData,
   zoomLevel = 1.0,
   selectedFileIds,
+  selectedPageIds,
   onVisibleItemsChange,
 }: DragDropGridProps<T>) => {
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -293,6 +305,10 @@ const DragDropGrid = <T extends DragDropItem>({
   const getScrollElement = useCallback(() => {
     return containerRef.current?.closest('[data-scrolling-container]') as HTMLElement | null;
   }, []);
+
+  // Create stable signature for items to ensure useMemo detects changes
+  const itemsSignature = useMemo(() => items.map(item => item.id).join(','), [items]);
+  const selectedFileIdsSignature = useMemo(() => selectedFileIds?.join(',') || '', [selectedFileIds]);
 
   const { filteredItems: visibleItems, filteredToOriginalIndex } = useMemo(() => {
     const filtered: T[] = [];
@@ -318,7 +334,7 @@ const DragDropGrid = <T extends DragDropItem>({
     });
 
     return { filteredItems: filtered, filteredToOriginalIndex: indexMap };
-  }, [items, selectedFileIds]);
+  }, [items, selectedFileIds, itemsSignature, selectedFileIdsSignature]);
 
   useEffect(() => {
     const visibleIdSet = new Set(visibleItems.map(item => item.id));
@@ -464,9 +480,11 @@ const DragDropGrid = <T extends DragDropItem>({
   }, [virtualRows, visibleItems, itemsPerRow, onVisibleItemsChange]);
 
   // Re-measure virtualizer when zoom or items per row changes
+  // Also remeasure when items change (not just length) to handle item additions/removals
+  const visibleItemsSignature = useMemo(() => visibleItems.map(item => item.id).join(','), [visibleItems]);
   useEffect(() => {
     rowVirtualizer.measure();
-  }, [zoomLevel, itemsPerRow, visibleItems.length]);
+  }, [zoomLevel, itemsPerRow, visibleItems.length, visibleItemsSignature, rowVirtualizer]);
 
   // Cleanup highlight timeout on unmount
   useEffect(() => {
@@ -564,11 +582,6 @@ const DragDropGrid = <T extends DragDropItem>({
   const clearBoxSelection = useCallback(() => {
     setBoxSelectedPageIds([]);
   }, []);
-
-  // Function to get current box selection (exposed to child components)
-  const getBoxSelection = useCallback(() => {
-    return boxSelectedPageIds;
-  }, [boxSelectedPageIds]);
 
   // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -791,14 +804,13 @@ const DragDropGrid = <T extends DragDropItem>({
                         itemRefs={itemRefs}
                         boxSelectedPageIds={boxSelectedPageIds}
                         clearBoxSelection={clearBoxSelection}
-                        getBoxSelection={getBoxSelection}
-                        activeId={activeId}
                         activeDragIds={activeDragIds}
                         justMoved={justMovedIds.includes(item.id)}
                         getThumbnailData={getThumbnailData}
                         onUpdateDropTarget={setHoveredItemId}
                         renderItem={renderItem}
                         zoomLevel={zoomLevel}
+                        selectedPageIds={selectedPageIds}
                       />
                     );
                   })}

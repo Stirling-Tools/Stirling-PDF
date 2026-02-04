@@ -76,6 +76,6 @@ export interface PageEditorFunctions {
   selectionMode: boolean;
   selectedPageIds: string[];
   displayDocument?: PDFDocument;
-  splitPositions: Set<number>;
+  splitPositions: Set<string>;
   totalPages: number;
 }
