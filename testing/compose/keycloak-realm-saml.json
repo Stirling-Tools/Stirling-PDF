@@ -16,8 +16,8 @@
   "bruteForceProtected": false,
   "users": [
     {
-      "username": "keycloak",
-      "email": "keycloak@example.com",
+      "username": "samluser",
+      "email": "samluser@example.com",
       "emailVerified": true,
       "firstName": "SAML",
       "lastName": "TestUser",
@@ -25,7 +25,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "keycloak",
+          "value": "samlpassword",
           "temporary": false
         }
       ],
@@ -36,8 +36,8 @@
       }
     },
     {
-      "username": "keycloakadmin",
-      "email": "keycloakadmin@example.com",
+      "username": "samladmin",
+      "email": "samladmin@example.com",
       "emailVerified": true,
       "firstName": "SAML",
       "lastName": "Admin",
@@ -45,7 +45,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "keycloak",
+          "value": "samladminpass",
           "temporary": false
         }
       ],
