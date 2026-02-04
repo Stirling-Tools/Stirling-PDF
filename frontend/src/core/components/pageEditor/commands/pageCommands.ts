@@ -748,43 +748,49 @@ export class InsertFilesCommand extends DOMCommand {
         console.log('Pages:', pages.length);
         console.log('ArrayBuffer size:', arrayBuffer?.byteLength || 'undefined');
 
-        if (arrayBuffer && arrayBuffer.byteLength > 0) {
-          // Extract page numbers for all pages from this file
-          const pageNumbers = pages.map(page => {
-            const pageNumMatch = page.id.match(/-page-(\d+)$/);
-            return pageNumMatch ? parseInt(pageNumMatch[1]) : 1;
-          });
+        try {
+          if (arrayBuffer && arrayBuffer.byteLength > 0) {
+            // Extract page numbers for all pages from this file
+            const pageNumbers = pages.map(page => {
+              const pageNumMatch = page.id.match(/-page-(\d+)$/);
+              return pageNumMatch ? parseInt(pageNumMatch[1]) : 1;
+            });
 
-          console.log('Generating thumbnails for page numbers:', pageNumbers);
+            console.log('Generating thumbnails for page numbers:', pageNumbers);
 
-          // Generate thumbnails for all pages from this file at once
-          const results = await thumbnailGenerationService.generateThumbnails(
-            fileId,
-            arrayBuffer,
-            pageNumbers,
-            { scale: 0.2, quality: 0.8 }
-          );
+            // Generate thumbnails for all pages from this file at once
+            const results = await thumbnailGenerationService.generateThumbnails(
+              fileId,
+              arrayBuffer,
+              pageNumbers,
+              { scale: 0.2, quality: 0.8 }
+            );
 
-          console.log('Thumbnail generation results:', results.length, 'thumbnails generated');
+            console.log('Thumbnail generation results:', results.length, 'thumbnails generated');
 
-          // Update pages with generated thumbnails
-          for (let i = 0; i < results.length && i < pages.length; i++) {
-            const result = results[i];
-            const page = pages[i];
+            // Update pages with generated thumbnails
+            for (let i = 0; i < results.length && i < pages.length; i++) {
+              const result = results[i];
+              const page = pages[i];
 
-            if (result.success) {
-              const pageIndex = updatedDocument.pages.findIndex(p => p.id === page.id);
-              if (pageIndex >= 0) {
-                updatedDocument.pages[pageIndex].thumbnail = result.thumbnail;
-                console.log('Updated thumbnail for page:', page.id);
+              if (result.success) {
+                const pageIndex = updatedDocument.pages.findIndex(p => p.id === page.id);
+                if (pageIndex >= 0) {
+                  updatedDocument.pages[pageIndex].thumbnail = result.thumbnail;
+                  console.log('Updated thumbnail for page:', page.id);
+                }
               }
             }
-          }
 
-          // Trigger re-render by updating the document
-          this.setDocument({ ...updatedDocument });
-        } else {
-          console.error('No valid ArrayBuffer found for file ID:', fileId);
+            // Trigger re-render by updating the document
+            this.setDocument({ ...updatedDocument });
+          } else {
+            console.error('No valid ArrayBuffer found for file ID:', fileId);
+          }
+        } catch (error) {
+          console.error('Failed to generate thumbnails for file:', fileId, error);
+        } finally {
+          this.fileDataMap.delete(fileId);
         }
       }
     } catch (error) {

@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useFileState } from '@app/contexts/FileContext';
 import { usePageEditor } from '@app/contexts/PageEditorContext';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 import { FileId } from '@app/types/file';
+import { FileAnalyzer } from '@app/services/fileAnalyzer';
 
 export interface PageDocumentHook {
   document: PDFDocument | null;
@@ -16,7 +17,7 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
-  const { fileOrder, currentPages } = usePageEditor();
+  const { fileOrder, currentPages, persistedDocument, persistedDocumentSignature } = usePageEditor();
 
   // Use PageEditorContext's fileOrder instead of FileContext's global order
   // This ensures the page editor respects its own workspace ordering
@@ -58,6 +59,63 @@ export function usePageDocument(): PageDocumentHook {
   const processedFilePages = primaryStirlingFileStub?.processedFile?.pages;
   const processedFileTotalPages = primaryStirlingFileStub?.processedFile?.totalPages;
 
+  const [placeholderDocument, setPlaceholderDocument] = useState<PDFDocument | null>(null);
+
+  useEffect(() => {
+    if (!primaryFileId) {
+      setPlaceholderDocument(null);
+      return;
+    }
+
+    if (primaryStirlingFileStub?.processedFile) {
+      setPlaceholderDocument(null);
+      return;
+    }
+
+    const file = selectors.getFile(primaryFileId);
+    if (!file) {
+      setPlaceholderDocument(null);
+      return;
+    }
+
+    let canceled = false;
+
+    const loadPlaceholder = async () => {
+      try {
+        const analysis = await FileAnalyzer.quickPDFAnalysis(file);
+        if (canceled) return;
+        const totalPages = Math.max(1, analysis.pageCount || 1);
+        const pages: PDFPage[] = Array.from({ length: totalPages }, (_, index) => ({
+          id: `placeholder-${primaryFileId}-page-${index + 1}`,
+          pageNumber: index + 1,
+          thumbnail: null,
+          rotation: 0,
+          selected: false,
+          originalFileId: primaryFileId,
+          originalPageNumber: index + 1,
+        }));
+
+        setPlaceholderDocument({
+          id: `placeholder-${primaryFileId}`,
+          name: selectors.getStirlingFileStub(primaryFileId)?.name ?? file.name,
+          file,
+          pages,
+          totalPages,
+        });
+      } catch {
+        if (!canceled) {
+          setPlaceholderDocument(null);
+        }
+      }
+    };
+
+    loadPlaceholder();
+
+    return () => {
+      canceled = true;
+    };
+  }, [primaryFileId, primaryStirlingFileStub?.processedFile, selectors]);
+
   // Compute merged document with stable signature (prevents infinite loops)
   const currentPagesSignature = useMemo(() => {
     return currentPages ? currentPages.map(page => page.id).join(',') : '';
@@ -66,7 +124,20 @@ export function usePageDocument(): PageDocumentHook {
   const mergedPdfDocument = useMemo((): PDFDocument | null => {
     if (activeFileIds.length === 0) return null;
 
-    const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
+  if (
+    persistedDocument &&
+    persistedDocumentSignature &&
+      persistedDocumentSignature === currentPagesSignature &&
+      currentPagesSignature.length > 0
+    ) {
+    return persistedDocument;
+  }
+
+  if (!primaryStirlingFileStub?.processedFile && placeholderDocument) {
+    return placeholderDocument;
+  }
+
+  const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
 
     // If we have file IDs but no file record, something is wrong - return null to show loading
     if (!primaryStirlingFileStub) {
@@ -245,7 +316,24 @@ export function usePageDocument(): PageDocumentHook {
     };
 
     return mergedDoc;
-  }, [activeFileIds, selectedActiveFileIds, primaryFileId, primaryStirlingFileStub, processedFilePages, processedFileTotalPages, selectors, activeFilesSignature, selectedFileIdsKey, state.ui.selectedFileIds, allFileIds, currentPagesSignature, currentPages]);
+  }, [
+    activeFileIds,
+    selectedActiveFileIds,
+    primaryFileId,
+    primaryStirlingFileStub,
+    processedFilePages,
+    processedFileTotalPages,
+    selectors,
+    activeFilesSignature,
+    selectedFileIdsKey,
+    state.ui.selectedFileIds,
+    allFileIds,
+    currentPagesSignature,
+    currentPages,
+    persistedDocument,
+    persistedDocumentSignature,
+    placeholderDocument,
+  ]);
 
   // Large document detection for smart loading
   const isVeryLargeDocument = useMemo(() => {
