@@ -22,8 +22,8 @@ interface UsePageEditorCommandsParams {
   displayDocument: PDFDocument | null;
   getEditedDocument: () => PDFDocument | null;
   setEditedDocument: React.Dispatch<React.SetStateAction<PDFDocument | null>>;
-  splitPositions: Set<number>;
-  setSplitPositions: React.Dispatch<React.SetStateAction<Set<number>>>;
+  splitPositions: Set<string>;
+  setSplitPositions: React.Dispatch<React.SetStateAction<Set<string>>>;
   selectedPageIds: string[];
   setSelectedPageIds: (ids: string[]) => void;
   getPageNumbersFromIds: (pageIds: string[]) => number[];
@@ -118,10 +118,11 @@ export const usePageEditorCommands = ({
   );
 
   const createSplitCommand = useCallback(
-    (position: number) => ({
+    (pageId: string, pageNumber: number) => ({
       execute: () => {
         const splitCommand = new SplitCommand(
-          position,
+          pageId,
+          pageNumber,
           () => splitPositions,
           setSplitPositions
         );
@@ -208,39 +209,34 @@ export const usePageEditorCommands = ({
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
 
-    const selectedPageNumbers = getPageNumbersFromIds(selectedPageIds);
-    const selectedPositions: number[] = [];
-    selectedPageNumbers.forEach((pageNum) => {
-      const pageIndex = displayDocument.pages.findIndex(
-        (p) => p.pageNumber === pageNum
-      );
-      if (pageIndex !== -1 && pageIndex < displayDocument.pages.length - 1) {
-        selectedPositions.push(pageIndex);
-      }
-    });
+    const selectedSplitPageIds = displayDocument.pages
+      .filter((page, index) =>
+        selectedPageIds.includes(page.id) && index < displayDocument.pages.length - 1
+      )
+      .map((page) => page.id);
 
-    if (selectedPositions.length === 0) return;
+    if (selectedSplitPageIds.length === 0) return;
 
-    const existingSplitsCount = selectedPositions.filter((pos) =>
-      splitPositions.has(pos)
+    const existingSplitsCount = selectedSplitPageIds.filter((id) =>
+      splitPositions.has(id)
     ).length;
-    const noSplitsCount = selectedPositions.length - existingSplitsCount;
+    const noSplitsCount = selectedSplitPageIds.length - existingSplitsCount;
     const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
 
     const newSplitPositions = new Set(splitPositions);
 
     if (shouldRemoveSplits) {
-      selectedPositions.forEach((pos) => newSplitPositions.delete(pos));
+      selectedSplitPageIds.forEach((id) => newSplitPositions.delete(id));
     } else {
-      selectedPositions.forEach((pos) => newSplitPositions.add(pos));
+      selectedSplitPageIds.forEach((id) => newSplitPositions.add(id));
     }
 
     const smartSplitCommand = {
       execute: () => setSplitPositions(newSplitPositions),
       undo: () => setSplitPositions(splitPositions),
       description: shouldRemoveSplits
-        ? `Remove ${selectedPositions.length} split(s)`
-        : `Add ${selectedPositions.length - existingSplitsCount} split(s)`,
+        ? `Remove ${selectedSplitPageIds.length} split(s)`
+        : `Add ${selectedSplitPageIds.length - existingSplitsCount} split(s)`,
     };
 
     executeCommandWithTracking(smartSplitCommand);

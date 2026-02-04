@@ -41,10 +41,10 @@ interface PageThumbnailProps {
   onDeletePage: (pageNumber: number) => void;
   createRotateCommand: (pageIds: string[], rotation: number) => { execute: () => void };
   createDeleteCommand: (pageIds: string[]) => { execute: () => void };
-  createSplitCommand: (position: number) => { execute: () => void };
+  createSplitCommand: (pageId: string, pageNumber: number) => { execute: () => void };
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
-  splitPositions: Set<number>;
+  splitPositions: Set<string>;
   onInsertFiles?: (files: File[] | StirlingFileStub[], insertAfterPage: number, isFromStorage?: boolean) => void;
   zoomLevel?: number;
 }
@@ -156,10 +156,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     e.stopPropagation();
 
     // Create a command to toggle split at this position
-    const command = createSplitCommand(pageIndex);
+    const command = createSplitCommand(page.id, page.pageNumber);
     onExecuteCommand(command);
 
-    const hasSplit = splitPositions.has(pageIndex);
+    const hasSplit = splitPositions.has(page.id);
     const action = hasSplit ? 'removed' : 'added';
     onSetStatus(`Split marker ${action} after position ${pageIndex + 1}`);
   }, [pageIndex, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);

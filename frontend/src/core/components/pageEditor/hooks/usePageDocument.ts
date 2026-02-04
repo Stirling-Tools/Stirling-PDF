@@ -247,13 +247,15 @@ export function usePageDocument(): PageDocumentHook {
       if (processedFile?.pages && processedFile.pages.length > 0) {
         // Use fully processed pages with thumbnails
         filePages = processedFile.pages.map((page, pageIndex) => ({
-          id: `${fileId}-${page.pageNumber}`,
+          id: `${fileId}-${pageIndex + 1}`,
           pageNumber: startPageNumber + pageIndex,
           thumbnail: page.thumbnail || null,
           rotation: page.rotation || 0,
           selected: false,
           splitAfter: page.splitAfter || false,
-          originalPageNumber: page.originalPageNumber || page.pageNumber || pageIndex + 1,
+          // Always use pageIndex + 1 for originalPageNumber to ensure correct numbering
+          // This prevents stale or incorrect page numbers from being cached
+          originalPageNumber: pageIndex + 1,
           originalFileId: fileId,
           isPlaceholder: false,
         }));
