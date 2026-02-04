@@ -3402,7 +3402,6 @@ bullet3 = "Karartmalar uygulandıktan sonra geri alınamaz"
 [redact.manual]
 title = "Karartma Araçları"
 instructions = "Karartılacak içeriği işaretlemek için PDF üzerinde metin seçin veya alan çizin."
-startRedacting = "Start Redacting"
 markText = "Metni İşaretle"
 markArea = "Alan İşaretle"
 pendingLabel = "Bekleyen:"

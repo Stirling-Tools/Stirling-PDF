@@ -3402,7 +3402,6 @@ bullet3 = "Ní féidir eagarthóireachtaí a chealú tar éis iad a chur i bhfei
 [redact.manual]
 title = "Uirlisí Eagarthóireachta"
 instructions = "Roghnaigh téacs nó tarraing limistéir ar an PDF chun ábhar a mharcáil le haghaidh eagarthóireachta."
-startRedacting = "Start Redacting"
 markText = "Marcáil Téacs"
 markArea = "Marcáil Limistéar"
 pendingLabel = "Ar feitheamh:"

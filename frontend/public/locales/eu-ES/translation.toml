@@ -3402,7 +3402,6 @@ bullet3 = "Zentsurak ezin dira desegin aplikatu ondoren"
 [redact.manual]
 title = "Zentsura-tresnak"
 instructions = "Hautatu testua edo marraztu eremuak PDFan zentsuratzeko edukia markatzeko."
-startRedacting = "Start Redacting"
 markText = "Markatu testua"
 markArea = "Markatu eremua"
 pendingLabel = "Zain:"

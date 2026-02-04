@@ -3402,7 +3402,6 @@ bullet3 = "Prekrivanj po uveljavitvi ni mogoče razveljaviti"
 [redact.manual]
 title = "Orodja za prekrivanje"
 instructions = "Izberite besedilo ali narišite območja v PDF-ju, da označite vsebino za prekrivanje."
-startRedacting = "Start Redacting"
 markText = "Označi besedilo"
 markArea = "Označi območje"
 pendingLabel = "V čakanju:"

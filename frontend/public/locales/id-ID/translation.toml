@@ -3402,7 +3402,6 @@ bullet3 = "Redaksi tidak dapat dibatalkan setelah diterapkan"
 [redact.manual]
 title = "Alat Redaksi"
 instructions = "Pilih teks atau gambar area pada PDF untuk menandai konten untuk redaksi."
-startRedacting = "Start Redacting"
 markText = "Tandai Teks"
 markArea = "Tandai Area"
 pendingLabel = "Tertunda:"

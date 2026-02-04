@@ -3402,7 +3402,6 @@ bullet3 = "적용 후에는 되돌릴 수 없습니다"
 [redact.manual]
 title = "가리기 도구"
 instructions = "PDF에서 텍스트를 선택하거나 영역을 그려 가릴 콘텐츠를 표시하세요."
-startRedacting = "Start Redacting"
 markText = "텍스트 표시"
 markArea = "영역 표시"
 pendingLabel = "대기 중:"

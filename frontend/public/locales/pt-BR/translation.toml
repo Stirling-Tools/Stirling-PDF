@@ -3402,7 +3402,6 @@ bullet3 = "As redações não podem ser desfeitas após aplicar"
 [redact.manual]
 title = "Ferramentas de redação"
 instructions = "Selecione texto ou desenhe áreas no PDF para marcar conteúdo para redação."
-startRedacting = "Start Redacting"
 markText = "Marcar texto"
 markArea = "Marcar área"
 pendingLabel = "Pendentes:"

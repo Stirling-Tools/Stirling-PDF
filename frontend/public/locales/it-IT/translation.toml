@@ -3402,7 +3402,6 @@ bullet3 = "Gli oscuramenti non possono essere annullati dopo l'applicazione"
 [redact.manual]
 title = "Strumenti di oscuramento"
 instructions = "Seleziona testo o disegna aree sul PDF per contrassegnare contenuti da oscurare."
-startRedacting = "Start Redacting"
 markText = "Contrassegna testo"
 markArea = "Contrassegna area"
 pendingLabel = "In sospeso:"

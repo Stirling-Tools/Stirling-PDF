@@ -3402,7 +3402,6 @@ bullet3 = "Les redaccions no es poden desfer després d'aplicar-les"
 [redact.manual]
 title = "Eines de redacció"
 instructions = "Selecciona text o dibuixa àrees al PDF per marcar contingut per a la redacció."
-startRedacting = "Start Redacting"
 markText = "Marca text"
 markArea = "Marca àrea"
 pendingLabel = "Pendent:"

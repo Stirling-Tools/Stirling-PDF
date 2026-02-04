@@ -3402,7 +3402,6 @@ bullet3 = "Maskeringer kan ikke fortrydes efter anvendelse"
 [redact.manual]
 title = "Maskeringsværktøjer"
 instructions = "Vælg tekst eller tegn områder på PDF'en for at markere indhold til maskering."
-startRedacting = "Start Redacting"
 markText = "Markér tekst"
 markArea = "Markér område"
 pendingLabel = "Afventer:"

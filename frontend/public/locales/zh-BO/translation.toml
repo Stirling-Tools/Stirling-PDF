@@ -3402,7 +3402,6 @@ bullet3 = "应用后无法撤销涂黑"
 [redact.manual]
 title = "涂黑工具"
 instructions = "在 PDF 上选择文本或绘制区域以标记要涂黑的内容。"
-startRedacting = "Start Redacting"
 markText = "标记文本"
 markArea = "标记区域"
 pendingLabel = "待处理："

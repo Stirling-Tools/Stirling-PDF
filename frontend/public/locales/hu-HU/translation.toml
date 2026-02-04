@@ -3402,7 +3402,6 @@ bullet3 = "A kitakarások alkalmazás után nem vonhatók vissza"
 [redact.manual]
 title = "Kitakaró eszközök"
 instructions = "Jelöljön meg szöveget vagy rajzoljon területeket a PDF-en a kitakarandó tartalom megjelöléséhez."
-startRedacting = "Start Redacting"
 markText = "Szöveg megjelölése"
 markArea = "Terület megjelölése"
 pendingLabel = "Függőben:"

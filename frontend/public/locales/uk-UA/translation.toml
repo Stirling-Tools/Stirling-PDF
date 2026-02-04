@@ -3402,7 +3402,6 @@ bullet3 = "Після застосування скасувати зачорне
 [redact.manual]
 title = "Інструменти зачорнення"
 instructions = "Виділяйте текст або малюйте області на PDF, щоб позначити вміст для зачорнення."
-startRedacting = "Start Redacting"
 markText = "Позначити текст"
 markArea = "Позначити область"
 pendingLabel = "В очікуванні:"

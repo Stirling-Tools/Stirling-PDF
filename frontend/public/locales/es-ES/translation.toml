@@ -3402,7 +3402,6 @@ bullet3 = "Las censuras no se pueden deshacer tras aplicarlas"
 [redact.manual]
 title = "Herramientas de censura"
 instructions = "Selecciona texto o dibuja áreas en el PDF para marcar contenido para censura."
-startRedacting = "Start Redacting"
 markText = "Marcar texto"
 markArea = "Marcar área"
 pendingLabel = "Pendientes:"

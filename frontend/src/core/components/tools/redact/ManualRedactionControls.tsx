@@ -3,8 +3,6 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Button, Stack, Text, Divider } from '@mantine/core';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import { useViewer } from '@app/contexts/ViewerContext';
-import { useSignature } from '@app/contexts/SignatureContext';
-import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 interface ManualRedactionControlsProps {
   disabled?: boolean;
@@ -19,17 +17,11 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   const { t } = useTranslation();
 
   // Use our RedactionContext which bridges to EmbedPDF
-  const { activateRedact, redactionsApplied, setActiveType } = useRedaction();
+  const { redactionsApplied, setActiveType } = useRedaction();
   const { pendingCount, activeType, isRedacting, isBridgeReady } = useRedactionMode();
   
   // Get viewer context to manage annotation mode and save changes
-  const { isAnnotationMode, setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
-  
-  // Get signature context to deactivate annotation tools when switching to redaction
-  const { signatureApiRef } = useSignature();
-  
-  // Check if unified redact mode is active (combines text selection and area marquee)
-  const isRedactActive = activeType === RedactionMode.Redact;
+  const { setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
   
   // Track if we've auto-activated
   const hasAutoActivated = useRef(false);
@@ -52,11 +44,10 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
       const timer = setTimeout(() => {
         // Deactivate annotation mode to show redaction layer
         setAnnotationMode(false);
-        activateRedact();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isBridgeReady, disabled, isRedacting, activateRedact, setAnnotationMode]);
+  }, [isBridgeReady, disabled, isRedacting, setAnnotationMode]);
 
   // Reset auto-activation flag when disabled changes or bridge becomes not ready
   useEffect(() => {
@@ -66,18 +57,13 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   }, [disabled, isBridgeReady]);
 
   // Reset redaction tool when switching between files
-  // The new PDF gets a fresh EmbedPDF instance - forcing user to re-select tool ensures it works properly
+  // The new PDF gets a fresh EmbedPDF instance
   useEffect(() => {
     if (prevFileIndexRef.current !== activeFileIndex) {
       prevFileIndexRef.current = activeFileIndex;
-      
-      // Reset active type to null when switching files
-      // This requires the user to re-click which ensures proper activation on the new PDF
-      if (isRedactActive) {
-        setActiveType(null);
-      }
+      setActiveType(null);
     }
-  }, [activeFileIndex, isRedactActive, setActiveType]);
+  }, [activeFileIndex, setActiveType]);
 
   // Auto-save when all pending redactions have been applied
   // This triggers when the user clicks "Apply (permanent)" on the last pending redaction
@@ -113,25 +99,6 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
     }
   }, [pendingCount, redactionsApplied, applyChanges]);
 
-  // Handle activating unified redact mode (combines text selection and area marquee)
-  const handleRedactClick = () => {
-    // Deactivate annotation mode and tools to switch to redaction layer
-    if (isAnnotationMode) {
-      setAnnotationMode(false);
-      // Deactivate any active annotation tools (like draw)
-      if (signatureApiRef?.current) {
-        try {
-          signatureApiRef.current.deactivateTools();
-        } catch (error) {
-          console.log('Unable to deactivate annotation tools:', error);
-        }
-      }
-    }
-    
-    // Activate unified redact mode
-    activateRedact();
-  };
-
   // Handle saving changes - this will apply pending redactions and save to file
   const handleSaveChanges = useCallback(async () => {
     if (applyChanges) {
@@ -158,24 +125,11 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
           {t('redact.manual.instructions', 'Select text or draw areas on the PDF to mark content for redaction.')}
         </Text>
 
-        {/* Unified Redact Tool - combines text selection and area marquee */}
-        <Button
-          fullWidth
-          variant={isRedactActive && !isAnnotationMode ? 'filled' : 'outline'}
-          color={isRedactActive && !isAnnotationMode ? 'blue' : 'gray'}
-          onClick={handleRedactClick}
-          disabled={disabled || !isApiReady}
-          size="sm"
-        >
-          {t('redact.manual.startRedacting', 'Start Redacting')}
-        </Button>
-
         {/* Save Changes Button - applies pending redactions and saves to file */}
         <Button
           fullWidth
           size="md"
           radius="md"
-          mt="sm"
           variant="filled"
           color="blue"
           disabled={!hasUnsavedChanges}

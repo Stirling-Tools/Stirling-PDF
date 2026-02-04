@@ -3405,7 +3405,6 @@ bullet3 = "Redactions cannot be undone after applying"
 [redact.manual]
 title = "Redaction Tools"
 instructions = "Select text or draw areas on the PDF to mark content for redaction."
-startRedacting = "Start Redacting"
 markText = "Mark Text"
 markArea = "Mark Area"
 pendingLabel = "Pending:"

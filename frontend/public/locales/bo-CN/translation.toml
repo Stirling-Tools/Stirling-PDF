@@ -3402,7 +3402,6 @@ bullet3 = "འཇུག་རྗེས་ཕྱིར་འབྱོར་བྱ
 [redact.manual]
 title = "གསང་སྦེད་ལག་ཆ"
 instructions = "PDF ཐོག་ཏུ་ཚིག་ཡིག་འདེམས་ ཡང་ན་ཁོར་ཁ་འབྲིས་ནས་གསང་སྦེད་དམིགས་ཡུལ་རྟགས་བཀལ།"
-startRedacting = "Start Redacting"
 markText = "ཚིག་ཡིག་རྟགས་བཀལ"
 markArea = "ཁོར་ཁ་རྟགས་བཀལ"
 pendingLabel = "བསྒུག་བཞག:"

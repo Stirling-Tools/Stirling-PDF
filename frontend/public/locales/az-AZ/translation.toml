@@ -3402,7 +3402,6 @@ bullet3 = "Tətbiqdən sonra məxfiləşdirmələri geri qaytarmaq olmur"
 [redact.manual]
 title = "Məxfiləşdirmə alətləri"
 instructions = "Məxfiləşdirmə üçün məzmunu işarələmək məqsədilə PDF-də mətn seçin və ya sahələr çəkin."
-startRedacting = "Start Redacting"
 markText = "Mətni işarələ"
 markArea = "Sahəni işarələ"
 pendingLabel = "Gözləyir:"

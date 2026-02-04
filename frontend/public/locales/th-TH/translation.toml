@@ -3402,7 +3402,6 @@ bullet3 = "ไม่สามารถยกเลิกการปกปิด
 [redact.manual]
 title = "เครื่องมือปกปิด"
 instructions = "เลือกข้อความหรือวาดพื้นที่บน PDF เพื่อทำเครื่องหมายเนื้อหาสำหรับการปกปิด"
-startRedacting = "Start Redacting"
 markText = "ทำเครื่องหมายข้อความ"
 markArea = "ทำเครื่องหมายพื้นที่"
 pendingLabel = "ค้างอยู่:"

@@ -3402,7 +3402,6 @@ bullet3 = "Redactările nu pot fi anulate după aplicare"
 [redact.manual]
 title = "Instrumente de redactare"
 instructions = "Selectați text sau desenați zone în PDF pentru a marca conținut de redactat."
-startRedacting = "Start Redacting"
 markText = "Marchează text"
 markArea = "Marchează zonă"
 pendingLabel = "În așteptare:"
