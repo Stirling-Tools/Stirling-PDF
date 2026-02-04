@@ -1,8 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useCallback } from 'react';
-import { Button, Stack, Text, Divider } from '@mantine/core';
+import { Button, Stack, Text, Group, Divider } from '@mantine/core';
+import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
+import CropFreeIcon from '@mui/icons-material/CropFree';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useSignature } from '@app/contexts/SignatureContext';
 
 interface ManualRedactionControlsProps {
   disabled?: boolean;
@@ -17,37 +20,40 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   const { t } = useTranslation();
 
   // Use our RedactionContext which bridges to EmbedPDF
-  const { redactionsApplied, setActiveType } = useRedaction();
-  const { pendingCount, isRedacting, isBridgeReady } = useRedactionMode();
+  const { activateTextSelection, activateMarquee, redactionsApplied, setActiveType } = useRedaction();
+  const { pendingCount, activeType, isBridgeReady } = useRedactionMode();
   
   // Get viewer context to manage annotation mode and save changes
-  const { setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
+  const { isAnnotationMode, setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
   
-  // Track if we've auto-activated
+  // Get signature context to deactivate annotation tools when switching to redaction
+  const { signatureApiRef } = useSignature();
+  
+  // Check which tool is active based on activeType
+  const isSelectionActive = activeType === 'redactSelection';
+  const isMarqueeActive = activeType === 'marqueeRedact';
+  
+  // Track if we've auto-activated for the current bridge session
   const hasAutoActivated = useRef(false);
   
   // Track the previous file index to detect file switches
   const prevFileIndexRef = useRef<number>(activeFileIndex);
-  
-  // Track previous pending count to detect when all redactions are applied
-  const prevPendingCountRef = useRef<number>(pendingCount);
-  
-  // Track if we're currently auto-saving to prevent re-entry
-  const isAutoSavingRef = useRef(false);
 
-  // Auto-activate unified redact mode when the API bridge becomes ready
-  // This ensures redaction mode is active when entering manual redaction mode
+  // Auto-activate selection mode when the API bridge becomes ready
+  // This ensures Mark Text is pre-selected when entering manual redaction mode
   useEffect(() => {
-    if (isBridgeReady && !disabled && !isRedacting && !hasAutoActivated.current) {
+    if (isBridgeReady && !disabled && !hasAutoActivated.current) {
       hasAutoActivated.current = true;
       // Small delay to ensure EmbedPDF is fully ready
       const timer = setTimeout(() => {
         // Deactivate annotation mode to show redaction layer
         setAnnotationMode(false);
-      }, 100);
+        // Pre-select the Mark Text tool
+        activateTextSelection();
+      }, 150);
       return () => clearTimeout(timer);
     }
-  }, [isBridgeReady, disabled, isRedacting, setAnnotationMode]);
+  }, [isBridgeReady, disabled, activateTextSelection, setAnnotationMode]);
 
   // Reset auto-activation flag when disabled changes or bridge becomes not ready
   useEffect(() => {
@@ -57,47 +63,66 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   }, [disabled, isBridgeReady]);
 
   // Reset redaction tool when switching between files
-  // The new PDF gets a fresh EmbedPDF instance
+  // The new PDF gets a fresh EmbedPDF instance - forcing user to re-select tool ensures it works properly
   useEffect(() => {
     if (prevFileIndexRef.current !== activeFileIndex) {
       prevFileIndexRef.current = activeFileIndex;
-      setActiveType(null);
+      
+      // Reset active type to null when switching files
+      // This makes both buttons appear unselected, requiring the user to re-click
+      // which ensures proper activation on the new PDF
+      if (isSelectionActive || isMarqueeActive) {
+        setActiveType(null);
+      }
+      
+      // Reset auto-activation flag so new file can auto-activate
+      hasAutoActivated.current = false;
     }
-  }, [activeFileIndex, setActiveType]);
+  }, [activeFileIndex, isSelectionActive, isMarqueeActive, setActiveType]);
 
-  // Auto-save when all pending redactions have been applied
-  // This triggers when the user clicks "Apply (permanent)" on the last pending redaction
-  useEffect(() => {
-    const hadPendingBefore = prevPendingCountRef.current > 0;
-    const hasNoPendingNow = pendingCount === 0;
-    const wasJustCleared = hadPendingBefore && hasNoPendingNow;
-    
-    // Update the ref for next comparison
-    prevPendingCountRef.current = pendingCount;
-    
-    // Auto-save when:
-    // - pendingCount just went from > 0 to 0 (user applied the last pending redaction)
-    // - redactionsApplied is true (at least one redaction was committed)
-    // - not already auto-saving
-    // - applyChanges is available
-    if (wasJustCleared && redactionsApplied && !isAutoSavingRef.current && applyChanges) {
-      isAutoSavingRef.current = true;
-      
-      // Small delay to ensure UI updates before save
-      const timer = setTimeout(async () => {
+  const handleSelectionClick = () => {
+    // Deactivate annotation mode and tools to switch to redaction layer
+    if (isAnnotationMode) {
+      setAnnotationMode(false);
+      // Deactivate any active annotation tools (like draw)
+      if (signatureApiRef?.current) {
         try {
-          await applyChanges();
-        } finally {
-          isAutoSavingRef.current = false;
+          signatureApiRef.current.deactivateTools();
+        } catch (error) {
+          console.log('Unable to deactivate annotation tools:', error);
         }
-      }, 100);
-      
-      return () => {
-        clearTimeout(timer);
-        isAutoSavingRef.current = false;
-      };
+      }
     }
-  }, [pendingCount, redactionsApplied, applyChanges]);
+    
+    if (isSelectionActive && !isAnnotationMode) {
+      // If already active and not coming from annotation mode, switch to marquee
+      activateMarquee();
+    } else {
+      activateTextSelection();
+    }
+  };
+
+  const handleMarqueeClick = () => {
+    // Deactivate annotation mode and tools to switch to redaction layer
+    if (isAnnotationMode) {
+      setAnnotationMode(false);
+      // Deactivate any active annotation tools (like draw)
+      if (signatureApiRef?.current) {
+        try {
+          signatureApiRef.current.deactivateTools();
+        } catch (error) {
+          console.log('Unable to deactivate annotation tools:', error);
+        }
+      }
+    }
+    
+    if (isMarqueeActive && !isAnnotationMode) {
+      // If already active and not coming from annotation mode, switch to selection
+      activateTextSelection();
+    } else {
+      activateMarquee();
+    }
+  };
 
   // Handle saving changes - this will apply pending redactions and save to file
   const handleSaveChanges = useCallback(async () => {
@@ -109,6 +134,9 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // Check if there are unsaved changes to save (pending redactions OR applied redactions)
   // Save Changes button will apply pending redactions and then save everything
   const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
+  
+  // Check if API is available - use isBridgeReady state instead of ref (refs don't trigger re-renders)
+  const isApiReady = isBridgeReady;
 
   return (
     <>
@@ -122,11 +150,50 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
           {t('redact.manual.instructions', 'Select text or draw areas on the PDF to mark content for redaction.')}
         </Text>
 
+        <Group gap="sm" grow wrap="nowrap">
+          {/* Mark Text Selection Tool */}
+          <Button
+            variant={isSelectionActive && !isAnnotationMode ? 'filled' : 'outline'}
+            color={isSelectionActive && !isAnnotationMode ? 'blue' : 'gray'}
+            leftSection={<HighlightAltIcon style={{ fontSize: 18, flexShrink: 0 }} />}
+            onClick={handleSelectionClick}
+            disabled={disabled || !isApiReady}
+            size="sm"
+            styles={{
+              root: { 
+                minWidth: 0,
+              },
+              label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+            }}
+          >
+            {t('redact.manual.markText', 'Mark Text')}
+          </Button>
+
+          {/* Mark Area (Marquee) Tool */}
+          <Button
+            variant={isMarqueeActive && !isAnnotationMode ? 'filled' : 'outline'}
+            color={isMarqueeActive && !isAnnotationMode ? 'blue' : 'gray'}
+            leftSection={<CropFreeIcon style={{ fontSize: 18, flexShrink: 0 }} />}
+            onClick={handleMarqueeClick}
+            disabled={disabled || !isApiReady}
+            size="sm"
+            styles={{
+              root: { 
+                minWidth: 0,
+              },
+              label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+            }}
+          >
+            {t('redact.manual.markArea', 'Mark Area')}
+          </Button>
+        </Group>
+
         {/* Save Changes Button - applies pending redactions and saves to file */}
         <Button
           fullWidth
           size="md"
           radius="md"
+          mt="sm"
           variant="filled"
           color="blue"
           disabled={!hasUnsavedChanges}

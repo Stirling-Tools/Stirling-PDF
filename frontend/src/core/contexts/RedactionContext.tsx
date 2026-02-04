@@ -56,6 +56,9 @@ interface RedactionActions {
   activateRedact: () => void;
   deactivateRedact: () => void;
   commitAllPending: () => void;
+  // Legacy UI actions (for backwards compatibility with UI)
+  activateTextSelection: () => void;
+  activateMarquee: () => void;
 }
 
 /**
@@ -174,6 +177,23 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [setRedactionsApplied]);
 
+  // Legacy UI actions for backwards compatibility
+  // In v2.4.1, both text selection and marquee use the same unified mode
+  // These just activate the unified redact mode and set the active type for UI state
+  const activateTextSelection = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.enableRedact();
+      setActiveType('redactSelection' as RedactionMode);
+    }
+  }, [setActiveType]);
+
+  const activateMarquee = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.enableRedact();
+      setActiveType('marqueeRedact' as RedactionMode);
+    }
+  }, [setActiveType]);
+
   const contextValue: RedactionContextValue = {
     ...state,
     redactionApiRef,
@@ -187,6 +207,8 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     activateRedact,
     deactivateRedact,
     commitAllPending,
+    activateTextSelection,
+    activateMarquee,
   };
 
   return (

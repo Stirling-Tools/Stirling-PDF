@@ -3400,6 +3400,7 @@ bullet2 = "Tüm bekleyen karartmalar tek seferde uygulanır"
 bullet3 = "Karartmalar uygulandıktan sonra geri alınamaz"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Karartma Araçları"
 instructions = "Karartılacak içeriği işaretlemek için PDF üzerinde metin seçin veya alan çizin."
 markText = "Metni İşaretle"

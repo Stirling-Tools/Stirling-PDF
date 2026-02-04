@@ -3400,6 +3400,7 @@ bullet2 = "Cuirtear gach eagarthóireacht atá ar feitheamh i bhfeidhm ag an am 
 bullet3 = "Ní féidir eagarthóireachtaí a chealú tar éis iad a chur i bhfeidhm"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Uirlisí Eagarthóireachta"
 instructions = "Roghnaigh téacs nó tarraing limistéir ar an PDF chun ábhar a mharcáil le haghaidh eagarthóireachta."
 markText = "Marcáil Téacs"

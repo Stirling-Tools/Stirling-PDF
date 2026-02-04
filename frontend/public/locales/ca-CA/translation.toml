@@ -3400,6 +3400,7 @@ bullet2 = "Totes les redaccions pendents s'apliquen alhora"
 bullet3 = "Les redaccions no es poden desfer després d'aplicar-les"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Eines de redacció"
 instructions = "Selecciona text o dibuixa àrees al PDF per marcar contingut per a la redacció."
 markText = "Marca text"

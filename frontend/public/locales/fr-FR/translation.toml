@@ -3400,6 +3400,7 @@ bullet2 = "Tous les caviardages en attente sont appliqués en une fois"
 bullet3 = "Les caviardages ne peuvent pas être annulés après application"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Outils de caviardage"
 instructions = "Sélectionnez du texte ou dessinez des zones sur le PDF pour marquer le contenu à caviarder."
 markText = "Marquer du texte"

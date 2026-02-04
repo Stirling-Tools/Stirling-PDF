@@ -3400,6 +3400,7 @@ bullet2 = "Tất cả bôi đen đang chờ sẽ được áp dụng cùng lúc"
 bullet3 = "Không thể hoàn tác sau khi áp dụng bôi đen"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Công cụ bôi đen"
 instructions = "Chọn văn bản hoặc vẽ vùng trên PDF để đánh dấu nội dung cần bôi đen."
 markText = "Đánh dấu văn bản"

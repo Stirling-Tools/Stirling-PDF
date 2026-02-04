@@ -3400,6 +3400,7 @@ bullet2 = "保留中の墨消しは一括で適用されます"
 bullet3 = "適用後の墨消しは元に戻せません"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "墨消しツール"
 instructions = "PDF 上のテキストを選択するか領域を描画して、墨消し対象をマークします。"
 markText = "テキストをマーキング"

@@ -3400,6 +3400,7 @@ bullet2 = "所有待处理涂黑将一次性应用"
 bullet3 = "应用后无法撤销涂黑"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "涂黑工具"
 instructions = "选择文本或绘制区域以标记需要涂黑的内容。"
 markText = "标记文本"

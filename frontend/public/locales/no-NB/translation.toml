@@ -3400,6 +3400,7 @@ bullet2 = "Alle ventende sladdinger brukes samtidig"
 bullet3 = "Sladding kan ikke angres etter bruk"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Sladdeverktøy"
 instructions = "Velg tekst eller tegn områder på PDF-en for å markere innhold for sladding."
 markText = "Marker tekst"

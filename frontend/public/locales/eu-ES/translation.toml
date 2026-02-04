@@ -3400,6 +3400,7 @@ bullet2 = "Zain dauden zentsura guztiak batera aplikatzen dira"
 bullet3 = "Zentsurak ezin dira desegin aplikatu ondoren"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Zentsura-tresnak"
 instructions = "Hautatu testua edo marraztu eremuak PDFan zentsuratzeko edukia markatzeko."
 markText = "Markatu testua"

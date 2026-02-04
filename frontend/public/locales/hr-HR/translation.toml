@@ -3400,6 +3400,7 @@ bullet2 = "Sva zacrnjivanja na čekanju primjenjuju se odjednom"
 bullet3 = "Zacrnjivanja se ne mogu poništiti nakon primjene"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Alati za zacrnjivanje"
 instructions = "Odaberite tekst ili nacrtajte područja na PDF-u kako biste označili sadržaj za zacrnjivanje."
 markText = "Označi tekst"

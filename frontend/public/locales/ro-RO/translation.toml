@@ -3400,6 +3400,7 @@ bullet2 = "Toate redactările în așteptare sunt aplicate simultan"
 bullet3 = "Redactările nu pot fi anulate după aplicare"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Instrumente de redactare"
 instructions = "Selectați text sau desenați zone în PDF pentru a marca conținut de redactat."
 markText = "Marchează text"

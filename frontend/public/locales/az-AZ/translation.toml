@@ -3400,6 +3400,7 @@ bullet2 = "Bütün gözləyən məxfiləşdirmələr eyni anda tətbiq olunur"
 bullet3 = "Tətbiqdən sonra məxfiləşdirmələri geri qaytarmaq olmur"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Məxfiləşdirmə alətləri"
 instructions = "Məxfiləşdirmə üçün məzmunu işarələmək məqsədilə PDF-də mətn seçin və ya sahələr çəkin."
 markText = "Mətni işarələ"

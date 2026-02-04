@@ -3400,6 +3400,7 @@ bullet2 = "Todas las censuras pendientes se aplican a la vez"
 bullet3 = "Las censuras no se pueden deshacer tras aplicarlas"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Herramientas de censura"
 instructions = "Selecciona texto o dibuja áreas en el PDF para marcar contenido para censura."
 markText = "Marcar texto"

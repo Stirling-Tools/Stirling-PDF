@@ -3400,6 +3400,7 @@ bullet2 = "Vsa prekrivanja v čakanju se uveljavijo naenkrat"
 bullet3 = "Prekrivanj po uveljavitvi ni mogoče razveljaviti"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Orodja za prekrivanje"
 instructions = "Izberite besedilo ali narišite območja v PDF-ju, da označite vsebino za prekrivanje."
 markText = "Označi besedilo"

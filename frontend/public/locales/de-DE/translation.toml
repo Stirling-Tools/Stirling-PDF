@@ -3400,6 +3400,7 @@ bullet2 = "All pending redactions are applied at once"
 bullet3 = "Redactions cannot be undone after applying"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Redaction Tools"
 instructions = "Select text or draw areas on the PDF to mark content for redaction."
 markText = "Mark Text"

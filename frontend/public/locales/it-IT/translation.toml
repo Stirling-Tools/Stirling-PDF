@@ -3400,6 +3400,7 @@ bullet2 = "Tutti gli oscuramenti in sospeso vengono applicati in una volta sola"
 bullet3 = "Gli oscuramenti non possono essere annullati dopo l'applicazione"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Strumenti di oscuramento"
 instructions = "Seleziona testo o disegna aree sul PDF per contrassegnare contenuti da oscurare."
 markText = "Contrassegna testo"

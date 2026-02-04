@@ -3400,6 +3400,7 @@ bullet2 = "Minden függőben lévő kitakarás egyszerre kerül alkalmazásra"
 bullet3 = "A kitakarások alkalmazás után nem vonhatók vissza"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Kitakaró eszközök"
 instructions = "Jelöljön meg szöveget vagy rajzoljon területeket a PDF-en a kitakarandó tartalom megjelöléséhez."
 markText = "Szöveg megjelölése"

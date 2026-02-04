@@ -3400,6 +3400,7 @@ bullet2 = "تُطبَّق جميع التنقيحات المعلّقة دفعة 
 bullet3 = "لا يمكن التراجع عن التنقيحات بعد تطبيقها"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "أدوات التنقيح"
 instructions = "حدّد نصًا أو ارسم مناطق على ملف PDF لتمييز المحتوى للتنقيح."
 markText = "تعليم النص"

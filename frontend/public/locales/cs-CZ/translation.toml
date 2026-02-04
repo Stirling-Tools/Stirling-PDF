@@ -3400,6 +3400,7 @@ bullet2 = "Všechna čekající začernění se použijí najednou"
 bullet3 = "Po použití nelze začernění vrátit zpět"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Nástroje pro začernění"
 instructions = "Vyberte text nebo nakreslete oblasti v PDF a označte obsah pro začernění."
 markText = "Označit text"

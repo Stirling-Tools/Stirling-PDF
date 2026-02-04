@@ -3400,6 +3400,7 @@ bullet2 = "Wszystkie oczekujące zaczernienia są stosowane jednocześnie"
 bullet3 = "Zaczernienia nie można cofnąć po zastosowaniu"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Narzędzia zaczerniania"
 instructions = "Zaznacz tekst lub narysuj obszary w PDF, aby oznaczyć zawartość do zaczernienia."
 markText = "Zaznacz tekst"

@@ -3400,6 +3400,7 @@ bullet2 = "Alla väntande maskningar tillämpas samtidigt"
 bullet3 = "Maskningar kan inte ångras efter tillämpning"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Maskeringsverktyg"
 instructions = "Markera text eller rita områden på PDF-filen för att markera innehåll för maskering."
 markText = "Markera text"

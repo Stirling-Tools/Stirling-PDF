@@ -3400,6 +3400,7 @@ bullet2 = "모든 대기 중인 가리기는 한 번에 적용됩니다"
 bullet3 = "적용 후에는 되돌릴 수 없습니다"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "가리기 도구"
 instructions = "PDF에서 텍스트를 선택하거나 영역을 그려 가릴 콘텐츠를 표시하세요."
 markText = "텍스트 표시"

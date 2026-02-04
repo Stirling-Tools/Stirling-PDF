@@ -3400,6 +3400,7 @@ bullet2 = "Alle afventende maskeringer anvendes på én gang"
 bullet3 = "Maskeringer kan ikke fortrydes efter anvendelse"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Maskeringsværktøjer"
 instructions = "Vælg tekst eller tegn områder på PDF'en for at markere indhold til maskering."
 markText = "Markér tekst"

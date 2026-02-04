@@ -3400,6 +3400,7 @@ bullet2 = "Todas as redações pendentes são aplicadas de uma vez"
 bullet3 = "As redações não podem ser desfeitas após aplicar"
 
 [redact.manual]
+applyRedactions = "Apply Redactions"
 title = "Ferramentas de redação"
 instructions = "Selecione texto ou desenhe áreas no PDF para marcar conteúdo para redação."
 markText = "Marcar texto"
