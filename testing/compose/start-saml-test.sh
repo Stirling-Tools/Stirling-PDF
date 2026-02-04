@@ -19,10 +19,14 @@ for arg in "$@"; do
         --auto)
             AUTO_LOGIN=true
             ;;
+        --nobuild)
+            COMPOSE_UP_ARGS=(-d)
+            ;;
         -h|--help)
-            echo "Usage: $0 [--auto]"
+            echo "Usage: $0 [--auto] [--nobuild]"
             echo ""
-            echo "  --auto   Enable SSO auto-login and force SAML-only login method"
+            echo "  --auto     Enable SSO auto-login and force SAML-only login method"
+            echo "  --nobuild  Skip building images (use existing images)"
             exit 0
             ;;
         *)
@@ -81,6 +85,23 @@ done
 if [ $WAITED -ge $MAX_WAIT ]; then
     echo -e "${RED}✗ Keycloak failed to start${NC}"
     exit 1
+fi
+
+echo ""
+echo -e "${YELLOW}▶ Generating SAML SP certificates if needed...${NC}"
+PRIVATE_KEY="${SCRIPT_DIR}/saml-private-key.key"
+PUBLIC_CERT="${SCRIPT_DIR}/saml-public-cert.crt"
+
+# Remove any directories that Docker might have created
+[ -d "$PRIVATE_KEY" ] && rm -rf "$PRIVATE_KEY"
+[ -d "$PUBLIC_CERT" ] && rm -rf "$PUBLIC_CERT"
+
+if [ ! -f "$PRIVATE_KEY" ] || [ ! -f "$PUBLIC_CERT" ]; then
+    openssl req -x509 -newkey rsa:2048 -keyout "$PRIVATE_KEY" -out "$PUBLIC_CERT" \
+        -days 3650 -nodes -subj "/CN=stirling-pdf-saml-sp" >/dev/null 2>&1
+    echo -e "${GREEN}✓ Generated SAML SP certificates${NC}"
+else
+    echo -e "${BLUE}Using existing SAML SP certificates${NC}"
 fi
 
 echo ""

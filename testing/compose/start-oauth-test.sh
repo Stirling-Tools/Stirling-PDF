@@ -19,10 +19,14 @@ for arg in "$@"; do
         --auto)
             AUTO_LOGIN=true
             ;;
+        --nobuild)
+            COMPOSE_UP_ARGS=(-d)
+            ;;
         -h|--help)
-            echo "Usage: $0 [--auto]"
+            echo "Usage: $0 [--auto] [--nobuild]"
             echo ""
-            echo "  --auto   Enable SSO auto-login and force OAuth-only login method"
+            echo "  --auto     Enable SSO auto-login and force OAuth-only login method"
+            echo "  --nobuild  Skip building images (use existing images)"
             exit 0
             ;;
         *)
@@ -40,6 +44,23 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Hostname used by Keycloak issuer (must resolve on host + containers)
+KEYCLOAK_HOST="${KEYCLOAK_HOST:-kubernetes.docker.internal}"
+export KEYCLOAK_HOST
+
+# Preflight check: ensure host can resolve the issuer hostname (skippable + bounded timeouts)
+if [ "${SKIP_OAUTH_PREFLIGHT:-false}" != "true" ]; then
+    if ! curl -sf --connect-timeout 2 --max-time 3 "http://${KEYCLOAK_HOST}:9080/realms/stirling-oauth" >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠ Cannot reach http://${KEYCLOAK_HOST}:9080 from this machine.${NC}"
+        echo -e "${YELLOW}  Add a hosts entry pointing ${KEYCLOAK_HOST} to 127.0.0.1, then retry.${NC}"
+        echo ""
+        echo -e "${BLUE}Windows:${NC}  C:\\Windows\\System32\\drivers\\etc\\hosts"
+        echo -e "${BLUE}macOS/Linux:${NC}  /etc/hosts"
+        echo ""
+        echo -e "${GREEN}127.0.0.1 ${KEYCLOAK_HOST}${NC}"
+        echo ""
+    fi
+fi
 # Prompt for license key (optional)
 if [ -z "$PREMIUM_KEY" ]; then
     echo -e "${YELLOW}Enter license key (press Enter to use default test key):${NC}"
@@ -61,8 +82,8 @@ if [ "$AUTO_LOGIN" = true ]; then
     echo ""
 fi
 
-echo -e "${YELLOW}▶ Starting OAuth test containers...${NC}"
-docker-compose -f docker-compose-keycloak-oauth.yml up "${COMPOSE_UP_ARGS[@]}"
+echo -e "${YELLOW}▶ Starting Keycloak (OAuth) containers...${NC}"
+docker-compose -f docker-compose-keycloak-oauth.yml up "${COMPOSE_UP_ARGS[@]}" keycloak-oauth-db keycloak-oauth
 
 echo ""
 echo -e "${YELLOW}▶ Waiting for Keycloak (OAuth)...${NC}"
@@ -82,6 +103,10 @@ if [ $WAITED -ge $MAX_WAIT ]; then
     echo -e "${RED}✗ Keycloak failed to start${NC}"
     exit 1
 fi
+
+echo ""
+echo -e "${YELLOW}▶ Starting Stirling PDF...${NC}"
+docker-compose -f docker-compose-keycloak-oauth.yml up "${COMPOSE_UP_ARGS[@]}" stirling-pdf-oauth
 
 echo ""
 echo -e "${YELLOW}▶ Waiting for Stirling PDF...${NC}"
@@ -108,7 +133,7 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 echo -e "${BLUE}📍 Services:${NC}"
 echo -e "   Stirling PDF:   ${GREEN}http://localhost:8080${NC}"
-echo -e "   Keycloak Admin: ${GREEN}http://localhost:9080/admin${NC}"
+echo -e "   Keycloak Admin: ${GREEN}http://${KEYCLOAK_HOST}:9080/admin${NC}"
 echo ""
 echo -e "${BLUE}🔑 Keycloak Admin:${NC}"
 echo -e "   Username: ${GREEN}admin${NC}"

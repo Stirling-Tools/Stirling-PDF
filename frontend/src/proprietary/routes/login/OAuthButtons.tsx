@@ -28,9 +28,16 @@ interface OAuthButtonsProps {
   isSubmitting: boolean
   layout?: 'vertical' | 'grid' | 'icons'
   enabledProviders?: OAuthProvider[]  // List of full auth paths from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
+  ctaPrefix?: string
 }
 
-export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical', enabledProviders = [] }: OAuthButtonsProps) {
+export default function OAuthButtons({
+  onProviderClick,
+  isSubmitting,
+  layout = 'vertical',
+  enabledProviders = [],
+  ctaPrefix,
+}: OAuthButtonsProps) {
   const { t } = useTranslation();
 
   // Debug mode: show all providers for UI testing
@@ -117,7 +124,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
             variant="default"
           >
             <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
-            <span>{p.label}</span>
+            <span>{ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}</span>
           </Button>
         </div>
       ))}

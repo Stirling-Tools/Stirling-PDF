@@ -1,4 +1,19 @@
 services:
+  keycloak-oauth-db:
+    container_name: stirling-keycloak-oauth-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - stirling-oauth-test
+
   keycloak-oauth:
     container_name: stirling-keycloak-oauth
     image: quay.io/keycloak/keycloak:24.0
@@ -12,12 +27,11 @@ services:
       KC_DB_PASSWORD: keycloak
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: host.docker.internal
+      # Use a consistent hostname for browser + containers (configure in hosts file)
+      KC_HOSTNAME: "${KEYCLOAK_HOST:-kubernetes.docker.internal}"
       KC_HOSTNAME_PORT: 9080
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
-      KC_PROXY: edge
-      KC_HTTP_RELATIVE_PATH: "/"
     ports:
       - "9080:8080"
     volumes:
@@ -34,27 +48,15 @@ services:
     networks:
       - stirling-oauth-test
 
-  keycloak-oauth-db:
-    container_name: stirling-keycloak-oauth-db
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - stirling-oauth-test
-
   stirling-pdf-oauth:
     container_name: stirling-pdf-oauth-test
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
     build:
       context: ../..
       dockerfile: docker/embedded/Dockerfile
+    extra_hosts:
+      - "localhost:host-gateway"
+      - "${KEYCLOAK_HOST:-kubernetes.docker.internal}:host-gateway"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
       interval: 5s
@@ -81,15 +83,15 @@ services:
       UI_APPNAMENAVBAR: Stirling-PDF OAuth
       SYSTEM_MAXFILESIZE: "100"
 
-      # OAuth2 Configuration (Keycloak)
+      # OAuth2 Configuration (Keycloak-specific path)
       SECURITY_OAUTH2_ENABLED: "true"
       SECURITY_OAUTH2_AUTOCREATEUSER: "true"
-      SECURITY_OAUTH2_ISSUER: "http://host.docker.internal:9080/realms/stirling-oauth"
-      SECURITY_OAUTH2_CLIENTID: "stirling-pdf-client"
-      SECURITY_OAUTH2_CLIENTSECRET: "test-client-secret-change-in-production"
-      SECURITY_OAUTH2_USEASUSERNAME: "email"
-      SECURITY_OAUTH2_SCOPES: "openid,profile,email"
-      SECURITY_OAUTH2_PROVIDER: "keycloak"
+      # Must match Keycloak's advertised issuer
+      SECURITY_OAUTH2_CLIENT_KEYCLOAK_ISSUER: "http://${KEYCLOAK_HOST:-kubernetes.docker.internal}:9080/realms/stirling-oauth"
+      SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTID: "stirling-pdf-client"
+      SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTSECRET: "test-client-secret-change-in-production"
+      SECURITY_OAUTH2_CLIENT_KEYCLOAK_USEASUSERNAME: "email"
+      SECURITY_OAUTH2_CLIENT_KEYCLOAK_SCOPES: "openid,profile,email"
 
       # Disable SAML (OAuth only)
       SECURITY_SAML2_ENABLED: "false"
@@ -118,8 +120,6 @@ services:
         condition: service_healthy
     networks:
       - stirling-oauth-test
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: on-failure:5
 
 networks:

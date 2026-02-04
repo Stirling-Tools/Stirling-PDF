@@ -90,10 +90,13 @@
       "secret": "test-client-secret-change-in-production",
       "redirectUris": [
         "http://localhost:8080/*",
-        "http://localhost:8080/login/oauth2/code/keycloak"
+        "http://localhost:8080/login/oauth2/code/keycloak",
+        "http://stirling-pdf-oauth:8080/*",
+        "http://stirling-pdf-oauth:8080/login/oauth2/code/keycloak"
       ],
       "webOrigins": [
-        "http://localhost:8080"
+        "http://localhost:8080",
+        "http://stirling-pdf-oauth:8080"
       ],
       "bearerOnly": false,
       "consentRequired": false,

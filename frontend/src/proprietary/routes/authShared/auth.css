@@ -142,7 +142,7 @@
 .oauth-container-vertical {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* 12px */
+  gap: 0.875rem; /* 14px */
 }
 
 .oauth-button-icon {
@@ -183,29 +183,35 @@
 
 .oauth-button-vertical {
   width: 100%;
+  min-height: 3.25rem; /* 52px */
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0.75rem 1rem; /* 12px 16px */
-  border: 1px solid #d1d5db;
-  border-radius: 0.75rem; /* 12px */
-  background-color: var(--auth-card-bg-light-only);
+  justify-content: space-between;
+  padding: 0.875rem 1.125rem; /* 14px 18px */
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 0.9rem; /* 14px */
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   font-size: 1rem; /* 16px */
-  font-weight: 500;
+  font-weight: 600;
   color: var(--auth-text-primary-light-only);
   cursor: pointer;
-  gap: 0.75rem; /* 12px */
+  gap: 0.875rem; /* 14px */
   font-family: inherit;
-  transition: background-color 0.2s ease;
+  box-shadow: 0 0.25rem 0.6rem rgba(15, 23, 42, 0.08);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .oauth-button-vertical:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
+  box-shadow: 0 0.35rem 0.9rem rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
 }
 
 .oauth-button-vertical:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+  box-shadow: none;
+  transform: none;
 }
 
 .oauth-button-vertical:focus-visible {
@@ -218,15 +224,15 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 .oauth-button-vertical .mantine-Button-label {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.75rem;
+  justify-content: space-between;
+  gap: 0.875rem;
   overflow: visible;
 }
 
@@ -243,16 +249,34 @@
 }
 
 .oauth-icon-tiny {
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
+  width: 1.75rem; /* 28px */
+  height: 1.75rem; /* 28px */
   display: block;
   flex-shrink: 0;
+  background: #ffffff;
+  padding: 0.35rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 0.2rem 0.4rem rgba(15, 23, 42, 0.08);
 }
 
 /* Login Header Styles */
 .login-header {
   margin-bottom: 1rem; /* 16px */
   margin-top: 0.5rem; /* 8px */
+}
+
+.login-header-centered {
+  text-align: center;
+  margin-bottom: 1.5rem; /* 24px */
+}
+
+.login-header-centered .login-header-logos {
+  justify-content: center;
+}
+
+.login-header-centered .login-logo-text {
+  height: 2.5rem; /* 40px */
 }
 
 .login-header-logos {

@@ -34,6 +34,15 @@ export default function AuthCallback() {
       console.log(`[AuthCallback:${executionId}] URL: ${window.location.href}`);
       console.log(`[AuthCallback:${executionId}] Hash: ${window.location.hash}`);
 
+      if (typeof window !== 'undefined' && window.sessionStorage.getItem('stirling_sso_auto_login_logged_out') === '1') {
+        console.warn(`[AuthCallback:${executionId}] ⚠️  Logout block active, skipping token processing`);
+        navigate('/login', {
+          replace: true,
+          state: { error: 'You have been signed out. Please sign in again.' }
+        });
+        return;
+      }
+
       // Prevent double execution (React 18 Strict Mode + navigate dependency)
       if (processingRef.current) {
         console.warn(`[AuthCallback:${executionId}] ⚠️  Already processing, skipping duplicate execution`);
