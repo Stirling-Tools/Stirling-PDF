@@ -262,8 +262,11 @@ const PageEditor = ({
   ]);
 
   useEffect(() => {
+    if (!displayDocument) {
+      return;
+    }
     queueThumbnailRequestsForPages(visiblePageIds);
-  }, [visiblePageIds, queueThumbnailRequestsForPages]);
+  }, [displayDocument, visiblePageIds, queueThumbnailRequestsForPages]);
 
   const lastInitialDocumentSignatureRef = useRef<string | null>(null);
   const displayDocumentId = displayDocument?.id ?? null;
