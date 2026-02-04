@@ -37,6 +37,7 @@ interface DragDropGridProps<T extends DragDropItem> {
   getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
   zoomLevel?: number;
   selectedFileIds?: string[];
+  selectedPageIds?: string[];
   onVisibleItemsChange?: (items: T[]) => void;
 }
 
@@ -188,6 +189,7 @@ interface DraggableItemProps<T extends DragDropItem> {
   index: number;
   itemRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   boxSelectedPageIds: string[];
+  selectedPageIds: string[];
   clearBoxSelection: () => void;
   getBoxSelection: () => string[];
   activeId: string | null;
@@ -199,7 +201,7 @@ interface DraggableItemProps<T extends DragDropItem> {
   zoomLevel: number;
 }
 
-const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
+const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, selectedPageIds, clearBoxSelection, getBoxSelection, activeId, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
   const isPlaceholder = Boolean(item.isPlaceholder);
   const pageNumber = (item as any).pageNumber ?? index + 1;
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
@@ -266,6 +268,13 @@ const DraggableItem = React.memo(DraggableItemInner, (prevProps, nextProps) => {
     return false; // Props changed, re-render needed
   }
 
+  // Re-render when this item's selection state changes (fixes checkmark not updating on deselect)
+  const prevSelected = prevProps.selectedPageIds?.includes(prevProps.item.id) ?? false;
+  const nextSelected = nextProps.selectedPageIds?.includes(nextProps.item.id) ?? false;
+  if (prevSelected !== nextSelected) {
+    return false; // Selection state changed, re-render needed
+  }
+
   // Item reference is same, check other props
   return (
     prevProps.item.id === nextProps.item.id &&
@@ -285,6 +294,7 @@ const DragDropGrid = <T extends DragDropItem>({
   getThumbnailData,
   zoomLevel = 1.0,
   selectedFileIds,
+  selectedPageIds = [],
   onVisibleItemsChange,
 }: DragDropGridProps<T>) => {
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -790,6 +800,7 @@ const DragDropGrid = <T extends DragDropItem>({
                         index={actualIndex}
                         itemRefs={itemRefs}
                         boxSelectedPageIds={boxSelectedPageIds}
+                        selectedPageIds={selectedPageIds}
                         clearBoxSelection={clearBoxSelection}
                         getBoxSelection={getBoxSelection}
                         activeId={activeId}
