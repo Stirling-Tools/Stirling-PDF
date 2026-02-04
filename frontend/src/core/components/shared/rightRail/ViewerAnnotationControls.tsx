@@ -46,7 +46,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   // Get redaction pending state and navigation guard
   const { isRedacting: _isRedacting } = useRedactionMode();
   const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
-  const { setRedactionMode, activateTextSelection, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } = useRedaction();
+  const { setRedactionMode, activateRedact, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } = useRedaction();
 
 
   // Check if we're in any annotation tool that should disable the toggle
@@ -114,12 +114,12 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
         setLeftPanelView('toolContent');
 
         setRedactionMode(true);
-        // Activate text selection mode after a short delay
+        // Activate unified redact mode after a short delay
         setTimeout(() => {
           const currentType = redactionApiRef.current?.getActiveType?.();
-          // Use RedactionMode enum from embedPDF v2.4.0
-          if (currentType !== RedactionMode.RedactSelection && currentType !== RedactionMode.Redact) {
-            activateTextSelection();
+          // Use unified RedactionMode.Redact from embedPDF v2.4.1
+          if (currentType !== RedactionMode.Redact) {
+            activateRedact();
           }
         }, 200);
       };

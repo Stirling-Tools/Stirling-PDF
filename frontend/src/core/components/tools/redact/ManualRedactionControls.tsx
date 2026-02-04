@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useCallback } from 'react';
-import { Button, Stack, Text, Group, Divider } from '@mantine/core';
-import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
-import CropFreeIcon from '@mui/icons-material/CropFree';
+import { Button, Stack, Text, Divider } from '@mantine/core';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
@@ -15,13 +13,13 @@ interface ManualRedactionControlsProps {
 /**
  * ManualRedactionControls provides UI for manual PDF redaction in the tool panel.
  * Displays controls for marking text/areas for redaction and applying them.
- * Uses our RedactionContext which bridges to the EmbedPDF API.
+ * Uses the unified redaction mode from embedPDF v2.4.1 (combines text selection and area marquee).
  */
 export default function ManualRedactionControls({ disabled = false }: ManualRedactionControlsProps) {
   const { t } = useTranslation();
 
   // Use our RedactionContext which bridges to EmbedPDF
-  const { activateTextSelection, activateMarquee, redactionsApplied, setActiveType } = useRedaction();
+  const { activateRedact, redactionsApplied, setActiveType } = useRedaction();
   const { pendingCount, activeType, isRedacting, isBridgeReady } = useRedactionMode();
   
   // Get viewer context to manage annotation mode and save changes
@@ -30,12 +28,8 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // Get signature context to deactivate annotation tools when switching to redaction
   const { signatureApiRef } = useSignature();
   
-  // Check which tool is active based on activeType
-  // Use RedactionMode enum values from embedPDF v2.4.0
-  const isSelectionActive = activeType === RedactionMode.RedactSelection;
-  const isMarqueeActive = activeType === RedactionMode.MarqueeRedact;
-  // New unified mode also counts as having redaction active
-  const _isUnifiedRedactActive = activeType === RedactionMode.Redact;
+  // Check if unified redact mode is active (combines text selection and area marquee)
+  const isRedactActive = activeType === RedactionMode.Redact;
   
   // Track if we've auto-activated
   const hasAutoActivated = useRef(false);
@@ -49,8 +43,8 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // Track if we're currently auto-saving to prevent re-entry
   const isAutoSavingRef = useRef(false);
 
-  // Auto-activate selection mode when the API bridge becomes ready
-  // This ensures at least one tool is selected when entering manual redaction mode
+  // Auto-activate unified redact mode when the API bridge becomes ready
+  // This ensures redaction mode is active when entering manual redaction mode
   useEffect(() => {
     if (isBridgeReady && !disabled && !isRedacting && !hasAutoActivated.current) {
       hasAutoActivated.current = true;
@@ -58,11 +52,11 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
       const timer = setTimeout(() => {
         // Deactivate annotation mode to show redaction layer
         setAnnotationMode(false);
-        activateTextSelection();
+        activateRedact();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isBridgeReady, disabled, isRedacting, activateTextSelection, setAnnotationMode]);
+  }, [isBridgeReady, disabled, isRedacting, activateRedact, setAnnotationMode]);
 
   // Reset auto-activation flag when disabled changes or bridge becomes not ready
   useEffect(() => {
@@ -78,13 +72,12 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
       prevFileIndexRef.current = activeFileIndex;
       
       // Reset active type to null when switching files
-      // This makes both buttons appear unselected, requiring the user to re-click
-      // which ensures proper activation on the new PDF
-      if (isSelectionActive || isMarqueeActive) {
+      // This requires the user to re-click which ensures proper activation on the new PDF
+      if (isRedactActive) {
         setActiveType(null);
       }
     }
-  }, [activeFileIndex, isSelectionActive, isMarqueeActive, setActiveType]);
+  }, [activeFileIndex, isRedactActive, setActiveType]);
 
   // Auto-save when all pending redactions have been applied
   // This triggers when the user clicks "Apply (permanent)" on the last pending redaction
@@ -120,7 +113,8 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
     }
   }, [pendingCount, redactionsApplied, applyChanges]);
 
-  const handleSelectionClick = () => {
+  // Handle activating unified redact mode (combines text selection and area marquee)
+  const handleRedactClick = () => {
     // Deactivate annotation mode and tools to switch to redaction layer
     if (isAnnotationMode) {
       setAnnotationMode(false);
@@ -134,34 +128,8 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
       }
     }
     
-    if (isSelectionActive && !isAnnotationMode) {
-      // If already active and not coming from annotation mode, switch to marquee
-      activateMarquee();
-    } else {
-      activateTextSelection();
-    }
-  };
-
-  const handleMarqueeClick = () => {
-    // Deactivate annotation mode and tools to switch to redaction layer
-    if (isAnnotationMode) {
-      setAnnotationMode(false);
-      // Deactivate any active annotation tools (like draw)
-      if (signatureApiRef?.current) {
-        try {
-          signatureApiRef.current.deactivateTools();
-        } catch (error) {
-          console.log('Unable to deactivate annotation tools:', error);
-        }
-      }
-    }
-    
-    if (isMarqueeActive && !isAnnotationMode) {
-      // If already active and not coming from annotation mode, switch to selection
-      activateTextSelection();
-    } else {
-      activateMarquee();
-    }
+    // Activate unified redact mode
+    activateRedact();
   };
 
   // Handle saving changes - this will apply pending redactions and save to file
@@ -190,43 +158,17 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
           {t('redact.manual.instructions', 'Select text or draw areas on the PDF to mark content for redaction.')}
         </Text>
 
-        <Group gap="sm" grow wrap="nowrap">
-          {/* Mark Text Selection Tool */}
-          <Button
-            variant={isSelectionActive && !isAnnotationMode ? 'filled' : 'outline'}
-            color={isSelectionActive && !isAnnotationMode ? 'blue' : 'gray'}
-            leftSection={<HighlightAltIcon style={{ fontSize: 18, flexShrink: 0 }} />}
-            onClick={handleSelectionClick}
-            disabled={disabled || !isApiReady}
-            size="sm"
-            styles={{
-              root: { 
-                minWidth: 0,
-              },
-              label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-            }}
-          >
-            {t('redact.manual.markText', 'Mark Text')}
-          </Button>
-
-          {/* Mark Area (Marquee) Tool */}
-          <Button
-            variant={isMarqueeActive && !isAnnotationMode ? 'filled' : 'outline'}
-            color={isMarqueeActive && !isAnnotationMode ? 'blue' : 'gray'}
-            leftSection={<CropFreeIcon style={{ fontSize: 18, flexShrink: 0 }} />}
-            onClick={handleMarqueeClick}
-            disabled={disabled || !isApiReady}
-            size="sm"
-            styles={{
-              root: { 
-                minWidth: 0,
-              },
-              label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-            }}
-          >
-            {t('redact.manual.markArea', 'Mark Area')}
-          </Button>
-        </Group>
+        {/* Unified Redact Tool - combines text selection and area marquee */}
+        <Button
+          fullWidth
+          variant={isRedactActive && !isAnnotationMode ? 'filled' : 'outline'}
+          color={isRedactActive && !isAnnotationMode ? 'blue' : 'gray'}
+          onClick={handleRedactClick}
+          disabled={disabled || !isApiReady}
+          size="sm"
+        >
+          {t('redact.manual.startRedacting', 'Start Redacting')}
+        </Button>
 
         {/* Save Changes Button - applies pending redactions and saves to file */}
         <Button

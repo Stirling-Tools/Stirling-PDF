@@ -5,13 +5,10 @@ import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 /**
  * API interface that the EmbedPDF bridge will implement
- * Updated for embedPDF v2.4.0 with unified redaction mode support
+ * Uses embedPDF v2.4.1 unified redaction mode
  */
 export interface RedactionAPI {
-  // Legacy methods (still supported for backward compatibility)
-  toggleRedactSelection: () => void;
-  toggleMarqueeRedact: () => void;
-  // New unified redaction methods (v2.4.0)
+  // Unified redaction methods (v2.4.1)
   toggleRedact: () => void;
   enableRedact: () => void;
   isRedactActive: () => boolean;
@@ -24,7 +21,7 @@ export interface RedactionAPI {
 
 /**
  * State interface for redaction operations
- * Updated for embedPDF v2.4.0 with unified redaction mode support
+ * Uses embedPDF v2.4.1 unified redaction mode
  */
 interface RedactionState {
   // Current redaction configuration from the tool
@@ -35,7 +32,7 @@ interface RedactionState {
   redactionsApplied: boolean;
   // Synced state from EmbedPDF
   pendingCount: number;
-  // Updated to use RedactionMode enum from v2.4.0
+  // Uses RedactionMode enum from v2.4.1
   activeType: RedactionMode | null;
   isRedacting: boolean;
   // Whether the redaction API bridge is ready (API ref is populated)
@@ -44,7 +41,7 @@ interface RedactionState {
 
 /**
  * Actions interface for redaction operations
- * Updated for embedPDF v2.4.0 with unified redaction mode support
+ * Uses embedPDF v2.4.1 unified redaction mode
  */
 interface RedactionActions {
   setRedactionConfig: (config: RedactParameters | null) => void;
@@ -55,10 +52,7 @@ interface RedactionActions {
   setActiveType: (type: RedactionMode | null) => void;
   setIsRedacting: (isRedacting: boolean) => void;
   setBridgeReady: (ready: boolean) => void;
-  // Legacy actions (still supported for backward compatibility)
-  activateTextSelection: () => void;
-  activateMarquee: () => void;
-  // New unified redaction actions (v2.4.0)
+  // Unified redaction actions (v2.4.1)
   activateRedact: () => void;
   deactivateRedact: () => void;
   commitAllPending: () => void;
@@ -158,20 +152,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [state.pendingCount, state.redactionsApplied, state.isRedactionMode, setHasUnsavedChanges]);
 
-  // Legacy actions that call through to EmbedPDF API (for backward compatibility)
-  const activateTextSelection = useCallback(() => {
-    if (redactionApiRef.current) {
-      redactionApiRef.current.toggleRedactSelection();
-    }
-  }, []);
-
-  const activateMarquee = useCallback(() => {
-    if (redactionApiRef.current) {
-      redactionApiRef.current.toggleMarqueeRedact();
-    }
-  }, []);
-
-  // New unified redaction actions (v2.4.0)
+  // Unified redaction actions (v2.4.1)
   const activateRedact = useCallback(() => {
     if (redactionApiRef.current) {
       redactionApiRef.current.enableRedact();
@@ -203,8 +184,6 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setActiveType,
     setIsRedacting,
     setBridgeReady,
-    activateTextSelection,
-    activateMarquee,
     activateRedact,
     deactivateRedact,
     commitAllPending,
