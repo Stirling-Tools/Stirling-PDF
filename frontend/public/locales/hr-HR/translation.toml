@@ -3402,6 +3402,7 @@ bullet3 = "Zacrnjivanja se ne mogu poništiti nakon primjene"
 [redact.manual]
 title = "Alati za zacrnjivanje"
 instructions = "Odaberite tekst ili nacrtajte područja na PDF-u kako biste označili sadržaj za zacrnjivanje."
+startRedacting = "Start Redacting"
 markText = "Označi tekst"
 markArea = "Označi područje"
 pendingLabel = "Na čekanju:"

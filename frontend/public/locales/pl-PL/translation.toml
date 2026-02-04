@@ -3402,6 +3402,7 @@ bullet3 = "Zaczernienia nie można cofnąć po zastosowaniu"
 [redact.manual]
 title = "Narzędzia zaczerniania"
 instructions = "Zaznacz tekst lub narysuj obszary w PDF, aby oznaczyć zawartość do zaczernienia."
+startRedacting = "Start Redacting"
 markText = "Zaznacz tekst"
 markArea = "Zaznacz obszar"
 pendingLabel = "Oczekujące:"

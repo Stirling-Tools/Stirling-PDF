@@ -3402,6 +3402,7 @@ bullet3 = "Οι αποκρύψεις δεν μπορούν να αναιρεθο
 [redact.manual]
 title = "Εργαλεία απόκρυψης"
 instructions = "Επιλέξτε κείμενο ή σχεδιάστε περιοχές στο PDF για να σημάνετε περιεχόμενο προς απόκρυψη."
+startRedacting = "Start Redacting"
 markText = "Σήμανση κειμένου"
 markArea = "Σήμανση περιοχής"
 pendingLabel = "Σε αναμονή:"

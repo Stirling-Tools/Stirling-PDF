@@ -3402,6 +3402,7 @@ bullet3 = "套用後無法復原"
 [redact.manual]
 title = "塗黑工具"
 instructions = "在 PDF 上選取文字或繪製區域，以標記要塗黑的內容。"
+startRedacting = "Start Redacting"
 markText = "標記文字"
 markArea = "標記區域"
 pendingLabel = "待處理："

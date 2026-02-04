@@ -3402,6 +3402,7 @@ bullet3 = "適用後の墨消しは元に戻せません"
 [redact.manual]
 title = "墨消しツール"
 instructions = "PDF 上のテキストを選択するか領域を描画して、墨消し対象をマークします。"
+startRedacting = "Start Redacting"
 markText = "テキストをマーキング"
 markArea = "領域をマーキング"
 pendingLabel = "保留中:"

@@ -3402,6 +3402,7 @@ bullet3 = "Maskningar kan inte ångras efter tillämpning"
 [redact.manual]
 title = "Maskeringsverktyg"
 instructions = "Markera text eller rita områden på PDF-filen för att markera innehåll för maskering."
+startRedacting = "Start Redacting"
 markText = "Markera text"
 markArea = "Markera område"
 pendingLabel = "Väntande:"

@@ -3402,6 +3402,7 @@ bullet3 = "Po použití nelze začernění vrátit zpět"
 [redact.manual]
 title = "Nástroje pro začernění"
 instructions = "Vyberte text nebo nakreslete oblasti v PDF a označte obsah pro začernění."
+startRedacting = "Start Redacting"
 markText = "Označit text"
 markArea = "Označit oblast"
 pendingLabel = "Čeká:"

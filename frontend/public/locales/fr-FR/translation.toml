@@ -3402,6 +3402,7 @@ bullet3 = "Les caviardages ne peuvent pas être annulés après application"
 [redact.manual]
 title = "Outils de caviardage"
 instructions = "Sélectionnez du texte ou dessinez des zones sur le PDF pour marquer le contenu à caviarder."
+startRedacting = "Start Redacting"
 markText = "Marquer du texte"
 markArea = "Marquer une zone"
 pendingLabel = "En attente :"
