@@ -24,6 +24,7 @@ import { usePageSelectionManager } from "@app/components/pageEditor/hooks/usePag
 import { usePageEditorCommands } from "@app/components/pageEditor/hooks/useEditorCommands";
 import { usePageEditorExport } from "@app/components/pageEditor/hooks/usePageEditorExport";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
+import { convertSplitPageIdsToIndexes } from '@app/components/pageEditor/utils/splitPositions';
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -49,6 +50,7 @@ const PageEditor = ({
     clearReorderedPages,
     updateCurrentPages,
     savePersistedDocument,
+    clearPersistedDocument,
   } = usePageEditor();
 
   const [visiblePageIds, setVisiblePageIds] = useState<string[]>([]);
@@ -176,12 +178,123 @@ const PageEditor = ({
     displayDocumentRef.current = displayDocument;
   }, [displayDocument]);
 
+  const queueThumbnailRequestsForPages = useCallback((pageIds: string[]) => {
+    const doc = displayDocumentRef.current;
+    if (!doc || pageIds.length === 0) return;
+
+    const loadedCount = doc.pages.filter(p => p.thumbnail).length;
+    const pending = thumbnailRequestsRef.current.size;
+    const MAX_CONCURRENT_THUMBNAILS = loadedCount < 8 ? 1
+      : doc.totalPages < 20 ? 3
+      : doc.totalPages < 50 ? 5
+      : 8;
+    const available = Math.max(0, MAX_CONCURRENT_THUMBNAILS - pending);
+    if (available === 0) return;
+
+    const toLoad: string[] = [];
+    for (const pageId of pageIds) {
+      if (toLoad.length >= available) break;
+      if (thumbnailRequestsRef.current.has(pageId)) continue;
+      const page = doc.pages.find(p => p.id === pageId);
+      if (!page || page.thumbnail) continue;
+      toLoad.push(pageId);
+    }
+
+    if (toLoad.length === 0) return;
+
+    toLoad.forEach(pageId => {
+      const page = doc.pages.find(p => p.id === pageId);
+      if (!page) return;
+
+      const cached = getThumbnailFromCache(pageId);
+      if (cached) {
+        thumbnailRequestsRef.current.add(pageId);
+        Promise.resolve(cached)
+          .then(cache => {
+            setEditedDocument(prev => {
+              if (!prev) return prev;
+              const pageIndex = prev.pages.findIndex(p => p.id === pageId);
+              if (pageIndex === -1) return prev;
+
+              const updated = [...prev.pages];
+              updated[pageIndex] = { ...prev.pages[pageIndex], thumbnail: cache };
+              return { ...prev, pages: updated };
+            });
+          })
+          .finally(() => {
+            thumbnailRequestsRef.current.delete(pageId);
+          });
+        return;
+      }
+
+      const fileId = page.originalFileId;
+      if (!fileId) return;
+      const file = selectors.getFile(fileId);
+      if (!file) return;
+
+      thumbnailRequestsRef.current.add(pageId);
+      requestThumbnail(pageId, file, page.originalPageNumber || page.pageNumber)
+        .then(thumbnail => {
+          if (thumbnail) {
+            setEditedDocument(prev => {
+              if (!prev) return prev;
+              const pageIndex = prev.pages.findIndex(p => p.id === pageId);
+              if (pageIndex === -1) return prev;
+
+              const updated = [...prev.pages];
+              updated[pageIndex] = { ...prev.pages[pageIndex], thumbnail };
+              return { ...prev, pages: updated };
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('[Thumbnail Loading] Error:', error);
+        })
+        .finally(() => {
+          thumbnailRequestsRef.current.delete(pageId);
+        });
+    });
+  }, [
+    getThumbnailFromCache,
+    requestThumbnail,
+    selectors,
+    setEditedDocument
+  ]);
+
+  useEffect(() => {
+    queueThumbnailRequestsForPages(visiblePageIds);
+  }, [visiblePageIds, queueThumbnailRequestsForPages]);
+
+  const lastInitialDocumentSignatureRef = useRef<string | null>(null);
+  const displayDocumentId = displayDocument?.id ?? null;
+  const displayDocumentLength = displayDocument?.pages.length ?? 0;
+  useEffect(() => {
+    if (!displayDocument || displayDocument.pages.length === 0) {
+      lastInitialDocumentSignatureRef.current = null;
+      return;
+    }
+
+    const signature = `${displayDocumentId}:${displayDocumentLength}`;
+    if (lastInitialDocumentSignatureRef.current === signature) {
+      return;
+    }
+
+    const INITIAL_VISIBLE_PAGE_COUNT = 8;
+    const initialIds = displayDocument.pages
+      .slice(0, INITIAL_VISIBLE_PAGE_COUNT)
+      .map(page => page.id);
+
+    queueThumbnailRequestsForPages(initialIds);
+    lastInitialDocumentSignatureRef.current = signature;
+  }, [displayDocumentId, displayDocumentLength, queueThumbnailRequestsForPages]);
+
+  useEffect(() => {
+    setVisiblePageIds([]);
+  }, [displayDocumentId]);
+
   useEffect(() => {
     return () => {
-      // Only save persisted document if we're still in page editor mode
-      // (e.g., component unmounting due to hot reload, not navigation away)
       if (navigationState.workbench !== 'pageEditor') {
-        // Navigating away from page editor - don't save stale state
         return;
       }
 
@@ -273,103 +386,9 @@ const PageEditor = ({
     exportLoading,
     setExportLoading,
     setSplitPositions,
+    clearPersistedDocument,
+    updateCurrentPages,
   });
-
-  useEffect(() => {
-    if (!displayDocument || visiblePageIds.length === 0) {
-      return;
-    }
-
-    // Count how many thumbnails have already been loaded (not including pending)
-    const loadedCount = displayDocument.pages.filter(p => p.thumbnail).length;
-
-    const pending = thumbnailRequestsRef.current.size;
-
-    // First 8 pages: load 1 at a time for immediate visual feedback
-    // After that: batch load based on document size
-    const MAX_CONCURRENT_THUMBNAILS = loadedCount < 8 ? 1
-      : displayDocument.totalPages < 20 ? 3
-      : displayDocument.totalPages < 50 ? 5
-      : 8;
-
-    const available = Math.max(0, MAX_CONCURRENT_THUMBNAILS - pending);
-    if (available === 0) {
-      return;
-    }
-
-    const toLoad: string[] = [];
-    for (const pageId of visiblePageIds) {
-      if (toLoad.length >= available) break;
-      if (thumbnailRequestsRef.current.has(pageId)) continue;
-      const page = displayDocument.pages.find(p => p.id === pageId);
-      if (!page || page.thumbnail) continue;
-      toLoad.push(pageId);
-    }
-
-    if (toLoad.length === 0) return;
-
-    toLoad.forEach(pageId => {
-      const page = displayDocument.pages.find(p => p.id === pageId);
-      if (!page) return;
-
-      const cached = getThumbnailFromCache(pageId);
-      if (cached) {
-        thumbnailRequestsRef.current.add(pageId);
-        Promise.resolve(cached)
-          .then(cache => {
-            setEditedDocument(prev => {
-              if (!prev) return prev;
-              const pageIndex = prev.pages.findIndex(p => p.id === pageId);
-              if (pageIndex === -1) return prev;
-
-              // Only create new page object for the changed page, reuse rest
-              const updated = [...prev.pages];
-              updated[pageIndex] = { ...prev.pages[pageIndex], thumbnail: cache };
-              return { ...prev, pages: updated };
-            });
-          })
-          .finally(() => {
-            thumbnailRequestsRef.current.delete(pageId);
-          });
-        return;
-      }
-
-      const fileId = page.originalFileId;
-      if (!fileId) return;
-      const file = selectors.getFile(fileId);
-      if (!file) return;
-
-      thumbnailRequestsRef.current.add(pageId);
-      requestThumbnail(pageId, file, page.originalPageNumber || page.pageNumber)
-        .then(thumbnail => {
-          if (thumbnail) {
-            setEditedDocument(prev => {
-              if (!prev) return prev;
-              const pageIndex = prev.pages.findIndex(p => p.id === pageId);
-              if (pageIndex === -1) return prev;
-
-              // Only create new page object for the changed page, reuse rest
-              const updated = [...prev.pages];
-              updated[pageIndex] = { ...prev.pages[pageIndex], thumbnail };
-              return { ...prev, pages: updated };
-            });
-          }
-        })
-        .catch((error) => {
-          console.error('[Thumbnail Loading] Error:', error);
-        })
-        .finally(() => {
-          thumbnailRequestsRef.current.delete(pageId);
-        });
-    });
-  }, [
-    displayDocument,
-    visiblePageIds,
-    selectors,
-    requestThumbnail,
-    getThumbnailFromCache,
-    setEditedDocument,
-  ]);
 
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
@@ -610,8 +629,9 @@ const PageEditor = ({
               }
 
               const containerRect = containerEl.getBoundingClientRect();
+              const splitIndexes = convertSplitPageIdsToIndexes(displayDocument, splitPositions);
 
-              return Array.from(splitPositions).map((position) => {
+              return Array.from(splitIndexes).map((position) => {
                 const currentPage = displayedPages[position];
                 if (!currentPage) {
                   return null;
