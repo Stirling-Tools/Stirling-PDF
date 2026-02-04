@@ -111,13 +111,13 @@ public class ApplicationProperties {
             String fileUploadLimit = null;
 
             // Check SYSTEMFILEUPLOADLIMIT first (format: "100MB", "1GB", etc.)
-            String systemFileUploadLimit = System.getenv("SYSTEMFILEUPLOADLIMIT");
+            String systemFileUploadLimit = java.lang.System.getenv("SYSTEMFILEUPLOADLIMIT");
             if (systemFileUploadLimit != null && !systemFileUploadLimit.trim().isEmpty()) {
                 fileUploadLimit = systemFileUploadLimit.trim();
                 log.info("Setting fileUploadLimit from SYSTEMFILEUPLOADLIMIT: {}", fileUploadLimit);
             } else {
                 // Check SYSTEM_MAXFILESIZE (format: number in MB, e.g., "100")
-                String systemMaxFileSize = System.getenv("SYSTEM_MAXFILESIZE");
+                String systemMaxFileSize = java.lang.System.getenv("SYSTEM_MAXFILESIZE");
                 if (systemMaxFileSize != null && !systemMaxFileSize.trim().isEmpty()) {
                     try {
                         // Validate it's a number

@@ -35,7 +35,7 @@ public class MultipartConfiguration {
         MultipartConfigFactory factory = new MultipartConfigFactory();
 
         // First check if SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE is explicitly set
-        String springMaxFileSize = System.getenv("SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE");
+        String springMaxFileSize = java.lang.System.getenv("SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE");
         long uploadLimitBytes = 0;
 
         if (springMaxFileSize != null && !springMaxFileSize.trim().isEmpty()) {
