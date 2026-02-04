@@ -210,15 +210,18 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         )}
 
         {serverUrl && (
-          <button
-            className="navigation-link-button"
-            disabled={testing || loading}
-            onClick={() => {
-              setCustomUrl(serverUrl);
-            }}
-          >
-            {t('setup.server.useLast', 'Last used server: {{serverUrl}}', { serverUrl: serverUrl })}
-          </button>
+          <div className="navigation-link-container">
+            <button
+              type="button"
+              className="navigation-link-button"
+              disabled={testing || loading}
+              onClick={() => {
+                setCustomUrl(serverUrl);
+              }}
+            >
+              {t('setup.server.useLast', 'Last used server: {{serverUrl}}', { serverUrl: serverUrl })}
+            </button>
+          </div>
         )}
 
         <Button
