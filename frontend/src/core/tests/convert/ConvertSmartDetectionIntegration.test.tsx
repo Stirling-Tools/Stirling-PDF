@@ -396,7 +396,8 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         paramsResult.current.updateParameter('fromExtension', 'pdf');
         paramsResult.current.updateParameter('toExtension', 'pdfa');
         paramsResult.current.updateParameter('pdfaOptions', {
-          outputFormat: 'pdfa'
+          outputFormat: 'pdfa',
+          strict: false
         });
       });
 
@@ -409,6 +410,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
 
       const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
       expect(formData.get('outputFormat')).toBe('pdfa');
+      expect(formData.get('strict')).toBe('false');
       expect(mockedApiClient.post).toHaveBeenCalledWith('/api/v1/convert/pdf/pdfa', expect.any(FormData), {
         responseType: 'blob'
       });
