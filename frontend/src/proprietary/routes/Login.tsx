@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
 import { useAuth } from '@app/auth/UseSession';
@@ -23,6 +23,7 @@ import LoggedInState from '@app/routes/login/LoggedInState';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
   const { refetch } = useAppConfig();
@@ -39,10 +40,84 @@ export default function Login() {
   const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const [loginMethod, setLoginMethod] = useState<string>('all');
+  const [ssoAutoLogin, setSsoAutoLogin] = useState(false);
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
   const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
+  const autoLoginAttempted = useRef(false);
+  const autoLoginErrorRecorded = useRef(false);
+  const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
+  const isSsoOnlyMode = loginMethod !== 'all' && loginMethod !== 'normal';
+  const isSingleSsoOnly = !isUserPassAllowed && enabledProviders.length === 1;
+
+  const AUTO_LOGIN_ATTEMPTS_KEY = 'stirling_sso_auto_login_attempts';
+  const AUTO_LOGIN_ERRORS_KEY = 'stirling_sso_auto_login_errors';
+  const AUTO_LOGIN_LOGOUT_KEY = 'stirling_sso_auto_login_logged_out';
+  const MAX_AUTO_LOGIN_ATTEMPTS = 2;
+  const MAX_AUTO_LOGIN_ERRORS = 1;
+
+  const readSessionNumber = (key: string) => {
+    if (typeof window === 'undefined') {
+      return 0;
+    }
+    const raw = window.sessionStorage.getItem(key);
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : 0;
+  };
+
+  const writeSessionNumber = (key: string, value: number) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.sessionStorage.setItem(key, String(value));
+  };
+
+  const hasLogoutBlock = () => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.sessionStorage.getItem(AUTO_LOGIN_LOGOUT_KEY) === '1';
+  };
+
+  const clearLogoutBlock = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.sessionStorage.removeItem(AUTO_LOGIN_LOGOUT_KEY);
+  };
+
+  const recordAutoLoginAttempt = () => {
+    const attempts = readSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY);
+    writeSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY, attempts + 1);
+  };
+
+  const recordAutoLoginError = () => {
+    const errors = readSessionNumber(AUTO_LOGIN_ERRORS_KEY);
+    writeSessionNumber(AUTO_LOGIN_ERRORS_KEY, errors + 1);
+  };
+
+  const errorFromState = (location.state as { error?: string } | null)?.error;
+  const errorFromQuery = useMemo(() => {
+    if (!searchParams) {
+      return null;
+    }
+    const errorParamKeys = ['error', 'error_description', 'error_code', 'sso_error', 'oauth_error', 'saml_error', 'login_error'];
+    for (const key of errorParamKeys) {
+      const value = searchParams.get(key);
+      if (value) {
+        return value;
+      }
+    }
+    for (const [key, value] of searchParams.entries()) {
+      if (key.toLowerCase().includes('error')) {
+        return value || 'Single sign-on failed. Please try again.';
+      }
+    }
+    return null;
+  }, [searchParams]);
+
+  const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -102,6 +177,7 @@ export default function Login() {
         }
 
         setEnableLogin(data.enableLogin ?? true);
+        setSsoAutoLogin(Boolean(data.ssoAutoLogin));
 
         // Set first-time setup flags
         setIsFirstTimeSetup(data.firstTimeSetup ?? false);
@@ -149,6 +225,76 @@ export default function Login() {
     }
   }, [enabledProviders, loginMethod]);
 
+  const signInWithProvider = async (provider: OAuthProvider) => {
+    try {
+      setIsSigningIn(true);
+      setError(null);
+      clearLogoutBlock();
+
+      console.log(`[Login] Signing in with provider: ${provider}`);
+
+      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
+      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
+      const { error } = await springAuth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: `${BASE_PATH}/auth/callback` }
+      });
+
+      if (error) {
+        console.error(`[Login] ${provider} error:`, error);
+        setError(t('login.failedToSignIn', { provider, message: error.message }) || `Failed to sign in with ${provider}`);
+      }
+    } catch (err) {
+      console.error(`[Login] Unexpected error:`, err);
+      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }) || 'An unexpected error occurred');
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  // Auto-login to SSO when enabled and only one SSO option exists
+  useEffect(() => {
+    if (autoLoginAttempted.current) {
+      return;
+    }
+
+    const attempts = readSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY);
+    const errors = readSessionNumber(AUTO_LOGIN_ERRORS_KEY);
+    const blockedByErrors = errors >= MAX_AUTO_LOGIN_ERRORS;
+    const blockedByAttempts = attempts >= MAX_AUTO_LOGIN_ATTEMPTS;
+    const blockedByLogout = hasLogoutBlock();
+
+    if (!ssoAutoLogin || loginDisabled || loading || session || backendProbe.status !== 'up') {
+      return;
+    }
+
+    if (hasSsoLoginError || blockedByErrors || blockedByAttempts || blockedByLogout) {
+      return;
+    }
+
+    if (isUserPassAllowed) {
+      return;
+    }
+
+    if (enabledProviders.length !== 1) {
+      return;
+    }
+
+    autoLoginAttempted.current = true;
+    recordAutoLoginAttempt();
+    void signInWithProvider(enabledProviders[0]);
+  }, [
+    ssoAutoLogin,
+    loginDisabled,
+    loading,
+    session,
+    backendProbe.status,
+    loginMethod,
+    enabledProviders,
+    signInWithProvider,
+    hasSsoLoginError,
+  ]);
+
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
     try {
@@ -177,10 +323,21 @@ export default function Login() {
             break
         }
       }
+
+      if (errorFromState) {
+        setError(errorFromState);
+      } else if (errorFromQuery) {
+        setError(errorFromQuery);
+      }
+
+      if (hasSsoLoginError && !autoLoginErrorRecorded.current) {
+        recordAutoLoginError();
+        autoLoginErrorRecorded.current = true;
+      }
     } catch (_) {
       // ignore
     }
-  }, [searchParams, t]);
+  }, [searchParams, t, errorFromState, errorFromQuery, hasSsoLoginError]);
 
   const baseUrl = window.location.origin + BASE_PATH;
 
@@ -243,32 +400,6 @@ export default function Login() {
     );
   }
 
-  const signInWithProvider = async (provider: OAuthProvider) => {
-    try {
-      setIsSigningIn(true);
-      setError(null);
-
-      console.log(`[Login] Signing in with provider: ${provider}`);
-
-      // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
-      // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
-      const { error } = await springAuth.signInWithOAuth({
-        provider: provider,
-        options: { redirectTo: `${BASE_PATH}/auth/callback` }
-      });
-
-      if (error) {
-        console.error(`[Login] ${provider} error:`, error);
-        setError(t('login.failedToSignIn', { provider, message: error.message }) || `Failed to sign in with ${provider}`);
-      }
-    } catch (err) {
-      console.error(`[Login] Unexpected error:`, err);
-      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }) || 'An unexpected error occurred');
-    } finally {
-      setIsSigningIn(false);
-    }
-  };
-
   const signInWithEmail = async () => {
     if (!email || !password) {
       setError(t('login.pleaseEnterBoth') || 'Please enter both email and password');
@@ -283,6 +414,7 @@ export default function Login() {
     try {
       setIsSigningIn(true);
       setError(null);
+      clearLogoutBlock();
 
       console.log('[Login] Signing in with email:', email);
 
@@ -300,6 +432,7 @@ export default function Login() {
         }
       } else if (user && session) {
         console.log('[Login] Email sign in successful');
+        clearLogoutBlock();
         setRequiresMfa(false);
         setMfaCode('');
         // Auth state will update automatically and Landing will redirect to home
@@ -320,7 +453,10 @@ export default function Login() {
 
   return (
     <AuthLayout>
-      <LoginHeader title={t('login.login') || 'Sign in'} />
+      <LoginHeader
+        title={isSingleSsoOnly ? '' : (t('login.login') || 'Sign in')}
+        centerOnly={isSingleSsoOnly}
+      />
 
       {/* Success message */}
       {successMessage && (
@@ -346,15 +482,18 @@ export default function Login() {
         isSubmitting={isSigningIn}
         layout="vertical"
         enabledProviders={enabledProviders}
+        ctaPrefix={isSsoOnlyMode ? t('login.signInWith', 'Sign in with') : undefined}
+        styleVariant="light"
+        useNewStyle={isSsoOnlyMode}
       />
 
       {/* Divider between OAuth and Email - only show if SSO is available and username/password is allowed */}
-      {hasSSOProviders && (loginMethod === 'all' || loginMethod === 'normal') && (
+      {hasSSOProviders && isUserPassAllowed && (
         <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
       )}
 
       {/* Sign in with email button - only show if SSO providers exist and username/password is allowed */}
-      {hasSSOProviders && !showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
+      {hasSSOProviders && !showEmailForm && isUserPassAllowed && (
         <div className="auth-section">
           <button
             type="button"
@@ -368,7 +507,7 @@ export default function Login() {
       )}
 
       {/* Email form - show by default if no SSO, or when button clicked, but ONLY if username/password is allowed */}
-      {showEmailForm && (loginMethod === 'all' || loginMethod === 'normal') && (
+      {showEmailForm && isUserPassAllowed && (
         <div style={{ marginTop: hasSSOProviders ? '1rem' : '0' }}>
           <EmailPasswordForm
             email={email}
@@ -387,7 +526,7 @@ export default function Login() {
       )}
 
       {/* Help section - only show on first-time setup with default credentials and username/password auth allowed */}
-      {isFirstTimeSetup && showDefaultCredentials && (loginMethod === 'all' || loginMethod === 'normal') && (
+      {isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed && (
         <Alert
           color="blue"
           variant="light"

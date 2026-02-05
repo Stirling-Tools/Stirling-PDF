@@ -15,6 +15,7 @@ export interface LoginPageData {
   showDefaultCredentials: boolean;
   firstTimeSetup: boolean;
   enableLogin: boolean;
+  ssoAutoLogin?: boolean;
 }
 
 /**
