@@ -58,6 +58,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, ultra-lite, API, Spr
 # Copy scripts
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
+COPY scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
 
 # Copy built JAR from build stage
 COPY --from=build /app/app/core/build/libs/*.jar /app.jar
