@@ -42,7 +42,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const { actions: navActions } = useNavigationActions();
   const isSignMode = selectedTool === 'sign';
   const isRedactMode = selectedTool === 'redact';
-  
+
   // Get redaction pending state and navigation guard
   const { isRedacting: _isRedacting } = useRedactionMode();
   const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
@@ -71,7 +71,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
       const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'redact');
       await fileActions.consumeFiles([state.files.ids[0]], stirlingFiles, stubs);
-      
+
       // Clear unsaved changes flags after successful save
       setHasUnsavedChanges(false);
       setRedactionsApplied(false);
@@ -117,7 +117,6 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
         // Activate unified redact mode after a short delay
         setTimeout(() => {
           const currentType = redactionApiRef.current?.getActiveType?.();
-          // Use unified RedactionMode.Redact from embedPDF v2.4.1
           if (currentType !== RedactionMode.Redact) {
             activateRedact();
           }

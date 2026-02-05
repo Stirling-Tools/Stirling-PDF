@@ -4,7 +4,7 @@ import { useRedaction } from '@app/contexts/RedactionContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
 /**
- * RedactionAPIBridge - Uses embedPDF v2.4.1
+ * RedactionAPIBridge - Uses embedPDF v2.5.0
  * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
  * Uses the unified redaction mode (toggleRedact/enableRedact/endRedact).
  */
@@ -48,9 +48,9 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   }, [state?.pendingCount, state?.activeType, state?.isRedacting, setPendingCount, setActiveType, setIsRedacting]);
 
   // Expose the EmbedPDF API through our context's ref
-  // Uses v2.4.1 unified redaction mode
+  // Uses v2.5.0 unified redaction mode
   useImperativeHandle(redactionApiRef, () => ({
-    // Unified redaction methods (v2.4.1)
+    // Unified redaction methods (v2.5.0)
     toggleRedact: () => {
       provides?.toggleRedact();
     },

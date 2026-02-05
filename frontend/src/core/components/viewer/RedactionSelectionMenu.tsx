@@ -8,32 +8,30 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useRedaction } from '@app/contexts/RedactionContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
-// Use the official EmbedPDF v2.3.0 types
 export type { RedactionSelectionMenuProps };
 
 export function RedactionSelectionMenu(props: RedactionSelectionMenuProps) {
   const activeDocumentId = useActiveDocumentId();
-  
+
   // Don't render until we have a valid document ID
   if (!activeDocumentId) {
     return null;
   }
-  
+
   return (
-    <RedactionSelectionMenuInner 
+    <RedactionSelectionMenuInner
       documentId={activeDocumentId}
       {...props}
     />
   );
 }
 
-function RedactionSelectionMenuInner({ 
+function RedactionSelectionMenuInner({
   documentId,
   context,
-  selected, 
+  selected,
   menuWrapperProps,
 }: RedactionSelectionMenuProps & { documentId: string }) {
-  // Extract item and pageIndex from context (EmbedPDF v2.3.0 API)
   const item = context?.item;
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
@@ -41,14 +39,14 @@ function RedactionSelectionMenuInner({
   const { setRedactionsApplied } = useRedaction();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  
+
   // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback((node: HTMLDivElement | null) => {
     wrapperRef.current = node;
     // Call the EmbedPDF ref callback
     menuWrapperProps?.ref?.(node);
   }, [menuWrapperProps]);
-  
+
   const handleRemove = useCallback(() => {
     if (provides?.removePending && item && pageIndex !== undefined) {
       provides.removePending(pageIndex, item.id);
@@ -89,17 +87,17 @@ function RedactionSelectionMenuInner({
     };
 
     updatePosition();
-    
+
     // Update position on scroll/resize
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
-    
+
     return () => {
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
     };
   }, [selected, item]);
-  
+
   // Early return AFTER all hooks have been called
   if (!selected || !item) return null;
 
@@ -146,8 +144,8 @@ function RedactionSelectionMenuInner({
               <DeleteIcon style={{ fontSize: 18 }} />
             </ActionIcon>
           </Tooltip>
-          
-          <Tooltip 
+
+          <Tooltip
             label={t('redact.manual.applyWarning', '⚠️ Permanent application, cannot be undone and the data underneath will be deleted')}
             withArrow
             position="top"
@@ -172,15 +170,15 @@ function RedactionSelectionMenuInner({
   return (
     <>
       {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps */}
-      <div 
-        ref={setRef} 
-        style={{ 
+      <div
+        ref={setRef}
+        style={{
           // Use EmbedPDF's positioning styles
           ...menuWrapperProps?.style,
           // Keep the wrapper invisible but still occupying space for positioning
           opacity: 0,
           pointerEvents: 'none',
-        }} 
+        }}
       />
       {typeof document !== 'undefined' && menuContent
         ? createPortal(menuContent, document.body)

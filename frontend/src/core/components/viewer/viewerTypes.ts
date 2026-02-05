@@ -25,6 +25,7 @@ export interface AnnotationAPI {
   deactivateTools: () => void;
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   getActiveTool?: () => { id: AnnotationToolId } | null;
+  purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
 }
 
 export interface HistoryAPI {
@@ -33,6 +34,15 @@ export interface HistoryAPI {
   canUndo: () => boolean;
   canRedo: () => boolean;
   subscribe?: (listener: () => void) => () => void;
+  /**
+   * Purges history entries that match the given predicate based on command metadata.
+   * Useful for removing commands that are no longer valid (e.g., after a permanent redaction commit).
+   * Added in embedPDF v2.4.0+
+   * @param predicate A function that returns true for commands that should be purged
+   * @param topic If provided, only purges entries for that specific topic
+   * @returns The number of entries that were purged
+   */
+  purgeByMetadata?: <T>(predicate: (metadata: T | undefined) => boolean, topic?: string) => number;
 }
 
 export type AnnotationToolId =

@@ -14,7 +14,6 @@ interface ManualRedactionControlsProps {
 /**
  * ManualRedactionControls provides UI for manual PDF redaction in the tool panel.
  * Displays controls for marking text/areas for redaction and applying them.
- * Uses the unified redaction mode from embedPDF v2.4.1 (combines text selection and area marquee).
  */
 export default function ManualRedactionControls({ disabled = false }: ManualRedactionControlsProps) {
   const { t } = useTranslation();
@@ -22,20 +21,20 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // Use our RedactionContext which bridges to EmbedPDF
   const { activateTextSelection, activateMarquee, redactionsApplied, setActiveType } = useRedaction();
   const { pendingCount, activeType, isBridgeReady } = useRedactionMode();
-  
+
   // Get viewer context to manage annotation mode and save changes
   const { isAnnotationMode, setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
-  
+
   // Get signature context to deactivate annotation tools when switching to redaction
   const { signatureApiRef } = useSignature();
-  
+
   // Check which tool is active based on activeType
   const isSelectionActive = activeType === 'redactSelection';
   const isMarqueeActive = activeType === 'marqueeRedact';
-  
+
   // Track if we've auto-activated for the current bridge session
   const hasAutoActivated = useRef(false);
-  
+
   // Track the previous file index to detect file switches
   const prevFileIndexRef = useRef<number>(activeFileIndex);
 
@@ -67,14 +66,14 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   useEffect(() => {
     if (prevFileIndexRef.current !== activeFileIndex) {
       prevFileIndexRef.current = activeFileIndex;
-      
+
       // Reset active type to null when switching files
       // This makes both buttons appear unselected, requiring the user to re-click
       // which ensures proper activation on the new PDF
       if (isSelectionActive || isMarqueeActive) {
         setActiveType(null);
       }
-      
+
       // Reset auto-activation flag so new file can auto-activate
       hasAutoActivated.current = false;
     }
@@ -93,7 +92,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
         }
       }
     }
-    
+
     if (isSelectionActive && !isAnnotationMode) {
       // If already active and not coming from annotation mode, switch to marquee
       activateMarquee();
@@ -115,7 +114,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
         }
       }
     }
-    
+
     if (isMarqueeActive && !isAnnotationMode) {
       // If already active and not coming from annotation mode, switch to selection
       activateTextSelection();
@@ -134,7 +133,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // Check if there are unsaved changes to save (pending redactions OR applied redactions)
   // Save Changes button will apply pending redactions and then save everything
   const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
-  
+
   // Check if API is available - use isBridgeReady state instead of ref (refs don't trigger re-renders)
   const isApiReady = isBridgeReady;
 
@@ -145,7 +144,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
         <Text size="sm" fw={500}>
           {t('redact.manual.title', 'Redaction Tools')}
         </Text>
-        
+
         <Text size="xs" c="dimmed">
           {t('redact.manual.instructions', 'Select text or draw areas on the PDF to mark content for redaction.')}
         </Text>
@@ -160,7 +159,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
             disabled={disabled || !isApiReady}
             size="sm"
             styles={{
-              root: { 
+              root: {
                 minWidth: 0,
               },
               label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
@@ -178,7 +177,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
             disabled={disabled || !isApiReady}
             size="sm"
             styles={{
-              root: { 
+              root: {
                 minWidth: 0,
               },
               label: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },

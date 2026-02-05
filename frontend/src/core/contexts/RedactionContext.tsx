@@ -5,10 +5,8 @@ import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 /**
  * API interface that the EmbedPDF bridge will implement
- * Uses embedPDF v2.4.1 unified redaction mode
  */
 export interface RedactionAPI {
-  // Unified redaction methods (v2.4.1)
   toggleRedact: () => void;
   enableRedact: () => void;
   isRedactActive: () => boolean;
@@ -21,7 +19,7 @@ export interface RedactionAPI {
 
 /**
  * State interface for redaction operations
- * Uses embedPDF v2.4.1 unified redaction mode
+ * Uses embedPDF v2.5.0 unified redaction mode
  */
 interface RedactionState {
   // Current redaction configuration from the tool
@@ -32,7 +30,7 @@ interface RedactionState {
   redactionsApplied: boolean;
   // Synced state from EmbedPDF
   pendingCount: number;
-  // Uses RedactionMode enum from v2.4.1
+  // Uses RedactionMode enum from v2.5.0
   activeType: RedactionMode | null;
   isRedacting: boolean;
   // Whether the redaction API bridge is ready (API ref is populated)
@@ -41,7 +39,7 @@ interface RedactionState {
 
 /**
  * Actions interface for redaction operations
- * Uses embedPDF v2.4.1 unified redaction mode
+ * Uses embedPDF v2.5.0 unified redaction mode
  */
 interface RedactionActions {
   setRedactionConfig: (config: RedactParameters | null) => void;
@@ -52,7 +50,7 @@ interface RedactionActions {
   setActiveType: (type: RedactionMode | null) => void;
   setIsRedacting: (isRedacting: boolean) => void;
   setBridgeReady: (ready: boolean) => void;
-  // Unified redaction actions (v2.4.1)
+  // Unified redaction actions (v2.5.0)
   activateRedact: () => void;
   deactivateRedact: () => void;
   commitAllPending: () => void;
@@ -155,7 +153,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [state.pendingCount, state.redactionsApplied, state.isRedactionMode, setHasUnsavedChanges]);
 
-  // Unified redaction actions (v2.4.1)
+  // Unified redaction actions (v2.5.0)
   const activateRedact = useCallback(() => {
     if (redactionApiRef.current) {
       redactionApiRef.current.enableRedact();
@@ -178,7 +176,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [setRedactionsApplied]);
 
   // Legacy UI actions for backwards compatibility
-  // In v2.4.1, both text selection and marquee use the same unified mode
+  // In v2.5.0, both text selection and marquee use the same unified mode
   // These just activate the unified redact mode and set the active type for UI state
   const activateTextSelection = useCallback(() => {
     if (redactionApiRef.current) {
