@@ -219,6 +219,8 @@ pagesAndStarting = "Páginas e número inicial"
 positionAndPages = "Posição e páginas"
 preview = "Seleção de posição"
 previewDisclaimer = "A prévia é aproximada. A saída final pode variar devido às métricas de fonte do PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Selecionar arquivo PDF:"
@@ -4521,6 +4523,14 @@ description = "Diretório onde o pipeline monitora PDFs recebidos (deixe em bran
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Diretório de pastas finalizadas"
 description = "Diretório onde os PDFs processados são gerados (deixe em branco para padrão: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Caminhos de ferramentas externas"

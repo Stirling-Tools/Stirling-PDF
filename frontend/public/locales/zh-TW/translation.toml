@@ -219,6 +219,8 @@ pagesAndStarting = "頁面與起始編號"
 positionAndPages = "位置與頁面"
 preview = "位置選擇"
 previewDisclaimer = "預覽為近似值。最終輸出可能因 PDF 字型度量而異。"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "選擇 PDF 檔案："
@@ -4521,6 +4523,14 @@ description = "管線監看輸入 PDF 的目錄（留空使用預設：/pipeline
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "完成資料夾目錄"
 description = "輸出已處理 PDF 的目錄（留空使用預設：/pipeline/finishedFolders）"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "外部工具路徑"

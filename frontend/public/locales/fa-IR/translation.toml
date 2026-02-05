@@ -219,6 +219,8 @@ pagesAndStarting = "صفحات و شماره آغازین"
 positionAndPages = "موقعیت و صفحات"
 preview = "انتخاب موقعیت"
 previewDisclaimer = "پیش‌نمایش تقریبی است. خروجی نهایی ممکن است به دلیل معیارهای فونت PDF متفاوت باشد."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "انتخاب فایل PDF:"
@@ -4521,6 +4523,14 @@ description = "مسیر پوشه‌ای که پایپلاین برای PDFهای
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "دایرکتوری پوشه‌های پایان‌یافته"
 description = "مسیر پوشه‌ای که PDFهای پردازش‌شده در آن خروجی داده می‌شوند (خالی بگذارید برای پیش‌فرض: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "مسیر ابزارهای خارجی"

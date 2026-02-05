@@ -219,6 +219,8 @@ pagesAndStarting = "Pàgines i número inicial"
 positionAndPages = "Posició i pàgines"
 preview = "Selecció de posició"
 previewDisclaimer = "La previsualització és aproximada. El resultat final pot variar a causa de les mètriques del tipus de lletra del PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Selecciona PDF:"
@@ -4521,6 +4523,14 @@ description = "Directori on la pipeline monitoritza l'arribada de PDFs (deixeu-h
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Directori de carpetes finalitzades"
 description = "Directori on es generen els PDFs processats (deixeu-ho buit per al valor per defecte: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Camins d'eines externes"

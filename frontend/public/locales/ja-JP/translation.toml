@@ -219,6 +219,8 @@ pagesAndStarting = "ページと開始番号"
 positionAndPages = "位置とページ"
 preview = "位置の選択"
 previewDisclaimer = "プレビューは概算です。最終出力は PDF のフォントメトリクスにより異なる場合があります。"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDFファイルを選択:"
@@ -4521,6 +4523,14 @@ description = "パイプラインが受信 PDF を監視するディレクトリ
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "完了フォルダーのディレクトリ"
 description = "処理済み PDF の出力先ディレクトリ（空欄で既定: /pipeline/finishedFolders）"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "外部ツールのパス"

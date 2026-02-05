@@ -219,6 +219,8 @@ pagesAndStarting = "หน้าและเลขเริ่มต้น"
 positionAndPages = "ตำแหน่งและหน้า"
 preview = "การเลือกตำแหน่ง"
 previewDisclaimer = "ภาพตัวอย่างเป็นการประมาณ ผลลัพธ์สุดท้ายอาจแตกต่างเนื่องจากเมตริกฟอนต์ของ PDF"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "เลือกไฟล์ PDF:"
@@ -4521,6 +4523,14 @@ description = "ไดเรกทอรีที่ Pipeline จะเฝ้า�
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "ไดเรกทอรีโฟลเดอร์ที่เสร็จสิ้น"
 description = "ไดเรกทอรีสำหรับผลลัพธ์ PDF ที่ประมวลผลแล้ว (ปล่อยว่างเพื่อค่าเริ่มต้น: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "พาธเครื่องมือภายนอก"

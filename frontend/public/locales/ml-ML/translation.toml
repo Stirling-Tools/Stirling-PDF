@@ -219,6 +219,8 @@ pagesAndStarting = "പേജുകളും ആരംഭ നമ്പറും"
 positionAndPages = "സ്ഥാനം & പേജുകൾ"
 preview = "സ്ഥാനം തിരഞ്ഞെടുപ്പ്"
 previewDisclaimer = "പ്രിവ്യൂ ഏകദേശമാണ്. PDF ഫോണ്ട് മീട്രിക്‌സിന്റെ കാരണമായി അന്തിമ ഔട്ട്പുട്ട് വ്യത്യാസപ്പെട്ടേക്കാം."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF ഫയൽ തിരഞ്ഞെടുക്കുക:"
@@ -4521,6 +4523,14 @@ description = "പൈപ്പ്‌ലൈൻ ഇൻകമിംഗ് PDFകൾ
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "ഫിനിഷ്ഡ് ഫോൾഡറുകളുടെ ഡയറക്ടറി"
 description = "പ്രോസസ്സ് ചെയ്ത PDFകൾ ഔട്ട്‌പുട്ട് ചെയ്യുന്ന ഡയറക്ടറി (ഡീഫാൾട്ട് ഉപയോഗിക്കാൻ ശൂന്യം വിടുക: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "ബാഹ്യ ടൂൾ പാതകൾ"

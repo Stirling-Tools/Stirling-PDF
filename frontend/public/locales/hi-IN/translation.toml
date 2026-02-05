@@ -219,6 +219,8 @@ pagesAndStarting = "पृष्ठ और आरंभिक संख्या
 positionAndPages = "स्थिति और पृष्ठ"
 preview = "स्थिति चयन"
 previewDisclaimer = "पूर्वावलोकन अनुमानित है। अंतिम आउटपुट PDF फ़ॉन्ट मेट्रिक्स के कारण भिन्न हो सकता है।"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF फ़ाइल चुनें:"
@@ -4521,6 +4523,14 @@ description = "वह डायरेक्टरी जहाँ पाइप�
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "फिनिश्ड फ़ोल्डर्स डायरेक्टरी"
 description = "वह डायरेक्टरी जहाँ प्रोसेस किए गए PDF आउटपुट होते हैं (डिफ़ॉल्ट हेतु खाली छोड़ें: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "बाह्य टूल पाथ"

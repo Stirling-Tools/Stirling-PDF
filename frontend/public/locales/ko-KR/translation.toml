@@ -219,6 +219,8 @@ pagesAndStarting = "페이지 및 시작 번호"
 positionAndPages = "위치 및 페이지"
 preview = "위치 선택"
 previewDisclaimer = "미리보기는 대략적인 표시입니다. 최종 출력은 PDF 글꼴 메트릭에 따라 달라질 수 있습니다."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF 파일 선택:"
@@ -4521,6 +4523,14 @@ description = "파이프라인이 들어오는 PDF를 감시하는 디렉터리(
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "처리 완료 폴더 디렉터리"
 description = "처리된 PDF가 출력되는 디렉터리(기본값 사용 시 비워두세요: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "외부 도구 경로"

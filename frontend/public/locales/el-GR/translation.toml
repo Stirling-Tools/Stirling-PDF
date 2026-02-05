@@ -219,6 +219,8 @@ pagesAndStarting = "Σελίδες & Αρχικός αριθμός"
 positionAndPages = "Θέση & Σελίδες"
 preview = "Επιλογή θέσης"
 previewDisclaimer = "Η προεπισκόπηση είναι κατά προσέγγιση. Το τελικό αποτέλεσμα μπορεί να διαφέρει λόγω των μετρικών γραμματοσειράς του PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Επιλέξτε αρχείο PDF:"
@@ -4521,6 +4523,14 @@ description = "Κατάλογος όπου το pipeline παρακολουθε�
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Κατάλογος ολοκληρωμένων φακέλων"
 description = "Κατάλογος όπου εξάγονται τα επεξεργασμένα PDF (αφήστε κενό για προεπιλογή: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Διαδρομές εξωτερικών εργαλείων"

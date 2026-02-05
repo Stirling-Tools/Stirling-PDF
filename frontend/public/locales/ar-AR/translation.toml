@@ -219,6 +219,8 @@ pagesAndStarting = "الصفحات والرقم الابتدائي"
 positionAndPages = "الموضع والصفحات"
 preview = "اختيار الموضع"
 previewDisclaimer = "المعاينة تقديرية. قد يختلف الناتج النهائي بسبب مقاييس خطوط PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "حدد ملف PDF:"
@@ -4521,6 +4523,14 @@ description = "الدليل الذي يراقب فيه خط الأنابيب م�
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "دليل المجلدات المنتهية"
 description = "الدليل الذي تُخرَج فيه ملفات PDF المعالجة (اتركه فارغًا للإعداد الافتراضي: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "مسارات الأدوات الخارجية"

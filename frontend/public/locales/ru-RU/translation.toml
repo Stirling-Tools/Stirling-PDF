@@ -219,6 +219,8 @@ pagesAndStarting = "Страницы и начальный номер"
 positionAndPages = "Положение и страницы"
 preview = "Выбор положения"
 previewDisclaimer = "Предпросмотр приблизительный. Итог может отличаться из‑за метрик шрифтов PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Выберите PDF-файл:"
@@ -4521,6 +4523,14 @@ description = "Каталог, где конвейер отслеживает в
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Каталог завершенных папок"
 description = "Каталог, куда выводятся обработанные PDF (оставьте пустым по умолчанию: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Пути к внешним инструментам"

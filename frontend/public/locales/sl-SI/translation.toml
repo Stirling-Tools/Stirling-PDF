@@ -219,6 +219,8 @@ pagesAndStarting = "Strani in začetna številka"
 positionAndPages = "Položaj in strani"
 preview = "Izbira položaja"
 previewDisclaimer = "Predogled je približen. Končni rezultat se lahko razlikuje zaradi metrik pisav PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Izberite datoteko PDF:"
@@ -4521,6 +4523,14 @@ description = "Imenik, kjer pipeline spremlja dohodne PDF-je (pustite prazno za 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Imenik zaključenih map"
 description = "Imenik, kamor se izpišejo obdelani PDF-ji (pustite prazno za privzeto: /pipeline/finishedFolders)"
+
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline Directory"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Poti zunanjih orodij"
