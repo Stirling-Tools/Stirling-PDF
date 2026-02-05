@@ -590,7 +590,8 @@ public class ConvertPDFToPDFA {
         if (isPdfX) {
             return handlePdfXConversion(inputFile, outputFormat);
         } else {
-            return handlePdfAConversion(inputFile, outputFormat, request.isStrict());
+            return handlePdfAConversion(
+                    inputFile, outputFormat, request.getStrict() != null && request.getStrict());
         }
     }
 

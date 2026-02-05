@@ -20,5 +20,5 @@ public class PdfToPdfARequest extends PDFFile {
     @Schema(
             description =
                     "If true, the conversion will fail if the output is not perfectly compliant")
-    private boolean strict;
+    private Boolean strict = false;
 }
