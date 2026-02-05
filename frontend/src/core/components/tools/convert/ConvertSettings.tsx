@@ -146,7 +146,7 @@ const ConvertSettings = ({
       includeAllRecipients: false,
     });
     onParameterChange('pdfaOptions', {
-      outputFormat: 'pdfa-1',
+      outputFormat: 'pdfa-2b',
       strict: false,
     });
     onParameterChange('pdfxOptions', {
@@ -235,7 +235,7 @@ const ConvertSettings = ({
       includeAllRecipients: false,
     });
     onParameterChange('pdfaOptions', {
-      outputFormat: 'pdfa-1',
+      outputFormat: 'pdfa-2b',
       strict: false,
     });
     onParameterChange('pdfxOptions', {

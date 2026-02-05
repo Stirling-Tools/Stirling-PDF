@@ -23,8 +23,8 @@ const ConvertToPdfaSettings = ({
 
   const pdfaFormatOptions = [
     { value: 'pdfa-1', label: 'PDF/A-1b' },
-    { value: 'pdfa', label: 'PDF/A-2b' },
-    { value: 'pdfa-3', label: 'PDF/A-3b' }
+    { value: 'pdfa-2b', label: 'PDF/A-2b' },
+    { value: 'pdfa-3b', label: 'PDF/A-3b' }
   ];
 
   return (
@@ -45,7 +45,7 @@ const ConvertToPdfaSettings = ({
           value={parameters.pdfaOptions.outputFormat}
           onChange={(value) => onParameterChange('pdfaOptions', {
             ...parameters.pdfaOptions,
-            outputFormat: value || 'pdfa-1'
+            outputFormat: value || 'pdfa-2b'
           })}
           data={pdfaFormatOptions}
           disabled={disabled || isChecking}

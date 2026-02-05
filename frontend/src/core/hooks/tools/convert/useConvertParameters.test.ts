@@ -24,7 +24,7 @@ describe('useConvertParameters', () => {
       expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(10);
       expect(result.current.parameters.emailOptions.downloadHtml).toBe(false);
       expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(false);
-      expect(result.current.parameters.pdfaOptions.outputFormat).toBe('pdfa-1');
+      expect(result.current.parameters.pdfaOptions.outputFormat).toBe('pdfa-2b');
     });
 
     test('should update individual parameters', () => {
