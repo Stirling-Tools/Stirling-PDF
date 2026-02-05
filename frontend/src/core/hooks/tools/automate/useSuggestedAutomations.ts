@@ -49,6 +49,7 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
               toExtension: 'pdfa',
               pdfaOptions: {
                 outputFormat: 'pdfa-1',
+                strict: false,
               }
             }
           },

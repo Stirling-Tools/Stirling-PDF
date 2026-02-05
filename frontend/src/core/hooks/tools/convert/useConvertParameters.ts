@@ -35,7 +35,7 @@ export interface ConvertParameters extends BaseParameters {
   };
   pdfaOptions: {
     outputFormat: string;
-    strict: boolean;
+    strict?: boolean;
   };
   pdfxOptions: {
     outputFormat: string;

@@ -95,7 +95,8 @@ describe('useConvertParameters', () => {
 
       act(() => {
         result.current.updateParameter('pdfaOptions', {
-          outputFormat: 'pdfa'
+          outputFormat: 'pdfa',
+          strict: false
         });
       });
 
