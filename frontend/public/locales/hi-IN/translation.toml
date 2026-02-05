@@ -2644,6 +2644,7 @@ label = "मूल PDF"
 
 [compare.edited]
 label = "संपादित PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "तुलना पुनः चलाएं?"
@@ -3604,6 +3605,11 @@ draftWatermark = "Draft Watermark"
 europeanDate = "European Date"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
+doc-info = "Document Info"
+draft = "Draft Watermark"
+european-date = "European Date (DD/MM/YYYY)"
+legal-footer = "Legal Footer"
+page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "छवि हटाएं,पृष्ठ कार्य,बैक एंड,सर्वर साइड"

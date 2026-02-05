@@ -2644,6 +2644,7 @@ label = "ملف PDF الأصلي"
 
 [compare.edited]
 label = "ملف PDF المعدل"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "إعادة تشغيل المقارنة؟"
@@ -3604,6 +3605,11 @@ draftWatermark = "Draft Watermark"
 europeanDate = "European Date"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
+doc-info = "Document Info"
+draft = "Draft Watermark"
+european-date = "European Date (DD/MM/YYYY)"
+legal-footer = "Legal Footer"
+page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "إزالة الصورة,عمليات الصفحة,الخلفية,جانب الخادم"

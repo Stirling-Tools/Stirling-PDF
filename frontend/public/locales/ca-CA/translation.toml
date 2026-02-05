@@ -2644,6 +2644,7 @@ label = "PDF original"
 
 [compare.edited]
 label = "PDF editat"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Tornar a executar la comparació?"
@@ -3604,6 +3605,11 @@ draftWatermark = "Draft Watermark"
 europeanDate = "European Date"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
+doc-info = "Document Info"
+draft = "Draft Watermark"
+european-date = "European Date (DD/MM/YYYY)"
+legal-footer = "Legal Footer"
+page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "Elimina imatge,Operacions de pàgina,Back-end,Servidor"

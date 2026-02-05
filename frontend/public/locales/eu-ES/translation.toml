@@ -2644,6 +2644,7 @@ label = "Jatorrizko PDFa"
 
 [compare.edited]
 label = "Editatutako PDFa"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Berriro exekutatu konparazioa?"
@@ -3604,6 +3605,11 @@ draftWatermark = "Draft Watermark"
 europeanDate = "European Date"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
+doc-info = "Document Info"
+draft = "Draft Watermark"
+european-date = "European Date (DD/MM/YYYY)"
+legal-footer = "Legal Footer"
+page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "Irudia kendu,Orrialde eragiketak,Back end,server side"

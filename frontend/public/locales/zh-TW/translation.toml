@@ -2644,6 +2644,7 @@ label = "原始 PDF"
 
 [compare.edited]
 label = "已編輯的 PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "要重新執行比較嗎？"
@@ -3604,6 +3605,11 @@ draftWatermark = "Draft Watermark"
 europeanDate = "European Date"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
+doc-info = "Document Info"
+draft = "Draft Watermark"
+european-date = "European Date (DD/MM/YYYY)"
+legal-footer = "Legal Footer"
+page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "移除圖片,頁面操作,後端,伺服器端"

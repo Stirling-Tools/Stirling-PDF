@@ -2644,6 +2644,7 @@ label = "원본 PDF"
 
 [compare.edited]
 label = "수정된 PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "비교를 다시 실행할까요?"
@@ -3604,6 +3605,11 @@ draftWatermark = "Draft Watermark"
 europeanDate = "European Date"
 pageNumberFooter = "Page Number Footer"
 timestamp = "Timestamp"
+doc-info = "Document Info"
+draft = "Draft Watermark"
+european-date = "European Date (DD/MM/YYYY)"
+legal-footer = "Legal Footer"
+page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "이미지 제거,페이지 작업,백엔드,서버 사이드"
