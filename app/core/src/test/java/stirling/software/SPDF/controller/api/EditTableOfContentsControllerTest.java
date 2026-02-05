@@ -85,7 +85,8 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response =
+                editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
@@ -109,7 +110,8 @@ class EditTableOfContentsControllerTest {
         when(mockCatalog.getDocumentOutline()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response =
+                editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
@@ -145,7 +147,8 @@ class EditTableOfContentsControllerTest {
         when(childItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response =
+                editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
@@ -183,7 +186,8 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response =
+                editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);

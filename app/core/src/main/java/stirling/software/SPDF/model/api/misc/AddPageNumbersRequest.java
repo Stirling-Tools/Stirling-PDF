@@ -40,7 +40,8 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
     private String fontColor;
 
     @Schema(
-            description = "Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding",
+            description =
+                    "Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding",
             minimum = "0",
             defaultValue = "0",
             requiredMode = RequiredMode.NOT_REQUIRED)

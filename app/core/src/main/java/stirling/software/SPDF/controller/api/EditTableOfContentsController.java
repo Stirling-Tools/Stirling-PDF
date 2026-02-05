@@ -46,8 +46,8 @@ public class EditTableOfContentsController {
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
-    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(@RequestParam("file") MultipartFile file)
-            throws Exception {
+    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(
+            @RequestParam("file") MultipartFile file) throws Exception {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
 
