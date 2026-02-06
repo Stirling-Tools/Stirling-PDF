@@ -191,7 +191,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                             min_lsb = min(min_lsb, lsb)
                             min_rsb = min(min_rsb, rsb)
                             max_extent = max(max_extent, extent)
-                    except:
+                    except Exception:
                         pass  # Some glyphs may not have outlines
 
                 except Exception:
@@ -315,14 +315,14 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                     unicode_val = int(glyph_name[3:], 16)
                     if unicode_val not in unicode_to_glyph:
                         unicode_to_glyph[unicode_val] = glyph_name
-                except:
+                except Exception:
                     pass
             elif glyph_name.startswith("u") and len(glyph_name) >= 5:
                 try:
                     unicode_val = int(glyph_name[1:], 16)
                     if unicode_val not in unicode_to_glyph:
                         unicode_to_glyph[unicode_val] = glyph_name
-                except:
+                except Exception:
                     pass
 
         # === Create cmap table ===
