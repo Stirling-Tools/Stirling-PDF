@@ -28,9 +28,22 @@ interface OAuthButtonsProps {
   isSubmitting: boolean
   layout?: 'vertical' | 'grid' | 'icons'
   enabledProviders?: OAuthProvider[]  // List of full auth paths from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
+  ctaPrefix?: string
+  styleVariant?: 'neutral' | 'tinted' | 'outline' | 'light'
+  demoMode?: boolean
+  useNewStyle?: boolean
 }
 
-export default function OAuthButtons({ onProviderClick, isSubmitting, layout = 'vertical', enabledProviders = [] }: OAuthButtonsProps) {
+export default function OAuthButtons({
+  onProviderClick,
+  isSubmitting,
+  layout = 'vertical',
+  enabledProviders = [],
+  ctaPrefix,
+  styleVariant = 'neutral',
+  demoMode = false,
+  useNewStyle = false,
+}: OAuthButtonsProps) {
   const { t } = useTranslation();
 
   // Debug mode: show all providers for UI testing
@@ -64,6 +77,21 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
   if (providers.length === 0) {
     return null;
   }
+
+  const isSingleProvider = providers.length === 1;
+  const isTinted = styleVariant === 'tinted';
+  const isOutline = styleVariant === 'outline';
+  const isLight = styleVariant === 'light';
+  const accentMap: Record<string, string> = {
+    google: '#4285F4',
+    github: '#111827',
+    apple: '#111827',
+    azure: '#0078D4',
+    keycloak: '#2C2C2C',
+    cloudron: '#3B82F6',
+    authentik: '#FA7B17',
+    oidc: '#334155',
+  };
 
   if (layout === 'icons') {
     return (
@@ -106,18 +134,30 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
   }
 
   return (
-    <div className="oauth-container-vertical">
+    <div className={`oauth-container-vertical${useNewStyle && isSingleProvider ? ' oauth-container-single' : ''}`}>
       {providers.map((p) => (
         <div key={p.id} title={`${t('login.signInWith', 'Sign in with')} ${p.label}`}>
           <Button
             onClick={() => onProviderClick(p.id)}
-            disabled={isSubmitting}
-            className="oauth-button-vertical"
+            disabled={!demoMode && isSubmitting}
+            className={`oauth-button-vertical${useNewStyle && isSingleProvider ? ' oauth-button-vertical-single' : ''}${!useNewStyle ? ' oauth-button-vertical-legacy' : ''}${isTinted ? ' oauth-button-vertical-tinted' : ''}${isOutline ? ' oauth-button-vertical-outline' : ''}${isLight ? ' oauth-button-vertical-light' : ''}`}
             aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
             variant="default"
+            style={isTinted ? { '--oauth-accent': accentMap[p.providerId] || '#334155' } as React.CSSProperties : undefined}
           >
-            <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
-            <span>{p.label}</span>
+            <span className="oauth-button-left">
+              <span className="oauth-icon-wrapper">
+                <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
+              </span>
+              <span className="oauth-button-text">{ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}</span>
+            </span>
+            {useNewStyle && isSingleProvider && (
+              <span className="oauth-button-right" aria-hidden="true">
+                <svg className="oauth-arrow-icon" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h12m0 0-5-5m5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            )}
           </Button>
         </div>
       ))}

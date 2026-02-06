@@ -67,7 +67,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.4.3'
+    version = '2.4.4'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
@@ -459,6 +459,24 @@ swaggerhubUpload {
     inputFile = file("SwaggerDoc.json")  // The path to your Swagger docs
     token = "${System.getenv("SWAGGERHUB_API_KEY")}"  // Your SwaggerHub API key, passed as an environment variable
     oas = "3.0.0"  // The version of the OpenAPI Specification you"re using
+}
+
+repositories {
+    if (!rootProject.ext.mavenUrl.isEmpty()) {
+        maven {
+            url = rootProject.ext.mavenUrl + '/releases'
+            credentials(PasswordCredentials) {
+                username = rootProject.ext.username
+                password = rootProject.ext.password
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+            allowInsecureProtocol = true
+        }
+    }
+    maven { url = "https://build.shibboleth.net/maven/releases" }
+    mavenCentral()
 }
 
 dependencies {
