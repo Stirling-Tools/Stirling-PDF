@@ -25,7 +25,7 @@
       Execute="deferred"
       Impersonate="yes"
       Return="check"
-      ExeCommand="[WriteProvisioningFilePerUser]"
+      ExeCommand="[WriteProvisioningFilePerUserCmd]"
     />
 
     <CustomAction
@@ -34,18 +34,18 @@
       Execute="deferred"
       Impersonate="no"
       Return="check"
-      ExeCommand="[WriteProvisioningFileAllUsers]"
+      ExeCommand="[WriteProvisioningFileAllUsersCmd]"
     />
 
     <CustomAction
       Id="SetWriteProvisioningFilePerUser"
-      Property="WriteProvisioningFilePerUser"
+      Property="WriteProvisioningFilePerUserCmd"
       Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot;"
     />
 
     <CustomAction
       Id="SetWriteProvisioningFileAllUsers"
-      Property="WriteProvisioningFileAllUsers"
+      Property="WriteProvisioningFileAllUsersCmd"
       Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot;"
     />
 

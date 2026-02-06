@@ -9,7 +9,6 @@ import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { authService } from '@app/services/authService';
-import { useRef } from "react";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
 
@@ -24,8 +23,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const windowShownRef = useRef(false);
-
   // Load connection mode on mount
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
@@ -63,8 +60,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
     if (!isTauri()) {
       return;
     }
-
-    windowShownRef.current = true;
 
     const currentWindow = getCurrentWindow();
     currentWindow
