@@ -3411,6 +3411,7 @@ instructions = "Select text or draw areas on the PDF to mark content for redacti
 markText = "Mark Text"
 markArea = "Mark Area"
 pendingLabel = "Pending:"
+applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 apply = "Apply"
 noMarks = "No redaction marks. Use the tools above to mark content for redaction."

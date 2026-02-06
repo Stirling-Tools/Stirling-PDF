@@ -13,6 +13,7 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 import { useRedactionMode, useRedaction } from '@app/contexts/RedactionContext';
 import { defaultParameters, RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
+import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 interface ViewerAnnotationControlsProps {
   currentView: string;
@@ -41,11 +42,11 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   const { actions: navActions } = useNavigationActions();
   const isSignMode = selectedTool === 'sign';
   const isRedactMode = selectedTool === 'redact';
-  
+
   // Get redaction pending state and navigation guard
   const { isRedacting: _isRedacting } = useRedactionMode();
   const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
-  const { setRedactionMode, activateTextSelection, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } = useRedaction();
+  const { setRedactionMode, activateRedact, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } = useRedaction();
 
 
   // Check if we're in any annotation tool that should disable the toggle
@@ -70,7 +71,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
       const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'redact');
       await fileActions.consumeFiles([state.files.ids[0]], stirlingFiles, stubs);
-      
+
       // Clear unsaved changes flags after successful save
       setHasUnsavedChanges(false);
       setRedactionsApplied(false);
@@ -113,11 +114,11 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
         setLeftPanelView('toolContent');
 
         setRedactionMode(true);
-        // Activate text selection mode after a short delay
+        // Activate unified redact mode after a short delay
         setTimeout(() => {
           const currentType = redactionApiRef.current?.getActiveType?.();
-          if (currentType !== 'redactSelection') {
-            activateTextSelection();
+          if (currentType !== RedactionMode.Redact) {
+            activateRedact();
           }
         }, 200);
       };
