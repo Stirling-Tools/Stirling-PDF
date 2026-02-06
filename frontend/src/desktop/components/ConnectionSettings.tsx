@@ -31,11 +31,13 @@ export const ConnectionSettings: React.FC = () => {
       setLoading(true);
       await authService.logout();
 
-      // Switch to SaaS mode
-      await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
+      if (!config?.lock_connection_mode) {
+        // Switch to SaaS mode
+        await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
 
-      // Reset setup completion to force login screen on reload
-      await connectionModeService.resetSetupCompletion();
+        // Reset setup completion to force login screen on reload
+        await connectionModeService.resetSetupCompletion();
+      }
 
       // Reload config
       const newConfig = await connectionModeService.getCurrentConfig();

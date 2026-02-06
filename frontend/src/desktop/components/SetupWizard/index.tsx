@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DesktopAuthLayout } from '@app/components/SetupWizard/DesktopAuthLayout';
 import { SaaSLoginScreen } from '@app/components/SetupWizard/SaaSLoginScreen';
@@ -10,7 +10,6 @@ import { AuthServiceError, authService, UserInfo } from '@app/services/authServi
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
-import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';
 
 enum SetupStep {
@@ -32,6 +31,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [error, setError] = useState<string | null>(null);
   const [selfHostedMfaCode, setSelfHostedMfaCode] = useState('');
   const [selfHostedMfaRequired, setSelfHostedMfaRequired] = useState(false);
+  const [lockConnectionMode, setLockConnectionMode] = useState(false);
 
   const handleSaaSLogin = async (username: string, password: string) => {
     if (!serverConfig) {
@@ -82,6 +82,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   const handleSelfHostedClick = () => {
+    if (lockConnectionMode) {
+      return;
+    }
     setError(null);
     setActiveStep(SetupStep.ServerSelection);
   };
@@ -259,6 +262,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   }, [onComplete, serverConfig?.url]);
 
   const handleBack = () => {
+    if (lockConnectionMode) {
+      return;
+    }
     setError(null);
     if (activeStep === SetupStep.SelfHostedLogin) {
       setSelfHostedMfaCode('');
@@ -272,10 +278,23 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }
   };
 
+  useEffect(() => {
+    const loadConfig = async () => {
+      const currentConfig = await connectionModeService.getCurrentConfig();
+      if (currentConfig.lock_connection_mode && currentConfig.server_config?.url) {
+        setLockConnectionMode(true);
+        setServerConfig(currentConfig.server_config);
+        setActiveStep(SetupStep.SelfHostedLogin);
+      }
+    };
+
+    void loadConfig();
+  }, []);
+
   return (
     <DesktopAuthLayout>
       {/* Step Content */}
-      {activeStep === SetupStep.SaaSLogin && (
+      {!lockConnectionMode && activeStep === SetupStep.SaaSLogin && (
         <SaaSLoginScreen
           serverUrl={serverConfig?.url || STIRLING_SAAS_URL}
           onLogin={handleSaaSLogin}
@@ -287,7 +306,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         />
       )}
 
-      {activeStep === SetupStep.SaaSSignup && (
+      {!lockConnectionMode && activeStep === SetupStep.SaaSSignup && (
         <SaaSSignupScreen
           loading={loading}
           error={error}
@@ -296,7 +315,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         />
       )}
 
-      {activeStep === SetupStep.ServerSelection && (
+      {!lockConnectionMode && activeStep === SetupStep.ServerSelection && (
         <ServerSelectionScreen
           onSelect={handleServerSelection}
           loading={loading}
@@ -319,7 +338,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       )}
 
       {/* Back Button */}
-      {activeStep > SetupStep.SaaSLogin && !loading && (
+      {!lockConnectionMode && activeStep > SetupStep.SaaSLogin && !loading && (
         <div className="navigation-link-container" style={{ marginTop: '1.5rem' }}>
           <button
             type="button"
