@@ -48,7 +48,14 @@ jobs:
         run: |
           pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_pre_commit.txt
 
-      - run: pre-commit run --all-files -c .pre-commit-config.yaml
+      - name: Run Pre-Commit
+        run: |
+          pre-commit run ruff --all-files -c .pre-commit-config.yaml
+          pre-commit run ruff-format --all-files -c .pre-commit-config.yaml
+          pre-commit run codespell --all-files -c .pre-commit-config.yaml
+          pre-commit run gitleaks --all-files -c .pre-commit-config.yaml
+          pre-commit run end-of-file-fixer --all-files -c .pre-commit-config.yaml
+          pre-commit run trailing-whitespace --all-files -c .pre-commit-config.yaml
         continue-on-error: true
 
       - name: Set up JDK 21

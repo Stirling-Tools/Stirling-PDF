@@ -399,9 +399,7 @@ def main() -> None:
 
     # Default behavior (no --lang): process all and update README
     messages_file_paths = glob.glob(os.path.join(locales_dir, "*", "translation.toml"))
-    progress = compare_files(
-        reference_file, messages_file_paths, translation_state_file
-    )
+    compare_files(reference_file, messages_file_paths, translation_state_file)
     # write_readme(progress)
 
 

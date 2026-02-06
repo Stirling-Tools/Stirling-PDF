@@ -55,11 +55,15 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install Python dependencies
-        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
+        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
 
       - name: Sync translation TOML files
         run: |
           python .github/scripts/check_language_toml.py --reference-file "frontend/public/locales/en-GB/translation.toml" --branch main
+
+      - name: pre-commit run
+        run: |
+          pre-commit run toml-sort-fix --all-files
 
       - name: Commit translation files
         run: |

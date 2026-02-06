@@ -114,7 +114,6 @@ def main():
     # Define paths
     locales_dir = Path("frontend/public/locales")
     en_gb_path = locales_dir / "en-GB" / "translation.toml"
-    file_ext = ".toml"
 
     if not en_gb_path.exists():
         print(f"❌ Error: en-GB translation file not found at {en_gb_path}")

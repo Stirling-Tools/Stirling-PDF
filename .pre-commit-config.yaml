@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.8
+    rev: v0.14.14
     hooks:
       - id: ruff
         args:
@@ -16,11 +16,11 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=thirdParty,tabEl,tabEls
+          - --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         files: \.(html|css|js|py|md)$
-        exclude: (.vscode|.devcontainer|app/core/src/main/resources|app/proprietary/src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
+        exclude: (.vscode|.devcontainer|app/core/src/main/resources|app/proprietary/src/main/resources|frontend/public/vendor|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
@@ -34,6 +34,12 @@ repos:
       - id: trailing-whitespace
         files: ^.*(\.js|\.java|\.py|\.yml)$
         exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
+  - repo: https://github.com/pappasam/toml-sort
+    rev: v0.24.3
+    hooks:
+      - id: toml-sort-fix
+        files: frontend/public/locales/.*\.toml$
+        args: ['--in-place', '--all', '--ignore-case']
   # - repo: https://github.com/thibaudcolas/pre-commit-stylelint
   #   rev: v16.21.1
   #   hooks:
