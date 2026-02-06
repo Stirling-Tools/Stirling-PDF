@@ -4233,6 +4233,15 @@ unknownFile = "Unknown file"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
+[viewer.attachments]
+title = "Attachments"
+searchPlaceholder = "Search attachments"
+noSupport = "Attachment support is unavailable for this viewer."
+noDocument = "Open a PDF to view its attachments."
+loading = "Loading attachments..."
+empty = "No attachments in this document"
+noMatch = "No attachments match your search"
+
 [rightRail]
 closeSelected = "Close Selected Files"
 selectAll = "Select All"
@@ -4248,6 +4257,7 @@ saveChanges = "Save Changes"
 toggleTheme = "Toggle Theme"
 language = "Language"
 toggleAnnotations = "Toggle Annotations Visibility"
+toggleAttachments = "Toggle Attachments"
 search = "Search PDF"
 panMode = "Pan Mode"
 applyRedactionsFirst = "Apply redactions first"
