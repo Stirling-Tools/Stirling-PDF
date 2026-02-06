@@ -12,6 +12,7 @@ export interface SSOProviderConfig {
 export interface ServerConfig {
   url: string;
   enabledOAuthProviders?: SSOProviderConfig[];
+  loginMethod?: string;
 }
 
 export interface ConnectionConfig {
