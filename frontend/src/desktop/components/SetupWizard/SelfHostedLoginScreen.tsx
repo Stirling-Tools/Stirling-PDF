@@ -13,6 +13,7 @@ import '@app/routes/authShared/auth.css';
 interface SelfHostedLoginScreenProps {
   serverUrl: string;
   enabledOAuthProviders?: SSOProviderConfig[];
+  loginMethod?: string;
   onLogin: (username: string, password: string) => Promise<void>;
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   mfaCode: string;
@@ -25,6 +26,7 @@ interface SelfHostedLoginScreenProps {
 export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   serverUrl,
   enabledOAuthProviders,
+  loginMethod = 'all',
   onLogin,
   onOAuthSuccess,
   mfaCode,
@@ -37,6 +39,9 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Check if username/password authentication is allowed
+  const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
 
   const handleSubmit = async () => {
     // Validation
@@ -69,7 +74,7 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
     <>
       <LoginHeader
         title={t('setup.selfhosted.title', 'Sign in to Server')}
-        subtitle={t('setup.selfhosted.subtitle', 'Enter your server credentials')}
+        subtitle={isUserPassAllowed ? t('setup.selfhosted.subtitle', 'Enter your server credentials') : undefined}
       />
 
       <ErrorMessage error={displayError} />
@@ -90,36 +95,42 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
             providers={enabledOAuthProviders}
           />
 
-          <DividerWithText
-            text={t('setup.login.orContinueWith', 'Or continue with email')}
-            respondsToDarkMode={false}
-            opacity={0.4}
-          />
+          {/* Only show divider if username/password auth is also allowed */}
+          {isUserPassAllowed && (
+            <DividerWithText
+              text={t('setup.login.orContinueWith', 'Or continue with email')}
+              respondsToDarkMode={false}
+              opacity={0.4}
+            />
+          )}
         </>
       )}
 
-      <EmailPasswordForm
-        email={username}
-        password={password}
-        setEmail={(value) => {
-          setUsername(value);
-          setValidationError(null);
-        }}
-        setPassword={(value) => {
-          setPassword(value);
-          setValidationError(null);
-        }}
-        mfaCode={mfaCode}
-        setMfaCode={(value) => {
-          setMfaCode(value);
-          setValidationError(null);
-        }}
-        showMfaField={requiresMfa || Boolean(mfaCode)}
-        requiresMfa={requiresMfa}
-        onSubmit={handleSubmit}
-        isSubmitting={loading}
-        submitButtonText={t('setup.login.submit', 'Login')}
-      />
+      {/* Only show email/password form if username/password auth is allowed */}
+      {isUserPassAllowed && (
+        <EmailPasswordForm
+          email={username}
+          password={password}
+          setEmail={(value) => {
+            setUsername(value);
+            setValidationError(null);
+          }}
+          setPassword={(value) => {
+            setPassword(value);
+            setValidationError(null);
+          }}
+          mfaCode={mfaCode}
+          setMfaCode={(value) => {
+            setMfaCode(value);
+            setValidationError(null);
+          }}
+          showMfaField={requiresMfa || Boolean(mfaCode)}
+          requiresMfa={requiresMfa}
+          onSubmit={handleSubmit}
+          isSubmitting={loading}
+          submitButtonText={t('setup.login.submit', 'Login')}
+        />
+      )}
     </>
   );
 };

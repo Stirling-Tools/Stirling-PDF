@@ -193,24 +193,24 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.875rem 1.5rem; /* 14px 24px */
-  border: none;
+  border: 1px solid #e5e7eb;
   border-radius: 999px;
-  background: #0f172a;
+  background-color: #ffffff;
   font-size: 1rem; /* 16px */
   font-weight: 600;
-  color: #f8fafc;
+  color: #1f2937;
   cursor: pointer;
   gap: 1rem; /* 16px */
   font-family: inherit;
-  box-shadow: 0 0.4rem 1rem rgba(15, 23, 42, 0.25);
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
 .oauth-button-vertical:hover:not(:disabled) {
-  background: #111827;
-  box-shadow: 0 0.55rem 1.25rem rgba(15, 23, 42, 0.3);
+  background-color: #f9fafb;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
-  color: #f8fafc;
+  border-color: #d1d5db;
 }
 
 .oauth-button-vertical-tinted {
@@ -295,7 +295,7 @@
 }
 
 .oauth-button-vertical:focus-visible {
-  outline: 3px solid rgba(59, 130, 246, 0.6);
+  outline: 3px solid rgba(59, 130, 246, 0.5);
   outline-offset: 2px;
 }
 
@@ -367,8 +367,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
 }
 
 .oauth-button-vertical-tinted .oauth-icon-wrapper {
