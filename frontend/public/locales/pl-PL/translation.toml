@@ -1302,6 +1302,8 @@ outputFormat = "Format wyjściowy"
 pdfaNote = "PDF/A-1b jest bardziej kompatybilny, PDF/A-2b obsługuje więcej funkcji."
 pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "Dokument zawiera podpis cyfrowy, nie zostanie on wczytany."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF zawiera podpis cyfrowy. Zostanie on usunięty w następnym kroku."
 pdfxDescription = "PDF/X to podzbiór PDF zgodny z normą ISO, przeznaczony do niezawodnego druku i wymiany grafiki."
 fileFormat = "Format pliku"
@@ -3403,7 +3405,6 @@ bullet2 = "Wszystkie oczekujące zaczernienia są stosowane jednocześnie"
 bullet3 = "Zaczernienia nie można cofnąć po zastosowaniu"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "Narzędzia zaczerniania"
 instructions = "Zaznacz tekst lub narysuj obszary w PDF, aby oznaczyć zawartość do zaczernienia."
 markText = "Zaznacz tekst"
@@ -3566,50 +3567,50 @@ imageSize = "Rozmiar obrazu"
 margin = "Margines"
 positionAndFormatting = "Pozycja i formatowanie"
 quickPosition = "Wybierz pozycję na stronie, aby umieścić stempel."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Wystąpił błąd podczas dodawania stempla do PDF."
 
 [AddStampRequest.results]
 title = "Wyniki dodawania stempla"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "Usuń obraz, operacje na stronie, back-end, strona serwera"
@@ -4522,21 +4523,21 @@ description = "Skonfiguruj niestandardowe ścieżki systemu plików dla przetwar
 [admin.settings.general.customPaths.pipeline]
 label = "Katalogi potoku"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Katalog obserwowanych folderów"
 description = "Katalog, w którym potok monitoruje przychodzące pliki PDF (pozostaw puste, aby użyć domyślnego: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Katalog ukończonych folderów"
 description = "Katalog, do którego trafiają przetworzone pliki PDF (pozostaw puste, aby użyć domyślnego: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Ścieżki do narzędzi zewnętrznych"
@@ -6572,6 +6573,7 @@ link = "lub połącz się z kontem hostowanym samodzielnie"
 title = "Połącz z serwerem"
 subtitle = "Wpisz URL własnego serwera"
 testing = "Testowanie połączenia..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

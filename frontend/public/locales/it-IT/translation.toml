@@ -1302,6 +1302,8 @@ outputFormat = "Formato di output"
 pdfaNote = "PDF/A-1b è più compatibile, PDF/A-2b supporta più funzionalità."
 pdfaFormat = "Formato PDF/A"
 pdfaDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questo verrà rimosso nel passaggio successivo."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questa verrà rimossa nel passaggio successivo."
 pdfxDescription = "PDF/X è un sottoinsieme PDF standard ISO per una stampa affidabile e lo scambio di grafica."
 fileFormat = "Formato file"
@@ -3403,7 +3405,6 @@ bullet2 = "Tutti gli oscuramenti in sospeso vengono applicati in una volta sola"
 bullet3 = "Gli oscuramenti non possono essere annullati dopo l'applicazione"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "Strumenti di oscuramento"
 instructions = "Seleziona testo o disegna aree sul PDF per contrassegnare contenuti da oscurare."
 markText = "Contrassegna testo"
@@ -3566,50 +3567,50 @@ imageSize = "Dimensione immagine"
 margin = "Margine"
 positionAndFormatting = "Posizione e formattazione"
 quickPosition = "Seleziona una posizione sulla pagina in cui posizionare il timbro."
-clickToExpand = "Clicca per espandere"
-customDateDesc = "Formato personalizzato"
-dateDesc = "Data corrente"
-dateTimeVars = "Data & Ora"
-datetimeDesc = "Data e ora combinate"
+preview = "Anteprima:"
+useTemplate = "Usa modello"
+selectTemplate = "Seleziona un modello..."
+stampTextDescription = "Utilizzare le variabili dinamiche di seguito. Utilizzare @@ per il carattere letterale @. Utilizzare \\n per le nuove righe."
 dynamicVariables = "Variabili dinamiche"
-examples = "Esempi"
+clickToExpand = "Clicca per espandere"
+variablesHelp = "Fai clic su una variabile qualsiasi per inserirla nel testo del timbro. Utilizzare @@ per letterale @."
+dateTimeVars = "Data & Ora"
+dateDesc = "Data corrente"
+timeDesc = "Ora corrente"
+datetimeDesc = "Data e ora combinate"
+customDateDesc = "Formato personalizzato"
+yearMonthDayDesc = "Parti di data individuali"
+pageVars = "Informazioni sulla pagina"
+pageNumberDesc = "Numero di pagina corrente"
+totalPagesDesc = "Numero totale di pagine"
 fileVars = "Informazioni sul file"
 filenameDesc = "Nome file senza estensione"
 filenameFullDesc = "Nome file con estensione"
-metadataDesc = "Dalle proprietà del documento PDF"
 metadataVars = "Metadati del documento"
-multiLine = "multilinea"
+metadataDesc = "Dalle proprietà del documento PDF"
 otherVars = "Altro"
-pageNumberDesc = "Numero di pagina corrente"
-pageVars = "Informazioni sulla pagina"
-preview = "Anteprima:"
-selectTemplate = "Seleziona un modello..."
-stampTextDescription = "Utilizzare le variabili dinamiche di seguito. Utilizzare @@ per il carattere letterale @. Utilizzare \\n per le nuove righe."
-timeDesc = "Ora corrente"
-totalPagesDesc = "Numero totale di pagine"
-useTemplate = "Usa modello"
 uuidDesc = "Identificatore univoco breve (8 caratteri)"
-variablesHelp = "Fai clic su una variabile qualsiasi per inserirla nel testo del timbro. Utilizzare @@ per letterale @."
-yearMonthDayDesc = "Parti di data individuali"
+examples = "Esempi"
+multiLine = "multilinea"
+
+[AddStampRequest.template]
+pageNumberFooter = "Piè di pagina con numero di pagina"
+dateHeader = "Data intestazione"
+europeanDate = "Data europea"
+timestamp = "Timestamp"
+draftWatermark = "Bozza Filigrana"
+custom = "Personalizzato"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Si è verificato un errore durante l'aggiunta del timbro al PDF."
 
 [AddStampRequest.results]
 title = "Risultati timbro"
-
-[AddStampRequest.template]
-custom = "Personalizzato"
-dateHeader = "Data intestazione"
-draftWatermark = "Bozza Filigrana"
-europeanDate = "Data europea"
-pageNumberFooter = "Piè di pagina con numero di pagina"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "Rimuovi immagine,operazioni sulla pagina,back-end,lato server"
@@ -4522,21 +4523,21 @@ description = "Configura percorsi personalizzati del file system per l'elaborazi
 [admin.settings.general.customPaths.pipeline]
 label = "Directory pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Directory cartelle monitorate"
 description = "Directory in cui la pipeline monitora i PDF in arrivo (lascia vuoto per predefinito: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Directory cartelle completate"
 description = "Directory di output dei PDF elaborati (lascia vuoto per default: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Percorsi strumenti esterni"
@@ -6572,6 +6573,7 @@ link = "oppure connettiti a un account self-hosted"
 title = "Connetti al server"
 subtitle = "Inserisci l'URL del tuo server self-hosted"
 testing = "Verifica connessione..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

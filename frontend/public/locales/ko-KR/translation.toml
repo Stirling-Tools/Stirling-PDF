@@ -1302,6 +1302,8 @@ outputFormat = "출력 형식"
 pdfaNote = "PDF/A-1b는 호환성이 더 높고, PDF/A-2b는 더 많은 기능을 지원합니다."
 pdfaFormat = "PDF/A 형식"
 pdfaDigitalSignatureWarning = "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "해당 PDF에는 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
 pdfxDescription = "PDF/X는 신뢰할 수 있는 인쇄와 그래픽 교환을 위한 ISO 표준 PDF 하위 집합입니다."
 fileFormat = "파일 형식"
@@ -3403,7 +3405,6 @@ bullet2 = "모든 대기 중인 가리기는 한 번에 적용됩니다"
 bullet3 = "적용 후에는 되돌릴 수 없습니다"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "가리기 도구"
 instructions = "PDF에서 텍스트를 선택하거나 영역을 그려 가릴 콘텐츠를 표시하세요."
 markText = "텍스트 표시"
@@ -3566,50 +3567,50 @@ imageSize = "이미지 크기"
 margin = "여백"
 positionAndFormatting = "위치 및 서식"
 quickPosition = "페이지에서 스탬프 위치를 선택하세요."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "PDF에 스탬프를 추가하는 중 오류가 발생했습니다."
 
 [AddStampRequest.results]
 title = "스탬프 결과"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "이미지 제거,페이지 작업,백엔드,서버 사이드"
@@ -4522,21 +4523,21 @@ description = "파이프라인 처리 및 외부 도구용 사용자 지정 파�
 [admin.settings.general.customPaths.pipeline]
 label = "파이프라인 디렉터리"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "감시 폴더 디렉터리"
 description = "파이프라인이 들어오는 PDF를 감시하는 디렉터리(기본값 사용 시 비워두세요: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "처리 완료 폴더 디렉터리"
 description = "처리된 PDF가 출력되는 디렉터리(기본값 사용 시 비워두세요: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "외부 도구 경로"
@@ -6572,6 +6573,7 @@ link = "또는 셀프 호스팅 계정에 연결"
 title = "서버에 연결"
 subtitle = "자가 호스팅 서버 URL을 입력하세요"
 testing = "연결 테스트 중..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

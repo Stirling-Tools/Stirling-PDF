@@ -1302,6 +1302,8 @@ outputFormat = "Outputformat"
 pdfaNote = "PDF/A-1b er mere kompatibel, PDF/A-2b understøtter flere funktioner."
 pdfaFormat = "PDF/A-format"
 pdfaDigitalSignatureWarning = "PDF'en indeholder en digital signatur. Dette vil blive fjernet i næste trin."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF'en indeholder en digital signatur. Denne fjernes i næste trin."
 pdfxDescription = "PDF/X er en ISO-standard PDF-undersæt til pålidelig udskrivning og grafikudveksling."
 fileFormat = "Filformat"
@@ -3403,7 +3405,6 @@ bullet2 = "Alle afventende maskeringer anvendes på én gang"
 bullet3 = "Maskeringer kan ikke fortrydes efter anvendelse"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "Maskeringsværktøjer"
 instructions = "Vælg tekst eller tegn områder på PDF'en for at markere indhold til maskering."
 markText = "Markér tekst"
@@ -3566,50 +3567,50 @@ imageSize = "Billedstørrelse"
 margin = "Margen"
 positionAndFormatting = "Placering og formatering"
 quickPosition = "Vælg en placering på siden til stemplet."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Der opstod en fejl under tilføjelse af stempel til PDF'en."
 
 [AddStampRequest.results]
 title = "Stempelresultater"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "Fjern Billede,Sideoperationer,Back end,server side"
@@ -4522,21 +4523,21 @@ description = "Konfigurer brugerdefinerede filsystemstier til pipeline-behandlin
 [admin.settings.general.customPaths.pipeline]
 label = "Pipelinemapper"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Mappe for overvågede mapper"
 description = "Mappe hvor pipelinen overvåger indkommende PDF'er (lad tom for standard: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Mappe for færdige mapper"
 description = "Mappe hvor behandlede PDF'er gemmes (lad tom for standard: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Stier til eksterne værktøjer"
@@ -6572,6 +6573,7 @@ link = "eller opret forbindelse til en selvhostet konto"
 title = "Forbind til server"
 subtitle = "Indtast URL til din selvhostede server"
 testing = "Tester forbindelse..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

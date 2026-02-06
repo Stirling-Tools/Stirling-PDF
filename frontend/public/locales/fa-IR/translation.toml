@@ -1302,6 +1302,8 @@ outputFormat = "قالب خروجی"
 pdfaNote = "PDF/A-1b سازگارتر است، PDF/A-2b از قابلیت‌های بیشتری پشتیبانی می‌کند."
 pdfaFormat = "فرمت PDF/A"
 pdfaDigitalSignatureWarning = "PDF حاوی یک امضای دیجیتال است. این در مرحله بعد حذف خواهد شد."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "این PDF شامل امضای دیجیتال است. این مورد در مرحله بعد حذف خواهد شد."
 pdfxDescription = "PDF/X زیرمجموعه استاندارد ISO از PDF برای چاپ قابل‌اعتماد و تبادل گرافیک است."
 fileFormat = "قالب فایل"
@@ -3403,7 +3405,6 @@ bullet2 = "تمام سانسورهای در انتظار یک‌جا اعمال 
 bullet3 = "پس از اعمال، سانسورها قابل بازگشت نیستند"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "ابزارهای سانسور"
 instructions = "متن را انتخاب کنید یا ناحیه‌هایی روی PDF بکشید تا برای سانسور علامت‌گذاری شود."
 markText = "علامت‌گذاری متن"
@@ -3566,50 +3567,50 @@ imageSize = "اندازه تصویر"
 margin = "حاشیه"
 positionAndFormatting = "موقعیت و قالب‌بندی"
 quickPosition = "یک موقعیت روی صفحه برای قرار دادن مهر انتخاب کنید."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "هنگام افزودن مهر به PDF خطایی رخ داد."
 
 [AddStampRequest.results]
 title = "نتایج مهر"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "حذف تصویر، عملیات صفحه، سرور"
@@ -4522,21 +4523,21 @@ description = "پیکربندی مسیرهای فایل سیستم سفارشی 
 [admin.settings.general.customPaths.pipeline]
 label = "دایرکتوری‌های پایپلاین"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "دایرکتوری پوشه‌های پایش‌شده"
 description = "مسیر پوشه‌ای که پایپلاین برای PDFهای ورودی پایش می‌کند (خالی بگذارید برای پیش‌فرض: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "دایرکتوری پوشه‌های پایان‌یافته"
 description = "مسیر پوشه‌ای که PDFهای پردازش‌شده در آن خروجی داده می‌شوند (خالی بگذارید برای پیش‌فرض: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "مسیر ابزارهای خارجی"
@@ -6572,6 +6573,7 @@ link = "یا به یک حساب خودمیزبان متصل شوید"
 title = "اتصال به سرور"
 subtitle = "URL سرور خودمیزبان خود را وارد کنید"
 testing = "در حال آزمون اتصال..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

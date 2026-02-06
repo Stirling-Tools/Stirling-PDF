@@ -1302,6 +1302,8 @@ outputFormat = "Formáid Aschuir"
 pdfaNote = "Tá PDF/A-1b níos comhoiriúnaí, tacaíonn PDF/A-2b le níos mó gnéithe."
 pdfaFormat = "Formáid PDF/A"
 pdfaDigitalSignatureWarning = "Tá síniú digiteach ar an PDF. Bainfear é seo sa chéad chéim eile."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "Tá síniú digiteach sa PDF. Bainfear é sa chéad chéim eile."
 pdfxDescription = "Is fo-thacar PDF de chaighdeán ISO é PDF/X le haghaidh priontála agus malartaithe grafaice iontaofa."
 fileFormat = "Formáid Comhaid"
@@ -3403,7 +3405,6 @@ bullet2 = "Cuirtear gach eagarthóireacht atá ar feitheamh i bhfeidhm ag an am 
 bullet3 = "Ní féidir eagarthóireachtaí a chealú tar éis iad a chur i bhfeidhm"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "Uirlisí Eagarthóireachta"
 instructions = "Roghnaigh téacs nó tarraing limistéir ar an PDF chun ábhar a mharcáil le haghaidh eagarthóireachta."
 markText = "Marcáil Téacs"
@@ -3566,50 +3567,50 @@ imageSize = "Méid Íomhá"
 margin = "Imeall"
 positionAndFormatting = "Suíomh & Formáidiú"
 quickPosition = "Roghnaigh suíomh ar an leathanach le stampa a chur."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Tharla earráid agus stampa á chur leis an PDF."
 
 [AddStampRequest.results]
 title = "Torthaí Stampa"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "Bain Íomhá, Oibríochtaí Leathanaigh, Cúl, taobh an fhreastalaí"
@@ -4522,21 +4523,21 @@ description = "Cumraigh conairí comhadchórais saincheaptha le haghaidh próise
 [admin.settings.general.customPaths.pipeline]
 label = "Eolairí Píblíne"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Comhadlann na bhFillteán Faire"
 description = "Comhadlann ina ndéanann an píblíne monatóireacht ar PDFs isteach (fág folamh don réamhshocrú: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Comhadlann na bhFillteán Críochnaithe"
 description = "Comhadlann ina n‑aschuirtear PDFs próiseáilte (fág folamh don réamhshocrú: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Conairí Uirlisí Seachtracha"
@@ -6572,6 +6573,7 @@ link = "nó ceangail le cuntas féinóstáilte"
 title = "Ceangail leis an bhFreastalaí"
 subtitle = "Cuir isteach URL do fhreastalaí féin-óstáilte"
 testing = "Ceangal á thástáil..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

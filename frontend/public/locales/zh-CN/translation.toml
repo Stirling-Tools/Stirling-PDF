@@ -1302,6 +1302,8 @@ outputFormat = "输出格式"
 pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持的功能更多。"
 pdfaFormat = "PDF/A 格式"
 pdfaDigitalSignatureWarning = "该PDF包含数字签名，下一步将移除该签名。"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "该 PDF 包含数字签名。此签名将在下一步移除。"
 pdfxDescription = "PDF/X 是用于可靠打印和图形交换的 ISO 标准 PDF 子集。"
 fileFormat = "文件格式"
@@ -3403,7 +3405,6 @@ bullet2 = "所有待处理涂黑将一次性应用"
 bullet3 = "应用后无法撤销涂黑"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "涂黑工具"
 instructions = "选择文本或绘制区域以标记需要涂黑的内容。"
 markText = "标记文本"
@@ -3566,50 +3567,50 @@ imageSize = "图像大小"
 margin = "边距"
 positionAndFormatting = "位置与格式"
 quickPosition = "选择页面上的一个位置以放置图章。"
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "向 PDF 添加图章时发生错误。"
 
 [AddStampRequest.results]
 title = "图章结果"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "删除图像, 页面操作, 后端, 服务端"
@@ -4522,21 +4523,21 @@ description = "配置用于流水线处理和外部工具的自定义文件系�
 [admin.settings.general.customPaths.pipeline]
 label = "流水线目录"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "监视文件夹目录"
 description = "监视流水线接收PDF的目录（留空为默认：/pipeline/watchedFolders）"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "已完成文件夹目录"
 description = "输出处理后PDF的目录（留空为默认：/pipeline/finishedFolders）"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "外部工具路径"
@@ -6572,6 +6573,7 @@ link = "或连接到自托管账户"
 title = "连接到服务器"
 subtitle = "输入您的自托管服务器 URL"
 testing = "正在测试连接..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

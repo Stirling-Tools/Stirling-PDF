@@ -1302,6 +1302,8 @@ outputFormat = "รูปแบบผลลัพธ์"
 pdfaNote = "PDF/A-1b เข้ากันได้มากกว่า ส่วน PDF/A-2b รองรับฟีเจอร์มากกว่า"
 pdfaFormat = "รูปแบบ PDF/A"
 pdfaDigitalSignatureWarning = "PDF มีลายเซ็นดิจิทัล ซึ่งจะถูกลบในขั้นตอนถัดไป"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "ไฟล์ PDF มีลายเซ็นดิจิทัล ซึ่งจะถูกลบในขั้นตอนถัดไป"
 pdfxDescription = "PDF/X เป็นชุดย่อยของ PDF ตามมาตรฐาน ISO สำหรับการพิมพ์และแลกเปลี่ยนกราฟิกที่เชื่อถือได้"
 fileFormat = "รูปแบบไฟล์"
@@ -3403,7 +3405,6 @@ bullet2 = "การปกปิดที่ค้างทั้งหมดจ
 bullet3 = "ไม่สามารถยกเลิกการปกปิดได้หลังจากใช้แล้ว"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "เครื่องมือปกปิด"
 instructions = "เลือกข้อความหรือวาดพื้นที่บน PDF เพื่อทำเครื่องหมายเนื้อหาสำหรับการปกปิด"
 markText = "ทำเครื่องหมายข้อความ"
@@ -3566,50 +3567,50 @@ imageSize = "ขนาดรูปภาพ"
 margin = "ระยะขอบ"
 positionAndFormatting = "ตำแหน่งและการจัดรูปแบบ"
 quickPosition = "เลือกตำแหน่งบนหน้าสำหรับวางตราประทับ"
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "เกิดข้อผิดพลาดขณะเพิ่มตราประทับลงใน PDF"
 
 [AddStampRequest.results]
 title = "ผลการประทับตรา"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "ลบรูปภาพ,การจัดการหน้า,แบ็กเอนด์,ฝั่งเซิร์ฟเวอร์"
@@ -4522,21 +4523,21 @@ description = "กำหนดค่าพาธระบบไฟล์แบ�
 [admin.settings.general.customPaths.pipeline]
 label = "ไดเรกทอรี Pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "ไดเรกทอรีโฟลเดอร์ที่เฝ้าดู"
 description = "ไดเรกทอรีที่ Pipeline จะเฝ้าดูไฟล์ PDF ที่เข้ามา (ปล่อยว่างเพื่อค่าเริ่มต้น: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "ไดเรกทอรีโฟลเดอร์ที่เสร็จสิ้น"
 description = "ไดเรกทอรีสำหรับผลลัพธ์ PDF ที่ประมวลผลแล้ว (ปล่อยว่างเพื่อค่าเริ่มต้น: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "พาธเครื่องมือภายนอก"
@@ -6572,6 +6573,7 @@ link = "หรือเชื่อมต่อกับบัญชีแบบ
 title = "เชื่อมต่อกับเซิร์ฟเวอร์"
 subtitle = "ป้อน URL เซิร์ฟเวอร์ที่โฮสต์เองของคุณ"
 testing = "กำลังทดสอบการเชื่อมต่อ..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

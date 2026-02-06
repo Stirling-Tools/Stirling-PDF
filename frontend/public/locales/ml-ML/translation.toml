@@ -1302,6 +1302,8 @@ outputFormat = "ഔട്ട്പുട്ട് ഫോർമാറ്റ്"
 pdfaNote = "PDF/A-1b കൂടുതൽ അനുയോജ്യതയുള്ളത്, PDF/A-2b കൂടുതൽ ഫീച്ചറുകൾ പിന്തുണയ്ക്കുന്നു."
 pdfaFormat = "PDF/A ഫോർമാറ്റ്"
 pdfaDigitalSignatureWarning = "ഈ PDF-ൽ ഡിജിറ്റൽ ഒപ്പ് ഉണ്ട്. ഇത് അടുത്ത ഘട്ടത്തിൽ നീക്കം ചെയ്യപ്പെടും."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF-യിൽ ഡിജിറ്റൽ ഒപ്പ് ഉണ്ട്. ഇത് അടുത്ത ഘട്ടത്തിൽ നീക്കം ചെയ്യും."
 pdfxDescription = "വിശ്വാസ്യതയുള്ള പ്രിന്റിംഗിനും ഗ്രാഫിക്സ് കൈമാറ്റത്തിനുമായി PDF/X ഒരു ISO സ്റ്റാൻഡേർഡ് PDF ഉപസമുച്ചയമാണ്."
 fileFormat = "ഫയൽ ഫോർമാറ്റ്"
@@ -3403,7 +3405,6 @@ bullet2 = "എല്ലാ പെൻഡിംഗ് റെഡാക്ഷനു�
 bullet3 = "പ്രയോഗിച്ചതിന് ശേഷം റെഡാക്ഷനുകൾ പിൻവലിക്കാൻ സാധിക്കില്ല"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "റെഡാക്ഷൻ ഉപകരണങ്ങൾ"
 instructions = "റെഡാക്ഷനായി ഉള്ളടക്കം അടയാളപ്പെടുത്താൻ PDF-ൽ ടെക്സ്റ്റ് തിരഞ്ഞെടുക്കുകയോ പ്രദേശങ്ങൾ വരയ്ക്കുകയോ ചെയ്യുക."
 markText = "ടെക്സ്റ്റ് മാർക്ക് ചെയ്യുക"
@@ -3566,50 +3567,50 @@ imageSize = "ഇമേജ് വലിപ്പം"
 margin = "മാർജിൻ"
 positionAndFormatting = "സ്ഥാനം & ഫോർമാറ്റിംഗ്"
 quickPosition = "സ്റ്റാമ്പ് വയ്ക്കാൻ പേജിലെ ഒരു സ്ഥാനം തിരഞ്ഞെടുക്കുക."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "PDF-ലേക്ക് സ്റ്റാമ്പ് ചേർക്കുന്നതിനിടെ പിശക് സംഭവിച്ചു."
 
 [AddStampRequest.results]
 title = "സ്റ്റാമ്പ് ഫലങ്ങൾ"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "ചിത്രം നീക്കം ചെയ്യുക,പേജ് പ്രവർത്തനങ്ങൾ,ബാക്ക് എൻഡ്,സെർവർ സൈഡ്"
@@ -4522,21 +4523,21 @@ description = "പൈപ്പ്‌ലൈൻ പ്രോസസിംഗിന�
 [admin.settings.general.customPaths.pipeline]
 label = "പൈപ്പ്‌ലൈൻ ഡയറക്ടറികൾ"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "വാച്ച് ചെയ്യുന്ന ഫോൾഡറുകളുടെ ഡയറക്ടറി"
 description = "പൈപ്പ്‌ലൈൻ ഇൻകമിംഗ് PDFകൾക്കായി നിരീക്ഷിക്കുന്ന ഡയറക്ടറി (ഡീഫാൾട്ട് ഉപയോഗിക്കാൻ ശൂന്യം വിടുക: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "ഫിനിഷ്ഡ് ഫോൾഡറുകളുടെ ഡയറക്ടറി"
 description = "പ്രോസസ്സ് ചെയ്ത PDFകൾ ഔട്ട്‌പുട്ട് ചെയ്യുന്ന ഡയറക്ടറി (ഡീഫാൾട്ട് ഉപയോഗിക്കാൻ ശൂന്യം വിടുക: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "ബാഹ്യ ടൂൾ പാതകൾ"
@@ -6572,6 +6573,7 @@ link = "അല്ലെങ്കിൽ സ്വയം-ഹോസ്റ്റു�
 title = "സെർവറിലേക്ക് കണക്റ്റുചെയ്യുക"
 subtitle = "നിങ്ങളുടെ സെൽഫ്-ഹോസ്റ്റഡ് സെർവർ URL നൽകുക"
 testing = "കണക്ഷൻ പരിശോധിക്കുന്നു..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

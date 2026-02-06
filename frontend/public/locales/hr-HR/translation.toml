@@ -1302,6 +1302,8 @@ outputFormat = "Izlazni format"
 pdfaNote = "PDF/A-1b je kompatibilniji, PDF/A-2b podržava više značajki."
 pdfaFormat = "PDF/A format"
 pdfaDigitalSignatureWarning = "PDF sadrži digitalni potpis. U sledećem koraku će biti uklonjen."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF sadrži digitalni potpis. Bit će uklonjen u sljedećem koraku."
 pdfxDescription = "PDF/X je ISO standardni podskup PDF-a za pouzdani tisak i razmjenu grafike."
 fileFormat = "Format datoteke"
@@ -3403,7 +3405,6 @@ bullet2 = "Sva zacrnjivanja na čekanju primjenjuju se odjednom"
 bullet3 = "Zacrnjivanja se ne mogu poništiti nakon primjene"
 
 [redact.manual]
-applyRedactions = "Apply Redactions"
 title = "Alati za zacrnjivanje"
 instructions = "Odaberite tekst ili nacrtajte područja na PDF-u kako biste označili sadržaj za zacrnjivanje."
 markText = "Označi tekst"
@@ -3566,50 +3567,50 @@ imageSize = "Veličina slike"
 margin = "Margina"
 positionAndFormatting = "Položaj i oblikovanje"
 quickPosition = "Odaberite položaj na stranici za postavljanje pečata."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Došlo je do pogreške pri dodavanju pečata u PDF."
 
 [AddStampRequest.results]
 title = "Rezultati pečata"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
 
 [removeImagePdf]
 tags = "Ukloni sliku, Rad sa stranicama, Back end, server strana"
@@ -4522,21 +4523,21 @@ description = "Konfigurirajte prilagođene putanje datotečnog sustava za obradu
 [admin.settings.general.customPaths.pipeline]
 label = "Direktoriji cjevovoda"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Direktorij nadziranih mapa"
 description = "Direktorij u kojem cjevovod nadzire dolazne PDF-ove (ostavite prazno za zadano: /pipeline/watchedFolders)"
 
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Direktorij dovršenih mapa"
 description = "Direktorij u koji se ispisuju obrađeni PDF-ovi (ostavite prazno za zadano: /pipeline/finishedFolders)"
-
-[admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
-
-[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
 
 [admin.settings.general.customPaths.operations]
 label = "Putanje vanjskih alata"
@@ -6572,6 +6573,7 @@ link = "ili se povežite sa samohostiranim računom"
 title = "Povežite se s poslužiteljem"
 subtitle = "Unesite URL svog self-hosted Stirling PDF poslužitelja"
 testing = "Testiranje veze..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"
