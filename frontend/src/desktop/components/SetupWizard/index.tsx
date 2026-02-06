@@ -308,6 +308,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         <SelfHostedLoginScreen
           serverUrl={serverConfig?.url || ''}
           enabledOAuthProviders={serverConfig?.enabledOAuthProviders}
+          loginMethod={serverConfig?.loginMethod}
           onLogin={handleSelfHostedLogin}
           onOAuthSuccess={handleSelfHostedOAuthSuccess}
           mfaCode={selfHostedMfaCode}
