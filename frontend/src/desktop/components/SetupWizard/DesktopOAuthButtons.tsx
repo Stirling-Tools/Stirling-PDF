@@ -4,7 +4,7 @@ import { authService, UserInfo } from '@app/services/authService';
 import { buildOAuthCallbackHtml } from '@app/utils/oauthCallbackHtml';
 import { BASE_PATH } from '@app/constants/app';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
-import './desktopOAuth.css';
+import '@app/components/SetupWizard/desktopOAuth.css';
 
 type KnownProviderId = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
 export type OAuthProviderId = KnownProviderId | string;
