@@ -550,7 +550,7 @@ tasks.register('compileRestartHelper', JavaCompile) {
     source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
     classpath = files()
     destinationDirectory = layout.buildDirectory.dir("restart-helper-classes")
-    def restartMajorVersion = ext.modernJavaVersion
+    def restartMajorVersion = project.ext.modernJavaVersion
     def restartCompatibility = JavaVersion.toVersion(restartMajorVersion.toString())
     sourceCompatibility = restartCompatibility
     targetCompatibility = restartCompatibility
