@@ -73,6 +73,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
       // Fetch OAuth providers and check if login is enabled
       const enabledProviders: SSOProviderConfig[] = [];
+      let loginMethod = 'all'; // Default to 'all' (allows both SSO and username/password)
       try {
         console.log('[ServerSelection] Fetching login configuration...');
         const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`);
@@ -107,6 +108,10 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
           setTesting(false);
           return;
         }
+
+        // Extract loginMethod from response
+        loginMethod = data.loginMethod || 'all';
+        console.log('[ServerSelection] Login method:', loginMethod);
 
         // Extract provider IDs from authorization URLs
         // Example: "/oauth2/authorization/google" → "google"
@@ -149,11 +154,12 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         return;
       }
 
-      // Connection successful - pass URL and OAuth providers
+      // Connection successful - pass URL, OAuth providers, and login method
       console.log('[ServerSelection] ✅ Server selection complete, proceeding to login');
       onSelect({
         url,
         enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+        loginMethod,
       });
     } catch (error) {
       console.error('[ServerSelection] ❌ Unexpected error during connection test:', error);
