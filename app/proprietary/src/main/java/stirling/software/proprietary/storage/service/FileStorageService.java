@@ -1043,4 +1043,82 @@ public class FileStorageService {
                 || role == ShareAccessRole.COMMENTER
                 || role == ShareAccessRole.VIEWER;
     }
+
+    // Workflow-aware methods
+
+    /**
+     * Stores a file as part of a workflow with specific purpose and workflow link. This enables
+     * tracking workflow files separately and applying workflow-specific logic.
+     *
+     * @param owner File owner (usually workflow session owner)
+     * @param file File to store
+     * @param purpose Purpose classification (SIGNING_ORIGINAL, SIGNING_SIGNED, etc.)
+     * @param workflowSession Workflow session to link file to (nullable)
+     * @return Stored file entity
+     */
+    public StoredFile storeWorkflowFile(
+            User owner,
+            MultipartFile file,
+            stirling.software.proprietary.storage.model.FilePurpose purpose,
+            stirling.software.proprietary.workflow.model.WorkflowSession workflowSession) {
+        StoredFile storedFile = storeFile(owner, file);
+        storedFile.setPurpose(purpose);
+        storedFile.setWorkflowSession(workflowSession);
+        return storedFileRepository.save(storedFile);
+    }
+
+    /**
+     * Checks if a stored file is part of an active workflow. Files in active workflows may have
+     * restricted operations (e.g., no deletion until workflow completes).
+     *
+     * @param file Stored file to check
+     * @return true if file is part of an active workflow
+     */
+    public boolean isWorkflowFile(StoredFile file) {
+        if (file.getWorkflowSession() == null) {
+            return false;
+        }
+        return file.getWorkflowSession().isActive();
+    }
+
+    /**
+     * Retrieves all files associated with a workflow session. Includes original file, processed
+     * file, and any auxiliary files.
+     *
+     * @param workflowSession Workflow session
+     * @return List of all files linked to the workflow
+     */
+    public List<StoredFile> getWorkflowFiles(
+            stirling.software.proprietary.workflow.model.WorkflowSession workflowSession) {
+        return storedFileRepository.findByWorkflowSession(workflowSession);
+    }
+
+    /**
+     * Counts total storage bytes used by a workflow session. Useful for quota tracking and
+     * reporting.
+     *
+     * @param workflowSession Workflow session
+     * @return Total bytes used by workflow files
+     */
+    public long countWorkflowStorageBytes(
+            stirling.software.proprietary.workflow.model.WorkflowSession workflowSession) {
+        List<StoredFile> files = getWorkflowFiles(workflowSession);
+        return files.stream().mapToLong(this::totalStoredBytes).sum();
+    }
+
+    /**
+     * Validates that a user can delete a file, considering workflow constraints. Files in active
+     * workflows cannot be deleted until the workflow completes.
+     *
+     * @param file File to validate
+     * @param user User attempting deletion
+     * @throws ResponseStatusException if deletion is not allowed
+     */
+    public void validateWorkflowDeletion(StoredFile file, User user) {
+        if (isWorkflowFile(file)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot delete file that is part of an active workflow");
+        }
+    }
 }

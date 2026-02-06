@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.UserApi;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.audit.AuditEventType;
@@ -896,5 +897,35 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to complete initial setup");
         }
+    }
+
+    /**
+     * List all enabled users for selection in signing workflows.
+     *
+     * @param principal The authenticated user
+     * @return List of user summaries
+     */
+    @GetMapping("/users")
+    public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<UserSummaryDTO> users =
+                userRepository.findAll().stream()
+                        .filter(User::isEnabled)
+                        .map(this::toUserSummaryDTO)
+                        .collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(users);
+    }
+
+    private UserSummaryDTO toUserSummaryDTO(User user) {
+        return new UserSummaryDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getUsername(), // Use username as displayName
+                user.getTeam() != null ? user.getTeam().getName() : null,
+                user.isEnabled());
     }
 }

@@ -1,9 +1,10 @@
 import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from 'react-dom';
-import { Stack, Divider, Menu, Indicator } from "@mantine/core";
+import { Stack, Divider, Menu, Indicator, Badge, Loader, Center, Text } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import SignPopout from '@app/components/shared/signing/SignPopout';
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -45,7 +46,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const location = useLocation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const {
+    handleReaderToggle,
+    handleToolSelect,
+    selectedToolKey,
+    leftPanelView,
+    toolRegistry,
+    readerMode,
+    resetTool,
+  } = useToolWorkflow();
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { state, selectors } = useFileState();
   const { actions } = useFileActions();
@@ -70,6 +79,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     { id: Date.now(), email: '', role: 'editor' },
   ]);
   const [isInviting, setIsInviting] = useState(false);
+
+  // Sign button state
+  const [signMenuOpen, setSignMenuOpen] = useState(false);
+  const signButtonRef = useRef<HTMLDivElement>(null);
+
   const {
     tooltipOpen,
     manualCloseOnly,
@@ -131,6 +145,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       const target = event.target as Node;
       if (accessPopoverRef.current?.contains(target)) return;
       if (accessButtonRef.current?.contains(target)) return;
+
+      // Check if click is inside a Mantine dropdown
+      const mantineDropdown = (target as Element).closest?.('.mantine-Combobox-dropdown, .mantine-Popover-dropdown');
+      if (mantineDropdown) return;
+
       setAccessMenuOpen(false);
     };
     const handleEscape = (event: KeyboardEvent) => {
@@ -397,6 +416,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     }
   };
 
+
   // Open modal if URL is at /settings/*
   useEffect(() => {
     const isSettings = location.pathname.startsWith('/settings');
@@ -609,6 +629,16 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     />
                   </div>
                 )}
+                <div ref={signButtonRef}>
+                  <QuickAccessButton
+                    icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
+                    label={t('quickAccess.sign', 'Sign')}
+                    isActive={signMenuOpen}
+                    onClick={() => setSignMenuOpen((prev) => !prev)}
+                    ariaLabel={t('quickAccess.sign', 'Sign')}
+                    dataTestId="sign-button"
+                  />
+                </div>
               </Stack>
             </>
           )}
@@ -821,7 +851,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   </div>
                   <div className="quick-access-popout__row">
                     <div className="quick-access-popout__icon-bubble">
-                      <LocalIcon icon="lock-rounded" width="1rem" height="1rem" />
+                      <LocalIcon icon="lock-outline" width="1rem" height="1rem" />
                     </div>
                     <div className="quick-access-popout__row-text">
                       <div className="quick-access-popout__row-title">
@@ -921,6 +951,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   {t('quickAccess.accessAddPerson', 'Add another person')}
                 </button>
               </div>
+
             </div>
 
             <div className="quick-access-popout__footer">
@@ -975,6 +1006,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         </div>,
         document.body
       )}
+
+      {/* Sign Popover */}
+      <SignPopout
+        isOpen={signMenuOpen}
+        onClose={() => setSignMenuOpen(false)}
+        buttonRef={signButtonRef}
+        isRTL={isRTL}
+      />
     </div>
   );
 });
