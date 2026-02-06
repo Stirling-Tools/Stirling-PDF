@@ -390,13 +390,8 @@ export async function generateThumbnailWithMetadata(file: File, applyRotation: b
     return { thumbnail, pageCount: 0 };
   }
 
-  // Skip very large files
-  if (file.size >= 100 * 1024 * 1024) {
-    const thumbnail = generatePlaceholderThumbnail(file);
-    return { thumbnail, pageCount: 1 };
-  }
-
   const scale = calculateScaleFromFileSize(file.size);
+  const isVeryLarge = file.size >= 100 * 1024 * 1024; // 100MB threshold
 
   try {
     const arrayBuffer = await file.arrayBuffer();
@@ -429,6 +424,18 @@ export async function generateThumbnailWithMetadata(file: File, applyRotation: b
 
     await page.render({ canvasContext: context, viewport, canvas }).promise;
     const thumbnail = canvas.toDataURL();
+
+    // For very large files, skip reading rotation/dimensions for all pages (just use first page data)
+    if (isVeryLarge) {
+      const rotation = page.rotate || 0;
+      pdfWorkerManager.destroyDocument(pdf);
+      return {
+        thumbnail,
+        pageCount,
+        pageRotations: [rotation],
+        pageDimensions: [pageDimensions[0]]
+      };
+    }
 
     // Read rotation for all pages
     const pageRotations: number[] = [];

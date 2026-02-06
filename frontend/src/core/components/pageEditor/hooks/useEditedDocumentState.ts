@@ -78,6 +78,12 @@ export const useEditedDocumentState = ({
     }
   }, [mergedPdfDocument]);
 
+  useEffect(() => {
+    if (!mergedPdfDocument) {
+      setEditedDocument(null);
+    }
+  }, [mergedPdfDocument, setEditedDocument]);
+
   // Keep editedDocument in sync with out-of-band insert/remove events (e.g. uploads finishing)
   useEffect(() => {
     const currentEditedDocument = editedDocumentRef.current;
@@ -101,6 +107,8 @@ export const useEditedDocumentState = ({
         const sourcePages = mergedPdfDocument.pages;
         const sourceIds = new Set(sourcePages.map((p) => p.id));
         const prevIds = new Set(prev.pages.map((p) => p.id));
+        const hasOverlap = sourcePages.some((page) => prevIds.has(page.id));
+        const shouldResetToMerged = !hasOverlap;
 
         const newPages: PDFPage[] = [];
         for (const page of sourcePages) {
@@ -121,7 +129,9 @@ export const useEditedDocumentState = ({
           }
         }
 
-        if (hasAdditions || hasRemovals) {
+        if (shouldResetToMerged) {
+          pages = sourcePages.map((page) => ({ ...page }));
+        } else if (hasAdditions || hasRemovals) {
           pages = [...prev.pages];
 
           const placeholderPositions = new Map<FileId, number>();
@@ -194,6 +204,9 @@ export const useEditedDocumentState = ({
             });
           }
 
+        }
+
+        if (shouldResetToMerged || hasAdditions || hasRemovals) {
           pages = pages.map((page, index) => ({
             ...page,
             pageNumber: index + 1,

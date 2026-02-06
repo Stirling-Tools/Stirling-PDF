@@ -88,6 +88,7 @@ type AnnotationApiSurface = {
   deselectAnnotation?: () => void;
   updateAnnotation?: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => void;
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
+  purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
 };
 
 type ToolDefaultsBuilder = (options?: AnnotationToolOptions) => AnnotationDefaults;
@@ -371,6 +372,11 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       getActiveTool: () => {
         const api = annotationApi as AnnotationApiSurface | undefined;
         return api?.getActiveTool?.() ?? null;
+      },
+
+      purgeAnnotation: (pageIndex: number, annotationId: string) => {
+        const api = annotationApi as AnnotationApiSurface | undefined;
+        api?.purgeAnnotation?.(pageIndex, annotationId);
       },
     }),
     [annotationApi, configureAnnotationTool, buildAnnotationDefaults]
