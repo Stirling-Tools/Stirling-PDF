@@ -26,8 +26,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
@@ -36,6 +34,8 @@ import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
+
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerMfaTest {

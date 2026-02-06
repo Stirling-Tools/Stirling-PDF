@@ -40,13 +40,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @DisplayName("GetInfoOnPDF Controller Tests")
 @ExtendWith(MockitoExtension.class)
@@ -216,8 +216,8 @@ class GetInfoOnPDFTest {
                 Assertions.assertTrue(jsonNode.has("Permissions"));
 
                 JsonNode metadata = jsonNode.get("Metadata");
-                Assertions.assertEquals("Test Title", metadata.get("Title").asText());
-                Assertions.assertEquals("Test Author", metadata.get("Author").asText());
+                Assertions.assertEquals("Test Title", metadata.get("Title").asText(""));
+                Assertions.assertEquals("Test Author", metadata.get("Author").asText(""));
             }
         }
 
@@ -315,12 +315,12 @@ class GetInfoOnPDFTest {
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode metadata = jsonNode.get("Metadata");
 
-            Assertions.assertEquals("Test Title", metadata.get("Title").asText());
-            Assertions.assertEquals("Test Author", metadata.get("Author").asText());
-            Assertions.assertEquals("Test Subject", metadata.get("Subject").asText());
-            Assertions.assertEquals("test, pdf, metadata", metadata.get("Keywords").asText());
-            Assertions.assertEquals("Test Creator", metadata.get("Creator").asText());
-            Assertions.assertEquals("Test Producer", metadata.get("Producer").asText());
+            Assertions.assertEquals("Test Title", metadata.get("Title").asText(""));
+            Assertions.assertEquals("Test Author", metadata.get("Author").asText(""));
+            Assertions.assertEquals("Test Subject", metadata.get("Subject").asText(""));
+            Assertions.assertEquals("test, pdf, metadata", metadata.get("Keywords").asText(""));
+            Assertions.assertEquals("Test Creator", metadata.get("Creator").asText(""));
+            Assertions.assertEquals("Test Producer", metadata.get("Producer").asText(""));
             Assertions.assertTrue(metadata.has("CreationDate"));
             Assertions.assertTrue(metadata.has("ModificationDate"));
 
@@ -512,10 +512,10 @@ class GetInfoOnPDFTest {
             JsonNode page1 = perPageInfo.get("Page 1");
             Assertions.assertTrue(page1.has("Size"));
             Assertions.assertTrue(page1.get("Size").has("Standard Page"));
-            Assertions.assertEquals("A4", page1.get("Size").get("Standard Page").asText());
+            Assertions.assertEquals("A4", page1.get("Size").get("Standard Page").asText(""));
 
             JsonNode page2 = perPageInfo.get("Page 2");
-            Assertions.assertEquals("Letter", page2.get("Size").get("Standard Page").asText());
+            Assertions.assertEquals("Letter", page2.get("Size").get("Standard Page").asText(""));
 
             loadedDoc.close();
         }
@@ -569,7 +569,8 @@ class GetInfoOnPDFTest {
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
-            Assertions.assertTrue(jsonNode.get("error").asText().contains("PDF file is required"));
+            Assertions.assertTrue(
+                    jsonNode.get("error").asText("").contains("PDF file is required"));
         }
 
         @Test
@@ -645,7 +646,7 @@ class GetInfoOnPDFTest {
 
             Assertions.assertTrue(jsonNode.has("error"));
             Assertions.assertTrue(
-                    jsonNode.get("error").asText().contains("exceeds maximum allowed size"));
+                    jsonNode.get("error").asText("").contains("exceeds maximum allowed size"));
         }
     }
 

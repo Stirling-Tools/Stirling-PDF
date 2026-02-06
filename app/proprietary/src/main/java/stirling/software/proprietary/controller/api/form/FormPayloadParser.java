@@ -1,6 +1,5 @@
 package stirling.software.proprietary.controller.api.form;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -8,12 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.util.FormUtils;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 final class FormPayloadParser {
 
@@ -32,8 +32,7 @@ final class FormPayloadParser {
 
     private FormPayloadParser() {}
 
-    static Map<String, Object> parseValueMap(ObjectMapper objectMapper, String json)
-            throws IOException {
+    static Map<String, Object> parseValueMap(ObjectMapper objectMapper, String json) {
         if (json == null || json.isBlank()) {
             return Map.of();
         }
@@ -41,7 +40,7 @@ final class FormPayloadParser {
         JsonNode root;
         try {
             root = objectMapper.readTree(json);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             // Fallback to legacy direct map parse (will throw again if invalid)
             return objectMapper.readValue(json, MAP_TYPE);
         }
@@ -88,14 +87,14 @@ final class FormPayloadParser {
     }
 
     static List<FormUtils.ModifyFormFieldDefinition> parseModificationDefinitions(
-            ObjectMapper objectMapper, String json) throws IOException {
+            ObjectMapper objectMapper, String json) {
         if (json == null || json.isBlank()) {
             return List.of();
         }
         return objectMapper.readValue(json, MODIFY_FIELD_LIST_TYPE);
     }
 
-    static List<String> parseNameList(ObjectMapper objectMapper, String json) throws IOException {
+    static List<String> parseNameList(ObjectMapper objectMapper, String json) {
         if (json == null || json.isBlank()) {
             return List.of();
         }
@@ -119,7 +118,7 @@ final class FormPayloadParser {
                 }
             }
         } else if (root.isTextual()) {
-            final String single = trimToNull(root.asText());
+            final String single = trimToNull(root.asText(""));
             if (single != null) {
                 names.add(single);
             }
@@ -131,7 +130,7 @@ final class FormPayloadParser {
 
         try {
             return objectMapper.readValue(json, STRING_LIST_TYPE);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidFormat",
                     "Invalid {0} format: {1}",
@@ -199,7 +198,7 @@ final class FormPayloadParser {
             return null;
         }
         if (node.isTextual()) {
-            return trimToEmpty(node.asText());
+            return trimToEmpty(node.asText(""));
         }
         if (node.isNumber()) {
             return node.numberValue().toString();
@@ -208,7 +207,7 @@ final class FormPayloadParser {
             return Boolean.toString(node.booleanValue());
         }
         // Fallback for other scalar-like nodes
-        return trimToEmpty(node.asText());
+        return trimToEmpty(node.asText(""));
     }
 
     private static void collectNames(JsonNode arrayNode, Set<String> sink) {
@@ -229,7 +228,7 @@ final class FormPayloadParser {
         }
 
         if (node.isTextual()) {
-            return trimToNull(node.asText());
+            return trimToNull(node.asText(""));
         }
 
         if (node.isObject()) {
@@ -264,8 +263,8 @@ final class FormPayloadParser {
     private static Map<String, Object> objectToLinkedMap(JsonNode objectNode) {
         final Map<String, Object> result = new LinkedHashMap<>();
         objectNode
-                .fieldNames()
-                .forEachRemaining(
+                .propertyNames()
+                .forEach(
                         key -> {
                             final JsonNode v = objectNode.get(key);
                             if (v == null || v.isNull()) {

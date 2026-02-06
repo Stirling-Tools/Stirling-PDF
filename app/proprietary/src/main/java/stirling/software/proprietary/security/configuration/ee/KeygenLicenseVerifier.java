@@ -12,8 +12,6 @@ import org.bouncycastle.crypto.signers.Ed25519Signer;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.posthog.java.shaded.org.json.JSONException;
 import com.posthog.java.shaded.org.json.JSONObject;
 
@@ -23,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j
@@ -488,9 +489,9 @@ public class KeygenLicenseVerifier {
             JsonNode validationResponse = validateLicense(licenseKey, machineFingerprint, context);
             if (validationResponse != null) {
                 boolean isValid = validationResponse.path("meta").path("valid").asBoolean();
-                String licenseId = validationResponse.path("data").path("id").asText();
+                String licenseId = validationResponse.path("data").path("id").asText("");
                 if (!isValid) {
-                    String code = validationResponse.path("meta").path("code").asText();
+                    String code = validationResponse.path("meta").path("code").asText("");
                     log.info(code);
                     if ("NO_MACHINE".equals(code)
                             || "NO_MACHINES".equals(code)
@@ -553,8 +554,8 @@ public class KeygenLicenseVerifier {
             JsonNode metaNode = jsonResponse.path("meta");
             boolean isValid = metaNode.path("valid").asBoolean();
 
-            String detail = metaNode.path("detail").asText();
-            String code = metaNode.path("code").asText();
+            String detail = metaNode.path("detail").asText("");
+            String code = metaNode.path("code").asText("");
 
             log.info("License validity: {}", isValid);
             log.info("Validation detail: {}", detail);
@@ -578,7 +579,7 @@ public class KeygenLicenseVerifier {
 
             if (includedNode.isArray()) {
                 for (JsonNode node : includedNode) {
-                    if ("policies".equals(node.path("type").asText())) {
+                    if ("policies".equals(node.path("type").asText(""))) {
                         policyNode = node;
                         break;
                     }
@@ -664,9 +665,9 @@ public class KeygenLicenseVerifier {
 
                 for (JsonNode machine : machines) {
                     if (machineFingerprint.equals(
-                            machine.path("attributes").path("fingerprint").asText())) {
+                            machine.path("attributes").path("fingerprint").asText(""))) {
                         isCurrentMachineActivated = true;
-                        currentMachineId = machine.path("id").asText();
+                        currentMachineId = machine.path("id").asText("");
                         log.info(
                                 "Current machine is already activated with ID: {}",
                                 currentMachineId);
@@ -700,7 +701,7 @@ public class KeygenLicenseVerifier {
                                             java.time.Instant.parse(createdStr);
                                     if (oldestTime == null || createdTime.isBefore(oldestTime)) {
                                         oldestTime = createdTime;
-                                        oldestMachineId = machine.path("id").asText();
+                                        oldestMachineId = machine.path("id").asText("");
                                     }
                                 } catch (Exception e) {
                                     log.warn(
@@ -714,7 +715,7 @@ public class KeygenLicenseVerifier {
                         if (oldestMachineId == null) {
                             log.warn(
                                     "Could not determine oldest machine by timestamp, using first machine in list");
-                            oldestMachineId = machines.path(0).path("id").asText();
+                            oldestMachineId = machines.path(0).path("id").asText("");
                         }
 
                         log.info("Deregistering machine with ID: {}", oldestMachineId);
