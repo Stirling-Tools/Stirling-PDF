@@ -219,8 +219,8 @@ pagesAndStarting = "Pagine e numero iniziale"
 positionAndPages = "Posizione e pagine"
 preview = "Selezione posizione"
 previewDisclaimer = "L'anteprima è approssimativa. Il risultato finale può variare a causa delle metriche dei font PDF."
-zeroPad = "Zero‑pad Width (Bates Stamping)"
-zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+zeroPad = "Larghezza del riempimento con zeri (Timbro Bates)"
+zeroPadTooltip = "Riempire con zeri (timbro Bates) i numeri di pagina fino a questa larghezza (ad esempio, 3 ⇒ 001). Impostare a 0 per disabilitare."
 
 [addPageNumbers.selectText]
 1 = "Seleziona il file PDF:"
@@ -1302,8 +1302,8 @@ outputFormat = "Formato di output"
 pdfaNote = "PDF/A-1b è più compatibile, PDF/A-2b supporta più funzionalità."
 pdfaFormat = "Formato PDF/A"
 pdfaDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questo verrà rimosso nel passaggio successivo."
-strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
+strictMode = "Modalità Stretta"
+strictModeDesc = "Errore se la conversione non è perfetta (utilizza la verifica VeraPDF)"
 pdfxDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questa verrà rimossa nel passaggio successivo."
 pdfxDescription = "PDF/X è un sottoinsieme PDF standard ISO per una stampa affidabile e lo scambio di grafica."
 fileFormat = "Formato file"
@@ -2646,7 +2646,7 @@ label = "PDF originale"
 
 [compare.edited]
 label = "PDF modificato"
-placeholder = "Select the edited PDF"
+placeholder = "Seleziona il PDF modificato"
 
 [compare.swap]
 confirmTitle = "Eseguire di nuovo il confronto?"
@@ -3600,11 +3600,11 @@ europeanDate = "Data europea"
 timestamp = "Timestamp"
 draftWatermark = "Bozza Filigrana"
 custom = "Personalizzato"
-page-numbers = "Page Numbers"
-draft = "Draft Watermark"
-doc-info = "Document Info"
-legal-footer = "Legal Footer"
-european-date = "European Date (DD/MM/YYYY)"
+page-numbers = "Numeri di pagina"
+draft = "Filigrana di bozza"
+doc-info = "Informazioni sul documento"
+legal-footer = "Note legali"
+european-date = "Note legali (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Si è verificato un errore durante l'aggiunta del timbro al PDF."
@@ -4521,19 +4521,19 @@ label = "Percorsi personalizzati"
 description = "Configura percorsi personalizzati del file system per l'elaborazione pipeline e strumenti esterni"
 
 [admin.settings.general.customPaths.pipeline]
-label = "Directory pipeline"
+label = "Pipeline della directory"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-label = "Pipeline Directory"
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+label = "Pipeline della directory"
+description = "Directory di base per le risorse della pipeline (lascia vuoto per il valore predefinito: /pipeline)"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Directory cartelle monitorate"
 description = "Directory in cui la pipeline monitora i PDF in arrivo (lascia vuoto per predefinito: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-label = "Watched Folders Directories"
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+label = "Cartelle e directory controllate"
+description = "Directory in cui la pipeline monitora i PDF in arrivo (una per riga o separate da virgola; lascia vuoto per il valore predefinito: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Directory cartelle completate"
@@ -6573,7 +6573,7 @@ link = "oppure connettiti a un account self-hosted"
 title = "Connetti al server"
 subtitle = "Inserisci l'URL del tuo server self-hosted"
 testing = "Verifica connessione..."
-useLast = "Last used server: {{serverUrl}}"
+useLast = "Ultimo server utilizzato: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"
