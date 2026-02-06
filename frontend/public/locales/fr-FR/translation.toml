@@ -219,6 +219,8 @@ pagesAndStarting = "Pages et numéro de départ"
 positionAndPages = "Position et pages"
 preview = "Sélection de la position"
 previewDisclaimer = "L’aperçu est approximatif. Le résultat final peut varier en raison des métriques de police du PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Sélectionnez le fichier PDF"
@@ -1300,6 +1302,8 @@ outputFormat = "Format de sortie"
 pdfaNote = "PDF/A-1b est plus compatible, PDF/A-2b prend en charge davantage de fonctionnalités."
 pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée dans l'étape suivante."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "Le PDF contient une signature numérique. Elle sera supprimée à l'étape suivante."
 pdfxDescription = "PDF/X est un sous-ensemble PDF conforme à l'ISO pour une impression fiable et un échange graphique."
 fileFormat = "Format de fichier"
@@ -2642,6 +2646,7 @@ label = "PDF original"
 
 [compare.edited]
 label = "PDF modifié"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Relancer la comparaison ?"
@@ -3562,45 +3567,50 @@ imageSize = "Taille de l’image"
 margin = "Marge"
 positionAndFormatting = "Position et mise en forme"
 quickPosition = "Sélectionnez une position sur la page pour placer le tampon."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Une erreur s’est produite lors de l’ajout du tampon au PDF."
 
 [AddStampRequest.results]
 title = "Résultats du tampon"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Images,Remove Image,Page operations,Back end,server side"
@@ -4513,9 +4523,17 @@ description = "Configurer des chemins de système de fichiers personnalisés pou
 [admin.settings.general.customPaths.pipeline]
 label = "Répertoires du pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Répertoire des dossiers surveillés"
 description = "Répertoire où le pipeline surveille les PDF entrants (laisser vide pour la valeur par défaut : /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Répertoire des dossiers terminés"
@@ -6555,6 +6573,7 @@ link = "ou connectez-vous à un compte auto-hébergé"
 title = "Connexion au serveur"
 subtitle = "Saisissez l’URL de votre serveur auto‑hébergé"
 testing = "Test de connexion…"
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

@@ -219,6 +219,8 @@ pagesAndStarting = "Oldalak és kezdő sorszám"
 positionAndPages = "Pozíció és oldalak"
 preview = "Pozíció kiválasztása"
 previewDisclaimer = "Az előnézet hozzávetőleges. A végső kimenet eltérhet a PDF betűkészlet-metrikái miatt."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF fájl kiválasztása:"
@@ -1300,6 +1302,8 @@ outputFormat = "Kimeneti formátum"
 pdfaNote = "A PDF/A-1b kompatibilisebb, a PDF/A-2b több funkciót támogat."
 pdfaFormat = "PDF/A formátum"
 pdfaDigitalSignatureWarning = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
 pdfxDescription = "A PDF/X egy ISO szabványos PDF-részhalmaz megbízható nyomtatáshoz és grafikai cseréhez."
 fileFormat = "Fájlformátum"
@@ -2642,6 +2646,7 @@ label = "Eredeti PDF"
 
 [compare.edited]
 label = "Szerkesztett PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Újrafuttatja az összehasonlítást?"
@@ -3562,45 +3567,50 @@ imageSize = "Képméret"
 margin = "Margó"
 positionAndFormatting = "Pozíció és formázás"
 quickPosition = "Válasszon pozíciót az oldalon a bélyeg elhelyezéséhez."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Hiba történt a bélyeg hozzáadása közben a PDF-hez."
 
 [AddStampRequest.results]
 title = "Bélyegzés eredményei"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Képek eltávolítása,Oldalműveletek,Backend,szerver oldali"
@@ -4513,9 +4523,17 @@ description = "Egyéni fájlrendszer-útvonalak konfigurálása a pipeline feldo
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline könyvtárak"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Megfigyelt mappák könyvtára"
 description = "Könyvtár, ahol a pipeline a beérkező PDF-eket figyeli (hagyja üresen az alapértelmezett útvonalhoz: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Befejezett mappák könyvtára"
@@ -6555,6 +6573,7 @@ link = "vagy csatlakozzon egy saját üzemeltetésű fiókhoz"
 title = "Csatlakozás a szerverhez"
 subtitle = "Adja meg az önhostolt szerver URL-jét"
 testing = "Kapcsolat tesztelése..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

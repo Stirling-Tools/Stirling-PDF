@@ -219,6 +219,8 @@ pagesAndStarting = "ཤོག་ངོས་དང་འགོ་འཛུགས
 positionAndPages = "གནས་བབ་དང་ཤོག་ངོས།"
 preview = "ལས་གནས་འདེམས་པ།"
 previewDisclaimer = "སྔོན་ལྟ་ནི་ཚོད་དཔག་ཡིན། མཐའ་མའི་ཐོན་འབྲས་དེ་PDFཡིག་གཟུགས་ཚད་གཞིའི་རྐྱེན་གྱིས་མི་འདྲ་བ་ཆགས་སྲིད།"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDFཡིག་ཆ་འདེམས།"
@@ -1300,6 +1302,8 @@ outputFormat = "ཐོན་འབྲས་རྣམ་གྲངས།"
 pdfaNote = "PDF/A-1b མཐུན་སྒྲིལ་ཆེ་བ་དང་། PDF/A-2b ཡིས་ཁྱད་ཆོས་མང་བ་ལ་རྒྱབ་སྐྱོར་བྱེད་ཀྱི་ཡོད། PDF/A-3b ཡིས་བཙུགས་པའི་ཡིག་ཆ་ལ་རྒྱབ་སྐྱོར་བྱེད་ཀྱི་ཡོད།"
 pdfaFormat = "PDF/A རྣམ་གཞག"
 pdfaDigitalSignatureWarning = "PDF ནང་ཨང་གྲངས་ཀྱི་མཚན་རྟགས་ཡོད། འདི་གོམ་པ་རྗེས་མར་མེད་པར་བཟོ་རྒྱུ་རེད།"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "དེབ PDF ནང་ གློག་སྒྲིག་མིང་རྟགས་ཡོད། རྗེས་སྟབས་ནས་འདི་བསུབ་བྱེད།"
 pdfxDescription = "PDF/X ནི ISO ཚད་ལྡན་PDF གྲངས་ཆ་ཞིག་ཡིན་པས་ ཡིད་ཆེན་པོར་པར་འདེབས་དང་ རི་མོ་བརྗེ་སོར་བྱེད་ཐུབ།"
 fileFormat = "ཡིག་ཆ།"
@@ -2642,6 +2646,7 @@ label = "ཐོག་མའི་PDF"
 
 [compare.edited]
 label = "རྩོམ་སྒྲིག་བྱས་པའི་PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "བསྐྱར་དུ་འགྲན་བསྡུར།"
@@ -3562,45 +3567,50 @@ imageSize = "པར་རིས་ཚད་གཞི།"
 margin = "མཐའ་ཤོག"
 positionAndFormatting = "ལས་གནས་དང་རྩ་སྒྲིག།"
 quickPosition = "ཤོག་ངོས་སྟེང་དུ་གནས་ཡུལ་ཞིག་འདེམས་ནས་མཚོན་རྟགས་འཇོག་དགོས།"
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "PDF ལ་མཚོན་རྟགས་ཁ་སྣོན་བྱེད་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
 
 [AddStampRequest.results]
 title = "མཚོན་རྟགས་གྲུབ་འབྲས།"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "པར་རིས་མེད་པར་བཟོས་པ། ཤོག་ངོས་བཀོལ་སྤྱོད། རྒྱབ་མཇུག་། ཞབས་ཞུ་པ།"
@@ -4513,9 +4523,17 @@ description = "མདོང་ལམ་ལས་སྣོན་དང་ཕྱ�
 [admin.settings.general.customPaths.pipeline]
 label = "མདོང་ལམ་ངོས་འཛིན།"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "བལྟ་བའི་སྣོད་ཆས་སྣོད་ཐོ།"
 description = "སྣོད་ཐོ་དེ་PDFནང་དུ་འོང་བའི་མདོང་ལམ་གྱི་ལྟ་རྟོག་བྱེད་ཆས་(སྔོན་སྒྲིག་ལ་སྟོང་པར་བཞག་པ་: /pipeline/whatedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "མཇུག་སྒྲིལ། སྣོད་ཐོ་ཐོ་གཞུང་།"
@@ -6555,6 +6573,7 @@ link = "ཡང་ན་རང་གིས་བདག་གཉེར་བྱེ
 title = "སར་བར་མཐུད་པ།"
 subtitle = "ཁྱེད་རང་གི་རང་གིས་གཉེར་བའི་སར་བར་གྱི་URLནང་འཇུག་བྱེད།"
 testing = "ཚོད་ལྟ། འབྲེལ་བ། ..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "སིཊི་རི་ལིང་PDF SaaS"

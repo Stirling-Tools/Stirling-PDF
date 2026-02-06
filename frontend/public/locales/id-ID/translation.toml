@@ -219,6 +219,8 @@ pagesAndStarting = "Halaman & Nomor Awal"
 positionAndPages = "Posisi & Halaman"
 preview = "Pemilihan Posisi"
 previewDisclaimer = "Pratinjau bersifat perkiraan. Hasil akhir dapat berbeda karena metrik font PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Pilih berkas PDF:"
@@ -1300,6 +1302,8 @@ outputFormat = "Format Keluaran"
 pdfaNote = "PDF/A-1b lebih kompatibel, PDF/A-2b mendukung lebih banyak fitur."
 pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF berisi tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
 pdfxDescription = "PDF/X adalah subset standar ISO dari PDF untuk pencetakan yang andal dan pertukaran grafis."
 fileFormat = "Format File"
@@ -2642,6 +2646,7 @@ label = "PDF Asli"
 
 [compare.edited]
 label = "PDF yang Diedit"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Jalankan ulang perbandingan?"
@@ -3562,45 +3567,50 @@ imageSize = "Ukuran Gambar"
 margin = "Margin"
 positionAndFormatting = "Posisi & Pemformatan"
 quickPosition = "Pilih posisi pada halaman untuk menempatkan stempel."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Terjadi kesalahan saat menambahkan stempel ke PDF."
 
 [AddStampRequest.results]
 title = "Hasil Stempel"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Hapus Gambar,Operasi Halaman,Backend,server side"
@@ -4513,9 +4523,17 @@ description = "Konfigurasikan jalur sistem file kustom untuk pemrosesan pipeline
 [admin.settings.general.customPaths.pipeline]
 label = "Direktori Pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Direktori Folder yang Dipantau"
 description = "Direktori tempat pipeline memantau PDF yang masuk (biarkan kosong untuk default: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Direktori Folder Selesai"
@@ -6555,6 +6573,7 @@ link = "atau hubungkan ke akun self-hosted"
 title = "Sambungkan ke Server"
 subtitle = "Masukkan URL server self-hosted Anda"
 testing = "Menguji koneksi..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"
