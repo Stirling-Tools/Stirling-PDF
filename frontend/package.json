@@ -71,6 +71,7 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
+    "pretauri-build": "node scripts/build-provisioner.mjs",
     "predev": "npm run generate-icons",
     "dev": "vite",
     "prebuild": "npm run generate-icons",
