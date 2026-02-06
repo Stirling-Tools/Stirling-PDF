@@ -219,6 +219,8 @@ pagesAndStarting = "ページと開始番号"
 positionAndPages = "位置とページ"
 preview = "位置の選択"
 previewDisclaimer = "プレビューは概算です。最終出力は PDF のフォントメトリクスにより異なる場合があります。"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDFファイルを選択:"
@@ -1300,6 +1302,8 @@ outputFormat = "出力形式"
 pdfaNote = "PDF/A-1b は互換性が高く、PDF/A-2b はより多くの機能をサポートします。"
 pdfaFormat = "PDF/A 形式"
 pdfaDigitalSignatureWarning = "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF にはデジタル署名が含まれています。これは次のステップで削除されます。"
 pdfxDescription = "PDF/X は、信頼性の高い印刷とグラフィック交換のための ISO 規格の PDF サブセットです。"
 fileFormat = "ファイル形式"
@@ -2642,6 +2646,7 @@ label = "元の PDF"
 
 [compare.edited]
 label = "編集済み PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "比較を再実行しますか？"
@@ -3562,45 +3567,50 @@ imageSize = "画像サイズ"
 margin = "余白"
 positionAndFormatting = "位置と書式"
 quickPosition = "ページ上の配置位置を選択してください。"
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "PDF にスタンプを追加中にエラーが発生しました。"
 
 [AddStampRequest.results]
 title = "スタンプ結果"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "画像削除,ページ操作,バックエンド,サーバー側"
@@ -4513,9 +4523,17 @@ description = "パイプライン処理や外部ツール用のカスタムフ�
 [admin.settings.general.customPaths.pipeline]
 label = "パイプラインディレクトリ"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "監視フォルダーのディレクトリ"
 description = "パイプラインが受信 PDF を監視するディレクトリ（空欄で既定: /pipeline/watchedFolders）"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "完了フォルダーのディレクトリ"
@@ -6555,6 +6573,7 @@ link = "またはセルフホスト型アカウントに接続"
 title = "サーバーに接続"
 subtitle = "セルフホスト サーバーの URL を入力"
 testing = "接続をテスト中..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

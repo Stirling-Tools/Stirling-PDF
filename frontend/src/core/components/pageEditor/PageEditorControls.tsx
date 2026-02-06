@@ -38,7 +38,7 @@ interface PageEditorControlsProps {
   displayDocument?: { pages: { id: string; pageNumber: number }[] };
 
   // Split state (for tooltip logic)
-  splitPositions?: Set<number>;
+  splitPositions?: Set<string>;
   totalPages?: number;
 }
 
@@ -54,35 +54,29 @@ const PageEditorControls = ({
   selectedPageIds,
   displayDocument,
   splitPositions,
-  totalPages
 }: PageEditorControlsProps) => {
   // Calculate split tooltip text using smart toggle logic
   const getSplitTooltip = () => {
-    if (!splitPositions || !totalPages || selectedPageIds.length === 0) {
+    if (!splitPositions || !displayDocument || selectedPageIds.length === 0) {
       return "Split Selected";
     }
 
-    // Convert selected pages to split positions (same logic as handleSplit)
-    const selectedPageNumbers = displayDocument ? selectedPageIds.map(id => {
-      const page = displayDocument.pages.find(p => p.id === id);
-      return page?.pageNumber || 0;
-    }).filter(num => num > 0) : [];
-    const selectedSplitPositions = selectedPageNumbers.map(pageNum => pageNum - 1).filter(pos => pos < totalPages - 1);
+    const totalPages = displayDocument.pages.length;
+    const selectedValidPageIds = displayDocument.pages
+      .filter((page, index) => selectedPageIds.includes(page.id) && index < totalPages - 1)
+      .map(page => page.id);
 
-    if (selectedSplitPositions.length === 0) {
+    if (selectedValidPageIds.length === 0) {
       return "Split Selected";
     }
 
-    // Smart toggle logic: follow the majority, default to adding splits if equal
-    const existingSplitsCount = selectedSplitPositions.filter(pos => splitPositions.has(pos)).length;
-    const noSplitsCount = selectedSplitPositions.length - existingSplitsCount;
+    const existingSplitsCount = selectedValidPageIds.filter(id => splitPositions.has(id)).length;
+    const noSplitsCount = selectedValidPageIds.length - existingSplitsCount;
 
-    // Remove splits only if majority already have splits
-    // If equal (50/50), default to adding splits
     const willRemoveSplits = existingSplitsCount > noSplitsCount;
 
     if (willRemoveSplits) {
-      return existingSplitsCount === selectedSplitPositions.length
+      return existingSplitsCount === selectedValidPageIds.length
         ? "Remove All Selected Splits"
         : "Remove Selected Splits";
     } else {

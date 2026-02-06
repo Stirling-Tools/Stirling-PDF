@@ -79,6 +79,7 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     formData.append("includeAllRecipients", emailOptions.includeAllRecipients.toString());
   } else if (fromExtension === 'pdf' && toExtension === 'pdfa') {
     formData.append("outputFormat", pdfaOptions.outputFormat);
+    formData.append("strict", String(!!pdfaOptions.strict));
   } else if (fromExtension === 'pdf' && toExtension === 'pdfx') {
     // Use PDF/A endpoint with PDF/X format parameter
     formData.append("outputFormat", pdfxOptions?.outputFormat || 'pdfx');
