@@ -16,12 +16,13 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
   const [securityDisabled, setSecurityDisabled] = useState(false);
+  const serverUrl = localStorage.getItem('server_url') || '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Normalize and validate URL
-    let url = customUrl.trim().replace(/\/+$/, '');
+    let url = customUrl.trim().replace(/\/+$/, '') || serverUrl;
 
     if (!url) {
       setTestError(t('setup.server.error.emptyUrl', 'Please enter a server URL'));
@@ -34,6 +35,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
       url = `https://${url}`;
       setCustomUrl(url); // Update the input field
     }
+    localStorage.setItem('server_url', url);
 
     // Validate URL format
     try {
@@ -205,6 +207,21 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
               </Text>
             </Stack>
           </Alert>
+        )}
+
+        {serverUrl && (
+          <div className="navigation-link-container">
+            <button
+              type="button"
+              className="navigation-link-button"
+              disabled={testing || loading}
+              onClick={() => {
+                setCustomUrl(serverUrl);
+              }}
+            >
+              {t('setup.server.useLast', 'Last used server: {{serverUrl}}', { serverUrl: serverUrl })}
+            </button>
+          </div>
         )}
 
         <Button
