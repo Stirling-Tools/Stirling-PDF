@@ -20,7 +20,12 @@ export function AttachmentAPIBridge() {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       try {
         const task = attachmentCapability.getAttachments();
-        const result = await task.toPromise();
+
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Attachment fetch timeout after 10 seconds')), 10000);
+        });
+
+        const result = await Promise.race([task.toPromise(), timeoutPromise]);
         setState({
           attachments: result ?? [],
           isLoading: false,
@@ -49,7 +54,7 @@ export function AttachmentAPIBridge() {
         try {
           const task = attachmentCapability.downloadAttachment(attachment);
           const buffer = await task.toPromise();
-          
+
           // Create a blob and trigger download
           const blob = new Blob([buffer], { type: 'application/octet-stream' });
           const url = window.URL.createObjectURL(blob);
