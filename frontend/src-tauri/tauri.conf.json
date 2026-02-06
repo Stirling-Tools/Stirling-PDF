@@ -7,7 +7,7 @@
         "frontendDist": "../dist",
         "devUrl": "http://localhost:5173",
         "beforeDevCommand": "npm run dev -- --mode desktop",
-        "beforeBuildCommand": "npm run build -- --mode desktop"
+        "beforeBuildCommand": "node scripts/build-provisioner.mjs && npm run build -- --mode desktop"
     },
     "app": {
         "windows": [
