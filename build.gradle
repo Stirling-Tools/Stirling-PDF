@@ -15,7 +15,9 @@ import com.github.jk1.license.render.*
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.xml.XmlSlurper
+import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
     springBootVersion = "3.5.9"
@@ -29,6 +31,15 @@ ext {
     googleJavaFormatVersion = "1.28.0"
     logback = "1.5.25"
     junitPlatformVersion = "1.12.2"
+    modernJavaVersion = 17
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 ext.isSecurityDisabled = { ->
@@ -140,6 +151,10 @@ subprojects {
     java {
         // 17 is lowest but we support and recommend 21
         sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
     }
 
     if (project.name != "stirling-pdf") {
@@ -207,7 +222,8 @@ subprojects {
     }
 
     tasks.named("compileJava", JavaCompile).configure {
-        options.compilerArgs.add("-parameters")
+        // options.compilerArgs.add("-Xlint:deprecation")
+        // options.compilerArgs.add("-Xlint:unchecked")
     }
 
     def jacocoReport = tasks.named("jacocoTestReport")
@@ -533,9 +549,15 @@ tasks.register('compileRestartHelper', JavaCompile) {
 
     source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
     classpath = files()
-    destinationDirectory = file("${buildDir}/restart-helper-classes")
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    destinationDirectory = layout.buildDirectory.dir("restart-helper-classes")
+    def restartMajorVersion = ext.modernJavaVersion
+    def restartCompatibility = JavaVersion.toVersion(restartMajorVersion.toString())
+    sourceCompatibility = restartCompatibility
+    targetCompatibility = restartCompatibility
+    options.release.set(restartMajorVersion)
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion.set(JavaLanguageVersion.of(restartMajorVersion))
+    }
 }
 
 // Task to create restart-helper.jar
