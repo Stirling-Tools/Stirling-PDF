@@ -461,6 +461,24 @@ swaggerhubUpload {
     oas = "3.0.0"  // The version of the OpenAPI Specification you"re using
 }
 
+repositories {
+    if (!rootProject.ext.mavenUrl.isEmpty()) {
+        maven {
+            url = rootProject.ext.mavenUrl + '/releases'
+            credentials(PasswordCredentials) {
+                username = rootProject.ext.username
+                password = rootProject.ext.password
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+            allowInsecureProtocol = true
+        }
+    }
+    maven { url = "https://build.shibboleth.net/maven/releases" }
+    mavenCentral()
+}
+
 dependencies {
     implementation project(':stirling-pdf')
     implementation project(':common')
