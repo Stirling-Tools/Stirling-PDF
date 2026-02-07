@@ -26,7 +26,7 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.9.0", features = [ "devtools"] }
 tauri-plugin-log = "2.8.0"
-tauri-plugin-shell = "2.3.4"
+tauri-plugin-shell = "2.3.5"
 tauri-plugin-fs = "2.4.5"
 tauri-plugin-http = { version = "2.5.6", features = ["dangerous-settings"] }
 tauri-plugin-single-instance = { version = "2.3.7", features = ["deep-link"] }
