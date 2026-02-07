@@ -14,14 +14,14 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.service.PersonalSignatureServiceInterface;
 import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
 import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service for managing user signatures with authentication and storage limits. This proprietary

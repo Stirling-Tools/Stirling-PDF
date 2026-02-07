@@ -344,7 +344,7 @@ jobs:
       - name: Check licenses and generate report
         id: license-check
         run: |
-          ./gradlew checkLicense generateLicenseReport || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
+          ./gradlew checkLicense generateLicenseReport --no-parallel || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

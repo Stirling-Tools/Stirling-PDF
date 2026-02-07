@@ -4,8 +4,8 @@ import java.beans.PropertyEditorSupport;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class StringToMapPropertyEditor extends PropertyEditorSupport {
 

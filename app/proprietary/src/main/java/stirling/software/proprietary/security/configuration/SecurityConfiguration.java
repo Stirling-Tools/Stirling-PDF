@@ -14,15 +14,17 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml5AuthenticationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -82,7 +84,7 @@ public class SecurityConfiguration {
     private final PersistentLoginRepository persistentLoginRepository;
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
-    private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+    private final OpenSaml5AuthenticationRequestResolver saml2AuthenticationRequestResolver;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
     private final ClientRegistrationRepository clientRegistrationRepository;
@@ -105,7 +107,7 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
-                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+                    OpenSaml5AuthenticationRequestResolver saml2AuthenticationRequestResolver,
             @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
             stirling.software.proprietary.service.UserLicenseSettingsService
                     licenseSettingsService) {
@@ -151,7 +153,8 @@ public class SecurityConfiguration {
             // Default to allowing all origins when nothing is configured
             cfg.setAllowedOriginPatterns(List.of("*"));
             log.info(
-                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); allowing all origins.");
+                    "No CORS allowed origins configured in settings.yml"
+                            + " (system.corsAllowedOrigins); allowing all origins.");
         }
 
         // Explicitly configure supported HTTP methods (include OPTIONS for preflight)
@@ -225,7 +228,7 @@ public class SecurityConfiguration {
             http.cors(cors -> cors.configurationSource(corsSource));
         } else {
             // Explicitly disable CORS when no origins are configured
-            http.cors(cors -> cors.disable());
+            http.cors(CorsConfigurer::disable);
         }
 
         http.csrf(CsrfConfigurer::disable);
@@ -233,24 +236,24 @@ public class SecurityConfiguration {
         // Configure X-Frame-Options based on settings.yml configuration
         // When login is disabled, automatically disable X-Frame-Options to allow embedding
         if (!loginEnabledValue) {
-            http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+            http.headers(headers -> headers.frameOptions(FrameOptionsConfig::disable));
         } else {
             String xFrameOption = securityProperties.getXFrameOptions();
             if (xFrameOption != null) {
                 http.headers(
                         headers -> {
                             if ("DISABLED".equalsIgnoreCase(xFrameOption)) {
-                                headers.frameOptions(frameOptions -> frameOptions.disable());
+                                headers.frameOptions(FrameOptionsConfig::disable);
                             } else if ("SAMEORIGIN".equalsIgnoreCase(xFrameOption)) {
-                                headers.frameOptions(frameOptions -> frameOptions.sameOrigin());
+                                headers.frameOptions(FrameOptionsConfig::sameOrigin);
                             } else {
                                 // Default to DENY
-                                headers.frameOptions(frameOptions -> frameOptions.deny());
+                                headers.frameOptions(FrameOptionsConfig::deny);
                             }
                         });
             } else {
                 // If not configured, use default DENY
-                http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.deny()));
+                http.headers(headers -> headers.frameOptions(FrameOptionsConfig::deny));
             }
         }
 
@@ -380,8 +383,8 @@ public class SecurityConfiguration {
             }
             // Handle SAML
             if (securityProperties.isSaml2Active() && runningProOrHigher) {
-                OpenSaml4AuthenticationProvider authenticationProvider =
-                        new OpenSaml4AuthenticationProvider();
+                OpenSaml5AuthenticationProvider authenticationProvider =
+                        new OpenSaml5AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(
                         new CustomSaml2ResponseAuthenticationConverter(userService));
                 http.authenticationProvider(authenticationProvider)

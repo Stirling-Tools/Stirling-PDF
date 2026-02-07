@@ -27,8 +27,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PipelineConfig;
@@ -38,6 +36,8 @@ import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.FileMonitor;
+
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j

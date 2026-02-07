@@ -15,7 +15,7 @@ import org.springframework.security.saml2.provider.service.registration.InMemory
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
-import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml5AuthenticationRequestResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -151,10 +151,10 @@ public class Saml2Configuration {
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
-    public OpenSaml4AuthenticationRequestResolver authenticationRequestResolver(
+    public OpenSaml5AuthenticationRequestResolver authenticationRequestResolver(
             RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
-        OpenSaml4AuthenticationRequestResolver resolver =
-                new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
+        OpenSaml5AuthenticationRequestResolver resolver =
+                new OpenSaml5AuthenticationRequestResolver(relyingPartyRegistrationRepository);
 
         resolver.setAuthnRequestCustomizer(
                 customizer -> {
