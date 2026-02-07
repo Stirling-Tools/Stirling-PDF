@@ -29,6 +29,7 @@ use commands::{
     start_backend,
     start_oauth_login,
 };
+use commands::connection::apply_provisioning_if_present;
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
 use tauri_plugin_deep_link::DeepLinkExt;
@@ -115,6 +116,10 @@ pub fn run() {
             dispatch_deep_link(&event_app_handle, url.as_str());
           }
         });
+      }
+
+      if let Err(err) = apply_provisioning_if_present(&app.handle()) {
+        add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
       }
 
       // Start backend immediately, non-blocking

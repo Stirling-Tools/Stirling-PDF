@@ -146,6 +146,13 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
       return historyApi ? historyApi.canRedo() : false;
     },
 
+    purgeByMetadata: <T,>(predicate: (metadata: T | undefined) => boolean, topic?: string) => {
+      if (historyApi?.purgeByMetadata) {
+        return historyApi.purgeByMetadata(predicate, topic);
+      }
+      return 0;
+    },
+
     subscribe: (listener: () => void) => {
       if (!historyApi?.onHistoryChange) {
         return () => {};

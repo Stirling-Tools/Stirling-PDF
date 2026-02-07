@@ -1303,6 +1303,8 @@ outputFormat = "Output Format"
 pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
 pdfaFormat = "PDF/A Format"
 pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
 pdfxDescription = "PDF/X is an ISO standard PDF subset for reliable printing and graphics exchange."
 fileFormat = "File Format"
@@ -2645,6 +2647,7 @@ label = "Original PDF"
 
 [compare.edited]
 label = "Edited PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Re-run comparison?"
@@ -3408,6 +3411,7 @@ instructions = "Select text or draw areas on the PDF to mark content for redacti
 markText = "Mark Text"
 markArea = "Mark Area"
 pendingLabel = "Pending:"
+applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 apply = "Apply"
 noMarks = "No redaction marks. Use the tools above to mark content for redaction."
@@ -3598,6 +3602,11 @@ europeanDate = "European Date"
 timestamp = "Timestamp"
 draftWatermark = "Draft Watermark"
 custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "An error occurred while adding stamp to the PDF."
@@ -6556,6 +6565,7 @@ link = "or connect to a self-hosted account"
 title = "Connect to Server"
 subtitle = "Enter your self-hosted server URL"
 testing = "Testing connection..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

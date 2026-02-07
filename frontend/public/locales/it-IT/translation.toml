@@ -219,6 +219,8 @@ pagesAndStarting = "Pagine e numero iniziale"
 positionAndPages = "Posizione e pagine"
 preview = "Selezione posizione"
 previewDisclaimer = "L'anteprima è approssimativa. Il risultato finale può variare a causa delle metriche dei font PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Seleziona il file PDF:"
@@ -439,9 +441,9 @@ fullscreen = "Schermo intero"
 [settings.general.updates]
 title = "Aggiornamenti software"
 description = "Controlla aggiornamenti e visualizza informazioni sulla versione"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+currentBackendVersion = "Versione attuale del Backend"
+currentFrontendVersion = "Versione attuale del Frontend"
+versionMismatch = "Attenzione: è stata rilevata una discrepanza tra la versione del client e la versione di AppConfig. L'utilizzo di versioni diverse può causare problemi di compatibilità, errori e rischi per la sicurezza. Assicurarsi che server e client utilizzino la stessa versione."
 latestVersion = "Ultima versione"
 checkForUpdates = "Controlla aggiornamenti"
 viewDetails = "Vedi dettagli"
@@ -1300,6 +1302,8 @@ outputFormat = "Formato di output"
 pdfaNote = "PDF/A-1b è più compatibile, PDF/A-2b supporta più funzionalità."
 pdfaFormat = "Formato PDF/A"
 pdfaDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questo verrà rimosso nel passaggio successivo."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "Il PDF contiene una firma digitale. Questa verrà rimossa nel passaggio successivo."
 pdfxDescription = "PDF/X è un sottoinsieme PDF standard ISO per una stampa affidabile e lo scambio di grafica."
 fileFormat = "Formato file"
@@ -2642,6 +2646,7 @@ label = "PDF originale"
 
 [compare.edited]
 label = "PDF modificato"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Eseguire di nuovo il confronto?"
@@ -3562,45 +3567,50 @@ imageSize = "Dimensione immagine"
 margin = "Margine"
 positionAndFormatting = "Posizione e formattazione"
 quickPosition = "Seleziona una posizione sulla pagina in cui posizionare il timbro."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
-dynamicVariables = "Dynamic Variables"
-examples = "Examples"
-fileVars = "File Information"
-filenameDesc = "Filename without extension"
-filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
-metadataVars = "Document Metadata"
-multiLine = "multi-line"
-otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
-uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+preview = "Anteprima:"
+useTemplate = "Usa modello"
+selectTemplate = "Seleziona un modello..."
+stampTextDescription = "Utilizzare le variabili dinamiche di seguito. Utilizzare @@ per il carattere letterale @. Utilizzare \\n per le nuove righe."
+dynamicVariables = "Variabili dinamiche"
+clickToExpand = "Clicca per espandere"
+variablesHelp = "Fai clic su una variabile qualsiasi per inserirla nel testo del timbro. Utilizzare @@ per letterale @."
+dateTimeVars = "Data & Ora"
+dateDesc = "Data corrente"
+timeDesc = "Ora corrente"
+datetimeDesc = "Data e ora combinate"
+customDateDesc = "Formato personalizzato"
+yearMonthDayDesc = "Parti di data individuali"
+pageVars = "Informazioni sulla pagina"
+pageNumberDesc = "Numero di pagina corrente"
+totalPagesDesc = "Numero totale di pagine"
+fileVars = "Informazioni sul file"
+filenameDesc = "Nome file senza estensione"
+filenameFullDesc = "Nome file con estensione"
+metadataVars = "Metadati del documento"
+metadataDesc = "Dalle proprietà del documento PDF"
+otherVars = "Altro"
+uuidDesc = "Identificatore univoco breve (8 caratteri)"
+examples = "Esempi"
+multiLine = "multilinea"
+
+[AddStampRequest.template]
+pageNumberFooter = "Piè di pagina con numero di pagina"
+dateHeader = "Data intestazione"
+europeanDate = "Data europea"
+timestamp = "Timestamp"
+draftWatermark = "Bozza Filigrana"
+custom = "Personalizzato"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Si è verificato un errore durante l'aggiunta del timbro al PDF."
 
 [AddStampRequest.results]
 title = "Risultati timbro"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Rimuovi immagine,operazioni sulla pagina,back-end,lato server"
@@ -4513,9 +4523,17 @@ description = "Configura percorsi personalizzati del file system per l'elaborazi
 [admin.settings.general.customPaths.pipeline]
 label = "Directory pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Directory cartelle monitorate"
 description = "Directory in cui la pipeline monitora i PDF in arrivo (lascia vuoto per predefinito: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Directory cartelle completate"
@@ -6555,6 +6573,7 @@ link = "oppure connettiti a un account self-hosted"
 title = "Connetti al server"
 subtitle = "Inserisci l'URL del tuo server self-hosted"
 testing = "Verifica connessione..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

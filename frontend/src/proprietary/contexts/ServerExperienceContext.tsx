@@ -171,6 +171,12 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
     if (!config) {
       return;
     }
+    if (!config.appVersion) {
+      return;
+    }
+    if (loginEnabled && !isAuthenticated) {
+      return;
+    }
 
     const shouldUseAdminData = (config.enableLogin ?? true) && config.isAdmin;
     // Use WAU estimate for no-login scenarios OR for login non-admin users
@@ -353,4 +359,3 @@ export function useServerExperienceContext() {
   }
   return context;
 }
-

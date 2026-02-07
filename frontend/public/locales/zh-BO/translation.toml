@@ -219,6 +219,8 @@ pagesAndStarting = "页面与起始编号"
 positionAndPages = "位置与页面"
 preview = "位置选择"
 previewDisclaimer = "预览为近似效果。由于 PDF 字体度量，最终输出可能有所不同。"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF ཡིག་ཆ་འདེམས་པ།"
@@ -1300,6 +1302,8 @@ outputFormat = "输出格式"
 pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持更多功能。"
 pdfaFormat = "PDF/A 格式"
 pdfaDigitalSignatureWarning = "该 PDF 包含数字签名。下一步将移除它。"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "该 PDF 包含数字签名。这将在下一步被移除。"
 pdfxDescription = "PDF/X 是用于可靠打印和图形交换的 ISO 标准 PDF 子集。"
 fileFormat = "文件格式"
@@ -2642,6 +2646,7 @@ label = "原始 PDF"
 
 [compare.edited]
 label = "已编辑 PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "重新运行比较？"
@@ -3562,45 +3567,50 @@ imageSize = "图像大小"
 margin = "边距"
 positionAndFormatting = "位置与格式"
 quickPosition = "选择页面上的位置以放置印章。"
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "将印章添加到 PDF 时发生错误。"
 
 [AddStampRequest.results]
 title = "印章结果"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "པར་རིས་སུབ་པ།,ཤོག་ངོས་བཀོལ་སྤྱོད།,རྒྱབ་ངོས།,ཞབས་ཞུ་ཕྱོགས།"
@@ -4513,9 +4523,17 @@ description = "为流水线处理和外部工具配置自定义文件系统路�
 [admin.settings.general.customPaths.pipeline]
 label = "流水线目录"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "监控文件夹目录"
 description = "流水线监控输入 PDF 的目录（留空使用默认：/pipeline/watchedFolders）"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "完成文件夹目录"
@@ -6555,6 +6573,7 @@ link = "或连接到自托管账户"
 title = "连接到服务器"
 subtitle = "输入自托管服务器的 URL"
 testing = "正在测试连接..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

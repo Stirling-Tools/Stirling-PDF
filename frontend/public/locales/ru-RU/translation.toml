@@ -219,6 +219,8 @@ pagesAndStarting = "Страницы и начальный номер"
 positionAndPages = "Положение и страницы"
 preview = "Выбор положения"
 previewDisclaimer = "Предпросмотр приблизительный. Итог может отличаться из‑за метрик шрифтов PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Выберите PDF-файл:"
@@ -1300,6 +1302,8 @@ outputFormat = "Выходной формат"
 pdfaNote = "PDF/A-1b более совместим, PDF/A-2b поддерживает больше функций."
 pdfaFormat = "Формат PDF/A"
 pdfaDigitalSignatureWarning = "PDF содержит цифровую подпись. Она будет удалена на следующем шаге."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF содержит цифровую подпись. Она будет удалена на следующем шаге."
 pdfxDescription = "PDF/X — это стандарт ISO, подмножество PDF для надежной печати и обмена графикой."
 fileFormat = "Формат файла"
@@ -2642,6 +2646,7 @@ label = "Исходный PDF"
 
 [compare.edited]
 label = "Измененный PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Выполнить сравнение заново?"
@@ -3562,45 +3567,50 @@ imageSize = "Размер изображения"
 margin = "Отступ"
 positionAndFormatting = "Положение и форматирование"
 quickPosition = "Выберите положение на странице для размещения штампа."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Произошла ошибка при добавлении штампа в PDF."
 
 [AddStampRequest.results]
 title = "Результаты штампа"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "Удаление изображения,операции со страницами,Серверная часть"
@@ -4513,9 +4523,17 @@ description = "Настройте пользовательские пути фа
 [admin.settings.general.customPaths.pipeline]
 label = "Каталоги конвейера"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Каталог отслеживаемых папок"
 description = "Каталог, где конвейер отслеживает входящие PDF (оставьте пустым по умолчанию: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Каталог завершенных папок"
@@ -6555,6 +6573,7 @@ link = "или подключитесь к самохостируемой учё
 title = "Подключение к серверу"
 subtitle = "Введите URL своего self-hosted сервера"
 testing = "Проверка подключения..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

@@ -219,6 +219,8 @@ pagesAndStarting = "Σελίδες & Αρχικός αριθμός"
 positionAndPages = "Θέση & Σελίδες"
 preview = "Επιλογή θέσης"
 previewDisclaimer = "Η προεπισκόπηση είναι κατά προσέγγιση. Το τελικό αποτέλεσμα μπορεί να διαφέρει λόγω των μετρικών γραμματοσειράς του PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Επιλέξτε αρχείο PDF:"
@@ -1300,6 +1302,8 @@ outputFormat = "Μορφή εξόδου"
 pdfaNote = "Το PDF/A-1b είναι πιο συμβατό, το PDF/A-2b υποστηρίζει περισσότερες δυνατότητες."
 pdfaFormat = "Μορφή PDF/A"
 pdfaDigitalSignatureWarning = "Το PDF περιέχει ψηφιακή υπογραφή. Αυτή θα αφαιρεθεί στο επόμενο βήμα."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "Το PDF περιέχει ψηφιακή υπογραφή. Αυτή θα αφαιρεθεί στο επόμενο βήμα."
 pdfxDescription = "Το PDF/X είναι ένα υποσύνολο PDF προτύπου ISO για αξιόπιστη εκτύπωση και ανταλλαγή γραφικών."
 fileFormat = "Μορφή αρχείου"
@@ -2642,6 +2646,7 @@ label = "Αρχικό PDF"
 
 [compare.edited]
 label = "Τροποποιημένο PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Επανεκτέλεση σύγκρισης;"
@@ -3562,45 +3567,50 @@ imageSize = "Μέγεθος εικόνας"
 margin = "Περιθώριο"
 positionAndFormatting = "Θέση & μορφοποίηση"
 quickPosition = "Επιλέξτε μια θέση στη σελίδα για τοποθέτηση της σφραγίδας."
-clickToExpand = "Click to expand"
-customDateDesc = "Custom format"
-dateDesc = "Current date"
-dateTimeVars = "Date & Time"
-datetimeDesc = "Date and time combined"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 dynamicVariables = "Dynamic Variables"
-examples = "Examples"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
 fileVars = "File Information"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
-metadataDesc = "From PDF document properties"
 metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "From PDF document properties"
 otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
-preview = "Preview:"
-selectTemplate = "Select a template..."
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
-timeDesc = "Current time"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
 uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την προσθήκη σφραγίδας στο PDF."
 
 [AddStampRequest.results]
 title = "Αποτελέσματα σφράγισης"
-
-[AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-draftWatermark = "Draft Watermark"
-europeanDate = "European Date"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
 
 [removeImagePdf]
 tags = "αφαίρεση εικόνας,λειτουργίες σελίδας,backend,server side"
@@ -4513,9 +4523,17 @@ description = "Ρυθμίστε προσαρμοσμένες διαδρομές 
 [admin.settings.general.customPaths.pipeline]
 label = "Κατάλογοι pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Κατάλογος παρακολουθούμενων φακέλων"
 description = "Κατάλογος όπου το pipeline παρακολουθεί για εισερχόμενα PDF (αφήστε κενό για προεπιλογή: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Κατάλογος ολοκληρωμένων φακέλων"
@@ -6555,6 +6573,7 @@ link = "ή συνδεθείτε σε έναν self-hosted λογαριασμό"
 title = "Σύνδεση σε διακομιστή"
 subtitle = "Εισαγάγετε το URL του self-hosted διακομιστή σας"
 testing = "Έλεγχος σύνδεσης..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

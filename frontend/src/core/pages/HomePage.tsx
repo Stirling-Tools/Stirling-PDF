@@ -10,7 +10,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoPath } from "@app/hooks/useLogoPath";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import { useFileContext } from "@app/contexts/file/fileHooks";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
@@ -54,6 +54,7 @@ export default function HomePage() {
   const [configModalOpen, setConfigModalOpen] = useState(false);
 
   const { activeFiles } = useFileContext();
+  const navigationState = useNavigationState();
   const { actions } = useNavigationActions();
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
@@ -64,7 +65,11 @@ export default function HomePage() {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
-    if (prevCount === 0 && currentCount === 1) {
+    if (
+      navigationState.workbench !== 'fileEditor' &&
+      prevCount === 0 &&
+      currentCount === 1
+    ) {
       // PDF Text Editor handles its own empty state with a dropzone
       if (selectedToolKey !== 'pdfTextEditor') {
         actions.setWorkbench('viewer');
@@ -73,7 +78,13 @@ export default function HomePage() {
     }
 
     prevFileCountRef.current = currentCount;
-  }, [activeFiles.length, actions, setActiveFileIndex, selectedToolKey]);
+  }, [
+    activeFiles.length,
+    actions,
+    setActiveFileIndex,
+    selectedToolKey,
+    navigationState.workbench,
+  ]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();

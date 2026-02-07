@@ -9,6 +9,8 @@ import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { authService } from '@app/services/authService';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { isTauri } from '@tauri-apps/api/core';
 
 /**
  * Desktop application providers
@@ -21,7 +23,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   // Load connection mode on mount
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
@@ -50,6 +51,42 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // This sets up port detection and health checks
   const shouldMonitorBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
   useBackendInitializer(shouldMonitorBackend);
+
+  useEffect(() => {
+    if (!authChecked) {
+      return;
+    }
+
+    if (!isTauri()) {
+      return;
+    }
+
+    const currentWindow = getCurrentWindow();
+    currentWindow
+      .show()
+      .then(() => currentWindow.unminimize().catch(() => {}))
+      .then(() => currentWindow.setFocus().catch(() => {}))
+      .then(() => currentWindow.requestUserAttention(1).catch(() => {}))
+      .catch(() => {});
+  }, [authChecked]);
+
+  if (!authChecked) {
+    return (
+      <ProprietaryAppProviders
+        appConfigRetryOptions={{
+          maxRetries: 5,
+          initialDelay: 1000,
+        }}
+        appConfigProviderProps={{
+          initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
+          bootstrapMode: 'non-blocking',
+          autoFetch: false,
+        }}
+      >
+        <div style={{ minHeight: '100vh' }} />
+      </ProprietaryAppProviders>
+    );
+  }
 
   // Show setup wizard on first launch
   if (isFirstLaunch && !setupComplete) {
