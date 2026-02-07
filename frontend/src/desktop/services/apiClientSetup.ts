@@ -107,6 +107,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
+        if (typeof window !== 'undefined') {
+          console.warn('[apiClientSetup] 401 on path:', window.location.pathname, 'url:', originalRequest.url);
+        }
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }

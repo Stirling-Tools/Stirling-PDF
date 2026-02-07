@@ -25,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   determine-matrix:
@@ -77,7 +78,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -99,13 +100,13 @@ jobs:
           targets: ${{ (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Set up JDK 21
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: "21"
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
           gradle-version: 8.14
 
@@ -193,7 +194,7 @@ jobs:
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
-        uses: digicert/ssm-code-signing@9476ceec3ea1c63298d4403b983e1ccf2556ff4c # v1.1.0
+        uses: digicert/ssm-code-signing@af7f4b07694120e514fe5b19f0598af3c20256e3 # v1.2.0
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
           SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
@@ -586,7 +587,7 @@ jobs:
           }
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*
@@ -638,6 +639,100 @@ jobs:
               fi
             fi
           done
+
+  pr-comment:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - name: Post/Update PR Comment with Download Links
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = context.issue.number;
+            const runId = context.runId;
+
+            // Fetch artifacts for this workflow run
+            const { data: artifactsList } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner,
+              repo,
+              run_id: runId
+            });
+
+            // Map of expected artifact names to display info
+            const artifactMap = {
+              'Stirling-PDF-windows-x86_64': { icon: '🪟', platform: 'Windows x64', files: '.exe, .msi' },
+              'Stirling-PDF-macos-aarch64': { icon: '🍎', platform: 'macOS ARM64', files: '.dmg' },
+              'Stirling-PDF-macos-x86_64': { icon: '🍎', platform: 'macOS Intel', files: '.dmg' },
+              'Stirling-PDF-linux-x86_64': { icon: '🐧', platform: 'Linux x64', files: '.deb, .AppImage' }
+            };
+
+            let commentBody = `## 📦 Tauri Desktop Builds Ready!\n\n`;
+            commentBody += `The desktop applications have been built and are ready for testing.\n\n`;
+            commentBody += `### Download Artifacts:\n\n`;
+
+            // Add links for each found artifact
+            let foundArtifacts = 0;
+            for (const artifact of artifactsList.artifacts) {
+              const info = artifactMap[artifact.name];
+              if (info) {
+                foundArtifacts++;
+                // GitHub doesn't provide direct download URLs via API, but we can link to the artifact on the Actions page
+                const artifactUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${artifact.id}`;
+                commentBody += `${info.icon} **${info.platform}**: [Download ${artifact.name}](${artifactUrl}) `;
+                commentBody += `(${info.files}) - ${(artifact.size_in_bytes / 1024 / 1024).toFixed(1)} MB\n`;
+              }
+            }
+
+            if (foundArtifacts === 0) {
+              commentBody += `⚠️ **Warning**: No artifacts found in workflow run.\n`;
+              commentBody += `[View workflow run](https://github.com/${owner}/${repo}/actions/runs/${runId})\n`;
+            }
+
+            commentBody += `\n---\n`;
+            commentBody += `_Built from commit ${context.sha.substring(0, 7)}_\n`;
+            commentBody += `_Artifacts expire in 7 days_`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('📦 Tauri Desktop Builds Ready!')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+              console.log('Updated existing comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+              console.log('Created new comment');
+            }
 
   report:
     needs: build
