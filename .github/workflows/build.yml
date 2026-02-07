@@ -221,7 +221,7 @@ jobs:
           gradle-version: 8.14
 
       - name: check the licenses for compatibility
-        run: ./gradlew checkLicense
+        run: ./gradlew checkLicense --no-parallel
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
