@@ -77,9 +77,10 @@ public class PdfToCbzUtilsTest {
                 new MockMultipartFile("test", "test.pdf", "application/pdf", new byte[100]);
 
         // Mock the PDF document
+        // Mock the PDF document
         PDDocument mockDocument = Mockito.mock(PDDocument.class);
         Mockito.when(mockDocument.getNumberOfPages()).thenReturn(1);
-        Mockito.when(pdfDocumentFactory.load(pdfFile)).thenReturn(mockDocument);
+        Mockito.when(pdfDocumentFactory.load(Mockito.any(byte[].class))).thenReturn(mockDocument);
 
         // structure
         Assertions.assertThrows(
@@ -87,6 +88,6 @@ public class PdfToCbzUtilsTest {
                 () -> PdfToCbzUtils.convertPdfToCbz(pdfFile, 300, pdfDocumentFactory));
 
         // Verify that load was called
-        Mockito.verify(pdfDocumentFactory).load(pdfFile);
+        Mockito.verify(pdfDocumentFactory).load(Mockito.any(byte[].class));
     }
 }
