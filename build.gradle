@@ -208,6 +208,7 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-starter-jackson'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
