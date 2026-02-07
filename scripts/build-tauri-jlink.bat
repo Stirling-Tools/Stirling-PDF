@@ -17,7 +17,19 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo ✅ Java and jlink detected
+echo ▶ Checking Java version...
+for /f "tokens=3" %%g in ('java -version 2^>^&1 ^| findstr /i "version"') do (
+    set JAVA_VERSION_STRING=%%g
+)
+set JAVA_VERSION_STRING=%JAVA_VERSION_STRING:"=%
+for /f "delims=. tokens=1" %%v in ("%JAVA_VERSION_STRING%") do set JAVA_MAJOR_VERSION=%%v
+
+if %JAVA_MAJOR_VERSION% LSS 17 (
+    echo ❌ Java 17 or higher is required. Found Java %JAVA_MAJOR_VERSION%
+    exit /b 1
+)
+
+echo ✅ Java %JAVA_MAJOR_VERSION% and jlink detected
 
 echo ▶ Building Stirling-PDF JAR...
 
