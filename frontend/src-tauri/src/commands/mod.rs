@@ -14,11 +14,14 @@ pub use connection::{
 };
 pub use auth::{
     clear_auth_token,
+    clear_refresh_token,
     clear_user_info,
     get_auth_token,
+    get_refresh_token,
     get_user_info,
     login,
     save_auth_token,
+    save_refresh_token,
     save_user_info,
     start_oauth_login,
 };

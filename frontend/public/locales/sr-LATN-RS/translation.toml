@@ -219,6 +219,8 @@ pagesAndStarting = "Strane i početni broj"
 positionAndPages = "Pozicija i strane"
 preview = "Izbor pozicije"
 previewDisclaimer = "Pregled je približan. Konačni rezultat može varirati zbog PDF metrika fontova."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Izaberi PDF fajl:"
@@ -439,7 +441,9 @@ fullscreen = "Ceo ekran"
 [settings.general.updates]
 title = "Ažuriranja softvera"
 description = "Proverite ažuriranja i pogledajte informacije o verziji"
-currentVersion = "Trenutna verzija"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Najnovija verzija"
 checkForUpdates = "Proveri ažuriranja"
 viewDetails = "Prikaži detalje"
@@ -1298,6 +1302,8 @@ outputFormat = "Izlazni format"
 pdfaNote = "PDF/A-1b je kompatibilniji, PDF/A-2b podržava više funkcija."
 pdfaFormat = "PDF/A format"
 pdfaDigitalSignatureWarning = "PDF sadrži digitalni potpis. Biće uklonjen u sledećem koraku."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF sadrži digitalni potpis. Ovo će biti uklonjeno u sledećem koraku."
 pdfxDescription = "PDF/X je ISO standardizovani podskup PDF-a za pouzdano štampanje i razmenu grafike."
 fileFormat = "Format datoteke"
@@ -2640,6 +2646,7 @@ label = "Originalni PDF"
 
 [compare.edited]
 label = "Izmenjeni PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Ponovo pokrenuti poređenje?"
@@ -3560,6 +3567,44 @@ imageSize = "Veličina slike"
 margin = "Margina"
 positionAndFormatting = "Pozicija i formatiranje"
 quickPosition = "Izaberite poziciju na stranici za postavljanje pečata."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Došlo je do greške prilikom dodavanja pečata u PDF."
@@ -4478,9 +4523,17 @@ description = "Podesite prilagođene putanje u sistemu datoteka za pipeline obra
 [admin.settings.general.customPaths.pipeline]
 label = "Direktorijumi za pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Direktorijum nadziranih fascikli"
 description = "Direktorijum u kome pipeline nadzire dolazne PDF-ove (ostavite prazno za podrazumevano: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Direktorijum završnih fascikli"
@@ -6520,6 +6573,7 @@ link = "ili se povežite na samohostovani nalog"
 title = "Poveži se na server"
 subtitle = "Unesite URL svog samohostovanog servera"
 testing = "Testiranje veze..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

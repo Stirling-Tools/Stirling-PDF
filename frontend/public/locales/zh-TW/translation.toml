@@ -219,6 +219,8 @@ pagesAndStarting = "頁面與起始編號"
 positionAndPages = "位置與頁面"
 preview = "位置選擇"
 previewDisclaimer = "預覽為近似值。最終輸出可能因 PDF 字型度量而異。"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "選擇 PDF 檔案："
@@ -439,7 +441,9 @@ fullscreen = "全螢幕"
 [settings.general.updates]
 title = "軟體更新"
 description = "檢查更新並檢視版本資訊"
-currentVersion = "目前版本"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "最新版本"
 checkForUpdates = "檢查更新"
 viewDetails = "檢視詳細資料"
@@ -1298,6 +1302,8 @@ outputFormat = "輸出格式"
 pdfaNote = "PDF/A-1b 相容性較佳，PDF/A-2b 支援更多功能。"
 pdfaFormat = "PDF/A 格式"
 pdfaDigitalSignatureWarning = "該 PDF 的憑證簽章將會在下一步被移除"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "該 PDF 含有數位簽章。此簽章將在下一步移除。"
 pdfxDescription = "PDF/X 是 ISO 標準的 PDF 子集，用於可靠的列印與圖形交換。"
 fileFormat = "檔案格式"
@@ -2640,6 +2646,7 @@ label = "原始 PDF"
 
 [compare.edited]
 label = "已編輯的 PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "要重新執行比較嗎？"
@@ -3560,6 +3567,44 @@ imageSize = "影像大小"
 margin = "邊距"
 positionAndFormatting = "位置與格式"
 quickPosition = "選擇頁面上的位置以放置印章。"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "將印章加入 PDF 時發生錯誤。"
@@ -4478,9 +4523,17 @@ description = "設定管線處理與外部工具的自訂檔案系統路徑"
 [admin.settings.general.customPaths.pipeline]
 label = "管線目錄"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "監看資料夾目錄"
 description = "管線監看輸入 PDF 的目錄（留空使用預設：/pipeline/watchedFolders）"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "完成資料夾目錄"
@@ -6520,6 +6573,7 @@ link = "或連線到自行託管的帳戶"
 title = "連線至伺服器"
 subtitle = "輸入你的自託管伺服器 URL"
 testing = "正在測試連線..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

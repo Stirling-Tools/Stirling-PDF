@@ -219,6 +219,8 @@ pagesAndStarting = "Səhifələr və başlanğıc nömrəsi"
 positionAndPages = "Mövqe və səhifələr"
 preview = "Mövqe seçimi"
 previewDisclaimer = "Önizləmə təxmindir. Son çıxış PDF şrift metriklərinə görə dəyişə bilər."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF faylını seçin:"
@@ -439,7 +441,9 @@ fullscreen = "Tam ekran"
 [settings.general.updates]
 title = "Proqram yeniləmələri"
 description = "Yeniləmələri yoxlayın və versiya məlumatlarını görün"
-currentVersion = "Cari versiya"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Ən son versiya"
 checkForUpdates = "Yeniləmələri yoxla"
 viewDetails = "Ətraflı bax"
@@ -1298,6 +1302,8 @@ outputFormat = "Çıxış formatı"
 pdfaNote = "PDF/A-1b daha uyğundur, PDF/A-2b daha çox funksiyanı dəstəkləyir."
 pdfaFormat = "PDF/A formatı"
 pdfaDigitalSignatureWarning = "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF rəqəmsal imza ehtiva edir. Bu imza növbəti addımda silinəcək."
 pdfxDescription = "PDF/X etibarlı çap və qrafika mübadiləsi üçün ISO standartlı PDF alt dəstidir."
 fileFormat = "Fayl formatı"
@@ -2640,6 +2646,7 @@ label = "Orijinal PDF"
 
 [compare.edited]
 label = "Redaktə edilmiş PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Müqayisə yenidən işlənsin?"
@@ -3560,6 +3567,44 @@ imageSize = "Şəkil ölçüsü"
 margin = "Kənar boşluğu"
 positionAndFormatting = "Mövqe və formatlama"
 quickPosition = "Möhürü yerləşdirmək üçün səhifədə bir mövqe seçin."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "PDF-ə möhür əlavə edilərkən xəta baş verdi."
@@ -4478,9 +4523,17 @@ description = "Pipeline emalı və xarici alətlər üçün fərdi fayl sistemi 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Qovluqları"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "İzlənən Qovluqlar Qovluğu"
 description = "Pipeline daxil olan PDF-ləri izlədiyi qovluq (defolt üçün boş saxlayın: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Tamamlanmış Qovluqlar Qovluğu"
@@ -6520,6 +6573,7 @@ link = "və ya self-hosted hesaba qoşulun"
 title = "Serverə qoşulun"
 subtitle = "Öz serverinizin URL ünvanını daxil edin"
 testing = "Bağlantı yoxlanılır..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

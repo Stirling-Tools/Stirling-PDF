@@ -219,6 +219,8 @@ pagesAndStarting = "पृष्ठ और आरंभिक संख्या
 positionAndPages = "स्थिति और पृष्ठ"
 preview = "स्थिति चयन"
 previewDisclaimer = "पूर्वावलोकन अनुमानित है। अंतिम आउटपुट PDF फ़ॉन्ट मेट्रिक्स के कारण भिन्न हो सकता है।"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF फ़ाइल चुनें:"
@@ -439,7 +441,9 @@ fullscreen = "फुलस्क्रीन"
 [settings.general.updates]
 title = "सॉफ़्टवेयर अपडेट्स"
 description = "अपडेट्स जाँचें और वर्ज़न जानकारी देखें"
-currentVersion = "वर्तमान संस्करण"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "नवीनतम संस्करण"
 checkForUpdates = "अपडेट्स जाँचें"
 viewDetails = "विवरण देखें"
@@ -1298,6 +1302,8 @@ outputFormat = "आउटपुट फ़ॉर्मेट"
 pdfaNote = "PDF/A-1b अधिक संगत है, PDF/A-2b अधिक सुविधाएँ समर्थित करता है।"
 pdfaFormat = "PDF/A फ़ॉर्मेट"
 pdfaDigitalSignatureWarning = "PDF में एक डिजिटल हस्ताक्षर है। यह अगले चरण में हटा दिया जाएगा।"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF में एक डिजिटल हस्ताक्षर है। यह अगले चरण में हटा दिया जाएगा।"
 pdfxDescription = "PDF/X विश्वसनीय प्रिंटिंग और ग्राफ़िक्स विनिमय के लिए एक ISO मानक PDF उपसमुच्चय है।"
 fileFormat = "फ़ाइल फ़ॉर्मेट"
@@ -2640,6 +2646,7 @@ label = "मूल PDF"
 
 [compare.edited]
 label = "संपादित PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "तुलना पुनः चलाएं?"
@@ -3560,6 +3567,44 @@ imageSize = "छवि आकार"
 margin = "हाशिया"
 positionAndFormatting = "स्थिति और फ़ॉर्मैटिंग"
 quickPosition = "मुहर रखने के लिए पृष्ठ पर एक स्थान चुनें।"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "PDF में मुहर जोड़ते समय त्रुटि हुई।"
@@ -4478,9 +4523,17 @@ description = "पाइपलाइन प्रोसेसिंग और �
 [admin.settings.general.customPaths.pipeline]
 label = "पाइपलाइन डायरेक्टरीज़"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "वॉच्ड फ़ोल्डर्स डायरेक्टरी"
 description = "वह डायरेक्टरी जहाँ पाइपलाइन आने वाले PDF मॉनिटर करती है (डिफ़ॉल्ट हेतु खाली छोड़ें: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "फिनिश्ड फ़ोल्डर्स डायरेक्टरी"
@@ -6520,6 +6573,7 @@ link = "या किसी स्व-होस्टेड खाते से 
 title = "सर्वर से कनेक्ट करें"
 subtitle = "अपना सेल्फ-होस्टेड सर्वर URL दर्ज करें"
 testing = "कनेक्शन परीक्षण हो रहा है..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

@@ -31,14 +31,16 @@ const scheduleMetadataHydration = (task: () => Promise<void>): void => {
 };
 
 const drainHydrationQueue = (): void => {
-  if (activeHydrations >= HYDRATION_CONCURRENCY) return;
+  if (activeHydrations >= HYDRATION_CONCURRENCY) {
+    return;
+  }
   const nextTask = hydrationQueue.shift();
   if (!nextTask) return;
 
   activeHydrations++;
   nextTask()
-    .catch(() => {
-      // Silently handle hydration failures
+    .catch((error) => {
+      console.error('[Hydration] Task failed with error:', error);
     })
     .finally(() => {
       activeHydrations--;
@@ -341,8 +343,8 @@ export async function addFiles(
         try {
           const { generateThumbnailForFile } = await import('@app/utils/thumbnailUtils');
           thumbnail = await generateThumbnailForFile(targetFile);
-        } catch {
-          // Silently handle thumbnail generation failures
+        } catch (error) {
+          console.warn(`[addFiles] Thumbnail generation failed for ${fileId}:`, error);
         }
       }
 
@@ -640,7 +642,6 @@ export async function addStirlingFileStubs(
       scheduleMetadataHydration(async () => {
         const stirlingFile = await fileStorage.getStirlingFile(fileId);
         if (!stirlingFile) {
-          console.warn(`📄 Failed to load StirlingFile for stub: ${stub.name} (${fileId})`);
           return;
         }
 
@@ -657,6 +658,7 @@ export async function addStirlingFileStubs(
           if (needsProcessing) {
             // Regenerate metadata
             const processedFileMetadata = await generateProcessedFileMetadata(stirlingFile);
+
             if (processedFileMetadata) {
               const updates: Partial<StirlingFileStub> = {
                 processedFile: processedFileMetadata

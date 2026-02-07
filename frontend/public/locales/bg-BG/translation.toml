@@ -219,6 +219,8 @@ pagesAndStarting = "Страници и начално число"
 positionAndPages = "Позиция и страници"
 preview = "Избор на позиция"
 previewDisclaimer = "Прегледът е ориентировъчен. Крайният резултат може да се различава заради метриките на PDF шрифтовете."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Изберете PDF файл:"
@@ -439,7 +441,9 @@ fullscreen = "Цял екран"
 [settings.general.updates]
 title = "Актуализации на софтуера"
 description = "Проверете за актуализации и вижте информация за версията"
-currentVersion = "Текуща версия"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Последна версия"
 checkForUpdates = "Провери за актуализации"
 viewDetails = "Виж подробности"
@@ -1298,6 +1302,8 @@ outputFormat = "Изходен формат"
 pdfaNote = "PDF/A-1b е по-съвместим, PDF/A-2b поддържа повече функции."
 pdfaFormat = "Формат PDF/A"
 pdfaDigitalSignatureWarning = "PDF файлът съдържа цифров подпис. Това ще бъде премахнато в следващата стъпка."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF файлът съдържа цифров подпис. Той ще бъде премахнат на следващата стъпка."
 pdfxDescription = "PDF/X е подмножество на PDF по стандарта ISO за надежден печат и обмен на графики."
 fileFormat = "Файлов формат"
@@ -2640,6 +2646,7 @@ label = "Оригинален PDF"
 
 [compare.edited]
 label = "Редактиран PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Да се изпълни сравнение отново?"
@@ -3560,6 +3567,44 @@ imageSize = "Размер на изображението"
 margin = "Отстъп"
 positionAndFormatting = "Позиция и форматиране"
 quickPosition = "Изберете позиция на страницата, където да поставите печата."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Възникна грешка при добавяне на печат към PDF."
@@ -4478,9 +4523,17 @@ description = "Конфигурирайте персонализирани пъ�
 [admin.settings.general.customPaths.pipeline]
 label = "Директории за Pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Директория за наблюдавани папки"
 description = "Директория, където pipeline наблюдава за входящи PDF (оставете празно за подразбиране: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Директория за завършени папки"
@@ -6520,6 +6573,7 @@ link = "или се свържете със самостоятелно хост�
 title = "Свързване към сървър"
 subtitle = "Въведете URL на самостоятелно хоствания си сървър"
 testing = "Тестване на връзката..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

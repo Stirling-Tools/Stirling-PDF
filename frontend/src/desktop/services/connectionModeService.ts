@@ -12,11 +12,13 @@ export interface SSOProviderConfig {
 export interface ServerConfig {
   url: string;
   enabledOAuthProviders?: SSOProviderConfig[];
+  loginMethod?: string;
 }
 
 export interface ConnectionConfig {
   mode: ConnectionMode;
   server_config: ServerConfig | null;
+  lock_connection_mode: boolean;
 }
 
 export interface DiagnosticResult {
@@ -50,7 +52,7 @@ export class ConnectionModeService {
     if (!this.configLoadedOnce) {
       await this.loadConfig();
     }
-    return this.currentConfig || { mode: 'saas', server_config: null };
+    return this.currentConfig || { mode: 'saas', server_config: null, lock_connection_mode: false };
   }
 
   async getCurrentMode(): Promise<ConnectionMode> {
@@ -84,12 +86,16 @@ export class ConnectionModeService {
     } catch (error) {
       console.error('Failed to load connection config:', error);
       // Default to SaaS mode on error
-      this.currentConfig = { mode: 'saas', server_config: null };
+      this.currentConfig = { mode: 'saas', server_config: null, lock_connection_mode: false };
       this.configLoadedOnce = true;
     }
   }
 
   async switchToSaaS(saasServerUrl: string): Promise<void> {
+    if (this.currentConfig?.lock_connection_mode) {
+      throw new Error('Connection mode is locked by provisioning');
+    }
+
     console.log('Switching to SaaS mode');
 
     const serverConfig: ServerConfig = { url: saasServerUrl };
@@ -99,7 +105,7 @@ export class ConnectionModeService {
       serverConfig,
     });
 
-    this.currentConfig = { mode: 'saas', server_config: serverConfig };
+    this.currentConfig = { mode: 'saas', server_config: serverConfig, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
     this.notifyListeners();
 
     console.log('Switched to SaaS mode successfully');
@@ -113,7 +119,7 @@ export class ConnectionModeService {
       serverConfig,
     });
 
-    this.currentConfig = { mode: 'selfhosted', server_config: serverConfig };
+    this.currentConfig = { mode: 'selfhosted', server_config: serverConfig, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
     this.notifyListeners();
 
     console.log('Switched to self-hosted mode successfully');
@@ -901,6 +907,9 @@ export class ConnectionModeService {
   }
 
   async resetSetupCompletion(): Promise<void> {
+    if (this.currentConfig?.lock_connection_mode) {
+      return;
+    }
     try {
       await invoke('reset_setup_completion');
       console.log('Setup completion flag reset successfully');

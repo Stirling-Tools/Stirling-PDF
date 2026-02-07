@@ -3,6 +3,11 @@ import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction
 import { useRedaction } from '@app/contexts/RedactionContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
+/**
+ * RedactionAPIBridge - Uses embedPDF v2.5.0
+ * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
+ * Uses the unified redaction mode (toggleRedact/enableRedact/endRedact).
+ */
 export function RedactionAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
   
@@ -43,13 +48,22 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   }, [state?.pendingCount, state?.activeType, state?.isRedacting, setPendingCount, setActiveType, setIsRedacting]);
 
   // Expose the EmbedPDF API through our context's ref
+  // Uses v2.5.0 unified redaction mode
   useImperativeHandle(redactionApiRef, () => ({
-    toggleRedactSelection: () => {
-      provides?.toggleRedactSelection();
+    // Unified redaction methods (v2.5.0)
+    toggleRedact: () => {
+      provides?.toggleRedact();
     },
-    toggleMarqueeRedact: () => {
-      provides?.toggleMarqueeRedact();
+    enableRedact: () => {
+      provides?.enableRedact();
     },
+    isRedactActive: () => {
+      return provides?.isRedactActive() ?? false;
+    },
+    endRedact: () => {
+      provides?.endRedact();
+    },
+    // Common methods
     commitAllPending: () => {
       provides?.commitAllPending();
       // Don't set redactionsApplied here - it should only be set after the file is saved

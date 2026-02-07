@@ -219,6 +219,8 @@ pagesAndStarting = "Pàgines i número inicial"
 positionAndPages = "Posició i pàgines"
 preview = "Selecció de posició"
 previewDisclaimer = "La previsualització és aproximada. El resultat final pot variar a causa de les mètriques del tipus de lletra del PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Selecciona PDF:"
@@ -439,7 +441,9 @@ fullscreen = "Pantalla completa"
 [settings.general.updates]
 title = "Actualitzacions de programari"
 description = "Comprova actualitzacions i informació de la versió"
-currentVersion = "Versió actual"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Última versió"
 checkForUpdates = "Comprova actualitzacions"
 viewDetails = "Veure detalls"
@@ -1298,6 +1302,8 @@ outputFormat = "Format de sortida"
 pdfaNote = "PDF/A-1b és més compatible; PDF/A-2b admet més funcions."
 pdfaFormat = "Format PDF/A"
 pdfaDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta serà eliminada en el següent pas."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "El PDF conté una signatura digital. Aquesta se suprimirà en el pas següent."
 pdfxDescription = "PDF/X és un subconjunt de PDF estàndard ISO per a una impressió fiable i un intercanvi de gràfics fiable."
 fileFormat = "Format de fitxer"
@@ -2640,6 +2646,7 @@ label = "PDF original"
 
 [compare.edited]
 label = "PDF editat"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Tornar a executar la comparació?"
@@ -3560,6 +3567,44 @@ imageSize = "Mida de la imatge"
 margin = "Marge"
 positionAndFormatting = "Posició i format"
 quickPosition = "Seleccioneu una posició a la pàgina per col·locar el segell."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "S'ha produït un error en afegir el segell al PDF."
@@ -4478,9 +4523,17 @@ description = "Configureu camins personalitzats del sistema de fitxers per al pr
 [admin.settings.general.customPaths.pipeline]
 label = "Directoris de pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Directori de carpetes monitoritzades"
 description = "Directori on la pipeline monitoritza l'arribada de PDFs (deixeu-ho buit per al valor per defecte: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Directori de carpetes finalitzades"
@@ -6520,6 +6573,7 @@ link = "o connecteu-vos a un compte autoallotjat"
 title = "Connecta't al servidor"
 subtitle = "Introdueix la URL del servidor autoallotjat"
 testing = "Provant la connexió..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

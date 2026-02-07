@@ -35,6 +35,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import jakarta.annotation.PostConstruct;
+
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.YamlPropertySourceFactory;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -96,6 +98,46 @@ public class ApplicationProperties {
         log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
+    }
+
+    /**
+     * Initialize fileUploadLimit from environment variables if not set in settings.yml.
+     * Supports SYSTEMFILEUPLOADLIMIT (format: "100MB") and SYSTEM_MAXFILESIZE (format: "100" in MB).
+     */
+    @PostConstruct
+    public void initializeFileUploadLimitFromEnv() {
+        // Only override if fileUploadLimit is not already set in settings.yml
+        if (system.getFileUploadLimit() == null || system.getFileUploadLimit().isEmpty()) {
+            String fileUploadLimit = null;
+
+            // Check SYSTEMFILEUPLOADLIMIT first (format: "100MB", "1GB", etc.)
+            String systemFileUploadLimit = java.lang.System.getenv("SYSTEMFILEUPLOADLIMIT");
+            if (systemFileUploadLimit != null && !systemFileUploadLimit.trim().isEmpty()) {
+                fileUploadLimit = systemFileUploadLimit.trim();
+                log.info("Setting fileUploadLimit from SYSTEMFILEUPLOADLIMIT: {}", fileUploadLimit);
+            } else {
+                // Check SYSTEM_MAXFILESIZE (format: number in MB, e.g., "100")
+                String systemMaxFileSize = java.lang.System.getenv("SYSTEM_MAXFILESIZE");
+                if (systemMaxFileSize != null && !systemMaxFileSize.trim().isEmpty()) {
+                    try {
+                        // Validate it's a number
+                        long sizeInMB = Long.parseLong(systemMaxFileSize.trim());
+                        if (sizeInMB > 0 && sizeInMB <= 999) {
+                            fileUploadLimit = sizeInMB + "MB";
+                            log.info("Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB", sizeInMB);
+                        } else {
+                            log.warn("SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring", sizeInMB);
+                        }
+                    } catch (NumberFormatException e) {
+                        log.warn("SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring", systemMaxFileSize);
+                    }
+                }
+            }
+
+            if (fileUploadLimit != null) {
+                system.setFileUploadLimit(fileUploadLimit);
+            }
+        }
     }
 
     @Data
@@ -459,7 +501,9 @@ public class ApplicationProperties {
 
         @Data
         public static class Pipeline {
+            private String pipelineDir;
             private String watchedFoldersDir;
+            private List<String> watchedFoldersDirs = new ArrayList<>();
             private String finishedFoldersDir;
             private String webUIConfigsDir;
         }

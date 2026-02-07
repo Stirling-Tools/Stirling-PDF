@@ -219,6 +219,8 @@ pagesAndStarting = "Strany a počiatočné číslo"
 positionAndPages = "Pozícia a strany"
 preview = "Výber pozície"
 previewDisclaimer = "Náhľad je približný. Konečný výstup sa môže líšiť kvôli metrikám písma PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Vybrať PDF súbor:"
@@ -439,7 +441,9 @@ fullscreen = "Celá obrazovka"
 [settings.general.updates]
 title = "Aktualizácie softvéru"
 description = "Skontrolujte aktualizácie a zobrazte informácie o verzii"
-currentVersion = "Aktuálna verzia"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Najnovšia verzia"
 checkForUpdates = "Skontrolovať aktualizácie"
 viewDetails = "Zobraziť podrobnosti"
@@ -1298,6 +1302,8 @@ outputFormat = "Výstupný formát"
 pdfaNote = "PDF/A-1b je kompatibilnejší, PDF/A-2b podporuje viac funkcií."
 pdfaFormat = "Formát PDF/A"
 pdfaDigitalSignatureWarning = "PDF obsahuje digitálny podpis. V ďalšom kroku bude odstránený."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF obsahuje digitálny podpis. Ten sa v nasledujúcom kroku odstráni."
 pdfxDescription = "PDF/X je podmnožina PDF podľa štandardu ISO pre spoľahlivú tlač a výmenu grafiky."
 fileFormat = "Formát súboru"
@@ -2640,6 +2646,7 @@ label = "Pôvodné PDF"
 
 [compare.edited]
 label = "Upravené PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Spustiť porovnanie znova?"
@@ -3560,6 +3567,44 @@ imageSize = "Veľkosť obrázka"
 margin = "Okraj"
 positionAndFormatting = "Poloha a formátovanie"
 quickPosition = "Vyberte polohu na stránke pre umiestnenie pečiatky."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Počas pridávania pečiatky do PDF došlo k chybe."
@@ -4478,9 +4523,17 @@ description = "Nakonfigurujte vlastné cesty systému súborov pre spracovanie v
 [admin.settings.general.customPaths.pipeline]
 label = "Adresáre pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Adresár sledovaných priečinkov"
 description = "Adresár, kde pipeline sleduje prichádzajúce PDF (ponechajte prázdne pre predvolené: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Adresár dokončených priečinkov"
@@ -6520,6 +6573,7 @@ link = "alebo sa pripojte k self-hosted účtu"
 title = "Pripojiť sa na server"
 subtitle = "Zadajte URL svojho self-hostovaného servera"
 testing = "Testuje sa pripojenie..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

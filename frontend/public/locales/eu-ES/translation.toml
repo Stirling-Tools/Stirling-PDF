@@ -219,6 +219,8 @@ pagesAndStarting = "Orrialdeak eta hasierako zenbakia"
 positionAndPages = "Kokalekua eta orrialdeak"
 preview = "Kokalekuaren hautaketa"
 previewDisclaimer = "Aurrebista orientagarria da. Azken emaitza aldatu daiteke PDFaren letra-metriken arabera."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Aukeratu PDF fitxategia:"
@@ -439,7 +441,9 @@ fullscreen = "Pantaila osoa"
 [settings.general.updates]
 title = "Software eguneratzeak"
 description = "Egiaztatu eguneratzeak eta ikusi bertsio-informazioa"
-currentVersion = "Uneko bertsioa"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Azken bertsioa"
 checkForUpdates = "Egiaztatu eguneratzeak"
 viewDetails = "Xehetasunak ikusi"
@@ -1298,6 +1302,8 @@ outputFormat = "Irteerako formatua"
 pdfaNote = "PDF/A-1b bateragarriagoa da; PDF/A-2b-k ezaugarri gehiago onartzen ditu."
 pdfaFormat = "PDF/A formatua"
 pdfaDigitalSignatureWarning = "PDFak sinadura digitala dauka. Hurrengo urratsean kenduko da."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDFak sinadura digital bat dauka. Hurrengo urratsean kenduko da."
 pdfxDescription = "PDF/X inprimaketa eta grafikoen truke fidagarrirako ISO estandarreko PDF azpimultzoa da."
 fileFormat = "Fitxategi formatua"
@@ -2640,6 +2646,7 @@ label = "Jatorrizko PDFa"
 
 [compare.edited]
 label = "Editatutako PDFa"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Berriro exekutatu konparazioa?"
@@ -3560,6 +3567,44 @@ imageSize = "Irudiaren tamaina"
 margin = "Marjina"
 positionAndFormatting = "Kokapena eta formatua"
 quickPosition = "Hautatu orrian zigiloa kokatzeko posizio bat."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Errore bat gertatu da zigilua PDFari gehitzean."
@@ -4478,9 +4523,17 @@ description = "Konfiguratu fitxategi-sistemako bide pertsonalizatuak pipeline pr
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline direktorioak"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Gainbegiratutako karpeten direktorioa"
 description = "Pipelineak sarrerako PDFak gainbegiratzen dituen direktorioa (utzi hutsik lehenetsia erabiltzeko: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Amaitutako karpeten direktorioa"
@@ -6520,6 +6573,7 @@ link = "edo konektatu autoostatutako kontu batera"
 title = "Konektatu zerbitzarira"
 subtitle = "Sartu zure auto-ostatuko zerbitzariaren URLa"
 testing = "Konexioa probatzen..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

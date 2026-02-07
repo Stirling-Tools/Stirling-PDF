@@ -219,6 +219,8 @@ pagesAndStarting = "പേജുകളും ആരംഭ നമ്പറും"
 positionAndPages = "സ്ഥാനം & പേജുകൾ"
 preview = "സ്ഥാനം തിരഞ്ഞെടുപ്പ്"
 previewDisclaimer = "പ്രിവ്യൂ ഏകദേശമാണ്. PDF ഫോണ്ട് മീട്രിക്‌സിന്റെ കാരണമായി അന്തിമ ഔട്ട്പുട്ട് വ്യത്യാസപ്പെട്ടേക്കാം."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "PDF ഫയൽ തിരഞ്ഞെടുക്കുക:"
@@ -439,7 +441,9 @@ fullscreen = "ഫുൾസ്ക്രീൻ"
 [settings.general.updates]
 title = "സോഫ്റ്റ്‌വെയർ അപ്‌ഡേറ്റുകൾ"
 description = "അപ്‌ഡേറ്റുകൾ പരിശോധിക്കുകയും പതിപ്പിന്റെ വിവരങ്ങൾ കാണുകയും ചെയ്യുക"
-currentVersion = "ഇപ്പോഴത്തെ പതിപ്പ്"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "പുതിയ പതിപ്പ്"
 checkForUpdates = "അപ്‌ഡേറ്റുകൾ പരിശോധിക്കുക"
 viewDetails = "വിശദാംശങ്ങൾ കാണുക"
@@ -1298,6 +1302,8 @@ outputFormat = "ഔട്ട്പുട്ട് ഫോർമാറ്റ്"
 pdfaNote = "PDF/A-1b കൂടുതൽ അനുയോജ്യതയുള്ളത്, PDF/A-2b കൂടുതൽ ഫീച്ചറുകൾ പിന്തുണയ്ക്കുന്നു."
 pdfaFormat = "PDF/A ഫോർമാറ്റ്"
 pdfaDigitalSignatureWarning = "ഈ PDF-ൽ ഡിജിറ്റൽ ഒപ്പ് ഉണ്ട്. ഇത് അടുത്ത ഘട്ടത്തിൽ നീക്കം ചെയ്യപ്പെടും."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF-യിൽ ഡിജിറ്റൽ ഒപ്പ് ഉണ്ട്. ഇത് അടുത്ത ഘട്ടത്തിൽ നീക്കം ചെയ്യും."
 pdfxDescription = "വിശ്വാസ്യതയുള്ള പ്രിന്റിംഗിനും ഗ്രാഫിക്സ് കൈമാറ്റത്തിനുമായി PDF/X ഒരു ISO സ്റ്റാൻഡേർഡ് PDF ഉപസമുച്ചയമാണ്."
 fileFormat = "ഫയൽ ഫോർമാറ്റ്"
@@ -2640,6 +2646,7 @@ label = "ഓറിജിനൽ PDF"
 
 [compare.edited]
 label = "എഡിറ്റുചെയ്ത PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "താരതമ്യം വീണ്ടും നടത്തണോ?"
@@ -3560,6 +3567,44 @@ imageSize = "ഇമേജ് വലിപ്പം"
 margin = "മാർജിൻ"
 positionAndFormatting = "സ്ഥാനം & ഫോർമാറ്റിംഗ്"
 quickPosition = "സ്റ്റാമ്പ് വയ്ക്കാൻ പേജിലെ ഒരു സ്ഥാനം തിരഞ്ഞെടുക്കുക."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "PDF-ലേക്ക് സ്റ്റാമ്പ് ചേർക്കുന്നതിനിടെ പിശക് സംഭവിച്ചു."
@@ -4478,9 +4523,17 @@ description = "പൈപ്പ്‌ലൈൻ പ്രോസസിംഗിന�
 [admin.settings.general.customPaths.pipeline]
 label = "പൈപ്പ്‌ലൈൻ ഡയറക്ടറികൾ"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "വാച്ച് ചെയ്യുന്ന ഫോൾഡറുകളുടെ ഡയറക്ടറി"
 description = "പൈപ്പ്‌ലൈൻ ഇൻകമിംഗ് PDFകൾക്കായി നിരീക്ഷിക്കുന്ന ഡയറക്ടറി (ഡീഫാൾട്ട് ഉപയോഗിക്കാൻ ശൂന്യം വിടുക: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "ഫിനിഷ്ഡ് ഫോൾഡറുകളുടെ ഡയറക്ടറി"
@@ -6520,6 +6573,7 @@ link = "അല്ലെങ്കിൽ സ്വയം-ഹോസ്റ്റു�
 title = "സെർവറിലേക്ക് കണക്റ്റുചെയ്യുക"
 subtitle = "നിങ്ങളുടെ സെൽഫ്-ഹോസ്റ്റഡ് സെർവർ URL നൽകുക"
 testing = "കണക്ഷൻ പരിശോധിക്കുന്നു..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

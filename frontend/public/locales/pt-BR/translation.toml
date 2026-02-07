@@ -219,6 +219,8 @@ pagesAndStarting = "Páginas e número inicial"
 positionAndPages = "Posição e páginas"
 preview = "Seleção de posição"
 previewDisclaimer = "A prévia é aproximada. A saída final pode variar devido às métricas de fonte do PDF."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Selecionar arquivo PDF:"
@@ -439,7 +441,9 @@ fullscreen = "Tela cheia"
 [settings.general.updates]
 title = "Atualizações de software"
 description = "Verifique atualizações e veja informações da versão"
-currentVersion = "Versão atual"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Última versão"
 checkForUpdates = "Verificar atualizações"
 viewDetails = "Ver detalhes"
@@ -1298,6 +1302,8 @@ outputFormat = "Formato de saída"
 pdfaNote = "PDF/A-1b é mais compatível; PDF/A-2b oferece mais recursos."
 pdfaFormat = "Formato PDF/A"
 pdfaDigitalSignatureWarning = "O PDF contém uma assinatura digital. Isso será removido na próxima etapa."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "O PDF contém uma assinatura digital. Ela será removida na próxima etapa."
 pdfxDescription = "PDF/X é um subconjunto de PDF padrão ISO para impressão confiável e troca de gráficos."
 fileFormat = "Formato de arquivo"
@@ -2640,6 +2646,7 @@ label = "PDF original"
 
 [compare.edited]
 label = "PDF editado"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Executar a comparação novamente?"
@@ -3560,6 +3567,44 @@ imageSize = "Tamanho da imagem"
 margin = "Margem"
 positionAndFormatting = "Posição e formatação"
 quickPosition = "Selecione uma posição na página para colocar o carimbo."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Ocorreu um erro ao adicionar o carimbo ao PDF."
@@ -4478,9 +4523,17 @@ description = "Configurar caminhos personalizados do sistema de arquivos para pr
 [admin.settings.general.customPaths.pipeline]
 label = "Diretórios do pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Diretório de pastas monitoradas"
 description = "Diretório onde o pipeline monitora PDFs recebidos (deixe em branco para padrão: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Diretório de pastas finalizadas"
@@ -6520,6 +6573,7 @@ link = "ou conecte-se a uma conta auto-hospedada"
 title = "Conectar ao servidor"
 subtitle = "Informe a URL do seu servidor self-hosted"
 testing = "Testando conexão..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

@@ -219,6 +219,8 @@ pagesAndStarting = "หน้าและเลขเริ่มต้น"
 positionAndPages = "ตำแหน่งและหน้า"
 preview = "การเลือกตำแหน่ง"
 previewDisclaimer = "ภาพตัวอย่างเป็นการประมาณ ผลลัพธ์สุดท้ายอาจแตกต่างเนื่องจากเมตริกฟอนต์ของ PDF"
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "เลือกไฟล์ PDF:"
@@ -439,7 +441,9 @@ fullscreen = "เต็มหน้าจอ"
 [settings.general.updates]
 title = "อัปเดตซอฟต์แวร์"
 description = "ตรวจสอบอัปเดตและดูข้อมูลเวอร์ชัน"
-currentVersion = "เวอร์ชันปัจจุบัน"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "เวอร์ชันล่าสุด"
 checkForUpdates = "ตรวจสอบอัปเดต"
 viewDetails = "ดูรายละเอียด"
@@ -1298,6 +1302,8 @@ outputFormat = "รูปแบบผลลัพธ์"
 pdfaNote = "PDF/A-1b เข้ากันได้มากกว่า ส่วน PDF/A-2b รองรับฟีเจอร์มากกว่า"
 pdfaFormat = "รูปแบบ PDF/A"
 pdfaDigitalSignatureWarning = "PDF มีลายเซ็นดิจิทัล ซึ่งจะถูกลบในขั้นตอนถัดไป"
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "ไฟล์ PDF มีลายเซ็นดิจิทัล ซึ่งจะถูกลบในขั้นตอนถัดไป"
 pdfxDescription = "PDF/X เป็นชุดย่อยของ PDF ตามมาตรฐาน ISO สำหรับการพิมพ์และแลกเปลี่ยนกราฟิกที่เชื่อถือได้"
 fileFormat = "รูปแบบไฟล์"
@@ -2640,6 +2646,7 @@ label = "PDF ต้นฉบับ"
 
 [compare.edited]
 label = "PDF ที่แก้ไข"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "เรียกใช้การเปรียบเทียบอีกครั้งหรือไม่?"
@@ -3560,6 +3567,44 @@ imageSize = "ขนาดรูปภาพ"
 margin = "ระยะขอบ"
 positionAndFormatting = "ตำแหน่งและการจัดรูปแบบ"
 quickPosition = "เลือกตำแหน่งบนหน้าสำหรับวางตราประทับ"
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "เกิดข้อผิดพลาดขณะเพิ่มตราประทับลงใน PDF"
@@ -4478,9 +4523,17 @@ description = "กำหนดค่าพาธระบบไฟล์แบ�
 [admin.settings.general.customPaths.pipeline]
 label = "ไดเรกทอรี Pipeline"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "ไดเรกทอรีโฟลเดอร์ที่เฝ้าดู"
 description = "ไดเรกทอรีที่ Pipeline จะเฝ้าดูไฟล์ PDF ที่เข้ามา (ปล่อยว่างเพื่อค่าเริ่มต้น: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "ไดเรกทอรีโฟลเดอร์ที่เสร็จสิ้น"
@@ -6520,6 +6573,7 @@ link = "หรือเชื่อมต่อกับบัญชีแบบ
 title = "เชื่อมต่อกับเซิร์ฟเวอร์"
 subtitle = "ป้อน URL เซิร์ฟเวอร์ที่โฮสต์เองของคุณ"
 testing = "กำลังทดสอบการเชื่อมต่อ..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

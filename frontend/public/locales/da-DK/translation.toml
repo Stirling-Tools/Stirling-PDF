@@ -219,6 +219,8 @@ pagesAndStarting = "Sider og startnummer"
 positionAndPages = "Position og sider"
 preview = "Positionsvalg"
 previewDisclaimer = "Forhåndsvisning er vejledende. Det endelige output kan variere pga. PDF-skrifttypemetrik."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "Vælg PDF-fil:"
@@ -439,7 +441,9 @@ fullscreen = "Fuldskærm"
 [settings.general.updates]
 title = "Softwareopdateringer"
 description = "Søg efter opdateringer og se versionsinfo"
-currentVersion = "Nuværende version"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "Seneste version"
 checkForUpdates = "Søg efter opdateringer"
 viewDetails = "Vis detaljer"
@@ -1298,6 +1302,8 @@ outputFormat = "Outputformat"
 pdfaNote = "PDF/A-1b er mere kompatibel, PDF/A-2b understøtter flere funktioner."
 pdfaFormat = "PDF/A-format"
 pdfaDigitalSignatureWarning = "PDF'en indeholder en digital signatur. Dette vil blive fjernet i næste trin."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "PDF'en indeholder en digital signatur. Denne fjernes i næste trin."
 pdfxDescription = "PDF/X er en ISO-standard PDF-undersæt til pålidelig udskrivning og grafikudveksling."
 fileFormat = "Filformat"
@@ -2640,6 +2646,7 @@ label = "Original-PDF"
 
 [compare.edited]
 label = "Redigeret PDF"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "Kør sammenligningen igen?"
@@ -3560,6 +3567,44 @@ imageSize = "Billedstørrelse"
 margin = "Margen"
 positionAndFormatting = "Placering og formatering"
 quickPosition = "Vælg en placering på siden til stemplet."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "Der opstod en fejl under tilføjelse af stempel til PDF'en."
@@ -4478,9 +4523,17 @@ description = "Konfigurer brugerdefinerede filsystemstier til pipeline-behandlin
 [admin.settings.general.customPaths.pipeline]
 label = "Pipelinemapper"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "Mappe for overvågede mapper"
 description = "Mappe hvor pipelinen overvåger indkommende PDF'er (lad tom for standard: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "Mappe for færdige mapper"
@@ -6520,6 +6573,7 @@ link = "eller opret forbindelse til en selvhostet konto"
 title = "Forbind til server"
 subtitle = "Indtast URL til din selvhostede server"
 testing = "Tester forbindelse..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"

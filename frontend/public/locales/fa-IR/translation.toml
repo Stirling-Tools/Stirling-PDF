@@ -219,6 +219,8 @@ pagesAndStarting = "صفحات و شماره آغازین"
 positionAndPages = "موقعیت و صفحات"
 preview = "انتخاب موقعیت"
 previewDisclaimer = "پیش‌نمایش تقریبی است. خروجی نهایی ممکن است به دلیل معیارهای فونت PDF متفاوت باشد."
+zeroPad = "Zero‑pad Width (Bates Stamping)"
+zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
 
 [addPageNumbers.selectText]
 1 = "انتخاب فایل PDF:"
@@ -439,7 +441,9 @@ fullscreen = "تمام‌صفحه"
 [settings.general.updates]
 title = "به‌روزرسانی نرم‌افزار"
 description = "بررسی به‌روزرسانی و مشاهده اطلاعات نسخه"
-currentVersion = "نسخه فعلی"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
 latestVersion = "آخرین نسخه"
 checkForUpdates = "بررسی به‌روزرسانی"
 viewDetails = "مشاهده جزئیات"
@@ -1298,6 +1302,8 @@ outputFormat = "قالب خروجی"
 pdfaNote = "PDF/A-1b سازگارتر است، PDF/A-2b از قابلیت‌های بیشتری پشتیبانی می‌کند."
 pdfaFormat = "فرمت PDF/A"
 pdfaDigitalSignatureWarning = "PDF حاوی یک امضای دیجیتال است. این در مرحله بعد حذف خواهد شد."
+strictMode = "Strict Mode"
+strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 pdfxDigitalSignatureWarning = "این PDF شامل امضای دیجیتال است. این مورد در مرحله بعد حذف خواهد شد."
 pdfxDescription = "PDF/X زیرمجموعه استاندارد ISO از PDF برای چاپ قابل‌اعتماد و تبادل گرافیک است."
 fileFormat = "قالب فایل"
@@ -2640,6 +2646,7 @@ label = "PDF اصلی"
 
 [compare.edited]
 label = "PDF ویرایش‌شده"
+placeholder = "Select the edited PDF"
 
 [compare.swap]
 confirmTitle = "مقایسه دوباره انجام شود؟"
@@ -3560,6 +3567,44 @@ imageSize = "اندازه تصویر"
 margin = "حاشیه"
 positionAndFormatting = "موقعیت و قالب‌بندی"
 quickPosition = "یک موقعیت روی صفحه برای قرار دادن مهر انتخاب کنید."
+preview = "Preview:"
+useTemplate = "Use Template"
+selectTemplate = "Select a template..."
+stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+dynamicVariables = "Dynamic Variables"
+clickToExpand = "Click to expand"
+variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
+dateTimeVars = "Date & Time"
+dateDesc = "Current date"
+timeDesc = "Current time"
+datetimeDesc = "Date and time combined"
+customDateDesc = "Custom format"
+yearMonthDayDesc = "Individual date parts"
+pageVars = "Page Information"
+pageNumberDesc = "Current page number"
+totalPagesDesc = "Total number of pages"
+fileVars = "File Information"
+filenameDesc = "Filename without extension"
+filenameFullDesc = "Filename with extension"
+metadataVars = "Document Metadata"
+metadataDesc = "From PDF document properties"
+otherVars = "Other"
+uuidDesc = "Short unique identifier (8 chars)"
+examples = "Examples"
+multiLine = "multi-line"
+
+[AddStampRequest.template]
+pageNumberFooter = "Page Number Footer"
+dateHeader = "Date Header"
+europeanDate = "European Date"
+timestamp = "Timestamp"
+draftWatermark = "Draft Watermark"
+custom = "Custom"
+page-numbers = "Page Numbers"
+draft = "Draft Watermark"
+doc-info = "Document Info"
+legal-footer = "Legal Footer"
+european-date = "European Date (DD/MM/YYYY)"
 
 [AddStampRequest.error]
 failed = "هنگام افزودن مهر به PDF خطایی رخ داد."
@@ -4478,9 +4523,17 @@ description = "پیکربندی مسیرهای فایل سیستم سفارشی 
 [admin.settings.general.customPaths.pipeline]
 label = "دایرکتوری‌های پایپلاین"
 
+[admin.settings.general.customPaths.pipeline.pipelineDir]
+label = "Pipeline Directory"
+description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 label = "دایرکتوری پوشه‌های پایش‌شده"
 description = "مسیر پوشه‌ای که پایپلاین برای PDFهای ورودی پایش می‌کند (خالی بگذارید برای پیش‌فرض: /pipeline/watchedFolders)"
+
+[admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
+label = "Watched Folders Directories"
+description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 label = "دایرکتوری پوشه‌های پایان‌یافته"
@@ -6520,6 +6573,7 @@ link = "یا به یک حساب خودمیزبان متصل شوید"
 title = "اتصال به سرور"
 subtitle = "URL سرور خودمیزبان خود را وارد کنید"
 testing = "در حال آزمون اتصال..."
+useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.type]
 saas = "Stirling PDF SaaS"
