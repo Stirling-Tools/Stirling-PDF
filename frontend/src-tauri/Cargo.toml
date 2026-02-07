@@ -32,7 +32,7 @@ tauri-plugin-http = { version = "2.5.6", features = ["dangerous-settings"] }
 tauri-plugin-single-instance = { version = "2.3.7", features = ["deep-link"] }
 tauri-plugin-store = "2.4.2"
 tauri-plugin-opener = "2.5.3"
-tauri-plugin-deep-link = "2.4.6"
+tauri-plugin-deep-link = "2.4.7"
 keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.0", features = ["time", "sync"] }
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls", "rustls-tls-native-roots"] }
