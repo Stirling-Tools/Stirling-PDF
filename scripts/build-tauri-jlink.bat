@@ -22,14 +22,38 @@ for /f "tokens=3" %%g in ('java -version 2^>^&1 ^| findstr /i "version"') do (
     set JAVA_VERSION_STRING=%%g
 )
 set JAVA_VERSION_STRING=%JAVA_VERSION_STRING:"=%
-for /f "delims=. tokens=1" %%v in ("%JAVA_VERSION_STRING%") do set JAVA_MAJOR_VERSION=%%v
-
-if %JAVA_MAJOR_VERSION% LSS 17 (
-    echo ❌ Java 17 or higher is required. Found Java %JAVA_MAJOR_VERSION%
+set "JAVA_MAJOR_VERSION="
+set "JAVA_MINOR_VERSION=0"
+set "JAVA_EFFECTIVE_MAJOR="
+for /f "tokens=1,2 delims=." %%a in ("%JAVA_VERSION_STRING%") do (
+    set "JAVA_MAJOR_VERSION=%%a"
+    set "JAVA_MINOR_VERSION=%%b"
+    if "%%a"=="1" (
+        set "JAVA_EFFECTIVE_MAJOR=%%b"
+    ) else (
+        set "JAVA_EFFECTIVE_MAJOR=%%a"
+    )
+)
+if not defined JAVA_MAJOR_VERSION (
+    echo ❌ Unable to determine Java major version from "%JAVA_VERSION_STRING%"
     exit /b 1
 )
-
-echo ✅ Java %JAVA_MAJOR_VERSION% and jlink detected
+if not defined JAVA_EFFECTIVE_MAJOR (
+    echo ❌ Unable to determine an effective Java major version from "%JAVA_VERSION_STRING%"
+    exit /b 1
+)
+for /f "tokens=1 delims=.-" %%c in ("%JAVA_EFFECTIVE_MAJOR%") do set "JAVA_EFFECTIVE_MAJOR=%%c"
+set /a "JAVA_EFFECTIVE_MAJOR_NUM=%JAVA_EFFECTIVE_MAJOR%" >nul 2>&1
+if errorlevel 1 (
+    echo ❌ Java major version "%JAVA_EFFECTIVE_MAJOR%" could not be parsed as an integer. Detected string: "%JAVA_VERSION_STRING%"
+    exit /b 1
+)
+set "JAVA_EFFECTIVE_MAJOR=%JAVA_EFFECTIVE_MAJOR_NUM%"
+if %JAVA_EFFECTIVE_MAJOR% LSS 17 (
+    echo ❌ Java 17 or higher is required. Found Java %JAVA_EFFECTIVE_MAJOR%
+    exit /b 1
+)
+echo ✅ Java %JAVA_EFFECTIVE_MAJOR% and jlink detected
 
 echo ▶ Building Stirling-PDF JAR...
 
