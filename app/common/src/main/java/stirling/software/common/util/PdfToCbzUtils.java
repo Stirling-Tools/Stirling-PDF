@@ -3,7 +3,10 @@ package stirling.software.common.util;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.*;
+import java.util.stream.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -11,8 +14,6 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,13 +28,15 @@ public class PdfToCbzUtils {
             throws IOException {
 
         validatePdfFile(pdfFile);
+        byte[] pdfData = pdfFile.getBytes();
 
-        try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
-            if (document.getNumberOfPages() == 0) {
+        try (PDDocument document = pdfDocumentFactory.load(pdfData)) {
+            int totalPages = document.getNumberOfPages();
+            if (totalPages == 0) {
                 throw ExceptionUtils.createPdfNoPages();
             }
 
-            return createCbzFromPdf(document, dpi);
+            return createCbzFromPdf(pdfDocumentFactory, pdfData, totalPages, dpi);
         }
     }
 
@@ -53,42 +56,85 @@ public class PdfToCbzUtils {
         }
     }
 
-    private static byte[] createCbzFromPdf(PDDocument document, int dpi) throws IOException {
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
-        pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
+    private static byte[] createCbzFromPdf(
+            CustomPDFDocumentFactory pdfDocumentFactory, byte[] pdfData, int totalPages, int dpi)
+            throws IOException {
 
         try (ByteArrayOutputStream cbzOutputStream = new ByteArrayOutputStream();
                 ZipOutputStream zipOut = new ZipOutputStream(cbzOutputStream)) {
 
-            int totalPages = document.getNumberOfPages();
+            int configuredParallelism =
+                    Math.min(64, Math.max(2, Runtime.getRuntime().availableProcessors() * 2));
+            int desiredParallelism = Math.max(1, Math.min(totalPages, configuredParallelism));
 
-            for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                final int currentPage = pageIndex;
-                try {
-                    BufferedImage image =
-                            ExceptionUtils.handleOomRendering(
-                                    currentPage + 1,
-                                    dpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    currentPage, dpi, ImageType.RGB));
+            try (ManagedForkJoinPool managedPool = new ManagedForkJoinPool(desiredParallelism);
+                    PdfThreadLocalResources renderingResources =
+                            new PdfThreadLocalResources(pdfDocumentFactory, pdfData)) {
+                ForkJoinPool customPool = managedPool.getPool();
 
-                    String imageFilename =
-                            String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
-                    ZipEntry zipEntry = new ZipEntry(imageFilename);
-                    zipOut.putNextEntry(zipEntry);
+                // Process in batches to save memory
+                int batchSize = 10;
+                for (int i = 0; i < totalPages; i += batchSize) {
+                    int start = i;
+                    int end = Math.min(totalPages, i + batchSize);
 
-                    ImageIO.write(image, "PNG", zipOut);
-                    zipOut.closeEntry();
+                    List<byte[]> batchImages =
+                            customPool
+                                    .submit(
+                                            () ->
+                                                    IntStream.range(start, end)
+                                                            .parallel()
+                                                            .mapToObj(
+                                                                    pageNum -> {
+                                                                        try {
+                                                                            BufferedImage image =
+                                                                                    ExceptionUtils
+                                                                                            .handleOomRendering(
+                                                                                                    pageNum
+                                                                                                            + 1,
+                                                                                                    dpi,
+                                                                                                    () ->
+                                                                                                            renderingResources
+                                                                                                                    .renderPage(
+                                                                                                                            pageNum,
+                                                                                                                            dpi,
+                                                                                                                            org
+                                                                                                                                    .apache
+                                                                                                                                    .pdfbox
+                                                                                                                                    .rendering
+                                                                                                                                    .ImageType
+                                                                                                                                    .RGB));
+                                                                            try (ByteArrayOutputStream
+                                                                                    pageBaos =
+                                                                                            new ByteArrayOutputStream()) {
+                                                                                ImageIO.write(
+                                                                                        image,
+                                                                                        "PNG",
+                                                                                        pageBaos);
+                                                                                image.flush();
+                                                                                return pageBaos
+                                                                                        .toByteArray();
+                                                                            }
+                                                                        } catch (Exception e) {
+                                                                            throw new RuntimeException(
+                                                                                    e);
+                                                                        }
+                                                                    })
+                                                            .collect(Collectors.toList()))
+                                    .get();
 
-                } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-                    // Re-throw OOM exceptions without wrapping
-                    throw e;
-                } catch (IOException e) {
-                    // Wrap other IOExceptions with context
-                    throw ExceptionUtils.createFileProcessingException(
-                            "CBZ creation for page " + (currentPage + 1), e);
+                    for (int j = 0; j < batchImages.size(); j++) {
+                        int pageNum = start + j;
+                        String imageFilename =
+                                String.format(Locale.ROOT, "page_%03d.png", pageNum + 1);
+                        ZipEntry zipEntry = new ZipEntry(imageFilename);
+                        zipOut.putNextEntry(zipEntry);
+                        zipOut.write(batchImages.get(j));
+                        zipOut.closeEntry();
+                    }
                 }
+            } catch (ExecutionException | InterruptedException e) {
+                throw new IOException("Error during parallel CBZ rendering", e);
             }
 
             zipOut.finish();

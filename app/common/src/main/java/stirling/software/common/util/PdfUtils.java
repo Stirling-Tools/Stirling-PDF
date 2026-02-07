@@ -6,11 +6,13 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -162,56 +164,96 @@ public class PdfUtils {
             }
             int pageCount = document.getNumberOfPages();
 
+            int configuredParallelism =
+                    Math.min(64, Math.max(2, Runtime.getRuntime().availableProcessors() * 2));
+            int desiredParallelism = Math.max(1, Math.min(pageCount, configuredParallelism));
+
             if (singleImage) {
                 if ("tiff".equals(imageType.toLowerCase(Locale.ROOT))
                         || "tif".equals(imageType.toLowerCase(Locale.ROOT))) {
-                    // Write the images to the output stream as a TIFF with multiple frames
-                    ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
-                    ImageWriteParam param = writer.getDefaultWriteParam();
-                    param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                    param.setCompressionType("ZLib");
-                    param.setCompressionQuality(1.0f);
+                    try (ManagedForkJoinPool managedPool =
+                                    new ManagedForkJoinPool(desiredParallelism);
+                            PdfThreadLocalResources renderingResources =
+                                    new PdfThreadLocalResources(pdfDocumentFactory, inputStream)) {
+                        ForkJoinPool customPool = managedPool.getPool();
 
-                    try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
-                        writer.setOutput(ios);
-                        writer.prepareWriteSequence(null);
+                        // Write the images to the output stream as a TIFF with multiple frames
+                        ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
+                        ImageWriteParam param = writer.getDefaultWriteParam();
+                        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                        param.setCompressionType("ZLib");
+                        param.setCompressionQuality(1.0f);
 
-                        for (int i = 0; i < pageCount; ++i) {
-                            final int pageIndex = i;
-                            BufferedImage image;
-                            try {
-                                // Validate dimensions before rendering
-                                ExceptionUtils.validateRenderingDimensions(
-                                        document.getPage(pageIndex), pageIndex + 1, DPI);
+                        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+                            writer.setOutput(ios);
+                            writer.prepareWriteSequence(null);
 
-                                image =
-                                        ExceptionUtils.handleOomRendering(
-                                                pageIndex + 1,
-                                                DPI,
-                                                () ->
-                                                        pdfRenderer.renderImageWithDPI(
-                                                                pageIndex, DPI, colorType));
-                            } catch (IllegalArgumentException e) {
-                                if (e.getMessage() != null
-                                        && e.getMessage()
-                                                .contains("Maximum size of image exceeded")) {
-                                    throw ExceptionUtils.createIllegalArgumentException(
-                                            "error.pageTooBigForDpi",
-                                            "PDF page {0} is too large to render at {1} DPI. Please"
-                                                    + " try a lower DPI value (recommended: 150 or"
-                                                    + " less).",
-                                            i + 1,
-                                            DPI);
+                            // Process in batches to save memory
+                            int batchSize = 10;
+                            for (int i = 0; i < pageCount; i += batchSize) {
+                                int start = i;
+                                int end = Math.min(pageCount, i + batchSize);
+
+                                List<BufferedImage> batchImages =
+                                        customPool
+                                                .submit(
+                                                        () ->
+                                                                IntStream.range(start, end)
+                                                                        .parallel()
+                                                                        .mapToObj(
+                                                                                pageNum -> {
+                                                                                    try {
+                                                                                        // Validate
+                                                                                        // dimensions before
+                                                                                        // rendering
+                                                                                        ExceptionUtils
+                                                                                                .validateRenderingDimensions(
+                                                                                                        renderingResources
+                                                                                                                .getDocument()
+                                                                                                                .getPage(
+                                                                                                                        pageNum),
+                                                                                                        pageNum
+                                                                                                                + 1,
+                                                                                                        DPI);
+
+                                                                                        return ExceptionUtils
+                                                                                                .handleOomRendering(
+                                                                                                        pageNum
+                                                                                                                + 1,
+                                                                                                        DPI,
+                                                                                                        () ->
+                                                                                                                renderingResources
+                                                                                                                        .renderPage(
+                                                                                                                                pageNum,
+                                                                                                                                DPI,
+                                                                                                                                colorType));
+                                                                                    } catch (
+                                                                                            Exception
+                                                                                                    e) {
+                                                                                        throw new RuntimeException(
+                                                                                                e);
+                                                                                    }
+                                                                                })
+                                                                        .collect(
+                                                                                Collectors
+                                                                                        .toList()))
+                                                .get();
+
+                                for (BufferedImage image : batchImages) {
+                                    writer.writeToSequence(new IIOImage(image, null, null), param);
+                                    image.flush();
                                 }
-                                throw e;
                             }
-                            writer.writeToSequence(new IIOImage(image, null, null), param);
+
+                            writer.endWriteSequence();
                         }
-
-                        writer.endWriteSequence();
+                        writer.dispose();
+                    } catch (ExecutionException | InterruptedException e) {
+                        if (e.getCause() instanceof IllegalArgumentException) {
+                            throw (IllegalArgumentException) e.getCause();
+                        }
+                        throw new IOException("Error during parallel TIFF rendering", e);
                     }
-
-                    writer.dispose();
                 } else {
                     // Combine all images into a single big image
 
@@ -219,166 +261,214 @@ public class PdfUtils {
                     int maxWidth = 0;
                     int totalHeight = 0;
 
-                    BufferedImage pdfSizeImage = null;
-                    int pdfSizeImageIndex = -1;
+                    try (ManagedForkJoinPool managedPool =
+                                    new ManagedForkJoinPool(desiredParallelism);
+                            PdfThreadLocalResources renderingResources =
+                                    new PdfThreadLocalResources(pdfDocumentFactory, inputStream)) {
+                        ForkJoinPool customPool = managedPool.getPool();
 
-                    // Using a map to store the rendered dimensions of each page size
-                    // to avoid rendering the same page sizes multiple times
-                    HashMap<PdfRenderSettingsKey, PdfImageDimensionValue> pageSizes =
-                            new HashMap<>();
-                    for (int i = 0; i < pageCount; ++i) {
-                        final int pageIndex = i;
-                        PDPage page = document.getPage(i);
-                        PDRectangle mediaBox = page.getMediaBox();
-                        int rotation = page.getRotation();
-                        PdfRenderSettingsKey settings =
-                                new PdfRenderSettingsKey(
-                                        mediaBox.getWidth(), mediaBox.getHeight(), rotation);
-                        PdfImageDimensionValue dimension = pageSizes.get(settings);
-                        if (dimension == null) {
-                            // Render the image to get the dimensions
-                            try {
-                                // Validate dimensions before rendering
-                                ExceptionUtils.validateRenderingDimensions(
-                                        page, pageIndex + 1, DPI);
-
-                                pdfSizeImage =
-                                        ExceptionUtils.handleOomRendering(
-                                                pageIndex + 1,
-                                                DPI,
+                        List<PdfImageDimensionValue> dimensions;
+                        dimensions =
+                                customPool
+                                        .submit(
                                                 () ->
-                                                        pdfRenderer.renderImageWithDPI(
-                                                                pageIndex, DPI, colorType));
-                            } catch (IllegalArgumentException e) {
-                                if (e.getMessage() != null
-                                        && e.getMessage()
-                                                .contains("Maximum size of image exceeded")) {
-                                    throw ExceptionUtils.createIllegalArgumentException(
-                                            "error.pageTooBigExceedsArray",
-                                            "PDF page {0} is too large to render at {1} DPI. The"
-                                                    + " resulting image would exceed Java's maximum"
-                                                    + " array size. Please try a lower DPI value"
-                                                    + " (recommended: 150 or less).",
-                                            i + 1,
-                                            DPI);
-                                }
-                                throw e;
+                                                        IntStream.range(0, pageCount)
+                                                                .parallel()
+                                                                .mapToObj(
+                                                                        i -> {
+                                                                            try {
+                                                                                PDPage page =
+                                                                                        renderingResources
+                                                                                                .getDocument()
+                                                                                                .getPage(
+                                                                                                        i);
+                                                                                // Validate
+                                                                                // dimensions before
+                                                                                // rendering
+                                                                                ExceptionUtils
+                                                                                        .validateRenderingDimensions(
+                                                                                                page,
+                                                                                                i
+                                                                                                        + 1,
+                                                                                                DPI);
+
+                                                                                PDRectangle
+                                                                                        mediaBox =
+                                                                                                page
+                                                                                                        .getMediaBox();
+                                                                                int rotation =
+                                                                                        page
+                                                                                                .getRotation();
+                                                                                float widthPts =
+                                                                                        (rotation
+                                                                                                                % 180
+                                                                                                        == 0)
+                                                                                                ? mediaBox
+                                                                                                        .getWidth()
+                                                                                                : mediaBox
+                                                                                                        .getHeight();
+                                                                                float heightPts =
+                                                                                        (rotation
+                                                                                                                % 180
+                                                                                                        == 0)
+                                                                                                ? mediaBox
+                                                                                                        .getHeight()
+                                                                                                : mediaBox
+                                                                                                        .getWidth();
+                                                                                return new PdfImageDimensionValue(
+                                                                                        Math.round(
+                                                                                                widthPts
+                                                                                                        * DPI
+                                                                                                        / 72f),
+                                                                                        Math.round(
+                                                                                                heightPts
+                                                                                                        * DPI
+                                                                                                        / 72f));
+                                                                            } catch (Exception e) {
+                                                                                throw new RuntimeException(
+                                                                                        e);
+                                                                            }
+                                                                        })
+                                                                .toList())
+                                        .get();
+
+                        for (PdfImageDimensionValue dim : dimensions) {
+                            if (dim.width() > maxWidth) {
+                                maxWidth = dim.width();
                             }
-                            pdfSizeImageIndex = i;
-                            dimension =
-                                    new PdfImageDimensionValue(
-                                            pdfSizeImage.getWidth(), pdfSizeImage.getHeight());
-                            pageSizes.put(settings, dimension);
-                            if (pdfSizeImage.getWidth() > maxWidth) {
-                                maxWidth = pdfSizeImage.getWidth();
-                            }
-                        }
-                        totalHeight += dimension.height();
-                    }
-
-                    // Create a new BufferedImage to store the combined images
-                    BufferedImage combined =
-                            prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
-                    Graphics g = combined.getGraphics();
-
-                    int currentHeight = 0;
-                    BufferedImage pageImage;
-
-                    // Check if the first image is the last rendered image
-                    boolean firstImageAlreadyRendered = pdfSizeImageIndex == 0;
-
-                    for (int i = 0; i < pageCount; ++i) {
-                        final int pageIndex = i;
-                        if (firstImageAlreadyRendered && i == 0) {
-                            pageImage = pdfSizeImage;
-                        } else {
-                            try {
-                                // Validate dimensions before rendering
-                                ExceptionUtils.validateRenderingDimensions(
-                                        document.getPage(pageIndex), pageIndex + 1, DPI);
-
-                                pageImage =
-                                        ExceptionUtils.handleOomRendering(
-                                                pageIndex + 1,
-                                                DPI,
-                                                () ->
-                                                        pdfRenderer.renderImageWithDPI(
-                                                                pageIndex, DPI, colorType));
-                            } catch (IllegalArgumentException e) {
-                                if (e.getMessage() != null
-                                        && e.getMessage()
-                                                .contains("Maximum size of image exceeded")) {
-                                    throw ExceptionUtils.createIllegalArgumentException(
-                                            "error.pageTooBigForDpi",
-                                            "PDF page {0} is too large to render at {1} DPI. Please"
-                                                    + " try a lower DPI value (recommended: 150 or"
-                                                    + " less).",
-                                            i + 1,
-                                            DPI);
-                                }
-                                throw e;
-                            }
+                            totalHeight += dim.height();
                         }
 
-                        // Calculate the x-coordinate to center the image
-                        int x = (maxWidth - pageImage.getWidth()) / 2;
+                        // Create a new BufferedImage to store the combined images
+                        BufferedImage combined =
+                                prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
+                        Graphics g = combined.getGraphics();
 
-                        g.drawImage(pageImage, x, currentHeight, null);
-                        currentHeight += pageImage.getHeight();
+                        // Process in batches to save memory
+                        int batchSize = 10;
+                        int currentHeightTotal = 0;
+                        for (int i = 0; i < pageCount; i += batchSize) {
+                            int start = i;
+                            int end = Math.min(pageCount, i + batchSize);
+
+                            List<BufferedImage> pageImages =
+                                    customPool
+                                            .submit(
+                                                    () ->
+                                                            IntStream.range(start, end)
+                                                                    .parallel()
+                                                                    .mapToObj(
+                                                                            pageNum -> {
+                                                                                try {
+                                                                                    return ExceptionUtils
+                                                                                            .handleOomRendering(
+                                                                                                    pageNum
+                                                                                                            + 1,
+                                                                                                    DPI,
+                                                                                                    () ->
+                                                                                                            renderingResources
+                                                                                                                    .renderPage(
+                                                                                                                            pageNum,
+                                                                                                                            DPI,
+                                                                                                                            colorType));
+                                                                                } catch (
+                                                                                        Exception
+                                                                                                e) {
+                                                                                    throw new RuntimeException(
+                                                                                            e);
+                                                                                }
+                                                                            })
+                                                                    .toList())
+                                            .get();
+
+                            for (BufferedImage pageImage : pageImages) {
+                                int x = (maxWidth - pageImage.getWidth()) / 2;
+                                g.drawImage(pageImage, x, currentHeightTotal, null);
+                                currentHeightTotal += pageImage.getHeight();
+                                pageImage.flush();
+                            }
+                        }
+
+                        // Write the image to the output stream
+                        ImageIO.write(combined, imageType, baos);
+                    } catch (ExecutionException | InterruptedException e) {
+                        throw new IOException("Error processing combined image in parallel", e);
                     }
-
-                    // Write the image to the output stream
-                    ImageIO.write(combined, imageType, baos);
                 }
 
                 // Log that the image was successfully written to the byte array
                 log.info("Image successfully written to byte array");
             } else {
                 // Zip the images and return as byte array
-                try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-                    for (int i = 0; i < pageCount; ++i) {
-                        final int pageIndex = i;
-                        BufferedImage image;
-                        try {
-                            // Validate dimensions before rendering
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, DPI);
 
-                            image =
-                                    ExceptionUtils.handleOomRendering(
-                                            pageIndex + 1,
-                                            DPI,
-                                            () ->
-                                                    pdfRenderer.renderImageWithDPI(
-                                                            pageIndex, DPI, colorType));
-                        } catch (IllegalArgumentException e) {
-                            if (e.getMessage() != null
-                                    && e.getMessage().contains("Maximum size of image exceeded")) {
-                                throw ExceptionUtils.createIllegalArgumentException(
-                                        "error.pageTooBigForDpi",
-                                        "PDF page {0} is too large to render at {1} DPI. Please try"
-                                                + " a lower DPI value (recommended: 150 or less).",
-                                        i + 1,
-                                        DPI);
-                            }
-                            throw e;
-                        }
-                        try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
-                            ImageIO.write(image, imageType, baosImage);
+                try (ManagedForkJoinPool managedPool = new ManagedForkJoinPool(desiredParallelism);
+                        PdfThreadLocalResources renderingResources =
+                                new PdfThreadLocalResources(pdfDocumentFactory, inputStream);
+                        ZipOutputStream zos = new ZipOutputStream(baos)) {
+                    ForkJoinPool customPool = managedPool.getPool();
 
-                            // Add the image to the zip file
-                            zos.putNextEntry(
+                    // Process in batches to save memory
+                    int batchSize = 10;
+                    for (int i = 0; i < pageCount; i += batchSize) {
+                        int start = i;
+                        int end = Math.min(pageCount, i + batchSize);
+
+                        List<byte[]> batchImages =
+                                customPool
+                                        .submit(
+                                                () ->
+                                                        IntStream.range(start, end)
+                                                                .parallel()
+                                                                .mapToObj(
+                                                                        pageNum -> {
+                                                                            try (ByteArrayOutputStream
+                                                                                    imageBaos =
+                                                                                            new ByteArrayOutputStream()) {
+                                                                                BufferedImage
+                                                                                        image =
+                                                                                                ExceptionUtils
+                                                                                                        .handleOomRendering(
+                                                                                                                pageNum
+                                                                                                                        + 1,
+                                                                                                                DPI,
+                                                                                                                () ->
+                                                                                                                        renderingResources
+                                                                                                                                .renderPage(
+                                                                                                                                        pageNum,
+                                                                                                                                        DPI,
+                                                                                                                                        colorType));
+                                                                                ImageIO.write(
+                                                                                        image,
+                                                                                        imageType,
+                                                                                        imageBaos);
+                                                                                image.flush();
+                                                                                return imageBaos
+                                                                                        .toByteArray();
+                                                                            } catch (Exception e) {
+                                                                                throw new RuntimeException(
+                                                                                        e);
+                                                                            }
+                                                                        })
+                                                                .collect(Collectors.toList()))
+                                        .get();
+
+                        for (int j = 0; j < batchImages.size(); j++) {
+                            int pageNum = start + j;
+                            ZipEntry entry =
                                     new ZipEntry(
-                                            String.format(
-                                                    Locale.ROOT,
-                                                    filename + "_%d.%s",
-                                                    i + 1,
-                                                    imageType.toLowerCase(Locale.ROOT))));
-                            zos.write(baosImage.toByteArray());
+                                            filename
+                                                    + "_"
+                                                    + (pageNum + 1)
+                                                    + "."
+                                                    + imageType.toLowerCase(Locale.ROOT));
+                            zos.putNextEntry(entry);
+                            zos.write(batchImages.get(j));
+                            zos.closeEntry();
                         }
                     }
-                    // Log that the images were successfully written to the byte array
-                    log.info("Images successfully written to byte array as a zip");
+                    zos.finish();
+                } catch (ExecutionException | InterruptedException e) {
+                    throw new IOException("Error during parallel ZIP rendering", e);
                 }
             }
             return baos.toByteArray();

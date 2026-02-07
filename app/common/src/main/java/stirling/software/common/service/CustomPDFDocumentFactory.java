@@ -56,7 +56,7 @@ public class CustomPDFDocumentFactory {
 
     private static final long LARGE_FILE_USAGE = 10 * 1024 * 1024;
 
-    private static final long EXTREMELY_LARGE_THRESHOLD = 100 * 1024 * 1024; // 100 MB
+    // private static final long EXTREMELY_LARGE_THRESHOLD = 100 * 1024 * 1024; // 100 MB
     // Files exceeding this threshold use specialized loading with RandomAccessReadBufferedFile
     // which provides buffered access to the file without loading the entire content at once.
     // These files are always processed using file-based caching with minimal memory footprint,
@@ -90,7 +90,7 @@ public class CustomPDFDocumentFactory {
         long fileSize = file.length();
         log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
-        PDDocument doc = loadAdaptively(file, fileSize);
+        PDDocument doc = loadAdaptively(file, fileSize, false);
         if (!readOnly) {
             postProcessDocument(doc);
         }
@@ -117,7 +117,7 @@ public class CustomPDFDocumentFactory {
         long fileSize = Files.size(path);
         log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
-        PDDocument doc = loadAdaptively(path.toFile(), fileSize);
+        PDDocument doc = loadAdaptively(path.toFile(), fileSize, false);
         if (!readOnly) {
             postProcessDocument(doc);
         }
@@ -138,7 +138,7 @@ public class CustomPDFDocumentFactory {
         long dataSize = input.length;
         log.debug("Loading PDF from byte array, size: {}MB", dataSize / (1024 * 1024));
 
-        PDDocument doc = loadAdaptively(input, dataSize);
+        PDDocument doc = loadAdaptively(input, dataSize, false);
         if (!readOnly) {
             postProcessDocument(doc);
         }
@@ -160,7 +160,7 @@ public class CustomPDFDocumentFactory {
         Path tempFile = createTempFile("pdf-stream-");
 
         Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile));
+        PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile), true);
         if (!readOnly) {
             postProcessDocument(doc);
         }
@@ -276,19 +276,19 @@ public class CustomPDFDocumentFactory {
         }
     }
 
-    /** Update the existing loadAdaptively method to use the common function */
-    private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
+    private PDDocument loadAdaptively(Object source, long contentSize, boolean deleteIfFile)
+            throws IOException {
         // Get the appropriate caching strategy
         StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
 
         // If small handle as bytes and remove original file
-        if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
+        if (deleteIfFile && contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
             source = Files.readAllBytes(file.toPath());
             file.delete();
         }
         PDDocument document;
         if (source instanceof File file) {
-            document = loadFromFile(file, contentSize, cacheFunction);
+            document = loadFromFile(file, cacheFunction);
         } else if (source instanceof byte[] bytes) {
             document = loadFromBytes(bytes, contentSize, cacheFunction);
         } else {
@@ -332,7 +332,7 @@ public class CustomPDFDocumentFactory {
         }
         PDDocument document;
         if (source instanceof File file) {
-            document = loadFromFileWithPassword(file, contentSize, cacheFunction, password);
+            document = loadFromFileWithPassword(file, cacheFunction, password);
         } else if (source instanceof byte[] bytes) {
             document = loadFromBytesWithPassword(bytes, contentSize, cacheFunction, password);
         } else {
@@ -346,8 +346,7 @@ public class CustomPDFDocumentFactory {
 
     /** Load a file with password */
     private PDDocument loadFromFileWithPassword(
-            File file, long size, StreamCacheCreateFunction cache, String password)
-            throws IOException {
+            File file, StreamCacheCreateFunction cache, String password) throws IOException {
         return Loader.loadPDF(new DeletingRandomAccessFile(file), password, null, null, cache);
     }
 
@@ -380,8 +379,7 @@ public class CustomPDFDocumentFactory {
         removePassword(doc);
     }
 
-    private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
-            throws IOException {
+    private PDDocument loadFromFile(File file, StreamCacheCreateFunction cache) throws IOException {
         try {
             return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
         } catch (IOException e) {
@@ -397,7 +395,7 @@ public class CustomPDFDocumentFactory {
             Path tempFile = createTempFile("pdf-bytes-");
 
             Files.write(tempFile, bytes);
-            return loadFromFile(tempFile.toFile(), size, cache);
+            return loadFromFile(tempFile.toFile(), cache);
         }
 
         try {

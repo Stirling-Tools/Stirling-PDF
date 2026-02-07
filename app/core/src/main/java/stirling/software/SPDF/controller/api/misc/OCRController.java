@@ -10,6 +10,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -19,7 +23,6 @@ import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +44,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ManagedForkJoinPool;
+import stirling.software.common.util.PdfThreadLocalResources;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempDirectory;
@@ -318,103 +323,56 @@ public class OCRController {
             tempOutputDir.mkdirs();
             tempImagesDir.mkdirs();
 
-            PDFMergerUtility merger = new PDFMergerUtility();
-            merger.setDestinationFileName(finalOutputFile.toString());
-
+            int totalPages;
             try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
-                pdfRenderer.setSubsamplingAllowed(
-                        true); // Enable subsampling to reduce memory usage
-                int pageCount = document.getNumberOfPages();
-
-                for (int pageNum = 0; pageNum < pageCount; pageNum++) {
-                    PDPage page = document.getPage(pageNum);
-                    boolean hasText;
-
-                    // Check for existing text
-                    try (PDDocument tempDoc = new PDDocument()) {
-                        tempDoc.addPage(page);
-                        PDFTextStripper stripper = new PDFTextStripper();
-                        hasText = !stripper.getText(tempDoc).trim().isEmpty();
-                    }
-
-                    boolean shouldOcr =
-                            switch (ocrType) {
-                                case "skip-text" -> !hasText;
-                                case "force-ocr" -> true;
-                                default -> true;
-                            };
-
-                    File pageOutputPath =
-                            new File(
-                                    tempOutputDir,
-                                    String.format(Locale.ROOT, "page_%d.pdf", pageNum));
-
-                    if (shouldOcr) {
-                        // Convert page to image
-                        BufferedImage image;
-
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
-                        if (applicationProperties != null
-                                && applicationProperties.getSystem() != null) {
-                            renderDpi = applicationProperties.getSystem().getMaxDPI();
-                        }
-                        final int dpi = renderDpi;
-                        final int currentPageNum = pageNum;
-
-                        image =
-                                ExceptionUtils.handleOomRendering(
-                                        currentPageNum + 1,
-                                        dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
-                        File imagePath =
-                                new File(
-                                        tempImagesDir,
-                                        String.format(Locale.ROOT, "page_%d.png", pageNum));
-                        ImageIO.write(image, "png", imagePath);
-
-                        // Build OCR command
-                        List<String> command = new ArrayList<>();
-                        command.add("tesseract");
-                        command.add(imagePath.toString());
-                        command.add(
-                                new File(
-                                                tempOutputDir,
-                                                String.format(Locale.ROOT, "page_%d", pageNum))
-                                        .toString());
-                        command.add("-l");
-                        command.add(String.join("+", selectedLanguages));
-                        command.add("pdf"); // Always output PDF
-
-                        ProcessExecutorResult result =
-                                ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
-                                        .runCommandWithOutputHandling(command);
-
-                        if (result.getRc() != 0) {
-                            throw ExceptionUtils.createRuntimeException(
-                                    "error.commandFailed",
-                                    "{0} command failed with exit code: {1}",
-                                    null,
-                                    "Tesseract",
-                                    result.getRc());
-                        }
-
-                        // Add OCR'd PDF to merger
-                        merger.addSource(pageOutputPath);
-                    } else {
-                        // Save original page without OCR
-                        try (PDDocument pageDoc = new PDDocument()) {
-                            pageDoc.addPage(page);
-                            pageDoc.save(pageOutputPath);
-                            merger.addSource(pageOutputPath);
-                        }
-                    }
-                }
+                totalPages = document.getNumberOfPages();
             }
 
-            // Merge all pages into final PDF
-            merger.mergeDocuments(IOUtils.createTempFileOnlyStreamCache());
+            int configuredParallelism =
+                    Math.min(64, Math.max(2, Runtime.getRuntime().availableProcessors() * 2));
+            int desiredParallelism = Math.max(1, Math.min(totalPages, configuredParallelism));
+
+            try (ManagedForkJoinPool managedPool = new ManagedForkJoinPool(desiredParallelism);
+                    PdfThreadLocalResources renderingResources =
+                            new PdfThreadLocalResources(pdfDocumentFactory, tempInputFile)) {
+                ForkJoinPool customPool = managedPool.getPool();
+                final List<String> finalSelectedLanguages = selectedLanguages;
+                final String finalOcrType = ocrType;
+
+                List<Future<Path>> futures =
+                        customPool.invokeAll(
+                                IntStream.range(0, totalPages)
+                                        .mapToObj(
+                                                pageNum ->
+                                                        (java.util.concurrent.Callable<Path>)
+                                                                () ->
+                                                                        processPage(
+                                                                                pageNum,
+                                                                                renderingResources,
+                                                                                tempOutputDir,
+                                                                                tempImagesDir,
+                                                                                finalSelectedLanguages,
+                                                                                finalOcrType))
+                                        .toList());
+
+                PDFMergerUtility merger = new PDFMergerUtility();
+                merger.setDestinationFileName(finalOutputFile.toString());
+
+                for (Future<Path> future : futures) {
+                    Path pagePath = future.get();
+                    if (pagePath != null) {
+                        merger.addSource(pagePath.toFile());
+                    }
+                }
+
+                // Merge all pages into final PDF
+                merger.mergeDocuments(IOUtils.createTempFileOnlyStreamCache());
+            } catch (InterruptedException | ExecutionException e) {
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                throw ExceptionUtils.createFileProcessingException("OCR parallel processing", e);
+            }
 
             // Copy final output to the expected location
             Files.copy(
@@ -422,5 +380,85 @@ public class OCRController {
                     tempOutputFile,
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         }
+    }
+
+    private Path processPage(
+            int pageNum,
+            PdfThreadLocalResources renderingResources,
+            File tempOutputDir,
+            File tempImagesDir,
+            List<String> selectedLanguages,
+            String ocrType)
+            throws IOException, InterruptedException {
+        PDDocument document = renderingResources.getDocument();
+        PDPage page = document.getPage(pageNum);
+        boolean hasText;
+
+        // Check for existing text
+        try (PDDocument tempDoc = new PDDocument()) {
+            tempDoc.addPage(page);
+            PDFTextStripper stripper = new PDFTextStripper();
+            hasText = !stripper.getText(tempDoc).trim().isEmpty();
+        }
+
+        boolean shouldOcr =
+                switch (ocrType) {
+                    case "skip-text" -> !hasText;
+                    case "force-ocr" -> true;
+                    default -> true;
+                };
+
+        File pageOutputPath =
+                new File(tempOutputDir, String.format(Locale.ROOT, "page_%d.pdf", pageNum));
+
+        if (shouldOcr) {
+            // Convert page to image
+            BufferedImage image;
+
+            // Use global maximum DPI setting, fallback to 300 if not set
+            int renderDpi = 300; // Default fallback
+            if (applicationProperties != null && applicationProperties.getSystem() != null) {
+                renderDpi = applicationProperties.getSystem().getMaxDPI();
+            }
+            final int dpi = renderDpi;
+
+            image =
+                    ExceptionUtils.handleOomRendering(
+                            pageNum + 1, dpi, () -> renderingResources.renderPage(pageNum, dpi));
+            File imagePath =
+                    new File(tempImagesDir, String.format(Locale.ROOT, "page_%d.png", pageNum));
+            ImageIO.write(image, "png", imagePath);
+
+            // Build OCR command
+            List<String> command = new ArrayList<>();
+            command.add("tesseract");
+            command.add(imagePath.toString());
+            command.add(
+                    new File(tempOutputDir, String.format(Locale.ROOT, "page_%d", pageNum))
+                            .toString());
+            command.add("-l");
+            command.add(String.join("+", selectedLanguages));
+            command.add("pdf"); // Always output PDF
+
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
+                            .runCommandWithOutputHandling(command);
+
+            if (result.getRc() != 0) {
+                throw ExceptionUtils.createRuntimeException(
+                        "error.commandFailed",
+                        "{0} command failed with exit code: {1}",
+                        null,
+                        "Tesseract",
+                        result.getRc());
+            }
+        } else {
+            // Save original page without OCR
+            try (PDDocument pageDoc = new PDDocument()) {
+                pageDoc.addPage(page);
+                pageDoc.save(pageOutputPath);
+            }
+        }
+        return pageOutputPath.toPath();
     }
 }

@@ -8,20 +8,16 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -51,6 +47,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ManagedForkJoinPool;
+import stirling.software.common.util.PdfThreadLocalResources;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -481,7 +479,7 @@ public class ScannerEffectController {
 
     private static ProcessedPage processPage(
             int pageIndex,
-            RenderingResources renderingResources,
+            PdfThreadLocalResources renderingResources,
             int baseRotation,
             int rotateVariance,
             int borderPx,
@@ -492,7 +490,7 @@ public class ScannerEffectController {
             boolean yellowish,
             int renderResolution,
             ScannerEffectRequest.Colorspace colorspace)
-            throws ExceptionUtils.OutOfMemoryDpiException {
+            throws ExceptionUtils.OutOfMemoryDpiException, IOException {
 
         try {
             PDRectangle pageSize = renderingResources.getPageMediaBox(pageIndex);
@@ -543,17 +541,9 @@ public class ScannerEffectController {
                     applyAllEffectsSinglePass(blurred, brightness, contrast, yellowish, noise);
 
             softened.flush();
-            blurred.flush();
-
-            if (rotated != composed) {
-                rotated.flush();
-            }
             return new ProcessedPage(adjusted, origW, origH, offsetX, offsetY, drawW, drawH);
-        } catch (IOException e) {
-            throw ExceptionUtils.wrapException(
-                    e, "scanner effect processing for page " + (pageIndex + 1));
-        } catch (OutOfMemoryError | NegativeArraySizeException e) {
-            throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
+        } catch (Exception e) {
+            throw ExceptionUtils.createFileProcessingException("scanner effect processing", e);
         }
     }
 
@@ -597,13 +587,16 @@ public class ScannerEffectController {
             ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
 
             long inputFileSize = Files.size(processingInput);
+
+            // For small files, we can load once and share bytes.
+            // For larger files, we share the path and each thread opens it with
+            // RandomAccessReadBufferedFile
             byte[] renderingPdfBytes = null;
             if (inputFileSize <= RENDER_CLONE_IN_MEMORY_THRESHOLD) {
                 renderingPdfBytes = Files.readAllBytes(processingInput);
             }
 
             final byte[] sharedPdfBytes = renderingPdfBytes;
-            final Path sharedPdfPath = sharedPdfBytes == null ? processingInput : null;
 
             int maxSafeDpi = 500; // Default maximum safe DPI
             ApplicationProperties properties =
@@ -637,31 +630,16 @@ public class ScannerEffectController {
                         Math.min(64, Math.max(2, Runtime.getRuntime().availableProcessors() * 2));
                 int desiredParallelism = Math.max(1, Math.min(totalPages, configuredParallelism));
 
-                try (ManagedForkJoinPool managedPool =
-                        new ManagedForkJoinPool(desiredParallelism)) {
+                try (ManagedForkJoinPool managedPool = new ManagedForkJoinPool(desiredParallelism);
+                        PdfThreadLocalResources renderingResources =
+                                sharedPdfBytes != null
+                                        ? new PdfThreadLocalResources(
+                                                pdfDocumentFactory, sharedPdfBytes)
+                                        : new PdfThreadLocalResources(
+                                                pdfDocumentFactory, processingInput)) {
+
                     ForkJoinPool customPool = managedPool.getPool();
 
-                    Queue<RenderingResources> renderingResourcesToClose =
-                            new ConcurrentLinkedQueue<>();
-                    ThreadLocal<RenderingResources> renderingResources =
-                            ThreadLocal.withInitial(
-                                    () -> {
-                                        try {
-                                            RenderingResources resources =
-                                                    sharedPdfBytes != null
-                                                            ? RenderingResources.fromBytes(
-                                                                    pdfDocumentFactory,
-                                                                    sharedPdfBytes)
-                                                            : RenderingResources.fromPath(
-                                                                    pdfDocumentFactory,
-                                                                    sharedPdfPath);
-                                            renderingResourcesToClose.add(resources);
-                                            return resources;
-                                        } catch (IOException e) {
-                                            throw new UncheckedIOException(
-                                                    "Failed to prepare rendering resources", e);
-                                        }
-                                    });
                     List<ProcessedPage> processedPages;
                     try {
                         List<Callable<ProcessedPage>> tasks =
@@ -672,8 +650,7 @@ public class ScannerEffectController {
                                                                 () ->
                                                                         processPage(
                                                                                 i,
-                                                                                renderingResources
-                                                                                        .get(),
+                                                                                renderingResources,
                                                                                 baseRotation,
                                                                                 rotateVariance,
                                                                                 borderPx,
@@ -699,11 +676,6 @@ public class ScannerEffectController {
                         throw ExceptionUtils.createFileProcessingException(
                                 "scanner effect parallel page processing",
                                 new IOException("Processing failed", e.getCause()));
-                    } finally {
-                        renderingResources.remove();
-                        for (RenderingResources resources : renderingResourcesToClose) {
-                            resources.closeQuietly();
-                        }
                     }
 
                     writeProcessedPagesToDocument(processedPages, outputDocument);
@@ -727,49 +699,6 @@ public class ScannerEffectController {
         }
     }
 
-    private static final class RenderingResources implements AutoCloseable {
-        private final PDDocument document;
-        private final PDFRenderer renderer;
-
-        private RenderingResources(PDDocument document) {
-            this.document = document;
-            this.renderer = new PDFRenderer(document);
-            this.renderer.setSubsamplingAllowed(true);
-            this.renderer.setImageDownscalingOptimizationThreshold(0.5f);
-        }
-
-        static RenderingResources fromBytes(CustomPDFDocumentFactory factory, byte[] pdfBytes)
-                throws IOException {
-            return new RenderingResources(factory.load(pdfBytes, true));
-        }
-
-        static RenderingResources fromPath(CustomPDFDocumentFactory factory, Path pdfPath)
-                throws IOException {
-            return new RenderingResources(factory.load(pdfPath, true));
-        }
-
-        PDRectangle getPageMediaBox(int pageIndex) {
-            return document.getPage(pageIndex).getMediaBox();
-        }
-
-        BufferedImage renderPage(int pageIndex, int dpi) throws IOException {
-            return renderPageSafely(renderer, pageIndex, dpi);
-        }
-
-        @Override
-        public void close() throws IOException {
-            document.close();
-        }
-
-        void closeQuietly() {
-            try {
-                close();
-            } catch (IOException e) {
-                // Ignore close failure
-            }
-        }
-    }
-
     private static class BufferCache {
         int[] tempPixels = new int[0];
         int[] dstPixels = new int[0];
@@ -786,34 +715,6 @@ public class ScannerEffectController {
                 dstPixels = new int[requiredSize];
             }
             return dstPixels;
-        }
-    }
-
-    private static class ManagedForkJoinPool implements AutoCloseable {
-        private final ForkJoinPool pool;
-
-        ManagedForkJoinPool(int parallelism) {
-            this.pool = new ForkJoinPool(parallelism);
-        }
-
-        ForkJoinPool getPool() {
-            return pool;
-        }
-
-        @Override
-        public void close() {
-            pool.shutdown();
-            try {
-                if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                    pool.shutdownNow();
-                    if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                        log.warn("ForkJoinPool did not terminate within timeout");
-                    }
-                }
-            } catch (InterruptedException e) {
-                pool.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
         }
     }
 
