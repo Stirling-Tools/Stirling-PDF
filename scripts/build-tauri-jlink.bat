@@ -18,10 +18,15 @@ if errorlevel 1 (
 )
 
 echo ▶ Checking Java version...
+set "JAVA_VERSION_STRING="
 for /f "tokens=3" %%g in ('java -version 2^>^&1 ^| findstr /i "version"') do (
-    set JAVA_VERSION_STRING=%%g
+    set "JAVA_VERSION_STRING=%%g"
 )
-set JAVA_VERSION_STRING=%JAVA_VERSION_STRING:"=%
+if not defined JAVA_VERSION_STRING (
+    echo ❌ Unable to capture Java version string from "java -version"
+    exit /b 1
+)
+set "JAVA_VERSION_STRING=%JAVA_VERSION_STRING:"=%"
 set "JAVA_MAJOR_VERSION="
 set "JAVA_MINOR_VERSION=0"
 set "JAVA_EFFECTIVE_MAJOR="
