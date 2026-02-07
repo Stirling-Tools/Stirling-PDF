@@ -1114,6 +1114,7 @@ placeholder = "Select how to split the PDF"
 [split.methods.prefix]
 splitAt = "Split at"
 splitBy = "Split by"
+splitInto = "Split into"
 
 [split.methods.byPages]
 name = "Page Numbers"
@@ -1150,6 +1151,11 @@ name = "Page Divider"
 desc = "Auto-split with divider sheets"
 tooltip = "Use QR code divider sheets between documents when scanning"
 
+[split.methods.byPoster]
+name = "Printable Chunks"
+desc = "Split large pages into printable sizes"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.value.fileSize]
 label = "File Size"
 placeholder = "e.g. 10MB, 500KB"
@@ -1161,6 +1167,21 @@ placeholder = "e.g. 5, 10"
 [split.value.docCount]
 label = "Number of Files"
 placeholder = "e.g. 3, 5"
+
+[split.poster.pageSize]
+label = "Target Page Size"
+description = "Size of output pages for printing"
+
+[split.poster.xFactor]
+label = "Horizontal Divisions"
+description = "Number of columns to split each page into"
+
+[split.poster.yFactor]
+label = "Vertical Divisions"
+description = "Number of rows to split each page into"
+
+[split.poster.rightToLeft]
+label = "Split right-to-left"
 
 [split.tooltip.header]
 title = "Split Methods Overview"

@@ -45,6 +45,12 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
       formData.append("duplexMode", (parameters.duplexMode ?? false).toString());
       break;
+    case SPLIT_METHODS.BY_POSTER:
+      formData.append("pageSize", parameters.pageSize || 'A4');
+      formData.append("xFactor", parameters.xFactor || '2');
+      formData.append("yFactor", parameters.yFactor || '2');
+      formData.append("rightToLeft", (parameters.rightToLeft ?? false).toString());
+      break;
     default:
       throw new Error(`Unknown split method: ${parameters.method}`);
   }
@@ -66,6 +72,8 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
       return "/api/v1/general/split-pdf-by-chapters";
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
       return "/api/v1/misc/auto-split-pdf";
+    case SPLIT_METHODS.BY_POSTER:
+      return "/api/v1/general/split-pdf-by-poster";
     default:
       throw new Error(`Unknown split method: ${parameters.method}`);
   }

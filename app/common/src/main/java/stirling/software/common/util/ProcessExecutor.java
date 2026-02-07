@@ -114,6 +114,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getFfmpegSessionLimit();
+                                case MUTOOL -> 10; // Default session limit for mutool
                             };
 
                     long timeoutMinutes =
@@ -179,6 +180,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getFfmpegTimeoutMinutes();
+                                case MUTOOL -> 5L; // Default timeout for mutool (5 minutes)
                             };
                     return new ProcessExecutor(
                             processType, semaphoreLimit, liveUpdates, timeoutMinutes);
@@ -536,7 +538,8 @@ public class ProcessExecutor {
         GHOSTSCRIPT,
         OCR_MY_PDF,
         CFF_CONVERTER,
-        FFMPEG
+        FFMPEG,
+        MUTOOL
     }
 
     @Setter
