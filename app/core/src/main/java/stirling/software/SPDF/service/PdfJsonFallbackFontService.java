@@ -315,6 +315,7 @@ public class PdfJsonFallbackFontService {
             Pattern.compile(".*[_-]?[6-9]00(wght)?.*");
     private static final Pattern FONT_NAME_DELIMITER_PATTERN = Pattern.compile("[-_,+]");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    private static final Pattern PATTERN = Pattern.compile("^[A-Z]{6}\\+");
 
     private final ResourceLoader resourceLoader;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
@@ -425,8 +426,7 @@ public class PdfJsonFallbackFontService {
             String normalized =
                     WHITESPACE_PATTERN
                             .matcher(
-                                    originalFontName
-                                            .replaceAll("^[A-Z]{6}\\+", "") // Remove subset prefix
+                                    PATTERN.matcher(originalFontName).replaceAll("") // Remove subset prefix
                                             .toLowerCase())
                             .replaceAll(""); // Remove spaces (e.g. "Times New Roman" ->
             // "timesnewroman")
