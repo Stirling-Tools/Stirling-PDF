@@ -53,6 +53,7 @@ import { DocumentPermissionsAPIBridge } from '@app/components/viewer/DocumentPer
 import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
 import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentContext';
 import { absoluteWithBasePath } from '@app/constants/app';
+import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
 
 const DOCUMENT_NAME = 'stirling-pdf-viewer';
 
@@ -61,6 +62,7 @@ interface LocalEmbedPDFProps {
   url?: string | null;
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
+  enableFormFill?: boolean;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
@@ -70,7 +72,7 @@ interface LocalEmbedPDFProps {
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -106,7 +108,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: true,
+        withForms: !enableFormFill, // Disable native form rendering when our interactive overlay is active
         withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
@@ -179,7 +181,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, showBakedAnnotations]);
+  }, [pdfUrl, enableAnnotations, enableFormFill, showBakedAnnotations]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
@@ -705,6 +707,16 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                           <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
                           <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
+
+                          {/* FormFieldOverlay for interactive form filling */}
+                          {enableFormFill && (
+                            <FormFieldOverlay
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              pageWidth={width}
+                              pageHeight={height}
+                            />
+                          )}
 
                           {/* AnnotationLayer for annotation editing (only when enabled) */}
                           {enableAnnotations && (

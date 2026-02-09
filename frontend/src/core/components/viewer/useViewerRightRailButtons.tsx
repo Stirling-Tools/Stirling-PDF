@@ -13,6 +13,7 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { BASE_PATH, withBasePath } from '@app/constants/app';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
+import TextFieldsIcon from '@mui/icons-material/TextFields';
 
 export function useViewerRightRailButtons() {
   const { t, i18n } = useTranslation();
@@ -21,7 +22,7 @@ export function useViewerRightRailButtons() {
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
-  const { handleToolSelect } = useToolWorkflow();
+  const { handleToolSelect, handleBackToTools } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
@@ -76,6 +77,9 @@ export function useViewerRightRailButtons() {
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
+  const formFillLabel = t('rightRail.formFill', 'Fill Form');
+
+  const isFormFillActive = selectedTool === 'formFill';
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
@@ -240,6 +244,35 @@ export function useViewerRightRailButtons() {
           <ViewerAnnotationControls currentView="viewer" disabled={disabled} />
         )
       },
+      {
+        id: 'viewer-form-fill',
+        tooltip: formFillLabel,
+        ariaLabel: formFillLabel,
+        section: 'top' as const,
+        order: 62,
+        render: ({ disabled }) => (
+          <Tooltip content={formFillLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+            <ActionIcon
+              variant={isFormFillActive ? 'filled' : 'subtle'}
+              radius="md"
+              className="right-rail-icon"
+              onClick={() => {
+                if (disabled) return;
+                if (isFormFillActive) {
+                  handleBackToTools();
+                } else {
+                  handleToolSelect('formFill' as any);
+                }
+              }}
+              disabled={disabled}
+              aria-pressed={isFormFillActive}
+              color={isFormFillActive ? 'blue' : undefined}
+            >
+              <TextFieldsIcon sx={{ fontSize: '1.5rem' }} />
+            </ActionIcon>
+          </Tooltip>
+        )
+      },
     ];
 
     // Optional: Save button for annotations (always registered when this hook is used
@@ -267,6 +300,8 @@ export function useViewerRightRailButtons() {
     handleToolSelect,
     pendingCount,
     redactionActiveType,
+    formFillLabel,
+    isFormFillActive,
   ]);
 
   useRightRailButtons(viewerButtons);

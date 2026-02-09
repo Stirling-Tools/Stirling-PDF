@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -46,6 +47,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.FormFieldWithCoordinates;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -162,6 +164,503 @@ public class FormUtils {
                 });
 
         return Collections.unmodifiableList(fields);
+    }
+
+    /**
+     * Extract form fields with widget coordinates for the interactive form viewer.
+     *
+     * @param document PDF document
+     * @return List of form fields with coordinates and metadata
+     */
+    public List<FormFieldWithCoordinates> extractFormFieldsWithCoordinates(PDDocument document) {
+        if (document == null) return List.of();
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) return List.of();
+
+        List<FormFieldWithCoordinates> fields = new ArrayList<>();
+        Map<String, Integer> typeCounters = new HashMap<>();
+
+        for (PDField field : acroForm.getFieldTree()) {
+            if (!(field instanceof PDTerminalField terminalField)) {
+                continue;
+            }
+
+            String type = detectFieldType(terminalField);
+            String name =
+                    Optional.ofNullable(field.getFullyQualifiedName())
+                            .orElseGet(field::getPartialName);
+            if (name == null || name.isBlank()) {
+                continue;
+            }
+
+            String currentValue = safeValue(terminalField);
+            boolean required = field.isRequired();
+            boolean readOnly = field.isReadOnly();
+            List<String> options = resolveOptions(terminalField);
+            List<String> displayOptions = resolveDisplayOptions(terminalField);
+            String tooltip = resolveTooltip(terminalField);
+            int typeIndex = typeCounters.merge(type, 1, Integer::sum);
+            String displayLabel =
+                    deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
+            boolean multiSelect = resolveMultiSelect(terminalField);
+            boolean multiline =
+                    terminalField instanceof PDTextField
+                            && ((PDTextField) terminalField).isMultiline();
+
+            // Extract widget coordinates
+            List<FormFieldWithCoordinates.WidgetCoordinates> widgets =
+                    extractWidgetCoordinates(document, terminalField);
+
+            // Only include displayOptions when they differ from export options
+            List<String> displayOptsToSend = null;
+            if (displayOptions != null
+                    && !displayOptions.isEmpty()
+                    && !displayOptions.equals(options)) {
+                displayOptsToSend = displayOptions;
+            }
+
+            fields.add(
+                    FormFieldWithCoordinates.builder()
+                            .name(name)
+                            .label(displayLabel)
+                            .type(type)
+                            .value(currentValue)
+                            .options(options.isEmpty() ? null : options)
+                            .displayOptions(displayOptsToSend)
+                            .required(required)
+                            .readOnly(readOnly)
+                            .multiSelect(multiSelect)
+                            .multiline(multiline)
+                            .tooltip(tooltip)
+                            .widgets(widgets.isEmpty() ? null : widgets)
+                            .build());
+        }
+
+        // Sort by page and position
+        fields.sort(
+                (a, b) -> {
+                    // Get first widget page for each field
+                    int pageA =
+                            (a.getWidgets() != null && !a.getWidgets().isEmpty())
+                                    ? a.getWidgets().get(0).getPageIndex()
+                                    : -1;
+                    int pageB =
+                            (b.getWidgets() != null && !b.getWidgets().isEmpty())
+                                    ? b.getWidgets().get(0).getPageIndex()
+                                    : -1;
+
+                    int pageCompare = Integer.compare(pageA, pageB);
+                    if (pageCompare != 0) {
+                        return pageCompare;
+                    }
+
+                    // Sort by Y position (top to bottom in CSS space)
+                    float yA =
+                            (a.getWidgets() != null && !a.getWidgets().isEmpty())
+                                    ? a.getWidgets().get(0).getY()
+                                    : 0;
+                    float yB =
+                            (b.getWidgets() != null && !b.getWidgets().isEmpty())
+                                    ? b.getWidgets().get(0).getY()
+                                    : 0;
+
+                    // Fields on approximately the same line (within 10pt threshold)
+                    // should be sorted left-to-right by X position
+                    if (Math.abs(yA - yB) < 10.0f) {
+                        float xA =
+                                (a.getWidgets() != null && !a.getWidgets().isEmpty())
+                                        ? a.getWidgets().get(0).getX()
+                                        : 0;
+                        float xB =
+                                (b.getWidgets() != null && !b.getWidgets().isEmpty())
+                                        ? b.getWidgets().get(0).getX()
+                                        : 0;
+                        return Float.compare(xA, xB);
+                    }
+
+                    return Float.compare(yA, yB);
+                });
+
+        log.debug("Total fields processed: {}", fields.size());
+        log.debug(
+                "Fields WITH widgets: {}",
+                fields.stream()
+                        .filter(f -> f.getWidgets() != null && !f.getWidgets().isEmpty())
+                        .count());
+        log.debug(
+                "Fields WITHOUT widgets: {}",
+                fields.stream()
+                        .filter(f -> f.getWidgets() == null || f.getWidgets().isEmpty())
+                        .count());
+
+        fields.stream()
+                .filter(f -> f.getWidgets() == null || f.getWidgets().isEmpty())
+                .forEach(
+                        f ->
+                                log.debug(
+                                        "Field '{}' type={} has NO widget coordinates",
+                                        f.getName(),
+                                        f.getType()));
+
+        return Collections.unmodifiableList(fields);
+    }
+
+    /**
+     * Extract widget coordinates for a form field.
+     *
+     * @param document PDF document
+     * @param field Terminal field
+     * @return List of widget coordinates
+     */
+    private List<FormFieldWithCoordinates.WidgetCoordinates> extractWidgetCoordinates(
+            PDDocument document, PDTerminalField field) {
+        List<FormFieldWithCoordinates.WidgetCoordinates> result = new ArrayList<>();
+
+        List<PDAnnotationWidget> widgets = field.getWidgets();
+
+        log.debug(
+                "Field '{}' type={} has {} widgets",
+                field.getFullyQualifiedName(),
+                field.getClass().getSimpleName(),
+                widgets != null ? widgets.size() : 0);
+
+        if (widgets == null || widgets.isEmpty()) {
+            // Some fields (especially text fields) might be their own widget annotation
+            log.trace(
+                    "Field '{}' has no widgets, checking if field acts as its own annotation",
+                    field.getFullyQualifiedName());
+            try {
+                COSDictionary fieldDict = field.getCOSObject();
+                if (fieldDict.containsKey(COSName.RECT)) {
+                    int pageIndex = findPageIndexForAnnotation(document, fieldDict);
+                    if (pageIndex >= 0) {
+                        PDRectangle rectangle =
+                                new PDRectangle(
+                                        (COSArray) fieldDict.getDictionaryObject(COSName.RECT));
+                        result.add(
+                                createWidgetCoordinates(
+                                        document, rectangle, pageIndex, null, field));
+                    } else {
+                        log.warn(
+                                "Found rectangle for field '{}' but could not resolve page index",
+                                field.getFullyQualifiedName());
+                    }
+                }
+            } catch (Exception e) {
+                log.debug(
+                        "Could not extract direct rectangle for field '{}': {}",
+                        field.getFullyQualifiedName(),
+                        e.getMessage());
+            }
+            return result;
+        }
+
+        // For radio buttons, pre-resolve export values per widget
+        List<String> exportValues = null;
+        if (field instanceof PDRadioButton radio) {
+            exportValues = radio.getExportValues();
+        }
+
+        for (int i = 0; i < widgets.size(); i++) {
+            PDAnnotationWidget widget = widgets.get(i);
+            try {
+                PDRectangle rectangle = widget.getRectangle();
+                if (rectangle == null) {
+                    log.warn(
+                            "Field '{}' widget {} has NULL rectangle",
+                            field.getFullyQualifiedName(),
+                            i);
+                    continue;
+                }
+
+                int pageIndex = resolveWidgetPageIndex(document, widget);
+                if (pageIndex < 0) {
+                    log.warn(
+                            "Field '{}' widget {} could not resolve page index",
+                            field.getFullyQualifiedName(),
+                            i);
+                    continue;
+                }
+
+                // Resolve export value for radio/checkbox widgets
+                String exportValue = null;
+                if (exportValues != null && i < exportValues.size()) {
+                    exportValue = exportValues.get(i);
+                } else if (field instanceof PDButton) {
+                    // Fall back to appearance state name from the widget's normal appearance
+                    try {
+                        var ap = widget.getAppearance();
+                        if (ap != null && ap.getNormalAppearance() != null) {
+                            var normalAp = ap.getNormalAppearance();
+                            if (normalAp.isSubDictionary()) {
+                                for (var cosName : normalAp.getSubDictionary().keySet()) {
+                                    String key = cosName.getName();
+                                    if (!"Off".equals(key)) {
+                                        exportValue = key;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.trace(
+                                "Could not extract export value for widget in '{}': {}",
+                                field.getFullyQualifiedName(),
+                                e.getMessage());
+                    }
+                }
+
+                result.add(
+                        createWidgetCoordinates(
+                                document, rectangle, pageIndex, exportValue, field));
+            } catch (Exception e) {
+                log.debug(
+                        "Failed to extract coordinates for widget in field '{}': {}",
+                        field.getFullyQualifiedName(),
+                        e.getMessage());
+            }
+        }
+
+        return result;
+    }
+
+    private FormFieldWithCoordinates.WidgetCoordinates createWidgetCoordinates(
+            PDDocument document,
+            PDRectangle rectangle,
+            int pageIndex,
+            String exportValue,
+            PDTerminalField field) {
+        if (pageIndex < 0 || pageIndex >= document.getNumberOfPages()) {
+            return null;
+        }
+
+        PDPage page = document.getPage(pageIndex);
+        PDRectangle cropBox = page.getCropBox();
+        int rotation = page.getRotation();
+
+        // Use CropBox dimensions for the viewport/flip.
+        // Note: getWidth() and getHeight() return dimensions BEFORE rotation.
+        float cropWidth = cropBox.getWidth();
+        float cropHeight = cropBox.getHeight();
+
+        // Get absolute widget coordinates (in MediaBox space)
+        float pdfX = rectangle.getLowerLeftX();
+        float pdfY = rectangle.getLowerLeftY();
+        float width = rectangle.getWidth();
+        float height = rectangle.getHeight();
+
+        // Adjust relative to CropBox origin
+        float relativeX = pdfX - cropBox.getLowerLeftX();
+        float relativeY = pdfY - cropBox.getLowerLeftY();
+
+        float finalX, finalY, finalW, finalH;
+
+        // Handle rotation (standard PDF rotation is clockwise)
+        // The renderer usually swaps dimensions for 90/270
+        switch (rotation) {
+            case 90 -> {
+                // Rotated 90 deg clockwise:
+                // Top-left origin: X comes from relativeY, Y comes from (width - relativeX)
+                finalX = relativeY;
+                finalY = cropWidth - relativeX - width;
+                finalW = height;
+                finalH = width;
+            }
+            case 180 -> {
+                // Rotated upside down:
+                // Top-left origin: X comes from (width - relativeX), Y comes from relativeY
+                finalX = cropWidth - relativeX - width;
+                finalY = relativeY;
+                finalW = width;
+                finalH = height;
+            }
+            case 270 -> {
+                // Rotated 270 deg clockwise (or 90 deg counter-clockwise):
+                // Top-left origin: X comes from (height - relativeY), Y comes from relativeX
+                finalX = cropHeight - relativeY - height;
+                finalY = relativeX;
+                finalW = height;
+                finalH = width;
+            }
+            default -> {
+                // No rotation (or 0):
+                // Standard flip: Y = height - pdfY - widgetHeight
+                finalX = relativeX;
+                finalY = cropHeight - relativeY - height;
+                finalW = width;
+                finalH = height;
+            }
+        }
+
+        // Validate coordinates are within reasonable bounds
+        float checkHeight = (rotation == 90 || rotation == 270) ? cropWidth : cropHeight;
+        if (finalX < -1.0f
+                || finalY < -1.0f
+                || finalX > checkHeight * 2 // Allow some horizontal overflow
+                || finalY > checkHeight + 1.0f) {
+            log.warn(
+                    "Widget coordinates out of bounds for field '{}': page={}, x={}, y={}, w={}, h={}, rotation={}",
+                    field.getFullyQualifiedName(),
+                    pageIndex,
+                    finalX,
+                    finalY,
+                    finalW,
+                    finalH,
+                    rotation);
+            return null;
+        }
+
+        return FormFieldWithCoordinates.WidgetCoordinates.builder()
+                .pageIndex(pageIndex)
+                .x(finalX)
+                .y(finalY)
+                .width(finalW)
+                .height(finalH)
+                .exportValue(exportValue)
+                .fontSize(extractFontSize(field))
+                .build();
+    }
+
+    /**
+     * Repairs widgets with missing page references by scanning all pages and setting the /P entry
+     * for orphan widgets.
+     *
+     * <p>This should be called BEFORE extracting form field coordinates.
+     *
+     * @param document PDF document to repair
+     */
+    public void repairMissingWidgetPageReferences(PDDocument document) {
+        try {
+            PDAcroForm acroForm = getAcroFormSafely(document);
+            if (acroForm == null) {
+                return;
+            }
+
+            log.debug("Checking for widgets with missing page references...");
+            int repairedCount = 0;
+
+            // First pass: Set page reference for all annotations on pages
+            for (PDPage page : document.getPages()) {
+                try {
+                    for (PDAnnotation annotation : page.getAnnotations()) {
+                        if (annotation.getPage() == null) {
+                            annotation.setPage(page);
+                            log.debug(
+                                    "Set page reference for annotation: {}",
+                                    annotation.getSubtype());
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Error processing annotations on page: {}", e.getMessage());
+                }
+            }
+
+            // Second pass: Fix field widgets specifically
+            for (PDField field : acroForm.getFieldTree()) {
+                if (!(field instanceof PDTerminalField terminalField)) {
+                    continue;
+                }
+
+                List<PDAnnotationWidget> widgets = terminalField.getWidgets();
+
+                if (widgets == null || widgets.isEmpty()) {
+                    continue;
+                }
+
+                for (PDAnnotationWidget widget : widgets) {
+                    if (widget.getPage() == null) {
+                        // Try to find the page by searching through all pages
+                        PDPage foundPage = findPageForWidget(document, widget);
+                        if (foundPage != null) {
+                            widget.setPage(foundPage);
+                            repairedCount++;
+                            log.debug(
+                                    "Repaired widget for field '{}' - set page reference",
+                                    field.getFullyQualifiedName());
+                        } else {
+                            log.warn(
+                                    "Could not find page for widget in field '{}'",
+                                    field.getFullyQualifiedName());
+                        }
+                    }
+                }
+            }
+
+            if (repairedCount > 0) {
+                log.debug(
+                        "Successfully repaired {} widgets with missing page references",
+                        repairedCount);
+            } else {
+                log.debug("No widgets needed repair");
+            }
+
+        } catch (Exception e) {
+            log.error("Error repairing widget page references: {}", e.getMessage(), e);
+        }
+    }
+
+    /** Finds which page contains a specific widget annotation by scanning all pages. */
+    private PDPage findPageForWidget(PDDocument document, PDAnnotationWidget widget) {
+        COSDictionary widgetDict = widget.getCOSObject();
+
+        try {
+            // Check if widget has a /P entry that PDFBox isn't reading
+            COSBase base = widgetDict.getDictionaryObject(COSName.P);
+            COSDictionary pageDict = (base instanceof COSDictionary c) ? c : null;
+            if (pageDict != null) {
+                // Find the page by comparing COS objects
+                for (PDPage page : document.getPages()) {
+                    if (page.getCOSObject() == pageDict) {
+                        return page;
+                    }
+                }
+            }
+
+            // Fallback: Search through all page annotations
+            for (PDPage page : document.getPages()) {
+                for (PDAnnotation annotation : page.getAnnotations()) {
+                    if (annotation.getCOSObject() == widgetDict) {
+                        return page;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.trace("Error finding page for widget: {}", e.getMessage());
+        }
+
+        return null;
+    }
+
+    private int findPageIndexForAnnotation(PDDocument document, COSDictionary annotDict) {
+        try {
+            // Method 1: Check the /P entry if it points to a page
+            COSBase base = annotDict.getDictionaryObject(COSName.P);
+            COSDictionary pageDict = (base instanceof COSDictionary c) ? c : null;
+            if (pageDict != null) {
+                for (int i = 0; i < document.getNumberOfPages(); i++) {
+                    if (document.getPage(i).getCOSObject() == pageDict) {
+                        return i;
+                    }
+                }
+            }
+
+            // Method 2: Fallback search through all pages' annotations
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                PDPage page = document.getPage(i);
+                List<PDAnnotation> annotations = page.getAnnotations();
+                if (annotations != null) {
+                    for (PDAnnotation annot : annotations) {
+                        if (annot != null && annot.getCOSObject() == annotDict) {
+                            return i;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.trace("Error finding page for annotation: {}", e.getMessage());
+        }
+        return -1;
     }
 
     /**
@@ -312,7 +811,24 @@ public class FormUtils {
             return;
         }
 
-        flattenViaRendering(document, acroForm);
+        if (acroForm == null) {
+            return;
+        }
+
+        // Use PDFBox's built-in field flattening which bakes form field values
+        // into the page content stream as static text/graphics, removing the
+        // interactive form structure but preserving all other document content
+        // (images, text, annotations, etc.) at full quality.
+        try {
+            ensureAppearances(acroForm);
+            acroForm.flatten();
+        } catch (Exception e) {
+            log.warn(
+                    "PDFBox acroForm.flatten() failed, falling back to rendering: {}",
+                    e.getMessage(),
+                    e);
+            flattenViaRendering(document, acroForm);
+        }
     }
 
     private void rebuildDocumentFromImages(PDDocument document, PDFRenderer renderer, int dpi)
@@ -833,13 +1349,16 @@ public class FormUtils {
     List<String> resolveOptions(PDTerminalField field) {
         try {
             if (field instanceof PDChoice choice) {
-                List<String> display = choice.getOptionsDisplayValues();
-                if (display != null && !display.isEmpty()) {
-                    return new ArrayList<>(display);
-                }
+                // Use export values as they match getValueAsString() / setValue()
                 List<String> exportValues = choice.getOptionsExportValues();
+                List<String> displayValues = choice.getOptionsDisplayValues();
+
                 if (exportValues != null && !exportValues.isEmpty()) {
                     return new ArrayList<>(exportValues);
+                }
+                // Fall back to display values if no export values
+                if (displayValues != null && !displayValues.isEmpty()) {
+                    return new ArrayList<>(displayValues);
                 }
             } else if (field instanceof PDRadioButton radio) {
                 List<String> exports = radio.getExportValues();
@@ -861,6 +1380,29 @@ public class FormUtils {
         return Collections.emptyList();
     }
 
+    /**
+     * Returns the display-value labels for a choice field's options. For radio / checkbox this
+     * returns an empty list (no separate display values). For PDChoice fields, if the PDF provides
+     * distinct display values, those are returned; otherwise an empty list (indicating that the
+     * export values from {@link #resolveOptions} should be shown directly).
+     */
+    List<String> resolveDisplayOptions(PDTerminalField field) {
+        try {
+            if (field instanceof PDChoice choice) {
+                List<String> display = choice.getOptionsDisplayValues();
+                if (display != null && !display.isEmpty()) {
+                    return new ArrayList<>(display);
+                }
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to resolve display options for field '{}': {}",
+                    field.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+        return Collections.emptyList();
+    }
+
     private boolean resolveMultiSelect(PDTerminalField field) {
         if (field instanceof PDListBox listBox) {
             try {
@@ -873,6 +1415,44 @@ public class FormUtils {
             }
         }
         return false;
+    }
+
+    private Float extractFontSize(PDTerminalField field) {
+        try {
+            String da = null;
+            if (field instanceof PDVariableText vt) {
+                da = vt.getDefaultAppearance();
+            }
+
+            if (da == null || da.isBlank()) {
+                // Check parent/acroform default appearance if field's is missing
+                PDAcroForm form = field.getAcroForm();
+                if (form != null) {
+                    da = form.getDefaultAppearance();
+                }
+            }
+
+            if (da != null && !da.isBlank()) {
+                // Standard DA looks like: /Helv 12 Tf 0 g
+                // We want the number before 'Tf'
+                String[] tokens = da.split("\\s+");
+                for (int i = 0; i < tokens.length; i++) {
+                    if ("Tf".equals(tokens[i]) && i > 0) {
+                        try {
+                            float size = Float.parseFloat(tokens[i - 1]);
+                            return size > 0 ? size : null;
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.trace(
+                    "Could not extract font size for field '{}': {}",
+                    field.getFullyQualifiedName(),
+                    e.getMessage());
+        }
+        return null;
     }
 
     private boolean isSettableCheckBoxState(String state) {
@@ -951,6 +1531,13 @@ public class FormUtils {
         String simplified = patterns.getPunctuationPattern().matcher(value).replaceAll(" ").trim();
 
         if (simplified.isEmpty()) return true;
+
+        // Detect UUID-like hex strings (e.g. "cdc47b7041524571 7b2d93017fe77bf7")
+        // Standard UUIDs are 32 hex characters; require at least that to avoid
+        // false positives on short hex-like field names.
+        String nospaces = simplified.replaceAll("\\s+", "");
+        if (nospaces.length() >= 32 && nospaces.matches("^[0-9a-fA-F]{8}[0-9a-fA-F]{24,}$"))
+            return true;
 
         return patterns.getGenericFieldNamePattern().matcher(simplified).matches()
                 || patterns.getSimpleFormFieldPattern().matcher(simplified).matches()
@@ -1267,14 +1854,18 @@ public class FormUtils {
             log.debug("Widget page lookup failed: {}", e.getMessage());
         }
 
+        // Try searching all pages by comparing COS objects for robustness
         int pageCount = document.getNumberOfPages();
+        COSDictionary widgetDict = widget.getCOSObject();
         for (int i = 0; i < pageCount; i++) {
             try {
                 PDPage candidate = document.getPage(i);
                 List<PDAnnotation> annotations = candidate.getAnnotations();
-                for (PDAnnotation annotation : annotations) {
-                    if (annotation == widget) {
-                        return i;
+                if (annotations != null) {
+                    for (PDAnnotation annot : annotations) {
+                        if (annot != null && annot.getCOSObject() == widgetDict) {
+                            return i;
+                        }
                     }
                 }
             } catch (IOException e) {
