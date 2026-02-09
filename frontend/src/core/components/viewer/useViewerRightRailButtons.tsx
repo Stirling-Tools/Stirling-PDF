@@ -79,7 +79,7 @@ export function useViewerRightRailButtons() {
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
   const formFillLabel = t('rightRail.formFill', 'Fill Form');
 
-  const isFormFillActive = selectedTool === 'formFill';
+  const isFormFillActive = (selectedTool as string) === 'formFill';
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
