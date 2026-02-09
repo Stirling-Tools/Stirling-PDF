@@ -21,9 +21,8 @@ import {
   ActionIcon,
   Paper,
 } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useFormFill } from './FormFillContext';
-import type { FormField, FormFieldType } from './types';
+import { useFormFill } from '@proprietary/tools/formFill/FormFillContext';
+import type { FormField, FormFieldType } from '@proprietary/tools/formFill/types';
 import CloseIcon from '@mui/icons-material/Close';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
@@ -222,7 +221,6 @@ export function FormFieldSidebar({
   visible,
   onToggle,
 }: FormFieldSidebarProps) {
-  const { t } = useTranslation();
   const { state, setValue, setActiveField } = useFormFill();
   const { fields, values, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);

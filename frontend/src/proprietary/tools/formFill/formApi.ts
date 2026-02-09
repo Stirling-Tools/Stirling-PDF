@@ -2,7 +2,7 @@
  * API service for form-related backend calls.
  */
 import apiClient from '@app/services/apiClient';
-import type { FormField } from './types';
+import type { FormField } from '@proprietary/tools/formFill/types';
 
 /**
  * Fetch form fields with coordinates from the backend.

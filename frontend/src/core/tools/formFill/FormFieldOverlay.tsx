@@ -3,7 +3,6 @@
  * This file is overridden in src/proprietary/tools/formFill/FormFieldOverlay.tsx
  * when building the proprietary variant.
  */
-import React from 'react';
 
 interface FormFieldOverlayProps {
   documentId: string;
