@@ -17,7 +17,7 @@ import React, {
   useState,
 } from 'react';
 import { useDebouncedCallback } from '@mantine/hooks';
-import type { FormField, FormFillState } from '@proprietary/tools/formFill/types';
+import type { FormField, FormFillState, WidgetCoordinates } from '@proprietary/tools/formFill/types';
 import {
   fetchFormFieldsWithCoordinates,
   fillFormFields,
@@ -225,7 +225,7 @@ export function FormFillProvider({
   const getFieldsForPage = useCallback(
     (pageIndex: number) =>
       fieldsRef.current.filter((f) =>
-        f.widgets?.some((w) => w.pageIndex === pageIndex)
+        f.widgets?.some((w: WidgetCoordinates) => w.pageIndex === pageIndex)
       ),
     []
   );
