@@ -799,6 +799,11 @@ tags = "fix,restore,repair,fix PDF,fix broken,fix corrupt,repair PDF,repair corr
 title = "Repair"
 desc = "Tries to repair a corrupt/broken PDF"
 
+[home.formFill]
+tags = "form,fill,fillable,input,field,acroform"
+title = "Fill Form"
+desc = "Fill PDF form fields interactively with a visual editor"
+
 [home.removeBlanks]
 tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Remove Blank pages"
@@ -4234,6 +4239,7 @@ zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
 [rightRail]
+formFill = "Fill Form"
 closeSelected = "Close Selected Files"
 selectAll = "Select All"
 deselectAll = "Deselect All"
