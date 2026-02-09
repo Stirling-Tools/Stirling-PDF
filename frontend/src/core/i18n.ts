@@ -79,7 +79,7 @@ i18n
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
-      caches: ['localStorage'],
+      caches: [], // Don't cache auto-detected language - only cache when user manually selects
       convertDetectedLanguage: (lng: string) => {
         // Map en and en-US to en-GB
         if (lng === 'en' || lng === 'en-US') return 'en-GB';
@@ -179,9 +179,11 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
   const currentLang = normalizeLanguageCode(i18n.language || '');
   if (currentLang && !validLanguages.includes(currentLang)) {
     i18n.changeLanguage(fallback);
+    localStorage.setItem('i18nextLng', fallback);
   } else if (validDefault && !localStorage.getItem('i18nextLng')) {
     // User has no saved preference - apply server default
     i18n.changeLanguage(validDefault);
+    localStorage.setItem('i18nextLng', validDefault);
   }
 }
 
@@ -190,26 +192,12 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
  * This respects the priority: user-selected language > defaultLocale > browser detection > fallback
  */
 function applyDefaultLocale(defaultLocale: string) {
-  const savedLng = localStorage.getItem('i18nextLng');
-
-  // Apply defaultLocale if:
-  // 1. No saved preference exists, OR
-  // 2. Saved preference matches browser language (auto-detected, not user-selected)
-  if (!savedLng) {
+  // Only apply if user has no saved preference
+  // Since we disabled auto-caching of detected languages, localStorage will only
+  // contain a value if the user manually selected a language
+  if (!localStorage.getItem('i18nextLng')) {
     i18n.changeLanguage(defaultLocale);
-    return;
-  }
-
-  // Check if saved language matches browser's navigator language
-  // If it does, it was likely auto-detected rather than user-selected
-  const browserLang = navigator.language || (navigator as any).userLanguage;
-  const normalizedBrowserLang = normalizeLanguageCode(browserLang);
-  const normalizedSavedLng = normalizeLanguageCode(savedLng);
-
-  // If saved language matches browser language, it was auto-detected
-  // Override it with server's defaultLocale
-  if (normalizedSavedLng === normalizedBrowserLang) {
-    i18n.changeLanguage(defaultLocale);
+    localStorage.setItem('i18nextLng', defaultLocale);
   }
 }
 

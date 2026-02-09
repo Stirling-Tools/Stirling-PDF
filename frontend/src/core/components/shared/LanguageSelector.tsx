@@ -207,6 +207,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     // Simulate processing time for smooth transition
     setTimeout(() => {
       i18n.changeLanguage(value);
+      // Manually save to localStorage since we disabled auto-caching of detected languages
+      // This ensures user-selected languages persist across sessions
+      localStorage.setItem('i18nextLng', value);
 
       setTimeout(() => {
         setPendingLanguage(null);
