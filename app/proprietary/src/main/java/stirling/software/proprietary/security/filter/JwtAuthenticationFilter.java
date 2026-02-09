@@ -69,27 +69,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (!apiKeyExists(request, response)) {
             String jwtToken = jwtService.extractToken(request);
 
-            if (jwtToken == null) {
-                // Allow auth endpoints to pass through without JWT
-                if (!isPublicAuthEndpoint(requestURI, contextPath)) {
-                    // For API requests, return 401 JSON
-                    String acceptHeader = request.getHeader("Accept");
-                    if (requestURI.startsWith(contextPath + "/api/")
-                            || (acceptHeader != null
-                                    && acceptHeader.contains("application/json"))) {
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.setContentType("application/json");
-                        response.getWriter().write("{\"error\":\"Authentication required\"}");
-                        return;
-                    }
+            // Check if this is a public endpoint BEFORE validating JWT
+            // This allows public endpoints to work even with expired tokens in the request
+            if (isPublicAuthEndpoint(requestURI, contextPath)) {
+                // For public auth endpoints, skip JWT validation and continue
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-                    // For HTML requests (SPA routes), let React Router handle it (serve
-                    // index.html)
-                    filterChain.doFilter(request, response);
+            if (jwtToken == null) {
+                // No JWT token and not a public endpoint
+                // For API requests, return 401 JSON
+                String acceptHeader = request.getHeader("Accept");
+                if (requestURI.startsWith(contextPath + "/api/")
+                        || (acceptHeader != null
+                                && acceptHeader.contains("application/json"))) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Authentication required\"}");
                     return;
                 }
 
-                // For public auth endpoints without JWT, continue to the endpoint
+                // For HTML requests (SPA routes), let React Router handle it (serve
+                // index.html)
                 filterChain.doFilter(request, response);
                 return;
             }

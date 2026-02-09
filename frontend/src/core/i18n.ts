@@ -187,11 +187,28 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
 
 /**
  * Apply server default locale when user has no saved language preference
- * This respects the priority: localStorage > defaultLocale > browser detection > fallback
+ * This respects the priority: user-selected language > defaultLocale > browser detection > fallback
  */
 function applyDefaultLocale(defaultLocale: string) {
-  // Only apply if user has no saved preference
-  if (!localStorage.getItem('i18nextLng')) {
+  const savedLng = localStorage.getItem('i18nextLng');
+
+  // Apply defaultLocale if:
+  // 1. No saved preference exists, OR
+  // 2. Saved preference matches browser language (auto-detected, not user-selected)
+  if (!savedLng) {
+    i18n.changeLanguage(defaultLocale);
+    return;
+  }
+
+  // Check if saved language matches browser's navigator language
+  // If it does, it was likely auto-detected rather than user-selected
+  const browserLang = navigator.language || (navigator as any).userLanguage;
+  const normalizedBrowserLang = normalizeLanguageCode(browserLang);
+  const normalizedSavedLng = normalizeLanguageCode(savedLng);
+
+  // If saved language matches browser language, it was auto-detected
+  // Override it with server's defaultLocale
+  if (normalizedSavedLng === normalizedBrowserLang) {
     i18n.changeLanguage(defaultLocale);
   }
 }
