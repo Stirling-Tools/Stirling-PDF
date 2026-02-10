@@ -245,7 +245,7 @@ function FieldInput({
 }
 
 const FormFill = (_props: BaseToolProps) => {
-  const { selectedTool, workbench } = useNavigation();
+  const { selectedTool } = useNavigation();
   const { selectors, state: fileState } = useFileState();
   const { actions } = useFileActions();
 
@@ -264,7 +264,6 @@ const FormFill = (_props: BaseToolProps) => {
   const [flatten, setFlatten] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const hasFetched = useRef(false);
   const activeFieldRef = useRef<HTMLDivElement>(null);
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
@@ -284,21 +283,6 @@ const FormFill = (_props: BaseToolProps) => {
 
   const isActive = selectedTool === 'formFill';
 
-  useEffect(() => {
-    if (
-      selectedTool === 'formFill' &&
-      workbench === 'viewer' &&
-      currentFile &&
-      !hasFetched.current
-    ) {
-      hasFetched.current = true;
-      fetchFields(currentFile);
-    }
-  }, [selectedTool, workbench, currentFile, fetchFields]);
-
-  useEffect(() => {
-    hasFetched.current = false;
-  }, [currentFile]);
   useEffect(() => {
     if (formState.activeFieldName && activeFieldRef.current) {
       activeFieldRef.current.scrollIntoView({
@@ -335,8 +319,6 @@ const FormFill = (_props: BaseToolProps) => {
         [filledFile], parentStub, 'formFill' as any
       );
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
-
-      hasFetched.current = false;
     } catch (err: any) {
       const message = err?.response?.status === 413
         ? 'File too large. Try reducing the PDF size first.'
@@ -375,10 +357,12 @@ const FormFill = (_props: BaseToolProps) => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [formState.isDirty]);
 
-  // Handle refresh
+  // Handle refresh / re-scan: pass the correct fileId so FormFieldOverlay's
+  // stale-file guard doesn't hide overlays after the re-fetch completes.
   const handleRefresh = useCallback(() => {
-    if (currentFile) {
-      hasFetched.current = false;
+    if (currentFile && isStirlingFile(currentFile)) {
+      fetchFields(currentFile, currentFile.fileId);
+    } else if (currentFile) {
       fetchFields(currentFile);
     }
   }, [currentFile, fetchFields]);

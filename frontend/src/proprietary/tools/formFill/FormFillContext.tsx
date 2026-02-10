@@ -279,9 +279,10 @@ export function FormFillProvider({
   /** Override the initial provider. If not given, defaults to pdf-lib. */
   provider?: IFormDataProvider;
 }) {
-  const [providerMode, setProviderModeState] = useState<'pdflib' | 'pdfbox'>(
-    providerProp?.name === 'pdfbox' ? 'pdfbox' : 'pdflib'
-  );
+  const initialMode = providerProp?.name === 'pdfbox' ? 'pdfbox' : 'pdflib';
+  const [providerMode, setProviderModeState] = useState<'pdflib' | 'pdfbox'>(initialMode);
+  const providerModeRef = useRef(initialMode as 'pdflib' | 'pdfbox');
+  providerModeRef.current = providerMode;
   const provider = providerProp ?? (providerMode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider);
   const providerRef = useRef(provider);
   providerRef.current = provider;
@@ -304,9 +305,10 @@ export function FormFillProvider({
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
     // Increment version so any in-flight fetch for a previous file is discarded.
-    // NOTE: This is the ONLY place the version is incremented for a fetch cycle.
-    // Do NOT call reset() before fetchFields() — that double-increments the counter
-    // and causes version mismatches when the effect re-fires before the fetch completes.
+    // NOTE: setProviderMode() also increments fetchVersionRef to invalidate
+    // in-flight fetches when switching providers. This is intentional — the
+    // fetch started here captures the NEW version, so stale results are
+    // correctly discarded.
     const version = ++fetchVersionRef.current;
 
     // Immediately clear previous state so FormFieldOverlay's stale-file guards
@@ -398,16 +400,22 @@ export function FormFillProvider({
 
   const setProviderMode = useCallback(
     (mode: 'pdflib' | 'pdfbox') => {
-      setProviderModeState((prev) => {
-        if (prev === mode) return prev;
-        // Invalidate in-flight fetches and reset form state when switching providers
-        fetchVersionRef.current++;
-        forFileIdRef.current = null;
-        setForFileId(null);
-        valuesStore.reset({});
-        dispatch({ type: 'RESET' });
-        return mode;
-      });
+      // Use the ref to check the current mode synchronously — avoids
+      // relying on stale closure state and allows the early return.
+      if (providerModeRef.current === mode) return;
+
+      // provider (pdfbox vs pdflib).
+      const newProvider = mode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider;
+      providerRef.current = newProvider;
+      providerModeRef.current = mode;
+
+      fetchVersionRef.current++;
+      forFileIdRef.current = null;
+      setForFileId(null);
+      valuesStore.reset({});
+      dispatch({ type: 'RESET' });
+
+      setProviderModeState(mode);
     },
     [valuesStore]
   );
