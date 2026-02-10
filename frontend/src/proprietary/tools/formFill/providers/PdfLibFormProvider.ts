@@ -405,6 +405,7 @@ export class PdfLibFormProvider implements IFormDataProvider {
     const doc = await PDFDocument.load(arrayBuffer, {
       ignoreEncryption: true,
       updateMetadata: false,
+      throwOnInvalidObject: false,
     });
 
     let form: PDFForm;
@@ -457,6 +458,7 @@ export class PdfLibFormProvider implements IFormDataProvider {
     const arrayBuffer = await readAsArrayBuffer(file);
     const doc = await PDFDocument.load(arrayBuffer, {
       ignoreEncryption: true,
+      throwOnInvalidObject: false,
     });
 
     const form = doc.getForm();

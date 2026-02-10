@@ -319,17 +319,8 @@ export function FormFieldOverlay({
   const { setValue, setActiveField, fieldsByPage, state, forFileId } = useFormFill();
   const { activeFieldName, validationErrors } = state;
 
-  // Guard: don't render fields from a previous document.
-  // If fileId is provided and doesn't match what the context fetched for, render nothing.
-  if (fileId != null && forFileId != null && fileId !== forFileId) {
-    return null;
-  }
-  // Also guard: if fields exist but no forFileId is set (reset happened), don't render stale fields
-  if (fileId != null && forFileId == null && state.fields.length > 0) {
-    return null;
-  }
-
   // Get scale from EmbedPDF document state — same pattern as LinkLayer
+  // NOTE: All hooks must be called unconditionally (before any early returns)
   const documentState = useDocumentState(documentId);
 
   const { scaleX, scaleY } = useMemo(() => {
@@ -361,6 +352,16 @@ export function FormFieldOverlay({
     (fieldName: string, value: string) => setValue(fieldName, value),
     [setValue]
   );
+
+  // Guard: don't render fields from a previous document.
+  // If fileId is provided and doesn't match what the context fetched for, render nothing.
+  if (fileId != null && forFileId != null && fileId !== forFileId) {
+    return null;
+  }
+  // Also guard: if fields exist but no forFileId is set (reset happened), don't render stale fields
+  if (fileId != null && forFileId == null && state.fields.length > 0) {
+    return null;
+  }
 
   if (pageFields.length === 0) return null;
 

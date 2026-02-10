@@ -205,10 +205,6 @@ export const mantineTheme = createTheme({
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
           color: 'var(--text-primary)',
-          '&:focus': {
-            borderColor: 'var(--color-primary-500)',
-            boxShadow: '0 0 0 1px var(--color-primary-500)',
-          },
         },
         label: {
           color: 'var(--text-secondary)',
@@ -221,13 +217,6 @@ export const mantineTheme = createTheme({
         },
         option: {
           color: 'var(--text-primary)',
-          '&[dataHovered]': {
-            backgroundColor: 'var(--hover-bg)',
-          },
-          '&[dataSelected]': {
-            backgroundColor: 'var(--color-primary-100)',
-            color: 'var(--color-primary-900)',
-          },
         },
       },
     },
@@ -238,10 +227,6 @@ export const mantineTheme = createTheme({
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
           color: 'var(--text-primary)',
-          '&:focus': {
-            borderColor: 'var(--color-primary-500)',
-            boxShadow: '0 0 0 1px var(--color-primary-500)',
-          },
         },
         label: {
           color: 'var(--text-secondary)',
@@ -254,13 +239,6 @@ export const mantineTheme = createTheme({
         },
         option: {
           color: 'var(--text-primary)',
-          '&[data-hovered]': {
-            backgroundColor: 'var(--hover-bg)',
-          },
-          '&[data-selected]': {
-            backgroundColor: 'var(--color-primary-100)',
-            color: 'var(--color-primary-900)',
-          },
         },
       },
     },
@@ -356,7 +334,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '[dataActive]': {
+          '&[dataActive]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',

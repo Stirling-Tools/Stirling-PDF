@@ -303,8 +303,18 @@ export function FormFillProvider({
   const [valuesStore] = useState(() => new FormValuesStore());
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
-    // Increment version so any in-flight fetch for a previous file is discarded
+    // Increment version so any in-flight fetch for a previous file is discarded.
+    // NOTE: This is the ONLY place the version is incremented for a fetch cycle.
+    // Do NOT call reset() before fetchFields() — that double-increments the counter
+    // and causes version mismatches when the effect re-fires before the fetch completes.
     const version = ++fetchVersionRef.current;
+
+    // Immediately clear previous state so FormFieldOverlay's stale-file guards
+    // prevent rendering fields from a previous document during the fetch.
+    forFileIdRef.current = null;
+    setForFileId(null);
+    valuesStore.reset({});
+    dispatch({ type: 'RESET' });
     dispatch({ type: 'FETCH_START' });
     try {
       const fields = await providerRef.current.fetchFields(file);

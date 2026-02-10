@@ -111,6 +111,8 @@ public class FormUtils {
         List<FormFieldInfo> fields = new ArrayList<>();
         Map<String, Integer> typeCounters = new HashMap<>();
         Map<Integer, Integer> pageOrderCounters = new HashMap<>();
+        Map<COSDictionary, Integer> annotationPageMap = buildAnnotationPageMap(document);
+
         for (PDField field : acroForm.getFieldTree()) {
             if (!(field instanceof PDTerminalField terminalField)) {
                 continue;
@@ -127,7 +129,7 @@ public class FormUtils {
 
             String currentValue = safeValue(terminalField);
             boolean required = field.isRequired();
-            int pageIndex = resolveFirstWidgetPageIndex(document, terminalField);
+            int pageIndex = resolveFirstWidgetPageIndex(document, terminalField, annotationPageMap);
             List<String> options = resolveOptions(terminalField);
             String tooltip = resolveTooltip(terminalField);
             int typeIndex = typeCounters.merge(type, 1, Integer::sum);
@@ -181,6 +183,8 @@ public class FormUtils {
         List<FormFieldWithCoordinates> fields = new ArrayList<>();
         Map<String, Integer> typeCounters = new HashMap<>();
 
+        Map<COSDictionary, Integer> annotationPageMap = buildAnnotationPageMap(document);
+
         for (PDField field : acroForm.getFieldTree()) {
             if (!(field instanceof PDTerminalField terminalField)) {
                 continue;
@@ -210,7 +214,7 @@ public class FormUtils {
 
             // Extract widget coordinates
             List<FormFieldWithCoordinates.WidgetCoordinates> widgets =
-                    extractWidgetCoordinates(document, terminalField);
+                    extractWidgetCoordinates(document, terminalField, annotationPageMap);
 
             // Only include displayOptions when they differ from export options
             List<String> displayOptsToSend = null;
@@ -314,7 +318,9 @@ public class FormUtils {
      * @return List of widget coordinates
      */
     private List<FormFieldWithCoordinates.WidgetCoordinates> extractWidgetCoordinates(
-            PDDocument document, PDTerminalField field) {
+            PDDocument document,
+            PDTerminalField field,
+            Map<COSDictionary, Integer> annotationPageMap) {
         List<FormFieldWithCoordinates.WidgetCoordinates> result = new ArrayList<>();
 
         List<PDAnnotationWidget> widgets = field.getWidgets();
@@ -333,7 +339,8 @@ public class FormUtils {
             try {
                 COSDictionary fieldDict = field.getCOSObject();
                 if (fieldDict.containsKey(COSName.RECT)) {
-                    int pageIndex = findPageIndexForAnnotation(document, fieldDict);
+                    int pageIndex =
+                            findPageIndexForAnnotation(document, fieldDict, annotationPageMap);
                     if (pageIndex >= 0) {
                         PDRectangle rectangle =
                                 new PDRectangle(
@@ -374,7 +381,7 @@ public class FormUtils {
                     continue;
                 }
 
-                int pageIndex = resolveWidgetPageIndex(document, widget);
+                int pageIndex = resolveWidgetPageIndex(document, widget, annotationPageMap);
                 if (pageIndex < 0) {
                     log.warn(
                             "Field '{}' widget {} could not resolve page index",
@@ -507,6 +514,8 @@ public class FormUtils {
             log.debug("Checking for widgets with missing page references...");
             int repairedCount = 0;
 
+            Map<COSDictionary, Integer> annotationPageMap = buildAnnotationPageMap(document);
+
             // First pass: Set page reference for all annotations on pages
             for (PDPage page : document.getPages()) {
                 try {
@@ -537,13 +546,14 @@ public class FormUtils {
 
                 for (PDAnnotationWidget widget : widgets) {
                     if (widget.getPage() == null) {
-                        // Try to find the page by searching through all pages
-                        PDPage foundPage = findPageForWidget(document, widget);
-                        if (foundPage != null) {
+                        // Try to find the page by searching through our pre-built map
+                        Integer pageIndex = annotationPageMap.get(widget.getCOSObject());
+                        if (pageIndex != null && pageIndex >= 0) {
+                            PDPage foundPage = document.getPage(pageIndex);
                             widget.setPage(foundPage);
                             repairedCount++;
                             log.debug(
-                                    "Repaired widget for field '{}' - set page reference",
+                                    "Repaired widget for field '{}' - set page reference via map",
                                     field.getFullyQualifiedName());
                         } else {
                             log.warn(
@@ -599,8 +609,19 @@ public class FormUtils {
         return null;
     }
 
-    private int findPageIndexForAnnotation(PDDocument document, COSDictionary annotDict) {
+    private int findPageIndexForAnnotation(
+            PDDocument document,
+            COSDictionary annotDict,
+            Map<COSDictionary, Integer> annotationPageMap) {
         try {
+            // Method 0: Check the pre-built lookup map (fastest)
+            if (annotationPageMap != null) {
+                Integer idx = annotationPageMap.get(annotDict);
+                if (idx != null) {
+                    return idx;
+                }
+            }
+
             // Method 1: Check the /P entry if it points to a page
             COSBase base = annotDict.getDictionaryObject(COSName.P);
             COSDictionary pageDict = (base instanceof COSDictionary c) ? c : null;
@@ -868,7 +889,7 @@ public class FormUtils {
 
                 PDPage page = widget.getPage();
                 if (page == null) {
-                    page = resolveWidgetPage(document, widget);
+                    page = resolveWidgetPage(document, widget, null);
                     if (page != null) {
                         widget.setPage(page);
                     }
@@ -1561,7 +1582,7 @@ public class FormUtils {
 
             PDAnnotationWidget widget = widgets.get(0);
             PDRectangle originalRectangle = cloneRectangle(widget.getRectangle());
-            PDPage page = resolveWidgetPage(document, widget);
+            PDPage page = resolveWidgetPage(document, widget, null);
             if (page == null || originalRectangle == null) {
                 log.warn(
                         "Unable to resolve widget page or rectangle for '{}'; skipping",
@@ -1618,7 +1639,7 @@ public class FormUtils {
                             desiredName,
                             modification.label(),
                             resolvedType,
-                            determineWidgetPageIndex(document, widget),
+                            determineWidgetPageIndex(document, widget, null),
                             originalRectangle.getLowerLeftX(),
                             originalRectangle.getLowerLeftY(),
                             originalRectangle.getWidth(),
@@ -1759,59 +1780,43 @@ public class FormUtils {
         return null;
     }
 
-    private int resolveFirstWidgetPageIndex(PDDocument document, PDTerminalField field) {
+    private int resolveFirstWidgetPageIndex(
+            PDDocument document,
+            PDTerminalField field,
+            Map<COSDictionary, Integer> annotationPageMap) {
         List<PDAnnotationWidget> widgets = field.getWidgets();
         if (widgets == null || widgets.isEmpty()) {
             return -1;
         }
-        Map<PDAnnotationWidget, Integer> widgetPageFallbacks = null;
         for (PDAnnotationWidget widget : widgets) {
-            int idx = resolveWidgetPageIndex(document, widget);
+            int idx = resolveWidgetPageIndex(document, widget, annotationPageMap);
             if (idx >= 0) {
                 return idx;
-            }
-            try {
-                COSDictionary widgetDictionary = widget.getCOSObject();
-                if (widgetDictionary != null
-                        && widgetDictionary.getDictionaryObject(COSName.P) == null) {
-                    if (widgetPageFallbacks == null) {
-                        widgetPageFallbacks = buildWidgetPageFallbackMap(document);
-                    }
-                    Integer fallbackIndex = widgetPageFallbacks.get(widget);
-                    if (fallbackIndex != null && fallbackIndex >= 0) {
-                        return fallbackIndex;
-                    }
-                }
-            } catch (Exception e) {
-                log.debug(
-                        "Failed to inspect widget page reference for field '{}': {}",
-                        field.getFullyQualifiedName(),
-                        e.getMessage());
             }
         }
         return -1;
     }
 
-    private int resolveWidgetPageIndex(PDDocument document, PDAnnotationWidget widget) {
+    private int resolveWidgetPageIndex(
+            PDDocument document,
+            PDAnnotationWidget widget,
+            Map<COSDictionary, Integer> annotationPageMap) {
         if (document == null || widget == null) {
             return -1;
         }
-        try {
-            COSDictionary widgetDictionary = widget.getCOSObject();
-            if (widgetDictionary != null
-                    && widgetDictionary.getDictionaryObject(COSName.P) == null) {
-                Map<PDAnnotationWidget, Integer> fallback = buildWidgetPageFallbackMap(document);
-                Integer index = fallback.get(widget);
-                if (index != null) {
-                    return index;
-                }
+
+        // Method 0: Check the pre-built lookup map (fastest)
+        if (annotationPageMap != null) {
+            Integer idx = annotationPageMap.get(widget.getCOSObject());
+            if (idx != null) {
+                return idx;
             }
-        } catch (Exception e) {
-            log.debug("Widget page lookup via fallback map failed: {}", e.getMessage());
         }
+
         try {
             PDPage page = widget.getPage();
             if (page != null) {
+                // indexOf is O(N), still slower than map but better than scanning annotations
                 int idx = document.getPages().indexOf(page);
                 if (idx >= 0) {
                     return idx;
@@ -1821,7 +1826,25 @@ public class FormUtils {
             log.debug("Widget page lookup failed: {}", e.getMessage());
         }
 
-        // Try searching all pages by comparing COS objects for robustness
+        // Method 1: Check the /P entry if it points to a page
+        try {
+            COSDictionary widgetDictionary = widget.getCOSObject();
+            if (widgetDictionary != null) {
+                COSBase base = widgetDictionary.getDictionaryObject(COSName.P);
+                COSDictionary pageDict = (base instanceof COSDictionary c) ? c : null;
+                if (pageDict != null) {
+                    for (int i = 0; i < document.getNumberOfPages(); i++) {
+                        if (document.getPage(i).getCOSObject() == pageDict) {
+                            return i;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Widget page lookup via /P entry failed: {}", e.getMessage());
+        }
+
+        // Method 2: Fallback search through all pages' annotations
         int pageCount = document.getNumberOfPages();
         COSDictionary widgetDict = widget.getCOSObject();
         for (int i = 0; i < pageCount; i++) {
@@ -1875,7 +1898,7 @@ public class FormUtils {
             List<PDAnnotationWidget> widgets = field.getWidgets();
             if (widgets != null) {
                 for (PDAnnotationWidget widget : widgets) {
-                    PDPage page = resolveWidgetPage(document, widget);
+                    PDPage page = resolveWidgetPage(document, widget, null);
                     if (page != null) {
                         page.getAnnotations().remove(widget);
                     }
@@ -1995,7 +2018,10 @@ public class FormUtils {
                 rectangle.getHeight());
     }
 
-    private PDPage resolveWidgetPage(PDDocument document, PDAnnotationWidget widget) {
+    private PDPage resolveWidgetPage(
+            PDDocument document,
+            PDAnnotationWidget widget,
+            Map<COSDictionary, Integer> annotationPageMap) {
         if (widget == null) {
             return null;
         }
@@ -2003,7 +2029,7 @@ public class FormUtils {
         if (page != null) {
             return page;
         }
-        int pageIndex = determineWidgetPageIndex(document, widget);
+        int pageIndex = determineWidgetPageIndex(document, widget, annotationPageMap);
         if (pageIndex >= 0) {
             try {
                 return document.getPage(pageIndex);
@@ -2014,9 +2040,19 @@ public class FormUtils {
         return null;
     }
 
-    private int determineWidgetPageIndex(PDDocument document, PDAnnotationWidget widget) {
+    private int determineWidgetPageIndex(
+            PDDocument document,
+            PDAnnotationWidget widget,
+            Map<COSDictionary, Integer> annotationPageMap) {
         if (document == null || widget == null) {
             return -1;
+        }
+
+        if (annotationPageMap != null) {
+            Integer idx = annotationPageMap.get(widget.getCOSObject());
+            if (idx != null) {
+                return idx;
+            }
         }
 
         PDPage directPage = widget.getPage();
@@ -2044,6 +2080,33 @@ public class FormUtils {
             }
         }
         return -1;
+    }
+
+    /**
+     * Build a map of annotation COS dictionaries to their respective page index. Scan once
+     * per-document to avoid O(N^2) lookups during field extraction.
+     */
+    public Map<COSDictionary, Integer> buildAnnotationPageMap(PDDocument document) {
+        if (document == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<COSDictionary, Integer> map = new HashMap<>();
+        int pageCount = document.getNumberOfPages();
+        for (int i = 0; i < pageCount; i++) {
+            try {
+                PDPage page = document.getPage(i);
+                List<PDAnnotation> annotations = page.getAnnotations();
+                for (PDAnnotation annot : annotations) {
+                    if (annot != null) {
+                        map.putIfAbsent(annot.getCOSObject(), i);
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("Failed to index annotations for page {}: {}", i, e.getMessage());
+            }
+        }
+        return map;
     }
 
     private Map<PDAnnotationWidget, Integer> buildWidgetPageFallbackMap(PDDocument document) {

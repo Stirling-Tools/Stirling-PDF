@@ -113,7 +113,7 @@ const EmbedPdfViewerContent = ({
   const { selectedTool } = useNavigationState();
 
   // Form fill context
-  const { fetchFields: fetchFormFields, setProviderMode, reset: resetFormFill } = useFormFill();
+  const { fetchFields: fetchFormFields, setProviderMode } = useFormFill();
 
   const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
   const isSignatureMode = isInAnnotationTool;
@@ -703,17 +703,19 @@ const EmbedPdfViewerContent = ({
     formFillProviderRef.current = isFormFillToolActive;
 
     if (fileChanged) {
-      // Clear old form data immediately so stale fields aren't shown
-      console.log('[FormFill] File changed, clearing form fields. Old:', formFillFileIdRef.current, 'New:', currentFileId);
+      console.log('[FormFill] File changed. Old:', formFillFileIdRef.current, 'New:', currentFileId);
       formFillFileIdRef.current = currentFileId;
-      resetFormFill();
+      // NOTE: Don't call resetFormFill() here — fetchFormFields() handles
+      // clearing old state internally. Calling reset() before fetch() would
+      // double-increment fetchVersionRef, causing version mismatches when
+      // the effect re-fires before the async fetch completes.
     }
 
     if (currentFile && (fileChanged || providerChanged)) {
       console.log('[FormFill] Fetching form fields for:', currentFileId);
       fetchFormFields(currentFile, currentFileId ?? undefined);
     }
-  }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields, resetFormFill]);
+  }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields]);
 
   const sidebarWidthRem = 15;
   const totalRightMargin =
