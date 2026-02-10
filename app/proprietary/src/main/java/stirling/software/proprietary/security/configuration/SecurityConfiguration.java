@@ -194,12 +194,9 @@ public class SecurityConfiguration {
             throws Exception {
         http.securityMatcher("/saml2/**", "/login/saml2/**");
 
-        // CRITICAL FIX: Use ALWAYS instead of IF_REQUIRED to ensure session exists
-        // for SAML flows. IF_REQUIRED may not create session on first request,
-        // causing SavedRequest lookup failures and state loss between filter chains.
         SessionCreationPolicy sessionPolicy =
                 (securityProperties.isSaml2Active() && runningProOrHigher)
-                        ? SessionCreationPolicy.ALWAYS
+                        ? SessionCreationPolicy.IF_REQUIRED
                         : SessionCreationPolicy.STATELESS;
 
         return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
