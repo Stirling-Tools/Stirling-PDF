@@ -338,13 +338,12 @@ public class FormUtils {
                     field.getFullyQualifiedName());
             try {
                 COSDictionary fieldDict = field.getCOSObject();
-                if (fieldDict.containsKey(COSName.RECT)) {
+                COSBase rectBase = fieldDict.getDictionaryObject(COSName.RECT);
+                if (rectBase instanceof COSArray rectArray) {
                     int pageIndex =
                             findPageIndexForAnnotation(document, fieldDict, annotationPageMap);
                     if (pageIndex >= 0) {
-                        PDRectangle rectangle =
-                                new PDRectangle(
-                                        (COSArray) fieldDict.getDictionaryObject(COSName.RECT));
+                        PDRectangle rectangle = new PDRectangle(rectArray);
                         result.add(
                                 createWidgetCoordinates(
                                         document, rectangle, pageIndex, null, field));

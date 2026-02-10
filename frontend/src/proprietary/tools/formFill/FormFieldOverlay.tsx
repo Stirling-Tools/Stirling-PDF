@@ -84,10 +84,15 @@ function WidgetInputInner({
     alignItems: field.multiline ? 'stretch' : 'center',
   };
 
-  // Scale font size with the widget height (using Y scale as a proxy for uniform font scaling)
+  // Scale font size with the widget height (using Y scale as a proxy for uniform font scaling).
+  // PDF form fields use fontSize=0 to mean "auto-size" (scale to fit the box).
+  // For single-line fields (e.g. Title), scale closer to the box height.
+  // For multiline fields (e.g. Description), use a smaller capped size.
   const fontSize = widget.fontSize
     ? widget.fontSize * scaleY
-    : Math.max(8, Math.min(height * 0.65, 14));
+    : field.multiline
+      ? Math.max(8, Math.min(height * 0.65, 14))
+      : Math.max(8, height * 0.7);
 
   const inputBaseStyle: React.CSSProperties = {
     width: '100%',
