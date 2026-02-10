@@ -5,8 +5,8 @@
 
 export interface WidgetCoordinates {
   pageIndex: number;
-  x: number;      // PDF points, lower-left origin
-  y: number;      // PDF points, lower-left origin
+  x: number;      // PDF points, un-rotated, CSS upper-left origin
+  y: number;      // PDF points, un-rotated, CSS upper-left origin
   width: number;  // PDF points
   height: number; // PDF points
   /** Export value for this specific widget (radio/checkbox only) */

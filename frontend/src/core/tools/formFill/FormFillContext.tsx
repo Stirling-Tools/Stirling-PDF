@@ -13,13 +13,21 @@ interface FormFillContextValue {
     error: string | null;
     activeFieldName: string | null;
     isDirty: boolean;
+    validationErrors: Record<string, string>;
   };
-  fetchFields: (file: File | Blob) => Promise<void>;
+  fetchFields: (file: File | Blob, fileId?: string) => Promise<void>;
   setValue: (fieldName: string, value: string) => void;
   setActiveField: (fieldName: string | null) => void;
   submitForm: (file: File | Blob, flatten?: boolean) => Promise<Blob>;
   getField: (fieldName: string) => any | undefined;
   getFieldsForPage: (pageIndex: number) => any[];
+  getValue: (fieldName: string) => string;
+  validateForm: () => boolean;
+  reset: () => void;
+  fieldsByPage: Map<number, any[]>;
+  activeProviderName: string;
+  setProviderMode: (mode: 'pdflib' | 'pdfbox') => void;
+  forFileId: string | null;
 }
 
 const noopAsync = async () => {};
@@ -39,6 +47,7 @@ export const useFormFill = (): FormFillContextValue => {
         error: null,
         activeFieldName: null,
         isDirty: false,
+        validationErrors: {},
       },
       fetchFields: noopAsync,
       setValue: noop,
@@ -46,10 +55,27 @@ export const useFormFill = (): FormFillContextValue => {
       submitForm: async () => new Blob(),
       getField: () => undefined,
       getFieldsForPage: () => [],
+      getValue: () => '',
+      validateForm: () => true,
+      reset: noop,
+      fieldsByPage: new Map(),
+      activeProviderName: 'none',
+      setProviderMode: noop,
+      forFileId: null,
     };
   }
   return ctx;
 };
+
+/** No-op stub for core builds */
+export function useFieldValue(_fieldName: string): string {
+  return '';
+}
+
+/** No-op stub for core builds */
+export function useAllFormValues(): Record<string, string> {
+  return {};
+}
 
 export function FormFillProvider({ children }: { children: React.ReactNode }) {
   // In core build, just render children without provider

@@ -70,9 +70,11 @@ interface LocalEmbedPDFProps {
   annotationApiRef?: React.RefObject<AnnotationAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
+  /** File identity passed through to FormFieldOverlay for stale-field guards */
+  fileId?: string | null;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -715,6 +717,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                               pageIndex={pageIndex}
                               pageWidth={width}
                               pageHeight={height}
+                              fileId={fileId}
                             />
                           )}
 

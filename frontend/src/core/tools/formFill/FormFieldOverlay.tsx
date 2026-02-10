@@ -9,6 +9,7 @@ interface FormFieldOverlayProps {
   pageIndex: number;
   pageWidth: number;
   pageHeight: number;
+  fileId?: string | null;
 }
 
 export function FormFieldOverlay(_props: FormFieldOverlayProps) {

@@ -437,14 +437,12 @@ public class FormUtils {
 
         PDPage page = document.getPage(pageIndex);
         PDRectangle cropBox = page.getCropBox();
-        int rotation = page.getRotation();
 
-        // Use CropBox dimensions for the viewport/flip.
+        // Use CropBox dimensions for the y-flip.
         // Note: getWidth() and getHeight() return dimensions BEFORE rotation.
-        float cropWidth = cropBox.getWidth();
         float cropHeight = cropBox.getHeight();
 
-        // Get absolute widget coordinates (in MediaBox space)
+        // Get absolute widget coordinates (in MediaBox space, un-rotated)
         float pdfX = rectangle.getLowerLeftX();
         float pdfY = rectangle.getLowerLeftY();
         float width = rectangle.getWidth();
@@ -454,60 +452,29 @@ public class FormUtils {
         float relativeX = pdfX - cropBox.getLowerLeftX();
         float relativeY = pdfY - cropBox.getLowerLeftY();
 
-        float finalX, finalY, finalW, finalH;
-
-        // Handle rotation (standard PDF rotation is clockwise)
-        // The renderer usually swaps dimensions for 90/270
-        switch (rotation) {
-            case 90 -> {
-                // Rotated 90 deg clockwise:
-                // Top-left origin: X comes from relativeY, Y comes from (width - relativeX)
-                finalX = relativeY;
-                finalY = cropWidth - relativeX - width;
-                finalW = height;
-                finalH = width;
-            }
-            case 180 -> {
-                // Rotated upside down:
-                // Top-left origin: X comes from (width - relativeX), Y comes from relativeY
-                finalX = cropWidth - relativeX - width;
-                finalY = relativeY;
-                finalW = width;
-                finalH = height;
-            }
-            case 270 -> {
-                // Rotated 270 deg clockwise (or 90 deg counter-clockwise):
-                // Top-left origin: X comes from (height - relativeY), Y comes from relativeX
-                finalX = cropHeight - relativeY - height;
-                finalY = relativeX;
-                finalW = height;
-                finalH = width;
-            }
-            default -> {
-                // No rotation (or 0):
-                // Standard flip: Y = height - pdfY - widgetHeight
-                finalX = relativeX;
-                finalY = cropHeight - relativeY - height;
-                finalW = width;
-                finalH = height;
-            }
-        }
+        // Convert from PDF lower-left origin to CSS upper-left origin (y-flip).
+        // Widget /Rect coordinates are always in un-rotated PDF user space.
+        // The embedpdf viewer wraps all page content inside a <Rotate> CSS
+        // component that handles visual rotation — we must NOT apply any
+        // rotation transform here, or widgets would be double-rotated.
+        float finalX = relativeX;
+        float finalY = cropHeight - relativeY - height;
+        float finalW = width;
+        float finalH = height;
 
         // Validate coordinates are within reasonable bounds
-        float checkHeight = (rotation == 90 || rotation == 270) ? cropWidth : cropHeight;
         if (finalX < -1.0f
                 || finalY < -1.0f
-                || finalX > checkHeight * 2 // Allow some horizontal overflow
-                || finalY > checkHeight + 1.0f) {
+                || finalX > cropBox.getWidth() * 2 // Allow some horizontal overflow
+                || finalY > cropHeight + 1.0f) {
             log.warn(
-                    "Widget coordinates out of bounds for field '{}': page={}, x={}, y={}, w={}, h={}, rotation={}",
+                    "Widget coordinates out of bounds for field '{}': page={}, x={}, y={}, w={}, h={}",
                     field.getFullyQualifiedName(),
                     pageIndex,
                     finalX,
                     finalY,
                     finalW,
-                    finalH,
-                    rotation);
+                    finalH);
             return null;
         }
 

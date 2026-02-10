@@ -4,64 +4,27 @@
  * This layer is placed inside the renderPage callback of the EmbedPDF Scroller,
  * similar to how AnnotationLayer, RedactionLayer, and LinkLayer work.
  *
- * It reads the form field coordinates (in PDF space, lower-left origin) and converts
- * them to CSS coordinates using the document scale from EmbedPDF, exactly like
- * LinkLayer does for link annotations.
+ * It reads the form field coordinates (in un-rotated CSS space, top-left origin)
+ * and scales them using the document scale from EmbedPDF.
  *
  * Each widget renders an appropriate HTML input (text, checkbox, dropdown, etc.)
  * that synchronises bidirectionally with FormFillContext values.
  *
- * Rotation handling:
- * The backend (FormUtils.java) transforms widget coordinates from the unrotated
- * MediaBox space into a rotated coordinate space (accounting for /Rotate).
- * However, the EmbedPDF <Rotate> component applies CSS rotation to the entire
- * page content (including this overlay). To avoid double-rotation, we inverse-
- * transform the backend coordinates back to the unrotated space and use uniform
- * scaling. The CSS <Rotate> transform then handles all visual rotation.
+ * Coordinate handling:
+ * Both providers (PdfLibFormProvider and PdfBoxFormProvider) output widget
+ * coordinates in un-rotated PDF space (y-flipped to CSS upper-left origin).
+ * The <Rotate> component (which wraps this overlay along with page tiles)
+ * handles visual rotation via CSS transforms — same as TilingLayer,
+ * AnnotationLayer, and LinkLayer.
  */
 import React, { useCallback, useMemo, memo } from 'react';
 import { useDocumentState } from '@embedpdf/core/react';
-import { useFormFill } from '@proprietary/tools/formFill/FormFillContext';
+import { useFormFill, useFieldValue } from '@proprietary/tools/formFill/FormFillContext';
 import type { FormField, WidgetCoordinates } from '@proprietary/tools/formFill/types';
-
-
-function transformToUnrotated(
-  bx: number, by: number, bw: number, bh: number,
-  pageRotation: number, // 0=0°, 1=90°, 2=180°, 3=270° (quarter turns)
-  pdfWidth: number,     // unrotated page width in PDF points
-  pdfHeight: number,    // unrotated page height in PDF points
-): { x: number; y: number; width: number; height: number } {
-  switch (pageRotation) {
-    case 1: // 90° — backend swapped coords and dimensions
-      return {
-        x: pdfWidth - by - bh,
-        y: pdfHeight - bx - bw,
-        width: bh,
-        height: bw,
-      };
-    case 2: // 180° — backend reflected both axes
-      return {
-        x: pdfWidth - bx - bw,
-        y: pdfHeight - by - bh,
-        width: bw,
-        height: bh,
-      };
-    case 3: // 270° — backend swapped coords and dimensions (opposite direction)
-      return {
-        x: by,
-        y: bx,
-        width: bh,
-        height: bw,
-      };
-    default: // 0° — no transformation needed
-      return { x: bx, y: by, width: bw, height: bh };
-  }
-}
 
 interface WidgetInputProps {
   field: FormField;
   widget: WidgetCoordinates;
-  value: string;
   isActive: boolean;
   error?: string;
   scaleX: number;
@@ -70,10 +33,14 @@ interface WidgetInputProps {
   onChange: (fieldName: string, value: string) => void;
 }
 
+/**
+ * WidgetInput subscribes to its own field value via useSyncExternalStore,
+ * so it only re-renders when its specific value changes — not when ANY
+ * form value in the entire document changes.
+ */
 function WidgetInputInner({
   field,
   widget,
-  value,
   isActive,
   error,
   scaleX,
@@ -81,8 +48,11 @@ function WidgetInputInner({
   onFocus,
   onChange,
 }: WidgetInputProps) {
-  // Coordinates are in PDF space (top-left origin relative to CropBox) from the backend.
-  // Multiply by per-axis scale to get CSS coordinates.
+  // Per-field value subscription — only this widget re-renders when its value changes
+  const value = useFieldValue(field.name);
+
+  // Coordinates are in visual CSS space (top-left origin).
+  // Multiply by per-axis scale to get rendered pixel coordinates.
   const left = widget.x * scaleX;
   const top = widget.y * scaleY;
   const width = widget.width * scaleX;
@@ -213,12 +183,29 @@ function WidgetInputInner({
     case 'combobox':
     case 'listbox': {
       const inputId = `${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`;
+      
+      // For multi-select, value should be an array
+      // We store as comma-separated string, so parse it
+      const selectValue = field.multiSelect
+        ? (value ? value.split(',').map(v => v.trim()) : [])
+        : value;
+      
+      const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        if (field.multiSelect) {
+          // For multi-select, join selected options with comma
+          const selected = Array.from(e.target.selectedOptions, opt => opt.value);
+          onChange(field.name, selected.join(','));
+        } else {
+          onChange(field.name, e.target.value);
+        }
+      };
+      
       return (
         <div style={commonStyle} title={error || field.tooltip || field.label}>
           <select
             id={inputId}
-            value={value}
-            onChange={(e) => onChange(field.name, e.target.value)}
+            value={selectValue}
+            onChange={handleSelectChange}
             onFocus={handleFocus}
             disabled={field.readOnly}
             multiple={field.multiSelect}
@@ -233,7 +220,7 @@ function WidgetInputInner({
             aria-required={field.required}
             aria-invalid={!!error}
           >
-            <option value="">— select —</option>
+            {!field.multiSelect && <option value="">— select —</option>}
             {(field.options || []).map((opt, idx) => (
               <option key={opt} value={opt}>
                 {(field.displayOptions && field.displayOptions[idx]) || opt}
@@ -318,6 +305,8 @@ interface FormFieldOverlayProps {
   pageIndex: number;
   pageWidth: number;  // rendered CSS pixel width (from renderPage callback)
   pageHeight: number; // rendered CSS pixel height
+  /** File identity — if provided, overlay only renders when context fields match this file */
+  fileId?: string | null;
 }
 
 export function FormFieldOverlay({
@@ -325,26 +314,36 @@ export function FormFieldOverlay({
   pageIndex,
   pageWidth,
   pageHeight,
+  fileId,
 }: FormFieldOverlayProps) {
-  const { state, setValue, setActiveField, fieldsByPage } = useFormFill();
-  const { values, activeFieldName, validationErrors } = state;
+  const { setValue, setActiveField, fieldsByPage, state, forFileId } = useFormFill();
+  const { activeFieldName, validationErrors } = state;
+
+  // Guard: don't render fields from a previous document.
+  // If fileId is provided and doesn't match what the context fetched for, render nothing.
+  if (fileId != null && forFileId != null && fileId !== forFileId) {
+    return null;
+  }
+  // Also guard: if fields exist but no forFileId is set (reset happened), don't render stale fields
+  if (fileId != null && forFileId == null && state.fields.length > 0) {
+    return null;
+  }
 
   // Get scale from EmbedPDF document state — same pattern as LinkLayer
   const documentState = useDocumentState(documentId);
 
-  const { scaleX, scaleY, pageRotation, pdfWidth, pdfHeight } = useMemo(() => {
+  const { scaleX, scaleY } = useMemo(() => {
     const pdfPage = documentState?.document?.pages?.[pageIndex];
     if (!pdfPage || !pdfPage.size || !pageWidth || !pageHeight) {
       const s = documentState?.scale ?? 1;
-      return { scaleX: s, scaleY: s, pageRotation: 0, pdfWidth: 0, pdfHeight: 0 };
+      return { scaleX: s, scaleY: s };
     }
 
+    // pdfPage.size contains un-rotated (MediaBox) dimensions;
+    // pageWidth/pageHeight from Scroller also use these un-rotated dims * scale
     return {
       scaleX: pageWidth / pdfPage.size.width,
       scaleY: pageHeight / pdfPage.size.height,
-      pageRotation: (pdfPage as any).rotation || 0,
-      pdfWidth: pdfPage.size.width,
-      pdfHeight: pdfPage.size.height,
     };
   }, [documentState, pageIndex, pageWidth, pageHeight]);
 
@@ -382,25 +381,14 @@ export function FormFieldOverlay({
         (field.widgets || [])
           .filter((w: WidgetCoordinates) => w.pageIndex === pageIndex)
           .map((widget: WidgetCoordinates, widgetIdx: number) => {
-            // Inverse-transform backend rotated coordinates back to unrotated space.
-            // The CSS <Rotate> component handles the visual rotation.
-            const unrotated = transformToUnrotated(
-              widget.x, widget.y, widget.width, widget.height,
-              pageRotation, pdfWidth, pdfHeight,
-            );
-            const adjustedWidget: WidgetCoordinates = {
-              ...widget,
-              x: unrotated.x,
-              y: unrotated.y,
-              width: unrotated.width,
-              height: unrotated.height,
-            };
+            // Coordinates are in un-rotated PDF space (y-flipped to CSS TL origin).
+            // The <Rotate> CSS wrapper handles visual rotation for us,
+            // just like it does for TilingLayer, LinkLayer, etc.
             return (
               <WidgetInput
                 key={`${field.name}-${widgetIdx}`}
                 field={field}
-                widget={adjustedWidget}
-                value={values[field.name] ?? ''}
+                widget={widget}
                 isActive={activeFieldName === field.name}
                 error={validationErrors[field.name]}
                 scaleX={scaleX}

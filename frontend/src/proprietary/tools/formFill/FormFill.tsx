@@ -28,7 +28,7 @@ import {
   Paper,
   Progress,
 } from '@mantine/core';
-import { useFormFill } from '@proprietary/tools/formFill/FormFillContext';
+import { useFormFill, useFieldValue, useAllFormValues } from '@proprietary/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useFileState, useFileActions } from '@app/contexts/FileContext';
@@ -227,7 +227,22 @@ function FieldInputInner({
   }
 }
 
-const FieldInput = memo(FieldInputInner);
+const FieldInputBase = memo(FieldInputInner);
+
+/**
+ * FieldInput that subscribes to its own field value via useFieldValue.
+ * Only re-renders when its specific field value changes.
+ */
+function FieldInput({
+  field,
+  onValueChange,
+}: {
+  field: FormField;
+  onValueChange: (fieldName: string, value: string) => void;
+}) {
+  const value = useFieldValue(field.name);
+  return <FieldInputBase field={field} value={value} onValueChange={onValueChange} />;
+}
 
 const FormFill = (_props: BaseToolProps) => {
   const { selectedTool, workbench } = useNavigation();
@@ -401,7 +416,9 @@ const FormFill = (_props: BaseToolProps) => {
     return { sortedPages: pages, fieldsByPage: byPage };
   }, [formState.fields]);
 
-  // Progress tracking
+  // Progress tracking — subscribe to all values (only used for the counters)
+  const allValues = useAllFormValues();
+
   const fillableFields = useMemo(() => {
     return formState.fields.filter((f) => f.type !== 'button' && f.type !== 'signature');
   }, [formState.fields]);
@@ -410,10 +427,10 @@ const FormFill = (_props: BaseToolProps) => {
 
   const filledCount = useMemo(() => {
     return fillableFields.filter((f) => {
-      const v = formState.values[f.name];
+      const v = allValues[f.name];
       return v && v !== 'Off' && v.trim() !== '';
     }).length;
-  }, [fillableFields, formState.values]);
+  }, [fillableFields, allValues]);
 
   const requiredFields = useMemo(() => {
     return fillableFields.filter((f) => f.required);
@@ -423,10 +440,10 @@ const FormFill = (_props: BaseToolProps) => {
 
   const filledRequiredCount = useMemo(() => {
     return requiredFields.filter((f) => {
-      const v = formState.values[f.name];
+      const v = allValues[f.name];
       return v && v !== 'Off' && v.trim() !== '';
     }).length;
-  }, [requiredFields, formState.values]);
+  }, [requiredFields, allValues]);
 
   if (!isActive) return null;
 
@@ -601,7 +618,6 @@ const FormFill = (_props: BaseToolProps) => {
                         <Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                           <FieldInput
                             field={field}
-                            value={formState.values[field.name] ?? ''}
                             onValueChange={handleValueChange}
                           />
                         </Box>

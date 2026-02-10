@@ -4238,6 +4238,15 @@ unknownFile = "Unknown file"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
+[viewer.formBar]
+title = "Form Fields"
+unsavedBadge = "Unsaved"
+unsavedDesc = "You have unsaved changes"
+hasFieldsDesc = "This PDF contains fillable fields"
+dismiss = "Dismiss"
+apply = "Apply Changes"
+download = "Download PDF"
+
 [rightRail]
 formFill = "Fill Form"
 closeSelected = "Close Selected Files"
