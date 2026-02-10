@@ -3,6 +3,8 @@ export { FormFieldSidebar } from '@proprietary/tools/formFill/FormFieldSidebar';
 export { FormFieldOverlay } from '@proprietary/tools/formFill/FormFieldOverlay';
 export { FormSaveBar } from '@proprietary/tools/formFill/FormSaveBar';
 export { default as FormFill } from '@proprietary/tools/formFill/FormFill';
+export { FieldInput } from '@proprietary/tools/formFill/FieldInput';
+export { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@proprietary/tools/formFill/fieldMeta';
 export type { FormField, FormFieldType, FormFillState, WidgetCoordinates } from '@proprietary/tools/formFill/types';
 export type { IFormDataProvider } from '@proprietary/tools/formFill/providers/types';
 export { PdfLibFormProvider } from '@proprietary/tools/formFill/providers/PdfLibFormProvider';

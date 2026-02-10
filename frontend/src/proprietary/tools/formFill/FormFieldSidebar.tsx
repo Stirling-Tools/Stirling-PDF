@@ -1,231 +1,44 @@
 /**
- * FormFieldSidebar — A right-side panel that lists all form fields
- * and allows the user to fill them in. Changes propagate in real-time
- * to the PDF overlay widgets.
+ * FormFieldSidebar — A right-side panel for viewing and filling form fields
+ * when the dedicated formFill tool is NOT selected (normal viewer mode).
+ *
+ * Redesigned with:
+ * - Consistent CSS module styling matching the main FormFill panel
+ * - Shared FieldInput component (no duplication)
+ * - Better visual hierarchy and spacing
  */
-import React, { useCallback, useEffect, useRef, memo } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   Box,
   Text,
-  TextInput,
-  Textarea,
-  Checkbox,
-  Select,
-  MultiSelect,
   ScrollArea,
   Badge,
   Tooltip,
-  Stack,
-  Group,
-  Divider,
   ActionIcon,
-  Paper,
 } from '@mantine/core';
-import { useFormFill } from '@proprietary/tools/formFill/FormFillContext';
-import type { FormField, FormFieldType } from '@proprietary/tools/formFill/types';
+import { useTranslation } from 'react-i18next';
+import { useFormFill } from './FormFillContext';
+import { FieldInput } from './FieldInput';
+import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from './fieldMeta';
+import type { FormField } from './types';
 import CloseIcon from '@mui/icons-material/Close';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import ArrowDropDownCircleIcon from '@mui/icons-material/ArrowDropDownCircle';
-import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
-import ListIcon from '@mui/icons-material/List';
-import DrawIcon from '@mui/icons-material/Draw';
+import styles from './FormFill.module.css';
 
 interface FormFieldSidebarProps {
   visible: boolean;
   onToggle: () => void;
 }
 
-const FIELD_TYPE_ICON: Record<FormFieldType, React.ReactNode> = {
-  text: <TextFieldsIcon sx={{ fontSize: 16 }} />,
-  checkbox: <CheckBoxIcon sx={{ fontSize: 16 }} />,
-  combobox: <ArrowDropDownCircleIcon sx={{ fontSize: 16 }} />,
-  listbox: <ListIcon sx={{ fontSize: 16 }} />,
-  radio: <RadioButtonCheckedIcon sx={{ fontSize: 16 }} />,
-  button: <DrawIcon sx={{ fontSize: 16 }} />,
-  signature: <DrawIcon sx={{ fontSize: 16 }} />,
-};
-
-const FIELD_TYPE_COLOR: Record<FormFieldType, string> = {
-  text: 'blue',
-  checkbox: 'green',
-  combobox: 'violet',
-  listbox: 'cyan',
-  radio: 'orange',
-  button: 'gray',
-  signature: 'pink',
-};
-
-function FieldInputInner({
-  field,
-  value,
-  onValueChange,
-}: {
-  field: FormField;
-  value: string;
-  onValueChange: (fieldName: string, value: string) => void;
-}) {
-  const onChange = useCallback(
-    (v: string) => onValueChange(field.name, v),
-    [onValueChange, field.name]
-  );
-  switch (field.type) {
-    case 'text':
-      if (field.multiline) {
-        return (
-          <Textarea
-            size="xs"
-            value={value}
-            onChange={(e) => onChange(e.currentTarget.value)}
-            placeholder={field.tooltip || `Enter ${field.label}`}
-            disabled={field.readOnly}
-            autosize
-            minRows={2}
-            maxRows={6}
-            style={{ flex: 1 }}
-          />
-        );
-      }
-      return (
-        <TextInput
-          size="xs"
-          value={value}
-          onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={field.tooltip || `Enter ${field.label}`}
-          disabled={field.readOnly}
-          style={{ flex: 1 }}
-        />
-      );
-
-    case 'checkbox': {
-      // Checkbox is checked when value is anything other than 'Off' or empty
-      const isChecked = !!value && value !== 'Off';
-      // Use the first widget's exportValue for the on-value, or fall back to 'Yes'
-      const onValue = (field.widgets && field.widgets[0]?.exportValue) || 'Yes';
-      return (
-        <Checkbox
-          size="xs"
-          checked={isChecked}
-          onChange={(e) =>
-            onChange(e.currentTarget.checked ? onValue : 'Off')
-          }
-          label={field.label}
-          disabled={field.readOnly}
-        />
-      );
-    }
-
-    case 'combobox': {
-      // Build data with separate value/label when display options differ
-      const comboData = (field.options || []).map((opt, idx) => ({
-        value: opt,
-        label: (field.displayOptions && field.displayOptions[idx]) || opt,
-      }));
-      return (
-        <Select
-          size="xs"
-          data={comboData}
-          value={value || null}
-          onChange={(v) => onChange(v || '')}
-          placeholder={`Select ${field.label}`}
-          clearable
-          searchable
-          disabled={field.readOnly}
-          style={{ flex: 1 }}
-        />
-      );
-    }
-
-    case 'listbox': {
-      const listData = (field.options || []).map((opt, idx) => ({
-        value: opt,
-        label: (field.displayOptions && field.displayOptions[idx]) || opt,
-      }));
-      if (field.multiSelect) {
-        const selectedValues = value ? value.split(',').filter(Boolean) : [];
-        return (
-          <MultiSelect
-            size="xs"
-            data={listData}
-            value={selectedValues}
-            onChange={(vals) => onChange(vals.join(','))}
-            placeholder={`Select ${field.label}`}
-            searchable
-            disabled={field.readOnly}
-            style={{ flex: 1 }}
-          />
-        );
-      }
-      return (
-        <Select
-          size="xs"
-          data={listData}
-          value={value || null}
-          onChange={(v) => onChange(v || '')}
-          placeholder={`Select ${field.label}`}
-          clearable
-          searchable
-          disabled={field.readOnly}
-          style={{ flex: 1 }}
-        />
-      );
-    }
-
-    case 'radio': {
-      // Derive radio options from widget exportValues (most reliable),
-      // falling back to field.options
-      const radioOptions: string[] = [];
-      if (field.widgets && field.widgets.length > 0) {
-        for (const w of field.widgets) {
-          if (w.exportValue && !radioOptions.includes(w.exportValue)) {
-            radioOptions.push(w.exportValue);
-          }
-        }
-      }
-      if (radioOptions.length === 0 && field.options) {
-        radioOptions.push(...field.options);
-      }
-      return (
-        <Stack gap={4}>
-          {radioOptions.map((opt) => (
-            <Checkbox
-              key={opt}
-              size="xs"
-              label={opt}
-              checked={value === opt}
-              onChange={() => onChange(value === opt ? 'Off' : opt)}
-              disabled={field.readOnly}
-              styles={{ input: { borderRadius: '50%' } }}
-            />
-          ))}
-        </Stack>
-      );
-    }
-
-    default:
-      return (
-        <TextInput
-          size="xs"
-          value={value}
-          onChange={(e) => onChange(e.currentTarget.value)}
-          disabled={field.readOnly}
-          style={{ flex: 1 }}
-        />
-      );
-  }
-}
-
-const FieldInput = memo(FieldInputInner);
-
 export function FormFieldSidebar({
   visible,
   onToggle,
 }: FormFieldSidebarProps) {
+  const { t } = useTranslation();
   const { state, setValue, setActiveField } = useFormFill();
-  const { fields, values, activeFieldName, loading } = state;
+  const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);
 
-  // Scroll the active field into view in the sidebar
   useEffect(() => {
     if (activeFieldName && activeFieldRef.current) {
       activeFieldRef.current.scrollIntoView({
@@ -251,10 +64,8 @@ export function FormFieldSidebar({
 
   if (!visible) return null;
 
-  // Group fields by page
   const fieldsByPage = new Map<number, FormField[]>();
   for (const field of fields) {
-    // Use the first widget's page
     const pageIndex =
       field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : 0;
     if (!fieldsByPage.has(pageIndex)) {
@@ -262,11 +73,7 @@ export function FormFieldSidebar({
     }
     fieldsByPage.get(pageIndex)!.push(field);
   }
-  const sortedPages = Array.from(fieldsByPage.keys()).sort(
-    (a, b) => a - b
-  );
-
-  const sidebarWidth = '18rem';
+  const sortedPages = Array.from(fieldsByPage.keys()).sort((a, b) => a - b);
 
   return (
     <Box
@@ -274,156 +81,127 @@ export function FormFieldSidebar({
         position: 'fixed',
         top: 0,
         right: 0,
-        width: sidebarWidth,
+        width: '18.5rem',
         height: '100%',
         zIndex: 999,
         display: 'flex',
         flexDirection: 'column',
-        background: 'var(--mantine-color-body)',
-        borderLeft: '1px solid var(--mantine-color-default-border)',
-        boxShadow: '-2px 0 8px rgba(0,0,0,0.1)',
+        background: 'var(--bg-toolbar, var(--mantine-color-body))',
+        borderLeft: '1px solid var(--border-subtle, var(--mantine-color-default-border))',
+        boxShadow: '-4px 0 16px rgba(0,0,0,0.08)',
       }}
     >
       {/* Header */}
-      <Group
-        justify="space-between"
-        p="xs"
+      <div
         style={{
-          borderBottom:
-            '1px solid var(--mantine-color-default-border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0.625rem 0.75rem',
+          borderBottom: '1px solid var(--border-subtle, var(--mantine-color-default-border))',
+          flexShrink: 0,
         }}
       >
-        <Group gap="xs">
-          <TextFieldsIcon sx={{ fontSize: 18 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <TextFieldsIcon sx={{ fontSize: 18, opacity: 0.7 }} />
           <Text fw={600} size="sm">
             Form Fields
           </Text>
-          <Badge size="xs" variant="light" color="blue">
+          <Badge size="xs" variant="light" color="blue" radius="sm">
             {fields.length}
           </Badge>
-        </Group>
-        <ActionIcon variant="subtle" size="sm" onClick={onToggle}>
+        </div>
+        <ActionIcon variant="subtle" size="sm" onClick={onToggle} aria-label="Close sidebar">
           <CloseIcon sx={{ fontSize: 16 }} />
         </ActionIcon>
-      </Group>
+      </div>
 
       {/* Content */}
-      <ScrollArea style={{ flex: 1 }} p="xs">
+      <ScrollArea style={{ flex: 1 }}>
         {loading && (
-          <Text size="sm" c="dimmed" ta="center" py="xl">
-            Loading form fields…
-          </Text>
+          <div className={styles.emptyState}>
+            <Text size="sm" c="dimmed">
+              Loading form fields...
+            </Text>
+          </div>
         )}
 
         {!loading && fields.length === 0 && (
-          <Text size="sm" c="dimmed" ta="center" py="xl">
-            No form fields found in this PDF
-          </Text>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyStateText}>
+              No form fields found in this PDF
+            </span>
+          </div>
         )}
 
         {!loading && fields.length > 0 && (
-          <Stack gap="xs">
-            {sortedPages.map((pageIdx) => (
+          <div className={styles.fieldListInner}>
+            {sortedPages.map((pageIdx, i) => (
               <React.Fragment key={pageIdx}>
-                <Divider
-                  label={
-                    <Text size="xs" fw={500} c="dimmed">
-                      Page {pageIdx + 1}
-                    </Text>
-                  }
-                  labelPosition="left"
-                />
+                <div
+                  className={styles.pageDivider}
+                  style={i === 0 ? { marginTop: 0 } : undefined}
+                >
+                  <Text className={styles.pageDividerLabel}>
+                    Page {pageIdx + 1}
+                  </Text>
+                </div>
+
                 {fieldsByPage.get(pageIdx)!.map((field) => {
-                  const isActive =
-                    activeFieldName === field.name;
+                  const isActive = activeFieldName === field.name;
+
                   return (
-                    <Paper
+                    <div
                       key={field.name}
-                      ref={
-                        isActive ? activeFieldRef : undefined
-                      }
-                      p="xs"
-                      withBorder
-                      shadow={isActive ? 'sm' : undefined}
-                      style={{
-                        cursor: 'pointer',
-                        borderColor: isActive
-                          ? 'var(--mantine-color-blue-5)'
-                          : undefined,
-                        borderWidth: isActive ? 2 : 1,
-                        background: isActive
-                          ? 'var(--mantine-color-blue-light)'
-                          : undefined,
-                        transition: 'all 0.15s ease',
-                      }}
-                      onClick={() =>
-                        handleFieldClick(field.name)
-                      }
+                      ref={isActive ? activeFieldRef : undefined}
+                      className={`${styles.fieldCard} ${
+                        isActive ? styles.fieldCardActive : ''
+                      }`}
+                      onClick={() => handleFieldClick(field.name)}
                     >
-                      {/* Field header */}
-                      <Group
-                        gap="xs"
-                        mb={4}
-                        wrap="nowrap"
-                      >
-                        <Tooltip label={field.type}>
-                          <Box
+                      <div className={styles.fieldHeader}>
+                        <Tooltip label={field.type} withArrow position="left">
+                          <span
+                            className={styles.fieldTypeIcon}
                             style={{
                               color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                              display: 'flex',
+                              fontSize: '0.875rem',
                             }}
                           >
                             {FIELD_TYPE_ICON[field.type]}
-                          </Box>
+                          </span>
                         </Tooltip>
-                        <Text
-                          size="xs"
-                          fw={500}
-                          truncate
-                          style={{ flex: 1 }}
-                        >
+                        <span className={styles.fieldName}>
                           {field.label || field.name}
-                        </Text>
+                        </span>
                         {field.required && (
-                          <Badge
-                            size="xs"
-                            color="red"
-                            variant="light"
-                          >
-                            *
-                          </Badge>
+                          <span className={styles.fieldRequired}>req</span>
                         )}
-                      </Group>
+                      </div>
 
-                      {/* Field input */}
-                      {field.type !== 'button' &&
-                        field.type !== 'signature' && (
+                      {field.type !== 'button' && field.type !== 'signature' && (
+                        <div
+                          className={styles.fieldInputWrap}
+                          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                        >
                           <FieldInput
                             field={field}
-                            value={
-                              values[field.name] ?? ''
-                            }
                             onValueChange={handleValueChange}
                           />
-                        )}
-
-                      {/* Tooltip hint */}
-                      {field.tooltip && (
-                        <Text
-                          size="xs"
-                          c="dimmed"
-                          mt={2}
-                          truncate
-                        >
-                          {field.tooltip}
-                        </Text>
+                        </div>
                       )}
-                    </Paper>
+
+                      {field.tooltip && (
+                        <div className={styles.fieldHint}>
+                          {field.tooltip}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </React.Fragment>
             ))}
-          </Stack>
+          </div>
         )}
       </ScrollArea>
     </Box>

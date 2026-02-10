@@ -2,33 +2,26 @@
  * FormFill — The tool component that renders in the left ToolPanel
  * when the "Fill Form" tool is selected.
  *
- * Contains the controls (save, flatten, re-scan) at the top and
- * the full form field list below, so users can fill everything
- * from the left sidebar without a separate right-side panel.
+ * Redesigned with:
+ * - Mode tabs for future extensibility (Fill / Make / Batch / Modify)
+ * - Clean visual hierarchy with proper spacing
+ * - Shared FieldInput component (eliminates duplication)
+ * - CSS module for theme-consistent styling
+ * - Status bar at bottom for contextual info
  */
-import React, { useEffect, useCallback, useState, useRef, useMemo, memo } from 'react';
+import React, { useEffect, useCallback, useState, useRef, useMemo } from 'react';
 import {
   Button,
-  Stack,
   Text,
   Alert,
-  Group,
   Switch,
   Loader,
-  Box,
   ScrollArea,
-  TextInput,
-  Textarea,
-  Checkbox,
-  Radio,
-  Select,
-  MultiSelect,
-  Divider,
-  Badge,
-  Paper,
   Progress,
+  Tooltip,
+  ActionIcon,
 } from '@mantine/core';
-import { useFormFill, useFieldValue, useAllFormValues } from '@proprietary/tools/formFill/FormFillContext';
+import { useFormFill, useAllFormValues } from '@proprietary/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useFileState, useFileActions } from '@app/contexts/FileContext';
@@ -36,213 +29,58 @@ import { Skeleton } from '@mantine/core';
 import { isStirlingFile } from '@app/types/fileContext';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import type { BaseToolProps } from '@app/types/tool';
-import type { FormField, FormFieldType } from '@proprietary/tools/formFill/types';
+import type { FormField } from '@proprietary/tools/formFill/types';
+import { FieldInput } from '@proprietary/tools/formFill/FieldInput';
+import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@proprietary/tools/formFill/fieldMeta';
 import SaveIcon from '@mui/icons-material/Save';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import TextFieldsIcon from '@mui/icons-material/TextFields';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import ArrowDropDownCircleIcon from '@mui/icons-material/ArrowDropDownCircle';
-import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
-import ListIcon from '@mui/icons-material/List';
-import DrawIcon from '@mui/icons-material/Draw';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import PostAddIcon from '@mui/icons-material/PostAdd';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import BuildCircleIcon from '@mui/icons-material/BuildCircle';
+import DescriptionIcon from '@mui/icons-material/Description';
+import styles from './FormFill.module.css';
 
-const FIELD_TYPE_ICON: Record<FormFieldType, React.ReactNode> = {
-  text: <TextFieldsIcon sx={{ fontSize: 14 }} />,
-  checkbox: <CheckBoxIcon sx={{ fontSize: 14 }} />,
-  combobox: <ArrowDropDownCircleIcon sx={{ fontSize: 14 }} />,
-  listbox: <ListIcon sx={{ fontSize: 14 }} />,
-  radio: <RadioButtonCheckedIcon sx={{ fontSize: 14 }} />,
-  button: <DrawIcon sx={{ fontSize: 14 }} />,
-  signature: <DrawIcon sx={{ fontSize: 14 }} />,
-};
+// ---------------------------------------------------------------------------
+// Mode tabs — extensible for future form tools
+// ---------------------------------------------------------------------------
 
-const FIELD_TYPE_COLOR: Record<FormFieldType, string> = {
-  text: 'blue',
-  checkbox: 'green',
-  combobox: 'violet',
-  listbox: 'cyan',
-  radio: 'orange',
-  button: 'gray',
-  signature: 'pink',
-};
+type FormMode = 'fill' | 'make' | 'batch' | 'modify';
 
-function FieldInputInner({
-  field,
-  value,
-  onValueChange,
-}: {
-  field: FormField;
-  value: string;
-  onValueChange: (fieldName: string, value: string) => void;
-}) {
-  const onChange = useCallback(
-    (v: string) => onValueChange(field.name, v),
-    [onValueChange, field.name]
+interface ModeTabDef {
+  id: FormMode;
+  label: string;
+  icon: React.ReactNode;
+  ready: boolean;
+}
+
+const MODE_TABS: ModeTabDef[] = [
+  { id: 'fill', label: 'Fill', icon: <EditNoteIcon className={styles.modeTabIcon} />, ready: true },
+  { id: 'make', label: 'Create', icon: <PostAddIcon className={styles.modeTabIcon} />, ready: false },
+  { id: 'batch', label: 'Batch', icon: <FileCopyIcon className={styles.modeTabIcon} />, ready: false },
+  { id: 'modify', label: 'Modify', icon: <BuildCircleIcon className={styles.modeTabIcon} />, ready: false },
+];
+
+// ---------------------------------------------------------------------------
+// Coming-soon placeholder for unimplemented tabs
+// ---------------------------------------------------------------------------
+
+function ComingSoonPlaceholder({ mode }: { mode: ModeTabDef }) {
+  return (
+    <div className={styles.comingSoon}>
+      <DescriptionIcon className={styles.comingSoonIcon} />
+      <div className={styles.comingSoonTitle}>{mode.label} Forms</div>
+      <div className={styles.comingSoonDesc}>
+        This feature is coming soon. Stay tuned!
+      </div>
+    </div>
   );
-
-  switch (field.type) {
-    case 'text':
-      if (field.multiline) {
-        return (
-          <Textarea
-            size="xs"
-            value={value}
-            onChange={(e) => onChange(e.currentTarget.value)}
-            placeholder={field.tooltip || `Enter ${field.label}`}
-            disabled={field.readOnly}
-            autosize
-            minRows={2}
-            maxRows={5}
-          />
-        );
-      }
-      return (
-        <TextInput
-          size="xs"
-          value={value}
-          onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={field.tooltip || `Enter ${field.label}`}
-          disabled={field.readOnly}
-        />
-      );
-
-    case 'checkbox': {
-      const isChecked = !!value && value !== 'Off';
-      const onValue = (field.widgets && field.widgets[0]?.exportValue) || 'Yes';
-      return (
-        <Checkbox
-          size="xs"
-          checked={isChecked}
-          onChange={(e) => onChange(e.currentTarget.checked ? onValue : 'Off')}
-          label={field.label}
-          disabled={field.readOnly}
-        />
-      );
-    }
-
-    case 'combobox': {
-      const comboData = (field.options || []).map((opt, idx) => ({
-        value: opt,
-        label: (field.displayOptions && field.displayOptions[idx]) || opt,
-      }));
-      return (
-        <Select
-          size="xs"
-          data={comboData}
-          value={value || null}
-          onChange={(v) => onChange(v || '')}
-          placeholder={`Select ${field.label}`}
-          clearable
-          searchable
-          disabled={field.readOnly}
-          aria-label={field.label || field.name}
-          aria-required={field.required}
-        />
-      );
-    }
-
-    case 'listbox': {
-      const listData = (field.options || []).map((opt, idx) => ({
-        value: opt,
-        label: (field.displayOptions && field.displayOptions[idx]) || opt,
-      }));
-      if (field.multiSelect) {
-        const selectedValues = value ? value.split(',').filter(Boolean) : [];
-        return (
-          <MultiSelect
-            size="xs"
-            data={listData}
-            value={selectedValues}
-            onChange={(vals) => onChange(vals.join(','))}
-            placeholder={`Select ${field.label}`}
-            searchable
-            disabled={field.readOnly}
-            aria-label={field.label || field.name}
-            aria-required={field.required}
-          />
-        );
-      }
-      return (
-        <Select
-          size="xs"
-          data={listData}
-          value={value || null}
-          onChange={(v) => onChange(v || '')}
-          placeholder={`Select ${field.label}`}
-          clearable
-          searchable
-          disabled={field.readOnly}
-          aria-label={field.label || field.name}
-          aria-required={field.required}
-        />
-      );
-    }
-
-    case 'radio': {
-      const radioOptions: { value: string; label: string }[] = [];
-      if (field.widgets && field.widgets.length > 0) {
-        for (const w of field.widgets) {
-          if (w.exportValue && !radioOptions.some(o => o.value === w.exportValue)) {
-            radioOptions.push({ value: w.exportValue, label: w.exportValue });
-          }
-        }
-      }
-      if (radioOptions.length === 0 && field.options) {
-        radioOptions.push(...field.options.map(o => ({ value: o, label: o })));
-      }
-      return (
-        <Radio.Group
-          value={value}
-          onChange={onChange}
-          aria-label={field.label || field.name}
-          aria-required={field.required}
-        >
-          <Stack gap={4} mt={4}>
-            {radioOptions.map((opt) => (
-              <Radio
-                key={opt.value}
-                size="xs"
-                value={opt.value}
-                label={opt.label}
-                disabled={field.readOnly}
-              />
-            ))}
-          </Stack>
-        </Radio.Group>
-      );
-    }
-
-    default:
-      return (
-        <TextInput
-          size="xs"
-          value={value}
-          onChange={(e) => onChange(e.currentTarget.value)}
-          disabled={field.readOnly}
-          aria-label={field.label || field.name}
-          aria-required={field.required}
-        />
-      );
-  }
 }
 
-const FieldInputBase = memo(FieldInputInner);
-
-/**
- * FieldInput that subscribes to its own field value via useFieldValue.
- * Only re-renders when its specific field value changes.
- */
-function FieldInput({
-  field,
-  onValueChange,
-}: {
-  field: FormField;
-  onValueChange: (fieldName: string, value: string) => void;
-}) {
-  const value = useFieldValue(field.name);
-  return <FieldInputBase field={field} value={value} onValueChange={onValueChange} />;
-}
+// ---------------------------------------------------------------------------
+// Main FormFill component
+// ---------------------------------------------------------------------------
 
 const FormFill = (_props: BaseToolProps) => {
   const { selectedTool } = useNavigation();
@@ -261,6 +99,7 @@ const FormFill = (_props: BaseToolProps) => {
 
   const { scrollActions } = useViewer();
 
+  const [mode, setMode] = useState<FormMode>('fill');
   const [flatten, setFlatten] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -270,7 +109,7 @@ const FormFill = (_props: BaseToolProps) => {
 
   const activeFiles = selectors.getFiles();
   const selectedFileIds = fileState.ui.selectedFileIds;
-  const currentFile = React.useMemo(() => {
+  const currentFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
     if (selectedFileIds.length > 0) {
       const sel = activeFiles.find(
@@ -350,15 +189,13 @@ const FormFill = (_props: BaseToolProps) => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (formState.isDirty) {
         e.preventDefault();
-        e.returnValue = ''; // Required for some browsers
+        e.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [formState.isDirty]);
 
-  // Handle refresh / re-scan: pass the correct fileId so FormFieldOverlay's
-  // stale-file guard doesn't hide overlays after the re-fetch completes.
   const handleRefresh = useCallback(() => {
     if (currentFile && isStirlingFile(currentFile)) {
       fetchFields(currentFile, currentFile.fileId);
@@ -377,7 +214,6 @@ const FormFill = (_props: BaseToolProps) => {
   const handleFieldClick = useCallback(
     (fieldName: string, pageIndex?: number) => {
       setActiveField(fieldName);
-      // Scroll to the field's page in the viewer
       if (pageIndex !== undefined) {
         scrollActions.scrollToPage(pageIndex + 1);
       }
@@ -400,7 +236,7 @@ const FormFill = (_props: BaseToolProps) => {
     return { sortedPages: pages, fieldsByPage: byPage };
   }, [formState.fields]);
 
-  // Progress tracking — subscribe to all values (only used for the counters)
+  // Progress tracking
   const allValues = useAllFormValues();
 
   const fillableFields = useMemo(() => {
@@ -431,204 +267,239 @@ const FormFill = (_props: BaseToolProps) => {
 
   if (!isActive) return null;
 
+  const currentModeDef = MODE_TABS.find((t) => t.id === mode)!;
+
   return (
-    <Box style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {/* Controls section */}
-      <Box p="sm" style={{ flexShrink: 0, borderBottom: '1px solid var(--mantine-color-default-border)' }}>
-        <Stack gap="sm">
-          {/* Status */}
-          {formState.loading && (
-            <Stack gap="xs">
-              <Group gap="xs">
-                <Loader size="xs" />
-                <Text size="sm" c="dimmed">
-                  Analysing form fields…
-                </Text>
-              </Group>
-              <Skeleton height={60} radius="md" />
-              <Skeleton height={60} radius="md" />
-              <Skeleton height={60} radius="md" />
-            </Stack>
-          )}
+    <div className={styles.root}>
+      {/* ---- Mode tabs ---- */}
+      <div className={styles.modeTabs}>
+        {MODE_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            className={`${styles.modeTab} ${mode === tab.id ? styles.modeTabActive : ''}`}
+            onClick={() => setMode(tab.id)}
+            title={tab.label}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-          {formState.error && (
-            <Alert
-              icon={<WarningAmberIcon sx={{ fontSize: 18 }} />}
-              color="red"
-              variant="light"
-              p="xs"
-            >
-              <Text size="xs">{formState.error}</Text>
-            </Alert>
-          )}
+      {/* ---- Coming-soon for non-ready tabs ---- */}
+      {!currentModeDef.ready && <ComingSoonPlaceholder mode={currentModeDef} />}
 
-          {!formState.loading && formState.fields.length > 0 && (
-            <>
-              {/* Progress */}
-              <Box>
-                <Group justify="space-between" mb={4}>
+      {/* ---- Fill Form content ---- */}
+      {mode === 'fill' && (
+        <>
+          {/* Header / controls */}
+          <div className={styles.header}>
+            {/* Loading state */}
+            {formState.loading && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Loader size={14} />
                   <Text size="xs" c="dimmed">
-                    {filledCount}/{fillableCount} fields filled
-                    {requiredCount > 0 && ` · ${filledRequiredCount}/${requiredCount} required`}
+                    Analysing form fields...
                   </Text>
-                </Group>
-                <Progress
-                  value={fillableCount > 0 ? (filledCount / fillableCount) * 100 : 0}
+                </div>
+                <Skeleton height={48} radius="sm" />
+                <Skeleton height={48} radius="sm" />
+              </>
+            )}
+
+            {/* Error state */}
+            {formState.error && (
+              <Alert
+                icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+                color="red"
+                variant="light"
+                p="xs"
+                radius="sm"
+              >
+                <Text size="xs">{formState.error}</Text>
+              </Alert>
+            )}
+
+            {/* Ready state with fields */}
+            {!formState.loading && formState.fields.length > 0 && (
+              <>
+                {/* Progress bar */}
+                <div>
+                  <div className={styles.progressRow}>
+                    <span className={styles.progressLabel}>
+                      {filledCount} / {fillableCount} filled
+                      {requiredCount > 0 && (
+                        <span style={{ marginLeft: '0.25rem', opacity: 0.7 }}>
+                          ({filledRequiredCount}/{requiredCount} req.)
+                        </span>
+                      )}
+                    </span>
+                    <span className={styles.progressLabel}>
+                      {fillableCount > 0
+                        ? Math.round((filledCount / fillableCount) * 100)
+                        : 0}
+                      %
+                    </span>
+                  </div>
+                  <Progress
+                    value={fillableCount > 0 ? (filledCount / fillableCount) * 100 : 0}
+                    size={6}
+                    radius="xl"
+                    color={filledRequiredCount === requiredCount ? 'teal' : 'blue'}
+                    mt={4}
+                  />
+                </div>
+
+                {/* Flatten toggle */}
+                <Switch
+                  label="Flatten after filling"
+                  checked={flatten}
+                  onChange={(e) => setFlatten(e.currentTarget.checked)}
                   size="xs"
-                  radius="xl"
-                  color={filledRequiredCount === requiredCount ? 'teal' : 'blue'}
+                  styles={{
+                    label: { fontSize: '0.75rem', cursor: 'pointer' },
+                  }}
                 />
-              </Box>
 
-              {/* Options */}
-              <Switch
-                label="Flatten after filling"
-                checked={flatten}
-                onChange={(e) => setFlatten(e.currentTarget.checked)}
-                size="xs"
-              />
-
-              {/* Actions */}
-              <Group gap="xs">
-                <Button
-                  leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                  size="xs"
-                  onClick={handleSave}
-                  loading={saving}
-                  disabled={!formState.isDirty}
-                  fullWidth
-                >
-                  Apply & Save
-                </Button>
-                <Button
-                  leftSection={<RefreshIcon sx={{ fontSize: 14 }} />}
-                  size="xs"
-                  variant="light"
-                  onClick={handleRefresh}
-                >
-                  Re-scan
-                </Button>
-              </Group>
-
-              {saveError && (
-                <Alert color="red" variant="light" p="xs">
-                  <Text size="xs">{saveError}</Text>
-                </Alert>
-              )}
-
-              {formState.isDirty && (
-                <Text size="xs" c="yellow.7">
-                  Unsaved changes
-                </Text>
-              )}
-            </>
-          )}
-
-          {!formState.loading && formState.fields.length === 0 && !formState.error && (
-            <Text size="xs" c="dimmed">
-              No fillable form fields found.
-            </Text>
-          )}
-        </Stack>
-      </Box>
-
-      {/* Form fields list */}
-      {!formState.loading && formState.fields.length > 0 && (
-        <ScrollArea style={{ flex: 1 }} px="sm" py="sm">
-          <Stack gap="sm">
-            {sortedPages.map((pageIdx) => (
-              <React.Fragment key={pageIdx}>
-                <Divider
-                  label={
-                    <Text size="xs" fw={600} c="dimmed" tt="uppercase" lts={0.5}>
-                      Page {pageIdx + 1}
-                    </Text>
-                  }
-                  labelPosition="left"
-                  mt={pageIdx === sortedPages[0] ? 0 : 'xs'}
-                />
-                {fieldsByPage.get(pageIdx)!.map((field) => {
-                  const isFieldActive = formState.activeFieldName === field.name;
-                  const hasError = !!validationErrors[field.name];
-                  const pageIndex =
-                    field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : undefined;
-
-                  return (
-                    <Paper
-                      key={field.name}
-                      ref={isFieldActive ? activeFieldRef : undefined}
-                      p="sm"
-                      radius="md"
-                      withBorder
-                      shadow={isFieldActive ? 'sm' : undefined}
-                      style={{
-                        cursor: 'pointer',
-                        borderColor: hasError
-                          ? 'var(--mantine-color-red-5)'
-                          : isFieldActive
-                            ? 'var(--mantine-color-blue-5)'
-                            : undefined,
-                        borderWidth: isFieldActive || hasError ? 2 : 1,
-                        background: isFieldActive
-                          ? 'var(--mantine-color-blue-light)'
-                          : undefined,
-                        transition: 'all 0.15s ease',
-                      }}
-                      onClick={() => handleFieldClick(field.name, pageIndex)}
+                {/* Action buttons */}
+                <div className={styles.actionBar}>
+                  <Button
+                    leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
+                    size="xs"
+                    onClick={handleSave}
+                    loading={saving}
+                    disabled={!formState.isDirty}
+                  >
+                    Apply & Save
+                  </Button>
+                  <Tooltip label="Re-scan fields" withArrow position="bottom">
+                    <ActionIcon
+                      variant="light"
+                      size="md"
+                      onClick={handleRefresh}
+                      aria-label="Re-scan form fields"
                     >
-                      {/* Field header */}
-                      <Group gap={6} mb={6} wrap="nowrap">
-                        <Box
-                          style={{
-                            color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                            display: 'flex',
-                            flexShrink: 0,
-                          }}
+                      <RefreshIcon sx={{ fontSize: 16 }} />
+                    </ActionIcon>
+                  </Tooltip>
+                </div>
+
+                {/* Error message */}
+                {saveError && (
+                  <Alert color="red" variant="light" p="xs" radius="sm">
+                    <Text size="xs">{saveError}</Text>
+                  </Alert>
+                )}
+              </>
+            )}
+
+            {/* Empty state */}
+            {!formState.loading && formState.fields.length === 0 && !formState.error && (
+              <div className={styles.emptyState}>
+                <DescriptionIcon className={styles.emptyStateIcon} />
+                <span className={styles.emptyStateText}>
+                  No fillable form fields found in this PDF.
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* ---- Scrollable field list ---- */}
+          {!formState.loading && formState.fields.length > 0 && (
+            <ScrollArea className={styles.fieldList}>
+              <div className={styles.fieldListInner}>
+                {sortedPages.map((pageIdx, i) => (
+                  <React.Fragment key={pageIdx}>
+                    <div
+                      className={styles.pageDivider}
+                      style={i === 0 ? { marginTop: 0 } : undefined}
+                    >
+                      <Text className={styles.pageDividerLabel}>
+                        Page {pageIdx + 1}
+                      </Text>
+                    </div>
+
+                    {fieldsByPage.get(pageIdx)!.map((field) => {
+                      const isFieldActive = formState.activeFieldName === field.name;
+                      const hasError = !!validationErrors[field.name];
+                      const pageIndex =
+                        field.widgets && field.widgets.length > 0
+                          ? field.widgets[0].pageIndex
+                          : undefined;
+
+                      return (
+                        <div
+                          key={field.name}
+                          ref={isFieldActive ? activeFieldRef : undefined}
+                          className={`${styles.fieldCard} ${
+                            isFieldActive ? styles.fieldCardActive : ''
+                          } ${hasError ? styles.fieldCardError : ''}`}
+                          onClick={() => handleFieldClick(field.name, pageIndex)}
                         >
-                          {FIELD_TYPE_ICON[field.type]}
-                        </Box>
-                        <Text size="xs" fw={500} truncate style={{ flex: 1 }}>
-                          {field.label || field.name}
-                        </Text>
-                        {field.required && (
-                          <Badge size="xs" color="red" variant="dot" style={{ flexShrink: 0 }}>
-                            required
-                          </Badge>
-                        )}
-                      </Group>
+                          <div className={styles.fieldHeader}>
+                            <span
+                              className={styles.fieldTypeIcon}
+                              style={{
+                                color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
+                                fontSize: '0.875rem',
+                              }}
+                            >
+                              {FIELD_TYPE_ICON[field.type]}
+                            </span>
+                            <span className={styles.fieldName}>
+                              {field.label || field.name}
+                            </span>
+                            {field.required && (
+                              <span className={styles.fieldRequired}>req</span>
+                            )}
+                          </div>
 
-                      {/* Field input */}
-                      {field.type !== 'button' && field.type !== 'signature' && (
-                        <Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                          <FieldInput
-                            field={field}
-                            onValueChange={handleValueChange}
-                          />
-                        </Box>
-                      )}
+                          {field.type !== 'button' && field.type !== 'signature' && (
+                            <div
+                              className={styles.fieldInputWrap}
+                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                            >
+                              <FieldInput
+                                field={field}
+                                onValueChange={handleValueChange}
+                              />
+                            </div>
+                          )}
 
-                      {/* Validation error */}
-                      {hasError && (
-                        <Text size="xs" c="red" mt={4}>
-                          {validationErrors[field.name]}
-                        </Text>
-                      )}
+                          {hasError && (
+                            <div className={styles.fieldError}>
+                              {validationErrors[field.name]}
+                            </div>
+                          )}
 
-                      {/* Tooltip hint */}
-                      {field.tooltip && (
-                        <Text size="xs" c="dimmed" mt={4} lineClamp={2}>
-                          {field.tooltip}
-                        </Text>
-                      )}
-                    </Paper>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </Stack>
-        </ScrollArea>
+                          {field.tooltip && (
+                            <div className={styles.fieldHint}>
+                              {field.tooltip}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+
+          {/* ---- Status bar ---- */}
+          {!formState.loading && formState.fields.length > 0 && (
+            <div className={styles.statusBar}>
+              <span>
+                {formState.isDirty && <span className={styles.unsavedDot} />}
+                {formState.isDirty ? 'Unsaved changes' : 'All saved'}
+              </span>
+              <span>Ctrl+S to save</span>
+            </div>
+          )}
+        </>
       )}
-    </Box>
+    </div>
   );
 };
 
