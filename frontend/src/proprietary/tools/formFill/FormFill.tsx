@@ -40,7 +40,7 @@ import PostAddIcon from '@mui/icons-material/PostAdd';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
-import styles from './FormFill.module.css';
+import styles from '@proprietary/tools/formFill/FormFill.module.css';
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools

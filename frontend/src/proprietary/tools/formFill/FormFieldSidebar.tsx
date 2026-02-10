@@ -17,13 +17,13 @@ import {
   ActionIcon,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useFormFill } from './FormFillContext';
-import { FieldInput } from './FieldInput';
-import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from './fieldMeta';
-import type { FormField } from './types';
+import { useFormFill } from '@proprietary/tools/formFill/FormFillContext';
+import { FieldInput } from '@proprietary/tools/formFill/FieldInput';
+import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@proprietary/tools/formFill/fieldMeta';
+import type { FormField } from '@proprietary/tools/formFill/types';
 import CloseIcon from '@mui/icons-material/Close';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
-import styles from './FormFill.module.css';
+import styles from '@proprietary/tools/formFill/FormFill.module.css';
 
 interface FormFieldSidebarProps {
   visible: boolean;
@@ -34,7 +34,7 @@ export function FormFieldSidebar({
   visible,
   onToggle,
 }: FormFieldSidebarProps) {
-  const { t } = useTranslation();
+  useTranslation();
   const { state, setValue, setActiveField } = useFormFill();
   const { fields, activeFieldName, loading } = state;
   const activeFieldRef = useRef<HTMLDivElement>(null);
