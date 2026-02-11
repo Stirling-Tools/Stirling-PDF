@@ -104,7 +104,7 @@ const FormFill = (_props: BaseToolProps) => {
   const { scrollActions } = useViewer();
 
   const [mode, setMode] = useState<FormMode>('fill');
-  const [flatten, setFlatten] = useState(true);
+  const [flatten, setFlatten] = useState(false);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
