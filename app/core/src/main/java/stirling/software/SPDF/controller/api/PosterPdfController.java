@@ -1,13 +1,19 @@
 package stirling.software.SPDF.controller.api;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.util.Matrix;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,12 +28,9 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.general.PosterPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -35,7 +38,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class PosterPdfController {
 
-    private final TempFileManager tempFileManager;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @AutoJobPostMapping(
             value = "/split-pdf-by-poster",
@@ -46,7 +49,7 @@ public class PosterPdfController {
             description =
                     "This endpoint splits large or oddly-sized PDF pages into smaller chunks "
                             + "suitable for printing on standard paper sizes (e.g., A4, Letter). "
-                            + "Uses mutool poster to divide each page into a grid of smaller pages. "
+                            + "Divides each page into a grid of smaller pages using Apache PDFBox. "
                             + "Input: PDF Output: ZIP-PDF Type: SISO")
     public ResponseEntity<byte[]> posterPdf(@ModelAttribute PosterPdfRequest request)
             throws Exception {
@@ -57,60 +60,181 @@ public class PosterPdfController {
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
         log.debug("Base filename for output: {}", filename);
 
-        try (TempFile inputTempFile = new TempFile(tempFileManager, ".pdf");
-                TempFile outputTempFile = new TempFile(tempFileManager, ".pdf");
-                TempFile zipTempFile = new TempFile(tempFileManager, ".zip")) {
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
+                PDDocument outputDocument =
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
+                ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
+                ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream()) {
 
-            Path inputPath = inputTempFile.getPath();
-            Path outputPath = outputTempFile.getPath();
-            Path zipPath = zipTempFile.getPath();
+            // Get target page size
+            PDRectangle targetPageSize = getTargetPageSize(request.getPageSize());
+            log.debug(
+                    "Target page size: {} ({}x{})",
+                    request.getPageSize(),
+                    targetPageSize.getWidth(),
+                    targetPageSize.getHeight());
 
-            // Write input file
-            log.debug("Writing input file to: {}", inputPath);
-            Files.write(inputPath, file.getBytes());
+            // Create LayerUtility for importing pages as forms
+            LayerUtility layerUtility = new LayerUtility(outputDocument);
 
-            // Build mutool poster command
-            List<String> command = buildMutoolCommand(request, inputPath, outputPath);
-            log.info("Executing mutool poster command: {}", String.join(" ", command));
+            int totalPages = sourceDocument.getNumberOfPages();
+            int xFactor = request.getXFactor();
+            int yFactor = request.getYFactor();
+            boolean rightToLeft = request.isRightToLeft();
 
-            // Execute mutool poster
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.MUTOOL)
-                            .runCommandWithOutputHandling(command, null);
+            log.debug(
+                    "Processing {} pages with grid {}x{}, RTL={}",
+                    totalPages,
+                    xFactor,
+                    yFactor,
+                    rightToLeft);
 
-            if (result.getRc() != 0) {
-                log.error("mutool poster failed with exit code: {}", result.getRc());
-                log.error("mutool output: {}", result.getMessages());
-                throw ExceptionUtils.createIOException(
-                        "error.pdfPoster",
-                        "Failed to split PDF into poster chunks: {0}",
-                        null,
-                        result.getMessages());
+            // Process each page
+            for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                PDPage sourcePage = sourceDocument.getPage(pageIndex);
+
+                // Get both MediaBox and CropBox
+                PDRectangle mediaBox = sourcePage.getMediaBox();
+                PDRectangle cropBox = sourcePage.getCropBox();
+
+                // If no CropBox is set, use MediaBox
+                if (cropBox == null) {
+                    cropBox = mediaBox;
+                }
+
+                // Save original boxes for restoration
+                PDRectangle originalMediaBox = sourcePage.getMediaBox();
+                PDRectangle originalCropBox = sourcePage.getCropBox();
+
+                // Normalize the page: set MediaBox to CropBox
+                // This ensures the form's coordinate space starts at (0, 0)
+                // instead of having an offset from the original MediaBox
+                sourcePage.setMediaBox(cropBox);
+                sourcePage.setCropBox(cropBox);
+
+                // Handle page rotation
+                int rotation = sourcePage.getRotation();
+                float sourceWidth = cropBox.getWidth();
+                float sourceHeight = cropBox.getHeight();
+
+                // Swap dimensions if rotated 90 or 270 degrees
+                if (rotation == 90 || rotation == 270) {
+                    float temp = sourceWidth;
+                    sourceWidth = sourceHeight;
+                    sourceHeight = temp;
+                }
+
+                log.debug(
+                        "Page {}: Normalized to CropBox dimensions {}x{}, rotation {}",
+                        pageIndex,
+                        sourceWidth,
+                        sourceHeight,
+                        rotation);
+
+                // Import source page as form (now with normalized coordinate space)
+                PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
+
+                // Restore original boxes
+                sourcePage.setMediaBox(originalMediaBox);
+                sourcePage.setCropBox(originalCropBox);
+
+                // Calculate cell dimensions in source page coordinates
+                float cellWidth = sourceWidth / xFactor;
+                float cellHeight = sourceHeight / yFactor;
+
+                // Create grid cells (rows × columns)
+                for (int row = 0; row < yFactor; row++) {
+                    for (int col = 0; col < xFactor; col++) {
+                        // Apply RTL ordering for columns if enabled
+                        int actualCol = rightToLeft ? (xFactor - 1 - col) : col;
+
+                        // Calculate crop rectangle in source coordinates
+                        // PDF coordinates start at bottom-left
+                        float cropX = actualCol * cellWidth;
+                        // For Y: invert so row 0 shows TOP (following SplitPdfBySectionsController
+                        // pattern)
+                        float cropY = (yFactor - 1 - row) * cellHeight;
+
+                        // Create new output page with target size
+                        PDPage outputPage = new PDPage(targetPageSize);
+                        outputDocument.addPage(outputPage);
+
+                        try (PDPageContentStream contentStream =
+                                new PDPageContentStream(
+                                        outputDocument,
+                                        outputPage,
+                                        PDPageContentStream.AppendMode.APPEND,
+                                        true,
+                                        true)) {
+
+                            // Calculate uniform scale to fit cell into target page
+                            // Scale UP if cell is smaller than target, scale DOWN if larger
+                            float scaleX = targetPageSize.getWidth() / cellWidth;
+                            float scaleY = targetPageSize.getHeight() / cellHeight;
+                            float scale = Math.min(scaleX, scaleY);
+
+                            // Center the scaled content on the target page
+                            float scaledCellWidth = cellWidth * scale;
+                            float scaledCellHeight = cellHeight * scale;
+                            float offsetX = (targetPageSize.getWidth() - scaledCellWidth) / 2;
+                            float offsetY = (targetPageSize.getHeight() - scaledCellHeight) / 2;
+
+                            // Apply transformations
+                            contentStream.saveGraphicsState();
+
+                            // Translate to center position
+                            contentStream.transform(Matrix.getTranslateInstance(offsetX, offsetY));
+
+                            // Scale uniformly
+                            contentStream.transform(Matrix.getScaleInstance(scale, scale));
+
+                            // Translate to show only the desired grid cell
+                            // IMPORTANT: The PDFormXObject's BBox already matches the CropBox
+                            // (including its offset), so we only need to translate by cropX/cropY
+                            // relative to the CropBox origin, NOT the MediaBox origin
+                            contentStream.transform(Matrix.getTranslateInstance(-cropX, -cropY));
+
+                            // Draw the form
+                            contentStream.drawForm(form);
+
+                            contentStream.restoreGraphicsState();
+                        }
+
+                        log.trace(
+                                "Created output page for grid cell [{},{}] of page {}: cropX={}, cropY={}, translate=({}, {})",
+                                row,
+                                actualCol,
+                                pageIndex,
+                                cropX,
+                                cropY,
+                                -cropX,
+                                -cropY);
+                    }
+                }
             }
 
-            log.debug("mutool poster completed successfully");
+            // Save output PDF
+            outputDocument.save(pdfOutputStream);
+            byte[] pdfData = pdfOutputStream.toByteArray();
 
-            // Check if output file was created
-            if (!Files.exists(outputPath) || Files.size(outputPath) == 0) {
-                log.error("Output file not created or is empty");
-                throw ExceptionUtils.createIOException(
-                        "error.pdfPoster", "Failed to create poster output file", null);
-            }
+            log.debug(
+                    "Generated output PDF with {} pages ({} bytes)",
+                    outputDocument.getNumberOfPages(),
+                    pdfData.length);
 
             // Create ZIP file with the result
-            log.debug("Creating ZIP file at: {}", zipPath);
-            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+            try (ZipOutputStream zipOut = new ZipOutputStream(zipOutputStream)) {
                 ZipEntry zipEntry = new ZipEntry(filename + "_poster.pdf");
                 zipOut.putNextEntry(zipEntry);
-                Files.copy(outputPath, zipOut);
+                zipOut.write(pdfData);
                 zipOut.closeEntry();
             }
 
-            byte[] data = Files.readAllBytes(zipPath);
-            log.debug("Successfully created ZIP with {} bytes", data.length);
+            byte[] zipData = zipOutputStream.toByteArray();
+            log.debug("Successfully created ZIP with {} bytes", zipData.length);
 
             return WebResponseUtils.bytesToWebResponse(
-                    data, filename + "_poster.zip", MediaType.APPLICATION_OCTET_STREAM);
+                    zipData, filename + "_poster.zip", MediaType.APPLICATION_OCTET_STREAM);
 
         } catch (IOException e) {
             ExceptionUtils.logException("PDF poster split process", e);
@@ -118,27 +242,30 @@ public class PosterPdfController {
         }
     }
 
-    private List<String> buildMutoolCommand(
-            PosterPdfRequest request, Path inputPath, Path outputPath) {
-        List<String> command = new ArrayList<>();
-        command.add("mutool");
-        command.add("poster");
+    /**
+     * Maps page size string to PDRectangle.
+     *
+     * @param pageSize the page size name (e.g., "A4", "Letter")
+     * @return the corresponding PDRectangle
+     * @throws IllegalArgumentException if page size is not supported
+     */
+    private PDRectangle getTargetPageSize(String pageSize) {
+        Map<String, PDRectangle> sizeMap = new HashMap<>();
+        sizeMap.put("A4", PDRectangle.A4);
+        sizeMap.put("Letter", PDRectangle.LETTER);
+        sizeMap.put("A3", PDRectangle.A3);
+        sizeMap.put("A5", PDRectangle.A5);
+        sizeMap.put("Legal", PDRectangle.LEGAL);
+        sizeMap.put("Tabloid", new PDRectangle(792, 1224)); // 11x17 inches
 
-        // Add decimation factors
-        command.add("-x");
-        command.add(String.valueOf(request.getXFactor()));
-        command.add("-y");
-        command.add(String.valueOf(request.getYFactor()));
-
-        // Add right-to-left flag if requested
-        if (request.isRightToLeft()) {
-            command.add("-r");
+        PDRectangle size = sizeMap.get(pageSize);
+        if (size == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidPageSize",
+                    "Invalid page size: {0}",
+                    pageSize,
+                    String.join(", ", sizeMap.keySet()));
         }
-
-        // Add input and output files
-        command.add(inputPath.toString());
-        command.add(outputPath.toString());
-
-        return command;
+        return size;
     }
 }
