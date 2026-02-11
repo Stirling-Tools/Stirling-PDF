@@ -33,6 +33,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.oauth2.TauriOAuthUtils;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
@@ -233,7 +234,16 @@ public class CustomSaml2AuthenticationSuccessHandler
         String redirectPath = resolveRedirectPath(request, contextPath);
         String origin = resolveOrigin(request);
         clearRedirectCookie(response);
-        return origin + redirectPath + "#access_token=" + jwt;
+        String url = origin + redirectPath + "#access_token=" + jwt;
+
+        String nonce = TauriSamlUtils.extractNonceFromRequest(request);
+        if (nonce != null) {
+            url +=
+                    "&nonce="
+                            + java.net.URLEncoder.encode(
+                                    nonce, java.nio.charset.StandardCharsets.UTF_8);
+        }
+        return url;
     }
 
     /**
@@ -256,6 +266,9 @@ public class CustomSaml2AuthenticationSuccessHandler
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
+        if (TauriSamlUtils.isTauriRelayState(request)) {
+            return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
+        }
         return extractRedirectPathFromCookie(request)
                 .filter(path -> path.startsWith("/"))
                 .orElseGet(() -> defaultCallbackPath(contextPath));
