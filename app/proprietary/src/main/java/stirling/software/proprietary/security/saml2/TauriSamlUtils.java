@@ -2,9 +2,7 @@ package stirling.software.proprietary.security.saml2;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * Utility helpers for the Tauri desktop SAML flow.
- */
+/** Utility helpers for the Tauri desktop SAML flow. */
 public final class TauriSamlUtils {
 
     public static final String TAURI_RELAY_STATE_PREFIX = "tauri:";

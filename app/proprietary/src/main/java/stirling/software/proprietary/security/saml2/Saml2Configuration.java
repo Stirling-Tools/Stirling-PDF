@@ -156,6 +156,16 @@ public class Saml2Configuration {
         OpenSaml4AuthenticationRequestResolver resolver =
                 new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
 
+        resolver.setRelayStateResolver(
+                request -> {
+                    String tauriParam = request.getParameter("tauri");
+                    if (!"1".equals(tauriParam)) {
+                        return null;
+                    }
+                    String nonce = request.getParameter("nonce");
+                    return TauriSamlUtils.buildRelayState(nonce);
+                });
+
         resolver.setAuthnRequestCustomizer(
                 customizer -> {
                     HttpServletRequest request = customizer.getRequest();
@@ -163,12 +173,6 @@ public class Saml2Configuration {
 
                     // Generate a unique AuthnRequest ID for each SAML request
                     authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
-
-                    String tauriParam = request.getParameter("tauri");
-                    if ("1".equals(tauriParam)) {
-                        String nonce = request.getParameter("nonce");
-                        customizer.setRelayState(TauriSamlUtils.buildRelayState(nonce));
-                    }
 
                     logAuthnRequestDetails(authnRequest);
                     logHttpRequestDetails(request);

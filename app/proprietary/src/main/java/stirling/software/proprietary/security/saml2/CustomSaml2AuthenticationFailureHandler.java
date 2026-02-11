@@ -41,9 +41,7 @@ public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthentica
                 if (nonce != null) {
                     redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
                 }
-                redirectUrl =
-                        appendQueryParam(
-                                redirectUrl, "errorOAuth", error.getErrorCode());
+                redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", error.getErrorCode());
                 getRedirectStrategy().sendRedirect(request, response, redirectUrl);
                 return;
             }
@@ -59,9 +57,7 @@ public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthentica
                 }
                 redirectUrl =
                         appendQueryParam(
-                                redirectUrl,
-                                "errorOAuth",
-                                "not_authentication_provider_found");
+                                redirectUrl, "errorOAuth", "not_authentication_provider_found");
                 getRedirectStrategy().sendRedirect(request, response, redirectUrl);
                 return;
             }
