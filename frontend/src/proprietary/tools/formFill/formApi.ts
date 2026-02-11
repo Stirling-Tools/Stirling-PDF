@@ -31,7 +31,7 @@ export async function fetchFormFieldsWithCoordinates(
 export async function fillFormFields(
   file: File | Blob,
   values: Record<string, string>,
-  flatten: boolean = false
+  flatten: boolean = true
 ): Promise<Blob> {
   const formData = new FormData();
   formData.append('file', file);

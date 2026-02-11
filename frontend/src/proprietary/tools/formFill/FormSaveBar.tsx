@@ -46,8 +46,8 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     setApplying(true);
     try {
       // Generate the filled PDF
-      const filledBlob = await submitForm(file, false);
-      
+      const filledBlob = await submitForm(file, true);
+
       // Call the onApply callback to reload the PDF in the viewer
       if (onApply) {
         await onApply(filledBlob);
@@ -63,7 +63,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     if (!file || saving || applying) return;
     setSaving(true);
     try {
-      const blob = await submitForm(file, false);
+      const blob = await submitForm(file, true);
       // Trigger browser download
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -115,11 +115,11 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
             <Stack gap="xs" p="md">
               <Group justify="space-between" wrap="nowrap">
                 <Group gap="sm" wrap="nowrap">
-                  <EditNoteIcon 
-                    sx={{ 
-                      fontSize: 24, 
-                      color: isDirty ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-6)' 
-                    }} 
+                  <EditNoteIcon
+                    sx={{
+                      fontSize: 24,
+                      color: isDirty ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-6)'
+                    }}
                   />
                   <div>
                     <Group gap="xs">
