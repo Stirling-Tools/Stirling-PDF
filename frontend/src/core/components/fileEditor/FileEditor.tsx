@@ -12,7 +12,7 @@ import AddFileCard from '@app/components/fileEditor/AddFileCard';
 import FilePickerModal from '@app/components/shared/FilePickerModal';
 import { FileId, StirlingFile } from '@app/types/fileContext';
 import { alert } from '@app/components/toast';
-import { downloadBlob } from '@app/utils/downloadUtils';
+import { downloadFile } from '@app/services/downloadService';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 
@@ -282,7 +282,11 @@ const FileEditor = ({
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
     if (record && file) {
-       downloadBlob(file, file.name);
+      void downloadFile({
+        data: file,
+        filename: file.name,
+        localPath: record.localFilePath
+      });
     }
   }, [activeStirlingFileStubs, selectors, _setStatus]);
 
