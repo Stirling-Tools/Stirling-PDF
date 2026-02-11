@@ -361,7 +361,7 @@ const FormFill = (_props: BaseToolProps) => {
                     <span className={styles.progressLabel}>
                       {filledCount} / {fillableCount} filled
                       {requiredCount > 0 && (
-                        <span style={{ marginLeft: '0.25rem', opacity: 0.7 }}>
+                        <span style={{ marginLeft: '0.5rem', opacity: 0.7 }}>
                           ({filledRequiredCount}/{requiredCount} req.)
                         </span>
                       )}

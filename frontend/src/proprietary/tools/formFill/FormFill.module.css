@@ -65,6 +65,13 @@
   gap: 0.625rem;
 }
 
+.progressRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .progressLabel {
   font-size: 0.6875rem;
   font-weight: 600;
