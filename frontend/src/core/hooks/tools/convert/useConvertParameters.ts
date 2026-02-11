@@ -11,7 +11,7 @@ import { getEndpointName as getEndpointNameUtil, getEndpointUrl, isImageFormat, 
 import { detectFileExtension as detectFileExtensionUtil } from '@app/utils/fileUtils';
 import { BaseParameters } from '@app/types/parameters';
 import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 
 export interface ConvertParameters extends BaseParameters {
   fromExtension: string;
@@ -399,6 +399,30 @@ export const useConvertParameters = (): ConvertParametersHook => {
       }
     }
   }, [baseHook.setParameters]);
+
+  // Read URL params on mount for sub-tool pre-selection
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const toParam = urlParams.get('to');
+
+    if (fromParam && toParam) {
+      // Validate that this is a valid conversion
+      const availableTargets = CONVERSION_MATRIX[fromParam] || [];
+      if (availableTargets.includes(toParam)) {
+        baseHook.setParameters(prev => ({
+          ...prev,
+          fromExtension: fromParam,
+          toExtension: toParam,
+          isSmartDetection: false,
+          smartDetectionType: 'none'
+        }));
+
+        // Clear URL params after reading
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []); // Only run on mount
 
   return {
     ...baseHook,
