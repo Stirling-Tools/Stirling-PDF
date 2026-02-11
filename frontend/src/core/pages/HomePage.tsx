@@ -192,7 +192,7 @@ export default function HomePage() {
           <div className="mobile-toggle">
             <div className="mobile-header">
               <div className="mobile-brand">
-                <img src={brandIconSrc} alt="" className="mobile-brand-icon" />
+                <img src={brandIconSrc} alt="" aria-hidden="true" className="mobile-brand-icon" />
                 <img src={brandTextSrc} alt={brandAltText} className="mobile-brand-text" />
               </div>
             </div>
