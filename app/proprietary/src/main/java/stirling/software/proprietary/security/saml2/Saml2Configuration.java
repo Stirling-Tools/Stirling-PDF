@@ -164,6 +164,12 @@ public class Saml2Configuration {
                     // Generate a unique AuthnRequest ID for each SAML request
                     authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
 
+                    String tauriParam = request.getParameter("tauri");
+                    if ("1".equals(tauriParam)) {
+                        String nonce = request.getParameter("nonce");
+                        customizer.setRelayState(TauriSamlUtils.buildRelayState(nonce));
+                    }
+
                     logAuthnRequestDetails(authnRequest);
                     logHttpRequestDetails(request);
                 });
