@@ -801,7 +801,7 @@ desc = "Tries to repair a corrupt/broken PDF"
 
 [home.formFill]
 tags = "form,fill,fillable,input,field,acroform"
-title = "Fill Form"
+title = "Form Tools"
 desc = "Fill PDF form fields interactively with a visual editor"
 
 [home.removeBlanks]
@@ -4248,7 +4248,7 @@ apply = "Apply Changes"
 download = "Download PDF"
 
 [rightRail]
-formFill = "Fill Form"
+formFill = "Form Tools"
 closeSelected = "Close Selected Files"
 selectAll = "Select All"
 deselectAll = "Deselect All"
