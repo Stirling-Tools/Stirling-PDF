@@ -100,6 +100,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   const handleServerSelection = (config: ServerConfig) => {
+    console.log('[SetupWizard] Server selected:', config);
+    console.log('[SetupWizard] OAuth providers:', config.enabledOAuthProviders);
+    console.log('[SetupWizard] Login method:', config.loginMethod);
     setServerConfig(config);
     setError(null);
     setSelfHostedMfaCode('');
@@ -283,7 +286,44 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       const currentConfig = await connectionModeService.getCurrentConfig();
       if (currentConfig.lock_connection_mode && currentConfig.server_config?.url) {
         setLockConnectionMode(true);
-        setServerConfig(currentConfig.server_config);
+
+        // Re-fetch OAuth providers for the saved server URL
+        const savedUrl = currentConfig.server_config.url.replace(/\/+$/, ''); // Remove trailing slashes
+        let updatedConfig = { ...currentConfig.server_config };
+
+        try {
+          console.log('[SetupWizard] Re-fetching OAuth providers for saved server:', savedUrl);
+          const response = await fetch(`${savedUrl}/api/v1/proprietary/ui-data/login`);
+
+          if (response.ok) {
+            const data = await response.json();
+            const enabledProviders: any[] = [];
+            const providerEntries = Object.entries(data.providerList || {});
+
+            providerEntries.forEach(([path, label]) => {
+              const id = path.split('/').pop();
+              if (id) {
+                enabledProviders.push({
+                  id,
+                  path,
+                  label: typeof label === 'string' ? label : undefined,
+                });
+              }
+            });
+
+            updatedConfig = {
+              ...updatedConfig,
+              enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+              loginMethod: data.loginMethod || 'all',
+            };
+
+            console.log('[SetupWizard] Updated config with OAuth providers:', updatedConfig);
+          }
+        } catch (err) {
+          console.error('[SetupWizard] Failed to re-fetch OAuth providers:', err);
+        }
+
+        setServerConfig(updatedConfig);
         setActiveStep(SetupStep.SelfHostedLogin);
       }
     };
