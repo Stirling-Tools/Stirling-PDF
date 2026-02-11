@@ -29,13 +29,13 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.annotation.PostConstruct;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import jakarta.annotation.PostConstruct;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.YamlPropertySourceFactory;
@@ -101,8 +101,8 @@ public class ApplicationProperties {
     }
 
     /**
-     * Initialize fileUploadLimit from environment variables if not set in settings.yml.
-     * Supports SYSTEMFILEUPLOADLIMIT (format: "100MB") and SYSTEM_MAXFILESIZE (format: "100" in MB).
+     * Initialize fileUploadLimit from environment variables if not set in settings.yml. Supports
+     * SYSTEMFILEUPLOADLIMIT (format: "100MB") and SYSTEM_MAXFILESIZE (format: "100" in MB).
      */
     @PostConstruct
     public void initializeFileUploadLimitFromEnv() {
@@ -124,12 +124,18 @@ public class ApplicationProperties {
                         long sizeInMB = Long.parseLong(systemMaxFileSize.trim());
                         if (sizeInMB > 0 && sizeInMB <= 999) {
                             fileUploadLimit = sizeInMB + "MB";
-                            log.info("Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB", sizeInMB);
+                            log.info(
+                                    "Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB",
+                                    sizeInMB);
                         } else {
-                            log.warn("SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring", sizeInMB);
+                            log.warn(
+                                    "SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring",
+                                    sizeInMB);
                         }
                     } catch (NumberFormatException e) {
-                        log.warn("SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring", systemMaxFileSize);
+                        log.warn(
+                                "SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring",
+                                systemMaxFileSize);
                     }
                 }
             }
