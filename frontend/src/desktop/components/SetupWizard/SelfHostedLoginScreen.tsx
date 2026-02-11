@@ -43,6 +43,14 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   // Check if username/password authentication is allowed
   const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
 
+  console.log('[SelfHostedLoginScreen] Props:', {
+    serverUrl,
+    enabledOAuthProviders,
+    loginMethod,
+    isUserPassAllowed,
+    shouldShowOAuth: !!(enabledOAuthProviders && enabledOAuthProviders.length > 0)
+  });
+
   const handleSubmit = async () => {
     // Validation
     if (!username.trim()) {
