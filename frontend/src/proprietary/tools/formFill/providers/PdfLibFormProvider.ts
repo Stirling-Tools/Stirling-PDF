@@ -38,7 +38,7 @@ function getWidgetPageIndex(
   const pRef = widget.get(PDFName.of('P'));
   if (pRef instanceof PDFRef) {
     for (let i = 0; i < pages.length; i++) {
-      if (pages[i].ref === pRef) return i;
+      if (pages[i].ref.tag === pRef.tag) return i;
     }
   }
 
@@ -56,7 +56,7 @@ function findWidgetRef(widget: PDFDict, pages: PDFPage[]): number | undefined {
       for (let j = 0; j < annots.size(); j++) {
         const annotRef = annots.get(j);
         const annotDict = annots.lookup(j);
-        if (annotDict === widget || annotRef === (widget as any).ref) {
+        if (annotDict === widget || (annotRef instanceof PDFRef && (widget as any).ref && annotRef.tag === (widget as any).ref.tag)) {
           return i;
         }
       }
@@ -105,8 +105,8 @@ function extractWidgets(
     const x2 = numberVal(rect.lookup(2));
     const y2 = numberVal(rect.lookup(3));
 
-    const widgetIndex = widgets.length;
     const pageIndex = getWidgetPageIndex(wDict, pages);
+    const widgetIndex = widgetDicts.indexOf(wDict);
     const page = pages[pageIndex];
     if (!page) continue;
 
@@ -472,6 +472,7 @@ export class PdfLibFormProvider implements IFormDataProvider {
     }
 
     const fields = form.getFields();
+    console.log(`[PdfLib] Found ${fields.length} raw fields`);
     if (fields.length === 0) return [];
 
     const pages = doc.getPages();
@@ -481,7 +482,10 @@ export class PdfLibFormProvider implements IFormDataProvider {
       const type = getFieldType(field);
       const widgets = extractWidgets(field, pages, doc);
 
-      if (widgets.length === 0) continue;
+      if (widgets.length === 0) {
+        console.warn(`[PdfLib] Skipping field "${field.getName()}" - no widgets found`);
+        continue;
+      }
 
       const formField: FormField = {
         name: field.getName(),

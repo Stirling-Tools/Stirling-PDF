@@ -66,12 +66,18 @@ export function FormFieldSidebar({
 
   const fieldsByPage = new Map<number, FormField[]>();
   for (const field of fields) {
-    const pageIndex =
-      field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : 0;
-    if (!fieldsByPage.has(pageIndex)) {
-      fieldsByPage.set(pageIndex, []);
+    const pages = new Set<number>();
+    for (const w of field.widgets || []) {
+      pages.add(w.pageIndex);
     }
-    fieldsByPage.get(pageIndex)!.push(field);
+    if (pages.size === 0) pages.add(0);
+
+    for (const pageIdx of pages) {
+      if (!fieldsByPage.has(pageIdx)) {
+        fieldsByPage.set(pageIdx, []);
+      }
+      fieldsByPage.get(pageIdx)!.push(field);
+    }
   }
   const sortedPages = Array.from(fieldsByPage.keys()).sort((a, b) => a - b);
 

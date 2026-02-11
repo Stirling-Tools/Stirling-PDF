@@ -418,9 +418,16 @@ export function FormFillProvider({
   const fieldsByPage = useMemo(() => {
     const map = new Map<number, FormField[]>();
     for (const field of state.fields) {
-      const pageIdx = field.widgets?.[0]?.pageIndex ?? 0;
-      if (!map.has(pageIdx)) map.set(pageIdx, []);
-      map.get(pageIdx)!.push(field);
+      const pages = new Set<number>();
+      for (const w of field.widgets || []) {
+        pages.add(w.pageIndex);
+      }
+      if (pages.size === 0) pages.add(0);
+
+      for (const pageIdx of pages) {
+        if (!map.has(pageIdx)) map.set(pageIdx, []);
+        map.get(pageIdx)!.push(field);
+      }
     }
     return map;
   }, [state.fields]);

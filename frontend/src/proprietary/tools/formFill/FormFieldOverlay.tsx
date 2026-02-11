@@ -343,13 +343,15 @@ export function FormFieldOverlay({
   );
 
   if (fileId != null && forFileId != null && fileId !== forFileId) {
-    return null;
-  }
-  if (fileId != null && forFileId == null && state.fields.length > 0) {
-    return null;
+    console.debug(`[FormFieldOverlay] ID mismatch (viewer: ${fileId}, context: ${forFileId}), but proceeding to render ${pageFields.length} fields.`);
   }
 
   if (pageFields.length === 0) return null;
+
+  const widgetCount = pageFields.reduce((acc, f) => acc + (f.widgets?.filter(w => w.pageIndex === pageIndex).length || 0), 0);
+  if (widgetCount > 0) {
+    console.debug(`[FormFieldOverlay] Rendering ${widgetCount} widgets on page ${pageIndex}`);
+  }
 
   return (
     <div
