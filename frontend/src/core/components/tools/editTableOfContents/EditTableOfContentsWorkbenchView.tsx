@@ -15,6 +15,7 @@ import ErrorNotification from '@app/components/tools/shared/ErrorNotification';
 import ResultsPreview from '@app/components/tools/shared/ResultsPreview';
 import BookmarkEditor from '@app/components/tools/editTableOfContents/BookmarkEditor';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { downloadFromUrl } from '@app/services/downloadService';
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -177,10 +178,8 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
               <Group justify="flex-end" gap="sm">
                 {downloadUrl && (
                   <Button
-                    component="a"
-                    href={downloadUrl}
-                    download={downloadFilename ?? undefined}
                     leftSection={<LocalIcon icon='download-rounded' />}
+                    onClick={() => downloadFromUrl(downloadUrl, downloadFilename ?? "download")}
                   >
                     {terminology.download}
                   </Button>

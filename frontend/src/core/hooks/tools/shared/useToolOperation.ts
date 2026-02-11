@@ -14,7 +14,6 @@ import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/fi
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
-import { saveToLocalPath, saveMultipleFilesWithPrompt } from '@app/services/localFileSaveService';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -141,6 +140,7 @@ export interface ToolOperationHook<TParams = void> {
   isGeneratingThumbnails: boolean;
   downloadUrl: string | null;
   downloadFilename: string;
+  downloadLocalPath?: string | null;
   isLoading: boolean;
   status: string;
   errorMessage: string | null;
@@ -376,7 +376,11 @@ export const useToolOperation = <TParams>(
         actions.setGeneratingThumbnails(false);
 
         actions.setThumbnails(thumbnails);
-        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
+        const downloadLocalPath =
+          validFiles.length === 1 && processedFiles.length === 1
+            ? selectors.getStirlingFileStub(validFiles[0].fileId)?.localFilePath ?? null
+            : null;
+        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath);
 
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
@@ -438,58 +442,12 @@ export const useToolOperation = <TParams>(
         console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
         const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
 
-        // Auto-save to local path if single input with local path produced single output (desktop only)
-        console.log('[Tool] Checking auto-save conditions:', {
-          inputCount: toConsumeInputIds.length,
-          outputCount: outputStirlingFiles.length
-        });
-        if (toConsumeInputIds.length === 1 && outputStirlingFiles.length === 1) {
-          const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
-          console.log('[Tool] Input file stub:', inputStub);
-          console.log('[Tool] Has localFilePath?', !!inputStub?.localFilePath, inputStub?.localFilePath);
-          if (inputStub?.localFilePath) {
-            console.log('[Tool] Attempting auto-save to:', inputStub.localFilePath);
-            const result = await saveToLocalPath(outputStirlingFiles[0], inputStub.localFilePath);
-            if (result.success) {
-              console.log(`[Tool] ✓ Auto-saved to ${inputStub.localFilePath}`);
-              // Preserve localFilePath in output file for future operations
-              fileActions.updateStirlingFileStub(outputFileIds[0], {
-                localFilePath: inputStub.localFilePath
-              });
-            } else if (result.error && !result.error.includes('not available in web mode')) {
-              console.warn('[Tool] ✗ Auto-save failed:', result.error);
-            }
-          } else {
-            console.log('[Tool] No localFilePath on input file - skipping auto-save');
-          }
-        } else {
-          console.log('[Tool] Auto-save conditions not met - skipping');
-        }
-
-        // Prompt for folder if single input with local path produced multiple outputs (desktop only)
-        if (toConsumeInputIds.length === 1 && outputStirlingFiles.length > 1) {
+        if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
           const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
           if (inputStub?.localFilePath) {
-            // Get directory of original file as default
-            const { dirname } = await import('@tauri-apps/api/path');
-            const defaultDir = await dirname(inputStub.localFilePath);
-
-            actions.setStatus(`Saving ${outputStirlingFiles.length} files...`);
-            const result = await saveMultipleFilesWithPrompt(outputStirlingFiles, defaultDir);
-
-            if (result.success) {
-              console.log(`[Tool] Saved ${result.savedCount} files to user-selected folder`);
-              actions.setStatus(`Saved ${result.savedCount} file${result.savedCount > 1 ? 's' : ''}`);
-            } else if (result.cancelledByUser) {
-              console.log('[Tool] User cancelled save dialog - files remain in workbench');
-              actions.setStatus('Files added to workbench');
-            } else if (result.error && !result.error.includes('not available in web mode')) {
-              console.warn('[Tool] Multi-file save failed:', result.error);
-              actions.setStatus(result.savedCount > 0
-                ? `Saved ${result.savedCount}/${outputStirlingFiles.length} files`
-                : 'Save failed - files remain in workbench'
-              );
-            }
+            fileActions.updateStirlingFileStub(outputFileIds[0], {
+              localFilePath: inputStub.localFilePath
+            });
           }
         }
 
@@ -588,19 +546,6 @@ export const useToolOperation = <TParams>(
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
 
-      // Auto-restore original file to local path if applicable (desktop only)
-      if (inputStirlingFileStubs.length === 1 && inputFiles[0]) {
-        const inputStub = inputStirlingFileStubs[0];
-        if (inputStub?.localFilePath) {
-          const result = await saveToLocalPath(inputFiles[0], inputStub.localFilePath);
-          if (result.success) {
-            console.log(`[Undo] Restored original file to ${inputStub.localFilePath}`);
-          } else if (result.error && !result.error.includes('not available in web mode')) {
-            console.warn('[Undo] Failed to restore file:', result.error);
-          }
-        }
-      }
-
       // Clear results and operation tracking
       resetResults();
       lastOperationRef.current = null;
@@ -633,6 +578,7 @@ export const useToolOperation = <TParams>(
     isGeneratingThumbnails: state.isGeneratingThumbnails,
     downloadUrl: state.downloadUrl,
     downloadFilename: state.downloadFilename,
+    downloadLocalPath: state.downloadLocalPath,
     isLoading: state.isLoading,
     status: state.status,
     errorMessage: state.errorMessage,

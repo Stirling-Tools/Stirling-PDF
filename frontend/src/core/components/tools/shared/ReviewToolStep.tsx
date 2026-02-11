@@ -9,6 +9,7 @@ import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
+import { downloadFromUrl } from "@app/services/downloadService";
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -49,6 +50,21 @@ function ReviewStepContent<TParams = unknown>({
       file,
       thumbnail: operation.thumbnails[index],
     })) || [];
+
+  const handleDownload = async () => {
+    if (!operation.downloadUrl) return;
+    try {
+      await downloadFromUrl(
+        operation.downloadUrl,
+        operation.downloadFilename || "download",
+        operation.downloadLocalPath || undefined
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[ReviewToolStep] Failed to download file:", message);
+      alert(`Failed to download file: ${message}`);
+    }
+  };
 
   // Auto-scroll to bottom when content appears
   useEffect(() => {
@@ -92,13 +108,11 @@ function ReviewStepContent<TParams = unknown>({
       )}
       {operation.downloadUrl && (
         <Button
-          component="a"
-          href={operation.downloadUrl}
-          download={operation.downloadFilename}
           leftSection={<DownloadIcon />}
           color="blue"
           fullWidth
           mb="md"
+          onClick={handleDownload}
         >
           {terminology.download}
         </Button>

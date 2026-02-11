@@ -62,3 +62,7 @@ export async function saveMultipleFilesWithPrompt(
 ): Promise<MultiFileSaveResult> {
   return { success: false, savedCount: 0, error: "Multi-file save not available in web mode" };
 }
+
+export function isDesktopFileAccessAvailable(): boolean {
+  return false;
+}

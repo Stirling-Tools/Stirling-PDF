@@ -1,5 +1,3 @@
-import { isTauri } from "@tauri-apps/api/core";
-
 export interface SaveResult {
   success: boolean;
   error?: string;
@@ -16,10 +14,6 @@ export async function saveToLocalPath(
   data: Blob | File,
   filePath: string
 ): Promise<SaveResult> {
-  if (!isTauri()) {
-    return { success: false, error: "Not running in Tauri desktop app" };
-  }
-
   try {
     const { writeFile } = await import("@tauri-apps/plugin-fs");
     const arrayBuffer = await data.arrayBuffer();
@@ -40,7 +34,7 @@ export async function saveToLocalPath(
  * @returns True if auto-save conditions are met
  */
 export function shouldAutoSave(inputCount: number, outputCount: number): boolean {
-  return isTauri() && inputCount === 1 && outputCount === 1;
+  return inputCount === 1 && outputCount === 1;
 }
 
 /**
@@ -50,10 +44,6 @@ export function shouldAutoSave(inputCount: number, outputCount: number): boolean
  * @returns Result indicating success or failure
  */
 export async function deleteLocalFile(filePath: string): Promise<SaveResult> {
-  if (!isTauri()) {
-    return { success: false, error: "Not running in Tauri desktop app" };
-  }
-
   try {
     const { remove } = await import("@tauri-apps/plugin-fs");
     await remove(filePath);
@@ -77,10 +67,6 @@ export async function showSaveDialog(
   defaultFilename: string,
   defaultDirectory?: string
 ): Promise<string | null> {
-  if (!isTauri()) {
-    return null;
-  }
-
   try {
     const { save } = await import("@tauri-apps/plugin-dialog");
 
@@ -118,10 +104,6 @@ export async function saveMultipleFilesWithPrompt(
   files: (Blob | File)[],
   defaultDirectory?: string
 ): Promise<MultiFileSaveResult> {
-  if (!isTauri()) {
-    return { success: false, savedCount: 0, error: "Not running in Tauri desktop app" };
-  }
-
   try {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const { writeFile } = await import("@tauri-apps/plugin-fs");
@@ -177,4 +159,8 @@ export async function saveMultipleFilesWithPrompt(
     console.error('[LocalFileSave] Failed to save multiple files:', message);
     return { success: false, savedCount: 0, error: message };
   }
+}
+
+export function isDesktopFileAccessAvailable(): boolean {
+  return true;
 }

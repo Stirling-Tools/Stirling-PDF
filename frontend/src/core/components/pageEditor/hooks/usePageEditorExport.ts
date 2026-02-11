@@ -7,7 +7,6 @@ import type {
 import { documentManipulationService } from "@app/services/documentManipulationService";
 import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
-import { saveToLocalPath, saveMultipleFilesWithPrompt } from "@app/services/localFileSaveService";
 import { FileId } from "@app/types/file";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 
@@ -296,40 +295,12 @@ export const usePageEditorExport = ({
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));
       }
 
-      // Auto-save to local path if single source had one (desktop only)
       if (sourceFileIds.length === 1 && newStirlingFiles.length === 1) {
         const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
-        if (sourceStub?.localFilePath && renamedFiles[0]) {
-          const result = await saveToLocalPath(renamedFiles[0], sourceStub.localFilePath);
-          if (result.success) {
-            console.log(`[PageEditor] Auto-saved to ${sourceStub.localFilePath}`);
-            // Preserve localFilePath in output file
-            actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
-              localFilePath: sourceStub.localFilePath
-            });
-          } else if (result.error && !result.error.includes('not available in web mode')) {
-            console.warn('[PageEditor] Auto-save failed:', result.error);
-          }
-        }
-      }
-
-      // Prompt for folder if single source with local path produced multiple outputs (desktop only)
-      if (sourceFileIds.length === 1 && newStirlingFiles.length > 1) {
-        const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
-        if (sourceStub?.localFilePath && renamedFiles.length > 0) {
-          // Get directory of original file as default
-          const { dirname } = await import("@tauri-apps/api/path");
-          const defaultDir = await dirname(sourceStub.localFilePath);
-
-          const result = await saveMultipleFilesWithPrompt(renamedFiles, defaultDir);
-
-          if (result.success) {
-            console.log(`[PageEditor] Saved ${result.savedCount} files to user-selected folder`);
-          } else if (result.cancelledByUser) {
-            console.log('[PageEditor] User cancelled save dialog - files remain in workbench');
-          } else if (result.error && !result.error.includes('not available in web mode')) {
-            console.warn('[PageEditor] Multi-file save failed:', result.error);
-          }
+        if (sourceStub?.localFilePath) {
+          actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
+            localFilePath: sourceStub.localFilePath
+          });
         }
       }
 
