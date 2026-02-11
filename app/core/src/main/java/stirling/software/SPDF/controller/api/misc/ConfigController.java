@@ -35,6 +35,7 @@ public class ConfigController {
     private final EndpointConfiguration endpointConfiguration;
     private final ServerCertificateServiceInterface serverCertificateService;
     private final UserServiceInterface userService;
+    private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
     public ConfigController(
@@ -45,13 +46,64 @@ public class ConfigController {
                     ServerCertificateServiceInterface serverCertificateService,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     UserServiceInterface userService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    stirling.software.common.service.LicenseServiceInterface licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
+        this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
+    }
+
+    /**
+     * Get current license type dynamically instead of from cached bean. This ensures the frontend
+     * sees updated license status after admin changes the license key.
+     */
+    private String getCurrentLicenseType() {
+        // Use LicenseService for fresh license status if available
+        if (licenseService != null) {
+            return licenseService.getLicenseTypeName();
+        }
+
+        // Fallback to cached bean if service not available
+        if (applicationContext.containsBean("license")) {
+            return applicationContext.getBean("license", String.class);
+        }
+
+        return null;
+    }
+
+    /** Check if running Pro or higher (SERVER or ENTERPRISE license) dynamically. */
+    private Boolean isRunningProOrHigher() {
+        // Use LicenseService for fresh license status if available
+        if (licenseService != null) {
+            return licenseService.isRunningProOrHigher();
+        }
+
+        // Fallback to cached bean
+        if (applicationContext.containsBean("runningProOrHigher")) {
+            return applicationContext.getBean("runningProOrHigher", Boolean.class);
+        }
+
+        return null;
+    }
+
+    /** Check if running Enterprise edition dynamically. */
+    private Boolean isRunningEE() {
+        // Use LicenseService for fresh license status if available
+        if (licenseService != null) {
+            return licenseService.isRunningEE();
+        }
+
+        // Fallback to cached bean
+        if (applicationContext.containsBean("runningEE")) {
+            return applicationContext.getBean("runningEE", Boolean.class);
+        }
+
+        return null;
     }
 
     @GetMapping("/app-config")
@@ -185,19 +237,23 @@ public class ConfigController {
                     applicationProperties.getLegal().getAccessibilityStatement());
 
             // Try to get EEAppConfig values if available
+            // Get these dynamically to reflect current license status (not cached at startup)
             try {
-                if (applicationContext.containsBean("runningProOrHigher")) {
-                    configData.put(
-                            "runningProOrHigher",
-                            applicationContext.getBean("runningProOrHigher", Boolean.class));
+                Boolean runningProOrHigher = isRunningProOrHigher();
+                if (runningProOrHigher != null) {
+                    configData.put("runningProOrHigher", runningProOrHigher);
                 }
-                if (applicationContext.containsBean("runningEE")) {
-                    configData.put(
-                            "runningEE", applicationContext.getBean("runningEE", Boolean.class));
+
+                Boolean runningEE = isRunningEE();
+                if (runningEE != null) {
+                    configData.put("runningEE", runningEE);
                 }
-                if (applicationContext.containsBean("license")) {
-                    configData.put("license", applicationContext.getBean("license", String.class));
+
+                String licenseType = getCurrentLicenseType();
+                if (licenseType != null) {
+                    configData.put("license", licenseType);
                 }
+
                 if (applicationContext.containsBean("SSOAutoLogin")) {
                     configData.put(
                             "SSOAutoLogin",
