@@ -458,7 +458,6 @@ const FormFill = (_props: BaseToolProps) => {
                           {field.type !== 'button' && field.type !== 'signature' && (
                             <div
                               className={styles.fieldInputWrap}
-                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
                             >
                               <FieldInput
                                 field={field}
