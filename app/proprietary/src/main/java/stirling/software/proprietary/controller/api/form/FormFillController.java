@@ -112,7 +112,6 @@ public class FormFillController {
         }
     }
 
-
     @PostMapping(value = "/fields-with-coordinates", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Inspect PDF form fields with widget coordinates",

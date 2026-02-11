@@ -1,5 +1,5 @@
 /**
- * FormFill — The tool component that renders in the left ToolPanel
+ * FormFill: The tool component that renders in the left ToolPanel
  * when the "Fill Form" tool is selected.
  *
  * Redesigned with:
@@ -20,15 +20,13 @@ import {
   Progress,
   Tooltip,
   ActionIcon,
-  SegmentedControl,
 } from '@mantine/core';
 import { useFormFill, useAllFormValues } from '@proprietary/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
 import { useViewer } from '@app/contexts/ViewerContext';
-import { useFileState, useFileActions } from '@app/contexts/FileContext';
+import { useFileState } from '@app/contexts/FileContext';
 import { Skeleton } from '@mantine/core';
 import { isStirlingFile } from '@app/types/fileContext';
-import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import type { BaseToolProps } from '@app/types/tool';
 import type { FormField } from '@proprietary/tools/formFill/types';
 import { FieldInput } from '@proprietary/tools/formFill/FieldInput';
@@ -57,7 +55,7 @@ interface ModeTabDef {
   ready: boolean;
 }
 
-const MODE_TABS: ModeTabDef[] = [
+const _MODE_TABS: ModeTabDef[] = [
   { id: 'fill', label: 'Fill', icon: <EditNoteIcon className={styles.modeTabIcon} />, ready: true },
   { id: 'make', label: 'Create', icon: <PostAddIcon className={styles.modeTabIcon} />, ready: false },
   { id: 'batch', label: 'Batch', icon: <FileCopyIcon className={styles.modeTabIcon} />, ready: false },
@@ -68,17 +66,18 @@ const MODE_TABS: ModeTabDef[] = [
 // Coming-soon placeholder for unimplemented tabs
 // ---------------------------------------------------------------------------
 
-function ComingSoonPlaceholder({ mode }: { mode: ModeTabDef }) {
-  return (
-    <div className={styles.comingSoon}>
-      <DescriptionIcon className={styles.comingSoonIcon} />
-      <div className={styles.comingSoonTitle}>{mode.label} Forms</div>
-      <div className={styles.comingSoonDesc}>
-        This feature is coming soon. Stay tuned!
-      </div>
-    </div>
-  );
-}
+// ComingSoonPlaceholder — re-enable when mode tabs are exposed
+// function ComingSoonPlaceholder({ mode }: { mode: ModeTabDef }) {
+//   return (
+//     <div className={styles.comingSoon}>
+//       <DescriptionIcon className={styles.comingSoonIcon} />
+//       <div className={styles.comingSoonTitle}>{mode.label} Forms</div>
+//       <div className={styles.comingSoonDesc}>
+//         This feature is coming soon. Stay tuned!
+//       </div>
+//     </div>
+//   );
+// }
 
 // ---------------------------------------------------------------------------
 // Main FormFill component
@@ -87,7 +86,6 @@ function ComingSoonPlaceholder({ mode }: { mode: ModeTabDef }) {
 const FormFill = (_props: BaseToolProps) => {
   const { selectedTool } = useNavigation();
   const { selectors, state: fileState } = useFileState();
-  const { actions } = useFileActions();
 
   const {
     state: formState,
@@ -103,7 +101,11 @@ const FormFill = (_props: BaseToolProps) => {
 
   const { scrollActions } = useViewer();
 
-  const [mode, setMode] = useState<FormMode>('fill');
+  // Mode system is temporarily restricted to 'fill' only.
+  // Other modes (make, batch, modify) are defined above but not yet exposed in the UI.
+  // When ready, uncomment the SegmentedControl and mode state below.
+  // const [mode, setMode] = useState<FormMode>('fill');
+  const mode: FormMode = 'fill';
   const [flatten, setFlatten] = useState(false);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -119,7 +121,8 @@ const FormFill = (_props: BaseToolProps) => {
       a.href = url;
       a.download = `form-data-${new Date().getTime()}.json`;
       a.click();
-      URL.revokeObjectURL(url);
+      // Delay revocation so the browser has time to start the download
+      setTimeout(() => URL.revokeObjectURL(url), 250);
     } finally {
       setExtracting(false);
     }
@@ -165,20 +168,13 @@ const FormFill = (_props: BaseToolProps) => {
 
     try {
       const filledBlob = await submitForm(currentFile, flatten);
-      const filledFile = new File(
-        [filledBlob],
-        currentFile.name || 'filled.pdf',
-        { type: 'application/pdf' }
-      );
 
-      const currentFileId = currentFile.fileId;
-      const parentStub = selectors.getStirlingFileStub(currentFileId);
-      if (!parentStub) throw new Error('Parent stub not found');
-
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
-        [filledFile], parentStub, 'formFill' as any
-      );
-      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+      // Dispatch to the viewer's handleFormApply via custom event.
+      // This ensures the viewer tracks the new file ID, preserves
+      // scroll position and rotation — instead of our own consumeFiles
+      // call which would lose the viewer's file tracking context.
+      const event = new CustomEvent('formfill:apply', { detail: { blob: filledBlob } });
+      window.dispatchEvent(event);
     } catch (err: any) {
       const message = err?.response?.status === 413
         ? 'File too large. Try reducing the PDF size first.'
@@ -190,7 +186,7 @@ const FormFill = (_props: BaseToolProps) => {
     } finally {
       setSaving(false);
     }
-  }, [currentFile, submitForm, flatten, actions, selectors, validateForm]);
+  }, [currentFile, submitForm, flatten, validateForm]);
 
   // Keyboard shortcut: Ctrl+S to save
   useEffect(() => {
@@ -287,11 +283,11 @@ const FormFill = (_props: BaseToolProps) => {
 
   if (!isActive) return null;
 
-  const currentModeDef = MODE_TABS.find((t) => t.id === mode)!;
+  // const currentModeDef = MODE_TABS.find((t) => t.id === mode)!;
 
   return (
     <div className={styles.root}>
-      {/* ---- Mode selection ---- */}
+      {/* ---- Mode selection (commented out until additional modes are implemented) ----
       <div className={styles.modeTabs}>
         <SegmentedControl
           value={mode}
@@ -316,9 +312,10 @@ const FormFill = (_props: BaseToolProps) => {
           }}
         />
       </div>
+      ---- */}
 
-      {/* ---- Coming-soon for non-ready tabs ---- */}
-      {!currentModeDef.ready && <ComingSoonPlaceholder mode={currentModeDef} />}
+      {/* ---- Coming-soon for non-ready tabs (hidden while mode tabs are disabled) ---- */}
+      {/* !currentModeDef.ready && <ComingSoonPlaceholder mode={currentModeDef} /> */}
 
       {/* ---- Fill Form content ---- */}
       {mode === 'fill' && (
@@ -403,7 +400,7 @@ const FormFill = (_props: BaseToolProps) => {
                     disabled={!formState.isDirty}
                     flex={1}
                   >
-                    Apply & Save
+                    Save
                   </Button>
 
                   <Button

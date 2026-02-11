@@ -504,6 +504,17 @@ const EmbedPdfViewerContent = ({
     }
   }, [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const blob = (e as CustomEvent).detail?.blob;
+      if (blob) {
+        handleFormApply(blob);
+      }
+    };
+    window.addEventListener('formfill:apply', handler);
+    return () => window.removeEventListener('formfill:apply', handler);
+  }, [handleFormApply]);
+
   // Discard pending redactions but save already-applied ones
   // This is called when user clicks "Discard & Leave" - we want to:
   // 1. NOT commit pending redaction marks (they get discarded)
@@ -679,24 +690,24 @@ const EmbedPdfViewerContent = ({
   // In formFill tool mode, this uses PDFBox (backend).
   const formFillFileIdRef = useRef<string | null>(null);
   const formFillProviderRef = useRef(isFormFillToolActive);
-  
+
   // Generate a unique identifier for the current file to detect file changes
   const currentFileId = React.useMemo(() => {
     if (!currentFile) return null;
-    
+
     if (isStirlingFile(currentFile)) {
       return `stirling-${currentFile.fileId}`;
     }
-    
+
     // File is also a Blob, but has more specific properties
     if (currentFile instanceof File) {
       return `file-${currentFile.name}-${currentFile.size}-${currentFile.lastModified}`;
     }
-    
+
     // Fallback for any other object (shouldn't happen in practice)
     return `unknown-${(currentFile as any).size || 0}`;
   }, [currentFile]);
-  
+
   useEffect(() => {
     const fileChanged = currentFileId !== formFillFileIdRef.current;
     const providerChanged = formFillProviderRef.current !== isFormFillToolActive;

@@ -1,5 +1,5 @@
 /**
- * Shared field type metadata — icons and color mappings.
+ * Shared field type metadata: icons and color mappings.
  * Used by FormFill, FormFieldSidebar, and any future form tools.
  */
 import React from 'react';

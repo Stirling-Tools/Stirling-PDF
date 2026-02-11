@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -68,6 +69,13 @@ public class FormUtils {
     // Set of choice field types that support options
     public final Set<String> CHOICE_FIELD_TYPES =
             Set.of(FIELD_TYPE_COMBOBOX, FIELD_TYPE_LISTBOX, FIELD_TYPE_RADIO);
+
+    /**
+     * Threshold in PDF points for considering two widgets to be on the same line. Fields whose
+     * y-coordinates differ by less than this value are sorted left-to-right by x-coordinate instead
+     * of top-to-bottom.
+     */
+    private static final float SAME_LINE_THRESHOLD_PT = 10.0f;
 
     /**
      * Returns a normalized logical type string for the supplied PDFBox field instance. Centralized
@@ -242,49 +250,7 @@ public class FormUtils {
         }
 
         // Sort by page and position
-        fields.sort(
-                (a, b) -> {
-                    // Get first widget page for each field
-                    int pageA =
-                            (a.getWidgets() != null && !a.getWidgets().isEmpty())
-                                    ? a.getWidgets().get(0).getPageIndex()
-                                    : -1;
-                    int pageB =
-                            (b.getWidgets() != null && !b.getWidgets().isEmpty())
-                                    ? b.getWidgets().get(0).getPageIndex()
-                                    : -1;
-
-                    int pageCompare = Integer.compare(pageA, pageB);
-                    if (pageCompare != 0) {
-                        return pageCompare;
-                    }
-
-                    // Sort by Y position (top to bottom in CSS space)
-                    float yA =
-                            (a.getWidgets() != null && !a.getWidgets().isEmpty())
-                                    ? a.getWidgets().get(0).getY()
-                                    : 0;
-                    float yB =
-                            (b.getWidgets() != null && !b.getWidgets().isEmpty())
-                                    ? b.getWidgets().get(0).getY()
-                                    : 0;
-
-                    // Fields on approximately the same line (within 10pt threshold)
-                    // should be sorted left-to-right by X position
-                    if (Math.abs(yA - yB) < 10.0f) {
-                        float xA =
-                                (a.getWidgets() != null && !a.getWidgets().isEmpty())
-                                        ? a.getWidgets().get(0).getX()
-                                        : 0;
-                        float xB =
-                                (b.getWidgets() != null && !b.getWidgets().isEmpty())
-                                        ? b.getWidgets().get(0).getX()
-                                        : 0;
-                        return Float.compare(xA, xB);
-                    }
-
-                    return Float.compare(yA, yB);
-                });
+        fields.sort(new FieldCoordinateComparator());
 
         log.debug("Total fields processed: {}", fields.size());
         log.debug(
@@ -515,23 +481,6 @@ public class FormUtils {
 
             Map<COSDictionary, Integer> annotationPageMap = buildAnnotationPageMap(document);
 
-            // First pass: Set page reference for all annotations on pages
-            for (PDPage page : document.getPages()) {
-                try {
-                    for (PDAnnotation annotation : page.getAnnotations()) {
-                        if (annotation.getPage() == null) {
-                            annotation.setPage(page);
-                            log.debug(
-                                    "Set page reference for annotation: {}",
-                                    annotation.getSubtype());
-                        }
-                    }
-                } catch (Exception e) {
-                    log.warn("Error processing annotations on page: {}", e.getMessage());
-                }
-            }
-
-            // Second pass: Fix field widgets specifically
             for (PDField field : acroForm.getFieldTree()) {
                 if (!(field instanceof PDTerminalField terminalField)) {
                     continue;
@@ -545,7 +494,6 @@ public class FormUtils {
 
                 for (PDAnnotationWidget widget : widgets) {
                     if (widget.getPage() == null) {
-                        // Try to find the page by searching through our pre-built map
                         Integer pageIndex = annotationPageMap.get(widget.getCOSObject());
                         if (pageIndex != null && pageIndex >= 0) {
                             PDPage foundPage = document.getPage(pageIndex);
@@ -574,38 +522,6 @@ public class FormUtils {
         } catch (Exception e) {
             log.error("Error repairing widget page references: {}", e.getMessage(), e);
         }
-    }
-
-    /** Finds which page contains a specific widget annotation by scanning all pages. */
-    private PDPage findPageForWidget(PDDocument document, PDAnnotationWidget widget) {
-        COSDictionary widgetDict = widget.getCOSObject();
-
-        try {
-            // Check if widget has a /P entry that PDFBox isn't reading
-            COSBase base = widgetDict.getDictionaryObject(COSName.P);
-            COSDictionary pageDict = (base instanceof COSDictionary c) ? c : null;
-            if (pageDict != null) {
-                // Find the page by comparing COS objects
-                for (PDPage page : document.getPages()) {
-                    if (page.getCOSObject() == pageDict) {
-                        return page;
-                    }
-                }
-            }
-
-            // Fallback: Search through all page annotations
-            for (PDPage page : document.getPages()) {
-                for (PDAnnotation annotation : page.getAnnotations()) {
-                    if (annotation.getCOSObject() == widgetDict) {
-                        return page;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.trace("Error finding page for widget: {}", e.getMessage());
-        }
-
-        return null;
     }
 
     private int findPageIndexForAnnotation(
@@ -692,7 +608,6 @@ public class FormUtils {
         Map<String, Object> template = buildFillTemplateRecord(fields);
         return new FormFieldExtraction(fields, template);
     }
-
 
     private String safeDefault(String current) {
         return current != null ? current : "";
@@ -1324,6 +1239,16 @@ public class FormUtils {
 
     private String safeValue(PDTerminalField field) {
         try {
+            // PDChoice.getValueAsString() returns a raw COS string representation
+            // that doesn't reliably reflect the selected value. Use getValue()
+            // which returns the proper List<String> of selected options.
+            if (field instanceof PDChoice choiceField) {
+                List<String> selected = choiceField.getValue();
+                if (selected == null || selected.isEmpty()) {
+                    return null;
+                }
+                return String.join(",", selected);
+            }
             return field.getValueAsString();
         } catch (Exception e) {
             log.debug(
@@ -1337,17 +1262,25 @@ public class FormUtils {
     List<String> resolveOptions(PDTerminalField field) {
         try {
             if (field instanceof PDChoice choice) {
-                // Use export values as they match getValueAsString() / setValue()
+                LinkedHashSet<String> allowed = new LinkedHashSet<>();
                 List<String> exportValues = choice.getOptionsExportValues();
                 List<String> displayValues = choice.getOptionsDisplayValues();
 
-                if (exportValues != null && !exportValues.isEmpty()) {
-                    return new ArrayList<>(exportValues);
+                if (exportValues != null) {
+                    exportValues.stream()
+                            .filter(Objects::nonNull)
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .forEach(allowed::add);
                 }
-                // Fall back to display values if no export values
-                if (displayValues != null && !displayValues.isEmpty()) {
-                    return new ArrayList<>(displayValues);
+                if (displayValues != null) {
+                    displayValues.stream()
+                            .filter(Objects::nonNull)
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .forEach(allowed::add);
                 }
+                return new ArrayList<>(allowed);
             } else if (field instanceof PDRadioButton radio) {
                 List<String> exports = radio.getExportValues();
                 if (exports != null && !exports.isEmpty()) {
@@ -2381,4 +2314,46 @@ public class FormUtils {
             boolean multiSelect,
             String tooltip,
             int pageOrder) {}
+
+    /**
+     * Comparator for sorting form fields by page, then vertically (top-to-bottom), then
+     * horizontally (left-to-right) for fields on approximately the same line.
+     */
+    static final class FieldCoordinateComparator implements Comparator<FormFieldWithCoordinates> {
+
+        private static int firstWidgetPageIndex(FormFieldWithCoordinates f) {
+            return (f.getWidgets() != null && !f.getWidgets().isEmpty())
+                    ? f.getWidgets().get(0).getPageIndex()
+                    : -1;
+        }
+
+        private static float firstWidgetY(FormFieldWithCoordinates f) {
+            return (f.getWidgets() != null && !f.getWidgets().isEmpty())
+                    ? f.getWidgets().get(0).getY()
+                    : 0;
+        }
+
+        private static float firstWidgetX(FormFieldWithCoordinates f) {
+            return (f.getWidgets() != null && !f.getWidgets().isEmpty())
+                    ? f.getWidgets().get(0).getX()
+                    : 0;
+        }
+
+        @Override
+        public int compare(FormFieldWithCoordinates a, FormFieldWithCoordinates b) {
+            int pageA = firstWidgetPageIndex(a);
+            int pageB = firstWidgetPageIndex(b);
+            int pageCompare = Integer.compare(pageA, pageB);
+            if (pageCompare != 0) return pageCompare;
+
+            float yA = firstWidgetY(a);
+            float yB = firstWidgetY(b);
+
+            // Fields on approximately the same line should be sorted left-to-right
+            if (Math.abs(yA - yB) < SAME_LINE_THRESHOLD_PT) {
+                return Float.compare(firstWidgetX(a), firstWidgetX(b));
+            }
+            return Float.compare(yA, yB);
+        }
+    }
 }

@@ -6,7 +6,6 @@
   background: transparent;
 }
 
-/* ---- Mode selection (SegmentedControl) ---- */
 .modeTabs {
   flex-shrink: 0;
   border-bottom: 1px solid var(--border-default, var(--mantine-color-default-border));
@@ -231,7 +230,6 @@
   max-width: 180px;
 }
 
-/* ---- Unsaved indicator ---- */
 .unsavedDot {
   display: inline-block;
   width: 6px;

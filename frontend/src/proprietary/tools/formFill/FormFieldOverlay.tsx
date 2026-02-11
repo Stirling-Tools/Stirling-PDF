@@ -1,5 +1,5 @@
 /**
- * FormFieldOverlay — Renders interactive HTML form widgets on top of a PDF page.
+ * FormFieldOverlay: Renders interactive HTML form widgets on top of a PDF page.
  *
  * This layer is placed inside the renderPage callback of the EmbedPDF Scroller,
  * similar to how AnnotationLayer, RedactionLayer, and LinkLayer work.
@@ -48,11 +48,8 @@ function WidgetInputInner({
   onFocus,
   onChange,
 }: WidgetInputProps) {
-  // Per-field value subscription — only this widget re-renders when its value changes
   const value = useFieldValue(field.name);
 
-  // Coordinates are in visual CSS space (top-left origin).
-  // Multiply by per-axis scale to get rendered pixel coordinates.
   const left = widget.x * scaleX;
   const top = widget.y * scaleY;
   const width = widget.width * scaleX;
@@ -84,10 +81,6 @@ function WidgetInputInner({
     alignItems: field.multiline ? 'stretch' : 'center',
   };
 
-  // Scale font size with the widget height (using Y scale as a proxy for uniform font scaling).
-  // PDF form fields use fontSize=0 to mean "auto-size" (scale to fit the box).
-  // For single-line fields (e.g. Title), scale closer to the box height.
-  // For multiline fields (e.g. Description), use a smaller capped size.
   const fontSize = widget.fontSize
     ? widget.fontSize * scaleY
     : field.multiline
@@ -188,13 +181,11 @@ function WidgetInputInner({
     case 'combobox':
     case 'listbox': {
       const inputId = `${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`;
-      
-      // For multi-select, value should be an array
-      // We store as comma-separated string, so parse it
+
       const selectValue = field.multiSelect
         ? (value ? value.split(',').map(v => v.trim()) : [])
         : value;
-      
+
       const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (field.multiSelect) {
           // For multi-select, join selected options with comma
@@ -204,7 +195,7 @@ function WidgetInputInner({
           onChange(field.name, e.target.value);
         }
       };
-      
+
       return (
         <div style={commonStyle} title={error || field.tooltip || field.label}>
           <select
@@ -237,7 +228,6 @@ function WidgetInputInner({
     }
 
     case 'radio': {
-      // Each radio widget has an exportValue set by the backend
       const optionValue = widget.exportValue || '';
       if (!optionValue) return null; // no export value, skip
       const isSelected = value === optionValue;
@@ -273,7 +263,6 @@ function WidgetInputInner({
 
     case 'signature':
     case 'button':
-      // Just render a highlighted area — not editable
       return (
         <div
           style={{
@@ -310,7 +299,6 @@ interface FormFieldOverlayProps {
   pageIndex: number;
   pageWidth: number;  // rendered CSS pixel width (from renderPage callback)
   pageHeight: number; // rendered CSS pixel height
-  /** File identity — if provided, overlay only renders when context fields match this file */
   fileId?: string | null;
 }
 
@@ -324,8 +312,6 @@ export function FormFieldOverlay({
   const { setValue, setActiveField, fieldsByPage, state, forFileId } = useFormFill();
   const { activeFieldName, validationErrors } = state;
 
-  // Get scale from EmbedPDF document state — same pattern as LinkLayer
-  // NOTE: All hooks must be called unconditionally (before any early returns)
   const documentState = useDocumentState(documentId);
 
   const { scaleX, scaleY } = useMemo(() => {
@@ -335,8 +321,6 @@ export function FormFieldOverlay({
       return { scaleX: s, scaleY: s };
     }
 
-    // pdfPage.size contains un-rotated (MediaBox) dimensions;
-    // pageWidth/pageHeight from Scroller also use these un-rotated dims * scale
     return {
       scaleX: pageWidth / pdfPage.size.width,
       scaleY: pageHeight / pdfPage.size.height,
@@ -358,12 +342,9 @@ export function FormFieldOverlay({
     [setValue]
   );
 
-  // Guard: don't render fields from a previous document.
-  // If fileId is provided and doesn't match what the context fetched for, render nothing.
   if (fileId != null && forFileId != null && fileId !== forFileId) {
     return null;
   }
-  // Also guard: if fields exist but no forFileId is set (reset happened), don't render stale fields
   if (fileId != null && forFileId == null && state.fields.length > 0) {
     return null;
   }
@@ -387,9 +368,6 @@ export function FormFieldOverlay({
         (field.widgets || [])
           .filter((w: WidgetCoordinates) => w.pageIndex === pageIndex)
           .map((widget: WidgetCoordinates, widgetIdx: number) => {
-            // Coordinates are in un-rotated PDF space (y-flipped to CSS TL origin).
-            // The <Rotate> CSS wrapper handles visual rotation for us,
-            // just like it does for TilingLayer, LinkLayer, etc.
             return (
               <WidgetInput
                 key={`${field.name}-${widgetIdx}`}

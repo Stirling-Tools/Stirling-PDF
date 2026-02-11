@@ -1,5 +1,5 @@
 /**
- * FieldInput — Shared, self-subscribing form field input widget.
+ * FieldInput: Shared, self-subscribing form field input widget.
  *
  * Used by both FormFill (left panel) and FormFieldSidebar (right panel).
  * Each instance subscribes to its own field value via useFieldValue(),

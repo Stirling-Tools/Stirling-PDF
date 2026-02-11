@@ -39,9 +39,7 @@ export async function fillFormFields(
     'data',
     new Blob([JSON.stringify(values)], { type: 'application/json' })
   );
-  if (flatten) {
-    formData.append('flatten', 'true');
-  }
+  formData.append('flatten', String(flatten));
 
   const response = await apiClient.post('/api/v1/form/fill', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },

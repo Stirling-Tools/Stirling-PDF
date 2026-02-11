@@ -1,5 +1,5 @@
 /**
- * PdfLibFormProvider — Frontend-only form data provider using pdf-lib.
+ * PdfLibFormProvider: Frontend-only form data provider using pdf-lib.
  *
  * Extracts form fields directly from the PDF byte stream and fills them
  * without any backend calls. This avoids sending large PDFs (potentially
@@ -16,7 +16,7 @@
  */
 import { PDFDocument, PDFForm, PDFField, PDFTextField, PDFCheckBox,
   PDFDropdown, PDFRadioGroup, PDFOptionList, PDFButton, PDFSignature,
-  PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage } from 'pdf-lib';
+  PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage, PDFString, PDFHexString } from 'pdf-lib';
 import type { FormField, FormFieldType, WidgetCoordinates } from '@proprietary/tools/formFill/types';
 import type { IFormDataProvider } from '@proprietary/tools/formFill/providers/types';
 
@@ -92,10 +92,8 @@ function extractWidgets(
   _doc: PDFDocument,
 ): WidgetCoordinates[] {
   const widgets: WidgetCoordinates[] = [];
-  // Access the underlying PDFDict from the acro field
   const acroFieldDict = (field.acroField as any).dict as PDFDict;
 
-  // Get all widget annotations for this field
   const widgetDicts = getFieldWidgets(acroFieldDict);
 
   for (const wDict of widgetDicts) {
@@ -107,6 +105,7 @@ function extractWidgets(
     const x2 = numberVal(rect.lookup(2));
     const y2 = numberVal(rect.lookup(3));
 
+    const widgetIndex = widgets.length;
     const pageIndex = getWidgetPageIndex(wDict, pages);
     const page = pages[pageIndex];
     if (!page) continue;
@@ -154,6 +153,17 @@ function extractWidgets(
       if (asEntry instanceof PDFName) {
         const asVal = asEntry.decodeText();
         if (asVal !== 'Off') exportValue = asVal;
+      }
+    }
+
+    // Heuristic for Radio Buttons: if logical options count matches widgets count,
+    // use the option at this widget's index as the exportValue.
+    // This maps logical values (Male/Female) to widgets even if they use
+    // internal names like /0, /1 for appearance states.
+    if (field instanceof PDFRadioGroup) {
+      const options = field.getOptions();
+      if (options.length === widgetDicts.length && options[widgetIndex]) {
+        exportValue = options[widgetIndex];
       }
     }
 
@@ -291,6 +301,40 @@ function getFieldType(field: PDFField): FormFieldType {
 }
 
 /**
+ * Read the raw /V (value) entry from a choice field's underlying dictionary.
+ * pdf-lib's getSelected() sometimes fails to parse values written by PDFBox
+ * (e.g. when /V is a bare PDFString instead of a PDFArray of strings).
+ */
+function readRawChoiceValue(field: PDFField): string | null {
+  try {
+    const dict = (field.acroField as any).dict as PDFDict;
+    const vEntry = dict.lookup(PDFName.of('V'));
+    if (vEntry instanceof PDFString) {
+      return vEntry.decodeText();
+    }
+    if (vEntry instanceof PDFHexString) {
+      return vEntry.decodeText();
+    }
+    if (vEntry instanceof PDFName) {
+      return vEntry.decodeText();
+    }
+    if (vEntry instanceof PDFArray) {
+      const parts: string[] = [];
+      for (let i = 0; i < vEntry.size(); i++) {
+        const item = vEntry.lookup(i);
+        if (item instanceof PDFString || item instanceof PDFHexString) {
+          parts.push(item.decodeText());
+        }
+      }
+      return parts.length > 0 ? parts.join(',') : null;
+    }
+  } catch (err) {
+    console.warn('[PdfLib] Failed to read raw /V for choice field:', err);
+  }
+  return null;
+}
+
+/**
  * Get the current value of a field as a string.
  */
 function getFieldValue(field: PDFField): string {
@@ -303,17 +347,25 @@ function getFieldValue(field: PDFField): string {
     }
     if (field instanceof PDFDropdown) {
       const selected = field.getSelected();
-      return selected.length > 0 ? selected[0] : '';
+      if (selected.length > 0) return selected[0];
+      // Fallback: read raw /V entry from dictionary — PDFBox may write
+      // values in a format that pdf-lib's getSelected() doesn't parse
+      return readRawChoiceValue(field) ?? '';
     }
     if (field instanceof PDFRadioGroup) {
-      return field.getSelected() ?? '';
+      const selected = field.getSelected();
+      if (selected) return selected;
+      // Fallback for radio group
+      return readRawChoiceValue(field) ?? '';
     }
     if (field instanceof PDFOptionList) {
       const selected = field.getSelected();
-      return selected.join(',');
+      if (selected.length > 0) return selected.join(',');
+      // Same fallback for listbox
+      return readRawChoiceValue(field) ?? '';
     }
-  } catch {
-    // Some fields may throw on getValue if malformed
+  } catch (err) {
+    console.warn('[PdfLib] Failed to read value for field:', err);
   }
   return '';
 }
@@ -332,8 +384,8 @@ function getFieldOptions(field: PDFField): string[] | null {
     if (field instanceof PDFRadioGroup) {
       return field.getOptions();
     }
-  } catch {
-    // ignore
+  } catch (err) {
+    console.warn('[PdfLib] Failed to read options for field:', err);
   }
   return null;
 }
@@ -344,7 +396,8 @@ function getFieldOptions(field: PDFField): string[] | null {
 function isFieldReadOnly(field: PDFField): boolean {
   try {
     return field.isReadOnly();
-  } catch {
+  } catch (err) {
+    console.warn('[PdfLib] Failed to check readOnly flag:', err);
     return false;
   }
 }
@@ -355,7 +408,8 @@ function isFieldReadOnly(field: PDFField): boolean {
 function isFieldRequired(field: PDFField): boolean {
   try {
     return field.isRequired();
-  } catch {
+  } catch (err) {
+    console.warn('[PdfLib] Failed to check required flag:', err);
     return false;
   }
 }
@@ -368,8 +422,8 @@ function getFieldTooltip(acroField: PDFDict): string | null {
   if (tu) {
     try {
       return tu.toString().replace(/^\(|\)$/g, '');
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[PdfLib] Failed to read tooltip for field:', err);
     }
   }
   return null;
@@ -382,7 +436,8 @@ function isMultiline(field: PDFField): boolean {
   if (!(field instanceof PDFTextField)) return false;
   try {
     return field.isMultiline();
-  } catch {
+  } catch (err) {
+    console.warn('[PdfLib] Failed to check multiline flag:', err);
     return false;
   }
 }
@@ -411,8 +466,8 @@ export class PdfLibFormProvider implements IFormDataProvider {
     let form: PDFForm;
     try {
       form = doc.getForm();
-    } catch {
-      // No AcroForm — return empty
+    } catch (err) {
+      console.warn('[PdfLib] No AcroForm or failed to read form:', err);
       return [];
     }
 
@@ -426,7 +481,6 @@ export class PdfLibFormProvider implements IFormDataProvider {
       const type = getFieldType(field);
       const widgets = extractWidgets(field, pages, doc);
 
-      // Skip fields with no visible widgets
       if (widgets.length === 0) continue;
 
       const formField: FormField = {

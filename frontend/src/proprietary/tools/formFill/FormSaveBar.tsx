@@ -1,5 +1,5 @@
 /**
- * FormSaveBar — A notification banner for form-filled PDFs.
+ * FormSaveBar: A notification banner for form-filled PDFs.
  *
  * Appears at the top-right of the PDF viewer when the current PDF has
  * fillable form fields. Provides options to apply changes or download
@@ -34,7 +34,6 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
   const [applying, setApplying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Reset dismissed state when file changes
   const [prevFile, setPrevFile] = useState<File | Blob | null>(null);
   if (file !== prevFile) {
     setPrevFile(file);
@@ -45,10 +44,8 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     if (!file || applying || saving) return;
     setApplying(true);
     try {
-      // Generate the filled PDF
-      const filledBlob = await submitForm(file, true);
+      const filledBlob = await submitForm(file, false);
 
-      // Call the onApply callback to reload the PDF in the viewer
       if (onApply) {
         await onApply(filledBlob);
       }
@@ -63,8 +60,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     if (!file || saving || applying) return;
     setSaving(true);
     try {
-      const blob = await submitForm(file, true);
-      // Trigger browser download
+      const blob = await submitForm(file, false);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -72,7 +68,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
       console.error('[FormSaveBar] Download failed:', err);
     } finally {

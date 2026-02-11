@@ -1,5 +1,5 @@
 /**
- * FormFillContext — React context for form fill state management.
+ * FormFillContext: React context for form fill state management.
  *
  * Provider-agnostic: delegates data fetching/saving to an IFormDataProvider.
  * - PdfLibFormProvider: frontend-only, uses pdf-lib (for normal viewer mode)
@@ -9,13 +9,7 @@
  * EmbedPdfViewer to auto-select:
  * - Normal viewer → PdfLibFormProvider (no backend calls for large PDFs)
  * - formFill tool → PdfBoxFormProvider (full-fidelity PDFBox handling)
- *
- * Performance Architecture:
- * Form values are stored in a FormValuesStore (external to React state) to
- * avoid full context re-renders on every keystroke. Individual widgets
- * subscribe to their specific field via useFieldValue() + useSyncExternalStore,
- * so only the active widget re-renders when its value changes.
- *
+
  * The UI components (FormFieldOverlay, FormFill, FormFieldSidebar) consume
  * this context regardless of which provider is active.
  */
@@ -35,9 +29,6 @@ import type { IFormDataProvider } from '@proprietary/tools/formFill/providers/ty
 import { PdfLibFormProvider } from '@proprietary/tools/formFill/providers/PdfLibFormProvider';
 import { PdfBoxFormProvider } from '@proprietary/tools/formFill/providers/PdfBoxFormProvider';
 
-// ---------------------------------------------------------------------------
-// FormValuesStore — external store for field values (outside React state)
-// ---------------------------------------------------------------------------
 
 type Listener = () => void;
 
@@ -76,7 +67,6 @@ class FormValuesStore {
     this._globalListeners.forEach((l) => l());
   }
 
-  /** Replace all values (e.g., on fetch or reset) */
   reset(values: Record<string, string> = {}): void {
     this._values = values;
     this._version++;
@@ -86,7 +76,6 @@ class FormValuesStore {
     this._globalListeners.forEach((l) => l());
   }
 
-  /** Subscribe to a single field's value changes */
   subscribeField(fieldName: string, listener: Listener): () => void {
     if (!this._fieldListeners.has(fieldName)) {
       this._fieldListeners.set(fieldName, new Set());
@@ -97,7 +86,6 @@ class FormValuesStore {
     };
   }
 
-  /** Subscribe to any value change */
   subscribeGlobal(listener: Listener): () => void {
     this._globalListeners.add(listener);
     return () => {
@@ -105,10 +93,6 @@ class FormValuesStore {
     };
   }
 }
-
-// ---------------------------------------------------------------------------
-// Reducer — handles everything EXCEPT values (which live in FormValuesStore)
-// ---------------------------------------------------------------------------
 
 type Action =
   | { type: 'FETCH_START' }
@@ -267,7 +251,6 @@ export function useAllFormValues(): Record<string, string> {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-/** Singleton provider instances */
 const pdfLibProvider = new PdfLibFormProvider();
 const pdfBoxProvider = new PdfBoxFormProvider();
 
@@ -276,7 +259,6 @@ export function FormFillProvider({
   provider: providerProp,
 }: {
   children: React.ReactNode;
-  /** Override the initial provider. If not given, defaults to pdf-lib. */
   provider?: IFormDataProvider;
 }) {
   const initialMode = providerProp?.name === 'pdfbox' ? 'pdfbox' : 'pdflib';
@@ -290,29 +272,19 @@ export function FormFillProvider({
   const [state, dispatch] = useReducer(reducer, initialState);
   const fieldsRef = useRef<FormField[]>([]);
   fieldsRef.current = state.fields;
+  const validationErrorsRef = useRef<Record<string, string>>({});
+  validationErrorsRef.current = state.validationErrors;
 
-  // Version counter to cancel stale async fetch responses.
-  // Incremented on every fetchFields() and reset() call.
   const fetchVersionRef = useRef(0);
 
-  // Track which file the current fields belong to
   const forFileIdRef = useRef<string | null>(null);
   const [forFileId, setForFileId] = useState<string | null>(null);
 
-  // External values store — values live HERE, not in the reducer.
-  // This prevents full context re-renders on every keystroke.
   const [valuesStore] = useState(() => new FormValuesStore());
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
-    // Increment version so any in-flight fetch for a previous file is discarded.
-    // NOTE: setProviderMode() also increments fetchVersionRef to invalidate
-    // in-flight fetches when switching providers. This is intentional — the
-    // fetch started here captures the NEW version, so stale results are
-    // correctly discarded.
     const version = ++fetchVersionRef.current;
 
-    // Immediately clear previous state so FormFieldOverlay's stale-file guards
-    // prevent rendering fields from a previous document during the fetch.
     forFileIdRef.current = null;
     setForFileId(null);
     valuesStore.reset({});
@@ -352,7 +324,7 @@ export function FormFillProvider({
     if (!val || val.trim() === '' || val === 'Off') {
       dispatch({
         type: 'SET_VALIDATION_ERRORS',
-        errors: { ...state.validationErrors, [fieldName]: `${field.label} is required` },
+        errors: { ...validationErrorsRef.current, [fieldName]: `${field.label} is required` },
       });
     } else {
       dispatch({ type: 'CLEAR_VALIDATION_ERROR', fieldName });
@@ -373,9 +345,7 @@ export function FormFillProvider({
 
   const setValue = useCallback(
     (fieldName: string, value: string) => {
-      // Update external store (triggers per-field subscribers only)
       valuesStore.setValue(fieldName, value);
-      // Mark form as dirty in React state (only triggers re-render once)
       dispatch({ type: 'MARK_DIRTY' });
       validateFieldDebounced(fieldName);
     },
@@ -400,16 +370,14 @@ export function FormFillProvider({
 
   const setProviderMode = useCallback(
     (mode: 'pdflib' | 'pdfbox') => {
-      // Use the ref to check the current mode synchronously — avoids
-      // relying on stale closure state and allows the early return.
       if (providerModeRef.current === mode) return;
 
-      // provider (pdfbox vs pdflib).
+      fetchVersionRef.current++;
+
       const newProvider = mode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider;
       providerRef.current = newProvider;
       providerModeRef.current = mode;
 
-      fetchVersionRef.current++;
       forFileIdRef.current = null;
       setForFileId(null);
       valuesStore.reset({});
@@ -440,7 +408,6 @@ export function FormFillProvider({
   );
 
   const reset = useCallback(() => {
-    // Increment version to invalidate any in-flight fetch
     fetchVersionRef.current++;
     forFileIdRef.current = null;
     setForFileId(null);
@@ -458,8 +425,6 @@ export function FormFillProvider({
     return map;
   }, [state.fields]);
 
-  // Context value — does NOT depend on values, so keystrokes don't
-  // trigger re-renders of all context consumers.
   const value = useMemo<FormFillContextValue>(
     () => ({
       state,
