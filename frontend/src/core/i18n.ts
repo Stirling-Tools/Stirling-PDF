@@ -105,6 +105,18 @@ i18n.on('languageChanged', (lng) => {
   document.documentElement.lang = lng;
 });
 
+// Track browser-detected language on first initialization
+i18n.on('initialized', () => {
+  // If no source is set yet, mark current language as browser-detected
+  if (!localStorage.getItem('i18nextLng-source')) {
+    const detectedLang = i18n.language;
+    if (detectedLang) {
+      localStorage.setItem('i18nextLng', detectedLang);
+      localStorage.setItem('i18nextLng-source', 'browser');
+    }
+  }
+});
+
 export function normalizeLanguageCode(languageCode: string): string {
   // Replace underscores with hyphens to align with i18next/translation file naming
   const hyphenated = languageCode.replace(/_/g, '-');
@@ -131,6 +143,53 @@ export function toUnderscoreFormat(languageCode: string): string {
  */
 export function toUnderscoreLanguages(languages: string[]): string[] {
   return languages.map(toUnderscoreFormat);
+}
+
+/**
+ * Language selection priority levels
+ * Higher number = higher priority (cannot be overridden by lower priority)
+ */
+const LANGUAGE_SOURCE_PRIORITY = {
+  fallback: 0,
+  browser: 1,
+  'server-default': 2,
+  user: 3,
+} as const;
+
+type LanguageSource = keyof typeof LANGUAGE_SOURCE_PRIORITY;
+
+/**
+ * Get the current language source priority
+ */
+function getCurrentSourcePriority(): number {
+  const source = localStorage.getItem('i18nextLng-source') as LanguageSource | null;
+  return source ? LANGUAGE_SOURCE_PRIORITY[source] : LANGUAGE_SOURCE_PRIORITY.fallback;
+}
+
+/**
+ * Set language with priority tracking
+ * Only updates if new source has equal or higher priority than current
+ */
+function setLanguageWithPriority(language: string, source: LanguageSource): boolean {
+  const currentPriority = getCurrentSourcePriority();
+  const newPriority = LANGUAGE_SOURCE_PRIORITY[source];
+
+  // Only apply if new source has higher priority
+  if (newPriority >= currentPriority) {
+    i18n.changeLanguage(language);
+    localStorage.setItem('i18nextLng', language);
+    localStorage.setItem('i18nextLng-source', source);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Set user-selected language (highest priority)
+ * Call this from the UI language selector
+ */
+export function setUserLanguage(language: string): void {
+  setLanguageWithPriority(language, 'user');
 }
 
 /**
@@ -178,12 +237,10 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
   // If current language is not in the new supported list, switch to fallback
   const currentLang = normalizeLanguageCode(i18n.language || '');
   if (currentLang && !validLanguages.includes(currentLang)) {
-    i18n.changeLanguage(fallback);
-    localStorage.setItem('i18nextLng', fallback);
-  } else if (validDefault && !localStorage.getItem('i18nextLng')) {
-    // User has no saved preference - apply server default
-    i18n.changeLanguage(validDefault);
-    localStorage.setItem('i18nextLng', validDefault);
+    setLanguageWithPriority(fallback, 'fallback');
+  } else if (validDefault) {
+    // Apply server default (respects user choice if already set)
+    setLanguageWithPriority(validDefault, 'server-default');
   }
 }
 
@@ -192,13 +249,8 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
  * This respects the priority: user-selected language > defaultLocale > browser detection > fallback
  */
 function applyDefaultLocale(defaultLocale: string) {
-  // Only apply if user has no saved preference
-  // Since we disabled auto-caching of detected languages, localStorage will only
-  // contain a value if the user manually selected a language
-  if (!localStorage.getItem('i18nextLng')) {
-    i18n.changeLanguage(defaultLocale);
-    localStorage.setItem('i18nextLng', defaultLocale);
-  }
+  // Apply server default (respects user choice if already set)
+  setLanguageWithPriority(defaultLocale, 'server-default');
 }
 
 export default i18n;

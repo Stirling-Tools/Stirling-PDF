@@ -59,8 +59,8 @@ public class ConfigController {
     }
 
     /**
-     * Get current license type dynamically instead of from cached bean.
-     * This ensures the frontend sees updated license status after admin changes the license key.
+     * Get current license type dynamically instead of from cached bean. This ensures the frontend
+     * sees updated license status after admin changes the license key.
      */
     private String getCurrentLicenseType() {
         // Use LicenseService for fresh license status if available
@@ -76,9 +76,7 @@ public class ConfigController {
         return null;
     }
 
-    /**
-     * Check if running Pro or higher (SERVER or ENTERPRISE license) dynamically.
-     */
+    /** Check if running Pro or higher (SERVER or ENTERPRISE license) dynamically. */
     private Boolean isRunningProOrHigher() {
         // Use LicenseService for fresh license status if available
         if (licenseService != null) {
@@ -93,9 +91,7 @@ public class ConfigController {
         return null;
     }
 
-    /**
-     * Check if running Enterprise edition dynamically.
-     */
+    /** Check if running Enterprise edition dynamically. */
     private Boolean isRunningEE() {
         // Use LicenseService for fresh license status if available
         if (licenseService != null) {

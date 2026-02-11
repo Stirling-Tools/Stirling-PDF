@@ -8,16 +8,15 @@ import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
 /**
- * Service that provides dynamic license checking instead of cached beans.
- * This ensures that when admins update the license key, the changes are
- * immediately reflected in the UI and config endpoints without requiring a restart.
+ * Service that provides dynamic license checking instead of cached beans. This ensures that when
+ * admins update the license key, the changes are immediately reflected in the UI and config
+ * endpoints without requiring a restart.
  *
- * Note: Some components (EnterpriseEndpointAspect, PremiumEndpointAspect, filters)
- * still inject cached beans at startup for performance. These will require a restart
- * to reflect license changes. This is acceptable because:
- * 1. Most deployments add licenses during initial setup
- * 2. License changes in production typically warrant a restart anyway
- * 3. UI reflects changes immediately (banner disappears, license status updates)
+ * <p>Note: Some components (EnterpriseEndpointAspect, PremiumEndpointAspect, filters) still inject
+ * cached beans at startup for performance. These will require a restart to reflect license changes.
+ * This is acceptable because: 1. Most deployments add licenses during initial setup 2. License
+ * changes in production typically warrant a restart anyway 3. UI reflects changes immediately
+ * (banner disappears, license status updates)
  */
 @Service
 @RequiredArgsConstructor
@@ -27,6 +26,7 @@ public class DynamicLicenseService implements LicenseServiceInterface {
 
     /**
      * Get the current license type dynamically (not cached).
+     *
      * @return Current license: NORMAL, SERVER, or ENTERPRISE
      */
     public License getCurrentLicense() {

@@ -82,8 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // For API requests, return 401 JSON
                 String acceptHeader = request.getHeader("Accept");
                 if (requestURI.startsWith(contextPath + "/api/")
-                        || (acceptHeader != null
-                                && acceptHeader.contains("application/json"))) {
+                        || (acceptHeader != null && acceptHeader.contains("application/json"))) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
                     response.getWriter().write("{\"error\":\"Authentication required\"}");

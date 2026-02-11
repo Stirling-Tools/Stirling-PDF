@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, Button, ActionIcon } from '@mantine/core';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { useTranslation } from 'react-i18next';
-import { supportedLanguages } from '@app/i18n';
+import { supportedLanguages, setUserLanguage } from '@app/i18n';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import styles from '@app/components/shared/LanguageSelector.module.css';
 import { Z_INDEX_CONFIG_MODAL } from '@app/styles/zIndex';
@@ -206,10 +206,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
     // Simulate processing time for smooth transition
     setTimeout(() => {
-      i18n.changeLanguage(value);
-      // Manually save to localStorage since we disabled auto-caching of detected languages
-      // This ensures user-selected languages persist across sessions
-      localStorage.setItem('i18nextLng', value);
+      // Use setUserLanguage to properly set priority (ensures user choice persists across sessions)
+      setUserLanguage(value);
 
       setTimeout(() => {
         setPendingLanguage(null);
