@@ -50,6 +50,23 @@ export const supportedLanguages = {
 // RTL languages (based on your existing language.direction property)
 export const rtlLanguages = ['ar-AR', 'fa-IR'];
 
+// LocalStorage keys for i18next
+export const I18N_STORAGE_KEYS = {
+  LANGUAGE: 'i18nextLng',
+  LANGUAGE_SOURCE: 'i18nextLng-source',
+} as const;
+
+/**
+ * Language selection priority levels
+ * Higher number = higher priority (cannot be overridden by lower priority)
+ */
+export enum LanguageSource {
+  Fallback = 0,
+  Browser = 1,
+  ServerDefault = 2,
+  User = 3,
+}
+
 i18n
   .use(TomlBackend)
   .use(LanguageDetector)
@@ -108,11 +125,11 @@ i18n.on('languageChanged', (lng) => {
 // Track browser-detected language on first initialization
 i18n.on('initialized', () => {
   // If no source is set yet, mark current language as browser-detected
-  if (!localStorage.getItem('i18nextLng-source')) {
+  if (!localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE)) {
     const detectedLang = i18n.language;
     if (detectedLang) {
-      localStorage.setItem('i18nextLng', detectedLang);
-      localStorage.setItem('i18nextLng-source', 'browser');
+      localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE, detectedLang);
+      localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE, String(LanguageSource.Browser));
     }
   }
 });
@@ -145,25 +162,14 @@ export function toUnderscoreLanguages(languages: string[]): string[] {
   return languages.map(toUnderscoreFormat);
 }
 
-/**
- * Language selection priority levels
- * Higher number = higher priority (cannot be overridden by lower priority)
- */
-const LANGUAGE_SOURCE_PRIORITY = {
-  fallback: 0,
-  browser: 1,
-  'server-default': 2,
-  user: 3,
-} as const;
-
-type LanguageSource = keyof typeof LANGUAGE_SOURCE_PRIORITY;
 
 /**
  * Get the current language source priority
  */
-function getCurrentSourcePriority(): number {
-  const source = localStorage.getItem('i18nextLng-source') as LanguageSource | null;
-  return source ? LANGUAGE_SOURCE_PRIORITY[source] : LANGUAGE_SOURCE_PRIORITY.fallback;
+function getCurrentSourcePriority(): LanguageSource {
+  const sourceStr = localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE);
+  const sourceNum = sourceStr ? parseInt(sourceStr, 10) : null;
+  return (sourceNum !== null && !isNaN(sourceNum)) ? sourceNum as LanguageSource : LanguageSource.Fallback;
 }
 
 /**
@@ -172,13 +178,13 @@ function getCurrentSourcePriority(): number {
  */
 function setLanguageWithPriority(language: string, source: LanguageSource): boolean {
   const currentPriority = getCurrentSourcePriority();
-  const newPriority = LANGUAGE_SOURCE_PRIORITY[source];
+  const newPriority = source;
 
   // Only apply if new source has higher priority
   if (newPriority >= currentPriority) {
     i18n.changeLanguage(language);
-    localStorage.setItem('i18nextLng', language);
-    localStorage.setItem('i18nextLng-source', source);
+    localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE, language);
+    localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE, String(source));
     return true;
   }
   return false;
@@ -189,7 +195,7 @@ function setLanguageWithPriority(language: string, source: LanguageSource): bool
  * Call this from the UI language selector
  */
 export function setUserLanguage(language: string): void {
-  setLanguageWithPriority(language, 'user');
+  setLanguageWithPriority(language, LanguageSource.User);
 }
 
 /**
@@ -237,10 +243,10 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
   // If current language is not in the new supported list, switch to fallback
   const currentLang = normalizeLanguageCode(i18n.language || '');
   if (currentLang && !validLanguages.includes(currentLang)) {
-    setLanguageWithPriority(fallback, 'fallback');
+    setLanguageWithPriority(fallback, LanguageSource.Fallback);
   } else if (validDefault) {
     // Apply server default (respects user choice if already set)
-    setLanguageWithPriority(validDefault, 'server-default');
+    setLanguageWithPriority(validDefault, LanguageSource.ServerDefault);
   }
 }
 
@@ -250,7 +256,7 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
  */
 function applyDefaultLocale(defaultLocale: string) {
   // Apply server default (respects user choice if already set)
-  setLanguageWithPriority(defaultLocale, 'server-default');
+  setLanguageWithPriority(defaultLocale, LanguageSource.ServerDefault);
 }
 
 export default i18n;
