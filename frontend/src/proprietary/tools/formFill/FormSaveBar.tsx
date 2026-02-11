@@ -69,12 +69,16 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 250);
+
+      if (onApply) {
+        await onApply(blob);
+      }
     } catch (err) {
       console.error('[FormSaveBar] Download failed:', err);
     } finally {
       setSaving(false);
     }
-  }, [file, saving, applying, submitForm]);
+  }, [file, saving, applying, submitForm, onApply]);
 
   // Don't show when:
   // - formFill tool is active (it has its own save panel)
