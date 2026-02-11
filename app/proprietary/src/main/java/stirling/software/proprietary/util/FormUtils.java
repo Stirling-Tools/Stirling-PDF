@@ -693,6 +693,7 @@ public class FormUtils {
         return new FormFieldExtraction(fields, template);
     }
 
+
     private String safeDefault(String current) {
         return current != null ? current : "";
     }

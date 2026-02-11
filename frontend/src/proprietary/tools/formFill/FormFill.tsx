@@ -40,15 +40,15 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import DescriptionIcon from '@mui/icons-material/Description';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import styles from '@proprietary/tools/formFill/FormFill.module.css';
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools
 // ---------------------------------------------------------------------------
 
-type FormMode = 'fill' | 'identify' | 'make' | 'batch' | 'modify';
+type FormMode = 'fill' | 'make' | 'batch' | 'modify';
 
 interface ModeTabDef {
   id: FormMode;
@@ -59,7 +59,6 @@ interface ModeTabDef {
 
 const MODE_TABS: ModeTabDef[] = [
   { id: 'fill', label: 'Fill', icon: <EditNoteIcon className={styles.modeTabIcon} />, ready: true },
-  { id: 'identify', label: 'Identify', icon: <AutoFixHighIcon className={styles.modeTabIcon} />, ready: false },
   { id: 'make', label: 'Create', icon: <PostAddIcon className={styles.modeTabIcon} />, ready: false },
   { id: 'batch', label: 'Batch', icon: <FileCopyIcon className={styles.modeTabIcon} />, ready: false },
   { id: 'modify', label: 'Modify', icon: <BuildCircleIcon className={styles.modeTabIcon} />, ready: false },
@@ -98,6 +97,8 @@ const FormFill = (_props: BaseToolProps) => {
     setActiveField,
     validateForm,
   } = useFormFill();
+
+  const allValues = useAllFormValues();
   const { validationErrors } = formState;
 
   const { scrollActions } = useViewer();
@@ -105,7 +106,24 @@ const FormFill = (_props: BaseToolProps) => {
   const [mode, setMode] = useState<FormMode>('fill');
   const [flatten, setFlatten] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleExtractJson = useCallback(() => {
+    setExtracting(true);
+    try {
+      const data = JSON.stringify(allValues, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `form-data-${new Date().getTime()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExtracting(false);
+    }
+  }, [allValues]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
@@ -240,7 +258,6 @@ const FormFill = (_props: BaseToolProps) => {
   }, [formState.fields]);
 
   // Progress tracking
-  const allValues = useAllFormValues();
 
   const fillableFields = useMemo(() => {
     return formState.fields.filter((f) => f.type !== 'button' && f.type !== 'signature');
@@ -384,9 +401,22 @@ const FormFill = (_props: BaseToolProps) => {
                     onClick={handleSave}
                     loading={saving}
                     disabled={!formState.isDirty}
+                    flex={1}
                   >
                     Apply & Save
                   </Button>
+
+                  <Button
+                    variant="light"
+                    color="blue"
+                    leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
+                    loading={extracting}
+                    onClick={handleExtractJson}
+                    size="xs"
+                  >
+                    Extract JSON
+                  </Button>
+
                   <Tooltip label="Re-scan fields" withArrow position="bottom">
                     <ActionIcon
                       variant="light"
