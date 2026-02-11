@@ -153,11 +153,12 @@ class PDFToFileTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             "Fake PDF content".getBytes());
 
-            // Create a mock HTML output file
+            // Create a mock HTML output file with image references
             Path htmlOutputFile = tempDir.resolve("test.html");
             Files.write(
                     htmlOutputFile,
-                    "<html><body><h1>Test</h1><p>This is a test.</p></body></html>".getBytes());
+                    "<html><body><h1>Test</h1><p>This is a test.</p><img src=\"image1.png\" /></body></html>"
+                            .getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -174,18 +175,61 @@ class PDFToFileTest {
                                 Files.copy(
                                         htmlOutputFile, Path.of(outputDir.getPath(), "test.html"));
 
+                                // Create a mock image file
+                                Files.write(
+                                        Path.of(outputDir.getPath(), "image1.png"),
+                                        "Fake image data".getBytes());
+
                                 return mockExecutorResult;
                             });
 
             // Execute the method
             ResponseEntity<byte[]> response = pdfToFile.processPdfToMarkdown(pdfFile);
 
-            // Verify
+            // Verify - should now return a ZIP file instead of plain markdown
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertTrue(response.getBody().length > 0);
+
+            // Verify content disposition indicates a ZIP file
             assertTrue(
-                    response.getHeaders().getContentDisposition().toString().contains("test.md"));
+                    response.getHeaders()
+                            .getContentDisposition()
+                            .toString()
+                            .contains("ToMarkdown.zip"));
+
+            // Verify the content by unzipping it
+            try (ZipInputStream zipStream =
+                    ZipSecurity.createHardenedInputStream(
+                            new java.io.ByteArrayInputStream(response.getBody()))) {
+                ZipEntry entry;
+                boolean foundMdFile = false;
+                boolean foundImageInFolder = false;
+                String markdownContent = null;
+
+                while ((entry = zipStream.getNextEntry()) != null) {
+                    if (entry.getName().endsWith(".md")) {
+                        foundMdFile = true;
+                        // Read markdown content to verify image references
+                        markdownContent =
+                                new String(
+                                        zipStream.readAllBytes(),
+                                        java.nio.charset.StandardCharsets.UTF_8);
+                    } else if (entry.getName().startsWith("images/")
+                            && entry.getName().endsWith(".png")) {
+                        foundImageInFolder = true;
+                    }
+                    zipStream.closeEntry();
+                }
+
+                assertTrue(foundMdFile, "ZIP should contain Markdown file");
+                assertTrue(foundImageInFolder, "ZIP should contain image in images/ folder");
+                assertNotNull(markdownContent, "Markdown content should be present");
+                // Verify markdown references images with images/ prefix
+                assertTrue(
+                        markdownContent.contains("images/"),
+                        "Markdown should reference images with images/ prefix");
+            }
         }
     }
 
@@ -256,14 +300,15 @@ class PDFToFileTest {
                 while ((entry = zipStream.getNextEntry()) != null) {
                     if (entry.getName().endsWith(".md")) {
                         foundMdFiles = true;
-                    } else if (entry.getName().endsWith(".png")) {
+                    } else if (entry.getName().startsWith("images/")
+                            && entry.getName().endsWith(".png")) {
                         foundImage = true;
                     }
                     zipStream.closeEntry();
                 }
 
                 assertTrue(foundMdFiles, "ZIP should contain Markdown files");
-                assertTrue(foundImage, "ZIP should contain image files");
+                assertTrue(foundImage, "ZIP should contain image files in images/ folder");
             }
         }
     }
