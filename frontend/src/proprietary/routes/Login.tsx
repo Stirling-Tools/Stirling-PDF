@@ -197,6 +197,11 @@ export default function Login() {
         setLoginMethod(data.loginMethod || 'all');
       } catch (err) {
         console.error('[Login] Failed to fetch enabled providers:', err);
+        // Set default values on error to ensure UI remains functional
+        // Login method defaults to 'all' to show both SSO and email/password options
+        setEnableLogin(true);
+        setLoginMethod('all');
+        setEnabledProviders([]);
       }
     };
 

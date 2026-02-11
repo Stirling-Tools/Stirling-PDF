@@ -116,9 +116,12 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         // Extract provider IDs from authorization URLs
         // Example: "/oauth2/authorization/google" → "google"
         const providerEntries = Object.entries(data.providerList || {});
+        console.log('[ServerSelection] providerList from API:', data.providerList);
         providerEntries.forEach(([path, label]) => {
           const id = path.split('/').pop();
+          console.log('[ServerSelection] Processing provider path:', path, '→ id:', id);
           if (!id) {
+            console.warn('[ServerSelection] Skipping provider with empty id:', path);
             return;
           }
 
@@ -130,6 +133,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         });
 
         console.log('[ServerSelection] ✅ Detected OAuth providers:', enabledProviders);
+        console.log('[ServerSelection] Login method:', loginMethod);
       } catch (err) {
         console.error('[ServerSelection] ❌ Failed to fetch login configuration:', err);
 

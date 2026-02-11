@@ -91,7 +91,11 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
     (id as KnownProviderId) in providerConfig;
   const GENERIC_PROVIDER_ICON = 'oidc.svg';
 
+  console.log('[DesktopOAuthButtons] Received providers:', providers);
+  console.log('[DesktopOAuthButtons] Mode:', mode, 'Server URL:', serverUrl);
+
   if (providers.length === 0) {
+    console.warn('[DesktopOAuthButtons] No providers to display, returning null');
     return null;
   }
 

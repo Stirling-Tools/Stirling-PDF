@@ -29,10 +29,16 @@ export default function Landing() {
   useEffect(() => {
     const mountId = Math.random().toString(36).substring(7);
     console.log(`[Landing:${mountId}] 🔵 Component mounted at ${location.pathname}`);
+    console.log(`[Landing:${mountId}] Mount state:`, {
+      authLoading,
+      configLoading,
+      backendLoading: backendProbe.loading,
+      hasSession: !!session,
+    });
     return () => {
       console.log(`[Landing:${mountId}] 🔴 Component unmounting`);
     };
-  }, [location.pathname]);
+  }, [location.pathname, authLoading, configLoading, backendProbe.loading, session]);
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {

@@ -168,6 +168,7 @@ def generatedFrontendPaths = [
 ]
 
 tasks.register('npmInstall', Exec) {
+    doNotTrackState("node_modules contains symlinks that Gradle cannot snapshot on Windows/WSL")
     enabled = buildWithFrontend
     group = 'frontend'
     description = 'Install frontend dependencies'
@@ -214,6 +215,7 @@ tasks.register('npmInstall', Exec) {
 }
 
 tasks.register('npmBuild', Exec) {
+    doNotTrackState("Frontend build depends on untracked npmInstall task")
     enabled = buildWithFrontend
     group = 'frontend'
     description = 'Build frontend application'

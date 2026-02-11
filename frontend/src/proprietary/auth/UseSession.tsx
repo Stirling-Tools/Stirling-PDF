@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
+      console.debug('[Auth] refreshSession: start', { path: window.location.pathname });
       console.debug('[Auth] Refreshing session...');
 
       const { data, error } = await springAuth.refreshSession();
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('[Auth] Unexpected error during session refresh:', err);
       setError(err as AuthError);
     } finally {
+      console.debug('[Auth] refreshSession: done', { hasSession: !!session });
       setLoading(false);
     }
   }, []);
@@ -109,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.debug(`[Auth:${mountId}] Initializing auth...`);
+        console.debug(`[Auth:${mountId}] Path: ${window.location.pathname} Search: ${window.location.search}`);
         // Clear any platform-specific cached auth on login page init.
         if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
           await clearPlatformAuthOnLoginInit();
@@ -137,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setError(err as AuthError);
         }
       } finally {
+        console.debug(`[Auth:${mountId}] Initialize auth complete. mounted=${mounted}`);
         if (mounted) {
           setLoading(false);
         }

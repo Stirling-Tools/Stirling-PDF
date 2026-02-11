@@ -37,7 +37,6 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
     console.error('Current search:', window.location.search);
     console.error('Timestamp:', new Date().toISOString());
     console.error('User agent:', navigator.userAgent);
-
     // Check for React error codes
     if (error.message.includes('Minified React error')) {
       const errorCodeMatch = error.message.match(/#(\d+)/);
