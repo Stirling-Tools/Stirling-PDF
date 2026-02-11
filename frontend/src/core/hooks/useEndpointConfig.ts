@@ -30,6 +30,7 @@ export function useEndpointEnabled(endpoint: string): {
     try {
       setLoading(true);
       setError(null);
+      console.debug('[useEndpointConfig] Fetch endpoint status', { endpoint });
 
       const response = await apiClient.get<boolean>(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`);
       const isEnabled = response.data;
@@ -102,6 +103,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     try {
       setLoading(true);
       setError(null);
+      console.debug('[useEndpointConfig] Fetching endpoint statuses', { count: endpoints.length, force });
 
       // Check which endpoints we haven't fetched yet
       const newEndpoints = endpoints.filter(ep => !(ep in globalEndpointCache));
