@@ -20,6 +20,7 @@ import {
   Progress,
   Tooltip,
   ActionIcon,
+  SegmentedControl,
 } from '@mantine/core';
 import { useFormFill, useAllFormValues } from '@proprietary/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -39,6 +40,7 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import DescriptionIcon from '@mui/icons-material/Description';
 import styles from '@proprietary/tools/formFill/FormFill.module.css';
 
@@ -46,7 +48,7 @@ import styles from '@proprietary/tools/formFill/FormFill.module.css';
 // Mode tabs — extensible for future form tools
 // ---------------------------------------------------------------------------
 
-type FormMode = 'fill' | 'make' | 'batch' | 'modify';
+type FormMode = 'fill' | 'identify' | 'make' | 'batch' | 'modify';
 
 interface ModeTabDef {
   id: FormMode;
@@ -57,6 +59,7 @@ interface ModeTabDef {
 
 const MODE_TABS: ModeTabDef[] = [
   { id: 'fill', label: 'Fill', icon: <EditNoteIcon className={styles.modeTabIcon} />, ready: true },
+  { id: 'identify', label: 'Identify', icon: <AutoFixHighIcon className={styles.modeTabIcon} />, ready: false },
   { id: 'make', label: 'Create', icon: <PostAddIcon className={styles.modeTabIcon} />, ready: false },
   { id: 'batch', label: 'Batch', icon: <FileCopyIcon className={styles.modeTabIcon} />, ready: false },
   { id: 'modify', label: 'Modify', icon: <BuildCircleIcon className={styles.modeTabIcon} />, ready: false },
@@ -271,19 +274,30 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root}>
-      {/* ---- Mode tabs ---- */}
+      {/* ---- Mode selection ---- */}
       <div className={styles.modeTabs}>
-        {MODE_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            className={`${styles.modeTab} ${mode === tab.id ? styles.modeTabActive : ''}`}
-            onClick={() => setMode(tab.id)}
-            title={tab.label}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
+        <SegmentedControl
+          value={mode}
+          onChange={(val) => setMode(val as FormMode)}
+          data={MODE_TABS.map((tab) => ({
+            value: tab.id,
+            label: (
+              <div className={styles.segmentedLabel}>
+                {tab.icon}
+                <span>{tab.label}</span>
+              </div>
+            ),
+          }))}
+          fullWidth
+          radius="xs"
+          size="xs"
+          classNames={{
+            root: styles.segmentedRoot,
+            indicator: styles.segmentedIndicator,
+            control: styles.segmentedControl,
+            label: styles.segmentedInnerLabel,
+          }}
+        />
       </div>
 
       {/* ---- Coming-soon for non-ready tabs ---- */}
