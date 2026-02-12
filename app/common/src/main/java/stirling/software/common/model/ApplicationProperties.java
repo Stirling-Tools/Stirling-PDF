@@ -29,6 +29,8 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.annotation.PostConstruct;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -96,6 +98,52 @@ public class ApplicationProperties {
         log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
+    }
+
+    /**
+     * Initialize fileUploadLimit from environment variables if not set in settings.yml. Supports
+     * SYSTEMFILEUPLOADLIMIT (format: "100MB") and SYSTEM_MAXFILESIZE (format: "100" in MB).
+     */
+    @PostConstruct
+    public void initializeFileUploadLimitFromEnv() {
+        // Only override if fileUploadLimit is not already set in settings.yml
+        if (system.getFileUploadLimit() == null || system.getFileUploadLimit().isEmpty()) {
+            String fileUploadLimit = null;
+
+            // Check SYSTEMFILEUPLOADLIMIT first (format: "100MB", "1GB", etc.)
+            String systemFileUploadLimit = java.lang.System.getenv("SYSTEMFILEUPLOADLIMIT");
+            if (systemFileUploadLimit != null && !systemFileUploadLimit.trim().isEmpty()) {
+                fileUploadLimit = systemFileUploadLimit.trim();
+                log.info("Setting fileUploadLimit from SYSTEMFILEUPLOADLIMIT: {}", fileUploadLimit);
+            } else {
+                // Check SYSTEM_MAXFILESIZE (format: number in MB, e.g., "100")
+                String systemMaxFileSize = java.lang.System.getenv("SYSTEM_MAXFILESIZE");
+                if (systemMaxFileSize != null && !systemMaxFileSize.trim().isEmpty()) {
+                    try {
+                        // Validate it's a number
+                        long sizeInMB = Long.parseLong(systemMaxFileSize.trim());
+                        if (sizeInMB > 0 && sizeInMB <= 999) {
+                            fileUploadLimit = sizeInMB + "MB";
+                            log.info(
+                                    "Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB",
+                                    sizeInMB);
+                        } else {
+                            log.warn(
+                                    "SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring",
+                                    sizeInMB);
+                        }
+                    } catch (NumberFormatException e) {
+                        log.warn(
+                                "SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring",
+                                systemMaxFileSize);
+                    }
+                }
+            }
+
+            if (fileUploadLimit != null) {
+                system.setFileUploadLimit(fileUploadLimit);
+            }
+        }
     }
 
     @Data

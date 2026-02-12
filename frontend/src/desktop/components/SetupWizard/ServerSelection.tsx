@@ -73,6 +73,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
       // Fetch OAuth providers and check if login is enabled
       const enabledProviders: SSOProviderConfig[] = [];
+      let loginMethod = 'all'; // Default to 'all' (allows both SSO and username/password)
       try {
         console.log('[ServerSelection] Fetching login configuration...');
         const response = await fetch(`${url}/api/v1/proprietary/ui-data/login`);
@@ -108,12 +109,19 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
           return;
         }
 
+        // Extract loginMethod from response
+        loginMethod = data.loginMethod || 'all';
+        console.log('[ServerSelection] Login method:', loginMethod);
+
         // Extract provider IDs from authorization URLs
         // Example: "/oauth2/authorization/google" → "google"
         const providerEntries = Object.entries(data.providerList || {});
+        console.log('[ServerSelection] providerList from API:', data.providerList);
         providerEntries.forEach(([path, label]) => {
           const id = path.split('/').pop();
+          console.log('[ServerSelection] Processing provider path:', path, '→ id:', id);
           if (!id) {
+            console.warn('[ServerSelection] Skipping provider with empty id:', path);
             return;
           }
 
@@ -125,6 +133,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         });
 
         console.log('[ServerSelection] ✅ Detected OAuth providers:', enabledProviders);
+        console.log('[ServerSelection] Login method:', loginMethod);
       } catch (err) {
         console.error('[ServerSelection] ❌ Failed to fetch login configuration:', err);
 
@@ -149,11 +158,12 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         return;
       }
 
-      // Connection successful - pass URL and OAuth providers
+      // Connection successful - pass URL, OAuth providers, and login method
       console.log('[ServerSelection] ✅ Server selection complete, proceeding to login');
       onSelect({
         url,
         enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+        loginMethod,
       });
     } catch (error) {
       console.error('[ServerSelection] ❌ Unexpected error during connection test:', error);

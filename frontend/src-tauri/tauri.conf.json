@@ -1,13 +1,13 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Stirling-PDF",
-    "version": "2.4.4",
+    "version": "2.4.6",
     "identifier": "stirling.pdf.dev",
     "build": {
         "frontendDist": "../dist",
         "devUrl": "http://localhost:5173",
         "beforeDevCommand": "npm run dev -- --mode desktop",
-        "beforeBuildCommand": "npm run build -- --mode desktop"
+        "beforeBuildCommand": "node scripts/build-provisioner.mjs && npm run build -- --mode desktop"
     },
     "app": {
         "windows": [
@@ -62,7 +62,15 @@
         "windows": {
             "certificateThumbprint": null,
             "digestAlgorithm": "sha256",
-            "timestampUrl": "http://timestamp.digicert.com"
+            "timestampUrl": "http://timestamp.digicert.com",
+            "wix": {
+                "fragmentPaths": [
+                    "windows/wix/provisioning.wxs"
+                ],
+                "componentGroupRefs": [
+                    "ProvisioningComponentGroup"
+                ]
+            }
         },
         "macOS": {
             "minimumSystemVersion": "10.15",
