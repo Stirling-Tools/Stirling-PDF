@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Stack, Paper, Text, Loader, Group, MultiSelect, Checkbox } from '@mantine/core';
+import { Button, Stack, Paper, Text, Loader, Group, MultiSelect, Switch } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -272,12 +272,6 @@ export default function AdminEndpointsSection() {
               disabled={!loginEnabled}
             />
           </div>
-
-          <Paper bg="var(--mantine-color-blue-light)" p="sm" radius="sm">
-            <Text size="xs" c="dimmed">
-              {t('admin.settings.endpoints.note', 'Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect.')}
-            </Text>
-          </Paper>
         </Stack>
       </Paper>
 
@@ -296,7 +290,7 @@ export default function AdminEndpointsSection() {
             </Text>
           </div>
 
-          <Checkbox
+          <Switch
             label={
               <Group gap="xs">
                 <span>{t('admin.settings.endpoints.defaultHideUnavailableTools.label', 'Hide unavailable tools by default')}</span>
@@ -312,7 +306,7 @@ export default function AdminEndpointsSection() {
             disabled={!loginEnabled}
           />
 
-          <Checkbox
+          <Switch
             label={
               <Group gap="xs">
                 <span>{t('admin.settings.endpoints.defaultHideUnavailableConversions.label', 'Hide unavailable conversions by default')}</span>

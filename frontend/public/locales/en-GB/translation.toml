@@ -829,7 +829,6 @@ label = "Username"
 [admin.settings.endpoints]
 description = "Control which API endpoints and endpoint groups are available."
 management = "Endpoint Management"
-note = "Note: Disabling endpoints restricts API access but does not remove UI components. Restart required for changes to take effect."
 title = "API Endpoints"
 userDefaults = "User Preference Defaults"
 userDefaultsDescription = "Set default values for user preferences. Users can override these in their personal settings."
