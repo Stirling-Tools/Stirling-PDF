@@ -705,7 +705,9 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
 
                           <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
-                          <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
+                          <div className="pdf-selection-layer" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                            <SelectionLayer documentId={documentId} pageIndex={pageIndex} background="var(--pdf-selection-bg)" />
+                          </div>
                           <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
 
                           {/* AnnotationLayer for annotation editing (only when enabled) */}
