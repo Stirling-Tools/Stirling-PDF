@@ -3,7 +3,7 @@ import { ActionIcon, Divider } from '@mantine/core';
 import '@app/components/shared/rightRail/RightRail.css';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useRightRail } from '@app/contexts/RightRailContext';
-import { useFileState, useFileSelection } from '@app/contexts/FileContext';
+import { useFileState, useFileSelection, useFileActions } from '@app/contexts/FileContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
@@ -60,6 +60,7 @@ export default function RightRail() {
 
   const { selectors } = useFileState();
   const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { actions: fileActions } = useFileActions();
   const { signaturesApplied } = useSignature();
 
   const activeFiles = selectors.getFiles();
@@ -165,6 +166,10 @@ export default function RightRail() {
           filename: file.name,
           localPath: stub?.localFilePath
         });
+        // Mark file as clean after successful save to disk
+        if (stub?.localFilePath && stub?.isDirty) {
+          fileActions.updateFileRecord(stub.id, { isDirty: false });
+        }
       }
     }
   }, [
@@ -175,6 +180,7 @@ export default function RightRail() {
     viewerContext,
     signaturesApplied,
     selectors,
+    fileActions,
   ]);
 
   const downloadTooltip = useMemo(() => {

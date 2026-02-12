@@ -364,8 +364,24 @@ const FileEditorThumbnail = ({
         marginTop: '0.5rem',
         marginBottom: '0.5rem',
       }}>
-        <Text  size="lg" fw={700} className={styles.title}  lineClamp={2}>
+        <Text  size="lg" fw={700} className={styles.title}  lineClamp={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
           <PrivateContent>{file.name}</PrivateContent>
+          {/* Dirty indicator - shows when file has unsaved changes */}
+          {file.localFilePath && file.isDirty && (
+            <Tooltip label={t('unsavedChanges', 'Unsaved changes')}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--mantine-color-yellow-6)',
+                  flexShrink: 0
+                }}
+                aria-label={t('unsavedChanges', 'Unsaved changes')}
+              />
+            </Tooltip>
+          )}
         </Text>
         <Text
           size="sm"

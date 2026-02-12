@@ -197,7 +197,10 @@ export function createChildStub(
     thumbnailUrl: thumbnail,
 
     // Set fresh processedFile metadata (no inheritance from parent)
-    processedFile: processedFileMetadata
+    processedFile: processedFileMetadata,
+
+    // Mark as dirty if parent has a localFilePath (modified file not yet saved to disk)
+    isDirty: parentStub.localFilePath ? true : undefined
   };
 }
 
@@ -716,5 +719,6 @@ export const createFileActions = (dispatch: React.Dispatch<FileContextAction>) =
   resetContext: () => dispatch({ type: 'RESET_CONTEXT' }),
   markFileError: (fileId: FileId) => dispatch({ type: 'MARK_FILE_ERROR', payload: { fileId } }),
   clearFileError: (fileId: FileId) => dispatch({ type: 'CLEAR_FILE_ERROR', payload: { fileId } }),
-  clearAllFileErrors: () => dispatch({ type: 'CLEAR_ALL_FILE_ERRORS' })
+  clearAllFileErrors: () => dispatch({ type: 'CLEAR_ALL_FILE_ERRORS' }),
+  updateFileRecord: (fileId: FileId, updates: Partial<StirlingFileStub>) => dispatch({ type: 'UPDATE_FILE_RECORD', payload: { id: fileId, updates } })
 });

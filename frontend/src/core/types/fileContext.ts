@@ -49,6 +49,7 @@ export interface StirlingFileStub extends BaseFileMetadata {
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string;   // Page ID after which this file should be inserted
   isPinned?: boolean;           // Protected from tool consumption (replace/remove)
+  isDirty?: boolean;            // Has unsaved changes (only for files with localFilePath)
   // Note: File object stored in provider ref, not in state
 }
 

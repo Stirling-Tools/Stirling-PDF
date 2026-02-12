@@ -278,17 +278,21 @@ const FileEditor = ({
     }
   }, [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
 
-  const handleDownloadFile = useCallback((fileId: FileId) => {
+  const handleDownloadFile = useCallback(async (fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
     if (record && file) {
-      void downloadFile({
+      await downloadFile({
         data: file,
         filename: file.name,
         localPath: record.localFilePath
       });
+      // Mark file as clean after successful save to disk
+      if (record.localFilePath && record.isDirty) {
+        fileActions.updateFileRecord(fileId, { isDirty: false });
+      }
     }
-  }, [activeStirlingFileStubs, selectors, _setStatus]);
+  }, [activeStirlingFileStubs, selectors, fileActions]);
 
   const handleUnzipFile = useCallback(async (fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
