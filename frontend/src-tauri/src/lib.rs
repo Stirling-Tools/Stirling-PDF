@@ -171,9 +171,9 @@ pub fn run() {
           app_handle.cleanup_before_exit();
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, .. } => {
-          add_log("🔄 Window close requested, cleaning up...".to_string());
-          cleanup_backend();
-          // Allow the window to close
+          add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
+          // Don't cleanup here - let JavaScript handler prevent close if needed
+          // Backend cleanup happens in ExitRequested when window actually closes
         }
         RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), .. } => {
           use tauri::DragDropEvent;

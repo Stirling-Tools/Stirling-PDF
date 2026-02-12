@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
 import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
+import { SaveShortcutListener } from '@app/components/SaveShortcutListener';
 import { SetupWizard } from '@app/components/SetupWizard';
 import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
@@ -149,6 +150,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     >
       <DesktopConfigSync />
       <DesktopBannerInitializer />
+      <SaveShortcutListener />
       {children}
     </ProprietaryAppProviders>
   );

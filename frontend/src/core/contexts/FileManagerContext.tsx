@@ -45,7 +45,7 @@ interface FileManagerContextValue {
   canDeleteSelectedFromDisk: boolean;
   onDownloadSelected: () => void;
   onDownloadSingle: (file: StirlingFileStub) => void;
-  onDeleteFromDisk: (file: StirlingFileStub) => void;
+  onDeleteFromDisk: (files: StirlingFileStub[]) => Promise<void>;
   onToggleExpansion: (fileId: FileId) => void;
   onAddToRecents: (file: StirlingFileStub) => void;
   onUnzipFile: (file: StirlingFileStub) => Promise<void>;

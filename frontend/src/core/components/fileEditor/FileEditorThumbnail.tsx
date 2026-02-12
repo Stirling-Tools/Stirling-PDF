@@ -24,6 +24,7 @@ import { formatFileSize } from '@app/utils/fileUtils';
 import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { downloadFile } from '@app/services/downloadService';
 
 
 
@@ -69,7 +70,7 @@ const FileEditorThumbnail = ({
     actions: fileActions,
     openEncryptedUnlockPrompt,
   } = useFileContext();
-  const { state } = useFileState();
+  const { state, selectors } = useFileState();
   const hasError = state.ui.errorFileIds.includes(file.id);
 
   // ---- Drag state ----
@@ -190,6 +191,33 @@ const FileEditorThumbnail = ({
     alert({ alertType: 'neutral', title: `Closed ${file.name}`, expandable: false, durationMs: 3500 });
     setShowCloseModal(false);
   }, [file.id, file.name, onCloseFile]);
+
+  const handleSaveAndClose = useCallback(async () => {
+    // Save the file first
+    if (file.localFilePath) {
+      const fileToSave = selectors.getFile(file.id);
+      if (fileToSave) {
+        try {
+          await downloadFile({
+            data: fileToSave,
+            filename: file.name,
+            localPath: file.localFilePath
+          });
+          // Mark as clean
+          fileActions.updateStirlingFileStub(file.id, { isDirty: false });
+        } catch (error) {
+          console.error(`Failed to save ${file.name}:`, error);
+          alert({ alertType: 'error', title: 'Save failed', body: `Could not save ${file.name}`, expandable: true });
+          setShowCloseModal(false);
+          return;
+        }
+      }
+    }
+    // Then close
+    onCloseFile(file.id);
+    alert({ alertType: 'success', title: `Saved and closed ${file.name}`, expandable: false, durationMs: 3500 });
+    setShowCloseModal(false);
+  }, [file.id, file.name, file.localFilePath, onCloseFile, selectors, fileActions]);
 
   const handleCancelClose = useCallback(() => {
     setShowCloseModal(false);
@@ -484,18 +512,40 @@ const FileEditorThumbnail = ({
         size="auto"
       >
         <Stack gap="md">
-          <Text size="md">{t('confirmCloseMessage', 'Are you sure you want to close this file?')}</Text>
-          <Text size="sm" c="dimmed" fw={500}>
-            {file.name}
-          </Text>
-          <Group justify="flex-end" gap="sm">
-            <Button variant="light" onClick={handleCancelClose}>
-              {t('confirmCloseCancel', 'Cancel')}
-            </Button>
-            <Button variant="filled" color="red" onClick={handleConfirmClose}>
-              {t('confirmCloseConfirm', 'Close File')}
-            </Button>
-          </Group>
+          {file.isDirty && file.localFilePath ? (
+            <>
+              <Text size="md">{t('confirmCloseUnsaved', 'This file has unsaved changes.')}</Text>
+              <Text size="sm" c="dimmed" fw={500}>
+                {file.name}
+              </Text>
+              <Group justify="flex-end" gap="sm">
+                <Button variant="light" onClick={handleCancelClose}>
+                  {t('confirmCloseCancel', 'Cancel')}
+                </Button>
+                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                  {t('confirmCloseDiscard', 'Discard changes and close')}
+                </Button>
+                <Button variant="filled" onClick={handleSaveAndClose}>
+                  {t('confirmCloseSave', 'Save and close')}
+                </Button>
+              </Group>
+            </>
+          ) : (
+            <>
+              <Text size="md">{t('confirmCloseMessage', 'Are you sure you want to close this file?')}</Text>
+              <Text size="sm" c="dimmed" fw={500}>
+                {file.name}
+              </Text>
+              <Group justify="flex-end" gap="sm">
+                <Button variant="light" onClick={handleCancelClose}>
+                  {t('confirmCloseCancel', 'Cancel')}
+                </Button>
+                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                  {t('confirmCloseConfirm', 'Close File')}
+                </Button>
+              </Group>
+            </>
+          )}
         </Stack>
       </Modal>
     </div>

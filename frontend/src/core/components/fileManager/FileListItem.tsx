@@ -278,7 +278,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   leftSection={<DeleteForeverIcon style={{ fontSize: 16 }} />}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDeleteFromDisk(file);
+                    onDeleteFromDisk([file]);
                   }}
                 >
                   {t('fileManager.deleteFromDisk', 'Delete from Disk')}

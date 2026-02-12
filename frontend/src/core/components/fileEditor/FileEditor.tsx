@@ -289,7 +289,7 @@ const FileEditor = ({
       });
       // Mark file as clean after successful save to disk
       if (record.localFilePath && record.isDirty) {
-        fileActions.updateFileRecord(fileId, { isDirty: false });
+        fileActions.updateStirlingFileStub(fileId, { isDirty: false });
       }
     }
   }, [activeStirlingFileStubs, selectors, fileActions]);

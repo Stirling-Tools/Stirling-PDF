@@ -720,5 +720,5 @@ export const createFileActions = (dispatch: React.Dispatch<FileContextAction>) =
   markFileError: (fileId: FileId) => dispatch({ type: 'MARK_FILE_ERROR', payload: { fileId } }),
   clearFileError: (fileId: FileId) => dispatch({ type: 'CLEAR_FILE_ERROR', payload: { fileId } }),
   clearAllFileErrors: () => dispatch({ type: 'CLEAR_ALL_FILE_ERRORS' }),
-  updateFileRecord: (fileId: FileId, updates: Partial<StirlingFileStub>) => dispatch({ type: 'UPDATE_FILE_RECORD', payload: { id: fileId, updates } })
+  updateStirlingFileStub: (fileId: FileId, updates: Partial<StirlingFileStub>) => dispatch({ type: 'UPDATE_FILE_RECORD', payload: { id: fileId, updates } })
 });

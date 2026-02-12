@@ -168,7 +168,7 @@ export default function RightRail() {
         });
         // Mark file as clean after successful save to disk
         if (stub?.localFilePath && stub?.isDirty) {
-          fileActions.updateFileRecord(stub.id, { isDirty: false });
+          fileActions.updateStirlingFileStub(stub.id, { isDirty: false });
         }
       }
     }
