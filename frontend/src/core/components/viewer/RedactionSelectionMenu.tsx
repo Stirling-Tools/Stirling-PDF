@@ -1,4 +1,5 @@
 import { useRedaction as useEmbedPdfRedaction, RedactionSelectionMenuProps } from '@embedpdf/plugin-redaction/react';
+import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { ActionIcon, Tooltip, Button, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
@@ -10,7 +11,7 @@ import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId'
 
 export type { RedactionSelectionMenuProps };
 
-export function RedactionSelectionMenu(props: RedactionSelectionMenuProps) {
+export function RedactionSelectionMenu(props: any) {
   const activeDocumentId = useActiveDocumentId();
 
   // Don't render until we have a valid document ID
@@ -32,7 +33,12 @@ function RedactionSelectionMenuInner({
   selected,
   menuWrapperProps,
 }: RedactionSelectionMenuProps & { documentId: string }) {
-  const item = context?.item;
+  const item = context?.type === 'redaction'
+    ? context.item
+    : (context?.type === 'annotation' ? (context as any).annotation?.object : null);
+
+  const isRedaction = context?.type === 'redaction' || (context?.type === 'annotation' && item?.type === PdfAnnotationSubtype.REDACT);
+
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
@@ -64,7 +70,7 @@ function RedactionSelectionMenuInner({
 
   // Calculate position for portal based on wrapper element
   useEffect(() => {
-    if (!selected || !item || !wrapperRef.current) {
+    if (!selected || !isRedaction || !item || !wrapperRef.current) {
       setMenuPosition(null);
       return;
     }
@@ -99,7 +105,7 @@ function RedactionSelectionMenuInner({
   }, [selected, item]);
 
   // Early return AFTER all hooks have been called
-  if (!selected || !item) return null;
+  if (!selected || !isRedaction || !item) return null;
 
   const menuContent = menuPosition ? (
     <div
