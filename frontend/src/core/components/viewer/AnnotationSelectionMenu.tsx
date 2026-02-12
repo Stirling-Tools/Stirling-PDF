@@ -9,6 +9,7 @@ import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId'
 import { OpacityControl } from '@app/components/annotation/shared/OpacityControl';
 import { WidthControl } from '@app/components/annotation/shared/WidthControl';
 import { PropertiesPopover } from '@app/components/annotation/shared/PropertiesPopover';
+import { ColorControl } from '@app/components/annotation/shared/ColorControl';
 
 /**
  * Props interface matching EmbedPDF's annotation selection menu pattern
@@ -325,56 +326,6 @@ function AnnotationSelectionMenuInner({
       },
     };
 
-    const ColorButton = ({ targetType = 'main' }: { targetType?: 'main' | 'stroke' | 'fill' | 'text' | 'background' }) => {
-      const [opened, setOpened] = useState(false);
-      const currentColor =
-        targetType === 'stroke' ? getStrokeColor() :
-        targetType === 'fill' ? getFillColor() :
-        targetType === 'text' ? getTextColor() :
-        targetType === 'background' ? getBackgroundColor() :
-        getCurrentColor();
-
-      const label =
-        targetType === 'stroke' ? t('annotation.strokeColor', 'Stroke Colour') :
-        targetType === 'fill' ? t('annotation.fillColor', 'Fill Colour') :
-        targetType === 'text' ? t('annotation.color', 'Color') :
-        targetType === 'background' ? t('annotation.backgroundColor', 'Background color') :
-        t('annotation.changeColor', 'Change Colour');
-
-      return (
-        <Popover opened={opened} onChange={setOpened} position="bottom" withArrow>
-          <Popover.Target>
-            <Tooltip label={label}>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="md"
-                onClick={() => setOpened(!opened)}
-                styles={commonButtonStyles}
-              >
-                <ColorSwatch color={currentColor} size={18} />
-              </ActionIcon>
-            </Tooltip>
-          </Popover.Target>
-          <Popover.Dropdown>
-            <Stack gap="xs">
-              <MantineColorPicker
-                format="hex"
-                value={currentColor}
-                onChange={(color) => handleColorChange(color, targetType)}
-                swatches={[
-                  '#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff',
-                  '#ffff00', '#ff00ff', '#00ffff', '#ffa500', 'transparent'
-                ]}
-                swatchesPerRow={5}
-                size="sm"
-              />
-            </Stack>
-          </Popover.Dropdown>
-        </Popover>
-      );
-    };
-
     const EditTextButton = () => (
       <Tooltip label={t('annotation.editText', 'Edit Text')}>
         <ActionIcon
@@ -416,7 +367,11 @@ function AnnotationSelectionMenuInner({
       case 'textMarkup':
         return (
           <>
-            <ColorButton />
+            <ColorControl
+              value={getCurrentColor()}
+              onChange={(color) => handleColorChange(color, 'main')}
+              label={t('annotation.changeColor', 'Change Colour')}
+            />
             <OpacityControl value={getOpacity()} onChange={handleOpacityChange} />
             <DeleteButton />
           </>
@@ -425,7 +380,11 @@ function AnnotationSelectionMenuInner({
       case 'ink':
         return (
           <>
-            <ColorButton />
+            <ColorControl
+              value={getCurrentColor()}
+              onChange={(color) => handleColorChange(color, 'main')}
+              label={t('annotation.changeColor', 'Change Colour')}
+            />
             <WidthControl value={getWidth()} onChange={handleWidthChange} min={1} max={12} />
             <DeleteButton />
           </>
@@ -434,7 +393,11 @@ function AnnotationSelectionMenuInner({
       case 'inkHighlighter':
         return (
           <>
-            <ColorButton />
+            <ColorControl
+              value={getCurrentColor()}
+              onChange={(color) => handleColorChange(color, 'main')}
+              label={t('annotation.changeColor', 'Change Colour')}
+            />
             <WidthControl value={getWidth()} onChange={handleWidthChange} min={1} max={20} />
             <OpacityControl value={getOpacity()} onChange={handleOpacityChange} />
             <DeleteButton />
@@ -445,8 +408,16 @@ function AnnotationSelectionMenuInner({
       case 'note':
         return (
           <>
-            <ColorButton targetType="text" />
-            <ColorButton targetType="background" />
+            <ColorControl
+              value={getTextColor()}
+              onChange={(color) => handleColorChange(color, 'text')}
+              label={t('annotation.color', 'Color')}
+            />
+            <ColorControl
+              value={getBackgroundColor()}
+              onChange={(color) => handleColorChange(color, 'background')}
+              label={t('annotation.backgroundColor', 'Background color')}
+            />
             <EditTextButton />
             <PropertiesPopover
               annotationType={annotationType}
@@ -460,8 +431,16 @@ function AnnotationSelectionMenuInner({
       case 'shape':
         return (
           <>
-            <ColorButton targetType="stroke" />
-            <ColorButton targetType="fill" />
+            <ColorControl
+              value={getStrokeColor()}
+              onChange={(color) => handleColorChange(color, 'stroke')}
+              label={t('annotation.strokeColor', 'Stroke Colour')}
+            />
+            <ColorControl
+              value={getFillColor()}
+              onChange={(color) => handleColorChange(color, 'fill')}
+              label={t('annotation.fillColor', 'Fill Colour')}
+            />
             <PropertiesPopover
               annotationType="shape"
               annotation={annotation}
@@ -474,7 +453,11 @@ function AnnotationSelectionMenuInner({
       case 'line':
         return (
           <>
-            <ColorButton />
+            <ColorControl
+              value={getCurrentColor()}
+              onChange={(color) => handleColorChange(color, 'main')}
+              label={t('annotation.changeColor', 'Change Colour')}
+            />
             <WidthControl value={getWidth()} onChange={handleWidthChange} min={1} max={12} />
             <DeleteButton />
           </>
@@ -486,7 +469,11 @@ function AnnotationSelectionMenuInner({
       default:
         return (
           <>
-            <ColorButton />
+            <ColorControl
+              value={getCurrentColor()}
+              onChange={(color) => handleColorChange(color, 'main')}
+              label={t('annotation.changeColor', 'Change Colour')}
+            />
             <DeleteButton />
           </>
         );
