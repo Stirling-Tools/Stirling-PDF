@@ -47,6 +47,7 @@ import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
 import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
+import { AnnotationSelectionMenu } from '@app/components/viewer/AnnotationSelectionMenu';
 import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
 import { DocumentPermissionsAPIBridge } from '@app/components/viewer/DocumentPermissionsAPIBridge';
@@ -712,6 +713,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                               documentId={documentId}
                               pageIndex={pageIndex}
                               selectionOutlineColor="#007ACC"
+                              selectionMenu={(props) => <AnnotationSelectionMenu {...props} />}
                             />
                           )}
 
