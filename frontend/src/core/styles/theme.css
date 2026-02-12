@@ -593,7 +593,7 @@
   --api-keys-input-border: #3A4047;
   --api-keys-button-bg: #3A4047;
   --api-keys-button-color: #D0D6DC;
-  
+
   /* Code token colors (dark mode - Cursor-like) */
   --code-kw-color: #C792EA;   /* purple */
   --code-str-color: #C3E88D;  /* green */
@@ -656,6 +656,198 @@
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
+/* ── PDF Link Overlay (viewer) ── */
+:root {
+  --link-hover-bg: rgba(10, 139, 255, 0.04);
+  --link-hover-border: rgba(10, 139, 255, 0.15);
+  --link-hover-shadow:
+    0 0 0 0.5px rgba(10, 139, 255, 0.05),
+    0 1px 3px rgba(10, 139, 255, 0.04);
+  --link-focus-ring: rgba(10, 139, 255, 0.25);
+  --link-toolbar-bg: rgba(15, 23, 42, 0.88);
+  --link-toolbar-border: rgba(255, 255, 255, 0.1);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.16),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05);
+}
+
+[data-mantine-color-scheme="dark"] {
+  --link-hover-bg: rgba(10, 139, 255, 0.06);
+  --link-hover-border: rgba(59, 170, 255, 0.2);
+  --link-hover-shadow:
+    0 0 0 0.5px rgba(59, 170, 255, 0.1),
+    0 1px 3px rgba(10, 139, 255, 0.08);
+  --link-focus-ring: rgba(59, 170, 255, 0.3);
+  --link-toolbar-bg: rgba(15, 23, 42, 0.92);
+  --link-toolbar-border: rgba(255, 255, 255, 0.08);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04);
+}
+
+/* ── Link hit-area ── */
+.pdf-link-overlay {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+  z-index: 11;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  box-shadow: none;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.pdf-link-overlay:hover,
+.pdf-link-overlay--active {
+  background: var(--link-hover-bg);
+  border-bottom: 2px solid var(--color-primary-500);
+  box-shadow: var(--link-hover-shadow);
+}
+
+.pdf-link-overlay:focus-visible {
+  background: var(--link-hover-bg);
+  border-color: var(--link-hover-border);
+  box-shadow:
+    var(--link-hover-shadow),
+    0 0 0 2.5px var(--link-focus-ring);
+}
+
+/* ── Floating toolbar ── */
+@keyframes pdf-link-toolbar-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(3px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes pdf-link-toolbar-enter-below {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-3px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+.pdf-link-toolbar {
+  position: absolute;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 4px;
+  pointer-events: auto;
+  white-space: nowrap;
+  user-select: none;
+
+  background: var(--link-toolbar-bg);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid var(--link-toolbar-border);
+  border-radius: 9999px;
+  box-shadow: var(--link-toolbar-shadow);
+
+  transform: translateX(-50%);
+  animation: pdf-link-toolbar-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center bottom;
+}
+
+.pdf-link-toolbar--below {
+  animation-name: pdf-link-toolbar-enter-below;
+  transform-origin: center top;
+}
+
+/* ── Toolbar buttons ── */
+.pdf-link-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  line-height: 1;
+  border-radius: 9999px;
+}
+
+.pdf-link-toolbar-label {
+  transition: color 0.12s ease;
+}
+
+.pdf-link-toolbar-btn:hover .pdf-link-toolbar-label {
+  color: #60a5fa; /* Modern blue accent */
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pdf-link-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pdf-link-toolbar-btn--delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.pdf-link-toolbar-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+}
+
+.pdf-link-toolbar-btn:last-child {
+  border-radius: 0 9px 9px 0;
+}
+
+.pdf-link-toolbar-btn:hover {
+  color: #fff;
+}
+
+.pdf-link-toolbar-btn--delete {
+  padding: 0 10px;
+}
+
+.pdf-link-toolbar-btn--delete:hover {
+  background: rgba(239, 68, 68, 0.20);
+  color: #f87171;
+}
+
+.pdf-link-toolbar-btn--go:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pdf-link-toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.10);
+  flex-shrink: 0;
+}
+
 :root {
   --shadow-color: rgba(15, 23, 42, 0.55);
 }
