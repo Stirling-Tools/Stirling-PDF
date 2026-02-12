@@ -3,7 +3,7 @@ import { useSelectionPlugin, useSelectionCapability, glyphAt } from '@embedpdf/p
 import { useInteractionManagerCapability } from '@embedpdf/plugin-interaction-manager/react';
 import type { Position, PdfPageGeometry, PdfRun } from '@embedpdf/models';
 
-interface TextSelectionEnhancerProps {
+interface TextSelectionHandlerProps {
   documentId: string;
   pageIndex: number;
 }
@@ -136,14 +136,14 @@ function setSelectionRange(
 }
 
 /**
- * Enhances text selection with standard PDF viewer behaviors:
+ * Handles text selection with standard PDF viewer behaviors:
  * - Double-click to select a whole word
  * - Triple-click to select an entire line
  *
  * This component renders nothing and purely registers interaction handlers.
  * It must be rendered per-page alongside SelectionLayer.
  */
-export function TextSelectionEnhancer({ documentId, pageIndex }: TextSelectionEnhancerProps) {
+export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHandlerProps) {
   const { plugin: selPlugin } = useSelectionPlugin();
   const { provides: selCapability } = useSelectionCapability();
   const { provides: imCapability } = useInteractionManagerCapability();

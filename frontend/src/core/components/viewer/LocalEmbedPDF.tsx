@@ -46,7 +46,7 @@ import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
-import { TextSelectionEnhancer } from '@app/components/viewer/TextSelectionEnhancer';
+import { TextSelectionHandler } from '@app/components/viewer/TextSelectionHandler';
 import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
 import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
@@ -706,7 +706,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                           <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
                           <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
-                          <TextSelectionEnhancer documentId={documentId} pageIndex={pageIndex} />
+                          <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
 
                           {/* AnnotationLayer for annotation editing (only when enabled) */}
                           {enableAnnotations && (
