@@ -188,13 +188,13 @@ function WidgetInputInner({
     case 'combobox':
     case 'listbox': {
       const inputId = `${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`;
-      
+
       // For multi-select, value should be an array
       // We store as comma-separated string, so parse it
       const selectValue = field.multiSelect
         ? (value ? value.split(',').map(v => v.trim()) : [])
         : value;
-      
+
       const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (field.multiSelect) {
           // For multi-select, join selected options with comma
@@ -204,7 +204,7 @@ function WidgetInputInner({
           onChange(field.name, e.target.value);
         }
       };
-      
+
       return (
         <div style={commonStyle} title={error || field.tooltip || field.label}>
           <select
@@ -219,7 +219,7 @@ function WidgetInputInner({
               padding: 0,
               paddingLeft: 2,
               appearance: 'auto',
-              WebkitAppearance: 'auto' as any,
+              WebkitAppearance: 'auto' as React.CSSProperties['WebkitAppearance'],
             }}
             aria-label={field.label || field.name}
             aria-required={field.required}
