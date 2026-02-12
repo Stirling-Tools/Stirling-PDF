@@ -226,7 +226,7 @@ public class FormFillController {
                             example = "{\"field\":\"value\"}")
                     @RequestPart(value = "data", required = false)
                     byte[] valuesPayload,
-            @RequestParam(value = "flatten", defaultValue = "true") boolean flatten)
+            @RequestParam(value = "flatten", defaultValue = "false") boolean flatten)
             throws IOException {
 
         String rawValues = decodePart(valuesPayload);

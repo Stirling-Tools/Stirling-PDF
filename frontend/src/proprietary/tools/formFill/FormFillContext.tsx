@@ -390,7 +390,7 @@ export function FormFillProvider({
   );
 
   const submitForm = useCallback(
-    async (file: File | Blob, flatten = true) => {
+    async (file: File | Blob, flatten = false) => {
       const blob = await providerRef.current.fillForm(file, valuesStore.values, flatten);
       dispatch({ type: 'MARK_CLEAN' });
       return blob;

@@ -31,7 +31,7 @@ export async function fetchFormFieldsWithCoordinates(
 export async function fillFormFields(
   file: File | Blob,
   values: Record<string, string>,
-  flatten: boolean = true
+  flatten: boolean = false
 ): Promise<Blob> {
   const formData = new FormData();
   formData.append('file', file);
@@ -39,9 +39,7 @@ export async function fillFormFields(
     'data',
     new Blob([JSON.stringify(values)], { type: 'application/json' })
   );
-  if (flatten) {
-    formData.append('flatten', 'true');
-  }
+  formData.append('flatten', String(flatten));
 
   const response = await apiClient.post('/api/v1/form/fill', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
