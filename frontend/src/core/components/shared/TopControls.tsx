@@ -11,6 +11,7 @@ import { PageEditorFileDropdown } from '@app/components/shared/PageEditorFileDro
 import type { CustomWorkbenchViewInstance } from '@app/contexts/ToolWorkflowContext';
 import { FileDropdownMenu } from '@app/components/shared/FileDropdownMenu';
 import { usePageEditorDropdownState, PageEditorDropdownState } from '@app/components/pageEditor/hooks/usePageEditorDropdownState';
+import { FileId } from '@app/types/file';
 
 
 const viewOptionStyle: React.CSSProperties = {
@@ -29,7 +30,7 @@ const createViewOptions = (
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
-  onFileRemove?: (fileId: string) => void,
+  onFileRemove?: (fileId: FileId) => void,
   pageEditorState?: PageEditorDropdownState,
   customViews?: CustomWorkbenchViewInstance[]
 ) => {
@@ -133,7 +134,7 @@ interface TopControlsProps {
   activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex?: number;
   onFileSelect?: (index: number) => void;
-  onFileRemove?: (fileId: string) => void;
+  onFileRemove?: (fileId: FileId) => void;
 }
 
 const TopControls = ({

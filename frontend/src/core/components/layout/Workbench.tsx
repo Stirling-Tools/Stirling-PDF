@@ -8,6 +8,7 @@ import { useNavigationState, useNavigationActions, useNavigationGuard } from '@a
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { FileId } from '@app/types/file';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -69,8 +70,8 @@ export default function Workbench() {
     });
   }, [activeFileIndex, requestNavigation, setActiveFileIndex]);
 
-  const handleFileRemove = useCallback((fileId: string) => {
-    fileActions.removeFiles([fileId], false); // false = don't delete from IndexedDB, just remove from context
+  const handleFileRemove = useCallback(async (fileId: FileId) => {
+    await fileActions.removeFiles([fileId], false); // false = don't delete from IndexedDB, just remove from context
   }, [fileActions]);
 
   const handlePreviewClose = () => {

@@ -5,6 +5,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CloseIcon from '@mui/icons-material/Close';
 import FitText from '@app/components/shared/FitText';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { FileId } from '@app/types/file';
 
 // Truncate text from the center: "very-long-filename.pdf" -> "very-lo...ame.pdf"
 function truncateCenter(text: string, maxLength: number = 25): string {
@@ -21,7 +22,7 @@ interface FileDropdownMenuProps {
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex: number;
   onFileSelect?: (index: number) => void;
-  onFileRemove?: (fileId: string) => void;
+  onFileRemove?: (fileId: FileId) => void;
   switchingTo?: string | null;
   viewOptionStyle: React.CSSProperties;
   pillRef?: React.RefObject<HTMLDivElement>;
@@ -103,7 +104,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                         color="red"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onFileRemove(file.fileId);
+                          onFileRemove(file.fileId as FileId);
                         }}
                         style={{ flexShrink: 0 }}
                       >
