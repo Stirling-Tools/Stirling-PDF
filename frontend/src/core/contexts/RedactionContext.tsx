@@ -35,6 +35,8 @@ interface RedactionState {
   isRedacting: boolean;
   // Whether the redaction API bridge is ready (API ref is populated)
   isBridgeReady: boolean;
+  // Color for manual redaction
+  manualRedactColor: string;
 }
 
 /**
@@ -50,10 +52,13 @@ interface RedactionActions {
   setActiveType: (type: RedactionMode | null) => void;
   setIsRedacting: (isRedacting: boolean) => void;
   setBridgeReady: (ready: boolean) => void;
+  setManualRedactColor: (color: string) => void;
   // Unified redaction actions (v2.5.0)
   activateRedact: () => void;
   deactivateRedact: () => void;
   commitAllPending: () => void;
+  // Unified manual redaction action
+  activateManualRedact: () => void;
   // Legacy UI actions (for backwards compatibility with UI)
   activateTextSelection: () => void;
   activateMarquee: () => void;
@@ -79,6 +84,7 @@ const initialState: RedactionState = {
   activeType: null,
   isRedacting: false,
   isBridgeReady: false,
+  manualRedactColor: '#000000',
 };
 
 /**
@@ -141,6 +147,13 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }));
   }, []);
 
+  const setManualRedactColor = useCallback((color: string) => {
+    setState(prev => ({
+      ...prev,
+      manualRedactColor: color,
+    }));
+  }, []);
+
   // Keep navigation guard aware of pending or applied redactions so we block navigation
   // Also clear the flag when all redactions have been saved
   useEffect(() => {
@@ -175,6 +188,12 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [setRedactionsApplied]);
 
+  const activateManualRedact = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.enableRedact();
+    }
+  }, []);
+
   // Legacy UI actions for backwards compatibility
   // In v2.5.0, both text selection and marquee use the same unified mode
   // These just activate the unified redact mode and set the active type for UI state
@@ -202,9 +221,11 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setActiveType,
     setIsRedacting,
     setBridgeReady,
+    setManualRedactColor,
     activateRedact,
     deactivateRedact,
     commitAllPending,
+    activateManualRedact,
     activateTextSelection,
     activateMarquee,
   };
@@ -239,6 +260,7 @@ export const useRedactionMode = () => {
     activeType: context?.activeType || null,
     isRedacting: context?.isRedacting || false,
     isBridgeReady: context?.isBridgeReady || false,
+    manualRedactColor: context?.manualRedactColor || '#000000',
   };
 };
 
