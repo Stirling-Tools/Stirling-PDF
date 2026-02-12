@@ -54,6 +54,7 @@ import { absoluteWithBasePath } from '@app/constants/app';
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
+  fileName?: string;
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   isManualRedactionMode?: boolean;
@@ -65,7 +66,7 @@ interface LocalEmbedPDFProps {
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -88,6 +89,17 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
     // Calculate 3.5rem in pixels dynamically based on root font size
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const viewportGap = rootFontSize * 3.5;
+
+    // Determine export filename - use provided fileName, or extract from file/url
+    let exportFileName = 'document.pdf';
+    if (fileName) {
+      exportFileName = fileName;
+    } else if (file && 'name' in file) {
+      exportFileName = file.name;
+    } else if (url) {
+      const urlPath = url.split('/').pop() || 'document.pdf';
+      exportFileName = urlPath.split('?')[0]; // Remove query params
+    }
 
     return [
       createPluginRegistration(LoaderPluginPackage, {
@@ -174,13 +186,13 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
 
       // Register export plugin for downloading PDFs
       createPluginRegistration(ExportPluginPackage, {
-        defaultFileName: 'document.pdf',
+        defaultFileName: exportFileName,
       }),
 
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, showBakedAnnotations]);
+  }, [pdfUrl, enableAnnotations, showBakedAnnotations, fileName, file, url]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
