@@ -141,6 +141,7 @@ export interface ToolOperationHook<TParams = void> {
   downloadUrl: string | null;
   downloadFilename: string;
   downloadLocalPath?: string | null;
+  outputFileIds?: string[] | null;
   isLoading: boolean;
   status: string;
   errorMessage: string | null;
@@ -380,7 +381,6 @@ export const useToolOperation = <TParams>(
           validFiles.length === 1 && processedFiles.length === 1
             ? selectors.getStirlingFileStub(validFiles[0].fileId)?.localFilePath ?? null
             : null;
-        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath);
 
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
@@ -450,6 +450,9 @@ export const useToolOperation = <TParams>(
             });
           }
         }
+
+        // Pass output file IDs to download info for marking clean after save
+        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath, outputFileIds);
 
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
@@ -579,6 +582,7 @@ export const useToolOperation = <TParams>(
     downloadUrl: state.downloadUrl,
     downloadFilename: state.downloadFilename,
     downloadLocalPath: state.downloadLocalPath,
+    outputFileIds: state.outputFileIds,
     isLoading: state.isLoading,
     status: state.status,
     errorMessage: state.errorMessage,

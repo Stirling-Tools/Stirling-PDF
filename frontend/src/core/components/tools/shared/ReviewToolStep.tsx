@@ -10,6 +10,8 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { downloadFromUrl } from "@app/services/downloadService";
+import { useFileActions } from "@app/contexts/FileContext";
+import { FileId } from "@app/types/fileContext";
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -35,6 +37,7 @@ function ReviewStepContent<TParams = unknown>({
   const icons = useFileActionIcons();
   const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
+  const { actions: fileActions } = useFileActions();
 
   const handleUndo = async () => {
     try {
@@ -54,11 +57,31 @@ function ReviewStepContent<TParams = unknown>({
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
     try {
+      console.log('[ReviewToolStep] Downloading file:', {
+        url: operation.downloadUrl,
+        filename: operation.downloadFilename,
+        localPath: operation.downloadLocalPath,
+        outputFileIds: operation.outputFileIds
+      });
       await downloadFromUrl(
         operation.downloadUrl,
         operation.downloadFilename || "download",
         operation.downloadLocalPath || undefined
       );
+      console.log('[ReviewToolStep] Download complete, marking files clean');
+
+      // Mark output files as clean after successful save to disk
+      if (operation.outputFileIds && operation.downloadLocalPath) {
+        console.log('[ReviewToolStep] Marking files as clean:', operation.outputFileIds);
+        for (const fileId of operation.outputFileIds) {
+          fileActions.updateStirlingFileStub(fileId as FileId, { isDirty: false });
+        }
+      } else {
+        console.log('[ReviewToolStep] Skipping clean mark:', {
+          hasOutputFileIds: !!operation.outputFileIds,
+          hasLocalPath: !!operation.downloadLocalPath
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error("[ReviewToolStep] Failed to download file:", message);

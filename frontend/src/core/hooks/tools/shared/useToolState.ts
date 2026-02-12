@@ -13,6 +13,7 @@ export interface OperationState {
   downloadUrl: string | null;
   downloadFilename: string;
   downloadLocalPath?: string | null;
+  outputFileIds?: string[] | null;
   isLoading: boolean;
   status: string;
   errorMessage: string | null;
@@ -24,7 +25,7 @@ type OperationAction =
   | { type: 'SET_FILES'; payload: File[] }
   | { type: 'SET_THUMBNAILS'; payload: string[] }
   | { type: 'SET_GENERATING_THUMBNAILS'; payload: boolean }
-  | { type: 'SET_DOWNLOAD_INFO'; payload: { url: string | null; filename: string; localPath?: string | null } }
+  | { type: 'SET_DOWNLOAD_INFO'; payload: { url: string | null; filename: string; localPath?: string | null; outputFileIds?: string[] | null } }
   | { type: 'SET_STATUS'; payload: string }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'SET_PROGRESS'; payload: ProcessingProgress | null }
@@ -38,6 +39,7 @@ const initialState: OperationState = {
   downloadUrl: null,
   downloadFilename: '',
   downloadLocalPath: null,
+  outputFileIds: null,
   isLoading: false,
   status: '',
   errorMessage: null,
@@ -55,11 +57,12 @@ const operationReducer = (state: OperationState, action: OperationAction): Opera
     case 'SET_GENERATING_THUMBNAILS':
       return { ...state, isGeneratingThumbnails: action.payload };
     case 'SET_DOWNLOAD_INFO':
-      return { 
-        ...state, 
-        downloadUrl: action.payload.url, 
+      return {
+        ...state,
+        downloadUrl: action.payload.url,
         downloadFilename: action.payload.filename,
-        downloadLocalPath: action.payload.localPath ?? null
+        downloadLocalPath: action.payload.localPath ?? null,
+        outputFileIds: action.payload.outputFileIds ?? null
       };
     case 'SET_STATUS':
       return { ...state, status: action.payload };
@@ -100,8 +103,8 @@ export const useToolState = () => {
     dispatch({ type: 'SET_GENERATING_THUMBNAILS', payload: generating });
   }, []);
 
-  const setDownloadInfo = useCallback((url: string | null, filename: string, localPath?: string | null) => {
-    dispatch({ type: 'SET_DOWNLOAD_INFO', payload: { url, filename, localPath } });
+  const setDownloadInfo = useCallback((url: string | null, filename: string, localPath?: string | null, outputFileIds?: string[] | null) => {
+    dispatch({ type: 'SET_DOWNLOAD_INFO', payload: { url, filename, localPath, outputFileIds } });
   }, []);
 
   const setStatus = useCallback((status: string) => {

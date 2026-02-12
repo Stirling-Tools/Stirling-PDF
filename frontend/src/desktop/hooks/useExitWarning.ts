@@ -1,41 +1,67 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { ask } from '@tauri-apps/plugin-dialog';
 import { useFileState } from '@app/contexts/FileContext';
 
-/**
- * Desktop-only: Warns user before closing app if there are unsaved files
- */
 export function useExitWarning() {
   const { selectors } = useFileState();
+  const selectorsRef = useRef(selectors);
+  const isClosingRef = useRef(false);
+
+  selectorsRef.current = selectors;
 
   useEffect(() => {
     const appWindow = getCurrentWindow();
 
-    const unlisten = appWindow.onCloseRequested(async (event) => {
-      // Check if any files have unsaved changes
-      const allStubs = selectors.getStirlingFileStubs();
+    const handleCloseRequested = async (event: { preventDefault: () => void }) => {
+      console.info('[exit-warning] close requested', { isClosing: isClosingRef.current });
+
+      // Always take control of the close flow to avoid inconsistent behavior.
+      event.preventDefault();
+
+      if (isClosingRef.current) {
+        return;
+      }
+
+      const allStubs = selectorsRef.current.getStirlingFileStubs();
       const dirtyFiles = allStubs.filter(stub => stub.localFilePath && stub.isDirty);
+      const dirtyCount = dirtyFiles.length;
 
-      if (dirtyFiles.length > 0) {
-        // Prevent the window from closing
-        event.preventDefault();
+      console.info('[exit-warning] dirty check', { dirtyCount });
 
-        // Show confirmation dialog
-        const fileList = dirtyFiles.map(f => f.name).join('\n');
-        const confirmed = confirm(
-          `You have ${dirtyFiles.length} file${dirtyFiles.length > 1 ? 's' : ''} with unsaved changes:\n\n${fileList}\n\nAre you sure you want to exit without saving?`
+      if (dirtyCount > 0) {
+        const fileList = dirtyFiles.map(f => `- ${f.name}`).join('\n');
+        const confirmed = await ask(
+          `You have ${dirtyFiles.length} file${dirtyFiles.length > 1 ? 's' : ''} with unsaved changes.\n\n${fileList}\n\nClose without saving?`,
+          { title: 'Unsaved Changes' }
         );
 
-        if (confirmed) {
-          // User confirmed, close the window
-          await appWindow.close();
-        }
-      }
-      // If no dirty files, allow the window to close normally
-    });
+        console.info('[exit-warning] user choice', { confirmed });
 
-    return () => {
-      unlisten.then(fn => fn());
+        if (!confirmed) {
+          console.info('[exit-warning] user cancelled close');
+          return;
+        }
+
+        console.info('[exit-warning] user confirmed close');
+      } else {
+        console.info('[exit-warning] no dirty files, closing');
+      }
+
+      isClosingRef.current = true;
+      try {
+        await appWindow.destroy();
+      } catch (error) {
+        console.info('[exit-warning] destroy failed', { error });
+        isClosingRef.current = false;
+      }
     };
-  }, [selectors]);
+
+    const unlisten = appWindow.onCloseRequested(handleCloseRequested);
+    return () => {
+      unlisten.then(fn => {
+        fn();
+      });
+    };
+  }, []);
 }

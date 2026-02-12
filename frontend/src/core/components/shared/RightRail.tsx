@@ -161,14 +161,19 @@ export default function RightRail() {
       for (let i = 0; i < filesToExport.length; i++) {
         const file = filesToExport[i];
         const stub = stubsToExport[i];
+        console.log('[RightRail] Exporting file:', { fileName: file.name, stubId: stub?.id, localFilePath: stub?.localFilePath, isDirty: stub?.isDirty });
         await downloadFile({
           data: file,
           filename: file.name,
           localPath: stub?.localFilePath
         });
+        console.log('[RightRail] Export complete, checking dirty state:', { localFilePath: stub?.localFilePath, isDirty: stub?.isDirty });
         // Mark file as clean after successful save to disk
         if (stub?.localFilePath && stub?.isDirty) {
+          console.log('[RightRail] Marking file as clean:', stub.id);
           fileActions.updateStirlingFileStub(stub.id, { isDirty: false });
+        } else {
+          console.log('[RightRail] Skipping clean mark:', { hasLocalFilePath: !!stub?.localFilePath, isDirty: stub?.isDirty });
         }
       }
     }

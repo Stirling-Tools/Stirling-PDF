@@ -281,15 +281,20 @@ const FileEditor = ({
   const handleDownloadFile = useCallback(async (fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
+    console.log('[FileEditor] handleDownloadFile called:', { fileId, hasRecord: !!record, hasFile: !!file, localFilePath: record?.localFilePath, isDirty: record?.isDirty });
     if (record && file) {
       await downloadFile({
         data: file,
         filename: file.name,
         localPath: record.localFilePath
       });
+      console.log('[FileEditor] Download complete, checking dirty state:', { localFilePath: record.localFilePath, isDirty: record.isDirty });
       // Mark file as clean after successful save to disk
       if (record.localFilePath && record.isDirty) {
+        console.log('[FileEditor] Marking file as clean:', fileId);
         fileActions.updateStirlingFileStub(fileId, { isDirty: false });
+      } else {
+        console.log('[FileEditor] Skipping clean mark:', { hasLocalFilePath: !!record.localFilePath, isDirty: record.isDirty });
       }
     }
   }, [activeStirlingFileStubs, selectors, fileActions]);

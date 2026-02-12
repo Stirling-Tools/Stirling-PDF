@@ -7,6 +7,7 @@
   ],
   "permissions": [
     "core:default",
+    "core:window:allow-destroy",
     "http:default",
     {
       "identifier": "http:allow-fetch",
@@ -49,6 +50,7 @@
       "allow": [{ "path": "**" }]
     },
     "dialog:default",
+    "dialog:allow-ask",
     "dialog:allow-open",
     "dialog:allow-save",
     "opener:default",

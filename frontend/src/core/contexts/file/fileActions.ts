@@ -178,7 +178,7 @@ export function createChildStub(
   // Copy parent metadata but exclude processedFile to prevent stale data
   const { processedFile: _processedFile, ...parentMetadata } = parentStub;
 
-  return {
+  const childStub = {
     // Copy parent metadata (excluding processedFile)
     ...parentMetadata,
 
@@ -202,6 +202,19 @@ export function createChildStub(
     // Mark as dirty if parent has a localFilePath (modified file not yet saved to disk)
     isDirty: parentStub.localFilePath ? true : undefined
   };
+
+  if (DEBUG) {
+    console.log('[createChildStub] Created child:', {
+      childId: newFileId,
+      parentId: parentStub.id,
+      parentLocalFilePath: parentStub.localFilePath,
+      childLocalFilePath: childStub.localFilePath,
+      childIsDirty: childStub.isDirty,
+      versionNumber: newVersionNumber
+    });
+  }
+
+  return childStub;
 }
 
 interface AddFileOptions {
@@ -580,11 +593,20 @@ export async function undoConsumeFiles(
       indexedDB
     );
 
+    // Mark restored files as dirty if they have localFilePath
+    // (they now differ from what's saved on disk)
+    const stubsWithDirtyMarked = inputStirlingFileStubs.map(stub => {
+      if (stub.localFilePath) {
+        return { ...stub, isDirty: true };
+      }
+      return stub;
+    });
+
     // Dispatch the undo action (only if everything else succeeded)
     dispatch({
       type: 'UNDO_CONSUME_FILES',
       payload: {
-        inputStirlingFileStubs,
+        inputStirlingFileStubs: stubsWithDirtyMarked,
         outputFileIds
       }
     });
