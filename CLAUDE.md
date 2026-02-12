@@ -128,8 +128,8 @@ return useToolOperation({
 ## Architecture Overview
 
 ### Project Structure
-- **Backend**: Spring Boot application with Thymeleaf templating
-- **Frontend**: React-based SPA in `/frontend` directory (Thymeleaf templates fully replaced)
+- **Backend**: Spring Boot application
+- **Frontend**: React-based SPA in `/frontend` directory
   - **File Storage**: IndexedDB for client-side file persistence and thumbnails
   - **Internationalization**: JSON-based translations (converted from backend .properties)
 - **PDF Processing**: PDFBox for core PDF operations, LibreOffice for conversions, PDF.js for client-side rendering
@@ -140,8 +140,6 @@ return useToolOperation({
 - **API Controllers** (`src/main/java/.../controller/api/`): REST endpoints for PDF operations
   - Organized by function: converters, security, misc, pipeline
   - Follow pattern: `@RestController` + `@RequestMapping("/api/v1/...")`
-- **Web Controllers** (`src/main/java/.../controller/web/`): Serve Thymeleaf templates
-  - Pattern: `@Controller` + return template names
 
 ### Key Components
 - **SPDFApplication.java**: Main application class with desktop UI and browser launching logic
@@ -201,7 +199,6 @@ return useToolOperation({
 
 - **Java Version**: Minimum JDK 17, supports and recommends JDK 21
 - **Lombok**: Used extensively - ensure IDE plugin is installed
-- **Desktop Mode**: Set `STIRLING_PDF_DESKTOP_UI=true` for desktop application mode
 - **File Persistence**:
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
   - **Frontend**: Uses IndexedDB for client-side file storage and caching (with thumbnails)

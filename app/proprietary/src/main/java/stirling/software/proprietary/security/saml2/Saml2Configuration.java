@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.saml2;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,12 +11,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
-import org.springframework.security.saml2.provider.service.authentication.Saml2PostAuthenticationRequest;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
-import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
-import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @Configuration
 @Slf4j
@@ -155,51 +151,29 @@ public class Saml2Configuration {
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
-    public Saml2AuthenticationRequestRepository<Saml2PostAuthenticationRequest>
-            saml2AuthenticationRequestRepository(
-                    JwtServiceInterface jwtService,
-                    RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
-        return new JwtSaml2AuthenticationRequestRepository(
-                new ConcurrentHashMap<>(), jwtService, relyingPartyRegistrationRepository);
-    }
-
-    @Bean
-    @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public OpenSaml4AuthenticationRequestResolver authenticationRequestResolver(
-            RelyingPartyRegistrationRepository relyingPartyRegistrationRepository,
-            Saml2AuthenticationRequestRepository<Saml2PostAuthenticationRequest>
-                    saml2AuthenticationRequestRepository) {
+            RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
         OpenSaml4AuthenticationRequestResolver resolver =
                 new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
+
+        resolver.setRelayStateResolver(
+                request -> {
+                    String tauriParam = request.getParameter("tauri");
+                    if (!"1".equals(tauriParam)) {
+                        return null;
+                    }
+                    String nonce = request.getParameter("nonce");
+                    return TauriSamlUtils.buildRelayState(nonce);
+                });
 
         resolver.setAuthnRequestCustomizer(
                 customizer -> {
                     HttpServletRequest request = customizer.getRequest();
                     AuthnRequest authnRequest = customizer.getAuthnRequest();
-                    Saml2PostAuthenticationRequest saml2AuthenticationRequest =
-                            saml2AuthenticationRequestRepository.loadAuthenticationRequest(request);
 
-                    if (saml2AuthenticationRequest != null) {
-                        String sessionId = request.getSession(false).getId();
+                    // Generate a unique AuthnRequest ID for each SAML request
+                    authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
 
-                        log.debug(
-                                "Retrieving SAML 2 authentication request ID from the current HTTP session {}",
-                                sessionId);
-
-                        String authenticationRequestId = saml2AuthenticationRequest.getId();
-
-                        if (!authenticationRequestId.isBlank()) {
-                            authnRequest.setID(authenticationRequestId);
-                        } else {
-                            log.warn(
-                                    "No authentication request found for HTTP session {}. Generating new ID",
-                                    sessionId);
-                            authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
-                        }
-                    } else {
-                        log.debug("Generating new authentication request ID");
-                        authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
-                    }
                     logAuthnRequestDetails(authnRequest);
                     logHttpRequestDetails(request);
                 });

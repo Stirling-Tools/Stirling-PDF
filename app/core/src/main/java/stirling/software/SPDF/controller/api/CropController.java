@@ -18,26 +18,22 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/general")
-@Tag(name = "General", description = "General APIs")
+@GeneralApi
 @RequiredArgsConstructor
 @Slf4j
 public class CropController {
@@ -122,7 +118,7 @@ public class CropController {
         return r >= threshold && g >= threshold && b >= threshold;
     }
 
-    @PostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Crops a PDF document",
             description =
@@ -155,6 +151,7 @@ public class CropController {
             try (PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                 PDFRenderer renderer = new PDFRenderer(sourceDocument);
+                renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
                 LayerUtility layerUtility = new LayerUtility(newDocument);
 
                 for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {

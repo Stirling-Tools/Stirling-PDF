@@ -47,19 +47,20 @@ public class RotationController {
                     "error.angleNotMultipleOf90", "Angle must be a multiple of 90");
         }
 
-        // Load the PDF document
-        PDDocument document = pdfDocumentFactory.load(request);
+        // Load the PDF document with proper resource management
+        try (PDDocument document = pdfDocumentFactory.load(request)) {
 
-        // Get the list of pages in the document
-        PDPageTree pages = document.getPages();
+            // Get the list of pages in the document
+            PDPageTree pages = document.getPages();
 
-        for (PDPage page : pages) {
-            page.setRotation(page.getRotation() + angle);
+            for (PDPage page : pages) {
+                page.setRotation(page.getRotation() + angle);
+            }
+
+            // Return the rotated PDF as a response
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"));
         }
-
-        // Return the rotated PDF as a response
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"));
     }
 }

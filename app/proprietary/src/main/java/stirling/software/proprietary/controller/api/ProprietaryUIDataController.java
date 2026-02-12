@@ -49,6 +49,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.DatabaseService;
+import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -68,6 +69,7 @@ public class ProprietaryUIDataController {
     private final ObjectMapper objectMapper;
     private final UserLicenseSettingsService licenseSettingsService;
     private final PersistentAuditEventRepository auditRepository;
+    private final MfaService mfaService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -80,7 +82,8 @@ public class ProprietaryUIDataController {
             ObjectMapper objectMapper,
             @Qualifier("runningEE") boolean runningEE,
             UserLicenseSettingsService licenseSettingsService,
-            PersistentAuditEventRepository auditRepository) {
+            PersistentAuditEventRepository auditRepository,
+            MfaService mfaService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -92,6 +95,7 @@ public class ProprietaryUIDataController {
         this.runningEE = runningEE;
         this.licenseSettingsService = licenseSettingsService;
         this.auditRepository = auditRepository;
+        this.mfaService = mfaService;
     }
 
     /**
@@ -135,6 +139,7 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
+        data.setSsoAutoLogin(applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -169,7 +174,10 @@ public class ProprietaryUIDataController {
 
         OAUTH2 oauth = securityProps.getOauth2();
 
-        if (oauth != null && oauth.getEnabled()) {
+        // Only add OAuth2 providers if loginMethod allows it
+        if (oauth != null
+                && oauth.getEnabled()
+                && securityProps.isOauth2Active()) { // This checks loginMethod
             if (oauth.isSettingsValid()) {
                 String firstChar = String.valueOf(oauth.getProvider().charAt(0));
                 String clientName =
@@ -201,6 +209,7 @@ public class ProprietaryUIDataController {
         }
 
         SAML2 saml2 = securityProps.getSaml2();
+        // Only add SAML2 providers if loginMethod allows it
         if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
@@ -210,9 +219,7 @@ public class ProprietaryUIDataController {
             String backendUrl = getBackendBaseUrl();
             String fullSamlPath = backendUrl + saml2AuthenticationPath;
 
-            if (!applicationProperties.getPremium().getProFeatures().isSsoAutoLogin()) {
-                providerList.put(fullSamlPath, samlIdp + " (SAML 2)");
-            }
+            providerList.put(fullSamlPath, samlIdp + " (SAML 2)");
         }
 
         // Remove null entries
@@ -241,12 +248,14 @@ public class ProprietaryUIDataController {
 
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Map<String, String>> userSettings = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
 
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
+                String username = user.getUsername();
                 boolean shouldRemove = false;
 
                 // Check if user is an INTERNAL_API_USER
@@ -260,7 +269,7 @@ public class ProprietaryUIDataController {
 
                 // Check if user is part of the Internal team
                 if (user.getTeam() != null
-                        && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                        && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
                     shouldRemove = true;
                 }
 
@@ -274,7 +283,7 @@ public class ProprietaryUIDataController {
                 boolean hasActiveSession = false;
                 Date lastRequest = null;
                 Optional<SessionEntity> latestSession =
-                        sessionPersistentRegistry.findLatestSession(user.getUsername());
+                        sessionPersistentRegistry.findLatestSession(username);
 
                 if (latestSession.isPresent()) {
                     SessionEntity sessionEntity = latestSession.get();
@@ -295,8 +304,21 @@ public class ProprietaryUIDataController {
                     lastRequest = new Date(0);
                 }
 
-                userSessions.put(user.getUsername(), hasActiveSession);
-                userLastRequest.put(user.getUsername(), lastRequest);
+                User userWithSettings =
+                        userRepository.findByIdWithSettings(user.getId()).orElse(user);
+
+                // Mask mfaSecret if present in settings
+                Map<String, String> originalSettings = userWithSettings.getSettings();
+                Map<String, String> settingsCopy =
+                        originalSettings != null
+                                ? new HashMap<>(originalSettings)
+                                : new HashMap<>();
+                if (settingsCopy.containsKey("mfaSecret")) {
+                    settingsCopy.put("mfaSecret", "********");
+                }
+                userSettings.put(username, settingsCopy);
+                userSessions.put(username, hasActiveSession);
+                userLastRequest.put(username, lastRequest);
 
                 if (hasActiveSession) activeUsers++;
                 if (!user.isEnabled()) disabledUsers++;
@@ -325,7 +347,7 @@ public class ProprietaryUIDataController {
 
         List<Team> allTeams =
                 teamRepository.findAll().stream()
-                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
                         .toList();
 
         // Calculate license limits
@@ -352,6 +374,7 @@ public class ProprietaryUIDataController {
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
+        data.setUserSettings(userSettings);
 
         return ResponseEntity.ok(data);
     }
@@ -403,6 +426,8 @@ public class ProprietaryUIDataController {
         data.setChangeCredsFlag(user.get().isFirstLogin() || user.get().isForcePasswordChange());
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
+        data.setMfaEnabled(mfaService.isMfaEnabled(user.get()));
+        data.setMfaRequired(mfaService.isMfaRequired(user.get()));
 
         return ResponseEntity.ok(data);
     }
@@ -414,7 +439,7 @@ public class ProprietaryUIDataController {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
         List<TeamWithUserCountDTO> teamsWithCounts =
                 allTeamsWithCounts.stream()
-                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
                         .toList();
 
         List<Object[]> teamActivities = sessionRepository.findLatestActivityByTeam();
@@ -442,7 +467,7 @@ public class ProprietaryUIDataController {
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("Team not found"));
 
-        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
             return ResponseEntity.status(403).build();
         }
 
@@ -455,11 +480,8 @@ public class ProprietaryUIDataController {
                                         (user.getTeam() == null
                                                         || !user.getTeam().getId().equals(id))
                                                 && (user.getTeam() == null
-                                                        || !user.getTeam()
-                                                                .getName()
-                                                                .equals(
-                                                                        TeamService
-                                                                                .INTERNAL_TEAM_NAME)))
+                                                        || !TeamService.INTERNAL_TEAM_NAME.equals(
+                                                                user.getTeam().getName())))
                         .toList();
 
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);
@@ -510,6 +532,7 @@ public class ProprietaryUIDataController {
     @Data
     public static class LoginData {
         private Boolean enableLogin;
+        private boolean ssoAutoLogin;
         private Map<String, String> providerList;
         private String loginMethod;
         private boolean altLogin;
@@ -537,6 +560,7 @@ public class ProprietaryUIDataController {
         private int licenseMaxUsers;
         private boolean premiumEnabled;
         private boolean mailEnabled;
+        private Map<String, Map<String, String>> userSettings;
     }
 
     @Data
@@ -547,6 +571,8 @@ public class ProprietaryUIDataController {
         private boolean changeCredsFlag;
         private boolean oAuth2Login;
         private boolean saml2Login;
+        private boolean mfaEnabled;
+        private boolean mfaRequired;
     }
 
     @Data

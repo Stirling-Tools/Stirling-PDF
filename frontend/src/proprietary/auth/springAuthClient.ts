@@ -11,6 +11,9 @@ import apiClient from '@app/services/apiClient';
 import { AxiosError } from 'axios';
 import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
+import { resetOAuthState } from '@app/auth/oauthStorage';
+import { clearPlatformAuthAfterSignOut } from '@app/extensions/authSessionCleanup';
+import { startOAuthNavigation } from '@app/extensions/oauthNavigation';
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -74,6 +77,8 @@ export interface Session {
 export interface AuthError {
   message: string;
   status?: number;
+  code?: string;
+  mfaRequired?: boolean;
 }
 
 export interface AuthResponse {
@@ -178,11 +183,13 @@ class SpringAuthClient {
   async signInWithPassword(credentials: {
     email: string;
     password: string;
+    mfaCode?: string;
   }): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/api/v1/auth/login', {
         username: credentials.email,
-        password: credentials.password
+        password: credentials.password,
+        mfaCode: credentials.mfaCode,
       }, {
         withCredentials: true, // Include cookies for CSRF
       });
@@ -210,6 +217,24 @@ class SpringAuthClient {
       return { user: data.user, session, error: null };
     } catch (error: unknown) {
       console.error('[SpringAuth] signInWithPassword error:', error);
+      if (error instanceof AxiosError) {
+        const errorCode = error.response?.data?.error as string | undefined;
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          'Login failed';
+        return {
+          user: null,
+          session: null,
+          error: {
+            message: errorMessage,
+            status: error.response?.status,
+            code: errorCode,
+            mfaRequired: errorCode === 'mfa_required',
+          },
+        };
+      }
       return {
         user: null,
         session: null,
@@ -267,6 +292,10 @@ class SpringAuthClient {
       // Use the full path provided by the backend
       // This supports both OAuth2 (/oauth2/authorization/...) and SAML2 (/saml2/authenticate/...)
       const redirectUrl = params.provider;
+      const handled = await startOAuthNavigation(redirectUrl);
+      if (handled) {
+        return { error: null };
+      }
       // console.log('[SpringAuth] Redirecting to SSO:', redirectUrl);
       // Use window.location.assign for full page navigation
       window.location.assign(redirectUrl);
@@ -283,6 +312,9 @@ class SpringAuthClient {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('stirling_sso_auto_login_logged_out', '1');
+      }
       const response = await apiClient.post('/api/v1/auth/logout', null, {
         headers: {
           'X-XSRF-TOKEN': this.getCsrfToken() || '',
@@ -296,6 +328,35 @@ class SpringAuthClient {
 
       // Clean up local storage
       localStorage.removeItem('stirling_jwt');
+      try {
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith('sb-') || key.includes('supabase'))
+          .forEach((key) => localStorage.removeItem(key));
+
+        // Clear any cached OAuth redirect/session state
+        resetOAuthState();
+      } catch (err) {
+        console.warn('[SpringAuth] Failed to clear Supabase/local auth tokens', err);
+      }
+
+      // Clear cookies that might hold refresh/session tokens
+      try {
+        document.cookie.split(';').forEach(cookie => {
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+          }
+        });
+      } catch (err) {
+        console.warn('[SpringAuth] Failed to clear cookies on sign out', err);
+      }
+
+      try {
+        await clearPlatformAuthAfterSignOut();
+      } catch (cleanupError) {
+        console.warn('[SpringAuth] Failed to run platform auth cleanup', cleanupError);
+      }
 
       // Notify listeners
       this.notifyListeners('SIGNED_OUT', null);
@@ -305,6 +366,11 @@ class SpringAuthClient {
       console.error('[SpringAuth] signOut error:', error);
       // Still remove token even if backend call fails
       localStorage.removeItem('stirling_jwt');
+      try {
+        await clearPlatformAuthAfterSignOut();
+      } catch (cleanupError) {
+        console.warn('[SpringAuth] Failed to run platform auth cleanup after error', cleanupError);
+      }
       return {
         error: { message: getErrorMessage(error, 'Logout failed') },
       };
@@ -342,6 +408,8 @@ class SpringAuthClient {
 
       // Notify listeners
       this.notifyListeners('TOKEN_REFRESHED', session);
+
+      console.debug('[SpringAuth] Token refreshed successfully');
 
       return { data: { session }, error: null };
     } catch (error: unknown) {

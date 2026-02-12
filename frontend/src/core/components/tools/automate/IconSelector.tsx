@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, Button, SimpleGrid, Tooltip, Popover } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { iconMap, iconOptions } from '@app/components/tools/automate/iconMap';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from '@app/styles/zIndex';
 
 interface IconSelectorProps {
   value?: string;
@@ -36,6 +37,8 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
         position="bottom-start"
         withArrow
         trapFocus
+        withinPortal
+        zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
       >
         <Popover.Target>
           <Button

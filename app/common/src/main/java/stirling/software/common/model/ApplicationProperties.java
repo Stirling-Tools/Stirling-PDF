@@ -29,6 +29,8 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.annotation.PostConstruct;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -61,6 +63,7 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
+    private Telegram telegram = new Telegram();
 
     private Premium premium = new Premium();
 
@@ -95,6 +98,52 @@ public class ApplicationProperties {
         log.debug("Loaded properties: {}", propertySource.getSource());
 
         return propertySource;
+    }
+
+    /**
+     * Initialize fileUploadLimit from environment variables if not set in settings.yml. Supports
+     * SYSTEMFILEUPLOADLIMIT (format: "100MB") and SYSTEM_MAXFILESIZE (format: "100" in MB).
+     */
+    @PostConstruct
+    public void initializeFileUploadLimitFromEnv() {
+        // Only override if fileUploadLimit is not already set in settings.yml
+        if (system.getFileUploadLimit() == null || system.getFileUploadLimit().isEmpty()) {
+            String fileUploadLimit = null;
+
+            // Check SYSTEMFILEUPLOADLIMIT first (format: "100MB", "1GB", etc.)
+            String systemFileUploadLimit = java.lang.System.getenv("SYSTEMFILEUPLOADLIMIT");
+            if (systemFileUploadLimit != null && !systemFileUploadLimit.trim().isEmpty()) {
+                fileUploadLimit = systemFileUploadLimit.trim();
+                log.info("Setting fileUploadLimit from SYSTEMFILEUPLOADLIMIT: {}", fileUploadLimit);
+            } else {
+                // Check SYSTEM_MAXFILESIZE (format: number in MB, e.g., "100")
+                String systemMaxFileSize = java.lang.System.getenv("SYSTEM_MAXFILESIZE");
+                if (systemMaxFileSize != null && !systemMaxFileSize.trim().isEmpty()) {
+                    try {
+                        // Validate it's a number
+                        long sizeInMB = Long.parseLong(systemMaxFileSize.trim());
+                        if (sizeInMB > 0 && sizeInMB <= 999) {
+                            fileUploadLimit = sizeInMB + "MB";
+                            log.info(
+                                    "Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB",
+                                    sizeInMB);
+                        } else {
+                            log.warn(
+                                    "SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring",
+                                    sizeInMB);
+                        }
+                    } catch (NumberFormatException e) {
+                        log.warn(
+                                "SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring",
+                                systemMaxFileSize);
+                    }
+                }
+            }
+
+            if (fileUploadLimit != null) {
+                system.setFileUploadLimit(fileUploadLimit);
+            }
+        }
     }
 
     @Data
@@ -163,6 +212,7 @@ public class ApplicationProperties {
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
+        private String xFrameOptions = "DENY";
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -418,6 +468,15 @@ public class ApplicationProperties {
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
         private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
+        private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
+
+        @Data
+        public static class MobileScannerSettings {
+            private boolean convertToPdf = true; // Whether to automatically convert images to PDF
+            private String imageResolution = "full"; // Options: "full", "reduced"
+            private String pageFormat = "A4"; // Options: "keep", "A4", "letter"
+            private boolean stretchToFit = false; // Whether to stretch image to fill page
+        }
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -448,7 +507,9 @@ public class ApplicationProperties {
 
         @Data
         public static class Pipeline {
+            private String pipelineDir;
             private String watchedFoldersDir;
+            private List<String> watchedFoldersDirs = new ArrayList<>();
             private String finishedFoldersDir;
             private String webUIConfigsDir;
         }
@@ -542,10 +603,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-      Driver {
-        driverName='%s'
-      }
-      """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
@@ -598,6 +659,7 @@ public class ApplicationProperties {
         private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
+        @Deprecated
         @Data
         public static class CustomMetadata {
             private boolean autoUpdateMetadata;
@@ -605,16 +667,23 @@ public class ApplicationProperties {
             private String creator;
             private String producer;
 
+            @Deprecated
             public String getCreator() {
                 return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
             }
 
+            @Deprecated
             public String getProducer() {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
             }
         }
     }
 
+    /**
+     * Mail server configuration properties.
+     *
+     * @since 0.46.1
+     */
     @Data
     public static class Mail {
         private boolean enabled;
@@ -635,6 +704,102 @@ public class ApplicationProperties {
         private String sslTrust;
         // Enables hostname verification for TLS connections
         private Boolean sslCheckServerIdentity;
+    }
+
+    /**
+     * Telegram bot configuration properties.
+     *
+     * @since 2.2.x
+     */
+    @Data
+    public static class Telegram {
+        private Boolean enabled = false;
+        @ToString.Exclude private String botToken;
+        private String botUsername;
+        private String pipelineInboxFolder = "telegram";
+        private Boolean customFolderSuffix = false;
+        private Boolean enableAllowUserIDs = false;
+        private List<Long> allowUserIDs = new ArrayList<>();
+        private Boolean enableAllowChannelIDs = false;
+        private List<Long> allowChannelIDs = new ArrayList<>();
+        private long processingTimeoutSeconds = 180;
+        private long pollingIntervalMillis = 2000;
+        private Feedback feedback = new Feedback();
+
+        /**
+         * Configuration for feedback messages sent by the Telegram bot.
+         *
+         * @since 2.2.x
+         */
+        @Data
+        public static class Feedback {
+            private Channel channel = new Channel();
+            private User user = new User();
+
+            /**
+             * Channel-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class Channel {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * the channel (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+
+            /**
+             * User-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class User {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * users (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to users (to
+                 * avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+        }
     }
 
     @Data
@@ -713,6 +878,16 @@ public class ApplicationProperties {
     public static class ProcessExecutor {
         private SessionLimit sessionLimit = new SessionLimit();
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+        private boolean autoUnoServer = true;
+        private List<UnoServerEndpoint> unoServerEndpoints = new ArrayList<>();
+
+        @Data
+        public static class UnoServerEndpoint {
+            private String host = "127.0.0.1";
+            private int port = 2003;
+            private String hostLocation = "auto"; // auto|local|remote
+            private String protocol = "http"; // http|https
+        }
 
         @Data
         public static class SessionLimit {

@@ -9,10 +9,11 @@
       "@core/*": ["src/core/*"]
     }
   },
-  "exclude": [
-    "src/core/**/*.test.ts*",
-    "src/core/**/*.spec.ts*",
-    "src/desktop",
-    "node_modules"
+  "include": [
+    "src/*.js",
+    "src/*.ts",
+    "src/*.tsx",
+    "src/core/setupTests.ts",
+    "src/proprietary"
   ]
 }

@@ -1,17 +1,26 @@
 import { useEffect, useImperativeHandle } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
 import { useRedaction } from '@app/contexts/RedactionContext';
+import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 
 /**
- * RedactionAPIBridge connects the EmbedPDF redaction plugin to our RedactionContext.
- * It must be rendered inside the EmbedPDF context to access the plugin API.
- * 
- * It does two things:
- * 1. Syncs EmbedPDF state (pendingCount, activeType, isRedacting) to our context
- * 2. Exposes the EmbedPDF API through our context's ref so outside components can call it
+ * RedactionAPIBridge - Uses embedPDF v2.5.0
+ * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
+ * Uses the unified redaction mode (toggleRedact/enableRedact/endRedact).
  */
 export function RedactionAPIBridge() {
-  const { state, provides } = useEmbedPdfRedaction();
+  const activeDocumentId = useActiveDocumentId();
+  
+  // Don't render the inner component until we have a valid document ID
+  if (!activeDocumentId) {
+    return null;
+  }
+  
+  return <RedactionAPIBridgeInner documentId={activeDocumentId} />;
+}
+
+function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
+  const { state, provides } = useEmbedPdfRedaction(documentId);
   const { 
     redactionApiRef, 
     setPendingCount, 
@@ -39,13 +48,22 @@ export function RedactionAPIBridge() {
   }, [state?.pendingCount, state?.activeType, state?.isRedacting, setPendingCount, setActiveType, setIsRedacting]);
 
   // Expose the EmbedPDF API through our context's ref
+  // Uses v2.5.0 unified redaction mode
   useImperativeHandle(redactionApiRef, () => ({
-    toggleRedactSelection: () => {
-      provides?.toggleRedactSelection();
+    // Unified redaction methods (v2.5.0)
+    toggleRedact: () => {
+      provides?.toggleRedact();
     },
-    toggleMarqueeRedact: () => {
-      provides?.toggleMarqueeRedact();
+    enableRedact: () => {
+      provides?.enableRedact();
     },
+    isRedactActive: () => {
+      return provides?.isRedactActive() ?? false;
+    },
+    endRedact: () => {
+      provides?.endRedact();
+    },
+    // Common methods
     commitAllPending: () => {
       provides?.commitAllPending();
       // Don't set redactionsApplied here - it should only be set after the file is saved

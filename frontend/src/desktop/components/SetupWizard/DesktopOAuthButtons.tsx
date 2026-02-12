@@ -3,16 +3,25 @@ import { useTranslation } from 'react-i18next';
 import { authService, UserInfo } from '@app/services/authService';
 import { buildOAuthCallbackHtml } from '@app/utils/oauthCallbackHtml';
 import { BASE_PATH } from '@app/constants/app';
-import '@app/routes/authShared/auth.css';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import '@app/components/SetupWizard/desktopOAuth.css';
 
-export type OAuthProvider = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
+type KnownProviderId = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
+export type OAuthProviderId = KnownProviderId | string;
+
+export interface DesktopSSOProvider {
+  id: OAuthProviderId;
+  path?: string;
+  label?: string;
+}
 
 interface DesktopOAuthButtonsProps {
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   onError: (error: string) => void;
   isDisabled: boolean;
   serverUrl: string;
-  providers: OAuthProvider[];
+  providers: DesktopSSOProvider[];
+  mode?: 'saas' | 'selfHosted';
 }
 
 export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
@@ -21,11 +30,12 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
   isDisabled,
   serverUrl,
   providers,
+  mode = 'saas',
 }) => {
   const { t } = useTranslation();
   const [oauthLoading, setOauthLoading] = useState(false);
 
-  const handleOAuthLogin = async (provider: OAuthProvider) => {
+  const handleOAuthLogin = async (provider: DesktopSSOProvider) => {
     // Prevent concurrent OAuth attempts
     if (oauthLoading || isDisabled) {
       return;
@@ -48,7 +58,12 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
         errorPlaceholder: true, // {error} will be replaced by Rust
       });
 
-      const userInfo = await authService.loginWithOAuth(provider, serverUrl, successHtml, errorHtml);
+      const normalizedServer = serverUrl.replace(/\/+$/, '');
+      const usingSupabaseFlow =
+        mode === 'saas' || normalizedServer === STIRLING_SAAS_URL.replace(/\/+$/, '');
+      const userInfo = usingSupabaseFlow
+        ? await authService.loginWithOAuth(provider.id, serverUrl, successHtml, errorHtml)
+        : await authService.loginWithSelfHostedOAuth(provider.path || provider.id, serverUrl);
 
       // Call the onOAuthSuccess callback to complete setup
       await onOAuthSuccess(userInfo);
@@ -64,7 +79,7 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
     }
   };
 
-  const providerConfig: Record<OAuthProvider, { label: string; file: string }> = {
+  const providerConfig: Record<KnownProviderId, { label: string; file: string }> = {
     google: { label: 'Google', file: 'google.svg' },
     github: { label: 'GitHub', file: 'github.svg' },
     keycloak: { label: 'Keycloak', file: 'keycloak.svg' },
@@ -72,31 +87,51 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
     apple: { label: 'Apple', file: 'apple.svg' },
     oidc: { label: 'OpenID', file: 'oidc.svg' },
   };
+  const isKnownProvider = (id: OAuthProviderId): id is KnownProviderId =>
+    (id as KnownProviderId) in providerConfig;
+  const GENERIC_PROVIDER_ICON = 'oidc.svg';
+
+  console.log('[DesktopOAuthButtons] Received providers:', providers);
+  console.log('[DesktopOAuthButtons] Mode:', mode, 'Server URL:', serverUrl);
 
   if (providers.length === 0) {
+    console.warn('[DesktopOAuthButtons] No providers to display, returning null');
     return null;
   }
 
+  // Desktop always uses its own styling classes (independent of web)
   return (
-    <div className="oauth-container-vertical">
+    <div className="oauth-container-vertical-desktop">
       {providers
-        .filter((providerId) => providerId in providerConfig)
-        .map((providerId) => {
-          const provider = providerConfig[providerId];
+        .filter((providerConfigEntry) => providerConfigEntry && providerConfigEntry.id)
+        .map((providerEntry) => {
+          const iconConfig = isKnownProvider(providerEntry.id)
+            ? providerConfig[providerEntry.id]
+            : undefined;
+          const label =
+            providerEntry.label ||
+            iconConfig?.label ||
+            (providerEntry.id
+              ? providerEntry.id.charAt(0).toUpperCase() + providerEntry.id.slice(1)
+              : t('setup.login.sso', 'Single Sign-On'));
           return (
             <button
-              key={providerId}
-              onClick={() => handleOAuthLogin(providerId)}
+              key={providerEntry.id}
+              onClick={() => handleOAuthLogin(providerEntry)}
               disabled={isDisabled || oauthLoading}
-              className="oauth-button-vertical"
-              title={provider.label}
+              className="oauth-button-vertical-desktop"
+              title={label}
             >
-              <img
-                src={`${BASE_PATH}/Login/${provider.file}`}
-                alt={provider.label}
-                className="oauth-icon-tiny"
-              />
-              {provider.label}
+              <span className="oauth-button-left-desktop">
+                <span className="oauth-icon-wrapper-desktop">
+                  <img
+                    src={`${BASE_PATH}/Login/${iconConfig?.file || GENERIC_PROVIDER_ICON}`}
+                    alt={label}
+                    className="oauth-icon-tiny-desktop"
+                  />
+                </span>
+                <span className="oauth-button-text-desktop">{label}</span>
+              </span>
             </button>
           );
         })}
