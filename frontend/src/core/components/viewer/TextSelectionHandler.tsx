@@ -13,15 +13,8 @@ const TRIPLE_CLICK_TIME_THRESHOLD = 500;
 // Distance threshold for triple-click position matching (in page units)
 const TRIPLE_CLICK_POSITION_THRESHOLD = 20;
 
-/**
- * Regex matching Unicode word characters (letters, digits, connector punctuation).
- * Used for word boundary detection on double-click.
- */
 const WORD_CHAR_REGEX = /[\p{L}\p{N}_]/u;
 
-/**
- * Finds the run containing the given glyph index.
- */
 function findRunForGlyph(geo: PdfPageGeometry, glyphIndex: number): PdfRun | null {
   for (const run of geo.runs) {
     const runEnd = run.charStart + run.glyphs.length - 1;
@@ -49,7 +42,6 @@ function findWordBoundariesInText(text: string, charIndex: number): { start: num
   // If clicked on whitespace, don't select
   if (/\s/.test(char)) return null;
 
-  // If clicked on a word character (Unicode letter, digit, underscore), select the word
   if (WORD_CHAR_REGEX.test(char)) {
     let start = charIndex;
     while (start > 0 && WORD_CHAR_REGEX.test(text[start - 1])) start--;
@@ -60,8 +52,6 @@ function findWordBoundariesInText(text: string, charIndex: number): { start: num
     return { start, end };
   }
 
-  // Clicked on punctuation or other non-word, non-space character:
-  // select just that character
   return { start: charIndex, end: charIndex };
 }
 
@@ -87,7 +77,6 @@ function findLineBoundaries(geo: PdfPageGeometry, glyphIndex: number): { start: 
   const targetH = targetRun.rect.height;
   const threshold = targetH * 0.5;
 
-  // Expand backwards to find the first run on the same visual line
   let firstRunIndex = targetRunIndex;
   while (firstRunIndex > 0) {
     const prevRun = geo.runs[firstRunIndex - 1];
@@ -98,7 +87,6 @@ function findLineBoundaries(geo: PdfPageGeometry, glyphIndex: number): { start: 
     }
   }
 
-  // Expand forwards to find the last run on the same visual line
   let lastRunIndex = targetRunIndex;
   while (lastRunIndex < geo.runs.length - 1) {
     const nextRun = geo.runs[lastRunIndex + 1];
@@ -118,10 +106,6 @@ function findLineBoundaries(geo: PdfPageGeometry, glyphIndex: number): { start: 
   };
 }
 
-/**
- * Sets selection on the plugin by calling its internal methods.
- * These methods are private in TypeScript but accessible at runtime.
- */
 function setSelectionRange(
   selPlugin: any,
   documentId: string,
@@ -139,18 +123,13 @@ function setSelectionRange(
  * Handles text selection with standard PDF viewer behaviors:
  * - Double-click to select a whole word
  * - Triple-click to select an entire line
- *
- * This component renders nothing and purely registers interaction handlers.
- * It must be rendered per-page alongside SelectionLayer.
  */
 export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHandlerProps) {
   const { plugin: selPlugin } = useSelectionPlugin();
   const { provides: selCapability } = useSelectionCapability();
   const { provides: imCapability } = useInteractionManagerCapability();
 
-  // Track double-click for triple-click detection
   const lastDblClickRef = useRef<{ time: number; x: number; y: number } | null>(null);
-  // Track triple-click time to skip subsequent dblclick events in the same sequence
   const tripleClickTimeRef = useRef(0);
 
   useEffect(() => {
@@ -158,12 +137,10 @@ export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHan
 
     const handlers = {
       onDoubleClick: (pos: Position, _evt: any, modeId: string) => {
-        // Skip if this dblclick is part of a triple-click sequence
         if (Date.now() - tripleClickTimeRef.current < TRIPLE_CLICK_TIME_THRESHOLD) {
           return;
         }
 
-        // Only handle when text selection is enabled for the current mode
         if (!selCapability.isEnabledForMode(modeId, documentId)) return;
 
         const state = selCapability.getState(documentId);
@@ -173,13 +150,11 @@ export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHan
         const g = glyphAt(geo, pos);
         if (g === -1) return;
 
-        // Find the run containing the glyph
         const run = findRunForGlyph(geo, g);
         if (!run || run.glyphs.length === 0) return;
 
         const localIndex = g - run.charStart;
 
-        // Get the actual text content from the engine to find real word boundaries
         const plugin = selPlugin as any;
         try {
           const coreDoc = plugin.getCoreDocument(documentId);
@@ -198,10 +173,8 @@ export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHan
             const boundaries = findWordBoundariesInText(text, localIndex);
             if (!boundaries) return;
 
-            // Record for triple-click detection
             lastDblClickRef.current = { time: Date.now(), x: pos.x, y: pos.y };
 
-            // Select the whole word
             setSelectionRange(
               selPlugin, documentId, pageIndex,
               run.charStart + boundaries.start,
@@ -214,7 +187,6 @@ export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHan
       },
 
       onClick: (pos: Position, _evt: any, modeId: string) => {
-        // Check for triple-click: a click shortly after a double-click at a similar position
         const dbl = lastDblClickRef.current;
         if (!dbl) return;
 
@@ -244,7 +216,6 @@ export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHan
           tripleClickTimeRef.current = now;
           lastDblClickRef.current = null;
 
-          // Select the whole line
           setSelectionRange(selPlugin, documentId, pageIndex, line.start, line.end);
         }
       },
