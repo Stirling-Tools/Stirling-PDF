@@ -94,6 +94,8 @@ const EmbedPdfViewerContent = ({
   // Track the file ID we should be viewing after a save (to handle list reordering)
   const pendingFileIdRef = useRef<string | null>(null);
 
+  const formApplyInProgressRef = useRef(false);
+
   // Get redaction context
   const { redactionsApplied, setRedactionsApplied } = useRedaction();
 
@@ -456,8 +458,10 @@ const EmbedPdfViewerContent = ({
 
   // Apply form fill changes - reload the filled PDF into the viewer
   const handleFormApply = useCallback(async (filledBlob: Blob) => {
+    if (formApplyInProgressRef.current) return;
     if (!currentFile || activeFileIds.length === 0) return;
 
+    formApplyInProgressRef.current = true;
     try {
       console.log('[Viewer] Applying form fill changes - reloading filled PDF');
 
@@ -501,6 +505,8 @@ const EmbedPdfViewerContent = ({
       console.log('[Viewer] Form fill changes applied successfully');
     } catch (error) {
       console.error('[Viewer] Apply form changes failed:', error);
+    } finally {
+      formApplyInProgressRef.current = false;
     }
   }, [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation]);
 

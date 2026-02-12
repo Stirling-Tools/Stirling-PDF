@@ -306,7 +306,7 @@ function getFieldValue(field: PDFField): string {
       return selected.length > 0 ? selected[0] : '';
     }
     if (field instanceof PDFRadioGroup) {
-      return field.getSelected() ?? '';
+      return getRadioValue(field);
     }
     if (field instanceof PDFOptionList) {
       const selected = field.getSelected();
@@ -316,6 +316,75 @@ function getFieldValue(field: PDFField): string {
     // Some fields may throw on getValue if malformed
   }
   return '';
+}
+
+function getRadioValue(field: PDFRadioGroup): string {
+  const selected = field.getSelected() ?? '';
+  if (!selected || selected === 'Off') return selected;
+
+  const options = field.getOptions();
+
+  if (options.includes(selected)) return selected;
+
+  const mappedOption = mapAppearanceStateToOption(field, selected, options);
+  if (mappedOption) return mappedOption;
+
+  const index = parseInt(selected, 10);
+  if (!isNaN(index) && index >= 0 && index < options.length) {
+    return options[index];
+  }
+
+  return selected;
+}
+
+function mapAppearanceStateToOption(
+  field: PDFRadioGroup,
+  stateName: string,
+  options: string[],
+): string | undefined {
+  try {
+    const acroFieldDict = (field.acroField as any).dict as PDFDict;
+    const widgets = getFieldWidgets(acroFieldDict);
+
+    for (let i = 0; i < widgets.length; i++) {
+      const ap = widgets[i].lookup(PDFName.of('AP'));
+      if (!(ap instanceof PDFDict)) continue;
+
+      const normal = ap.lookup(PDFName.of('N'));
+      if (!(normal instanceof PDFDict)) continue;
+
+      const keys = normal.entries().map(([k]) => k.decodeText());
+      if (keys.includes(stateName) && i < options.length) {
+        return options[i];
+      }
+    }
+  } catch {
+    // Fallback handled by caller
+  }
+  return undefined;
+}
+
+function resolveRadioValueForSelect(
+  field: PDFRadioGroup,
+  value: string,
+): string | null {
+  const options = field.getOptions();
+
+  if (options.includes(value)) return value;
+
+  const mappedOption = mapAppearanceStateToOption(field, value, options);
+  if (mappedOption) return mappedOption;
+
+  const index = parseInt(value, 10);
+  if (!isNaN(index) && index >= 0 && index < options.length) {
+    return options[index];
+  }
+
+  const lower = value.toLowerCase();
+  const match = options.find(o => o.toLowerCase() === lower);
+  if (match) return match;
+
+  return null;
 }
 
 /**
@@ -487,7 +556,14 @@ export class PdfLibFormProvider implements IFormDataProvider {
           }
         } else if (field instanceof PDFRadioGroup) {
           if (value && value !== 'Off') {
-            field.select(value);
+            const resolved = resolveRadioValueForSelect(field, value);
+            if (resolved) {
+              field.select(resolved);
+            } else {
+              console.warn(
+                `[PdfLibFormProvider] Radio value "${value}" could not be mapped to options [${field.getOptions().join(', ')}] for field "${fieldName}"`,
+              );
+            }
           }
         } else if (field instanceof PDFOptionList) {
           if (value) {

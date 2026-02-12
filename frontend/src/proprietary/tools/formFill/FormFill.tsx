@@ -111,6 +111,11 @@ const FormFill = (_props: BaseToolProps) => {
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(null);
+  const flattenChanged = lastSavedFlatten !== null && flatten !== lastSavedFlatten;
+
+  const savingRef = useRef(false);
+
   const handleExtractJson = useCallback(() => {
     setExtracting(true);
     try {
@@ -156,6 +161,8 @@ const FormFill = (_props: BaseToolProps) => {
   }, [formState.activeFieldName]);
 
   const handleSave = useCallback(async () => {
+    // Ref-based guard prevents concurrent saves that cause file duplication
+    if (savingRef.current) return;
     if (!currentFile || !isStirlingFile(currentFile)) return;
 
     if (!validateForm()) {
@@ -163,11 +170,15 @@ const FormFill = (_props: BaseToolProps) => {
       return;
     }
 
+    savingRef.current = true;
     setSaving(true);
     setSaveError(null);
 
     try {
       const filledBlob = await submitForm(currentFile, flatten);
+
+      // Track the flatten value at save so toggling it later re-enables Save
+      setLastSavedFlatten(flatten);
 
       // Dispatch to the viewer's handleFormApply via custom event.
       // This ensures the viewer tracks the new file ID, preserves
@@ -184,17 +195,20 @@ const FormFill = (_props: BaseToolProps) => {
       setSaveError(message);
       console.error('[FormFill] Save failed:', err);
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }, [currentFile, submitForm, flatten, validateForm]);
 
   // Keyboard shortcut: Ctrl+S to save
+  const flattenChangedRef = useRef(flattenChanged);
+  flattenChangedRef.current = flattenChanged;
   useEffect(() => {
     if (!isActive) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        if (isDirtyRef.current) handleSave();
+        if (isDirtyRef.current || flattenChangedRef.current) handleSave();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -397,7 +411,7 @@ const FormFill = (_props: BaseToolProps) => {
                     size="xs"
                     onClick={handleSave}
                     loading={saving}
-                    disabled={!formState.isDirty}
+                    disabled={!formState.isDirty && !flattenChanged}
                     flex={1}
                   >
                     Save
@@ -531,8 +545,8 @@ const FormFill = (_props: BaseToolProps) => {
           {!formState.loading && formState.fields.length > 0 && (
             <div className={styles.statusBar}>
               <span>
-                {formState.isDirty && <span className={styles.unsavedDot} />}
-                {formState.isDirty ? 'Unsaved changes' : 'All saved'}
+                {(formState.isDirty || flattenChanged) && <span className={styles.unsavedDot} />}
+                {formState.isDirty || flattenChanged ? 'Unsaved changes' : 'All saved'}
               </span>
               <span>Ctrl+S to save</span>
             </div>
