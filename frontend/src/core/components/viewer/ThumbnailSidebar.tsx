@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
@@ -27,10 +27,16 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
     setThumbnails({});
   }, [activeFileIndex]);
 
+  // Keep a ref to thumbnails for cleanup on unmount
+  const thumbnailsRef = useRef(thumbnails);
+  useEffect(() => {
+    thumbnailsRef.current = thumbnails;
+  }, [thumbnails]);
+
   // Clear thumbnails when sidebar closes and revoke blob URLs to prevent memory leaks
   useEffect(() => {
     if (!visible) {
-      Object.values(thumbnails).forEach((thumbUrl) => {
+      Object.values(thumbnailsRef.current).forEach((thumbUrl) => {
         // Only revoke if it's a blob URL (not 'error')
         if (typeof thumbUrl === 'string' && thumbUrl.startsWith('blob:')) {
           URL.revokeObjectURL(thumbUrl);
@@ -38,48 +44,89 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
       });
       setThumbnails({});
     }
-  }, [visible]); // Remove thumbnails from dependency to prevent infinite loop
+  }, [visible]);
+
+  // Cleanup all blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(thumbnailsRef.current).forEach((thumbUrl) => {
+        if (typeof thumbUrl === 'string' && thumbUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(thumbUrl);
+        }
+      });
+    };
+  }, []);
 
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
     if (!visible || scrollState.totalPages === 0) return;
     if (!thumbnailAPI) return;
 
+    let isCancelled = false;
+
     const generateThumbnails = async () => {
-      for (let pageIndex = 0; pageIndex < scrollState.totalPages; pageIndex++) {
-        if (thumbnails[pageIndex]) continue; // Skip if already generated
+      const allPages = Array.from({ length: scrollState.totalPages }, (_, i) => i);
+      const currentPage = scrollState.currentPage - 1;
+
+      // Group pages by priority:
+      // 1. Current page
+      // 2. Visible neighbors (current +/- 3)
+      // 3. Everything else
+      const prioritized = [
+        ...allPages.filter(i => i === currentPage),
+        ...allPages.filter(i => i !== currentPage && Math.abs(i - currentPage) <= 3),
+        ...allPages.filter(i => Math.abs(i - currentPage) > 3)
+      ];
+
+      const CONCURRENCY_LIMIT = 3;
+      const queue = [...prioritized];
+
+      const processNext = async () => {
+        if (queue.length === 0 || isCancelled) return;
+        const pageIndex = queue.shift()!;
+
+        if (thumbnailsRef.current[pageIndex]) {
+          await processNext();
+          return;
+        }
 
         try {
           const thumbTask = thumbnailAPI.renderThumb(pageIndex, 1.0);
+          const thumbBlob = await thumbTask.toPromise();
+          if (isCancelled) {
+            // If cancelled during generation, revoke the new URL
+            return;
+          }
+          const thumbUrl = URL.createObjectURL(thumbBlob);
 
-          // Convert Task to Promise and handle properly
-          thumbTask.toPromise().then((thumbBlob: Blob) => {
-            const thumbUrl = URL.createObjectURL(thumbBlob);
-
-            setThumbnails(prev => ({
-              ...prev,
-              [pageIndex]: thumbUrl
-            }));
-          }).catch((error: any) => {
-            console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
+          setThumbnails(prev => ({
+            ...prev,
+            [pageIndex]: thumbUrl
+          }));
+        } catch (error) {
+          console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
+          if (!isCancelled) {
             setThumbnails(prev => ({
               ...prev,
               [pageIndex]: 'error'
             }));
-          });
-
-        } catch (error) {
-          console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
-          setThumbnails(prev => ({
-            ...prev,
-            [pageIndex]: 'error'
-          }));
+          }
         }
-      }
+
+        await processNext();
+      };
+
+      // Start initial concurrent batch
+      const workers = Array.from({ length: CONCURRENCY_LIMIT }, () => processNext());
+      await Promise.all(workers);
     };
 
     generateThumbnails();
-  }, [visible, scrollState.totalPages, thumbnailAPI]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [visible, scrollState.totalPages, thumbnailAPI, scrollState.currentPage]);
 
   const handlePageClick = (pageIndex: number) => {
     const pageNumber = pageIndex + 1; // Convert to 1-based
