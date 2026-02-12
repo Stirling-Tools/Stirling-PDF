@@ -68,6 +68,57 @@
   color: var(--onboarding-body, #1f2937);
 }
 
+.mfaSlideContent {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.mfaCard {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-surface, #ffffff);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+.mfaSetupGrid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.mfaQrCard {
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+  display: flex;
+  justify-content: center;
+}
+
+.mfaSteps {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--onboarding-body, #1f2937);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mfaForm {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .mfaSetupGrid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+
 .heroIconsContainer {
   display: flex;
   gap: 32px;

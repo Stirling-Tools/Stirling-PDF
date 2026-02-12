@@ -191,7 +191,7 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                             min_lsb = min(min_lsb, lsb)
                             min_rsb = min(min_rsb, rsb)
                             max_extent = max(max_extent, extent)
-                    except:
+                    except Exception:
                         pass  # Some glyphs may not have outlines
 
                 except Exception:
@@ -315,14 +315,14 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
                     unicode_val = int(glyph_name[3:], 16)
                     if unicode_val not in unicode_to_glyph:
                         unicode_to_glyph[unicode_val] = glyph_name
-                except:
+                except Exception:
                     pass
             elif glyph_name.startswith("u") and len(glyph_name) >= 5:
                 try:
                     unicode_val = int(glyph_name[1:], 16)
                     if unicode_val not in unicode_to_glyph:
                         unicode_to_glyph[unicode_val] = glyph_name
-                except:
+                except Exception:
                     pass
 
         # === Create cmap table ===
@@ -496,16 +496,50 @@ def wrap_cff_as_otf(input_path, output_path, tounicode_path=None):
 
 
 def main():
-    if len(sys.argv) < 3:
-        print(
-            "Usage: convert_cff_to_ttf.py <input.cff> <output.otf> [tounicode.cmap]",
-            file=sys.stderr,
-        )
+    import argparse
+
+    # Create argument parser that supports both named and positional arguments
+    parser = argparse.ArgumentParser(
+        description="Convert CFF font data to OpenType-CFF format",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Named arguments (used by Java code):
+  convert_cff_to_ttf.py --input font.cff --output font.otf --to-unicode mapping.tounicode
+
+  # Positional arguments (backward compatibility):
+  convert_cff_to_ttf.py font.cff font.otf mapping.tounicode
+        """,
+    )
+
+    # Add named arguments
+    parser.add_argument("--input", dest="input_file", help="Input CFF file path")
+    parser.add_argument("--output", dest="output_file", help="Output OTF file path")
+    parser.add_argument(
+        "--to-unicode", dest="tounicode_file", help="ToUnicode mapping file path"
+    )
+
+    # Add positional arguments for backward compatibility
+    parser.add_argument("input_pos", nargs="?", help="Input CFF file (positional)")
+    parser.add_argument("output_pos", nargs="?", help="Output OTF file (positional)")
+    parser.add_argument("tounicode_pos", nargs="?", help="ToUnicode file (positional)")
+
+    args = parser.parse_args()
+
+    # Determine which arguments to use (named take precedence over positional)
+    input_path = args.input_file or args.input_pos
+    output_path = args.output_file or args.output_pos
+    tounicode_path = args.tounicode_file or args.tounicode_pos
+
+    # Validate required arguments
+    if not input_path or not output_path:
+        parser.print_help(file=sys.stderr)
+        print("\nERROR: Both input and output files are required", file=sys.stderr)
         sys.exit(1)
 
-    input_path = Path(sys.argv[1])
-    output_path = Path(sys.argv[2])
-    tounicode_path = Path(sys.argv[3]) if len(sys.argv) > 3 else None
+    input_path = Path(input_path)
+    output_path = Path(output_path)
+    tounicode_path = Path(tounicode_path) if tounicode_path else None
 
     if not input_path.exists():
         print(f"ERROR: Input file not found: {input_path}", file=sys.stderr)

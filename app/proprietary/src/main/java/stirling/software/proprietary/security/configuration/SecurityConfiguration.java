@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,6 +19,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
@@ -46,6 +48,7 @@ import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.proprietary.security.oauth2.TauriAuthorizationRequestResolver;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
@@ -82,6 +85,7 @@ public class SecurityConfiguration {
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -102,6 +106,7 @@ public class SecurityConfiguration {
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
                     OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
             stirling.software.proprietary.service.UserLicenseSettingsService
                     licenseSettingsService) {
         this.userDetailsService = userDetailsService;
@@ -120,6 +125,7 @@ public class SecurityConfiguration {
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+        this.clientRegistrationRepository = clientRegistrationRepository;
         this.licenseSettingsService = licenseSettingsService;
     }
 
@@ -180,10 +186,38 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain samlFilterChain(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        http.securityMatcher("/saml2/**", "/login/saml2/**");
+
+        SessionCreationPolicy sessionPolicy =
+                (securityProperties.isSaml2Active() && runningProOrHigher)
+                        ? SessionCreationPolicy.IF_REQUIRED
+                        : SessionCreationPolicy.STATELESS;
+
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             @Lazy IPRateLimitingFilter rateLimitingFilter,
             @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        SessionCreationPolicy sessionPolicy = SessionCreationPolicy.STATELESS;
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    private SecurityFilterChain configureSecurity(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
+            SessionCreationPolicy sessionPolicy)
             throws Exception {
         // Enable CORS only if we have configured origins
         CorsConfigurationSource corsSource = corsConfigurationSource();
@@ -196,6 +230,30 @@ public class SecurityConfiguration {
 
         http.csrf(CsrfConfigurer::disable);
 
+        // Configure X-Frame-Options based on settings.yml configuration
+        // When login is disabled, automatically disable X-Frame-Options to allow embedding
+        if (!loginEnabledValue) {
+            http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+        } else {
+            String xFrameOption = securityProperties.getXFrameOptions();
+            if (xFrameOption != null) {
+                http.headers(
+                        headers -> {
+                            if ("DISABLED".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(frameOptions -> frameOptions.disable());
+                            } else if ("SAMEORIGIN".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(frameOptions -> frameOptions.sameOrigin());
+                            } else {
+                                // Default to DENY
+                                headers.frameOptions(frameOptions -> frameOptions.deny());
+                            }
+                        });
+            } else {
+                // If not configured, use default DENY
+                http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.deny()));
+            }
+        }
+
         if (loginEnabledValue) {
 
             http.addFilterBefore(
@@ -204,9 +262,7 @@ public class SecurityConfiguration {
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(
-                    sessionManagement ->
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS));
+                    sessionManagement -> sessionManagement.sessionCreationPolicy(sessionPolicy));
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
 
@@ -290,6 +346,15 @@ public class SecurityConfiguration {
                 http.oauth2Login(
                         oauth2 -> {
                             oauth2.loginPage("/login")
+                                    .authorizationEndpoint(
+                                            authorizationEndpoint -> {
+                                                if (clientRegistrationRepository != null) {
+                                                    authorizationEndpoint
+                                                            .authorizationRequestResolver(
+                                                                    new TauriAuthorizationRequestResolver(
+                                                                            clientRegistrationRepository));
+                                                }
+                                            })
                                     .successHandler(
                                             new CustomOAuth2AuthenticationSuccessHandler(
                                                     loginAttemptService,

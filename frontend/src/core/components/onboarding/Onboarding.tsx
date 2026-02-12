@@ -26,6 +26,8 @@ import { useServerExperience } from '@app/hooks/useServerExperience';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import apiClient from '@app/services/apiClient';
 import '@app/components/onboarding/OnboardingTour.css';
+import { useAccountLogout } from '@app/extensions/accountLogout';
+import { useAuth } from '@app/auth/UseSession';
 
 export default function Onboarding() {
   const { t } = useTranslation();
@@ -45,15 +47,30 @@ export default function Onboarding() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [analyticsModalDismissed, setAnalyticsModalDismissed] = useState(false);
+  const [firstLoginModalOpen, setFirstLoginModalOpen] = useState(false);
+  const [mfaModalOpen, setMfaModalOpen] = useState(false);
+  const accountLogout = useAccountLogout();
+  const { signOut } = useAuth();
 
   const handleRoleSelect = useCallback((role: 'admin' | 'user' | null) => {
     actions.updateRuntimeState({ selectedRole: role });
     serverExperience.setSelfReportedAdmin(role === 'admin');
   }, [actions, serverExperience]);
 
-  const handlePasswordChanged = useCallback(() => {
+  const redirectToLogin = useCallback(() => {
+    window.location.assign('/login');
+  }, []);
+
+  const handlePasswordChanged = useCallback(async () => {
     actions.updateRuntimeState({ requiresPasswordChange: false });
-    window.location.href = '/login';
+    // delete session and redirect to login page
+    await accountLogout({ signOut, redirectToLogin });
+  }, [actions, accountLogout, redirectToLogin, signOut]);
+
+  const handleMfaSetupComplete = useCallback(() => {
+    actions.updateRuntimeState({ requiresMfaSetup: false });
+    setMfaModalOpen(false);
+    actions.complete();
   }, [actions]);
 
   // Check if we should show analytics modal before onboarding
@@ -68,17 +85,17 @@ export default function Onboarding() {
     setAnalyticsLoading(true);
     setAnalyticsError(null);
 
-    try {
-      const formData = new FormData();
-      formData.append('enabled', enableAnalytics.toString());
+    const formData = new FormData();
+    formData.append('enabled', enableAnalytics.toString());
 
+    try {
       await apiClient.post('/api/v1/settings/update-enable-analytics', formData);
       await refetchConfig();
       setShowAnalyticsModal(false);
       setAnalyticsModalDismissed(true);
-      setAnalyticsLoading(false);
     } catch (error) {
       setAnalyticsError(error instanceof Error ? error.message : 'Unknown error');
+    } finally {
       setAnalyticsLoading(false);
     }
   }, [analyticsLoading, refetchConfig]);
@@ -223,6 +240,27 @@ export default function Onboarding() {
     return () => removeAllGlows();
   }, [isTourOpen]);
 
+  // Handle first-login password change modal
+  useEffect(() => {
+    if(runtimeState.requiresPasswordChange === true) {
+      console.log('[Onboarding] User requires password change on first login.');
+      setFirstLoginModalOpen(true);
+    } else {
+      setFirstLoginModalOpen(false);
+    }
+  }, [runtimeState.requiresPasswordChange]);
+
+  // Handle MFA setup modal
+  useEffect(() => {
+    if(runtimeState.requiresMfaSetup === true) {
+      console.log('[Onboarding] User requires MFA setup.');
+      setMfaModalOpen(true);
+    } else {
+      console.log('[Onboarding] User does not require MFA setup.');
+      setMfaModalOpen(false);
+    }
+  }, [runtimeState.requiresMfaSetup]);
+
   const finishTour = useCallback(() => {
     setIsTourOpen(false);
     if (runtimeState.tourType === 'admin') {
@@ -272,8 +310,9 @@ export default function Onboarding() {
       usingDefaultCredentials: runtimeState.usingDefaultCredentials,
       analyticsError,
       analyticsLoading,
+      onMfaSetupComplete: handleMfaSetupComplete,
     });
-  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged]);
+  }, [analyticsError, analyticsLoading, currentSlideDefinition, osInfo, osOptions, runtimeState.selectedRole, runtimeState.licenseNotice, handleRoleSelect, serverExperience.loginEnabled, setSelectedDownloadUrl, runtimeState.firstLoginUsername, handlePasswordChanged, handleMfaSetupComplete]);
 
   const modalSlideCount = useMemo(() => {
     return activeFlow.filter((step) => step.type === 'modal-slide').length;
@@ -318,6 +357,65 @@ export default function Onboarding() {
             await handleAnalyticsChoice(true);
           } else if (action === 'disable-analytics') {
             await handleAnalyticsChoice(false);
+          }
+        }}
+        allowDismiss={false}
+      />
+    );
+  }
+
+  if (firstLoginModalOpen) {
+    const baseSlideDefinition = SLIDE_DEFINITIONS['first-login'];
+    const slideContent = baseSlideDefinition.createSlide({
+      osLabel: '',
+      osUrl: '',
+      selectedRole: null,
+      onRoleSelect: () => {},
+      firstLoginUsername: runtimeState.firstLoginUsername,
+      onPasswordChanged: handlePasswordChanged,
+      usingDefaultCredentials: runtimeState.usingDefaultCredentials,
+    });
+
+    return (
+      <OnboardingModalSlide
+        slideDefinition={baseSlideDefinition}
+        slideContent={slideContent}
+        runtimeState={runtimeState}
+        modalSlideCount={1}
+        currentModalSlideIndex={0}
+        onSkip={() => {}}
+        onAction={async (action) => {
+          if (action === 'complete-close') {
+            handlePasswordChanged();
+          }
+        }}
+        allowDismiss={false}
+      />
+    );
+  }
+
+  if (mfaModalOpen) {
+    console.log('[Onboarding] Rendering MFA setup modal slide.');
+    const baseSlideDefinition = SLIDE_DEFINITIONS['mfa-setup'];
+    const slideContent = baseSlideDefinition.createSlide({
+      osLabel: '',
+      osUrl: '',
+      selectedRole: null,
+      onRoleSelect: () => {},
+      onMfaSetupComplete: handleMfaSetupComplete,
+    });
+
+    return (
+      <OnboardingModalSlide
+        slideDefinition={baseSlideDefinition}
+        slideContent={slideContent}
+        runtimeState={runtimeState}
+        modalSlideCount={1}
+        currentModalSlideIndex={0}
+        onSkip={() => {}}
+        onAction={async (action) => {
+          if (action === 'complete-close') {
+            handleMfaSetupComplete();
           }
         }}
         allowDismiss={false}
@@ -403,6 +501,7 @@ export default function Onboarding() {
           currentModalSlideIndex={currentModalSlideIndex}
           onSkip={actions.skip}
           onAction={handleButtonAction}
+          allowDismiss={currentStep.allowDismiss}
         />
       );
 

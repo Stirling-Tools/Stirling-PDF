@@ -1,6 +1,7 @@
 import { Stack, PasswordInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface AddPasswordSettingsProps {
   parameters: AddPasswordParameters;
@@ -47,6 +48,7 @@ const AddPasswordSettings = ({ parameters, onParameterChange, disabled = false }
             { value: '128', label: t('addPassword.encryption.keyLength.128bit', '128-bit (Standard)') },
             { value: '256', label: t('addPassword.encryption.keyLength.256bit', '256-bit (High)') }
           ]}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       </Stack>
 

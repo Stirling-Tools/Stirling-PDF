@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useSelectionCapability, SelectionRangeX } from '@embedpdf/plugin-selection/react';
+import { useSelectionCapability } from '@embedpdf/plugin-selection/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 
-/**
- * Component that runs inside EmbedPDF context and updates selection state in ViewerContext
- */
 export function SelectionAPIBridge() {
   const { provides: selection } = useSelectionCapability();
   const { registerBridge } = useViewer();
@@ -16,7 +13,6 @@ export function SelectionAPIBridge() {
         hasSelection
       };
 
-      // Register this bridge with ViewerContext
       registerBridge('selection', {
         state: newState,
         api: {
@@ -26,12 +22,10 @@ export function SelectionAPIBridge() {
         }
       });
 
-      // Listen for selection changes to track when text is selected
-      const unsubscribe = selection.onSelectionChange((sel: SelectionRangeX | null) => {
-        const hasText = !!sel;
+      const unsubscribe = selection.onSelectionChange((event: any) => {
+        const hasText = !!(event?.selection || event);
         setHasSelection(hasText);
         const updatedState = { hasSelection: hasText };
-        // Re-register with updated state
         registerBridge('selection', {
           state: updatedState,
           api: {

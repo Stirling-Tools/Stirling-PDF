@@ -7,6 +7,8 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "frontend/public/locales/*/translation.toml"
+      - ".github/scripts/check_language_toml.py"
+      - ".github/workflows/check_toml.yml"
 
 # cancel in-progress jobs if a new job is triggered
 concurrency:
@@ -25,12 +27,12 @@ jobs:
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Checkout main branch first
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup GitHub App Bot
         id: setup-bot

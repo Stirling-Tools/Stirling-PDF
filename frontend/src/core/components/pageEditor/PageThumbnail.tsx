@@ -9,7 +9,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import AddIcon from '@mui/icons-material/Add';
 import { PDFPage, PDFDocument } from '@app/types/pageEditor';
-import { useThumbnailGeneration } from '@app/hooks/useThumbnailGeneration';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { getFileColorWithOpacity } from '@app/components/pageEditor/fileColors';
 import styles from '@app/components/pageEditor/PageEditor.module.css';
@@ -22,7 +21,6 @@ interface PageThumbnailProps {
   page: PDFPage;
   index: number;
   totalPages: number;
-  originalFile?: File;
   fileColorIndex: number;
   selectedPageIds: string[];
   selectionMode: boolean;
@@ -43,10 +41,10 @@ interface PageThumbnailProps {
   onDeletePage: (pageNumber: number) => void;
   createRotateCommand: (pageIds: string[], rotation: number) => { execute: () => void };
   createDeleteCommand: (pageIds: string[]) => { execute: () => void };
-  createSplitCommand: (position: number) => { execute: () => void };
+  createSplitCommand: (pageId: string, pageNumber: number) => { execute: () => void };
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
-  splitPositions: Set<number>;
+  splitPositions: Set<string>;
   onInsertFiles?: (files: File[] | StirlingFileStub[], insertAfterPage: number, isFromStorage?: boolean) => void;
   zoomLevel?: number;
 }
@@ -55,7 +53,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   page,
   index: _index,
   totalPages,
-  originalFile,
   fileColorIndex,
   selectedPageIds,
   selectionMode,
@@ -81,6 +78,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   justMoved = false,
 }: PageThumbnailProps) => {
   const pageIndex = page.pageNumber - 1;
+  const isSelected = Array.isArray(selectedPageIds) ? selectedPageIds.includes(page.id) : false;
 
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{x: number, y: number} | null>(null);
@@ -90,7 +88,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const elementRef = useRef<HTMLDivElement | null>(null);
-  const { getThumbnailFromCache, requestThumbnail} = useThumbnailGeneration();
   const { openFilesModal } = useFilesModalContext();
 
   // Check if this page is currently being dragged
@@ -114,43 +111,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       setThumbnailUrl(page.thumbnail);
     }
   }, [page.thumbnail, thumbnailUrl]);
-
-  // Request thumbnail if missing (on-demand, virtualized approach)
-  useEffect(() => {
-    let isCancelled = false;
-
-    // If we already have a thumbnail, use it
-    if (page.thumbnail) {
-      setThumbnailUrl(page.thumbnail);
-      return;
-    }
-
-    // Check cache first
-    const cachedThumbnail = getThumbnailFromCache(page.id);
-    if (cachedThumbnail) {
-      setThumbnailUrl(cachedThumbnail);
-      return;
-    }
-
-    // Request thumbnail generation if we have the original file
-    if (originalFile) {
-      const pageNumber = page.originalPageNumber;
-
-      requestThumbnail(page.id, originalFile, pageNumber)
-        .then(thumbnail => {
-          if (!isCancelled && thumbnail) {
-            setThumbnailUrl(thumbnail);
-          }
-        })
-        .catch(error => {
-          console.warn(`Failed to generate thumbnail for ${page.id}:`, error);
-        });
-    }
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [page.id, page.thumbnail, originalFile, getThumbnailFromCache, requestThumbnail]);
 
   // Merge refs - combine our ref tracking with dnd-kit's ref
   const mergedRef = useCallback((element: HTMLDivElement | null) => {
@@ -196,10 +156,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     e.stopPropagation();
 
     // Create a command to toggle split at this position
-    const command = createSplitCommand(pageIndex);
+    const command = createSplitCommand(page.id, page.pageNumber);
     onExecuteCommand(command);
 
-    const hasSplit = splitPositions.has(pageIndex);
+    const hasSplit = splitPositions.has(page.id);
     const action = hasSplit ? 'removed' : 'added';
     onSetStatus(`Split marker ${action} after position ${pageIndex + 1}`);
   }, [pageIndex, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand]);
@@ -406,7 +366,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           }}
         >
           <Checkbox
-            checked={Array.isArray(selectedPageIds) ? selectedPageIds.includes(page.id) : false}
+            checked={isSelected}
             onChange={() => {
               // Selection is handled by container mouseDown
             }}

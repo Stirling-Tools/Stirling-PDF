@@ -21,14 +21,15 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup GitHub App Bot
         id: setup-bot
@@ -48,17 +49,33 @@ jobs:
         run: |
           pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_pre_commit.txt
 
-      - run: pre-commit run --all-files -c .pre-commit-config.yaml
+      - name: Run Pre-Commit
+        run: |
+          pre-commit run ruff --all-files -c .pre-commit-config.yaml
+          pre-commit run ruff-format --all-files -c .pre-commit-config.yaml
+          pre-commit run codespell --all-files -c .pre-commit-config.yaml
+          pre-commit run gitleaks --all-files -c .pre-commit-config.yaml
+          pre-commit run end-of-file-fixer --all-files -c .pre-commit-config.yaml
+          pre-commit run trailing-whitespace --all-files -c .pre-commit-config.yaml
         continue-on-error: true
 
       - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: 21
           distribution: "temurin"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 8.14
+
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew build
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: git add
         run: |
@@ -67,7 +84,7 @@ jobs:
 
       - name: Create Pull Request
         if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
         with:
           token: ${{ steps.setup-bot.outputs.token }}
           commit-message: ":file_folder: pre-commit"

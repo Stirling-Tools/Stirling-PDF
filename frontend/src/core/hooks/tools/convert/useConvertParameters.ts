@@ -35,6 +35,10 @@ export interface ConvertParameters extends BaseParameters {
   };
   pdfaOptions: {
     outputFormat: string;
+    strict?: boolean;
+  };
+  pdfxOptions: {
+    outputFormat: string;
   };
   cbrOptions: {
     optimizeForEbook: boolean;
@@ -53,6 +57,11 @@ export interface ConvertParameters extends BaseParameters {
     includeTableOfContents: boolean;
     includePageNumbers: boolean;
     optimizeForEbook: boolean;
+  };
+  epubOptions?: {
+    detectChapters: boolean;
+    targetDevice: string;
+    outputFormat: string;
   };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
@@ -85,7 +94,11 @@ export const defaultParameters: ConvertParameters = {
     includeAllRecipients: false,
   },
   pdfaOptions: {
-    outputFormat: 'pdfa-1',
+    outputFormat: 'pdfa-2b',
+    strict: false,
+  },
+  pdfxOptions: {
+    outputFormat: 'pdfx',
   },
   cbrOptions: {
     optimizeForEbook: false,
@@ -104,6 +117,11 @@ export const defaultParameters: ConvertParameters = {
     includeTableOfContents: false,
     includePageNumbers: false,
     optimizeForEbook: false,
+  },
+  epubOptions: {
+    detectChapters: true,
+    targetDevice: 'TABLET_PHONE_IMAGES',
+    outputFormat: 'EPUB',
   },
   isSmartDetection: false,
   smartDetectionType: 'none',

@@ -56,7 +56,7 @@ export class FileAnalyzer {
   /**
    * Quick PDF analysis without full processing
    */
-  private static async quickPDFAnalysis(file: File): Promise<{
+  static async quickPDFAnalysis(file: File): Promise<{
     pageCount: number;
     isEncrypted: boolean;
     isCorrupted: boolean;

@@ -26,6 +26,8 @@ export interface AppConfig {
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
+  enableOAuth?: boolean;
+  enableSaml?: boolean;
   isAdmin?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
@@ -45,6 +47,10 @@ export interface AppConfig {
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
   enableMobileScanner?: boolean;
+  mobileScannerConvertToPdf?: boolean;
+  mobileScannerImageResolution?: string;
+  mobileScannerPageFormat?: string;
+  mobileScannerStretchToFit?: boolean;
   appVersion?: string;
   machineType?: string;
   activeSecurity?: boolean;
@@ -116,6 +122,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     }
     setError(null);
 
+    const startTime = performance.now();
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const testConfig = getSimulatedAppConfig();
@@ -136,6 +143,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
         // apiClient automatically adds JWT header if available via interceptors
         // Always suppress error toast - we handle 401 errors locally
+        console.debug('[AppConfig] Fetching app config', { attempt, force, path: window.location.pathname });
         const response = await apiClient.get<AppConfig>(
           '/api/v1/config/app-config',
           {
@@ -146,6 +154,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         const data = response.data;
 
         console.debug('[AppConfig] Config fetched successfully:', data);
+        console.debug('[AppConfig] Fetch duration ms:', (performance.now() - startTime).toFixed(2));
         setConfig(data);
         setHasResolvedConfig(true);
         setLoading(false);
@@ -157,6 +166,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         // This allows the app to work even without authentication
         if (status === 401) {
           console.debug('[AppConfig] 401 error - using default config (login enabled)');
+          console.debug('[AppConfig] Fetch duration ms:', (performance.now() - startTime).toFixed(2));
           setConfig({ enableLogin: true });
           setHasResolvedConfig(true);
           setLoading(false);
@@ -175,6 +185,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         const errorMessage = err?.response?.data?.message || err?.message || 'Unknown error occurred';
         setError(errorMessage);
         console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
+        console.debug('[AppConfig] Fetch duration ms:', (performance.now() - startTime).toFixed(2));
         // Preserve existing config (initial default or previous fetch). If nothing is set, assume login enabled.
         setConfig((current) => current ?? { enableLogin: true });
         setHasResolvedConfig(true);
@@ -197,7 +208,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     // On auth pages, always skip the config fetch
     // The config will be fetched after authentication via jwt-available event
     if (isAuthPage) {
-      console.debug('[AppConfig] On auth page - using default config, skipping fetch');
+      console.debug('[AppConfig] On auth page - using default config, skipping fetch', { path: currentPath });
       setConfig({ enableLogin: true });
       setHasResolvedConfig(true);
       setLoading(false);

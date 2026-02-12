@@ -303,22 +303,23 @@ public class EndpointConfiguration {
         // Adding endpoints to "PageOps" group
         addEndpointToGroup("PageOps", "remove-pages");
         addEndpointToGroup("PageOps", "merge-pdfs");
-        addEndpointToGroup("PageOps", "split-pdfs");
-        addEndpointToGroup("PageOps", "pdf-organizer");
+        addEndpointToGroup("PageOps", "split-pages");
+        addEndpointToGroup("PageOps", "rearrange-pages");
         addEndpointToGroup("PageOps", "rotate-pdf");
         addEndpointToGroup("PageOps", "multi-page-layout");
         addEndpointToGroup("PageOps", "booklet-imposition");
         addEndpointToGroup("PageOps", "scale-pages");
         addEndpointToGroup("PageOps", "crop");
-        addEndpointToGroup("PageOps", "extract-page");
         addEndpointToGroup("PageOps", "pdf-to-single-page");
         addEndpointToGroup("PageOps", "auto-split-pdf");
         addEndpointToGroup("PageOps", "split-by-size-or-count");
         addEndpointToGroup("PageOps", "overlay-pdf");
         addEndpointToGroup("PageOps", "split-pdf-by-sections");
         addEndpointToGroup("PageOps", "split-pdf-by-chapters");
+        addEndpointToGroup("PageOps", "add-page-numbers");
+        addEndpointToGroup("PageOps", "extract-pages");
 
-        // Adding endpoints to "Convert" group
+        // Adding endpoints to "Convert" group (Frontend has 15 convert endpoints)
         addEndpointToGroup("Convert", "pdf-to-img");
         addEndpointToGroup("Convert", "img-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-pdfa");
@@ -334,6 +335,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-epub");
+        // Backend-only endpoints (not in frontend tool registry)
         addEndpointToGroup("Convert", "pdf-to-vector");
         addEndpointToGroup("Convert", "vector-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-video");
@@ -341,6 +344,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-cbz");
         addEndpointToGroup("Convert", "pdf-to-json");
         addEndpointToGroup("Convert", "json-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-rtf");
 
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -351,51 +355,49 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "remove-cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
         addEndpointToGroup("Security", "auto-redact");
-        addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "validate-signature");
+        addEndpointToGroup("Security", "add-stamp");
+        addEndpointToGroup("Security", "unlock-pdf-forms");
+        // Backend-only endpoints (not in frontend tool registry endpoints)
+        addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "verify-pdf");
-        addEndpointToGroup("Security", "stamp");
         addEndpointToGroup("Security", "sign");
 
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
-        addEndpointToGroup("Other", "add-image");
         addEndpointToGroup("Other", "extract-images");
-        addEndpointToGroup("Other", "change-metadata");
+        addEndpointToGroup("Other", "update-metadata");
         addEndpointToGroup("Other", "flatten");
-        addEndpointToGroup("Other", "unlock-pdf-forms");
         addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
-        addEndpointToGroup("Other", "compare");
-        addEndpointToGroup("Other", "add-page-numbers");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "remove-image-pdf");
         addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "replace-invert-pdf");
+        addEndpointToGroup("Other", "edit-table-of-contents");
+        addEndpointToGroup("Other", "text-editor-pdf");
+        // Backend-only endpoints (not in frontend tool registry endpoints)
+        addEndpointToGroup("Other", "add-image");
+        addEndpointToGroup("Other", "compare");
         addEndpointToGroup("Other", "view-pdf");
-        addEndpointToGroup("Other", "replace-and-invert-color-pdf");
         addEndpointToGroup("Other", "multi-tool");
-
-        // Adding form-related endpoints to "Other" group
         addEndpointToGroup("Other", "fields");
         addEndpointToGroup("Other", "modify-fields");
         addEndpointToGroup("Other", "delete-fields");
         addEndpointToGroup("Other", "fill");
 
         // Adding endpoints to "Advance" group
-        addEndpointToGroup("Advance", "adjust-contrast");
         addEndpointToGroup("Advance", "compress-pdf");
         addEndpointToGroup("Advance", "extract-image-scans");
         addEndpointToGroup("Advance", "repair");
         addEndpointToGroup("Advance", "auto-rename");
-        addEndpointToGroup("Advance", "pipeline");
+        addEndpointToGroup("Advance", "handleData");
         addEndpointToGroup("Advance", "scanner-effect");
-        addEndpointToGroup("Advance", "auto-split-pdf");
         addEndpointToGroup("Advance", "show-javascript");
-        addEndpointToGroup("Advance", "split-by-size-or-count");
         addEndpointToGroup("Advance", "overlay-pdf");
-        addEndpointToGroup("Advance", "split-pdf-by-sections");
-        addEndpointToGroup("Advance", "edit-table-of-contents");
-        addEndpointToGroup("Advance", "split-pdf-by-chapters");
+        // Backend-only endpoints
+        addEndpointToGroup("Advance", "adjust-contrast");
+        addEndpointToGroup("Advance", "pipeline");
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
@@ -436,8 +438,8 @@ public class EndpointConfiguration {
         // Java
         addEndpointToGroup("Java", "merge-pdfs");
         addEndpointToGroup("Java", "remove-pages");
-        addEndpointToGroup("Java", "split-pdfs");
-        addEndpointToGroup("Java", "pdf-organizer");
+        addEndpointToGroup("Java", "split-pages");
+        addEndpointToGroup("Java", "rearrange-pages");
         addEndpointToGroup("Java", "rotate-pdf");
         addEndpointToGroup("Java", "pdf-to-img");
         addEndpointToGroup("Java", "img-to-pdf");
@@ -445,9 +447,10 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "remove-password");
         addEndpointToGroup("Java", "change-permissions");
         addEndpointToGroup("Java", "add-watermark");
+        addEndpointToGroup("Java", "add-stamp");
         addEndpointToGroup("Java", "add-image");
         addEndpointToGroup("Java", "extract-images");
-        addEndpointToGroup("Java", "change-metadata");
+        addEndpointToGroup("Java", "update-metadata");
         addEndpointToGroup("Java", "cert-sign");
         addEndpointToGroup("Java", "remove-cert-sign");
         addEndpointToGroup("Java", "multi-page-layout");
@@ -459,7 +462,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "sanitize-pdf");
         addEndpointToGroup("Java", "crop");
         addEndpointToGroup("Java", "get-info-on-pdf");
-        addEndpointToGroup("Java", "extract-page");
         addEndpointToGroup("Java", "pdf-to-single-page");
         addEndpointToGroup("Java", "markdown-to-pdf");
         addEndpointToGroup("Java", "show-javascript");
@@ -469,7 +471,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
+        addEndpointToGroup("Java", "split-pdf-by-chapters");
         addEndpointToGroup("Java", REMOVE_BLANKS);
+        addEndpointToGroup("Java", "remove-annotations");
         addEndpointToGroup("Java", "pdf-to-text");
         addEndpointToGroup("Java", "remove-image-pdf");
         addEndpointToGroup("Java", "pdf-to-markdown");
@@ -479,15 +483,24 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-cbz");
         addEndpointToGroup("Java", "pdf-to-json");
         addEndpointToGroup("Java", "json-to-pdf");
-        addEndpointToGroup("rar", "pdf-to-cbr");
         addEndpointToGroup("Java", "pdf-to-video");
         addEndpointToGroup("Java", "verify-pdf");
+        addEndpointToGroup("Java", "flatten");
+        addEndpointToGroup("Java", "unlock-pdf-forms");
+        addEndpointToGroup("Java", "validate-signature");
+        addEndpointToGroup("Java", "text-editor-pdf");
+        addEndpointToGroup("Java", "edit-table-of-contents");
+        addEndpointToGroup("Java", "pdf-to-epub");
+        addEndpointToGroup("Java", "eml-to-pdf");
+        addEndpointToGroup("Java", "handleData");
+        addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
-        addEndpointToGroup("Javascript", "pdf-organizer");
+        addEndpointToGroup("Javascript", "rearrange-pages");
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
+        addEndpointToGroup("Javascript", "text-editor-pdf");
 
         /* qpdf */
         addEndpointToGroup("qpdf", "repair");
@@ -498,6 +511,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "compress-pdf");
         addEndpointToGroup("Ghostscript", "crop");
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
+        addEndpointToGroup("Ghostscript", "scanner-effect");
         addEndpointToGroup("Ghostscript", "pdf-to-vector");
         addEndpointToGroup("Ghostscript", "vector-to-pdf");
 
@@ -516,6 +530,8 @@ public class EndpointConfiguration {
         addEndpointAlternative("compress-pdf", "qpdf");
         addEndpointAlternative("compress-pdf", "Ghostscript");
         addEndpointAlternative("compress-pdf", "Java");
+        addEndpointAlternative("crop", "Ghostscript");
+        addEndpointAlternative("crop", "Java");
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
 
@@ -544,6 +560,9 @@ public class EndpointConfiguration {
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
+
+        // Calibre dependent endpoints
+        addEndpointToGroup("Calibre", "pdf-to-epub");
     }
 
     private void processEnvironmentConfigs() {

@@ -107,54 +107,63 @@ public class PDFToFile {
             File[] outputFiles =
                     Objects.requireNonNull(tempOutputDir.getPath().toFile().listFiles());
             List<File> markdownFiles = new ArrayList<>();
+            List<File> imageFiles = new ArrayList<>();
 
-            // Convert HTML files to Markdown
+            // Convert HTML files to Markdown and collect image files
             for (File outputFile : outputFiles) {
                 if (outputFile.getName().endsWith(".html")) {
                     String html = Files.readString(outputFile.toPath());
                     String markdown = htmlToMarkdownConverter.convert(html);
 
+                    // Update image references to point to images/ folder
+                    markdown = updateImageReferences(markdown);
+
                     String mdFileName = outputFile.getName().replace(".html", ".md");
                     File mdFile = new File(tempOutputDir.getPath().toFile(), mdFileName);
                     Files.writeString(mdFile.toPath(), markdown);
                     markdownFiles.add(mdFile);
+                } else if (!outputFile.getName().endsWith(".md")) {
+                    // Collect non-HTML, non-MD files as images/assets
+                    imageFiles.add(outputFile);
                 }
             }
 
-            // If there's only one markdown file, return it directly
-            if (markdownFiles.size() == 1) {
-                fileName = pdfBaseName + ".md";
-                fileBytes = Files.readAllBytes(markdownFiles.get(0).toPath());
-            } else {
-                // Multiple files - create a zip
-                fileName = pdfBaseName + "ToMarkdown.zip";
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            // Always create a ZIP file
+            fileName = pdfBaseName + "ToMarkdown.zip";
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-                try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-                    // Add markdown files
-                    for (File mdFile : markdownFiles) {
-                        ZipEntry mdEntry = new ZipEntry(mdFile.getName());
-                        zipOutputStream.putNextEntry(mdEntry);
-                        Files.copy(mdFile.toPath(), zipOutputStream);
-                        zipOutputStream.closeEntry();
-                    }
-
-                    // Add images and other assets
-                    for (File file : outputFiles) {
-                        if (!file.getName().endsWith(".html") && !file.getName().endsWith(".md")) {
-                            ZipEntry assetEntry = new ZipEntry(file.getName());
-                            zipOutputStream.putNextEntry(assetEntry);
-                            Files.copy(file.toPath(), zipOutputStream);
-                            zipOutputStream.closeEntry();
-                        }
-                    }
+            try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+                // Add markdown files to root of ZIP
+                for (File mdFile : markdownFiles) {
+                    ZipEntry mdEntry = new ZipEntry(mdFile.getName());
+                    zipOutputStream.putNextEntry(mdEntry);
+                    Files.copy(mdFile.toPath(), zipOutputStream);
+                    zipOutputStream.closeEntry();
                 }
 
-                fileBytes = byteArrayOutputStream.toByteArray();
+                // Add images and other assets to images/ folder
+                for (File imageFile : imageFiles) {
+                    ZipEntry assetEntry = new ZipEntry("images/" + imageFile.getName());
+                    zipOutputStream.putNextEntry(assetEntry);
+                    Files.copy(imageFile.toPath(), zipOutputStream);
+                    zipOutputStream.closeEntry();
+                }
             }
+
+            fileBytes = byteArrayOutputStream.toByteArray();
         }
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    /**
+     * Updates image references in markdown to point to the images/ folder. Matches patterns like
+     * ![alt](filename.png) and converts to ![alt](images/filename.png)
+     */
+    private String updateImageReferences(String markdown) {
+        // Match markdown image syntax: ![alt text](image.png)
+        // Only update if the path doesn't already start with images/
+        return markdown.replaceAll("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)", "$1(images/$2)");
     }
 
     public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
@@ -360,8 +369,6 @@ public class PDFToFile {
             Path inputFile, Path outputFile, String outputFormat, String libreOfficeFilter) {
         List<String> command = new ArrayList<>();
         command.add(runtimePathConfig.getUnoConvertPath());
-        command.add("--port");
-        command.add("2003");
         command.add("--convert-to");
         command.add(outputFormat);
         if (libreOfficeFilter != null && !libreOfficeFilter.isBlank()) {

@@ -309,10 +309,16 @@ public class AdminLicenseController {
         }
 
         try {
+            log.info(
+                    "License upload: original filename='{}', size={} bytes, contentType='{}'",
+                    file.getOriginalFilename(),
+                    file.getSize(),
+                    file.getContentType());
             // Validate certificate format by reading content
             byte[] fileBytes = file.getBytes();
             String content = new String(fileBytes, StandardCharsets.UTF_8);
             if (!content.trim().startsWith("-----BEGIN LICENSE FILE-----")) {
+                log.warn("License upload rejected: invalid certificate header");
                 return ResponseEntity.badRequest()
                         .body(
                                 Map.of(
@@ -324,9 +330,15 @@ public class AdminLicenseController {
 
             // Get config directory and target path
             Path configPath = Paths.get(InstallationPathConfig.getConfigPath());
-            Path targetPath = configPath.resolve(filename).normalize();
+            Path configPathAbs = configPath.toAbsolutePath().normalize();
+            Path targetPath = configPathAbs.resolve(filename).normalize();
+            log.info(
+                    "License upload paths: configPath='{}', targetPath='{}'",
+                    configPathAbs,
+                    targetPath.toAbsolutePath());
             // Prevent directory traversal: ensure targetPath is inside configPath
-            if (!targetPath.startsWith(configPath.normalize().toAbsolutePath())) {
+            if (!targetPath.startsWith(configPathAbs)) {
+                log.warn("License upload rejected: target path outside config path");
                 return ResponseEntity.badRequest()
                         .body(Map.of("success", false, "error", "Invalid file path"));
             }
