@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Stack, Paper, Text, Loader, Group, MultiSelect } from '@mantine/core';
+import { Button, Stack, Paper, Text, Loader, Group, MultiSelect, Checkbox } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -8,6 +8,11 @@ import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+
+interface UISettingsData {
+  defaultHideUnavailableTools?: boolean;
+  defaultHideUnavailableConversions?: boolean;
+}
 
 interface EndpointsSettingsData {
   toRemove?: string[];
@@ -31,11 +36,24 @@ export default function AdminEndpointsSection() {
     sectionName: 'endpoints',
   });
 
+  const {
+    settings: uiSettings,
+    setSettings: setUiSettings,
+    loading: uiLoading,
+    saving: uiSaving,
+    fetchSettings: fetchUiSettings,
+    saveSettings: saveUiSettings,
+    isFieldPending: isUiFieldPending,
+  } = useAdminSettings<UISettingsData>({
+    sectionName: 'ui',
+  });
+
   useEffect(() => {
     if (loginEnabled) {
       fetchSettings();
+      fetchUiSettings();
     }
-  }, [loginEnabled, fetchSettings]);
+  }, [loginEnabled, fetchSettings, fetchUiSettings]);
 
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
@@ -54,8 +72,29 @@ export default function AdminEndpointsSection() {
     }
   };
 
+  const handleUiSave = async () => {
+    if (!validateLoginEnabled()) {
+      return;
+    }
+
+    try {
+      await saveUiSettings();
+      alert({
+        alertType: 'success',
+        title: t('admin.success', 'Success'),
+        body: t('admin.settings.saveSuccess', 'Settings saved successfully. Restart required for changes to take effect.'),
+      });
+    } catch (_error) {
+      alert({
+        alertType: 'error',
+        title: t('admin.error', 'Error'),
+        body: t('admin.settings.saveError', 'Failed to save settings'),
+      });
+    }
+  };
+
   // Override loading state when login is disabled
-  const actualLoading = loginEnabled ? loading : false;
+  const actualLoading = loginEnabled ? (loading || uiLoading) : false;
 
   if (actualLoading) {
     return (
@@ -77,11 +116,16 @@ export default function AdminEndpointsSection() {
     'auto-redact',
     'auto-rename',
     'auto-split-pdf',
+    'automate',
     'booklet-imposition',
     'cert-sign',
     'compare',
     'compress-pdf',
     'crop',
+    'dev-airgapped-docs',
+    'dev-api-docs',
+    'dev-folder-scanning-docs',
+    'dev-sso-guide-docs',
     'edit-table-of-contents',
     'eml-to-pdf',
     'extract-image-scans',
@@ -109,6 +153,7 @@ export default function AdminEndpointsSection() {
     'pdf-to-text',
     'pdf-to-word',
     'pdf-to-xml',
+    'pipeline',
     'rearrange-pages',
     'remove-annotations',
     'remove-blanks',
@@ -143,6 +188,9 @@ export default function AdminEndpointsSection() {
     'Security',
     'Other',
     'Advance',
+    'Automation',
+    'DeveloperTools',
+    'DeveloperDocs',
     // Tool Groups
     'CLI',
     'Python',
@@ -235,7 +283,56 @@ export default function AdminEndpointsSection() {
 
       <Group justify="flex-end">
         <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
+          {t('admin.settings.save', 'Save Endpoint Settings')}
+        </Button>
+      </Group>
+
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <div>
+            <Text fw={600} size="sm" mb="xs">{t('admin.settings.endpoints.userDefaults', 'User Preference Defaults')}</Text>
+            <Text size="xs" c="dimmed">
+              {t('admin.settings.endpoints.userDefaultsDescription', 'Set default values for user preferences. Users can override these in their personal settings.')}
+            </Text>
+          </div>
+
+          <Checkbox
+            label={
+              <Group gap="xs">
+                <span>{t('admin.settings.endpoints.defaultHideUnavailableTools.label', 'Hide unavailable tools by default')}</span>
+                <PendingBadge show={isUiFieldPending('defaultHideUnavailableTools')} />
+              </Group>
+            }
+            description={t('admin.settings.endpoints.defaultHideUnavailableTools.description', 'Remove disabled tools instead of showing them greyed out')}
+            checked={uiSettings.defaultHideUnavailableTools || false}
+            onChange={(e) => {
+              if (!loginEnabled) return;
+              setUiSettings({ ...uiSettings, defaultHideUnavailableTools: e.currentTarget.checked });
+            }}
+            disabled={!loginEnabled}
+          />
+
+          <Checkbox
+            label={
+              <Group gap="xs">
+                <span>{t('admin.settings.endpoints.defaultHideUnavailableConversions.label', 'Hide unavailable conversions by default')}</span>
+                <PendingBadge show={isUiFieldPending('defaultHideUnavailableConversions')} />
+              </Group>
+            }
+            description={t('admin.settings.endpoints.defaultHideUnavailableConversions.description', 'Remove disabled conversion options instead of showing them greyed out')}
+            checked={uiSettings.defaultHideUnavailableConversions || false}
+            onChange={(e) => {
+              if (!loginEnabled) return;
+              setUiSettings({ ...uiSettings, defaultHideUnavailableConversions: e.currentTarget.checked });
+            }}
+            disabled={!loginEnabled}
+          />
+        </Stack>
+      </Paper>
+
+      <Group justify="flex-end">
+        <Button onClick={handleUiSave} loading={uiSaving} size="sm" disabled={!loginEnabled}>
+          {t('admin.settings.save', 'Save User Defaults')}
         </Button>
       </Group>
 
