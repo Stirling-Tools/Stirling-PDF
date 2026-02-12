@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 import { OpacityControl } from '@app/components/annotation/shared/OpacityControl';
@@ -56,7 +57,11 @@ function AnnotationSelectionMenuInner({
   const { t } = useTranslation();
   const { provides } = useAnnotation(documentId);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [isTextEditorOpen, setIsTextEditorOpen] = useState(false);
+  const [textDraft, setTextDraft] = useState('');
+  const [textBoxPosition, setTextBoxPosition] = useState<{ top: number; left: number; width: number; height: number; fontSize: number; fontFamily: string } | null>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback((node: HTMLDivElement | null) => {
@@ -146,6 +151,77 @@ function AnnotationSelectionMenuInner({
       provides.deleteAnnotation(pageIndex, annotationId);
     }
   }, [provides, annotationId, pageIndex]);
+
+  const handleOpenTextEditor = useCallback(() => {
+    if (!annotation) return;
+
+    // Try to find the annotation element in the DOM
+    const annotationElement = document.querySelector(`[data-annotation-id="${annotationId}"]`) as HTMLElement;
+
+    let fontSize = (obj?.fontSize || 14) * 1.33;
+    let fontFamily = 'Helvetica';
+
+    if (annotationElement) {
+      const rect = annotationElement.getBoundingClientRect();
+
+      // Try multiple selectors to find the text element
+      const textElement = annotationElement.querySelector('text, [class*="text"], [class*="content"]') as HTMLElement;
+      if (textElement) {
+        const computedStyle = window.getComputedStyle(textElement);
+        const computedSize = parseFloat(computedStyle.fontSize);
+        if (computedSize && computedSize > 0) {
+          fontSize = computedSize;
+        }
+        fontFamily = computedStyle.fontFamily || fontFamily;
+      }
+
+      setTextBoxPosition({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+      });
+    } else if (wrapperRef.current) {
+      // Fallback to wrapper position
+      const rect = wrapperRef.current.getBoundingClientRect();
+      setTextBoxPosition({
+        top: rect.top,
+        left: rect.left,
+        width: Math.max(rect.width, 200),
+        height: Math.max(rect.height, 50),
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+      });
+    } else {
+      return;
+    }
+
+    setTextDraft(obj?.contents || '');
+    setIsTextEditorOpen(true);
+
+    // Focus the textarea after it renders
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.select();
+    }, 0);
+  }, [obj, annotation, annotationId]);
+
+  const handleSaveText = useCallback(() => {
+    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
+
+    provides.updateAnnotation(pageIndex, annotationId, {
+      contents: textDraft,
+    });
+    setIsTextEditorOpen(false);
+    setTextBoxPosition(null);
+  }, [provides, annotationId, pageIndex, textDraft]);
+
+  const handleCloseTextEdit = useCallback(() => {
+    setIsTextEditorOpen(false);
+    setTextBoxPosition(null);
+  }, []);
 
   const handleColorChange = useCallback((color: string, target: 'main' | 'stroke' | 'fill' | 'text' | 'background') => {
     if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
@@ -299,6 +375,20 @@ function AnnotationSelectionMenuInner({
       );
     };
 
+    const EditTextButton = () => (
+      <Tooltip label={t('annotation.editText', 'Edit Text')}>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="md"
+          onClick={handleOpenTextEditor}
+          styles={commonButtonStyles}
+        >
+          <EditIcon style={{ fontSize: 18 }} />
+        </ActionIcon>
+      </Tooltip>
+    );
+
     const DeleteButton = () => (
       <Tooltip label={t('annotation.delete', 'Delete')}>
         <ActionIcon
@@ -357,6 +447,7 @@ function AnnotationSelectionMenuInner({
           <>
             <ColorButton targetType="text" />
             <ColorButton targetType="background" />
+            <EditTextButton />
             <PropertiesPopover
               annotationType={annotationType}
               annotation={annotation}
@@ -466,21 +557,78 @@ function AnnotationSelectionMenuInner({
     </div>
   ) : null;
 
+  const textEditorOverlay = isTextEditorOpen && textBoxPosition ? (
+    <div
+      style={{
+        position: 'fixed',
+        top: `${textBoxPosition.top}px`,
+        left: `${textBoxPosition.left}px`,
+        width: `${textBoxPosition.width}px`,
+        height: `${textBoxPosition.height}px`,
+        zIndex: 10001,
+        pointerEvents: 'auto',
+      }}
+    >
+      <textarea
+        ref={textareaRef}
+        value={textDraft}
+        onChange={(e) => setTextDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            handleCloseTextEdit();
+          } else if (e.key === 'Enter' && e.ctrlKey) {
+            handleSaveText();
+          }
+        }}
+        onBlur={handleSaveText}
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: '0',
+          minWidth: '0',
+          maxWidth: '100%',
+          maxHeight: '100%',
+          fontSize: `${textBoxPosition.fontSize}px`,
+          fontFamily: textBoxPosition.fontFamily,
+          lineHeight: '1.2',
+          color: '#000000',
+          backgroundColor: '#ffffff',
+          border: '2px solid var(--mantine-color-blue-5)',
+          borderRadius: '0',
+          padding: '0',
+          margin: '0',
+          resize: 'none',
+          boxSizing: 'border-box',
+          outline: 'none',
+          overflow: 'hidden',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+        }}
+      />
+    </div>
+  ) : null;
+
+  const canClickToEdit = selected && (annotationType === 'text' || annotationType === 'note') && !isTextEditorOpen;
+
   return (
     <>
       {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps */}
       <div
         ref={setRef}
+        onClick={canClickToEdit ? handleOpenTextEditor : undefined}
         style={{
           // Use EmbedPDF's positioning styles
           ...menuWrapperProps?.style,
           // Keep the wrapper invisible but still occupying space for positioning
           opacity: 0,
-          pointerEvents: 'none',
+          pointerEvents: canClickToEdit ? 'auto' : 'none',
         }}
       />
       {typeof document !== 'undefined' && menuContent
         ? createPortal(menuContent, document.body)
+        : null}
+      {typeof document !== 'undefined' && textEditorOverlay
+        ? createPortal(textEditorOverlay, document.body)
         : null}
     </>
   );

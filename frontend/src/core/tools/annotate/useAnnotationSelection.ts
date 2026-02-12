@@ -33,7 +33,6 @@ interface UseAnnotationSelectionParams {
 }
 
 const MARKUP_TOOL_IDS = ['highlight', 'underline', 'strikeout', 'squiggly'] as const;
-const DRAWING_TOOL_IDS = ['ink', 'inkHighlighter'] as const;
 
 const isTextMarkupAnnotation = (annotation: any): boolean => {
   const toolId =
@@ -55,6 +54,9 @@ const isTextMarkupAnnotation = (annotation: any): boolean => {
 };
 
 const shouldStayOnPlacementTool = (annotation: any, derivedTool?: string | null | undefined): boolean => {
+  // Only text markup tools (highlight, underline, strikeout, squiggly) stay active
+  // All other tools switch to select mode after placement
+
   const toolId =
     derivedTool ||
     annotation?.customData?.annotationToolId ||
@@ -62,12 +64,17 @@ const shouldStayOnPlacementTool = (annotation: any, derivedTool?: string | null 
     annotation?.object?.customData?.annotationToolId ||
     annotation?.object?.customData?.toolId;
 
-  if (toolId && (MARKUP_TOOL_IDS.includes(toolId as any) || DRAWING_TOOL_IDS.includes(toolId as any))) {
+  // Check if it's a markup tool by ID
+  if (toolId && MARKUP_TOOL_IDS.includes(toolId as any)) {
     return true;
   }
-  const type = annotation?.type ?? annotation?.object?.type;
-  if (typeof type === 'number' && type === 15) return true; // ink family
-  if (isTextMarkupAnnotation(annotation)) return true;
+
+  // Check if it's a markup annotation by type/subtype
+  if (isTextMarkupAnnotation(annotation)) {
+    return true;
+  }
+
+  // All other tools (text, note, ink, shapes, lines, stamps) switch to select
   return false;
 };
 
@@ -304,9 +311,7 @@ export function useAnnotationSelection({
             const tool =
               deriveToolFromAnnotation((eventAnn as any)?.object ?? eventAnn ?? api.getSelectedAnnotation?.()) ||
               currentTool;
-            const stayOnPlacement =
-              shouldStayOnPlacementTool(eventAnn, tool) ||
-              (tool ? DRAWING_TOOL_IDS.includes(tool as any) : false);
+            const stayOnPlacement = shouldStayOnPlacementTool(eventAnn, tool);
             if (activeToolRef.current !== 'select' && !stayOnPlacement) {
               activeToolRef.current = 'select';
               setActiveTool('select');
@@ -318,9 +323,7 @@ export function useAnnotationSelection({
               applySelectionFromAnnotation(selected ?? eventAnn ?? null);
               const derivedAfter =
                 deriveToolFromAnnotation((selected as any)?.object ?? selected ?? eventAnn ?? null) || activeToolRef.current;
-              const stayOnPlacementAfter =
-                shouldStayOnPlacementTool(selected ?? eventAnn ?? null, derivedAfter) ||
-                (derivedAfter ? DRAWING_TOOL_IDS.includes(derivedAfter as any) : false);
+              const stayOnPlacementAfter = shouldStayOnPlacementTool(selected ?? eventAnn ?? null, derivedAfter);
               if (activeToolRef.current !== 'select' && !stayOnPlacementAfter) {
                 activeToolRef.current = 'select';
                 setActiveTool('select');

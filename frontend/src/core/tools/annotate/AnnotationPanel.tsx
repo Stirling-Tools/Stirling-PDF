@@ -1287,11 +1287,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         {renderToolButtons(otherTools)}
       </Box>
 
-      {activeTool !== 'select' && defaultStyleControls}
-
-      {activeTool === 'select' && selectedAnn && selectedAnnotationControls}
-
-      {activeTool === 'select' && !selectedAnn && defaultStyleControls}
+      {activeTool === 'stamp' && defaultStyleControls}
 
       {colorPickerComponent}
 
