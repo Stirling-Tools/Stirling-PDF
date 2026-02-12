@@ -29,6 +29,7 @@ const createViewOptions = (
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>,
   currentFileIndex: number,
   onFileSelect?: (index: number) => void,
+  onFileRemove?: (fileId: string) => void,
   pageEditorState?: PageEditorDropdownState,
   customViews?: CustomWorkbenchViewInstance[]
 ) => {
@@ -37,8 +38,7 @@ const createViewOptions = (
   const isInViewer = currentView === 'viewer';
   const fileName = currentFile?.name || '';
   const viewerDisplayName = isInViewer && fileName ? fileName : 'Viewer';
-  const hasMultipleFiles = activeFiles.length > 1;
-  const showViewerDropdown = isInViewer && hasMultipleFiles;
+  const showViewerDropdown = isInViewer;
 
   const viewerOption = {
     label: showViewerDropdown ? (
@@ -47,6 +47,7 @@ const createViewOptions = (
         activeFiles={activeFiles}
         currentFileIndex={currentFileIndex}
         onFileSelect={onFileSelect}
+        onFileRemove={onFileRemove}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
       />
@@ -132,6 +133,7 @@ interface TopControlsProps {
   activeFiles?: Array<{ fileId: string; name: string; versionNumber?: number }>;
   currentFileIndex?: number;
   onFileSelect?: (index: number) => void;
+  onFileRemove?: (fileId: string) => void;
 }
 
 const TopControls = ({
@@ -141,6 +143,7 @@ const TopControls = ({
   activeFiles = [],
   currentFileIndex = 0,
   onFileSelect,
+  onFileRemove,
 }: TopControlsProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
@@ -176,9 +179,10 @@ const TopControls = ({
     activeFiles,
     currentFileIndex,
     onFileSelect,
+    onFileRemove,
     pageEditorState,
     customViews
-  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, pageEditorState, customViews]);
+  ), [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, onFileRemove, pageEditorState, customViews]);
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
