@@ -26,36 +26,29 @@ export function useSaveShortcut() {
           ? selectors.getStirlingFileStubs(selectedFileIds)
           : selectors.getStirlingFileStubs();
 
-        // Filter to only files with localFilePath
-        const saveableFiles: typeof filesToSave = [];
-        const saveableStubs: typeof stubsToSave = [];
+        if (filesToSave.length === 0) {
+          return;
+        }
 
+        // Save files (Save As for files without localFilePath)
         for (let i = 0; i < filesToSave.length; i++) {
-          if (stubsToSave[i]?.localFilePath) {
-            saveableFiles.push(filesToSave[i]);
-            saveableStubs.push(stubsToSave[i]);
-          }
-        }
-
-        if (saveableFiles.length === 0) {
-          return; // Nothing to save
-        }
-
-        // Save files
-        for (let i = 0; i < saveableFiles.length; i++) {
-          const file = saveableFiles[i];
-          const stub = saveableStubs[i];
+          const file = filesToSave[i];
+          const stub = stubsToSave[i];
+          if (!stub) continue;
 
           try {
-            await downloadFile({
+            const result = await downloadFile({
               data: file,
               filename: file.name,
               localPath: stub.localFilePath
             });
 
             // Mark file as clean after successful save
-            if (stub.isDirty) {
-              fileActions.updateStirlingFileStub(stub.id, { isDirty: false });
+            if (result.savedPath) {
+              fileActions.updateStirlingFileStub(stub.id, {
+                localFilePath: stub.localFilePath ?? result.savedPath,
+                isDirty: false
+              });
             }
           } catch (error) {
             console.error(`Failed to save ${file.name}:`, error);

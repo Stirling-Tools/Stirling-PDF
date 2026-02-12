@@ -63,7 +63,7 @@ function ReviewStepContent<TParams = unknown>({
         localPath: operation.downloadLocalPath,
         outputFileIds: operation.outputFileIds
       });
-      await downloadFromUrl(
+      const result = await downloadFromUrl(
         operation.downloadUrl,
         operation.downloadFilename || "download",
         operation.downloadLocalPath || undefined
@@ -71,15 +71,25 @@ function ReviewStepContent<TParams = unknown>({
       console.log('[ReviewToolStep] Download complete, marking files clean');
 
       // Mark output files as clean after successful save to disk
-      if (operation.outputFileIds && operation.downloadLocalPath) {
+      if (operation.outputFileIds && result.savedPath) {
         console.log('[ReviewToolStep] Marking files as clean:', operation.outputFileIds);
-        for (const fileId of operation.outputFileIds) {
-          fileActions.updateStirlingFileStub(fileId as FileId, { isDirty: false });
+        const targetIds = operation.downloadLocalPath
+          ? operation.outputFileIds
+          : operation.outputFileIds.length === 1
+            ? [operation.outputFileIds[0]]
+            : [];
+
+        for (const fileId of targetIds) {
+          fileActions.updateStirlingFileStub(fileId as FileId, {
+            localFilePath: operation.downloadLocalPath ?? result.savedPath,
+            isDirty: false
+          });
         }
       } else {
         console.log('[ReviewToolStep] Skipping clean mark:', {
           hasOutputFileIds: !!operation.outputFileIds,
-          hasLocalPath: !!operation.downloadLocalPath
+          hasLocalPath: !!operation.downloadLocalPath,
+          savedPath: result.savedPath
         });
       }
     } catch (error) {

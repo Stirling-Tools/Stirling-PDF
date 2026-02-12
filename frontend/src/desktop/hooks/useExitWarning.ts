@@ -24,7 +24,7 @@ export function useExitWarning() {
       }
 
       const allStubs = selectorsRef.current.getStirlingFileStubs();
-      const dirtyStubs = allStubs.filter(stub => stub.localFilePath && stub.isDirty);
+      const dirtyStubs = allStubs.filter(stub => stub.isDirty);
 
       if (dirtyStubs.length > 0) {
         const fileList = dirtyStubs.map(f => `• ${f.name}`).join('\n');
@@ -49,7 +49,10 @@ export function useExitWarning() {
         }
 
         if (saveChoices.has(choice)) {
-          const { failedCount } = await saveDirtyFiles(dirtyStubs);
+          const { failedCount, cancelled } = await saveDirtyFiles(dirtyStubs);
+          if (cancelled) {
+            return;
+          }
           if (failedCount > 0) {
             await message(
               `Saved with errors. ${failedCount} file${failedCount > 1 ? 's' : ''} could not be saved.`,
@@ -82,29 +85,40 @@ export function useExitWarning() {
   const saveDirtyFiles = async (dirtyStubs: StirlingFileStub[]) => {
     const filesById = new Map(selectorsRef.current.getFiles().map(file => [file.fileId, file]));
     let failedCount = 0;
+    let cancelled = false;
 
     for (const stub of dirtyStubs) {
       const file = filesById.get(stub.id);
       if (!file || !stub.localFilePath) {
-        failedCount += 1;
-        continue;
+        if (!file) {
+          failedCount += 1;
+          continue;
+        }
       }
 
       try {
-        await downloadFile({
+        const result = await downloadFile({
           data: file,
           filename: file.name,
           localPath: stub.localFilePath,
         });
 
-        if (stub.isDirty) {
-          fileActions.updateStirlingFileStub(stub.id, { isDirty: false });
+        if (result.cancelled) {
+          cancelled = true;
+          break;
+        }
+
+        if (result.savedPath) {
+          fileActions.updateStirlingFileStub(stub.id, {
+            localFilePath: stub.localFilePath ?? result.savedPath,
+            isDirty: false
+          });
         }
       } catch {
         failedCount += 1;
       }
     }
 
-    return { failedCount };
+    return { failedCount, cancelled };
   };
 }

@@ -193,24 +193,28 @@ const FileEditorThumbnail = ({
   }, [file.id, file.name, onCloseFile]);
 
   const handleSaveAndClose = useCallback(async () => {
-    // Save the file first
-    if (file.localFilePath) {
-      const fileToSave = selectors.getFile(file.id);
-      if (fileToSave) {
-        try {
-          await downloadFile({
-            data: fileToSave,
-            filename: file.name,
-            localPath: file.localFilePath
+    const fileToSave = selectors.getFile(file.id);
+    if (fileToSave) {
+      try {
+        const result = await downloadFile({
+          data: fileToSave,
+          filename: file.name,
+          localPath: file.localFilePath
+        });
+        if (!result.cancelled && result.savedPath) {
+          fileActions.updateStirlingFileStub(file.id, {
+            localFilePath: file.localFilePath ?? result.savedPath,
+            isDirty: false
           });
-          // Mark as clean
-          fileActions.updateStirlingFileStub(file.id, { isDirty: false });
-        } catch (error) {
-          console.error(`Failed to save ${file.name}:`, error);
-          alert({ alertType: 'error', title: 'Save failed', body: `Could not save ${file.name}`, expandable: true });
+        } else if (result.cancelled) {
           setShowCloseModal(false);
           return;
         }
+      } catch (error) {
+        console.error(`Failed to save ${file.name}:`, error);
+        alert({ alertType: 'error', title: 'Save failed', body: `Could not save ${file.name}`, expandable: true });
+        setShowCloseModal(false);
+        return;
       }
     }
     // Then close

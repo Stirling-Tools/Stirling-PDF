@@ -162,18 +162,21 @@ export default function RightRail() {
         const file = filesToExport[i];
         const stub = stubsToExport[i];
         console.log('[RightRail] Exporting file:', { fileName: file.name, stubId: stub?.id, localFilePath: stub?.localFilePath, isDirty: stub?.isDirty });
-        await downloadFile({
+        const result = await downloadFile({
           data: file,
           filename: file.name,
           localPath: stub?.localFilePath
         });
-        console.log('[RightRail] Export complete, checking dirty state:', { localFilePath: stub?.localFilePath, isDirty: stub?.isDirty });
+        console.log('[RightRail] Export complete, checking dirty state:', { localFilePath: stub?.localFilePath, isDirty: stub?.isDirty, savedPath: result.savedPath });
         // Mark file as clean after successful save to disk
-        if (stub?.localFilePath && stub?.isDirty) {
+        if (stub && result.savedPath) {
           console.log('[RightRail] Marking file as clean:', stub.id);
-          fileActions.updateStirlingFileStub(stub.id, { isDirty: false });
+          fileActions.updateStirlingFileStub(stub.id, {
+            localFilePath: stub.localFilePath ?? result.savedPath,
+            isDirty: false
+          });
         } else {
-          console.log('[RightRail] Skipping clean mark:', { hasLocalFilePath: !!stub?.localFilePath, isDirty: stub?.isDirty });
+          console.log('[RightRail] Skipping clean mark:', { savedPath: result.savedPath, isDirty: stub?.isDirty });
         }
       }
     }

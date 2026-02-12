@@ -4,7 +4,12 @@ export interface DownloadRequest {
   localPath?: string;
 }
 
-export async function downloadFile(request: DownloadRequest): Promise<void> {
+export interface DownloadResult {
+  savedPath?: string;
+  cancelled?: boolean;
+}
+
+export async function downloadFile(request: DownloadRequest): Promise<DownloadResult> {
   const url = URL.createObjectURL(request.data);
 
   const link = document.createElement("a");
@@ -15,17 +20,19 @@ export async function downloadFile(request: DownloadRequest): Promise<void> {
   document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
+
+  return { savedPath: request.localPath };
 }
 
 export async function downloadFromUrl(
   url: string,
   filename: string,
   localPath?: string
-): Promise<void> {
+): Promise<DownloadResult> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Download failed (${response.status})`);
   }
   const blob = await response.blob();
-  await downloadFile({ data: blob, filename, localPath });
+  return downloadFile({ data: blob, filename, localPath });
 }

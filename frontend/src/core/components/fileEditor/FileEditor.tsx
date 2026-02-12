@@ -283,18 +283,21 @@ const FileEditor = ({
     const file = record ? selectors.getFile(record.id) : null;
     console.log('[FileEditor] handleDownloadFile called:', { fileId, hasRecord: !!record, hasFile: !!file, localFilePath: record?.localFilePath, isDirty: record?.isDirty });
     if (record && file) {
-      await downloadFile({
+      const result = await downloadFile({
         data: file,
         filename: file.name,
         localPath: record.localFilePath
       });
-      console.log('[FileEditor] Download complete, checking dirty state:', { localFilePath: record.localFilePath, isDirty: record.isDirty });
+      console.log('[FileEditor] Download complete, checking dirty state:', { localFilePath: record.localFilePath, isDirty: record.isDirty, savedPath: result.savedPath });
       // Mark file as clean after successful save to disk
-      if (record.localFilePath && record.isDirty) {
+      if (result.savedPath) {
         console.log('[FileEditor] Marking file as clean:', fileId);
-        fileActions.updateStirlingFileStub(fileId, { isDirty: false });
+        fileActions.updateStirlingFileStub(fileId, {
+          localFilePath: record.localFilePath ?? result.savedPath,
+          isDirty: false
+        });
       } else {
-        console.log('[FileEditor] Skipping clean mark:', { hasLocalFilePath: !!record.localFilePath, isDirty: record.isDirty });
+        console.log('[FileEditor] Skipping clean mark:', { savedPath: result.savedPath, isDirty: record.isDirty });
       }
     }
   }, [activeStirlingFileStubs, selectors, fileActions]);

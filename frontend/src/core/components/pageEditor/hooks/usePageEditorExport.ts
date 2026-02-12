@@ -299,7 +299,8 @@ export const usePageEditorExport = ({
         const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
         if (sourceStub?.localFilePath) {
           actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
-            localFilePath: sourceStub.localFilePath
+            localFilePath: sourceStub.localFilePath,
+            isDirty: true
           });
         }
       }
