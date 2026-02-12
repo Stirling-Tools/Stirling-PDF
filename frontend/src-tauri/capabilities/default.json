@@ -50,7 +50,7 @@
       "allow": [{ "path": "**" }]
     },
     "dialog:default",
-    "dialog:allow-ask",
+    "dialog:allow-message",
     "dialog:allow-open",
     "dialog:allow-save",
     "opener:default",
