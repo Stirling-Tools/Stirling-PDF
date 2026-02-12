@@ -1,5 +1,4 @@
 import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as MantineColorPicker } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 
 interface ColorControlProps {
@@ -10,7 +9,6 @@ interface ColorControlProps {
 }
 
 export function ColorControl({ value, onChange, label, disabled = false }: ColorControlProps) {
-  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
   return (

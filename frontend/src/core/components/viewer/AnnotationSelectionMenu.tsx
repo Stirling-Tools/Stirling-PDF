@@ -1,4 +1,4 @@
-import { ActionIcon, Tooltip, Group, ColorSwatch, Popover, Stack, ColorPicker as MantineColorPicker } from '@mantine/core';
+import { ActionIcon, Tooltip, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { useEffect, useState, useRef, useCallback } from 'react';

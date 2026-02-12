@@ -33,6 +33,8 @@ interface UseAnnotationSelectionParams {
 }
 
 const MARKUP_TOOL_IDS = ['highlight', 'underline', 'strikeout', 'squiggly'] as const;
+const DRAWING_TOOL_IDS = ['ink', 'inkHighlighter'] as const;
+const STAY_ACTIVE_TOOL_IDS = [...MARKUP_TOOL_IDS, ...DRAWING_TOOL_IDS] as const;
 
 const isTextMarkupAnnotation = (annotation: any): boolean => {
   const toolId =
@@ -54,7 +56,7 @@ const isTextMarkupAnnotation = (annotation: any): boolean => {
 };
 
 const shouldStayOnPlacementTool = (annotation: any, derivedTool?: string | null | undefined): boolean => {
-  // Only text markup tools (highlight, underline, strikeout, squiggly) stay active
+  // Text markup tools (highlight, underline, strikeout, squiggly) and drawing tools (ink, inkHighlighter) stay active
   // All other tools switch to select mode after placement
 
   const toolId =
@@ -64,8 +66,8 @@ const shouldStayOnPlacementTool = (annotation: any, derivedTool?: string | null 
     annotation?.object?.customData?.annotationToolId ||
     annotation?.object?.customData?.toolId;
 
-  // Check if it's a markup tool by ID
-  if (toolId && MARKUP_TOOL_IDS.includes(toolId as any)) {
+  // Check if it's a tool that should stay active
+  if (toolId && STAY_ACTIVE_TOOL_IDS.includes(toolId as any)) {
     return true;
   }
 
@@ -74,7 +76,7 @@ const shouldStayOnPlacementTool = (annotation: any, derivedTool?: string | null 
     return true;
   }
 
-  // All other tools (text, note, ink, shapes, lines, stamps) switch to select
+  // All other tools (text, note, shapes, lines, stamps) switch to select
   return false;
 };
 
