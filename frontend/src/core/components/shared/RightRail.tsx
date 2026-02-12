@@ -152,10 +152,19 @@ export default function RightRail() {
     }
 
     const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+    const stubsToExport = selectedFiles.length > 0
+      ? selectors.getSelectedStirlingFileStubs()
+      : selectors.getStirlingFileStubs();
 
     if (filesToExport.length > 0) {
-      for (const file of filesToExport) {
-        await downloadFile({ data: file, filename: file.name });
+      for (let i = 0; i < filesToExport.length; i++) {
+        const file = filesToExport[i];
+        const stub = stubsToExport[i];
+        await downloadFile({
+          data: file,
+          filename: file.name,
+          localPath: stub?.localFilePath
+        });
       }
     }
   }, [
@@ -165,6 +174,7 @@ export default function RightRail() {
     pageEditorFunctions,
     viewerContext,
     signaturesApplied,
+    selectors,
   ]);
 
   const downloadTooltip = useMemo(() => {

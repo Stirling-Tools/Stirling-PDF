@@ -213,7 +213,6 @@ const FileEditorThumbnail = ({
       onClick: (e) => {
         e.stopPropagation();
         onDownloadFile(file.id);
-        alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
       },
     },
     {
