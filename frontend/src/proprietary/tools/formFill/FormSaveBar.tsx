@@ -46,7 +46,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     setApplying(true);
     try {
       // Generate the filled PDF
-      const filledBlob = await submitForm(file, true);
+      const filledBlob = await submitForm(file, false);
 
       // Call the onApply callback to reload the PDF in the viewer
       if (onApply) {
@@ -63,7 +63,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
     if (!file || saving || applying) return;
     setSaving(true);
     try {
-      const blob = await submitForm(file, true);
+      const blob = await submitForm(file, false);
       // Trigger browser download
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
