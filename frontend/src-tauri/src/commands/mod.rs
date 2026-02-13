@@ -5,7 +5,7 @@ pub mod auth;
 pub mod default_app;
 
 pub use backend::{cleanup_backend, get_backend_port, start_backend};
-pub use files::{add_opened_file, clear_opened_files, get_opened_files};
+pub use files::{add_opened_file, clear_opened_files, get_opened_files, pop_opened_files};
 pub use connection::{
     get_connection_config,
     is_first_launch,

@@ -15,7 +15,7 @@ export function useAppInitialization(): void {
   const { addFiles, updateStirlingFileStub } = useFileManagement();
 
   // Handle files opened with app (Tauri mode)
-  const { openedFilePaths, loading: openedFileLoading } = useOpenedFile();
+  const { openedFilePaths, loading: openedFileLoading, consumeOpenedFilePaths } = useOpenedFile();
 
   // Load opened files and add directly to FileContext
   useEffect(() => {
@@ -24,10 +24,14 @@ export function useAppInitialization(): void {
     }
 
     const loadOpenedFiles = async () => {
+      const filePaths = consumeOpenedFilePaths();
+      if (filePaths.length === 0) {
+        return;
+      }
       try {
         const loadedFiles = (
           await Promise.all(
-            openedFilePaths.map(async (filePath) => {
+            filePaths.map(async (filePath) => {
               try {
                 const fileData = await fileOpenService.readFileAsArrayBuffer(filePath);
                 if (!fileData) return null;
@@ -71,7 +75,7 @@ export function useAppInitialization(): void {
     };
 
     loadOpenedFiles();
-  }, [openedFilePaths, openedFileLoading, addFiles, updateStirlingFileStub]);
+  }, [openedFilePaths, openedFileLoading, addFiles, updateStirlingFileStub, consumeOpenedFilePaths]);
 }
 
 export function useSetupCompletion(): (completed: boolean) => void {
