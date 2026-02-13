@@ -1,59 +1,75 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 
 export function SelectionAPIBridge() {
   const { provides: selection } = useSelectionCapability();
   const { registerBridge } = useViewer();
-  const [hasSelection, setHasSelection] = useState(false);
+
+
+  const hasSelectionRef = useRef(false);
+  const selectedTextRef = useRef('');
 
   useEffect(() => {
-    if (selection) {
-      const newState = {
-        hasSelection
-      };
+    if (!selection) return;
 
-      registerBridge('selection', {
-        state: newState,
-        api: {
-          copyToClipboard: () => selection.copyToClipboard(),
-          getSelectedText: () => selection.getSelectedText(),
-          getFormattedSelection: () => selection.getFormattedSelection(),
+    const buildApi = () => ({
+      copyToClipboard: () => selection.copyToClipboard(),
+      getSelectedText: () => selection.getSelectedText(),
+      getFormattedSelection: () => selection.getFormattedSelection(),
+    });
+
+    registerBridge('selection', { state: { hasSelection: false }, api: buildApi() });
+
+    const unsubChange = selection.onSelectionChange((event: any) => {
+      const hasText = !!event?.selection;
+      hasSelectionRef.current = hasText;
+
+      registerBridge('selection', { state: { hasSelection: hasText }, api: buildApi() });
+
+      if (hasText) {
+        try {
+          const result = selection.getSelectedText();
+          result?.wait?.((texts: string[]) => {
+            selectedTextRef.current = texts.join('\n');
+          }, () => { /* ignore errors */ });
+        } catch {
+          // Engine access failed
         }
-      });
+      } else {
+        selectedTextRef.current = '';
+      }
+    });
 
-      const unsubscribe = selection.onSelectionChange((event: any) => {
-        const hasText = !!(event?.selection || event);
-        setHasSelection(hasText);
-        const updatedState = { hasSelection: hasText };
-        registerBridge('selection', {
-          state: updatedState,
-          api: {
-            copyToClipboard: () => selection.copyToClipboard(),
-            getSelectedText: () => selection.getSelectedText(),
-            getFormattedSelection: () => selection.getFormattedSelection(),
-          }
-        });
-      });
+    // Fallback: subscribe to the plugin's copy event for navigator.clipboard writes
+    const unsubCopy = selection.onCopyToClipboard(({ text }: { text: string }) => {
+      if (text) {
+        navigator.clipboard.writeText(text).catch(() => { /* ignore */ });
+      }
+    });
 
-      // Intercept Ctrl+C only when we have PDF text selected
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'c' && hasSelection) {
-          // Call EmbedPDF's copyToClipboard API
-          selection.copyToClipboard();
-          // Don't prevent default - let EmbedPDF handle the clipboard
-        }
-      };
+    const handleCopy = (event: ClipboardEvent) => {
+      if (!hasSelectionRef.current || !selectedTextRef.current) return;
+      event.clipboardData?.setData('text/plain', selectedTextRef.current);
+      event.preventDefault();
+    };
 
-      // Add keyboard listener
-      document.addEventListener('keydown', handleKeyDown);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'c' && hasSelectionRef.current) {
+        selection.copyToClipboard();
+      }
+    };
 
-      return () => {
-        unsubscribe?.();
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [selection, hasSelection]);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      unsubChange?.();
+      unsubCopy?.();
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selection]);
 
   return null;
 }
