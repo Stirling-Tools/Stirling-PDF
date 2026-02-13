@@ -5,7 +5,6 @@ interface UseAnnotationSelectionParams {
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
   deriveToolFromAnnotation: (annotation: any) => AnnotationToolId | undefined;
   activeToolRef: React.MutableRefObject<AnnotationToolId>;
-  manualToolSwitch: React.MutableRefObject<boolean>;
   setActiveTool: (toolId: AnnotationToolId) => void;
   setSelectedTextDraft: (text: string) => void;
   setSelectedFontSize: (size: number) => void;
@@ -84,7 +83,6 @@ export function useAnnotationSelection({
   annotationApiRef,
   deriveToolFromAnnotation,
   activeToolRef,
-  manualToolSwitch,
   setActiveTool,
   setSelectedTextDraft,
   setSelectedFontSize,
