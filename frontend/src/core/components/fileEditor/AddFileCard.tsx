@@ -8,6 +8,7 @@ import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import styles from '@app/components/fileEditor/FileEditor.module.css';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
+import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 interface AddFileCardProps {
   onFileSelect: (files: File[]) => void;
@@ -33,9 +34,15 @@ const AddFileCard = ({
     openFilesModal();
   };
 
-  const handleNativeUploadClick = (e: React.MouseEvent) => {
+  const handleNativeUploadClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    fileInputRef.current?.click();
+    const files = await openFilesFromDisk({
+      multiple,
+      onFallbackOpen: () => fileInputRef.current?.click()
+    });
+    if (files.length > 0) {
+      onFileSelect(files);
+    }
   };
 
   const handleOpenFilesModal = (e: React.MouseEvent) => {

@@ -5,6 +5,11 @@ import { StirlingFileStub } from '@app/types/fileContext';
 import { downloadFiles } from '@app/utils/downloadUtils';
 import { FileId } from '@app/types/file';
 import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
+import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
+
+// Module-level storage for file path mappings (quickKey -> localFilePath)
+// Used to pass file paths from Tauri file dialog to FileContext
+export const pendingFilePathMappings = new Map<string, string>();
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {
@@ -121,6 +126,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const selectedFiles = selectedFileIds.length === 0 ? [] :
     displayFiles.filter(file => selectedFilesSet.has(file.id));
 
+
   const filteredFiles = !searchTerm ? displayFiles :
     displayFiles.filter(file =>
       file.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -135,9 +141,23 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, []);
 
-  const handleLocalFileClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+  const handleLocalFileClick = useCallback(async () => {
+    console.log('[FileManager] Opening file dialog...');
+
+    // Try native dialog first (desktop), falls back to empty array (web)
+    const files = await openFilesFromDisk({
+      multiple: true,
+      onFallbackOpen: () => fileInputRef.current?.click()
+    });
+
+    if (files.length > 0) {
+      console.log('[FileManager] Passing files to FileContext:', files.map(f => f.name));
+      onNewFilesSelect(files);
+
+      await refreshRecentFiles();
+      onClose();
+    }
+  }, [onNewFilesSelect, refreshRecentFiles, onClose]);
 
   const handleFileSelect = useCallback((file: StirlingFileStub, currentIndex: number, shiftKey?: boolean) => {
     const fileId = file.id;
@@ -433,7 +453,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       console.error('Failed to delete selected files:', error);
     }
   }, [selectedFileIds, handleFileRemoveById]);
-
 
   const handleDownloadSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;

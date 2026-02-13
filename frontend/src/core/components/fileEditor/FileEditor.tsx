@@ -12,7 +12,7 @@ import AddFileCard from '@app/components/fileEditor/AddFileCard';
 import FilePickerModal from '@app/components/shared/FilePickerModal';
 import { FileId, StirlingFile } from '@app/types/fileContext';
 import { alert } from '@app/components/toast';
-import { downloadBlob } from '@app/utils/downloadUtils';
+import { downloadFile } from '@app/services/downloadService';
 import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 
@@ -278,13 +278,29 @@ const FileEditor = ({
     }
   }, [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
 
-  const handleDownloadFile = useCallback((fileId: FileId) => {
+  const handleDownloadFile = useCallback(async (fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
+    console.log('[FileEditor] handleDownloadFile called:', { fileId, hasRecord: !!record, hasFile: !!file, localFilePath: record?.localFilePath, isDirty: record?.isDirty });
     if (record && file) {
-       downloadBlob(file, file.name);
+      const result = await downloadFile({
+        data: file,
+        filename: file.name,
+        localPath: record.localFilePath
+      });
+      console.log('[FileEditor] Download complete, checking dirty state:', { localFilePath: record.localFilePath, isDirty: record.isDirty, savedPath: result.savedPath });
+      // Mark file as clean after successful save to disk
+      if (result.savedPath) {
+        console.log('[FileEditor] Marking file as clean:', fileId);
+        fileActions.updateStirlingFileStub(fileId, {
+          localFilePath: record.localFilePath ?? result.savedPath,
+          isDirty: false
+        });
+      } else {
+        console.log('[FileEditor] Skipping clean mark:', { savedPath: result.savedPath, isDirty: record.isDirty });
+      }
     }
-  }, [activeStirlingFileStubs, selectors, _setStatus]);
+  }, [activeStirlingFileStubs, selectors, fileActions]);
 
   const handleUnzipFile = useCallback(async (fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);

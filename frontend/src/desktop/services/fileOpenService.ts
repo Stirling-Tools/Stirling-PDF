@@ -10,9 +10,9 @@ export interface FileOpenService {
 class TauriFileOpenService implements FileOpenService {
   async getOpenedFiles(): Promise<string[]> {
     try {
-      console.log('🔍 Calling invoke(get_opened_files)...');
-      const result = await invoke<string[]>('get_opened_files');
-      console.log('🔍 invoke(get_opened_files) returned:', result);
+      console.log('🔍 Calling invoke(pop_opened_files)...');
+      const result = await invoke<string[]>('pop_opened_files');
+      console.log('🔍 invoke(pop_opened_files) returned:', result);
       return result;
     } catch (error) {
       console.error('❌ Failed to get opened files:', error);

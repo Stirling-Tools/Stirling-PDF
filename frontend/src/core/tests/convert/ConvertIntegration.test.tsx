@@ -192,7 +192,7 @@ describe('Convert Tool Integration Tests', () => {
       expect(result.current.downloadUrl).toBeTruthy();
       expect(result.current.downloadFilename).toBe('test.png');
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.errorMessage).not.toBe(null);
+      expect(result.current.errorMessage).toBe(null);
     });
 
     test('should handle API error responses correctly', async () => {
@@ -478,7 +478,7 @@ describe('Convert Tool Integration Tests', () => {
       expect(result.current.downloadUrl).toBeTruthy();
       expect(result.current.downloadFilename).toBe('test.csv');
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.errorMessage).not.toBe(null);
+      expect(result.current.errorMessage).toBe(null);
     });
 
     test('should handle complete unsupported conversion workflow', async () => {

@@ -178,7 +178,7 @@ export function createChildStub(
   // Copy parent metadata but exclude processedFile to prevent stale data
   const { processedFile: _processedFile, ...parentMetadata } = parentStub;
 
-  return {
+  const childStub = {
     // Copy parent metadata (excluding processedFile)
     ...parentMetadata,
 
@@ -197,8 +197,24 @@ export function createChildStub(
     thumbnailUrl: thumbnail,
 
     // Set fresh processedFile metadata (no inheritance from parent)
-    processedFile: processedFileMetadata
+    processedFile: processedFileMetadata,
+
+    // Mark as dirty if parent has a localFilePath (modified file not yet saved to disk)
+    isDirty: parentStub.localFilePath ? true : undefined
   };
+
+  if (DEBUG) {
+    console.log('[createChildStub] Created child:', {
+      childId: newFileId,
+      parentId: parentStub.id,
+      parentLocalFilePath: parentStub.localFilePath,
+      childLocalFilePath: childStub.localFilePath,
+      childIsDirty: childStub.isDirty,
+      versionNumber: newVersionNumber
+    });
+  }
+
+  return childStub;
 }
 
 interface AddFileOptions {
@@ -310,6 +326,25 @@ export async function addFiles(
 
     // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
     const fileStub = createNewStirlingFileStub(file, fileId);
+
+    // Check for pending file path mapping from Tauri file dialog (desktop only)
+    try {
+      const { pendingFilePathMappings } = await import('@app/contexts/FileManagerContext');
+      console.log(`[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`);
+      console.log(`[FileActions] Available mappings:`, Array.from(pendingFilePathMappings.keys()));
+      const localFilePath = pendingFilePathMappings.get(quickKey);
+      if (localFilePath) {
+        console.log(`[FileActions] ✓ Found localFilePath: ${localFilePath}`);
+        fileStub.localFilePath = localFilePath;
+        pendingFilePathMappings.delete(quickKey); // Clean up after use
+        console.log(`[FileActions] Applied localFilePath to file: ${file.name}`);
+      } else {
+        console.log(`[FileActions] ✗ No localFilePath found for this file`);
+      }
+    } catch (error) {
+      console.log('[FileActions] Could not check for localFilePath:', error);
+      // FileManagerContext may not be available in all contexts
+    }
 
     // Store insertion position if provided
     if (options.insertAfterPageId !== undefined) {
@@ -558,11 +593,20 @@ export async function undoConsumeFiles(
       indexedDB
     );
 
+    // Mark restored files as dirty if they have localFilePath
+    // (they now differ from what's saved on disk)
+    const stubsWithDirtyMarked = inputStirlingFileStubs.map(stub => {
+      if (stub.localFilePath) {
+        return { ...stub, isDirty: true };
+      }
+      return stub;
+    });
+
     // Dispatch the undo action (only if everything else succeeded)
     dispatch({
       type: 'UNDO_CONSUME_FILES',
       payload: {
-        inputStirlingFileStubs,
+        inputStirlingFileStubs: stubsWithDirtyMarked,
         outputFileIds
       }
     });
@@ -697,5 +741,6 @@ export const createFileActions = (dispatch: React.Dispatch<FileContextAction>) =
   resetContext: () => dispatch({ type: 'RESET_CONTEXT' }),
   markFileError: (fileId: FileId) => dispatch({ type: 'MARK_FILE_ERROR', payload: { fileId } }),
   clearFileError: (fileId: FileId) => dispatch({ type: 'CLEAR_FILE_ERROR', payload: { fileId } }),
-  clearAllFileErrors: () => dispatch({ type: 'CLEAR_ALL_FILE_ERRORS' })
+  clearAllFileErrors: () => dispatch({ type: 'CLEAR_ALL_FILE_ERRORS' }),
+  updateStirlingFileStub: (fileId: FileId, updates: Partial<StirlingFileStub>) => dispatch({ type: 'UPDATE_FILE_RECORD', payload: { id: fileId, updates } })
 });
