@@ -33,6 +33,7 @@ export default function AuthCallback() {
       console.log(`[AuthCallback:${executionId}] Starting authentication callback`);
       console.log(`[AuthCallback:${executionId}] URL: ${window.location.href}`);
       console.log(`[AuthCallback:${executionId}] Hash: ${window.location.hash}`);
+      console.log(`[AuthCallback:${executionId}] Document readyState: ${document.readyState}`);
 
       if (typeof window !== 'undefined' && window.sessionStorage.getItem('stirling_sso_auto_login_logged_out') === '1') {
         console.warn(`[AuthCallback:${executionId}] ⚠️  Logout block active, skipping token processing`);
@@ -79,6 +80,7 @@ export default function AuthCallback() {
         // Dispatch custom event for other components to react to JWT availability
         window.dispatchEvent(new CustomEvent('jwt-available'));
         console.log(`[AuthCallback:${executionId}] ✓ Event dispatched`);
+        console.log(`[AuthCallback:${executionId}] Elapsed after jwt-available: ${(performance.now() - startTime).toFixed(2)}ms`);
 
         console.log(`[AuthCallback:${executionId}] Step 4: Validating token with backend`);
         // Validate the token and load user info
@@ -101,7 +103,14 @@ export default function AuthCallback() {
         await handleAuthCallbackSuccess(token);
 
         console.log(`[AuthCallback:${executionId}] ✓ Callback handlers complete`);
-        console.log(`[AuthCallback:${executionId}] Step 6: Navigating to home page`);
+        console.log(`[AuthCallback:${executionId}] Step 6: Waiting for context stabilization`);
+
+        // Wait for all context providers to process jwt-available event
+        // This prevents infinite render loop when coming from cross-domain SAML redirect
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log(`[AuthCallback:${executionId}] Elapsed after stabilization wait: ${(performance.now() - startTime).toFixed(2)}ms`);
+
+        console.log(`[AuthCallback:${executionId}] Step 7: Navigating to home page`);
 
         // Clear the hash from URL and redirect to home page
         navigate('/', { replace: true });
