@@ -11,6 +11,7 @@ import { FILE_EVENTS } from '@app/services/errorUtils';
 import { getFilenameWithoutExtension } from '@app/utils/fileUtils';
 import { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
+import { createNewStirlingFileStub } from '@app/types/fileContext';
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
@@ -395,6 +396,9 @@ export const useToolOperation = <TParams>(
             inputStirlingFileStubs.push(record);
           } else {
             console.warn(`No file stub found for file: ${file.name}`);
+            const fallbackStub = createNewStirlingFileStub(file, fileId);
+            inputFileIds.push(fileId);
+            inputStirlingFileStubs.push(fallbackStub);
           }
         }
 
