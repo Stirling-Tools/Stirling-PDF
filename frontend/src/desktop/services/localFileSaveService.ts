@@ -1,7 +1,5 @@
-export interface SaveResult {
-  success: boolean;
-  error?: string;
-}
+import type { SaveResult, MultiFileSaveResult } from "@core/services/localFileSaveService";
+export type { SaveResult, MultiFileSaveResult };
 
 /**
  * Save file data to a local filesystem path (Tauri desktop only)
@@ -84,13 +82,6 @@ export async function showSaveDialog(
     console.error('[SaveDialog] Failed to show dialog:', error);
     return null;
   }
-}
-
-export interface MultiFileSaveResult {
-  success: boolean;
-  savedCount: number;
-  cancelledByUser?: boolean;
-  error?: string;
 }
 
 /**

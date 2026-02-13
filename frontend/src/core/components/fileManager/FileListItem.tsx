@@ -17,7 +17,7 @@ import ToolChain from '@app/components/shared/ToolChain';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { useFileManagement } from '@app/contexts/FileContext';
-import { isDesktopFileAccessAvailable } from '@app/services/localFileSaveService';
+import { canDeleteFromDisk } from '@app/services/fileDiskActionService';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -67,7 +67,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const hasVersionHistory = (file.versionNumber || 1) > 1; // Show history for any processed file (v2+)
   const currentVersion = file.versionNumber || 1; // Display original files as v1
   const isExpanded = expandedFileIds.has(leafFileId);
-  const canDeleteFromDisk = isDesktopFileAccessAvailable() && Boolean(file.localFilePath);
+  const canDeleteFromDiskValue = canDeleteFromDisk(file);
 
   return (
     <>
@@ -273,7 +273,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 {t('fileManager.delete', 'Delete')}
               </Menu.Item>
 
-              {canDeleteFromDisk && !isHistoryFile && (
+              {canDeleteFromDiskValue && !isHistoryFile && (
                 <Menu.Item
                   leftSection={<DeleteForeverIcon style={{ fontSize: 16 }} />}
                   onClick={(e) => {

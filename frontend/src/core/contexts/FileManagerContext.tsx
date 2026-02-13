@@ -6,7 +6,7 @@ import { downloadFiles } from '@app/utils/downloadUtils';
 import { FileId } from '@app/types/file';
 import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
 import { openFileDialog } from '@app/services/fileDialogService';
-import { deleteLocalFile, isDesktopFileAccessAvailable } from '@app/services/localFileSaveService';
+import { canDeleteSelectedFromDisk, deleteFromDisk } from '@app/services/fileDiskActionService';
 import { useFileManagement } from '@app/contexts/FileContext';
 
 // Module-level storage for file path mappings (quickKey -> localFilePath)
@@ -132,8 +132,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const selectedFiles = selectedFileIds.length === 0 ? [] :
     displayFiles.filter(file => selectedFilesSet.has(file.id));
 
-  const canUseDesktopFileAccess = isDesktopFileAccessAvailable();
-  const canDeleteSelectedFromDisk = canUseDesktopFileAccess && selectedFiles.some(file => file.localFilePath);
+  const canDeleteSelectedFromDiskValue = canDeleteSelectedFromDisk(selectedFiles);
 
   const filteredFiles = !searchTerm ? displayFiles :
     displayFiles.filter(file =>
@@ -479,47 +478,19 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [selectedFileIds, handleFileRemoveById]);
 
-  const confirmDeleteFromDisk = useCallback((files: Array<{ name: string; path: string }>): boolean => {
-    if (files.length === 0) return false;
-    const fileList = files.map(file => `• ${file.name}`).join('\n');
-    const message = files.length === 1
-      ? `Delete "${files[0].name}" from disk?\n\nThis will permanently delete the file from:\n${files[0].path}`
-      : `Delete ${files.length} files from disk?\n\n${fileList}\n\nThis will permanently delete these files from your computer.`;
-    return window.confirm(message);
-  }, []);
-
   const handleDeleteFromDisk = useCallback(async (files: StirlingFileStub[]) => {
-    if (!canUseDesktopFileAccess) return;
-
-    const targets = files
-      .filter(file => file.localFilePath)
-      .map(file => ({ file, path: file.localFilePath as string }));
-
-    if (targets.length === 0) return;
-
-    if (!confirmDeleteFromDisk(targets.map(target => ({ name: target.file.name, path: target.path })))) {
+    const result = await deleteFromDisk(files);
+    if (result.cancelled) {
       return;
     }
 
-    const deletedIds: FileId[] = [];
-    const failedDeletes: Array<{ name: string; error: string }> = [];
-
-    for (const target of targets) {
-      const result = await deleteLocalFile(target.path);
-      if (result.success) {
-        deletedIds.push(target.file.id);
-      } else if (result.error) {
-        failedDeletes.push({ name: target.file.name, error: result.error });
-      }
-    }
-
-    if (deletedIds.length > 0) {
-      const activeToClose = deletedIds.filter(id => activeFileIds.includes(id));
+    if (result.deletedIds.length > 0) {
+      const activeToClose = result.deletedIds.filter(id => activeFileIds.includes(id));
       if (activeToClose.length > 0) {
         await removeFiles(activeToClose);
       }
 
-      for (const fileId of deletedIds) {
+      for (const fileId of result.deletedIds) {
         const fileIndex = recentFiles.findIndex(file => file.id === fileId);
         const fileStub = recentFiles[fileIndex];
         if (fileStub && fileIndex >= 0) {
@@ -528,21 +499,13 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       }
     }
 
-    if (failedDeletes.length > 0) {
-      const message = failedDeletes.length === 1
-        ? `Failed to delete "${failedDeletes[0].name}" from disk: ${failedDeletes[0].error}`
-        : `Failed to delete ${failedDeletes.length} files from disk:\n${failedDeletes.map(f => `• ${f.name}: ${f.error}`).join('\n')}`;
+    if (result.failed.length > 0) {
+      const message = result.failed.length === 1
+        ? `Failed to delete "${result.failed[0].name}" from disk: ${result.failed[0].error}`
+        : `Failed to delete ${result.failed.length} files from disk:\n${result.failed.map(f => `• ${f.name}: ${f.error}`).join('\n')}`;
       alert(message);
     }
-  }, [
-    canUseDesktopFileAccess,
-    confirmDeleteFromDisk,
-    deleteLocalFile,
-    activeFileIds,
-    removeFiles,
-    recentFiles,
-    performFileDelete
-  ]);
+  }, [activeFileIds, removeFiles, recentFiles, performFileDelete]);
 
   const handleDeleteSelectedFromDisk = useCallback(async () => {
     if (selectedFiles.length === 0) return;
@@ -751,7 +714,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onSelectAll: handleSelectAll,
     onDeleteSelected: handleDeleteSelected,
     onDeleteSelectedFromDisk: handleDeleteSelectedFromDisk,
-    canDeleteSelectedFromDisk,
+    canDeleteSelectedFromDisk: canDeleteSelectedFromDiskValue,
     onDownloadSelected: handleDownloadSelected,
     onDownloadSingle: handleDownloadSingle,
     onDeleteFromDisk: handleDeleteFromDisk,
@@ -790,7 +753,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleSelectAll,
     handleDeleteSelected,
     handleDeleteSelectedFromDisk,
-    canDeleteSelectedFromDisk,
+    canDeleteSelectedFromDiskValue,
     handleDownloadSelected,
     handleToggleExpansion,
     handleAddToRecents,

@@ -1,15 +1,7 @@
+import type { DownloadRequest, DownloadResult } from "@core/services/downloadService";
 import { saveToLocalPath, showSaveDialog } from "@app/services/localFileSaveService";
 
-export interface DownloadRequest {
-  data: Blob | File;
-  filename: string;
-  localPath?: string;
-}
-
-export interface DownloadResult {
-  savedPath?: string;
-  cancelled?: boolean;
-}
+export type { DownloadRequest, DownloadResult };
 
 export async function downloadFile(request: DownloadRequest): Promise<DownloadResult> {
   if (request.localPath) {

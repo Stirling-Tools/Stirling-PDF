@@ -1,19 +1,8 @@
 // Desktop implementation - Tauri native file dialogs
+import type { FileWithPath, FileDialogOptions } from '@core/services/fileDialogService';
 import { createQuickKey } from '@app/types/fileContext';
 
-export interface FileWithPath {
-  file: File;
-  path: string;
-  quickKey: string;
-}
-
-export interface FileDialogOptions {
-  multiple?: boolean;
-  filters?: Array<{
-    name: string;
-    extensions: string[];
-  }>;
-}
+export type { FileWithPath, FileDialogOptions };
 
 /**
  * Open native file dialog and read selected files (Desktop/Tauri only)

@@ -9,9 +9,8 @@ import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { downloadFile, downloadFromUrl } from "@app/services/downloadService";
+import { saveOperationResults } from "@app/services/operationResultsSaveService";
 import { useFileActions, useFileState } from "@app/contexts/FileContext";
-import { isDesktopFileAccessAvailable } from "@app/services/localFileSaveService";
 import { FileId } from "@app/types/fileContext";
 
 export interface ReviewToolStepProps<TParams = unknown> {
@@ -59,45 +58,21 @@ function ReviewStepContent<TParams = unknown>({
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
     try {
-      if (isDesktopFileAccessAvailable() && operation.outputFileIds && operation.outputFileIds.length > 0) {
-        for (const fileId of operation.outputFileIds) {
-          const file = selectors.getFile(fileId as FileId);
+      await saveOperationResults({
+        downloadUrl: operation.downloadUrl,
+        downloadFilename: operation.downloadFilename || "download",
+        downloadLocalPath: operation.downloadLocalPath,
+        outputFileIds: operation.outputFileIds,
+        getFile: (fileId) => selectors.getFile(fileId as FileId),
+        getStub: (fileId) => selectors.getStirlingFileStub(fileId as FileId),
+        markSaved: (fileId, savedPath) => {
           const stub = selectors.getStirlingFileStub(fileId as FileId);
-          if (!file) {
-            console.warn('[ReviewToolStep] Missing file for output id:', fileId);
-            continue;
-          }
-
-          const result = await downloadFile({
-            data: file,
-            filename: file.name,
-            localPath: stub?.localFilePath
-          });
-
-          if (result.savedPath) {
-            fileActions.updateStirlingFileStub(fileId as FileId, {
-              localFilePath: stub?.localFilePath ?? result.savedPath,
-              isDirty: false
-            });
-          }
-        }
-        return;
-      }
-
-      const result = await downloadFromUrl(
-        operation.downloadUrl,
-        operation.downloadFilename || "download",
-        operation.downloadLocalPath || undefined
-      );
-
-      if (isDesktopFileAccessAvailable() && operation.outputFileIds && result.savedPath) {
-        for (const fileId of operation.outputFileIds) {
           fileActions.updateStirlingFileStub(fileId as FileId, {
-            localFilePath: operation.downloadLocalPath ?? result.savedPath,
+            localFilePath: stub?.localFilePath ?? savedPath,
             isDirty: false
           });
         }
-      }
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error("[ReviewToolStep] Failed to download file:", message);
