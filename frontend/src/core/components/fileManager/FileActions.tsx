@@ -2,7 +2,6 @@ import React from "react";
 import { Group, Text, ActionIcon, Tooltip } from "@mantine/core";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -19,8 +18,6 @@ const FileActions: React.FC = () => {
     filteredFiles,
     onSelectAll,
     onDeleteSelected,
-    onDeleteSelectedFromDisk,
-    canDeleteSelectedFromDisk,
     onDownloadSelected
   } = useFileManagerContext();
 
@@ -40,11 +37,6 @@ const FileActions: React.FC = () => {
     }
   };
 
-  const handleDeleteSelectedFromDisk = () => {
-    if (selectedFileIds.length > 0) {
-      onDeleteSelectedFromDisk();
-    }
-  };
 
   // Only show actions if there are files
   if (recentFiles.length === 0) {
@@ -113,21 +105,6 @@ const FileActions: React.FC = () => {
             <DeleteIcon style={{ fontSize: "1rem" }} />
           </ActionIcon>
         </Tooltip>
-
-        {canDeleteSelectedFromDisk && (
-          <Tooltip label={t("fileManager.deleteSelectedFromDisk", "Delete Selected From Disk")}>
-            <ActionIcon
-              variant="light"
-              size="sm"
-              color="dimmed"
-              onClick={handleDeleteSelectedFromDisk}
-              disabled={!hasSelection}
-              radius="sm"
-            >
-              <DeleteForeverIcon style={{ fontSize: "1rem" }} />
-            </ActionIcon>
-          </Tooltip>
-        )}
 
         <Tooltip label={terminology.downloadSelected}>
           <ActionIcon

@@ -5,8 +5,6 @@ import { StirlingFileStub } from '@app/types/fileContext';
 import { downloadFiles } from '@app/utils/downloadUtils';
 import { FileId } from '@app/types/file';
 import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
-import { canDeleteSelectedFromDisk, deleteFromDisk } from '@app/services/fileDiskActionService';
-import { useFileManagement } from '@app/contexts/FileContext';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 // Module-level storage for file path mappings (quickKey -> localFilePath)
@@ -41,11 +39,8 @@ interface FileManagerContextValue {
   onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectAll: () => void;
   onDeleteSelected: () => void;
-  onDeleteSelectedFromDisk: () => void;
-  canDeleteSelectedFromDisk: boolean;
   onDownloadSelected: () => void;
   onDownloadSingle: (file: StirlingFileStub) => void;
-  onDeleteFromDisk: (files: StirlingFileStub[]) => Promise<void>;
   onToggleExpansion: (fileId: FileId) => void;
   onAddToRecents: (file: StirlingFileStub) => void;
   onUnzipFile: (file: StirlingFileStub) => Promise<void>;
@@ -91,7 +86,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   isLoading,
   activeFileIds,
 }) => {
-  const { removeFiles } = useFileManagement();
   const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -132,7 +126,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const selectedFiles = selectedFileIds.length === 0 ? [] :
     displayFiles.filter(file => selectedFilesSet.has(file.id));
 
-  const canDeleteSelectedFromDiskValue = canDeleteSelectedFromDisk(selectedFiles);
 
   const filteredFiles = !searchTerm ? displayFiles :
     displayFiles.filter(file =>
@@ -461,41 +454,6 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [selectedFileIds, handleFileRemoveById]);
 
-  const handleDeleteFromDisk = useCallback(async (files: StirlingFileStub[]) => {
-    const result = await deleteFromDisk(files);
-    if (result.cancelled) {
-      return;
-    }
-
-    if (result.deletedIds.length > 0) {
-      const activeToClose = result.deletedIds.filter(id => activeFileIds.includes(id));
-      if (activeToClose.length > 0) {
-        await removeFiles(activeToClose);
-      }
-
-      for (const fileId of result.deletedIds) {
-        const fileIndex = recentFiles.findIndex(file => file.id === fileId);
-        const fileStub = recentFiles[fileIndex];
-        if (fileStub && fileIndex >= 0) {
-          await performFileDelete(fileStub, fileIndex);
-        }
-      }
-    }
-
-    if (result.failed.length > 0) {
-      const message = result.failed.length === 1
-        ? `Failed to delete "${result.failed[0].name}" from disk: ${result.failed[0].error}`
-        : `Failed to delete ${result.failed.length} files from disk:\n${result.failed.map(f => `• ${f.name}: ${f.error}`).join('\n')}`;
-      alert(message);
-    }
-  }, [activeFileIds, removeFiles, recentFiles, performFileDelete]);
-
-  const handleDeleteSelectedFromDisk = useCallback(async () => {
-    if (selectedFiles.length === 0) return;
-    await handleDeleteFromDisk(selectedFiles);
-  }, [selectedFiles, handleDeleteFromDisk]);
-
-
   const handleDownloadSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;
 
@@ -696,11 +654,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onFileInputChange: handleFileInputChange,
     onSelectAll: handleSelectAll,
     onDeleteSelected: handleDeleteSelected,
-    onDeleteSelectedFromDisk: handleDeleteSelectedFromDisk,
-    canDeleteSelectedFromDisk: canDeleteSelectedFromDiskValue,
     onDownloadSelected: handleDownloadSelected,
     onDownloadSingle: handleDownloadSingle,
-    onDeleteFromDisk: handleDeleteFromDisk,
     onToggleExpansion: handleToggleExpansion,
     onAddToRecents: handleAddToRecents,
     onUnzipFile: handleUnzipFile,
@@ -735,13 +690,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleFileInputChange,
     handleSelectAll,
     handleDeleteSelected,
-    handleDeleteSelectedFromDisk,
-    canDeleteSelectedFromDiskValue,
     handleDownloadSelected,
     handleToggleExpansion,
     handleAddToRecents,
     handleUnzipFile,
-    handleDeleteFromDisk,
     onNewFilesSelect,
     handleGoogleDriveSelect,
     recentFiles,

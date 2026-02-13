@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Group, Box, Text, ActionIcon, Checkbox, Divider, Menu, Badge } from '@mantine/core';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import DownloadIcon from '@mui/icons-material/Download';
 import HistoryIcon from '@mui/icons-material/History';
 import RestoreIcon from '@mui/icons-material/Restore';
@@ -17,7 +16,6 @@ import ToolChain from '@app/components/shared/ToolChain';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { useFileManagement } from '@app/contexts/FileContext';
-import { canDeleteFromDisk } from '@app/services/fileDiskActionService';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -48,7 +46,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const { expandedFileIds, onToggleExpansion, onUnzipFile, onDeleteFromDisk } = useFileManagerContext();
+  const { expandedFileIds, onToggleExpansion, onUnzipFile } = useFileManagerContext();
   const { removeFiles } = useFileManagement();
 
   // Check if this is a ZIP file
@@ -67,7 +65,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const hasVersionHistory = (file.versionNumber || 1) > 1; // Show history for any processed file (v2+)
   const currentVersion = file.versionNumber || 1; // Display original files as v1
   const isExpanded = expandedFileIds.has(leafFileId);
-  const canDeleteFromDiskValue = canDeleteFromDisk(file);
 
   return (
     <>
@@ -273,17 +270,6 @@ const FileListItem: React.FC<FileListItemProps> = ({
                 {t('fileManager.delete', 'Delete')}
               </Menu.Item>
 
-              {canDeleteFromDiskValue && !isHistoryFile && (
-                <Menu.Item
-                  leftSection={<DeleteForeverIcon style={{ fontSize: 16 }} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteFromDisk([file]);
-                  }}
-                >
-                  {t('fileManager.deleteFromDisk', 'Delete from Disk')}
-                </Menu.Item>
-              )}
             </Menu.Dropdown>
           </Menu>
         </Group>
