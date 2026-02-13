@@ -173,11 +173,14 @@ export default function RightRail() {
     if (currentView === 'pageEditor') {
       return t('rightRail.exportAll', 'Export PDF');
     }
+    if (currentView === 'viewer') {
+      return terminology.download;
+    }
     if (selectedCount > 0) {
       return terminology.downloadSelected;
     }
     return terminology.downloadAll;
-  }, [currentView, selectedCount, t]);
+  }, [currentView, selectedCount, t, terminology]);
 
   return (
     <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail">
