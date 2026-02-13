@@ -1,6 +1,7 @@
 // Desktop implementation - Tauri native file dialogs
 import type { FileWithPath, FileDialogOptions } from '@core/services/fileDialogService';
 import { createQuickKey } from '@app/types/fileContext';
+import { getDocumentFileDialogFilter } from '@app/utils/fileDialogUtils';
 
 export type { FileWithPath, FileDialogOptions };
 
@@ -17,10 +18,7 @@ export async function openFileDialog(
     console.log('[FileDialog] Opening file dialog...');
     const selectedPaths = await open({
       multiple: options?.multiple ?? true,
-      filters: options?.filters ?? [{
-        name: 'Documents',
-        extensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'tiff', 'bmp', 'html', 'zip']
-      }]
+      filters: options?.filters ?? getDocumentFileDialogFilter()
     });
 
     if (!selectedPaths) {

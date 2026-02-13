@@ -14,8 +14,7 @@ import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
-import { openFileDialog } from '@app/services/fileDialogService';
-import { pendingFilePathMappings } from '@app/contexts/FileManagerContext';
+import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -44,23 +43,13 @@ const LandingPage = () => {
   };
 
   const handleNativeUploadClick = async () => {
-    const filesWithPaths = await openFileDialog({
+    const files = await openFilesFromDisk({
       multiple: true,
-      filters: [{
-        name: 'Documents',
-        extensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'tiff', 'bmp', 'html', 'zip']
-      }]
+      onFallbackOpen: () => fileInputRef.current?.click()
     });
-
-    if (filesWithPaths.length > 0) {
-      for (const { quickKey, path } of filesWithPaths) {
-        pendingFilePathMappings.set(quickKey, path);
-      }
-      await addFiles(filesWithPaths.map((entry) => entry.file));
-      return;
+    if (files.length > 0) {
+      await addFiles(files);
     }
-
-    fileInputRef.current?.click();
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {

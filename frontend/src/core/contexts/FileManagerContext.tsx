@@ -5,9 +5,9 @@ import { StirlingFileStub } from '@app/types/fileContext';
 import { downloadFiles } from '@app/utils/downloadUtils';
 import { FileId } from '@app/types/file';
 import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
-import { openFileDialog } from '@app/services/fileDialogService';
 import { canDeleteSelectedFromDisk, deleteFromDisk } from '@app/services/fileDiskActionService';
 import { useFileManagement } from '@app/contexts/FileContext';
+import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 // Module-level storage for file path mappings (quickKey -> localFilePath)
 // Used to pass file paths from Tauri file dialog to FileContext
@@ -152,34 +152,17 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     console.log('[FileManager] Opening file dialog...');
 
     // Try native dialog first (desktop), falls back to empty array (web)
-    const filesWithPaths = await openFileDialog({
+    const files = await openFilesFromDisk({
       multiple: true,
-      filters: [{
-        name: 'Documents',
-        extensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'tiff', 'bmp', 'html', 'zip']
-      }]
+      onFallbackOpen: () => fileInputRef.current?.click()
     });
 
-    if (filesWithPaths.length > 0) {
-      // Desktop mode: files selected through native dialog
-      console.log('[FileManager] Storing file path mappings:');
-      for (const { quickKey, path } of filesWithPaths) {
-        console.log(`  - ${quickKey} -> ${path}`);
-        pendingFilePathMappings.set(quickKey, path);
-      }
-      console.log('[FileManager] Total pending mappings:', pendingFilePathMappings.size);
-
-      // Pass files to FileContext
-      const files = filesWithPaths.map(f => f.file);
+    if (files.length > 0) {
       console.log('[FileManager] Passing files to FileContext:', files.map(f => f.name));
       onNewFilesSelect(files);
 
       await refreshRecentFiles();
       onClose();
-    } else {
-      // Web mode: use browser file input (no native dialog)
-      console.log('[FileManager] Using browser file input');
-      fileInputRef.current?.click();
     }
   }, [onNewFilesSelect, refreshRecentFiles, onClose]);
 
