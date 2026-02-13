@@ -58,6 +58,8 @@ export interface AppConfig {
   error?: string;
   isNewServer?: boolean;
   isNewUser?: boolean;
+  defaultHideUnavailableTools?: boolean;
+  defaultHideUnavailableConversions?: boolean;
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';

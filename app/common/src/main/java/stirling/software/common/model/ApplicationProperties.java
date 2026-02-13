@@ -616,6 +616,8 @@ public class ApplicationProperties {
         private String appNameNavbar;
         private List<String> languages;
         private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
+        private boolean defaultHideUnavailableTools = false;
+        private boolean defaultHideUnavailableConversions = false;
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;

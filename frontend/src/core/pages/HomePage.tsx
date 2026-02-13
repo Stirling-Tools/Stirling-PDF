@@ -42,6 +42,7 @@ export default function HomePage() {
     handleBackToTools,
     readerMode,
     setLeftPanelView,
+    toolAvailability,
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
@@ -249,19 +250,21 @@ export default function HomePage() {
               <AppsIcon sx={{ fontSize: '1.5rem' }} />
               <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'Tools')}</span>
             </button>
-            <button
-              className="mobile-bottom-button"
-              aria-label={t('quickAccess.automate', 'Automate')}
-              onClick={() => {
-                handleToolSelect('automate');
-                if (isMobile) {
-                  setActiveMobileView('tools');
-                }
-              }}
-            >
-              <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
-              <span className="mobile-bottom-button-label">{t('quickAccess.automate', 'Automate')}</span>
-            </button>
+            {toolAvailability['automate']?.available !== false && (
+              <button
+                className="mobile-bottom-button"
+                aria-label={t('quickAccess.automate', 'Automate')}
+                onClick={() => {
+                  handleToolSelect('automate');
+                  if (isMobile) {
+                    setActiveMobileView('tools');
+                  }
+                }}
+              >
+                <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
+                <span className="mobile-bottom-button-label">{t('quickAccess.automate', 'Automate')}</span>
+              </button>
+            )}
             <button
               className="mobile-bottom-button"
               aria-label={t('home.mobile.openFiles', 'Open files')}
