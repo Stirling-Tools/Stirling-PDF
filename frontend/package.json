@@ -46,6 +46,7 @@
     "@tailwindcss/postcss": "^4.1.13",
     "@tanstack/react-virtual": "^3.13.12",
     "@tauri-apps/api": "^2.9.1",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-fs": "^2.4.5",
     "@tauri-apps/plugin-http": "^2.5.6",
     "@tauri-apps/plugin-shell": "^2.3.4",
