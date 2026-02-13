@@ -20,6 +20,7 @@ import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark/react';
+import { AttachmentPluginPackage } from '@embedpdf/plugin-attachment/react';
 import { PrintPluginPackage } from '@embedpdf/plugin-print/react';
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
@@ -42,10 +43,12 @@ import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, AnnotationAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
+import { AttachmentAPIBridge } from '@app/components/viewer/AttachmentAPIBridge';
 import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
+import { TextSelectionHandler } from '@app/components/viewer/TextSelectionHandler';
 import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
 import { AnnotationSelectionMenu } from '@app/components/viewer/AnnotationSelectionMenu';
 import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
@@ -54,14 +57,17 @@ import { DocumentPermissionsAPIBridge } from '@app/components/viewer/DocumentPer
 import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
 import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentContext';
 import { absoluteWithBasePath } from '@app/constants/app';
+import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
 
 const DOCUMENT_NAME = 'stirling-pdf-viewer';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
+  fileName?: string;
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
+  enableFormFill?: boolean;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
@@ -69,9 +75,11 @@ interface LocalEmbedPDFProps {
   annotationApiRef?: React.RefObject<AnnotationAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
+  /** File identity passed through to FormFieldOverlay for stale-field guards */
+  fileId?: string | null;
 }
 
-export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -95,6 +103,17 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const viewportGap = rootFontSize * 3.5;
 
+    // Determine export filename - use provided fileName, or extract from file/url
+    let exportFileName = 'document.pdf';
+    if (fileName) {
+      exportFileName = fileName;
+    } else if (file && 'name' in file) {
+      exportFileName = file.name;
+    } else if (url) {
+      const urlPath = url.split('/').pop() || 'document.pdf';
+      exportFileName = urlPath.split('?')[0]; // Remove query params
+    }
+
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
         initialDocuments: [{
@@ -107,7 +126,7 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: true,
+        withForms: !enableFormFill, // Disable native form rendering when our interactive overlay is active
         withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
@@ -132,7 +151,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
 
       // Register redaction plugin (depends on InteractionManager, Selection, History)
       // Always register for redaction functionality
-      createPluginRegistration(RedactionPluginPackage),
+      createPluginRegistration(RedactionPluginPackage, {
+        useAnnotationMode: true,
+        drawBlackBoxes: false,
+      }),
 
       // Register pan plugin (depends on Viewport, InteractionManager)
       createPluginRegistration(PanPluginPackage, {
@@ -169,18 +191,21 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
       // Register bookmark plugin for PDF outline support
       createPluginRegistration(BookmarkPluginPackage),
 
+      // Register attachment plugin for PDF attachments support
+      createPluginRegistration(AttachmentPluginPackage),
+
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage),
 
       // Register export plugin for downloading PDFs
       createPluginRegistration(ExportPluginPackage, {
-        defaultFileName: 'document.pdf',
+        defaultFileName: exportFileName,
       }),
 
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, showBakedAnnotations]);
+  }, [pdfUrl, enableAnnotations, enableFormFill, showBakedAnnotations, fileName, file, url]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
@@ -646,9 +671,10 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
         {(enableAnnotations || enableRedaction || isManualRedactionMode) && <SignatureAPIBridge ref={signatureApiRef} />}
         {(enableRedaction || isManualRedactionMode) && <RedactionPendingTracker ref={redactionTrackerRef} />}
         {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
-        
+
         <ExportAPIBridge />
         <BookmarkAPIBridge />
+        <AttachmentAPIBridge />
         <PrintAPIBridge />
         <DocumentPermissionsAPIBridge />
         <DocumentReadyWrapper
@@ -705,10 +731,24 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
 
                           <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
-                          <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
+                          <div className="pdf-selection-layer" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                            <SelectionLayer documentId={documentId} pageIndex={pageIndex} background="var(--pdf-selection-bg)" />
+                          </div>
+                          <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
 
-                          {/* AnnotationLayer for annotation editing (only when enabled) */}
-                          {enableAnnotations && (
+                          {/* FormFieldOverlay for interactive form filling */}
+                          {enableFormFill && (
+                            <FormFieldOverlay
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              pageWidth={width}
+                              pageHeight={height}
+                              fileId={fileId}
+                            />
+                          )}
+
+                          {/* AnnotationLayer for annotation editing and annotation-based redactions */}
+                          {(enableAnnotations || enableRedaction) && (
                             <AnnotationLayer
                               documentId={documentId}
                               pageIndex={pageIndex}
@@ -725,12 +765,13 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                             />
                           )}
 
-                          {/* LinkLayer on top to handle link navigation - must be last for click priority */}
+                          {/* LinkLayer – uses pdf-lib for link extraction, rendered last for click priority */}
                           <LinkLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
-                            pageWidth={width}
-                            pageHeight={height}
+                            _pageWidth={width}
+                            _pageHeight={height}
+                            pdfUrl={pdfUrl}
                           />
                         </div>
                       </PagePointerProvider>
