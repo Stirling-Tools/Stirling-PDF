@@ -414,6 +414,22 @@ const FileEditorThumbnail = ({
               />
             </Tooltip>
           )}
+          {/* Saved indicator - shows when file is saved to disk and not dirty */}
+          {file.localFilePath && !file.isDirty && (
+            <Tooltip label={t('fileSavedToDisk', 'File saved to disk')}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--mantine-color-green-6)',
+                  flexShrink: 0
+                }}
+                aria-label={t('fileSavedToDisk', 'File saved to disk')}
+              />
+            </Tooltip>
+          )}
         </Text>
         <Text
           size="sm"
