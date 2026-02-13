@@ -235,12 +235,12 @@ function AnnotationSelectionMenuInner({
       // Shape stroke - preserve fill color
       patch.strokeColor = color;
       patch.color = obj?.color || '#0000ff'; // Preserve fill
-      patch.borderWidth = getWidth();
+      patch.strokeWidth = getWidth();
     } else if (target === 'fill') {
       // Shape fill - preserve stroke color
       patch.color = color;
       patch.strokeColor = obj?.strokeColor || '#000000'; // Preserve stroke
-      patch.borderWidth = getWidth();
+      patch.strokeWidth = getWidth();
     } else if (target === 'background') {
       // Background color for text/note - set multiple properties for compatibility
       patch.backgroundColor = color;
@@ -279,9 +279,6 @@ function AnnotationSelectionMenuInner({
       if (type === 15) {
         patch.strokeColor = color;
         patch.strokeWidth = obj?.strokeWidth ?? obj?.thickness ?? 2;
-        patch.thickness = obj?.thickness ?? obj?.strokeWidth ?? 2;
-        patch.borderWidth = obj?.borderWidth ?? 2;
-        patch.lineWidth = obj?.lineWidth ?? 2;
         patch.opacity = obj?.opacity ?? 1;
       }
     }
@@ -302,9 +299,6 @@ function AnnotationSelectionMenuInner({
 
     provides.updateAnnotation(pageIndex, annotationId, {
       strokeWidth: width,
-      borderWidth: width,
-      lineWidth: width,
-      thickness: width,
     });
   }, [provides, annotationId, pageIndex]);
 
