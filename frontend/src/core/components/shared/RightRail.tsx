@@ -195,7 +195,9 @@ export default function RightRail() {
     if (currentView === 'pageEditor') {
       return t('rightRail.exportAll', 'Export PDF');
     }
-
+    if (currentView === 'viewer') {
+      return terminology.download;
+    }
     if (selectedCount > 0) {
       return terminology.downloadSelected;
     }

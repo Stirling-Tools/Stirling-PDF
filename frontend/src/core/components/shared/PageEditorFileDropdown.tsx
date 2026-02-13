@@ -127,7 +127,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
           />
           <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
             <PrivateContent>
-              <FitText text={itemName} fontSize={14} minimumFontScale={0.7} />
+              <FitText text={itemName} minimumFontScale={0.7} />
             </PrivateContent>
           </div>
           {file.versionNumber && file.versionNumber > 1 && (
