@@ -23,6 +23,7 @@ import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import AppConfigLoader from '@app/components/shared/AppConfigLoader';
 import { RedactionProvider } from "@app/contexts/RedactionContext";
+import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -117,6 +118,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                   <PageEditorProvider>
                                     <SignatureProvider>
                                       <RedactionProvider>
+                                      <FormFillProvider>
                                       <AnnotationProvider>
                                         <RightRailProvider>
                                           <TourOrchestrationProvider>
@@ -126,6 +128,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                           </TourOrchestrationProvider>
                                         </RightRailProvider>
                                       </AnnotationProvider>
+                                      </FormFillProvider>
                                       </RedactionProvider>
                                     </SignatureProvider>
                                   </PageEditorProvider>

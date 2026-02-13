@@ -3309,6 +3309,10 @@ desc = "Build multi-step workflows by chaining together PDF actions. Ideal for r
 tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automate"
 
+[home.formFill]
+desc = "Fill PDF form fields interactively with a visual editor"
+title = "Fill Form"
+
 [home.autoRename]
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
@@ -5291,6 +5295,7 @@ annotations = "Annotations"
 applyRedactionsFirst = "Apply redactions first"
 closePdf = "Close PDF"
 closeSelected = "Close Selected Files"
+formFill = "Fill Form"
 deleteSelected = "Delete Selected Pages"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
@@ -5313,6 +5318,7 @@ selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleBookmarks = "Toggle Bookmarks"
+toggleAttachments = "Toggle Attachments"
 toggleSidebar = "Toggle Sidebar"
 toggleTheme = "Toggle Theme"
 
@@ -6445,6 +6451,24 @@ singlePageView = "Single Page View"
 unknownFile = "Unknown file"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
+
+[viewer.attachments]
+title = "Attachments"
+searchPlaceholder = "Search attachments"
+noSupport = "Attachment support is unavailable for this viewer."
+noDocument = "Open a PDF to view its attachments."
+loading = "Loading attachments..."
+empty = "No attachments in this document"
+noMatch = "No attachments match your search"
+
+[viewer.formBar]
+title = "Form Fields"
+unsavedBadge = "Unsaved"
+unsavedDesc = "You have unsaved changes"
+hasFieldsDesc = "This PDF contains fillable fields"
+dismiss = "Dismiss"
+apply = "Apply Changes"
+download = "Download PDF"
 
 [viewPdf]
 header = "View PDF"
