@@ -10,10 +10,13 @@ import {
   PDFRef,
   PDFPage,
   PDFContext,
-} from 'pdf-lib';
+} from '@cantoo/pdf-lib';
 
 
 export type LinkType = 'internal' | 'external' | 'unknown';
+
+export type LinkBorderStyle = 'solid' | 'dashed' | 'beveled' | 'inset' | 'underline';
+export type LinkHighlightMode = 'none' | 'invert' | 'outline' | 'push';
 
 export interface PdfLibLink {
   id: string;
@@ -26,6 +29,14 @@ export interface PdfLibLink {
   targetPage?: number;
   /** URI for external links. */
   uri?: string;
+  /** Tooltip / alt text from the /Contents entry. */
+  title?: string;
+  /** RGB color of the link annotation border (each component 0–1). */
+  color?: [number, number, number];
+  /** Border width and style. */
+  borderStyle?: { width: number; style: LinkBorderStyle };
+  /** Visual feedback when the link is clicked. */
+  highlightMode?: LinkHighlightMode;
 }
 
 export interface PdfLibLinksResult {
@@ -43,6 +54,9 @@ interface CachedDoc {
   refCount: number;
   /** Per-page extracted links (lazy, filled on first request). */
   pageLinks: Map<number, { links: PdfLibLink[]; width: number; height: number }>;
+  /** Set to true when the PDF catalog/pages tree is invalid, so we
+   *  skip link extraction on all subsequent calls without retrying. */
+  invalidCatalog?: boolean;
 }
 
 const docCache = new Map<string, Promise<CachedDoc>>();
@@ -54,11 +68,16 @@ async function acquireDocument(url: string): Promise<CachedDoc> {
       const buffer = await response.arrayBuffer();
       const doc = await PDFDocument.load(new Uint8Array(buffer), {
         ignoreEncryption: true,
+        updateMetadata: false,
         throwOnInvalidObject: false,
       });
+
       return { doc, refCount: 0, pageLinks: new Map() };
     })();
     docCache.set(url, promise);
+    promise.catch(() => {
+      docCache.delete(url);
+    });
   }
   const cached = await docCache.get(url)!;
   cached.refCount++;
@@ -150,7 +169,7 @@ function resolveNamedDest(
       }
     }
   } catch {
-    // Swallow – named dest resolution is best-effort
+    // Swallow named dest resolution is best-effort
   }
   return undefined;
 }
@@ -203,6 +222,113 @@ function searchNameTree(
     }
   }
 
+  return undefined;
+}
+
+
+function parseBorderStyleName(value: unknown): LinkBorderStyle {
+  if (!value) return 'solid';
+  const s = value instanceof PDFName ? value.decodeText() : String(value);
+  switch (s) {
+    case 'D': return 'dashed';
+    case 'B': return 'beveled';
+    case 'I': return 'inset';
+    case 'U': return 'underline';
+    default:  return 'solid';
+  }
+}
+
+function parseHighlightMode(value: unknown): LinkHighlightMode {
+  if (!value) return 'invert';
+  const s = value instanceof PDFName ? value.decodeText() : String(value);
+  switch (s) {
+    case 'N': return 'none';
+    case 'I': return 'invert';
+    case 'O': return 'outline';
+    case 'P': return 'push';
+    default:  return 'invert';
+  }
+}
+
+/**
+ * Extract /Border or /BS (Border Style) entry from a link annotation dict.
+ */
+function extractBorderStyle(
+  ctx: PDFContext,
+  annot: PDFDict,
+): PdfLibLink['borderStyle'] | undefined {
+  // Prefer /BS (PDF 1.2+ border-style dict) over legacy /Border array.
+  const bsRaw = annot.get(PDFName.of('BS'));
+  const bs = bsRaw instanceof PDFRef ? ctx.lookup(bsRaw) : bsRaw;
+  if (bs instanceof PDFDict) {
+    const w = bs.get(PDFName.of('W'));
+    const s = bs.get(PDFName.of('S'));
+    return {
+      width: num(ctx, w) || 1,
+      style: parseBorderStyleName(s),
+    };
+  }
+
+  // Fall back to /Border array: [horizontal-radius, vertical-radius, width [, dash-pattern]]
+  const borderRaw = annot.get(PDFName.of('Border'));
+  const border = borderRaw instanceof PDFRef ? ctx.lookup(borderRaw) : borderRaw;
+  if (border instanceof PDFArray && border.size() >= 3) {
+    const width = num(ctx, border.get(2));
+    const style: LinkBorderStyle = border.size() >= 4 ? 'dashed' : 'solid';
+    return { width, style };
+  }
+
+  return undefined;
+}
+
+/**
+ * Extract /C (Color) entry an array of 1, 3, or 4 numbers.
+ * We normalise to RGB (3-component).
+ */
+function extractColor(
+  ctx: PDFContext,
+  annot: PDFDict,
+): [number, number, number] | undefined {
+  const cRaw = annot.get(PDFName.of('C'));
+  const c = cRaw instanceof PDFRef ? ctx.lookup(cRaw) : cRaw;
+  if (!(c instanceof PDFArray)) return undefined;
+
+  const len = c.size();
+  if (len === 3) {
+    return [num(ctx, c.get(0)), num(ctx, c.get(1)), num(ctx, c.get(2))];
+  }
+  if (len === 1) {
+    // Grayscale — expand to RGB
+    const g = num(ctx, c.get(0));
+    return [g, g, g];
+  }
+  if (len === 4) {
+    // CMYK → approximate RGB
+    const cVal = num(ctx, c.get(0));
+    const m = num(ctx, c.get(1));
+    const y = num(ctx, c.get(2));
+    const k = num(ctx, c.get(3));
+    return [
+      (1 - cVal) * (1 - k),
+      (1 - m) * (1 - k),
+      (1 - y) * (1 - k),
+    ];
+  }
+  return undefined;
+}
+
+/**
+ * Extract /Contents entry (tooltip / alt text).
+ */
+function extractTitle(
+  ctx: PDFContext,
+  annot: PDFDict,
+): string | undefined {
+  const raw = annot.get(PDFName.of('Contents'));
+  const resolved = raw instanceof PDFRef ? ctx.lookup(raw) : raw;
+  if (resolved instanceof PDFString || resolved instanceof PDFHexString) {
+    return resolved.decodeText();
+  }
   return undefined;
 }
 
@@ -296,6 +422,11 @@ function extractLinksFromPage(
         }
       }
 
+      const title = extractTitle(ctx, annot);
+      const color = extractColor(ctx, annot);
+      const borderStyle = extractBorderStyle(ctx, annot);
+      const highlightMode = parseHighlightMode(annot.get(PDFName.of('H')));
+
       links.push({
         id: `pdflib-link-${pageIndex}-${i}`,
         annotIndex: i,
@@ -303,6 +434,10 @@ function extractLinksFromPage(
         type: linkType,
         targetPage,
         uri,
+        title,
+        color,
+        borderStyle,
+        highlightMode,
       });
     } catch (e) {
       console.warn('[usePdfLibLinks] Failed to parse annotation:', e);
@@ -350,20 +485,41 @@ export function usePdfLibLinks(
           return;
         }
 
+        if (cached.invalidCatalog) {
+          setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
+          releaseDocument(url);
+          return;
+        }
+
         let pageData = cached.pageLinks.get(pageIndex);
         if (!pageData) {
-          const pageCount = cached.doc.getPageCount();
+          let pageCount: number;
+          try {
+            pageCount = cached.doc.getPageCount();
+          } catch {
+            cached.invalidCatalog = true;
+            setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
+            releaseDocument(url);
+            return;
+          }
+
           if (pageIndex < 0 || pageIndex >= pageCount) {
             setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
             releaseDocument(url);
             return;
           }
 
-          const page = cached.doc.getPage(pageIndex);
-          const { width, height } = page.getSize();
-          const links = extractLinksFromPage(cached.doc, page, pageIndex);
-          pageData = { links, width, height };
-          cached.pageLinks.set(pageIndex, pageData);
+          try {
+            const page = cached.doc.getPage(pageIndex);
+            const { width, height } = page.getSize();
+            const links = extractLinksFromPage(cached.doc, page, pageIndex);
+            pageData = { links, width, height };
+            cached.pageLinks.set(pageIndex, pageData);
+          } catch (pageError) {
+            console.warn(`[usePdfLibLinks] Failed to read page ${pageIndex}:`, pageError);
+            pageData = { links: [], width: 0, height: 0 };
+            cached.pageLinks.set(pageIndex, pageData);
+          }
         }
 
         if (!cancelled && mountedRef.current) {
@@ -377,7 +533,7 @@ export function usePdfLibLinks(
 
         releaseDocument(url);
       } catch (error) {
-        console.error('[usePdfLibLinks] Failed to extract links:', error);
+        console.warn('[usePdfLibLinks] Failed to extract links:', error);
         if (!cancelled && mountedRef.current) {
           setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
         }

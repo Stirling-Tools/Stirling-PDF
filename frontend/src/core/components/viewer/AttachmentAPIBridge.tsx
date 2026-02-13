@@ -3,7 +3,11 @@ import { useAttachmentCapability } from '@embedpdf/plugin-attachment/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { AttachmentState, AttachmentAPIWrapper } from '@app/contexts/viewer/viewerBridges';
 import { PdfAttachmentObject } from '@embedpdf/models';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
+/**
+ * Connects the PDF attachment plugin to the shared ViewerContext.
+ */
 export function AttachmentAPIBridge() {
   const { provides: attachmentCapability } = useAttachmentCapability();
   const { registerBridge } = useViewer();
@@ -12,10 +16,19 @@ export function AttachmentAPIBridge() {
     isLoading: false,
     error: null,
   });
+  const documentReady = useDocumentReady();
 
   const fetchAttachments = useCallback(
     async () => {
-      if (!attachmentCapability) return [];
+      if (!attachmentCapability || !documentReady) {
+        // Set error state instead of throwing for better user experience
+        setState(prev => ({
+          ...prev,
+          error: 'Document not ready or attachment capability not available',
+          isLoading: false
+        }));
+        return [];
+      }
 
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       try {
@@ -39,14 +52,17 @@ export function AttachmentAPIBridge() {
           isLoading: false,
           error: message,
         });
-        throw error;
+        // Consistent contract: always return empty array on failure.
+        // Callers can check the error state via getAttachmentState().
+        return [];
       }
     },
-    [attachmentCapability]
+    [attachmentCapability, documentReady]
   );
 
   const api = useMemo<AttachmentAPIWrapper | null>(() => {
-    if (!attachmentCapability) return null;
+    // Only provide API when both capability AND document are ready
+    if (!attachmentCapability || !documentReady) return null;
 
     return {
       getAttachments: fetchAttachments,
@@ -84,15 +100,23 @@ export function AttachmentAPIBridge() {
         });
       },
     };
-  }, [attachmentCapability, fetchAttachments]);
+  }, [attachmentCapability, documentReady, fetchAttachments]);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api) {
+      // If API becomes null (e.g. document transitions), ensure we unregister stale bridge
+      registerBridge('attachment', null);
+      return;
+    }
 
     registerBridge('attachment', {
       state,
       api,
     });
+
+    return () => {
+      registerBridge('attachment', null);
+    };
   }, [api, state, registerBridge]);
 
   return null;

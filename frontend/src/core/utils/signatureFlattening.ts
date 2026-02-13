@@ -1,4 +1,4 @@
-import { PDFDocument, rgb } from 'pdf-lib';
+import { PDFDocument, rgb } from '@cantoo/pdf-lib';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
 import { createProcessedFile, createChildStub } from '@app/contexts/file/fileActions';
@@ -192,7 +192,56 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       }
                     }
 
-                    if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
+                    if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image/svg+xml')) {
+                      // SVG data URL — use @cantoo/pdf-lib's native SVG support
+                      // for vector-quality rendering (no rasterisation).
+                      let svgRendered = false;
+                      try {
+                        const svgContent = decodeSvgDataUrl(imageDataUrl);
+                        if (svgContent && typeof (page as any).drawSvg === 'function') {
+                          // drawSvg from @cantoo/pdf-lib renders SVG natively as
+                          // vector paths in the PDF — much higher fidelity than
+                          // rasterising to PNG first.
+                          (page as any).drawSvg(svgContent, {
+                            x: pdfX,
+                            y: pdfY,
+                            width: width,
+                            height: height,
+                          });
+                          svgRendered = true;
+                        }
+                      } catch (svgError) {
+                        console.warn('Native SVG embed failed, falling back to raster:', svgError);
+                      }
+
+                      // Fallback: convert SVG to PNG via canvas and embed as image
+                      if (!svgRendered) {
+                        try {
+                          const pngBytes = await rasteriseSvgToPng(imageDataUrl, width * 2, height * 2);
+                          if (pngBytes) {
+                            const image = await pdfDoc.embedPng(pngBytes);
+                            page.drawImage(image, { x: pdfX, y: pdfY, width, height });
+                            svgRendered = true;
+                          }
+                        } catch (rasterError) {
+                          console.error('SVG raster fallback also failed:', rasterError);
+                        }
+                      }
+
+                      // Last resort: draw a placeholder so the signature position is visible
+                      if (!svgRendered) {
+                        page.drawRectangle({
+                          x: pdfX,
+                          y: pdfY,
+                          width: width,
+                          height: height,
+                          borderColor: rgb(0.8, 0, 0),
+                          borderWidth: 1,
+                          color: rgb(1, 0.95, 0.95),
+                          opacity: 0.7,
+                        });
+                      }
+                    } else if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
                       try {
                         // Convert data URL to bytes
                         const base64Data = imageDataUrl.split(',')[1];
@@ -205,7 +254,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         } else if (imageDataUrl.includes('data:image/png')) {
                           image = await pdfDoc.embedPng(imageBytes);
                         } else {
-                          // Default to PNG for other formats (including converted SVGs)
+                          // Default to PNG for other formats
                           image = await pdfDoc.embedPng(imageBytes);
                         }
 
@@ -221,7 +270,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         console.error('Failed to render image annotation:', imageError);
                       }
                     } else if (annotation.content || annotation.text) {
-                      console.warn('Rendering text annotation instead');
                       // Handle text annotations
                       page.drawText(annotation.content || annotation.text, {
                         x: pdfX,
@@ -230,26 +278,20 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         color: rgb(0, 0, 0)
                       });
                     } else if (annotation.type === PdfAnnotationSubtype.INK || annotation.type === PdfAnnotationSubtype.LINE) {
-                      // Handle ink annotations (drawn signatures)
+                      // Handle ink annotations (drawn signatures) — render as a
+                      // semi-transparent placeholder box when no image data exists.
                       page.drawRectangle({
                         x: pdfX,
                         y: pdfY,
                         width: width,
                         height: height,
                         borderColor: rgb(0, 0, 0),
-                        borderWidth: 2,
-                        color: rgb(0.9, 0.9, 0.9), // Light gray background
-                        opacity: 0.8
-                      });
-
-                      page.drawText('Drawn Signature', {
-                        x: pdfX + 5,
-                        y: pdfY + height / 2,
-                        size: 10,
-                        color: rgb(0, 0, 0)
+                        borderWidth: 1,
+                        color: rgb(0.95, 0.95, 0.95),
+                        opacity: 0.6
                       });
                     } else {
-                      // Handle other annotation types
+                      // Handle other annotation types — yellow highlight box
                       page.drawRectangle({
                         x: pdfX,
                         y: pdfY,
@@ -257,7 +299,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         height: height,
                         borderColor: rgb(1, 0, 0),
                         borderWidth: 2,
-                        color: rgb(1, 1, 0), // Yellow background
+                        color: rgb(1, 1, 0),
                         opacity: 0.5
                       });
                     }
@@ -320,4 +362,66 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     console.error('Error flattening signatures:', error);
     return null;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  SVG helper utilities                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Decode an SVG data URL to its raw XML string.
+ * Handles both base64-encoded and URI-encoded SVG data URLs.
+ */
+function decodeSvgDataUrl(dataUrl: string): string | null {
+  try {
+    if (dataUrl.includes(';base64,')) {
+      const base64 = dataUrl.split(',')[1];
+      return atob(base64);
+    }
+    // URI-encoded SVG
+    const encoded = dataUrl.split(',')[1];
+    return decodeURIComponent(encoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Rasterise an SVG data URL to PNG bytes via an offscreen canvas.
+ * Used as a fallback when native SVG embedding is unavailable.
+ */
+function rasteriseSvgToPng(svgDataUrl: string, width: number, height: number): Promise<Uint8Array | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(width));
+        canvas.height = Math.max(1, Math.round(height));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(null);
+              return;
+            }
+            blob.arrayBuffer().then(
+              (buf) => resolve(new Uint8Array(buf)),
+              () => resolve(null),
+            );
+          },
+          'image/png',
+        );
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = svgDataUrl;
+  });
 }

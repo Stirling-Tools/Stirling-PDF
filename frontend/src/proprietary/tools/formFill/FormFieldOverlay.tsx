@@ -60,8 +60,8 @@ function WidgetInputInner({
 
   const borderColor = error ? '#f44336' : (isActive ? '#2196F3' : 'rgba(33, 150, 243, 0.4)');
   const bgColor = error
-    ? 'rgba(244, 67, 54, 0.08)'
-    : (isActive ? 'rgba(33, 150, 243, 0.08)' : 'rgba(255, 255, 255, 0.85)');
+    ? '#FFEBEE' // Red 50 (Opaque)
+    : (isActive ? '#E3F2FD' : '#FFFFFF'); // Blue 50 (Opaque) : White (Opaque)
 
   const commonStyle: React.CSSProperties = {
     position: 'absolute',
@@ -84,10 +84,41 @@ function WidgetInputInner({
     alignItems: field.multiline ? 'stretch' : 'center',
   };
 
-  // Scale font size with the widget height (using Y scale as a proxy for uniform font scaling).
-  // PDF form fields use fontSize=0 to mean "auto-size" (scale to fit the box).
-  // For single-line fields (e.g. Title), scale closer to the box height.
-  // For multiline fields (e.g. Description), use a smaller capped size.
+  const stopPropagation = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    // Also stop immediate propagation to native listeners to block non-React subscribers
+    if (e.nativeEvent) {
+      e.nativeEvent.stopImmediatePropagation?.();
+    }
+  };
+
+  const commonProps = {
+    style: commonStyle,
+    onPointerDown: stopPropagation,
+    onPointerUp: stopPropagation,
+    onMouseDown: stopPropagation,
+    onMouseUp: stopPropagation,
+    onClick: stopPropagation,
+    onDoubleClick: stopPropagation,
+    onKeyDown: stopPropagation,
+    onKeyUp: stopPropagation,
+    onKeyPress: stopPropagation,
+    onDragStart: stopPropagation,
+    onSelect: stopPropagation,
+    onContextMenu: stopPropagation,
+  };
+
+  const captureStopProps = {
+    onPointerDownCapture: stopPropagation,
+    onPointerUpCapture: stopPropagation,
+    onMouseDownCapture: stopPropagation,
+    onMouseUpCapture: stopPropagation,
+    onClickCapture: stopPropagation,
+    onKeyDownCapture: stopPropagation,
+    onKeyUpCapture: stopPropagation,
+    onKeyPressCapture: stopPropagation,
+  };
+
   const fontSize = widget.fontSize
     ? widget.fontSize * scaleY
     : field.multiline
@@ -115,7 +146,7 @@ function WidgetInputInner({
   switch (field.type) {
     case 'text':
       return (
-        <div style={commonStyle} title={error || field.tooltip || field.label}>
+        <div {...commonProps} title={error || field.tooltip || field.label}>
           {field.multiline ? (
             <textarea
               value={value}
@@ -129,6 +160,7 @@ function WidgetInputInner({
                 overflow: 'auto',
                 paddingTop: `${Math.max(1, 2 * scaleY)}px`,
               }}
+              {...captureStopProps}
             />
           ) : (
             <input
@@ -144,6 +176,7 @@ function WidgetInputInner({
               aria-required={field.required}
               aria-invalid={!!error}
               aria-describedby={error ? `${field.name}-error` : undefined}
+              {...captureStopProps}
             />
           )}
         </div>
@@ -156,6 +189,7 @@ function WidgetInputInner({
       const onValue = widget.exportValue || 'Yes';
       return (
         <div
+          {...commonProps}
           style={{
             ...commonStyle,
             display: 'flex',
@@ -164,10 +198,11 @@ function WidgetInputInner({
             cursor: field.readOnly ? 'default' : 'pointer',
           }}
           title={error || field.tooltip || field.label}
-          onClick={() => {
+          onClick={(e) => {
             if (field.readOnly) return;
             handleFocus();
             onChange(field.name, isChecked ? 'Off' : onValue);
+            stopPropagation(e);
           }}
         >
           <span
@@ -206,7 +241,7 @@ function WidgetInputInner({
       };
 
       return (
-        <div style={commonStyle} title={error || field.tooltip || field.label}>
+        <div {...commonProps} title={error || field.tooltip || field.label}>
           <select
             id={inputId}
             value={selectValue}
@@ -221,9 +256,11 @@ function WidgetInputInner({
               appearance: 'auto',
               WebkitAppearance: 'auto' as React.CSSProperties['WebkitAppearance'],
             }}
+            {...captureStopProps}
             aria-label={field.label || field.name}
             aria-required={field.required}
             aria-invalid={!!error}
+            {...captureStopProps}
           >
             {!field.multiSelect && <option value="">— select —</option>}
             {(field.options || []).map((opt, idx) => (
@@ -243,6 +280,7 @@ function WidgetInputInner({
       const isSelected = value === optionValue;
       return (
         <div
+          {...commonProps}
           style={{
             ...commonStyle,
             display: 'flex',
@@ -251,10 +289,11 @@ function WidgetInputInner({
             cursor: field.readOnly ? 'default' : 'pointer',
           }}
           title={error || field.tooltip || `${field.label}: ${optionValue}`}
-          onClick={() => {
+          onClick={(e) => {
             if (field.readOnly || value === optionValue) return; // Don't deselect radio buttons
             handleFocus();
             onChange(field.name, optionValue);
+            stopPropagation(e);
           }}
         >
           <span
@@ -276,6 +315,7 @@ function WidgetInputInner({
       // Just render a highlighted area — not editable
       return (
         <div
+          {...commonProps}
           style={{
             ...commonStyle,
             background: 'rgba(200,200,200,0.3)',
@@ -289,7 +329,7 @@ function WidgetInputInner({
 
     default:
       return (
-        <div style={commonStyle} title={field.tooltip || field.label}>
+        <div {...commonProps} title={field.tooltip || field.label}>
           <input
             type="text"
             value={value}
@@ -297,6 +337,7 @@ function WidgetInputInner({
             onFocus={handleFocus}
             disabled={field.readOnly}
             style={inputBaseStyle}
+            {...captureStopProps}
           />
         </div>
       );
