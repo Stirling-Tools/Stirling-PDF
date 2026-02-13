@@ -787,6 +787,11 @@ const EmbedPdfViewerContent = ({
               key={currentFileId || 'no-file'}
               file={effectiveFile.file}
               url={effectiveFile.url}
+              fileName={
+                previewFile ? previewFile.name :
+                (currentFile && isStirlingFile(currentFile) ? currentFile.name :
+                (effectiveFile?.file instanceof File ? effectiveFile.file.name : undefined))
+              }
               enableAnnotations={shouldEnableAnnotations}
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
