@@ -231,6 +231,10 @@
   --text-brand-accent: #DC2626;
 
 
+  /* PDF text selection colors */
+  --pdf-selection-bg: rgba(59, 130, 246, 0.2);
+  --pdf-selection-ring: rgba(59, 130, 246, 0.18);
+
   /* Placeholder text colors */
   --search-text-and-icon-color: #6B7382;
 
@@ -548,6 +552,10 @@
   --tool-subcategory-rule-color: #3A4047; /* doubly lighter (relative) line in dark */
 
 
+  /* PDF text selection colors (dark mode) */
+  --pdf-selection-bg: rgba(96, 165, 250, 0.25);
+  --pdf-selection-ring: rgba(96, 165, 250, 0.28);
+
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #FFFFFF !important;
 
@@ -593,7 +601,7 @@
   --api-keys-input-border: #3A4047;
   --api-keys-button-bg: #3A4047;
   --api-keys-button-color: #D0D6DC;
-  
+
   /* Code token colors (dark mode - Cursor-like) */
   --code-kw-color: #C792EA;   /* purple */
   --code-str-color: #C3E88D;  /* green */
@@ -650,6 +658,17 @@
 [data-mantine-color-scheme="dark"] .plan-button:disabled,
 [data-mantine-color-scheme="dark"] .plan-button[data-disabled] {
   background-color: #6b7280 !important;
+}
+
+/* Override the flat multiply blend for a clean, modern semi-transparent overlay */
+.pdf-selection-layer > div:first-child {
+  mix-blend-mode: normal !important;
+}
+
+/* Individual selection highlight rectangles */
+.pdf-selection-layer > div:first-child > div {
+  border-radius: 3px !important;
+  box-shadow: 0 0 0 0.5px var(--pdf-selection-ring);
 }
 
 /* Smooth transitions for theme switching */
