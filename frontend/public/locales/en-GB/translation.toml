@@ -4338,11 +4338,8 @@ saveChanges = "Save Changes"
 changeColor = "Change Colour"
 duplicate = "Duplicate"
 delete = "Delete"
-opacity = "Opacity"
 width = "Width"
 properties = "Properties"
-strokeColor = "Stroke Colour"
-fillColor = "Fill Colour"
 textColor = "Text Colour"
 
 [search]
