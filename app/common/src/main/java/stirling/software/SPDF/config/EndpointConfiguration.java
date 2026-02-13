@@ -627,17 +627,6 @@ public class EndpointConfiguration {
                 || "veraPDF".equals(group);
     }
 
-    private boolean isFunctionalGroup(String group) {
-        return "PageOps".equals(group)
-                || "Convert".equals(group)
-                || "Security".equals(group)
-                || "Other".equals(group)
-                || "Advance".equals(group)
-                || "Automation".equals(group)
-                || "DeveloperTools".equals(group)
-                || "DeveloperDocs".equals(group);
-    }
-
     private boolean isEndpointEnabledDirectly(String endpoint) {
         if (endpoint.startsWith("/")) {
             endpoint = endpoint.substring(1);
