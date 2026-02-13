@@ -4,8 +4,10 @@ import { message } from '@tauri-apps/plugin-dialog';
 import { useFileState, useFileActions } from '@app/contexts/FileContext';
 import { downloadFile } from '@app/services/downloadService';
 import type { StirlingFileStub } from '@app/types/fileContext';
+import { useTranslation } from 'react-i18next';
 
 export function useExitWarning() {
+  const { t } = useTranslation();
   const { selectors } = useFileState();
   const { actions: fileActions } = useFileActions();
   const selectorsRef = useRef(selectors);
@@ -28,39 +30,48 @@ export function useExitWarning() {
 
       if (dirtyStubs.length > 0) {
         const fileList = dirtyStubs.map(f => `• ${f.name}`).join('\n');
+        const saveLabel = t('confirmCloseSave', 'Save and close');
+        const discardLabel = t('confirmCloseDiscard', 'Discard changes and close');
+        const cancelLabel = t('confirmCloseCancel', 'Cancel');
+
         const choice = await message(
-          `You have ${dirtyStubs.length} file${dirtyStubs.length > 1 ? 's' : ''} with unsaved changes.\n\n${fileList}`,
+          t(
+            'confirmCloseUnsavedList',
+            'You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}',
+            { count: dirtyStubs.length, plural: dirtyStubs.length > 1 ? 's' : '', fileList }
+          ),
           {
-            title: 'Unsaved Changes',
+            title: t('confirmCloseUnsaved', 'This file has unsaved changes.'),
             kind: 'warning',
             buttons: {
-              yes: 'Save all and close',
-              no: 'Discard changes and close',
-              cancel: 'Cancel',
+              yes: saveLabel,
+              no: discardLabel,
+              cancel: cancelLabel,
             },
           }
         );
 
-        const saveChoices = new Set(['Yes', 'yes', 'Save all and close']);
-        const discardChoices = new Set(['No', 'no', 'Discard changes and close']);
-
-        if (choice === 'Cancel' || choice === 'cancel') {
+        if (choice === cancelLabel) {
           return;
         }
 
-        if (saveChoices.has(choice)) {
+        if (choice === saveLabel) {
           const { failedCount, cancelled } = await saveDirtyFiles(dirtyStubs);
           if (cancelled) {
             return;
           }
           if (failedCount > 0) {
             await message(
-              `Saved with errors. ${failedCount} file${failedCount > 1 ? 's' : ''} could not be saved.`,
-              { title: 'Save Failed', kind: 'error' }
+              t(
+                'confirmCloseSaveFailed',
+                'Saved with errors. {{count}} file{{plural}} could not be saved.',
+                { count: failedCount, plural: failedCount > 1 ? 's' : '' }
+              ),
+              { title: t('confirmCloseSaveFailedTitle', 'Save Failed'), kind: 'error' }
             );
             return;
           }
-        } else if (!discardChoices.has(choice)) {
+        } else if (choice !== discardLabel) {
           return;
         }
       }
@@ -80,7 +91,7 @@ export function useExitWarning() {
         fn();
       });
     };
-  }, [fileActions]);
+  }, [fileActions, t]);
 
   const saveDirtyFiles = async (dirtyStubs: StirlingFileStub[]) => {
     const filesById = new Map(selectorsRef.current.getFiles().map(file => [file.fileId, file]));
