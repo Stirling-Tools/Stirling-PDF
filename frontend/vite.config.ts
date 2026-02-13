@@ -15,7 +15,6 @@ export default defineConfig(({ mode }) => {
   if (isDesktopMode) {
     const requiredEnvVars = [
       'VITE_SAAS_SERVER_URL',
-      'VITE_SAAS_SIGNUP_URL',
       'VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
     ];
 
