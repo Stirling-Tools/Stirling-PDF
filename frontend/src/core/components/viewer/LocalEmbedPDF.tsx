@@ -731,12 +731,13 @@ export function LocalEmbedPDF({ file, url, enableAnnotations = false, enableReda
                             />
                           )}
 
-                          {/* LinkLayer on top to handle link navigation - must be last for click priority */}
+                          {/* LinkLayer – uses pdf-lib for link extraction, rendered last for click priority */}
                           <LinkLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
-                            pageWidth={width}
-                            pageHeight={height}
+                            _pageWidth={width}
+                            _pageHeight={height}
+                            pdfUrl={pdfUrl}
                           />
                         </div>
                       </PagePointerProvider>
