@@ -256,7 +256,6 @@ function WidgetInputInner({
               appearance: 'auto',
               WebkitAppearance: 'auto' as React.CSSProperties['WebkitAppearance'],
             }}
-            {...captureStopProps}
             aria-label={field.label || field.name}
             aria-required={field.required}
             aria-invalid={!!error}

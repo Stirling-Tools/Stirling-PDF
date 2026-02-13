@@ -439,7 +439,6 @@ function getFieldDisplayOptions(field: PDFField): string[] | null {
     const optRaw = acroDict.lookup(PDFName.of('Opt'));
     if (!(optRaw instanceof PDFArray)) return null;
 
-    const exports: string[] = [];
     const displays: string[] = [];
     let hasDifference = false;
 
@@ -451,13 +450,11 @@ function getFieldDisplayOptions(field: PDFField): string[] | null {
           // [exportValue, displayValue] pair
           const exp = decodeText(entry.lookup(0));
           const disp = decodeText(entry.lookup(1));
-          exports.push(exp);
           displays.push(disp);
           if (exp !== disp) hasDifference = true;
         } else {
           // Plain string — export and display are the same
           const val = decodeText(entry);
-          exports.push(val);
           displays.push(val);
         }
       } catch {
@@ -602,6 +599,7 @@ export class PdfLibFormProvider implements IFormDataProvider {
     const result: FormField[] = [];
 
     for (const field of fields) {
+      const fieldName = field.getName();
       try {
         const type = getFieldType(field);
         const widgets = extractWidgets(field, pages, doc);
@@ -627,7 +625,7 @@ export class PdfLibFormProvider implements IFormDataProvider {
         result.push(formField);
       } catch (fieldError) {
         // Skip individual malformed fields but continue processing
-        console.warn(`[PdfLibFormProvider] Skipping field "${field.getName()}":`, fieldError);
+        console.warn(`[PdfLibFormProvider] Skipping field "${fieldName}":`, fieldError);
       }
     }
 

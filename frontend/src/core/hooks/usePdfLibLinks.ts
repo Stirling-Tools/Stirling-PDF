@@ -226,8 +226,9 @@ function searchNameTree(
 }
 
 
-function parseBorderStyleName(value: unknown): LinkBorderStyle {
+function parseBorderStyleName(ctx: PDFContext, value: unknown): LinkBorderStyle {
   if (!value) return 'solid';
+  if (value instanceof PDFRef) value = ctx.lookup(value);
   const s = value instanceof PDFName ? value.decodeText() : String(value);
   switch (s) {
     case 'D': return 'dashed';
@@ -238,8 +239,9 @@ function parseBorderStyleName(value: unknown): LinkBorderStyle {
   }
 }
 
-function parseHighlightMode(value: unknown): LinkHighlightMode {
+function parseHighlightMode(ctx: PDFContext, value: unknown): LinkHighlightMode {
   if (!value) return 'invert';
+  if (value instanceof PDFRef) value = ctx.lookup(value);
   const s = value instanceof PDFName ? value.decodeText() : String(value);
   switch (s) {
     case 'N': return 'none';
@@ -265,7 +267,7 @@ function extractBorderStyle(
     const s = bs.get(PDFName.of('S'));
     return {
       width: num(ctx, w) || 1,
-      style: parseBorderStyleName(s),
+      style: parseBorderStyleName(ctx, s),
     };
   }
 
@@ -425,7 +427,7 @@ function extractLinksFromPage(
       const title = extractTitle(ctx, annot);
       const color = extractColor(ctx, annot);
       const borderStyle = extractBorderStyle(ctx, annot);
-      const highlightMode = parseHighlightMode(annot.get(PDFName.of('H')));
+      const highlightMode = parseHighlightMode(ctx, annot.get(PDFName.of('H')));
 
       links.push({
         id: `pdflib-link-${pageIndex}-${i}`,

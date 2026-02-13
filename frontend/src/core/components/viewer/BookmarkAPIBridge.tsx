@@ -45,7 +45,7 @@ export function BookmarkAPIBridge() {
           isLoading: false,
           error: message,
         });
-        return [];
+        throw error;
       }
     },
     [documentReady]

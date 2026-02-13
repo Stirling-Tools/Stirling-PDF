@@ -52,9 +52,7 @@ export function AttachmentAPIBridge() {
           isLoading: false,
           error: message,
         });
-        // Consistent contract: always return empty array on failure.
-        // Callers can check the error state via getAttachmentState().
-        return [];
+        throw error;
       }
     },
     [attachmentCapability, documentReady]
