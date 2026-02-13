@@ -3,9 +3,6 @@
  *
  * Complements the read-only link extraction in usePdfLibLinks.ts by providing
  * a write API for programmatically adding hyperlinks to PDFs.
- *
- * Uses @cantoo/pdf-lib (maintained fork of pdf-lib) which provides proper
- * TypeScript types and bug fixes for annotation handling.
  */
 import {
   PDFDocument,
@@ -97,7 +94,7 @@ export function createLinkAnnotation(
   const ctx = pdfDoc.context;
 
   // Build the raw annotation dictionary entries
-  const entries: Record<string, unknown> = {
+  const entries: Record<string, any> = {
     Type: 'Annot',
     Subtype: 'Link',
     Rect: [rect.x, rect.y, rect.x + rect.width, rect.y + rect.height],
