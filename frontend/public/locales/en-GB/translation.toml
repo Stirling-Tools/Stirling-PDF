@@ -5965,6 +5965,9 @@ selectMethodFirst = "Please select a split method first"
 chooseMethod = "Choose Method"
 settings = "Settings"
 
+[split.poster]
+rightToLeft = "Split right-to-left"
+
 [split.poster.pageSize]
 label = "Target Page Size"
 description = "Size of output pages for printing"
@@ -5976,9 +5979,6 @@ description = "Number of columns to split each page into"
 [split.poster.yFactor]
 label = "Vertical Divisions"
 description = "Number of rows to split each page into"
-
-[split.poster.rightToLeft]
-label = "Split right-to-left"
 
 [split.tooltip.byChapters]
 bullet1 = "Bookmark Level: Which level to split on (1=top level)"
