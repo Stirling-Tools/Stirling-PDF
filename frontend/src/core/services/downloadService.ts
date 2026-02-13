@@ -29,10 +29,12 @@ export async function downloadFromUrl(
   filename: string,
   localPath?: string
 ): Promise<DownloadResult> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Download failed (${response.status})`);
-  }
-  const blob = await response.blob();
-  return downloadFile({ data: blob, filename, localPath });
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  return { savedPath: localPath };
 }
