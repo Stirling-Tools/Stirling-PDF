@@ -1,4 +1,4 @@
-import { ActionIcon, Tooltip, Popover, Stack, Slider, Text, Group, Button } from '@mantine/core';
+import { ActionIcon, Tooltip, Popover, Stack, Slider, Text, Group, Button, Select } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import TuneIcon from '@mui/icons-material/Tune';

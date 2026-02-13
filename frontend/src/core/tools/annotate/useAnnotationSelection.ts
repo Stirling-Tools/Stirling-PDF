@@ -235,8 +235,8 @@ export function useAnnotationSelection({
     },
     [
       activeToolRef,
+      annotationApiRef,
       deriveToolFromAnnotation,
-      manualToolSwitch,
       setActiveTool,
       setInkWidth,
       setNoteBackgroundColor,
@@ -261,7 +261,6 @@ export function useAnnotationSelection({
       setShapeFillOpacity,
       setTextAlignment,
       setFreehandHighlighterWidth,
-      shouldStayOnPlacementTool,
     ]
   );
 

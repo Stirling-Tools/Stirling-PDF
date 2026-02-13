@@ -131,7 +131,8 @@ function AnnotationSelectionMenuInner({
   };
 
   const getBackgroundColor = (): string => {
-    return obj?.backgroundColor || '#ffffff';
+    // Check multiple possible properties for background color
+    return obj?.backgroundColor || obj?.fillColor || obj?.color || '#ffffff';
   };
 
   const getTextColor = (): string => {
@@ -241,6 +242,9 @@ function AnnotationSelectionMenuInner({
       patch.strokeColor = obj?.strokeColor || '#000000'; // Preserve stroke
       patch.borderWidth = getWidth();
     } else if (target === 'background') {
+      // Background color for text/note - set multiple properties for compatibility
+      patch.backgroundColor = color;
+      patch.fillColor = color;
       patch.color = color;
     } else if (target === 'text') {
       // Text color for text/note - TRY PROPERTY COMBINATIONS
