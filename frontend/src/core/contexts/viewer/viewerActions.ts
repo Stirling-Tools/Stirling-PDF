@@ -5,7 +5,7 @@ import {
   ScrollState,
   ZoomState,
 } from '@app/contexts/viewer/viewerBridges';
-import { PdfBookmarkObject } from '@embedpdf/models';
+import { PdfBookmarkObject, PdfAttachmentObject } from '@embedpdf/models';
 
 export interface ScrollActions {
   scrollToPage: (page: number, behavior?: 'smooth' | 'instant') => void;
@@ -66,6 +66,13 @@ export interface BookmarkActions {
   setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
 }
 
+export interface AttachmentActions {
+  getAttachments: () => Promise<PdfAttachmentObject[] | null>;
+  downloadAttachment: (attachment: PdfAttachmentObject) => void;
+  clearAttachments: () => void;
+  setLocalAttachments: (attachments: PdfAttachmentObject[] | null, error?: string | null) => void;
+}
+
 export interface PrintActions {
   print: () => void;
 }
@@ -80,6 +87,7 @@ export interface ViewerActionsBundle {
   searchActions: SearchActions;
   exportActions: ExportActions;
   bookmarkActions: BookmarkActions;
+  attachmentActions: AttachmentActions;
   printActions: PrintActions;
 }
 
@@ -373,6 +381,27 @@ export function createViewerActions({
       setLocalBookmarks: (bookmarks, error = null) => {
         const api = registry.current.bookmark?.api;
         api?.setLocalBookmarks?.(bookmarks ?? null, error);
+      },
+    },
+    attachmentActions: {
+      getAttachments: async () => {
+        const api = registry.current.attachment?.api;
+        if (!api?.getAttachments) {
+          return null;
+        }
+        return api.getAttachments();
+      },
+      downloadAttachment: (attachment) => {
+        const api = registry.current.attachment?.api;
+        api?.downloadAttachment?.(attachment);
+      },
+      clearAttachments: () => {
+        const api = registry.current.attachment?.api;
+        api?.clearAttachments?.();
+      },
+      setLocalAttachments: (attachments, error = null) => {
+        const api = registry.current.attachment?.api;
+        api?.setLocalAttachments?.(attachments ?? null, error);
       },
     },
     printActions: {

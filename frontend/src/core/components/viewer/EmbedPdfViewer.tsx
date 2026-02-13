@@ -9,6 +9,7 @@ import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
 import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
 import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
+import { AttachmentSidebar } from '@app/components/viewer/AttachmentSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { useRedaction } from '@app/contexts/RedactionContext';
@@ -45,6 +46,7 @@ const EmbedPdfViewerContent = ({
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
+    isAttachmentSidebarVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
@@ -83,13 +85,13 @@ const EmbedPdfViewerContent = ({
   const lastKnownScrollPageRef = useRef<number>(1);
   const pendingScrollRestoreRef = useRef<number | null>(null);
   const scrollRestoreAttemptsRef = useRef<number>(0);
-  
+
   // Track the file ID we should be viewing after a save (to handle list reordering)
   const pendingFileIdRef = useRef<string | null>(null);
 
   // Get redaction context
   const { redactionsApplied, setRedactionsApplied } = useRedaction();
-  
+
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
 
@@ -118,7 +120,7 @@ const EmbedPdfViewerContent = ({
   // Track previous annotation/redaction state to detect tool switches
   const prevEnableAnnotationsRef = useRef(shouldEnableAnnotations);
   const prevEnableRedactionRef = useRef(shouldEnableRedaction);
-  
+
   // Track scroll position whenever scrollState changes from the context
   // This ensures we always have the most up-to-date position
   useEffect(() => {
@@ -126,27 +128,27 @@ const EmbedPdfViewerContent = ({
       lastKnownScrollPageRef.current = scrollState.currentPage;
     }
   }, [scrollState.currentPage]);
-  
+
   // Preserve scroll position when switching between annotation and redaction tools
   // Using useLayoutEffect to capture synchronously before DOM updates
   useLayoutEffect(() => {
     const annotationsChanged = prevEnableAnnotationsRef.current !== shouldEnableAnnotations;
     const redactionChanged = prevEnableRedactionRef.current !== shouldEnableRedaction;
-    
+
     if (annotationsChanged || redactionChanged) {
       // Read scroll state directly AND use the tracked value - take whichever is valid
       const currentScrollState = getScrollState();
       const pageFromState = currentScrollState.currentPage;
       const pageFromRef = lastKnownScrollPageRef.current;
-      
+
       // Use the current state if valid, otherwise fall back to tracked ref
       const pageToRestore = pageFromState > 0 ? pageFromState : pageFromRef;
-      
+
       if (pageToRestore > 0) {
         pendingScrollRestoreRef.current = pageToRestore;
         scrollRestoreAttemptsRef.current = 0;
       }
-      
+
       prevEnableAnnotationsRef.current = shouldEnableAnnotations;
       prevEnableRedactionRef.current = shouldEnableRedaction;
     }
@@ -338,10 +340,10 @@ const EmbedPdfViewerContent = ({
     const checkForChanges = () => {
       // Check for annotation history changes (using ref that's updated by useEffect)
       const hasAnnotationChanges = hasAnnotationChangesRef.current;
-      
+
       // Check for pending redactions
       const hasPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-      
+
       // Always consider applied redactions as unsaved until export
       const hasAppliedRedactions = redactionsApplied;
 
@@ -367,13 +369,13 @@ const EmbedPdfViewerContent = ({
 
       // Step 0: Commit any pending redactions before export
       const hadPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-      
+
       // Mark redactions as applied BEFORE committing, so the button stays enabled during the save process
       // This ensures the button doesn't become disabled when pendingCount becomes 0
       if (hadPendingRedactions || redactionsApplied) {
         setRedactionsApplied(true);
       }
-      
+
       if (hadPendingRedactions) {
         console.log('[Viewer] Committing pending redactions before export');
         redactionTrackerRef.current?.commitAllPending();
@@ -396,7 +398,7 @@ const EmbedPdfViewerContent = ({
       // Only consume the current file, not all active files
       const currentFileId = activeFiles[activeFileIndex]?.fileId;
       if (!currentFileId) throw new Error('Current file ID not found');
-      
+
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
@@ -405,7 +407,7 @@ const EmbedPdfViewerContent = ({
       // Store the page to restore after file replacement triggers re-render
       pendingScrollRestoreRef.current = pageToRestore;
       scrollRestoreAttemptsRef.current = 0;
-      
+
       // Store the new file ID so we can track it after the list reorders
       const newFileId = stubs[0]?.id;
       if (newFileId) {
@@ -451,7 +453,7 @@ const EmbedPdfViewerContent = ({
       // Create StirlingFiles and stubs for version history
       const currentFileId = activeFiles[activeFileIndex]?.fileId;
       if (!currentFileId) throw new Error('Current file ID not found');
-      
+
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
@@ -463,7 +465,7 @@ const EmbedPdfViewerContent = ({
       // Clear flags
       hasAnnotationChangesRef.current = false;
       setRedactionsApplied(false);
-      
+
       console.log('[Viewer] Applied redactions saved, pending marks discarded');
     } catch (error) {
       console.error('Failed to save applied redactions:', error);
@@ -474,19 +476,19 @@ const EmbedPdfViewerContent = ({
   // Uses polling with retries to ensure the scroll succeeds
   useEffect(() => {
     if (pendingScrollRestoreRef.current === null) return;
-    
+
     const pageToRestore = pendingScrollRestoreRef.current;
     const maxAttempts = 10;
     const attemptInterval = 100; // ms between attempts
-    
+
     const attemptScroll = () => {
       const currentState = getScrollState();
       const targetPage = Math.min(pageToRestore, currentState.totalPages);
-      
+
       // Only attempt if we have valid state (totalPages > 0 means PDF is loaded)
       if (currentState.totalPages > 0 && targetPage > 0) {
         scrollActions.scrollToPage(targetPage, 'instant');
-        
+
         // Check if scroll succeeded after a brief delay
         setTimeout(() => {
           const afterState = getScrollState();
@@ -516,7 +518,7 @@ const EmbedPdfViewerContent = ({
         scrollRestoreAttemptsRef.current = 0;
       }
     };
-    
+
     // Start attempting after initial delay
     const timer = setTimeout(attemptScroll, 150);
     return () => clearTimeout(timer);
@@ -535,7 +537,9 @@ const EmbedPdfViewerContent = ({
 
   const sidebarWidthRem = 15;
   const totalRightMargin =
-    (isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0);
+    (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
+    (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
+    (isAttachmentSidebarVisible ? sidebarWidthRem : 0);
 
   return (
     <Box
@@ -645,6 +649,12 @@ const EmbedPdfViewerContent = ({
       />
       <BookmarkSidebar
         visible={isBookmarkSidebarVisible}
+        thumbnailVisible={isThumbnailSidebarVisible}
+        documentCacheKey={bookmarkCacheKey}
+        preloadCacheKeys={allBookmarkCacheKeys}
+      />
+      <AttachmentSidebar
+        visible={isAttachmentSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
