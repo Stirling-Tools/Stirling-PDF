@@ -6,7 +6,8 @@
         "src/proprietary/*",
         "src/core/*"
       ],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@proprietary/*": ["src/proprietary/*"]
     }
   },
   "include": [

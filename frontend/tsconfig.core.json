@@ -4,7 +4,9 @@
     "paths": {
       "@app/*": [
         "src/core/*"
-      ]
+      ],
+      "@core/*": ["src/core/*"],
+      "@proprietary/*": ["src/core/*"]
     }
   },
   "include": [

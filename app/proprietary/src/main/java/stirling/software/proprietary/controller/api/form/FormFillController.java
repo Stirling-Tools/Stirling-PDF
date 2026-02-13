@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.FormFieldWithCoordinates;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -104,9 +105,37 @@ public class FormFillController {
 
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            FormUtils.repairMissingWidgetPageReferences(document);
             FormUtils.FormFieldExtraction extraction =
                     FormUtils.extractFieldsWithTemplate(document);
             return ResponseEntity.ok(extraction);
+        }
+    }
+
+    @PostMapping(value = "/fields-with-coordinates", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Inspect PDF form fields with widget coordinates",
+            description =
+                    "Returns metadata describing each field in the provided PDF form, "
+                            + "including precise widget coordinates for interactive rendering")
+    public ResponseEntity<List<FormFieldWithCoordinates>> listFieldsWithCoordinates(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file)
+            throws IOException {
+
+        requirePdf(file);
+        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            FormUtils.repairMissingWidgetPageReferences(document);
+            List<FormFieldWithCoordinates> fields =
+                    FormUtils.extractFormFieldsWithCoordinates(document);
+            return ResponseEntity.ok(fields);
         }
     }
 
@@ -215,6 +244,7 @@ public class FormFillController {
 
         String baseName = buildBaseName(file, suffix);
         try (PDDocument document = pdfDocumentFactory.load(file)) {
+            FormUtils.repairMissingWidgetPageReferences(document);
             processor.accept(document);
             return saveDocument(document, baseName);
         }
