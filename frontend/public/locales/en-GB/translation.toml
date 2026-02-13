@@ -5304,6 +5304,7 @@ selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleBookmarks = "Toggle Bookmarks"
+toggleAttachments = "Toggle Attachments"
 toggleSidebar = "Toggle Sidebar"
 toggleTheme = "Toggle Theme"
 
@@ -6436,6 +6437,15 @@ singlePageView = "Single Page View"
 unknownFile = "Unknown file"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
+
+[viewer.attachments]
+title = "Attachments"
+searchPlaceholder = "Search attachments"
+noSupport = "Attachment support is unavailable for this viewer."
+noDocument = "Open a PDF to view its attachments."
+loading = "Loading attachments..."
+empty = "No attachments in this document"
+noMatch = "No attachments match your search"
 
 [viewPdf]
 header = "View PDF"

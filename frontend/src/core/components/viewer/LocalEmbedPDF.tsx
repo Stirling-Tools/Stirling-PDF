@@ -20,6 +20,7 @@ import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { ExportPluginPackage } from '@embedpdf/plugin-export/react';
 import { BookmarkPluginPackage } from '@embedpdf/plugin-bookmark/react';
+import { AttachmentPluginPackage } from '@embedpdf/plugin-attachment/react';
 import { PrintPluginPackage } from '@embedpdf/plugin-print/react';
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
@@ -42,6 +43,7 @@ import { HistoryAPIBridge } from '@app/components/viewer/HistoryAPIBridge';
 import type { SignatureAPI, AnnotationAPI, HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ExportAPIBridge } from '@app/components/viewer/ExportAPIBridge';
 import { BookmarkAPIBridge } from '@app/components/viewer/BookmarkAPIBridge';
+import { AttachmentAPIBridge } from '@app/components/viewer/AttachmentAPIBridge';
 import { PrintAPIBridge } from '@app/components/viewer/PrintAPIBridge';
 import { isPdfFile } from '@app/utils/fileUtils';
 import { useTranslation } from 'react-i18next';
@@ -183,6 +185,9 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
 
       // Register bookmark plugin for PDF outline support
       createPluginRegistration(BookmarkPluginPackage),
+
+      // Register attachment plugin for PDF attachments support
+      createPluginRegistration(AttachmentPluginPackage),
 
       // Register rotate plugin
       createPluginRegistration(RotatePluginPackage),
@@ -664,6 +669,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
 
         <ExportAPIBridge />
         <BookmarkAPIBridge />
+        <AttachmentAPIBridge />
         <PrintAPIBridge />
         <DocumentPermissionsAPIBridge />
         <DocumentReadyWrapper
