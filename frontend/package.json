@@ -11,6 +11,7 @@
     "@embedpdf/engines": "^2.5.0",
     "@embedpdf/models": "^2.5.0",
     "@embedpdf/plugin-annotation": "^2.5.0",
+    "@embedpdf/plugin-attachment": "^2.5.0",
     "@embedpdf/plugin-bookmark": "^2.5.0",
     "@embedpdf/plugin-export": "^2.5.0",
     "@embedpdf/plugin-history": "^2.5.0",

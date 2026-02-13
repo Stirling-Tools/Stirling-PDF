@@ -18,7 +18,7 @@ import TextFieldsIcon from '@mui/icons-material/TextFields';
 export function useViewerRightRailButtons() {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
-  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
+  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
@@ -75,6 +75,7 @@ export function useViewerRightRailButtons() {
   const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
   const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
+  const attachmentLabel = t('rightRail.toggleAttachments', 'Toggle Attachments');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
   const formFillLabel = t('rightRail.formFill', 'Fill Form');
@@ -183,6 +184,18 @@ export function useViewerRightRailButtons() {
         }
       },
       {
+        id: 'viewer-toggle-attachments',
+        icon: <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />,
+        tooltip: attachmentLabel,
+        ariaLabel: attachmentLabel,
+        section: 'top' as const,
+        order: 56,
+        active: isAttachmentSidebarVisible,
+        onClick: () => {
+          viewer.toggleAttachmentSidebar();
+        }
+      },
+      {
         id: 'viewer-print',
         icon: <LocalIcon icon="print" width="1.5rem" height="1.5rem" />,
         tooltip: printLabel,
@@ -284,6 +297,7 @@ export function useViewerRightRailButtons() {
     viewer,
     isThumbnailSidebarVisible,
     isBookmarkSidebarVisible,
+    isAttachmentSidebarVisible,
     isSearchInterfaceVisible,
     isPanning,
     searchLabel,
@@ -293,6 +307,7 @@ export function useViewerRightRailButtons() {
     rotateRightLabel,
     sidebarLabel,
     bookmarkLabel,
+    attachmentLabel,
     printLabel,
     tooltipPosition,
     annotationsLabel,

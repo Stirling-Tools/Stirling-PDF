@@ -9,6 +9,7 @@ import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
 import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
 import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
+import { AttachmentSidebar } from '@app/components/viewer/AttachmentSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { useRedaction } from '@app/contexts/RedactionContext';
@@ -47,6 +48,7 @@ const EmbedPdfViewerContent = ({
     isThumbnailSidebarVisible,
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
+    isAttachmentSidebarVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
@@ -90,7 +92,6 @@ const EmbedPdfViewerContent = ({
   // Similar to scroll preservation - track rotation across file reloads
   const pendingRotationRestoreRef = useRef<number | null>(null);
   const rotationRestoreAttemptsRef = useRef<number>(0);
-
   // Track the file ID we should be viewing after a save (to handle list reordering)
   const pendingFileIdRef = useRef<string | null>(null);
 
@@ -437,7 +438,6 @@ const EmbedPdfViewerContent = ({
       // Store the rotation to restore after file replacement
       pendingRotationRestoreRef.current = currentRotation;
       rotationRestoreAttemptsRef.current = 0;
-
       // Store the new file ID so we can track it after the list reorders
       const newFileId = stubs[0]?.id;
       if (newFileId) {
@@ -737,7 +737,8 @@ const EmbedPdfViewerContent = ({
   const sidebarWidthRem = 15;
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
-    (isBookmarkSidebarVisible ? sidebarWidthRem : 0);
+    (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
+    (isAttachmentSidebarVisible ? sidebarWidthRem : 0);
 
   return (
     <Box
@@ -855,6 +856,12 @@ const EmbedPdfViewerContent = ({
       />
       <BookmarkSidebar
         visible={isBookmarkSidebarVisible}
+        thumbnailVisible={isThumbnailSidebarVisible}
+        documentCacheKey={bookmarkCacheKey}
+        preloadCacheKeys={allBookmarkCacheKeys}
+      />
+      <AttachmentSidebar
+        visible={isAttachmentSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
