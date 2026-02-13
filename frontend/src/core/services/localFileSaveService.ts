@@ -26,22 +26,6 @@ export async function saveToLocalPath(
 }
 
 /**
- * Check if auto-save should be performed
- * Core stub - always returns false
- */
-export function shouldAutoSave(_inputCount: number, _outputCount: number): boolean {
-  return false;
-}
-
-/**
- * Delete a file from local filesystem
- * Core stub - always returns failure
- */
-export async function deleteLocalFile(_filePath: string): Promise<SaveResult> {
-  return { success: false, error: "Local file delete not available in web mode" };
-}
-
-/**
  * Show native save dialog
  * Core stub - always returns null
  */
@@ -61,8 +45,4 @@ export async function saveMultipleFilesWithPrompt(
   _defaultDirectory?: string
 ): Promise<MultiFileSaveResult> {
   return { success: false, savedCount: 0, error: "Multi-file save not available in web mode" };
-}
-
-export function isDesktopFileAccessAvailable(): boolean {
-  return false;
 }

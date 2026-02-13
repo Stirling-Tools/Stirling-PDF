@@ -25,36 +25,6 @@ export async function saveToLocalPath(
 }
 
 /**
- * Check if auto-save should be performed for this operation
- *
- * @param inputCount - Number of input files
- * @param outputCount - Number of output files
- * @returns True if auto-save conditions are met
- */
-export function shouldAutoSave(inputCount: number, outputCount: number): boolean {
-  return inputCount === 1 && outputCount === 1;
-}
-
-/**
- * Delete a file from local filesystem (Tauri desktop only)
- *
- * @param filePath - Absolute path to delete
- * @returns Result indicating success or failure
- */
-export async function deleteLocalFile(filePath: string): Promise<SaveResult> {
-  try {
-    const { remove } = await import("@tauri-apps/plugin-fs");
-    await remove(filePath);
-    console.log(`[LocalFileDelete] Deleted: ${filePath}`);
-    return { success: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[LocalFileDelete] Failed to delete:', message);
-    return { success: false, error: message };
-  }
-}
-
-/**
  * Show native save dialog and return selected path
  *
  * @param defaultFilename - Suggested filename
@@ -150,8 +120,4 @@ export async function saveMultipleFilesWithPrompt(
     console.error('[LocalFileSave] Failed to save multiple files:', message);
     return { success: false, savedCount: 0, error: message };
   }
-}
-
-export function isDesktopFileAccessAvailable(): boolean {
-  return true;
 }
