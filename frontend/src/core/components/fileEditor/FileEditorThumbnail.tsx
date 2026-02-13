@@ -23,8 +23,9 @@ import { FileId } from '@app/types/file';
 import { formatFileSize } from '@app/utils/fileUtils';
 import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { downloadFile } from '@app/services/downloadService';
+import FileEditorFileName from '@app/components/fileEditor/FileEditorFileName';
+import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
 
@@ -397,39 +398,7 @@ const FileEditorThumbnail = ({
         marginBottom: '0.5rem',
       }}>
         <Text  size="lg" fw={700} className={styles.title}  lineClamp={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-          <PrivateContent>{file.name}</PrivateContent>
-          {/* Dirty indicator - shows when file has unsaved changes */}
-          {file.localFilePath && file.isDirty && (
-            <Tooltip label={t('unsavedChanges', 'Unsaved changes')}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--mantine-color-yellow-6)',
-                  flexShrink: 0
-                }}
-                aria-label={t('unsavedChanges', 'Unsaved changes')}
-              />
-            </Tooltip>
-          )}
-          {/* Saved indicator - shows when file is saved to disk and not dirty */}
-          {file.localFilePath && !file.isDirty && (
-            <Tooltip label={t('fileSavedToDisk', 'File saved to disk')}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--mantine-color-green-6)',
-                  flexShrink: 0
-                }}
-                aria-label={t('fileSavedToDisk', 'File saved to disk')}
-              />
-            </Tooltip>
-          )}
+          <FileEditorFileName file={file} />
         </Text>
         <Text
           size="sm"
