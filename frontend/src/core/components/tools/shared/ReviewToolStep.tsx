@@ -9,8 +9,9 @@ import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { downloadFromUrl } from "@app/services/downloadService";
-import { useFileActions } from "@app/contexts/FileContext";
+import { downloadFile, downloadFromUrl } from "@app/services/downloadService";
+import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { isDesktopFileAccessAvailable } from "@app/services/localFileSaveService";
 import { FileId } from "@app/types/fileContext";
 
 export interface ReviewToolStepProps<TParams = unknown> {
@@ -38,6 +39,7 @@ function ReviewStepContent<TParams = unknown>({
   const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
   const { actions: fileActions } = useFileActions();
+  const { selectors } = useFileState();
 
   const handleUndo = async () => {
     try {
@@ -57,40 +59,44 @@ function ReviewStepContent<TParams = unknown>({
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
     try {
-      console.log('[ReviewToolStep] Downloading file:', {
-        url: operation.downloadUrl,
-        filename: operation.downloadFilename,
-        localPath: operation.downloadLocalPath,
-        outputFileIds: operation.outputFileIds
-      });
+      if (isDesktopFileAccessAvailable() && operation.outputFileIds && operation.outputFileIds.length > 0) {
+        for (const fileId of operation.outputFileIds) {
+          const file = selectors.getFile(fileId as FileId);
+          const stub = selectors.getStirlingFileStub(fileId as FileId);
+          if (!file) {
+            console.warn('[ReviewToolStep] Missing file for output id:', fileId);
+            continue;
+          }
+
+          const result = await downloadFile({
+            data: file,
+            filename: file.name,
+            localPath: stub?.localFilePath
+          });
+
+          if (result.savedPath) {
+            fileActions.updateStirlingFileStub(fileId as FileId, {
+              localFilePath: stub?.localFilePath ?? result.savedPath,
+              isDirty: false
+            });
+          }
+        }
+        return;
+      }
+
       const result = await downloadFromUrl(
         operation.downloadUrl,
         operation.downloadFilename || "download",
         operation.downloadLocalPath || undefined
       );
-      console.log('[ReviewToolStep] Download complete, marking files clean');
 
-      // Mark output files as clean after successful save to disk
-      if (operation.outputFileIds && result.savedPath) {
-        console.log('[ReviewToolStep] Marking files as clean:', operation.outputFileIds);
-        const targetIds = operation.downloadLocalPath
-          ? operation.outputFileIds
-          : operation.outputFileIds.length === 1
-            ? [operation.outputFileIds[0]]
-            : [];
-
-        for (const fileId of targetIds) {
+      if (isDesktopFileAccessAvailable() && operation.outputFileIds && result.savedPath) {
+        for (const fileId of operation.outputFileIds) {
           fileActions.updateStirlingFileStub(fileId as FileId, {
             localFilePath: operation.downloadLocalPath ?? result.savedPath,
             isDirty: false
           });
         }
-      } else {
-        console.log('[ReviewToolStep] Skipping clean mark:', {
-          hasOutputFileIds: !!operation.outputFileIds,
-          hasLocalPath: !!operation.downloadLocalPath,
-          savedPath: result.savedPath
-        });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
