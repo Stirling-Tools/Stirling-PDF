@@ -32,7 +32,4 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
-      SPDF_PDFJSON_DUMP: "true"
-      SPDF_PDFJSON_ANALYZE: "true"
-      SPDF_PDFJSON_REPEAT_SCAN: "true"
     restart: on-failure:5

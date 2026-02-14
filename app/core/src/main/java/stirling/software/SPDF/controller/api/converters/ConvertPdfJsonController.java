@@ -110,7 +110,7 @@ public class ConvertPdfJsonController {
         // Scope job to authenticated user if security is enabled
         String scopedJobKey = getScopedJobKey(baseJobId);
 
-        log.info("Extracting metadata for PDF, assigned jobId: {}", scopedJobKey);
+        log.debug("Extracting metadata for PDF, assigned jobId: {}", scopedJobKey);
 
         byte[] jsonBytes =
                 pdfJsonConversionService.extractDocumentMetadata(inputFile, scopedJobKey);
@@ -218,21 +218,25 @@ public class ConvertPdfJsonController {
             log.warn("Returning {} JSON response: null bytes", label);
             return;
         }
-        int length = jsonBytes.length;
-        boolean endsWithJson =
-                length > 0 && (jsonBytes[length - 1] == '}' || jsonBytes[length - 1] == ']');
-        String tail = "";
-        if (length > 0) {
-            int start = Math.max(0, length - 64);
-            tail = new String(jsonBytes, start, length - start, StandardCharsets.UTF_8);
-            tail = tail.replaceAll("[\\r\\n\\t]+", " ").replaceAll("[^\\x20-\\x7E]", "?");
+
+        // Only perform expensive tail extraction if debug logging is enabled
+        if (log.isDebugEnabled()) {
+            int length = jsonBytes.length;
+            boolean endsWithJson =
+                    length > 0 && (jsonBytes[length - 1] == '}' || jsonBytes[length - 1] == ']');
+            String tail = "";
+            if (length > 0) {
+                int start = Math.max(0, length - 64);
+                tail = new String(jsonBytes, start, length - start, StandardCharsets.UTF_8);
+                tail = tail.replaceAll("[\\r\\n\\t]+", " ").replaceAll("[^\\x20-\\x7E]", "?");
+            }
+            log.debug(
+                    "Returning {} JSON response ({} bytes, endsWithJson={}, tail='{}')",
+                    label,
+                    length,
+                    endsWithJson,
+                    tail);
         }
-        log.info(
-                "Returning {} JSON response ({} bytes, endsWithJson={}, tail='{}')",
-                label,
-                length,
-                endsWithJson,
-                tail);
 
         if (isPdfJsonDebugDumpEnabled()) {
             try {
@@ -245,7 +249,7 @@ public class ConvertPdfJsonController {
                 java.nio.file.Path dumpPath =
                         java.nio.file.Files.createTempFile(dumpDir, "pdfjson_", ".json");
                 java.nio.file.Files.write(dumpPath, jsonBytes);
-                log.info("PDF JSON debug dump ({}): {}", label, dumpPath);
+                log.debug("PDF JSON debug dump ({}): {}", label, dumpPath);
             } catch (Exception ex) {
                 log.warn("Failed to write PDF JSON debug dump ({}): {}", label, ex.getMessage());
             }
@@ -351,13 +355,13 @@ public class ConvertPdfJsonController {
                                                     e.getKey().length(),
                                                     e.getValue()))
                             .collect(java.util.stream.Collectors.joining("; "));
-            log.info(
+            log.debug(
                     "PDF JSON repeat scan ({}): top strings -> {}{}",
                     label,
                     summary,
                     capped ? " (capped)" : "");
         } else {
-            log.info(
+            log.debug(
                     "PDF JSON repeat scan ({}): no repeated strings found{}", label, capped ? " (capped)" : "");
         }
     }

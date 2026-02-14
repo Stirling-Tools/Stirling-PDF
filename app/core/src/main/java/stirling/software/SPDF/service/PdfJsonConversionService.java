@@ -235,12 +235,12 @@ public class PdfJsonConversionService {
         }
         cacheBudgetBytes = effective;
         if (cacheBudgetBytes > 0) {
-            log.info(
+            log.debug(
                     "PDF JSON cache budget configured: {} bytes (source: {})",
                     cacheBudgetBytes,
                     cacheMaxBytes > 0 ? "max-bytes" : "max-percent");
         } else {
-            log.info("PDF JSON cache budget: unlimited");
+            log.debug("PDF JSON cache budget: unlimited");
         }
     }
 
@@ -455,7 +455,7 @@ public class PdfJsonConversionService {
 
                 // Only cache for real async jobIds, not synthetic synchronous ones
                 if (useLazyImages && isRealJobId) {
-                    log.info(
+                    log.debug(
                             "Creating cache for jobId: {} (useLazyImages={}, isRealJobId={})",
                             jobId,
                             useLazyImages,
@@ -1095,7 +1095,7 @@ public class PdfJsonConversionService {
             }
         }
 
-        log.info(
+        log.debug(
                 "Font payload stats ({}): fonts={}, programBytes={}, webProgramBytes={}, pdfProgramBytes={}, toUnicodeBytes={}, maxFontPayloadBytes={} (fontId={})",
                 label,
                 fonts.size(),
@@ -1176,7 +1176,7 @@ public class PdfJsonConversionService {
             logDuplicateSummary("resources", label, resourceStats);
             logDuplicateSummary("fontCosDictionary", label, fontDictStats);
             logDuplicateSummary("annotationRawData", label, annotationStats);
-            log.info(
+            log.debug(
                     "PDF JSON analysis ({}): images={} imageDataBytes={} textElements={} textChars={}",
                     label,
                     imageCount,
@@ -1189,7 +1189,7 @@ public class PdfJsonConversionService {
             long metadataBytes = sizeOfObject(pdfJson.getMetadata());
             long xmpBytes = sizeOfObject(pdfJson.getXmpMetadata());
             long formFieldsBytes = sizeOfObject(pdfJson.getFormFields());
-            log.info(
+            log.debug(
                     "PDF JSON analysis ({}): sectionSizes fonts={} pages={} metadata={} xmp={} formFields={}",
                     label,
                     fontsBytes,
@@ -1221,7 +1221,7 @@ public class PdfJsonConversionService {
                                                 String.format(
                                                         "page=%d size=%d", s.pageNumber, s.sizeBytes))
                                 .collect(java.util.stream.Collectors.joining("; "));
-                log.info("PDF JSON analysis ({}): topPageSizes -> {}", label, top);
+                log.debug("PDF JSON analysis ({}): topPageSizes -> {}", label, top);
 
                 topPages.stream()
                         .limit(3)
@@ -1233,7 +1233,7 @@ public class PdfJsonConversionService {
                                     long annotations = sizeOfObject(page.getAnnotations());
                                     long textElements = sizeOfObject(page.getTextElements());
                                     long imageElements = sizeOfObject(page.getImageElements());
-                                    log.info(
+                                    log.debug(
                                             "PDF JSON analysis ({}): pageBreakdown page={} total={} resources={} contentStreams={} annotations={} textElements={} imageElements={}",
                                             label,
                                             s.pageNumber,
@@ -1295,7 +1295,7 @@ public class PdfJsonConversionService {
                                                 "count=%d size=%d potentialSavings=%d",
                                                 s.count, s.sizeBytes, s.totalBytesSaved()))
                         .collect(java.util.stream.Collectors.joining("; "));
-        log.info(
+        log.debug(
                 "PDF JSON analysis ({}): top duplicates for {} -> {}",
                 label,
                 category,
@@ -1911,12 +1911,12 @@ public class PdfJsonConversionService {
                     "[FALLBACK-DEBUG] Reusing cached fallback font {} (key: {})", effectiveId, key);
             return font;
         }
-        log.info(
+        log.debug(
                 "[FALLBACK-DEBUG] Loading fallback font {} (key: {}) via fallbackFontService",
                 effectiveId,
                 key);
         PDFont loaded = fallbackFontService.loadFallbackPdfFont(document, effectiveId);
-        log.info(
+        log.debug(
                 "[FALLBACK-DEBUG] Loaded fallback font {} - PDFont class: {}, name: {}",
                 effectiveId,
                 loaded.getClass().getSimpleName(),
@@ -2111,7 +2111,7 @@ public class PdfJsonConversionService {
         PDStream fontFile3 = descriptor.getFontFile3();
         if (fontFile3 != null) {
             String subtype = fontFile3.getCOSObject().getNameAsString(COSName.SUBTYPE);
-            log.info(
+            log.debug(
                     "[FONT-DEBUG] Font {}: Found FontFile3 with subtype {}",
                     font.getName(),
                     subtype);
@@ -3274,8 +3274,8 @@ public class PdfJsonConversionService {
                                 baseFontModel.getUid(), Collections.emptySet())
                         : Collections.emptySet();
         boolean hasNormalizedType3 = baseIsType3 && normalizedType3Font != null;
-        if (hasNormalizedType3 && log.isInfoEnabled()) {
-            log.info(
+        if (hasNormalizedType3 && log.isDebugEnabled()) {
+            log.debug(
                     "[TYPE3-RUNTIME] Using normalized library font {} for Type3 resource {} on page {}",
                     normalizedType3Font.getName(),
                     baseFontModel != null ? baseFontModel.getId() : baseFontId,
@@ -3405,7 +3405,7 @@ public class PdfJsonConversionService {
         }
 
         if (rawType3CodesUsed) {
-            log.info(
+            log.debug(
                     "[TYPE3-RUNTIME] Reused original Type3 charCodes for font {} on page {} ({} glyphs)",
                     baseFontModel != null ? baseFontModel.getId() : baseFontId,
                     pageNumber,
@@ -4045,22 +4045,22 @@ public class PdfJsonConversionService {
                 // NOTE: Do NOT sanitize encoded bytes for normalized Type3 fonts
                 // Multi-byte encodings (UTF-16BE, CID fonts) have null bytes that are essential
                 // Removing them corrupts the byte boundaries and produces garbled text
-                log.info(
+                log.debug(
                         "[TYPE3] Encoded text '{}' for normalized font {}: encoded={} bytes",
                         text.length() > 20 ? text.substring(0, 20) + "..." : text,
                         fontModel.getId(),
                         encoded != null ? encoded.length : 0);
                 if (encoded != null && encoded.length > 0) {
-                    log.info(
+                    log.debug(
                             "[TYPE3] Successfully encoded text for normalized Type3 font {} using standard encoding",
                             fontModel.getId());
                     return encoded;
                 }
-                log.info(
+                log.debug(
                         "[TYPE3] Standard encoding produced empty result for normalized Type3 font {}, falling through to Type3 mapping",
                         fontModel.getId());
             } catch (IOException | IllegalArgumentException ex) {
-                log.info(
+                log.debug(
                         "[TYPE3] Standard encoding failed for normalized Type3 font {}: {}",
                         fontModel.getId(),
                         ex.getMessage());
@@ -4586,7 +4586,7 @@ public class PdfJsonConversionService {
         // Last resort: Fuzzy match baseName against Standard14 fonts
         Standard14Fonts.FontName fuzzyMatch = fuzzyMatchStandard14(fontModel.getBaseName());
         if (fuzzyMatch != null) {
-            log.info(
+            log.debug(
                     "Fuzzy-matched font {} (baseName: {}) to Standard14 font {}",
                     fontModel.getId(),
                     fontModel.getBaseName(),
@@ -4620,7 +4620,7 @@ public class PdfJsonConversionService {
                             document, fontModel, source, originalFormat, true, true, true);
             if (font != null) {
                 type3NormalizedFontCache.put(cacheKey, font);
-                log.info(
+                log.debug(
                         "Cached normalized font {} for Type3 {} (key: {})",
                         source.originLabel(),
                         fontModel.getId(),
@@ -4667,7 +4667,7 @@ public class PdfJsonConversionService {
         String originLabel = source.originLabel();
         try {
             if (!skipMetadataLog) {
-                log.info(
+                log.debug(
                         "[FONT-DEBUG] Attempting to load font {} using payload {} (format={}, size={} bytes)",
                         fontModel.getId(),
                         originLabel,
@@ -4694,7 +4694,7 @@ public class PdfJsonConversionService {
                 // so all glyphs are available for editing
                 boolean willBeSubset = !originLabel.contains("type3-library");
                 if (!willBeSubset) {
-                    log.info(
+                    log.debug(
                             "[TYPE3-RUNTIME] Loading library font {} WITHOUT subsetting (full glyph set) from {}",
                             fontModel.getId(),
                             originLabel);
@@ -6276,7 +6276,7 @@ public class PdfJsonConversionService {
         if (jobId == null || jobId.isBlank()) {
             throw new IllegalArgumentException("jobId is required for incremental export");
         }
-        log.info("Looking up cache for jobId: {}", jobId);
+        log.debug("Looking up cache for jobId: {}", jobId);
         CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
             log.error(
@@ -6286,7 +6286,7 @@ public class PdfJsonConversionService {
             throw new stirling.software.SPDF.exception.CacheUnavailableException(
                     "No cached document available for jobId: " + jobId);
         }
-        log.info(
+        log.debug(
                 "Found cached document for jobId: {} (size={}, diskBacked={})",
                 jobId,
                 cached.getPdfSize(),
