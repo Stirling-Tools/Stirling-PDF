@@ -153,6 +153,14 @@ public class ConfigController {
             configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
             configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
+            // User preference defaults
+            configData.put(
+                    "defaultHideUnavailableTools",
+                    applicationProperties.getUi().isDefaultHideUnavailableTools());
+            configData.put(
+                    "defaultHideUnavailableConversions",
+                    applicationProperties.getUi().isDefaultHideUnavailableConversions());
+
             // Security settings
             // enableLogin requires both the config flag AND proprietary features to be loaded
             // If userService is null, proprietary module isn't loaded

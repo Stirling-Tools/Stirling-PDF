@@ -689,7 +689,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.AUTOMATION,
         maxFiles: -1,
         supportedFormats: CONVERT_SUPPORTED_FORMATS,
-        endpoints: ["handleData"],
+        endpoints: ["automate"],
         synonyms: getSynonyms(t, "automate"),
         automationSettings: null,
       },
@@ -808,6 +808,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: devApiLink,
+        endpoints: ["dev-api-docs"],
         synonyms: getSynonyms(t, "devApi"),
         supportsAutomate: false,
         automationSettings: null
@@ -820,6 +821,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Configuration/Folder%20Scanning/",
+        endpoints: ["dev-folder-scanning-docs"],
         synonyms: getSynonyms(t, "devFolderScanning"),
         supportsAutomate: false,
         automationSettings: null
@@ -832,6 +834,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Configuration/Single%20Sign-On%20Configuration/",
+        endpoints: ["dev-sso-guide-docs"],
         synonyms: getSynonyms(t, "devSsoGuide"),
         supportsAutomate: false,
         automationSettings: null
@@ -844,6 +847,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
+        endpoints: ["dev-airgapped-docs"],
         synonyms: getSynonyms(t, "devAirgapped"),
         supportsAutomate: false,
         automationSettings: null
