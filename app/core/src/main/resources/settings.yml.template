@@ -230,10 +230,12 @@ ui:
   appNameNavbar: "" # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
   languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
+  defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
+  defaultHideUnavailableConversions: false # Default user preference: hide disabled conversion options instead of greying them out
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice'])
+  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
