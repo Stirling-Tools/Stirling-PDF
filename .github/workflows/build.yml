@@ -140,7 +140,7 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
       - name: Setup Gradle
