@@ -125,7 +125,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: !enableFormFill, // Disable native form rendering when our interactive overlay is active
+        withForms: true,
         withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
@@ -204,7 +204,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, enableFormFill, showBakedAnnotations, fileName, file, url]);
+  }, [pdfUrl, enableAnnotations, showBakedAnnotations, fileName, file, url]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
