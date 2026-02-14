@@ -1,8 +1,8 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
-import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -183,7 +183,28 @@ public class ConvertPdfJsonController {
         return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
     }
 
-    @AutoJobPostMapping(value = "/pdf/text-editor/clear-cache/{jobId}")
+    @GetMapping(value = "/pdf/text-editor/fonts/{jobId}/{pageNumber}")
+    @Operation(
+            summary = "Extract fonts used by a single cached page for text editor",
+            description =
+                    "Retrieves the font payloads used by a single page from a previously cached PDF document."
+                            + " Requires prior call to /pdf/text-editor/metadata. The jobId must belong to the"
+                            + " authenticated user. Output:JSON")
+    public ResponseEntity<byte[]> extractPageFonts(
+            @PathVariable String jobId, @PathVariable int pageNumber) throws Exception {
+
+        // Validate job ownership
+        validateJobAccess(jobId);
+
+        byte[] jsonBytes = pdfJsonConversionService.extractPageFonts(jobId, pageNumber);
+        logJsonResponse("pdf/text-editor/fonts/page", jsonBytes);
+        String docName = "page_fonts_" + pageNumber + ".json";
+        return WebResponseUtils.bytesToWebResponse(jsonBytes, docName, MediaType.APPLICATION_JSON);
+    }
+
+    @AutoJobPostMapping(
+            value = "/pdf/text-editor/clear-cache/{jobId}",
+            consumes = MediaType.ALL_VALUE)
     @Operation(
             summary = "Clear cached PDF document for text editor",
             description =
@@ -362,7 +383,9 @@ public class ConvertPdfJsonController {
                     capped ? " (capped)" : "");
         } else {
             log.debug(
-                    "PDF JSON repeat scan ({}): no repeated strings found{}", label, capped ? " (capped)" : "");
+                    "PDF JSON repeat scan ({}): no repeated strings found{}",
+                    label,
+                    capped ? " (capped)" : "");
         }
     }
 

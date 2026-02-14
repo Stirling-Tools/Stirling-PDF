@@ -45,7 +45,7 @@ public class PdfJsonCosMapper {
         RESOURCES_LIGHTWEIGHT;
 
         public boolean omitStreamData() {
-            return this != DEFAULT;
+            return this == CONTENT_STREAMS_LIGHTWEIGHT || this == RESOURCES_LIGHTWEIGHT;
         }
     }
 
@@ -74,8 +74,7 @@ public class PdfJsonCosMapper {
         if (cosStream == null) {
             return null;
         }
-        SerializationContext effective =
-                context != null ? context : SerializationContext.DEFAULT;
+        SerializationContext effective = context != null ? context : SerializationContext.DEFAULT;
         return serializeStream(
                 cosStream, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
     }
@@ -97,8 +96,7 @@ public class PdfJsonCosMapper {
 
     public PdfJsonCosValue serializeCosValue(COSBase base, SerializationContext context)
             throws IOException {
-        SerializationContext effective =
-                context != null ? context : SerializationContext.DEFAULT;
+        SerializationContext effective = context != null ? context : SerializationContext.DEFAULT;
         return serializeCosValue(
                 base, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
     }
@@ -274,15 +272,16 @@ public class PdfJsonCosMapper {
                 return builder.build();
             }
             if (base instanceof COSStream stream) {
-                builder.type(PdfJsonCosValue.Type.STREAM)
-                        .stream(serializeStream(stream, visited, context));
+                builder.type(PdfJsonCosValue.Type.STREAM).stream(
+                        serializeStream(stream, visited, context));
                 return builder.build();
             }
             if (base instanceof COSDictionary dictionary) {
                 Map<String, PdfJsonCosValue> entries = new LinkedHashMap<>();
                 for (COSName key : dictionary.keySet()) {
                     PdfJsonCosValue serialized =
-                            serializeCosValue(dictionary.getDictionaryObject(key), visited, context);
+                            serializeCosValue(
+                                    dictionary.getDictionaryObject(key), visited, context);
                     entries.put(key.getName(), serialized);
                 }
                 builder.type(PdfJsonCosValue.Type.DICTIONARY).entries(entries);

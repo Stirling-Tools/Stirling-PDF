@@ -16,6 +16,7 @@ import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { Util } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {
   PdfJsonDocument,
+  PdfJsonFont,
   PdfJsonImageElement,
   PdfJsonPage,
   TextGroup,
@@ -450,14 +451,28 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const start = performance.now();
 
       try {
-        const response = await apiClient.get(
-          `/api/v1/convert/pdf/text-editor/page/${cachedJobId}/${pageNumber}`,
-          {
-            responseType: 'json',
-          },
-        );
+        const [pageResponse, pageFontsResponse] = await Promise.all([
+          apiClient.get(
+            `/api/v1/convert/pdf/text-editor/page/${cachedJobId}/${pageNumber}`,
+            {
+              responseType: 'json',
+            },
+          ),
+          apiClient.get(
+            `/api/v1/convert/pdf/text-editor/fonts/${cachedJobId}/${pageNumber}`,
+            {
+              responseType: 'json',
+            },
+          ).catch((error) => {
+            console.warn(`[loadImagesForPage] Failed to load fonts for page ${pageNumber}:`, error);
+            return { data: [] };
+          }),
+        ]);
 
-        const pageData = response.data as PdfJsonPage;
+        const pageData = pageResponse.data as PdfJsonPage;
+        const pageFonts = Array.isArray(pageFontsResponse.data)
+          ? (pageFontsResponse.data as PdfJsonFont[])
+          : [];
         const normalizedImages = (pageData.imageElements ?? []).map(cloneImageElement);
 
         if (imagesByPageRef.current.length <= pageIndex) {
@@ -471,12 +486,31 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           }
           const nextPages = [...prevDoc.pages];
           const existingPage = nextPages[pageIndex] ?? {};
+          const nextFonts = [...(prevDoc.fonts ?? [])];
+          if (pageFonts.length > 0) {
+            for (const font of pageFonts) {
+              if (!font) {
+                continue;
+              }
+              const key = font.uid || `${font.pageNumber ?? -1}:${font.id ?? ''}`;
+              const existingIndex = nextFonts.findIndex((f) => {
+                const existingKey = f?.uid || `${f?.pageNumber ?? -1}:${f?.id ?? ''}`;
+                return existingKey === key;
+              });
+              if (existingIndex >= 0) {
+                nextFonts[existingIndex] = font;
+              } else {
+                nextFonts.push(font);
+              }
+            }
+          }
           nextPages[pageIndex] = {
             ...existingPage,
             imageElements: normalizedImages.map(cloneImageElement),
           };
           return {
             ...prevDoc,
+            fonts: nextFonts,
             pages: nextPages,
           };
         });
@@ -1087,8 +1121,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const canUseIncremental =
         isLazyMode &&
         cachedJobId &&
-        dirtyPageIndices.length > 0 &&
-        dirtyPageIndices.length < totalPages;
+        dirtyPageIndices.length > 0;
 
       if (canUseIncremental) {
         await ensureImagesForPages(dirtyPageIndices);
@@ -1105,10 +1138,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             document.pages?.filter((_, index) => dirtyPageSet.has(index)) ?? [];
 
           const partialDocument: PdfJsonDocument = {
-            metadata: document.metadata,
-            xmpMetadata: document.xmpMetadata,
-            fonts: document.fonts,
-            lazyImages: true,
+            // Incremental export only needs changed pages.
+            // Fonts/resources/content streams are resolved from server-side cache.
             pages: partialPages,
           };
 
@@ -1272,8 +1303,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const canUseIncremental =
         isLazyMode &&
         cachedJobId &&
-        dirtyPageIndices.length > 0 &&
-        dirtyPageIndices.length < totalPages;
+        dirtyPageIndices.length > 0;
 
       if (canUseIncremental) {
         await ensureImagesForPages(dirtyPageIndices);
@@ -1290,10 +1320,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             document.pages?.filter((_, index) => dirtyPageSet.has(index)) ?? [];
 
           const partialDocument: PdfJsonDocument = {
-            metadata: document.metadata,
-            xmpMetadata: document.xmpMetadata,
-            fonts: document.fonts,
-            lazyImages: true,
+            // Incremental export only needs changed pages.
+            // Fonts/resources/content streams are resolved from server-side cache.
             pages: partialPages,
           };
 
