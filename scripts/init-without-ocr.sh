@@ -254,6 +254,21 @@ if [ -z "${VERSION_TAG:-}" ] && [ -f /etc/stirling_version ]; then
   export VERSION_TAG
 fi
 
+# Check if JVM supports Project Lilliput (Compact Object Headers)
+# Also set default modern flags if JAVA_BASE_OPTS is unset (e.g. running outside Docker)
+if [ -z "${JAVA_BASE_OPTS:-}" ]; then
+  log "JAVA_BASE_OPTS unset; applying modern defaults."
+  JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Xlog:gc*:file=/configs/gc.log:time,uptime,level,tags:filecount=5,filesize=10M -XX:+UseStringDeduplication"
+fi
+
+# Check if Project Lilliput is supported (Standard in Java 25+)
+if java -XX:+UseCompactObjectHeaders -version >/dev/null 2>&1; then
+  log "JVM supports Compact Object Headers (Standard). Enabling Project Lilliput..."
+  JAVA_BASE_OPTS="${JAVA_BASE_OPTS:-} -XX:+UseCompactObjectHeaders"
+else
+  log "JVM does not support Compact Object Headers. Skipping Project Lilliput flags."
+fi
+
 # ---------- JAVA_OPTS ----------
 # Configure Java runtime options.
 export JAVA_TOOL_OPTIONS="${JAVA_BASE_OPTS:-} ${JAVA_CUSTOM_OPTS:-}"

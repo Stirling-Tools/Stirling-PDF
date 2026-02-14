@@ -2,7 +2,7 @@
 # Single JAR contains both frontend and backend
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
+FROM gradle:jdk25 AS build
 
 # Install Node.js and npm for frontend build
 RUN apt-get update && apt-get install -y \
@@ -34,9 +34,9 @@ COPY . .
 RUN DISABLE_ADDITIONAL_FEATURES=false \
     ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
-# Stage 2: Runtime image based on Debian stable-slim
+# Stage 2: Runtime image based on Eclipse Temurin (Java 25)
 # Contains Java runtime + LibreOffice + Calibre + all PDF tools
-FROM debian:stable-slim@sha256:ed542b2d269ff08139fc5ab8c762efe8c8986b564a423d5241a5ce9fb09b6c08
+FROM eclipse-temurin:25-jre
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
@@ -49,7 +49,6 @@ ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 # Install core runtime dependencies + tools required by Stirling-PDF features
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
-    openjdk-21-jre-headless \
     ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
     fonts-dejavu \
     fonts-liberation fonts-liberation2 \
@@ -151,7 +150,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, API, Spring Boot, Re
 # Runtime environment variables
 # ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -Djava.awt.headless=true" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Xlog:gc*:file=/configs/gc.log:time,uptime,level,tags:filecount=5,filesize=10M -XX:+UseStringDeduplication -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \

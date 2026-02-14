@@ -35,10 +35,10 @@ ext {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -78,7 +78,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.4.5'
+    version = '2.4.6'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -148,11 +148,10 @@ subprojects {
     apply plugin: 'jacoco'
 
     java {
-        // Spring Boot 4 requires Java 17+, we use 21
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(25)
         }
     }
 
@@ -218,6 +217,7 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
+        options.release = rootProject.ext.modernJavaVersion
         if (!project.hasProperty("noSpotless")) {
             dependsOn "spotlessApply"
         }
@@ -405,6 +405,16 @@ subprojects {
             finalizedBy("copySwaggerDoc")
             doNotTrackState("OpenAPI plugin writes outside build directory")
         }
+
+        tasks.named("bootRun") {
+            jvmArgs = [
+                "-XX:+UseG1GC",
+                "-XX:MaxGCPauseMillis=200",
+                "-XX:+DisableExplicitGC",
+                "-XX:+UseStringDeduplication",
+                "-XX:+UseCompactObjectHeaders"
+            ]
+        }
     }
 }
 
@@ -557,9 +567,6 @@ tasks.register('compileRestartHelper', JavaCompile) {
     sourceCompatibility = restartCompatibility
     targetCompatibility = restartCompatibility
     options.release.set(restartMajorVersion)
-    javaCompiler = javaToolchains.compilerFor {
-        languageVersion.set(JavaLanguageVersion.of(restartMajorVersion))
-    }
 }
 
 // Task to create restart-helper.jar
