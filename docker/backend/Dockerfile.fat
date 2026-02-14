@@ -37,9 +37,11 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install core runtime dependencies + tools required by Stirling-PDF features
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN echo "deb http://deb.debian.org/debian bookworm-backports main" > /etc/apt/sources.list.d/backports.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends -t bookworm-backports openjdk-21-jre-headless \
+    && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
-    openjdk-21-jre-headless \
     ffmpeg poppler-utils qpdf ghostscript ocrmypdf \
     libreoffice-nogui libreoffice-java-common \
     python3 python3-venv python3-uno \
