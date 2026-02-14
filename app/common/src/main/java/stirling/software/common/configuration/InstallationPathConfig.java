@@ -14,6 +14,7 @@ public class InstallationPathConfig {
     private static final String CUSTOM_FILES_PATH;
     private static final String CLIENT_WEBUI_PATH;
     private static final String PIPELINE_PATH;
+    private static final String PLUGINS_PATH;
 
     // Config paths
     private static final String SETTINGS_PATH;
@@ -40,6 +41,7 @@ public class InstallationPathConfig {
         CUSTOM_FILES_PATH = BASE_PATH + "customFiles" + File.separator;
         CLIENT_WEBUI_PATH = BASE_PATH + "clientWebUI" + File.separator;
         PIPELINE_PATH = BASE_PATH + "pipeline" + File.separator;
+        PLUGINS_PATH = CUSTOM_FILES_PATH + "plugins" + File.separator;
 
         // Initialize config paths
         SETTINGS_PATH = CONFIG_PATH + "settings.yml";
@@ -108,6 +110,10 @@ public class InstallationPathConfig {
 
     public static String getSignaturesPath() {
         return SIGNATURES_PATH;
+    }
+
+    public static String getPluginsPath() {
+        return PLUGINS_PATH;
     }
 
     public static String getPrivateKeyPath() {

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from "react";
-import { Box, Stack } from "@mantine/core";
+import { Box, Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
@@ -12,6 +12,8 @@ import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
+import { usePluginRegistry } from "@app/contexts/PluginRegistryContext";
+import { useNavigate } from "react-router-dom";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -26,7 +28,13 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const scrollableRef = useRef<HTMLDivElement>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  const { favoriteTools, toolRegistry } = useToolWorkflow();
+  const {
+    favoriteTools,
+    toolRegistry,
+    setLeftPanelView,
+    setReaderMode,
+    setSearchQuery,
+  } = useToolWorkflow();
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
@@ -45,6 +53,13 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const allSection = useMemo(
     () => visibleSections.find(s => s.key === 'all'),
     [visibleSections]
+  );
+
+  const { plugins } = usePluginRegistry();
+  const navigate = useNavigate();
+  const pluginItems = useMemo(
+    () => plugins.filter((plugin) => plugin.hasFrontend && plugin.frontendUrl),
+    [plugins],
   );
 
   // Build flat list by subcategory for search mode
@@ -129,6 +144,50 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                     onSelect={onSelect}
                     hasStars
                   />
+                ))}
+              </div>
+            </Box>
+          )}
+          {pluginItems.length > 0 && (
+            <Box w="100%">
+              <div style={headerTextStyle}>{t("plugins.shortTitle", "Plugins")}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                {pluginItems.map((plugin) => (
+                  <Button
+                    key={`plugin-${plugin.id}`}
+                    variant="subtle"
+                    size="sm"
+                    radius="md"
+                    fullWidth
+                    justify="flex-start"
+                    onClick={() => {
+                      console.debug(`[ToolPicker] Navigating to plugin ${plugin.id}`);
+                      setReaderMode(false);
+                      setSearchQuery("");
+                      setLeftPanelView("hidden");
+                      navigate(`/plugins/${plugin.id}`, { state: { plugin } });
+                    }}
+                    data-tour={`plugin-button-${plugin.id}`}
+                    styles={{
+                      root: {
+                        borderRadius: 0,
+                        textAlign: "left",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.125rem",
+                        paddingTop: 12,
+                        paddingBottom: 12,
+                        color: "var(--tools-text-and-icon-color)",
+                      },
+                    }}
+                  >
+                    <Text size="sm" fw={600}>
+                      {plugin.name}
+                    </Text>
+                    <Text size="xs" color="var(--mantine-color-dimmed)">
+                      {plugin.description || t("plugins.noDescription", "No description provided.")}
+                    </Text>
+                  </Button>
                 ))}
               </div>
             </Box>
