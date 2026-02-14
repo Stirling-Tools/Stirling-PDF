@@ -329,7 +329,6 @@ function FileContextInner({
     addStirlingFileStubs: addStirlingFileStubsAction,
     removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
       // Remove from memory and cleanup resources
-      // Note: Files with localFilePath are kept on disk - only removed from app
       lifecycleManager.removeFiles(fileIds, stateRef);
 
       // Remove from IndexedDB if enabled

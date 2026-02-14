@@ -463,10 +463,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             {
               responseType: 'json',
             },
-          ).catch((error) => {
-            console.warn(`[loadImagesForPage] Failed to load fonts for page ${pageNumber}:`, error);
-            return { data: [] };
-          }),
+          ),
         ]);
 
         const pageData = pageResponse.data as PdfJsonPage;
@@ -486,24 +483,24 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           }
           const nextPages = [...prevDoc.pages];
           const existingPage = nextPages[pageIndex] ?? {};
-          const nextFonts = [...(prevDoc.fonts ?? [])];
+          const fontMap = new Map<string, PdfJsonFont>();
+          for (const existingFont of prevDoc.fonts ?? []) {
+            if (!existingFont) {
+              continue;
+            }
+            const existingKey = existingFont.uid || `${existingFont.pageNumber ?? -1}:${existingFont.id ?? ''}`;
+            fontMap.set(existingKey, existingFont);
+          }
           if (pageFonts.length > 0) {
             for (const font of pageFonts) {
               if (!font) {
                 continue;
               }
               const key = font.uid || `${font.pageNumber ?? -1}:${font.id ?? ''}`;
-              const existingIndex = nextFonts.findIndex((f) => {
-                const existingKey = f?.uid || `${f?.pageNumber ?? -1}:${f?.id ?? ''}`;
-                return existingKey === key;
-              });
-              if (existingIndex >= 0) {
-                nextFonts[existingIndex] = font;
-              } else {
-                nextFonts.push(font);
-              }
+              fontMap.set(key, font);
             }
           }
+          const nextFonts = Array.from(fontMap.values());
           nextPages[pageIndex] = {
             ...existingPage,
             imageElements: normalizedImages.map(cloneImageElement),
@@ -1166,11 +1163,13 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           setErrorMessage(null);
           return;
         } catch (incrementalError) {
+          if (isLazyMode && cachedJobIdRef.current) {
+            throw new Error('Incremental export failed for cached document. Please reload and retry.');
+          }
           console.warn(
             '[handleGeneratePdf] Incremental export failed, falling back to full export',
             incrementalError,
           );
-          // Fall through to full export below
         }
       }
 
@@ -1340,6 +1339,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           downloadName = detectedName || expectedName;
           pdfBlob = response.data;
         } catch (incrementalError) {
+          if (isLazyMode && cachedJobId) {
+            throw new Error('Incremental export failed for cached document. Please reload and retry.');
+          }
           console.warn(
             '[handleSaveToWorkbench] Incremental export failed, falling back to full export',
             incrementalError,

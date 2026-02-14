@@ -438,13 +438,21 @@ public class PdfJsonConversionService {
                 pdfJson.setMetadata(extractMetadata(document));
                 pdfJson.setXmpMetadata(extractXmpMetadata(document));
                 pdfJson.setLazyImages(useLazyImages);
-                List<PdfJsonFont> serializedFonts = cloneFontList(fonts.values());
-                serializedFonts.sort(
+                List<PdfJsonFont> cachedFonts = cloneFontList(fonts.values());
+                cachedFonts.sort(
                         Comparator.comparing(
                                 PdfJsonFont::getUid,
                                 Comparator.nullsLast(Comparator.naturalOrder())));
-                dedupeFontPayloads(serializedFonts);
-                pdfJson.setFonts(serializedFonts);
+                dedupeFontPayloads(cachedFonts);
+                Map<String, PdfJsonFont> cachedFontMap = new LinkedHashMap<>();
+                for (PdfJsonFont cachedFont : cachedFonts) {
+                    String cacheKey = resolveFontCacheKey(cachedFont);
+                    if (cacheKey != null) {
+                        cachedFontMap.put(cacheKey, cachedFont);
+                    }
+                }
+                List<PdfJsonFont> responseFonts = cloneFontList(cachedFonts);
+                pdfJson.setFonts(responseFonts);
                 pdfJson.setPages(
                         extractPages(
                                 document,
@@ -471,7 +479,7 @@ public class PdfJsonConversionService {
                     PdfJsonDocumentMetadata docMetadata = new PdfJsonDocumentMetadata();
                     docMetadata.setMetadata(pdfJson.getMetadata());
                     docMetadata.setXmpMetadata(pdfJson.getXmpMetadata());
-                    docMetadata.setFonts(serializedFonts);
+                    docMetadata.setFonts(cloneFontList(responseFonts));
                     docMetadata.setFormFields(pdfJson.getFormFields());
                     docMetadata.setLazyImages(Boolean.TRUE);
 
@@ -501,7 +509,11 @@ public class PdfJsonConversionService {
                     }
                     CachedPdfDocument cached =
                             buildCachedDocument(
-                                    jobId, cachedPdfBytes, docMetadata, fonts, pageFontResources);
+                                    jobId,
+                                    cachedPdfBytes,
+                                    docMetadata,
+                                    cachedFontMap,
+                                    pageFontResources);
                     putCachedDocument(jobId, cached);
                     log.info(
                             "Successfully cached PDF ({} bytes, {} pages, {} fonts) for jobId: {} (diskBacked={})",
@@ -523,11 +535,11 @@ public class PdfJsonConversionService {
                     applyLightweightTransformations(pdfJson);
                 }
                 if (lightweight && isRealJobId) {
-                    stripFontProgramPayloads(serializedFonts);
-                    stripFontCosStreamData(serializedFonts);
+                    stripFontProgramPayloads(responseFonts);
+                    stripFontCosStreamData(responseFonts);
                 }
 
-                logFontPayloadStats(serializedFonts, "pdf/text-editor");
+                logFontPayloadStats(responseFonts, "pdf/text-editor");
                 analyzePdfJson(pdfJson, "pdf/text-editor");
 
                 progress.accept(
@@ -535,7 +547,7 @@ public class PdfJsonConversionService {
 
                 // Collect font issues for summary
                 java.util.List<String> fontsWithMissingProgram =
-                        serializedFonts.stream()
+                        responseFonts.stream()
                                 .filter(
                                         f ->
                                                 Boolean.TRUE.equals(f.getEmbedded())
@@ -559,14 +571,12 @@ public class PdfJsonConversionService {
                                         })
                                 .collect(java.util.stream.Collectors.toList());
                 long type3Fonts =
-                        serializedFonts.stream()
-                                .filter(f -> "Type3".equals(f.getSubtype()))
-                                .count();
+                        responseFonts.stream().filter(f -> "Type3".equals(f.getSubtype())).count();
 
                 if (!fontsWithMissingProgram.isEmpty()) {
                     log.warn(
                             "PDF->JSON conversion complete: {} fonts ({} Type3), {} pages. Missing font programs for {} embedded font(s): {}",
-                            serializedFonts.size(),
+                            responseFonts.size(),
                             type3Fonts,
                             pdfJson.getPages().size(),
                             fontsWithMissingProgram.size(),
@@ -574,7 +584,7 @@ public class PdfJsonConversionService {
                 } else {
                     log.info(
                             "PDF->JSON conversion complete: {} fonts ({} Type3), {} pages",
-                            serializedFonts.size(),
+                            responseFonts.size(),
                             type3Fonts,
                             pdfJson.getPages().size());
                 }
@@ -976,40 +986,59 @@ public class PdfJsonConversionService {
         if (font == null) {
             return null;
         }
-        return PdfJsonFont.builder()
-                .id(font.getId())
-                .pageNumber(font.getPageNumber())
-                .uid(font.getUid())
-                .baseName(font.getBaseName())
-                .subtype(font.getSubtype())
-                .encoding(font.getEncoding())
-                .cidSystemInfo(font.getCidSystemInfo())
-                .embedded(font.getEmbedded())
-                .program(font.getProgram())
-                .programFormat(font.getProgramFormat())
-                .webProgram(font.getWebProgram())
-                .webProgramFormat(font.getWebProgramFormat())
-                .pdfProgram(font.getPdfProgram())
-                .pdfProgramFormat(font.getPdfProgramFormat())
-                .type3Glyphs(
-                        font.getType3Glyphs() == null
-                                ? null
-                                : new ArrayList<>(font.getType3Glyphs()))
-                .conversionCandidates(
-                        font.getConversionCandidates() == null
-                                ? null
-                                : new ArrayList<>(font.getConversionCandidates()))
-                .toUnicode(font.getToUnicode())
-                .standard14Name(font.getStandard14Name())
-                .fontDescriptorFlags(font.getFontDescriptorFlags())
-                .ascent(font.getAscent())
-                .descent(font.getDescent())
-                .capHeight(font.getCapHeight())
-                .xHeight(font.getXHeight())
-                .italicAngle(font.getItalicAngle())
-                .unitsPerEm(font.getUnitsPerEm())
-                .cosDictionary(font.getCosDictionary())
-                .build();
+        try {
+            byte[] bytes = objectMapper.writeValueAsBytes(font);
+            return objectMapper.readValue(bytes, PdfJsonFont.class);
+        } catch (Exception ex) {
+            log.debug(
+                    "Failed deep-cloning font {} via roundtrip: {}", font.getId(), ex.getMessage());
+            PdfJsonCosValue cosClone = null;
+            try {
+                if (font.getCosDictionary() != null) {
+                    byte[] cosBytes = objectMapper.writeValueAsBytes(font.getCosDictionary());
+                    cosClone = objectMapper.readValue(cosBytes, PdfJsonCosValue.class);
+                }
+            } catch (Exception cosEx) {
+                log.debug(
+                        "Failed deep-cloning font cosDictionary {}: {}",
+                        font.getId(),
+                        cosEx.getMessage());
+            }
+            return PdfJsonFont.builder()
+                    .id(font.getId())
+                    .pageNumber(font.getPageNumber())
+                    .uid(font.getUid())
+                    .baseName(font.getBaseName())
+                    .subtype(font.getSubtype())
+                    .encoding(font.getEncoding())
+                    .cidSystemInfo(font.getCidSystemInfo())
+                    .embedded(font.getEmbedded())
+                    .program(font.getProgram())
+                    .programFormat(font.getProgramFormat())
+                    .webProgram(font.getWebProgram())
+                    .webProgramFormat(font.getWebProgramFormat())
+                    .pdfProgram(font.getPdfProgram())
+                    .pdfProgramFormat(font.getPdfProgramFormat())
+                    .type3Glyphs(
+                            font.getType3Glyphs() == null
+                                    ? null
+                                    : new ArrayList<>(font.getType3Glyphs()))
+                    .conversionCandidates(
+                            font.getConversionCandidates() == null
+                                    ? null
+                                    : new ArrayList<>(font.getConversionCandidates()))
+                    .toUnicode(font.getToUnicode())
+                    .standard14Name(font.getStandard14Name())
+                    .fontDescriptorFlags(font.getFontDescriptorFlags())
+                    .ascent(font.getAscent())
+                    .descent(font.getDescent())
+                    .capHeight(font.getCapHeight())
+                    .xHeight(font.getXHeight())
+                    .italicAngle(font.getItalicAngle())
+                    .unitsPerEm(font.getUnitsPerEm())
+                    .cosDictionary(cosClone)
+                    .build();
+        }
     }
 
     private void applyLightweightTransformations(PdfJsonDocument document) {
@@ -1063,6 +1092,9 @@ public class PdfJsonConversionService {
     }
 
     private void logFontPayloadStats(List<PdfJsonFont> fonts, String label) {
+        if (!log.isDebugEnabled()) {
+            return;
+        }
         if (fonts == null || fonts.isEmpty()) {
             return;
         }
@@ -1388,8 +1420,11 @@ public class PdfJsonConversionService {
                 continue;
             }
             font.setProgram(null);
+            font.setProgramFormat(null);
             font.setWebProgram(null);
+            font.setWebProgramFormat(null);
             font.setPdfProgram(null);
+            font.setPdfProgramFormat(null);
         }
     }
 
@@ -6750,7 +6785,14 @@ public class PdfJsonConversionService {
     }
 
     private boolean hasMissingStreamData(PdfJsonCosValue value) {
+        return hasMissingStreamData(value, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    private boolean hasMissingStreamData(PdfJsonCosValue value, Set<PdfJsonCosValue> visited) {
         if (value == null || value.getType() == null) {
+            return false;
+        }
+        if (!visited.add(value)) {
             return false;
         }
         switch (value.getType()) {
@@ -6760,7 +6802,7 @@ public class PdfJsonConversionService {
             case ARRAY:
                 if (value.getItems() != null) {
                     for (PdfJsonCosValue item : value.getItems()) {
-                        if (hasMissingStreamData(item)) {
+                        if (hasMissingStreamData(item, visited)) {
                             return true;
                         }
                     }
@@ -6769,7 +6811,7 @@ public class PdfJsonConversionService {
             case DICTIONARY:
                 if (value.getEntries() != null) {
                     for (PdfJsonCosValue entry : value.getEntries().values()) {
-                        if (hasMissingStreamData(entry)) {
+                        if (hasMissingStreamData(entry, visited)) {
                             return true;
                         }
                     }
