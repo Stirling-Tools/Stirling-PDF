@@ -1,4 +1,5 @@
 import { PDFDocument as PDFLibDocument, degrees, PageSizes } from 'pdf-lib';
+import { downloadFile } from '@app/services/downloadService';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 
 export interface ExportOptions {
@@ -181,18 +182,7 @@ export class PDFExportService {
    * Download a single file
    */
   downloadFile(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.style.display = 'none';
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Clean up the URL after a short delay
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    void downloadFile({ data: blob, filename });
   }
 
   /**

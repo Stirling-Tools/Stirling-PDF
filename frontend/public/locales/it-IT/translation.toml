@@ -264,8 +264,8 @@ preview = "Selezione posizione"
 previewDisclaimer = "L'anteprima è approssimativa. Il risultato finale può variare a causa delle metriche dei font PDF."
 submit = "Aggiungi numeri di pagina"
 title = "Aggiungi numeri di pagina"
-zeroPad = "Zero‑pad Width (Bates Stamping)"
-zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+zeroPad = "Larghezza del riempimento con zeri (Timbro Bates)"
+zeroPadTooltip = "Riempire con zeri (timbro Bates) i numeri di pagina fino a questa larghezza (ad esempio, 3 ⇒ 001). Impostare a 0 per disabilitare."
 
 [addPageNumbers.error]
 failed = "Operazione di aggiunta dei numeri di pagina non riuscita"
@@ -391,13 +391,13 @@ title = "Risultati timbro"
 [AddStampRequest.template]
 custom = "Personalizzato"
 dateHeader = "Data intestazione"
-doc-info = "Document Info"
-draft = "Draft Watermark"
+doc-info = "Informazioni sul documento"
+draft = "Filigrana di bozza"
 draftWatermark = "Bozza Filigrana"
-european-date = "European Date (DD/MM/YYYY)"
+european-date = "Note legali (DD/MM/YYYY)"
 europeanDate = "Data europea"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
+legal-footer = "Note legali"
+page-numbers = "Numeri di pagina"
 pageNumberFooter = "Piè di pagina con numero di pagina"
 timestamp = "Timestamp"
 
@@ -921,23 +921,23 @@ description = "Percorso dell'eseguibile WeasyPrint per conversione da HTML a PDF
 label = "Eseguibile WeasyPrint"
 
 [admin.settings.general.customPaths.pipeline]
-label = "Directory pipeline"
+label = "Pipeline della directory"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
 description = "Directory di output dei PDF elaborati (lascia vuoto per default: /pipeline/finishedFolders)"
 label = "Directory cartelle completate"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
+description = "Directory di base per le risorse della pipeline (lascia vuoto per il valore predefinito: /pipeline)"
+label = "Pipeline della directory"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "Directory in cui la pipeline monitora i PDF in arrivo (lascia vuoto per predefinito: /pipeline/watchedFolders)"
 label = "Directory cartelle monitorate"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
+description = "Directory in cui la pipeline monitora i PDF in arrivo (una per riga o separate da virgola; lascia vuoto per il valore predefinito: /pipeline/watchedFolders)"
+label = "Cartelle e directory controllate"
 
 [admin.settings.general.defaultLocale]
 description = "La lingua predefinita per i nuovi utenti (es. en_US, es_ES)"
@@ -2285,7 +2285,7 @@ title = "Questi PDF sembrano molto diversi"
 
 [compare.edited]
 label = "PDF modificato"
-placeholder = "Select the edited PDF"
+placeholder = "Seleziona il PDF modificato"
 
 [compare.error]
 filesMissing = "Impossibile trovare i file selezionati. Selezionali di nuovo."
@@ -2560,8 +2560,8 @@ selectSourceFormatFirst = "Seleziona prima un formato sorgente"
 settings = "Impostazioni"
 single = "Singolo"
 sourceFormatPlaceholder = "Formato sorgente"
-strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
+strictMode = "Modalità Stretta"
+strictModeDesc = "Errore se la conversione non è perfetta (utilizza la verifica VeraPDF)"
 svgPdfOptions = "Opzioni da SVG a PDF"
 svgVectorNote = "I file SVG vengono renderizzati come grafica vettoriale per un output nitido a qualsiasi risoluzione. Le dimensioni dell'SVG determinano le dimensioni della pagina PDF."
 targetFormatPlaceholder = "Formato di destinazione"
@@ -4887,7 +4887,6 @@ failed = "Si è verificato un errore durante la redazione del PDF."
 [redact.manual]
 apply = "Applica"
 applyChanges = "Applica modifiche"
-applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Applicazione permanente, non può essere annullata e i dati sottostanti verranno eliminati"
 boxRedaction = "Redazione con riquadro"
 colourPicker = "Selettore colore"
@@ -4915,6 +4914,7 @@ upload = "Carica"
 zoom = "Zoom"
 zoomIn = "Ingrandisci"
 zoomOut = "Riduci"
+applyRedactions = "Apply Redactions"
 
 [redact.manual.pageRedactionNumbers]
 placeholder = "(es. 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -5669,7 +5669,7 @@ title = "Accedi al server"
 subtitle = "Inserisci l'URL del tuo server self-hosted"
 testing = "Verifica connessione..."
 title = "Connetti al server"
-useLast = "Last used server: {{serverUrl}}"
+useLast = "Ultimo server utilizzato: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Impossibile recuperare la configurazione del server. Controlla l'URL e riprova."
