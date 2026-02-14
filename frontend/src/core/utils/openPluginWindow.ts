@@ -9,7 +9,7 @@ export async function openPluginWindow(plugin: PluginInfo) {
 
   if (isTauri) {
     try {
-      const { WebviewWindow } = await import("@tauri-apps/api/window");
+      const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
       const windowId = `plugin-${plugin.id}`;
       const pluginWindow = new WebviewWindow(windowId, {
         url: plugin.frontendUrl,
