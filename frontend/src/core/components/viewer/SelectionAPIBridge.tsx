@@ -1,17 +1,22 @@
 import { useEffect, useRef } from 'react';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
+/**
+ * Connects the PDF selection plugin to the shared ViewerContext.
+ */
 export function SelectionAPIBridge() {
   const { provides: selection } = useSelectionCapability();
   const { registerBridge } = useViewer();
+  const documentReady = useDocumentReady();
 
 
   const hasSelectionRef = useRef(false);
   const selectedTextRef = useRef('');
 
   useEffect(() => {
-    if (!selection) return;
+    if (!selection || !documentReady) return;
 
     const buildApi = () => ({
       copyToClipboard: () => selection.copyToClipboard(),
@@ -68,8 +73,9 @@ export function SelectionAPIBridge() {
       unsubCopy?.();
       document.removeEventListener('copy', handleCopy);
       document.removeEventListener('keydown', handleKeyDown);
+      registerBridge('selection', null);
     };
-  }, [selection]);
+  }, [selection, documentReady, registerBridge]);
 
   return null;
 }

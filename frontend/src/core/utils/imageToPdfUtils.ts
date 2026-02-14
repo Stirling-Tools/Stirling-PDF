@@ -1,4 +1,4 @@
-import { PDFDocument, PageSizes } from 'pdf-lib';
+import { PDFDocument, PageSizes } from '@cantoo/pdf-lib';
 
 export interface ImageToPdfOptions {
   imageResolution?: 'full' | 'reduced';

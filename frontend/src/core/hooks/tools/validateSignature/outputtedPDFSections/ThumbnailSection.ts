@@ -1,4 +1,4 @@
-import { PDFFont, PDFPage, PDFImage } from 'pdf-lib';
+import { PDFFont, PDFPage, PDFImage } from '@cantoo/pdf-lib';
 import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 export const drawThumbnailPlaceholder = (

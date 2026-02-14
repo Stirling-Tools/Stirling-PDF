@@ -2,15 +2,21 @@ import { useEffect, useRef } from 'react';
 import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
+/**
+ * SpreadAPIBridge - Updated for embedPDF v2.6.0
+ * Connects the PDF spread mode (single/dual page) plugin to the shared ViewerContext.
+ */
 export function SpreadAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
-  
-  // Don't render the inner component until we have a valid document ID
-  if (!activeDocumentId) {
+  const documentReady = useDocumentReady();
+
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
     return null;
   }
-  
+
   return <SpreadAPIBridgeInner documentId={activeDocumentId} />;
 }
 
@@ -52,6 +58,10 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
     });
 
     triggerImmediateSpreadUpdate(spreadMode);
+
+    return () => {
+      registerBridge('spread', null);
+    };
   }, [spreadMode, registerBridge, triggerImmediateSpreadUpdate]);
 
   return null;

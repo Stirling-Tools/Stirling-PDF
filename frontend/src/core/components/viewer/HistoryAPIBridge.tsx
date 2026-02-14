@@ -2,19 +2,25 @@ import { useImperativeHandle, forwardRef, useEffect, useRef } from 'react';
 import { useHistoryCapability } from '@embedpdf/plugin-history/react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useSignature } from '@app/contexts/SignatureContext';
-import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
+import { uuidV4, PdfAnnotationSubtype } from '@embedpdf/models';
 import type { HistoryAPI } from '@app/components/viewer/viewerTypes';
 import { ANNOTATION_RECREATION_DELAY_MS, ANNOTATION_VERIFICATION_DELAY_MS } from '@app/constants/app';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+
+/**
+ * Connects the PDF history (undo/redo) plugin to the shared ViewerContext.
+ */
 
 export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge(_, ref) {
   const { provides: historyApi } = useHistoryCapability();
   const { provides: annotationApi } = useAnnotationCapability();
   const { getImageData, storeImageData } = useSignature();
+  const documentReady = useDocumentReady();
   const restoringIds = useRef<Set<string>>(new Set());
 
   // Monitor annotation events to detect when annotations are restored
   useEffect(() => {
-    if (!annotationApi) return;
+    if (!annotationApi || !documentReady) return;
 
     const handleAnnotationEvent = (event: any) => {
       const annotation = event.annotation;
@@ -145,6 +151,8 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
     canRedo: () => {
       return historyApi ? historyApi.canRedo() : false;
     },
+
+    isReady: () => !!historyApi && documentReady,
 
     purgeByMetadata: <T,>(predicate: (metadata: T | undefined) => boolean, topic?: string) => {
       if (historyApi?.purgeByMetadata) {

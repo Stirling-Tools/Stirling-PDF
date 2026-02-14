@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFPage, StandardFonts } from '@cantoo/pdf-lib';
 import type { TFunction } from 'i18next';
 import { SignatureValidationReportEntry } from '@app/types/validateSignature';
 import { REPORT_PDF_FILENAME } from '@app/hooks/tools/validateSignature/utils/signatureUtils';

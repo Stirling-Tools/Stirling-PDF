@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { PDFFont, PDFPage } from 'pdf-lib';
+import { PDFFont, PDFPage } from '@cantoo/pdf-lib';
 import { SignatureValidationSignature } from '@app/types/validateSignature';
 import { drawFieldBox } from '@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection';
 import { drawStatusBadge } from '@app/hooks/tools/validateSignature/outputtedPDFSections/StatusBadgeSection';

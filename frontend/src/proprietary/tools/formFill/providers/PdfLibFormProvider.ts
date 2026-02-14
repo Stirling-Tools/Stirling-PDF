@@ -16,7 +16,8 @@
  */
 import { PDFDocument, PDFForm, PDFField, PDFTextField, PDFCheckBox,
   PDFDropdown, PDFRadioGroup, PDFOptionList, PDFButton, PDFSignature,
-  PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage } from 'pdf-lib';
+  PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage,
+  PDFString, PDFHexString } from '@cantoo/pdf-lib';
 import type { FormField, FormFieldType, WidgetCoordinates } from '@proprietary/tools/formFill/types';
 import type { IFormDataProvider } from '@proprietary/tools/formFill/providers/types';
 
@@ -141,11 +142,18 @@ function extractWidgets(
     if (ap instanceof PDFDict) {
       const normal = ap.lookup(PDFName.of('N'));
       if (normal instanceof PDFDict) {
-        // The keys of /N (other than /Off) are the export values
-        const keys = normal.entries()
-          .map(([k]) => k.decodeText())
-          .filter(k => k !== 'Off');
-        if (keys.length > 0) exportValue = keys[0];
+        // The keys of /N (other than /Off) are the export values.
+        // PDFDict.entries() reliably returns [PDFName, PDFObject][] in
+        // @cantoo/pdf-lib — no optional chaining needed.
+        try {
+          const entries = normal.entries();
+          const keys = entries
+            .map(([k]) => k.decodeText())
+            .filter((k) => k !== 'Off');
+          if (keys.length > 0) exportValue = keys[0];
+        } catch {
+          // Malformed AP dict — skip export value extraction
+        }
       }
     }
     // Also check /AS for current appearance state
@@ -353,7 +361,12 @@ function mapAppearanceStateToOption(
       const normal = ap.lookup(PDFName.of('N'));
       if (!(normal instanceof PDFDict)) continue;
 
-      const keys = normal.entries().map(([k]) => k.decodeText());
+      let keys: string[] = [];
+      try {
+        keys = normal.entries().map(([k]) => k.decodeText());
+      } catch {
+        continue;
+      }
       if (keys.includes(stateName) && i < options.length) {
         return options[i];
       }
@@ -381,7 +394,7 @@ function resolveRadioValueForSelect(
   }
 
   const lower = value.toLowerCase();
-  const match = options.find(o => o.toLowerCase() === lower);
+  const match = options.find((o: string) => o.toLowerCase() === lower);
   if (match) return match;
 
   return null;
@@ -408,6 +421,68 @@ function getFieldOptions(field: PDFField): string[] | null {
 }
 
 /**
+ * Extract display labels from the /Opt array if it contains [export, display]
+ * pairs.  PDF spec §12.7.4.4: each element of /Opt may be either a text
+ * string (export value == display value) or a two-element array where the
+ * first element is the export value and the second is the display text.
+ *
+ * Returns null when every display value equals its export value (no distinct
+ * display labels exist), keeping the interface lean for the common case.
+ */
+function getFieldDisplayOptions(field: PDFField): string[] | null {
+  if (!(field instanceof PDFDropdown) && !(field instanceof PDFOptionList)) {
+    return null;
+  }
+
+  try {
+    const acroDict = (field.acroField as any).dict as PDFDict;
+    const optRaw = acroDict.lookup(PDFName.of('Opt'));
+    if (!(optRaw instanceof PDFArray)) return null;
+
+    const displays: string[] = [];
+    let hasDifference = false;
+
+    for (let i = 0; i < optRaw.size(); i++) {
+      try {
+        const entry = optRaw.lookup(i);
+
+        if (entry instanceof PDFArray && entry.size() >= 2) {
+          // [exportValue, displayValue] pair
+          const exp = decodeText(entry.lookup(0));
+          const disp = decodeText(entry.lookup(1));
+          displays.push(disp);
+          if (exp !== disp) hasDifference = true;
+        } else {
+          // Plain string — export and display are the same
+          const val = decodeText(entry);
+          displays.push(val);
+        }
+      } catch {
+        // Malformed /Opt entry — skip but continue processing remaining entries
+        continue;
+      }
+    }
+
+    if (displays.length === 0) return null;
+    return hasDifference ? displays : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Decode a PDFString, PDFHexString, or PDFName to a JS string. */
+function decodeText(obj: unknown): string {
+  if (obj instanceof PDFString || obj instanceof PDFHexString) {
+    return obj.decodeText();
+  }
+  if (obj instanceof PDFName) {
+    return obj.decodeText();
+  }
+  if (typeof obj === 'string') return obj;
+  return String(obj ?? '');
+}
+
+/**
  * Check if a field is read-only.
  */
 function isFieldReadOnly(field: PDFField): boolean {
@@ -431,17 +506,22 @@ function isFieldRequired(field: PDFField): boolean {
 
 /**
  * Get field tooltip (TU entry).
+ * Uses proper PDFString/PDFHexString decoding for correct Unicode support.
  */
 function getFieldTooltip(acroField: PDFDict): string | null {
   const tu = acroField.lookup(PDFName.of('TU'));
-  if (tu) {
-    try {
-      return tu.toString().replace(/^\(|\)$/g, '');
-    } catch {
-      // ignore
+  if (!tu) return null;
+
+  try {
+    // Prefer decodeText() for proper Unicode handling (UTF-16BE / PDFDocEncoding)
+    if (tu instanceof PDFString || tu instanceof PDFHexString) {
+      return tu.decodeText();
     }
+    // Fallback: strip parentheses from raw toString() for other object types
+    return tu.toString().replace(/^\(|\)$/g, '');
+  } catch {
+    return null;
   }
-  return null;
 }
 
 /**
@@ -471,49 +551,82 @@ export class PdfLibFormProvider implements IFormDataProvider {
 
   async fetchFields(file: File | Blob): Promise<FormField[]> {
     const arrayBuffer = await readAsArrayBuffer(file);
-    const doc = await PDFDocument.load(arrayBuffer, {
-      ignoreEncryption: true,
-      updateMetadata: false,
-      throwOnInvalidObject: false,
-    });
+    let doc: PDFDocument;
+    try {
+      doc = await PDFDocument.load(arrayBuffer, {
+        ignoreEncryption: true,
+        updateMetadata: false,
+        throwOnInvalidObject: false,
+      });
+    } catch (loadError) {
+      console.warn('[PdfLibFormProvider] Failed to load PDF document:', loadError);
+      return [];
+    }
 
     let form: PDFForm;
     try {
       form = doc.getForm();
-    } catch {
-      // No AcroForm — return empty
+    } catch (formError) {
+      // No AcroForm or broken catalog — return empty
+      console.warn('[PdfLibFormProvider] Failed to access AcroForm:', formError);
       return [];
     }
 
-    const fields = form.getFields();
+    let fields: PDFField[];
+    try {
+      fields = form.getFields();
+    } catch (fieldsError) {
+      console.warn('[PdfLibFormProvider] Failed to enumerate form fields:', fieldsError);
+      return [];
+    }
     if (fields.length === 0) return [];
 
-    const pages = doc.getPages();
+    let pages: PDFPage[];
+    try {
+      pages = doc.getPages();
+    } catch (pagesError) {
+      // Pages tree is invalid (same issue as usePdfLibLinks "invalid catalog").
+      // Without page references we can't place widgets, so return empty.
+      // The viewer will fall back to native form rendering via withForms.
+      console.warn(
+        '[PdfLibFormProvider] PDF pages tree is invalid — cannot place form widgets.',
+        'Native form rendering will be used as fallback.',
+        pagesError,
+      );
+      return [];
+    }
+
     const result: FormField[] = [];
 
     for (const field of fields) {
-      const type = getFieldType(field);
-      const widgets = extractWidgets(field, pages, doc);
+      const fieldName = field.getName();
+      try {
+        const type = getFieldType(field);
+        const widgets = extractWidgets(field, pages, doc);
 
-      // Skip fields with no visible widgets
-      if (widgets.length === 0) continue;
+        // Skip fields with no visible widgets
+        if (widgets.length === 0) continue;
 
-      const formField: FormField = {
-        name: field.getName(),
-        label: getFieldLabel(field),
-        type,
-        value: getFieldValue(field),
-        options: getFieldOptions(field),
-        displayOptions: null, // pdf-lib doesn't expose display vs export values separately
-        required: isFieldRequired(field),
-        readOnly: isFieldReadOnly(field),
-        multiSelect: field instanceof PDFOptionList,
-        multiline: isMultiline(field),
-        tooltip: getFieldTooltip((field.acroField as any).dict as PDFDict),
-        widgets,
-      };
+        const formField: FormField = {
+          name: field.getName(),
+          label: getFieldLabel(field),
+          type,
+          value: getFieldValue(field),
+          options: getFieldOptions(field),
+          displayOptions: getFieldDisplayOptions(field),
+          required: isFieldRequired(field),
+          readOnly: isFieldReadOnly(field),
+          multiSelect: field instanceof PDFOptionList,
+          multiline: isMultiline(field),
+          tooltip: getFieldTooltip((field.acroField as any).dict as PDFDict),
+          widgets,
+        };
 
-      result.push(formField);
+        result.push(formField);
+      } catch (fieldError) {
+        // Skip individual malformed fields but continue processing
+        console.warn(`[PdfLibFormProvider] Skipping field "${fieldName}":`, fieldError);
+      }
     }
 
     return result;

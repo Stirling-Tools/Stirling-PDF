@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 import {
   PdfPermissionFlag,
   DocumentPermissionsState,
@@ -25,6 +26,7 @@ export function DocumentPermissionsAPIBridge({
   permissions = PdfPermissionFlag.AllowAll,
 }: DocumentPermissionsAPIBridgeProps) {
   const { registerBridge } = useViewer();
+  const documentReady = useDocumentReady();
 
   const state = useMemo<DocumentPermissionsState>(() => ({
     isEncrypted,
@@ -42,7 +44,7 @@ export function DocumentPermissionsAPIBridge({
 
   const api = useMemo<DocumentPermissionsAPIWrapper>(() => ({
     hasPermission: (flag: PdfPermissionFlag) => hasPermissionFlag(permissions, flag),
-    hasAllPermissions: (flags: PdfPermissionFlag[]) => 
+    hasAllPermissions: (flags: PdfPermissionFlag[]) =>
       flags.every(flag => hasPermissionFlag(permissions, flag)),
     getEffectivePermission: (flag: PdfPermissionFlag) => {
       if (isOwnerUnlocked) return true;
@@ -51,11 +53,17 @@ export function DocumentPermissionsAPIBridge({
   }), [permissions, isOwnerUnlocked]);
 
   useEffect(() => {
-    registerBridge('permissions', {
-      state,
-      api,
-    });
-  }, [registerBridge, state, api]);
+    if (documentReady) {
+      registerBridge('permissions', {
+        state,
+        api,
+      });
+    }
+
+    return () => {
+      registerBridge('permissions', null);
+    };
+  }, [registerBridge, state, api, documentReady]);
 
   return null;
 }

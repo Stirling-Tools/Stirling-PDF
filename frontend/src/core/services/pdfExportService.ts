@@ -1,4 +1,4 @@
-import { PDFDocument as PDFLibDocument, degrees, PageSizes } from 'pdf-lib';
+import { PDFDocument as PDFLibDocument, degrees, PageSizes } from '@cantoo/pdf-lib';
 import { downloadFile } from '@app/services/downloadService';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 

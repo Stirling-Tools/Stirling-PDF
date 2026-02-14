@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearch } from '@embedpdf/plugin-search/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
 interface SearchResult {
   pageIndex: number;
@@ -11,30 +12,35 @@ interface SearchResult {
   }>;
 }
 
+/**
+ * SearchAPIBridge - Updated for embedPDF v2.6.0
+ * Connects the PDF search plugin to the shared ViewerContext.
+ */
 export function SearchAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
-  
-  // Don't render the inner component until we have a valid document ID
-  if (!activeDocumentId) {
+  const documentReady = useDocumentReady();
+
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
     return null;
   }
-  
+
   return <SearchAPIBridgeInner documentId={activeDocumentId} />;
 }
 
 function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
   const { provides: search } = useSearch(documentId);
   const { registerBridge, scrollActions } = useViewer();
-  
+
   // Keep search ref updated to avoid re-running effects when object reference changes
   const searchRef = useRef(search);
   const isSearchingRef = useRef(false);
   const lastScrolledIndexRef = useRef<number | null>(null);
-  
+
   useEffect(() => {
     searchRef.current = search;
   }, [search]);
-  
+
   const [localState, setLocalState] = useState({
     results: null as SearchResult[] | null,
     activeIndex: 0
@@ -42,14 +48,14 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
 
   // Subscribe to search result changes from EmbedPDF
   const subscriptionRef = useRef<(() => void) | null>(null);
-  
+
   useEffect(() => {
     // Cleanup previous subscription
     if (subscriptionRef.current) {
       subscriptionRef.current();
       subscriptionRef.current = null;
     }
-    
+
     if (!search) return;
 
     subscriptionRef.current = search.onSearchResultStateChange?.((state: any) => {
@@ -87,11 +93,11 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
       lastScrolledIndexRef.current = null;
       return;
     }
-    
+
     // Only scroll if the active index actually changed
     const activeResultIndex = localActiveIndex - 1; // Convert back to 0-based
-    if (activeResultIndex >= 0 && 
-        activeResultIndex < localResults.length && 
+    if (activeResultIndex >= 0 &&
+        activeResultIndex < localResults.length &&
         lastScrolledIndexRef.current !== activeResultIndex) {
       const activeResult = localResults[activeResultIndex];
       if (activeResult) {
@@ -114,13 +120,13 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
             if (isSearchingRef.current) {
               return null;
             }
-            
+
             if (!currentSearch?.startSearch || !currentSearch?.searchAllPages) {
               return null;
             }
-            
+
             isSearchingRef.current = true;
-            
+
             try {
               currentSearch.startSearch();
               const results = await currentSearch.searchAllPages(query);
@@ -171,6 +177,10 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
         }
       });
     }
+
+    return () => {
+      registerBridge('search', null);
+    };
   }, [localResults, localActiveIndex, registerBridge]);
 
   return null;

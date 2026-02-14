@@ -151,7 +151,7 @@ interface ViewerContextType {
   // Bridge registration - internal use by bridges
   registerBridge: <K extends BridgeKey>(
     type: K,
-    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
   ) => void;
 
   // Save changes function - registered by EmbedPdfViewer
@@ -242,7 +242,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const registerBridge = useCallback(
     <K extends BridgeKey>(
       type: K,
-      ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+      ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
     ) => {
       setBridgeRef(bridgeRefs.current, type, ref);
     },

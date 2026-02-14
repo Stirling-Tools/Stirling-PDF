@@ -4,17 +4,18 @@ import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { useRedaction } from '@app/contexts/RedactionContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
 /**
- * RedactionAPIBridge - Uses embedPDF v2.5.0
  * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
  * Uses the unified redaction mode (toggleRedact/enableRedact/endRedact).
  */
 export function RedactionAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
+  const documentReady = useDocumentReady();
 
-  // Don't render the inner component until we have a valid document ID
-  if (!activeDocumentId) {
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
     return null;
   }
 
@@ -69,9 +70,7 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   }, [annotationProvides, manualRedactColor]);
 
   // Expose the EmbedPDF API through our context's ref
-  // Uses v2.5.0 unified redaction mode
   useImperativeHandle(redactionApiRef, () => ({
-    // Unified redaction methods (v2.5.0)
     toggleRedact: () => {
       redactionProvides?.toggleRedact();
     },
