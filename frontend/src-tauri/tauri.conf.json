@@ -13,8 +13,10 @@
         "windows": [
             {
                 "title": "Stirling-PDF",
-                "width": 1280,
-                "height": 800,
+                "width": 1600,
+                "height": 1000,
+                "minWidth": 1100,
+                "minHeight": 700,
                 "resizable": true,
                 "fullscreen": false,
                 "additionalBrowserArgs": "--enable-features=CertVerifierBuiltinFeature"
