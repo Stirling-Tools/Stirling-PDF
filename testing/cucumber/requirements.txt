@@ -7,7 +7,7 @@
 behave==1.3.3 \
     --hash=sha256:2b8f4b64ed2ea756a5a2a73e23defc1c4631e9e724c499e46661778453ebaf51 \
     --hash=sha256:89bdb62af8fb9f147ce245736a5de69f025e5edfb66f1fbe16c5007493f842c0
-    # via -r testing/cucumber/requirements.in
+    # via -r requirements.in
 certifi==2026.1.4 \
     --hash=sha256:9943707519e4add1115f44c2bc244f782c0249876bf51b6599fee1ffbedd685c \
     --hash=sha256:ac726dd470482006e014ad384921ed6438c457018f4b3d204aea4281258b2120
@@ -290,19 +290,19 @@ pycryptodome==3.23.0 \
     --hash=sha256:dea827b4d55ee390dc89b2afe5927d4308a8b538ae91d9c6f7a5090f397af1aa \
     --hash=sha256:e3f2d0aaf8080bda0587d58fc9fe4766e012441e2eed4269a77de6aea981c8be \
     --hash=sha256:eb8f24adb74984aa0e5d07a2368ad95276cf38051fe2dc6605cbcf482e04f2a7
-    # via -r testing/cucumber/requirements.in
-pypdf==6.6.2 \
-    --hash=sha256:0a3ea3b3303982333404e22d8f75d7b3144f9cf4b2970b96856391a516f9f016 \
-    --hash=sha256:44c0c9811cfb3b83b28f1c3d054531d5b8b81abaedee0d8cb403650d023832ba
-    # via -r testing/cucumber/requirements.in
+    # via -r requirements.in
+pypdf==6.7.0 \
+    --hash=sha256:62e85036d50839cbdf45b8067c2c1a1b925517514d7cba4cbe8755a6c2829bc9 \
+    --hash=sha256:eb95e244d9f434e6cfd157272283339ef586e593be64ee699c620f756d5c3f7e
+    # via -r requirements.in
 reportlab==4.4.9 \
     --hash=sha256:68e2d103ae8041a37714e8896ec9b79a1c1e911d68c3bd2ea17546568cf17bfd \
     --hash=sha256:7cf487764294ee791a4781f5a157bebce262a666ae4bbb87786760a9676c9378
-    # via -r testing/cucumber/requirements.in
+    # via -r requirements.in
 requests==2.32.5 \
     --hash=sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6 \
     --hash=sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf
-    # via -r testing/cucumber/requirements.in
+    # via -r requirements.in
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
