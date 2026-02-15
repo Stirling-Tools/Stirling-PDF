@@ -41,7 +41,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [pluginExplorerOpen, setPluginExplorerOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
   const {
