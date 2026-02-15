@@ -58,6 +58,7 @@ class AuthControllerLoginTest {
     void setUp() {
         securityProperties = new ApplicationProperties.Security();
         securityProperties.setLoginMethod("all");
+        securityProperties.getJwt().setTokenExpiryMinutes(60);
 
         AuthController controller =
                 new AuthController(
@@ -175,7 +176,7 @@ class AuthControllerLoginTest {
     void refreshReturnsNewTokenWhenValid() throws Exception {
         User user = buildUser();
         when(jwtService.extractToken(any())).thenReturn("old");
-        when(jwtService.extractUsername("old")).thenReturn("user@example.com");
+        when(jwtService.extractUsernameAllowExpired("old")).thenReturn("user@example.com");
         when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
         when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
                 .thenReturn("new-token");

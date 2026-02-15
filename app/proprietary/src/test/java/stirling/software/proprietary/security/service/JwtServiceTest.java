@@ -31,6 +31,7 @@ import org.springframework.security.core.Authentication;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
@@ -64,7 +65,8 @@ class JwtServiceTest {
                 Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
         testVerificationKey = new JwtVerificationKey("test-key-id", encodedPublicKey);
 
-        jwtService = new JwtService(true, keystoreService);
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        jwtService = new JwtService(true, keystoreService, applicationProperties);
     }
 
     @Test

@@ -48,7 +48,7 @@ const FREE_LICENSE_INFO: LicenseInfo = {
 
 const BASE_NO_LOGIN_CONFIG: AppConfig = {
   enableAnalytics: true,
-  appVersion: '2.4.6',
+  appVersion: '2.4.5',
   serverCertificateEnabled: false,
   enableAlphaFunctionality: false,
   enableDesktopInstallSlide: true,

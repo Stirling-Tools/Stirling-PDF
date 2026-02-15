@@ -392,7 +392,7 @@ export default function AdminSecuritySection() {
                 </Group>
               }
               description={t('admin.settings.security.jwt.keyRetentionDays.description', 'Number of days to retain old JWT keys for verification')}
-              value={settings?.jwt?.keyRetentionDays || 7}
+              value={settings?.jwt?.keyRetentionDays || 30}
               onChange={(value) => setSettings({ ...settings, jwt: { ...settings?.jwt, keyRetentionDays: Number(value) } })}
               min={1}
               max={365}
