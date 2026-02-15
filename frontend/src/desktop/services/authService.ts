@@ -542,7 +542,10 @@ export class AuthService {
         }
       );
 
-      const token = response.data?.session?.access_token ?? response.data?.token;
+      const token =
+        response.data?.session?.access_token ??
+        response.data?.access_token ??
+        response.data?.token;
 
       if (!token) {
         console.error('[Desktop AuthService] Refresh response missing token payload');

@@ -104,9 +104,16 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     },
     async (error) => {
       const originalRequest = error.config as ExtendedRequestConfig;
+      const requestUrl = String(originalRequest?.url || '');
+      const isAuthProbeRequest = requestUrl.includes('/api/v1/auth/me');
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
+        // `/auth/me` is used as a probe by session bootstrap; refreshing here can
+        // create recursion (refresh -> save token -> jwt-available -> /auth/me).
+        if (isAuthProbeRequest) {
+          return Promise.reject(error);
+        }
         if (typeof window !== 'undefined') {
           console.warn('[apiClientSetup] 401 on path:', window.location.pathname, 'url:', originalRequest.url);
         }

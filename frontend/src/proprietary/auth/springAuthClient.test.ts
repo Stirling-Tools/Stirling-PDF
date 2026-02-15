@@ -52,6 +52,7 @@ describe('SpringAuthClient', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me', {
         headers: { Authorization: `Bearer ${mockToken}` },
         suppressErrorToast: true,
+        skipAuthRedirect: true,
       });
       expect(result.data.session).toBeTruthy();
       expect(result.data.session?.user).toEqual(mockUser);

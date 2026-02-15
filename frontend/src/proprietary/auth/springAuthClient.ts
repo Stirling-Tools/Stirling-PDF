@@ -13,6 +13,11 @@ import { BASE_PATH } from '@app/constants/app';
 import { type OAuthProvider } from '@app/auth/oauthTypes';
 import { resetOAuthState } from '@app/auth/oauthStorage';
 import { clearPlatformAuthAfterSignOut } from '@app/extensions/authSessionCleanup';
+import {
+  getPlatformSessionUser,
+  isDesktopSaaSAuthMode,
+  refreshPlatformSession,
+} from '@app/extensions/platformSessionBridge';
 import { startOAuthNavigation } from '@app/extensions/oauthNavigation';
 
 // Helper to extract error message from axios error
@@ -106,6 +111,26 @@ class SpringAuthClient {
     this.startSessionMonitoring();
   }
 
+  private getTokenExpiry(token: string): { expiresIn: number; expiresAt: number } {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) {
+        throw new Error('Token payload missing');
+      }
+
+      const payload = JSON.parse(atob(parts[1]));
+      const expSeconds = typeof payload?.exp === 'number' ? payload.exp : 0;
+      const expiresAt = expSeconds > 0 ? expSeconds * 1000 : Date.now() + 3600 * 1000;
+      const expiresIn = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+
+      return { expiresIn, expiresAt };
+    } catch {
+      // Fallback for non-JWT or malformed tokens.
+      const expiresAt = Date.now() + 3600 * 1000;
+      return { expiresIn: 3600, expiresAt };
+    }
+  }
+
   /**
    * Helper to get CSRF token from cookie
    */
@@ -127,11 +152,38 @@ class SpringAuthClient {
   async getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
     try {
       // Get JWT from localStorage
-      const token = localStorage.getItem('stirling_jwt');
+      let token = localStorage.getItem('stirling_jwt');
 
       if (!token) {
         // console.debug('[SpringAuth] getSession: No JWT in localStorage');
         return { data: { session: null }, error: null };
+      }
+
+      if (await isDesktopSaaSAuthMode()) {
+        let tokenExpiry = this.getTokenExpiry(token);
+        if (tokenExpiry.expiresIn <= 0) {
+          const refreshed = await refreshPlatformSession();
+          if (refreshed) {
+            token = localStorage.getItem('stirling_jwt') || token;
+            tokenExpiry = this.getTokenExpiry(token);
+          }
+        }
+
+        const platformUser = await getPlatformSessionUser();
+
+        const session: Session = {
+          user: {
+            id: platformUser?.email || platformUser?.username || 'desktop-saas-user',
+            email: platformUser?.email || '',
+            username: platformUser?.username || platformUser?.email || 'User',
+            role: 'USER',
+          },
+          access_token: token,
+          expires_in: tokenExpiry.expiresIn,
+          expires_at: tokenExpiry.expiresAt,
+        };
+
+        return { data: { session }, error: null };
       }
 
       // Verify with backend
@@ -142,6 +194,8 @@ class SpringAuthClient {
           'Authorization': `Bearer ${token}`,
         },
         suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
+        // Session bootstrap should not trigger global 401 refresh/redirect loops.
+        skipAuthRedirect: true,
       });
 
       // console.debug('[SpringAuth] /me response status:', response.status);
@@ -149,11 +203,12 @@ class SpringAuthClient {
       // console.debug('[SpringAuth] /me response data:', data);
 
       // Create session object
+      const tokenExpiry = this.getTokenExpiry(token);
       const session: Session = {
         user: data.user,
         access_token: token,
-        expires_in: 3600,
-        expires_at: Date.now() + 3600 * 1000,
+        expires_in: tokenExpiry.expiresIn,
+        expires_at: tokenExpiry.expiresAt,
       };
 
       // console.debug('[SpringAuth] getSession: Session retrieved successfully');
@@ -382,6 +437,28 @@ class SpringAuthClient {
    */
   async refreshSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
     try {
+      if (await isDesktopSaaSAuthMode()) {
+        const refreshed = await refreshPlatformSession();
+        if (!refreshed) {
+          localStorage.removeItem('stirling_jwt');
+          return {
+            data: { session: null },
+            error: { message: 'Token refresh failed - please log in again' },
+          };
+        }
+
+        const { data, error } = await this.getSession();
+        if (error || !data.session) {
+          return {
+            data: { session: null },
+            error: error || { message: 'Token refresh failed - please log in again' },
+          };
+        }
+
+        this.notifyListeners('TOKEN_REFRESHED', data.session);
+        return { data, error: null };
+      }
+
       const response = await apiClient.post('/api/v1/auth/refresh', null, {
         headers: {
           'X-XSRF-TOKEN': this.getCsrfToken() || '',
