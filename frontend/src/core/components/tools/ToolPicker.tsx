@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { Badge, Box, Button, Stack, Text } from "@mantine/core";
+import { Box, Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
@@ -34,9 +34,6 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const {
     favoriteTools,
     toolRegistry,
-    setLeftPanelView,
-    setReaderMode,
-    setSearchQuery,
   } = useToolWorkflow();
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Paper, Text, Group, Stack, Badge, Divider, Avatar, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePluginRegistry } from "@app/contexts/PluginRegistryContext";
