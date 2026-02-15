@@ -73,13 +73,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Virtual framebuffer (required for headless LibreOffice)
     xvfb x11-utils coreutils \
     # Temporary packages only needed for Calibre installer
-    xz-utils gpgv curl xdg-utils \
+    xz-utils curl \
     \
     # Install Calibre from official installer script
-    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
+    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin install_dir=/opt/calibre isolated=y \
     \
     # Clean up installer-only packages
-    && apt-get purge -y xz-utils gpgv xdg-utils \
+    && apt-get purge -y xz-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
