@@ -60,7 +60,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xz-utils gpgv curl xdg-utils \
     \
     # Install Calibre from official installer script
-    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
+    && echo "=== Downloading Calibre installer..." \
+    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh -o /tmp/calibre-installer.sh \
+    && echo "=== Running Calibre installer..." \
+    && sh /tmp/calibre-installer.sh \
+    && rm /tmp/calibre-installer.sh \
+    \
+    # Verify Calibre was installed successfully
+    && echo "=== Verifying Calibre installation..." \
+    && { test -f /opt/calibre/ebook-convert || { echo "ERROR: Calibre ebook-convert not found!"; exit 1; }; } \
+    && echo "=== Calibre installed successfully" \
     \
     # Clean up installer-only packages
     && apt-get purge -y xz-utils gpgv xdg-utils \

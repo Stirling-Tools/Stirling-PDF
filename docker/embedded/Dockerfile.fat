@@ -68,7 +68,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # AWT headless support (required for some Java graphics operations)
     libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
     libxinerama1 libxkbcommon0 libxkbfile1 libsm6 libice6 \
-    # Qt WebEngine dependencies for Calibre
+    # Qt/X11 dependencies for Calibre
     libegl1 libopengl0 libgl1 libxdamage1 libxfixes3 libxshmfence1 libdrm2 libgbm1 \
     libxkbcommon-x11-0 libxrandr2 libxcomposite1 libnss3 libx11-xcb1 \
     libxcb-cursor0 libdbus-1-3 libglib2.0-0 \
@@ -78,25 +78,59 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xz-utils gpgv curl xdg-utils \
     \
     # Install Calibre from official installer script
-    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
+    && echo "=== Downloading Calibre installer..." \
+    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh -o /tmp/calibre-installer.sh \
+    && echo "=== Running Calibre installer..." \
+    && sh /tmp/calibre-installer.sh \
+    && rm /tmp/calibre-installer.sh \
     \
-    # Clean up installer-only packages
+    # Verify Calibre was installed successfully
+    && echo "=== Verifying Calibre installation..." \
+    && { test -f /opt/calibre/ebook-convert || { echo "ERROR: Calibre ebook-convert not found!"; exit 1; }; } \
+    && echo "=== Calibre installed successfully" \
+    \
+    # Remove everything except ebook-convert and its runtime deps
+    && rm -rf \
+        /opt/calibre/lib/calibre/gui2 \
+        /opt/calibre/lib/calibre/ebooks/docx/images \
+        /opt/calibre/resources/images \
+        /opt/calibre/resources/icons \
+        /opt/calibre/resources/content-server \
+        /opt/calibre/resources/editor \
+        /opt/calibre/resources/viewer \
+        /opt/calibre/resources/recipes \
+        /opt/calibre/resources/localization \
+        /opt/calibre/share \
+        /opt/calibre/man \
+    \
+    # Make ebook-convert available in PATH (after Calibre strip)
+    && ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
+    \
+    # Clean up installer-only packages (KEEP curl)
     && apt-get purge -y xz-utils gpgv xdg-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
     . /etc/os-release; \
+    # Ensure VERSION_CODENAME is set, usually in /etc/os-release but just in case
+    if [ -z "${VERSION_CODENAME:-}" ]; then VERSION_CODENAME=bookworm; fi; \
     echo "deb http://deb.debian.org/debian ${VERSION_CODENAME}-backports main" > /etc/apt/sources.list.d/backports.list; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -t ${VERSION_CODENAME}-backports \
-        libreoffice libreoffice-java-common; \
+        libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui libreoffice-java-common; \
     rm -rf /var/lib/apt/lists/*; \
     libreoffice --version
 
-# Make ebook-convert available in PATH
-RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
-    && /opt/calibre/ebook-convert --version
+# Remove docs, man pages, and locale data not needed at runtime
+RUN rm -rf /usr/share/doc/* \
+           /usr/share/man/* \
+           /usr/share/info/* \
+           /usr/share/lintian/* \
+           /usr/share/linda/* \
+           /var/cache/fontconfig/*
+
+
 
 # ==============================================================================
 # Create non-root user (stirlingpdfuser) with configurable UID/GID
@@ -126,6 +160,10 @@ RUN set -eux; \
 # Compatibility alias for older entrypoint scripts expecting su-exec
 RUN ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 
+# Create heap dump directory writable by stirlingpdfuser
+RUN mkdir -p /tmp/stirling-pdf/heap_dumps \
+    && chown stirlingpdfuser:stirlingpdfgroup /tmp/stirling-pdf/heap_dumps
+
 # Copy application files from build stage
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
@@ -152,7 +190,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, fat, air-gapped, API
 # Runtime environment variables
 # ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -Djava.awt.headless=true" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
@@ -170,18 +208,14 @@ ENV VERSION_TAG=$VERSION_TAG \
 # ==============================================================================
 # Python virtual environment for additional Python tools (WeasyPrint, OpenCV, etc.)
 # ==============================================================================
+ARG UNOSERVER_VERSION=3.6
 RUN python3 -m venv /opt/venv --system-site-packages \
     && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
+    && python3 -m venv /opt/unoserver-venv --system-site-packages \
+    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}" \
+    && ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
+    && ln -sf /opt/unoserver-venv/bin/unoserver /opt/venv/bin/unoserver \
     && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
-
-# Separate venv for unoserver (keeps it isolated)
-ARG UNOSERVER_VERSION=3.6
-RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}"
-
-# Make unoserver tools available in main venv PATH
-RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
-    && ln -sf /opt/unoserver-venv/bin/unoserver /opt/venv/bin/unoserver
 
 # Extend PATH to include both virtual environments
 ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
@@ -206,6 +240,9 @@ ENV QT_QPA_PLATFORM=offscreen \
 
 # Expose web UI port
 EXPOSE 8080/tcp
+
+# Ensure container runs as root so init.sh can fix permissions
+USER root
 
 STOPSIGNAL SIGTERM
 
