@@ -42,12 +42,30 @@ public interface JwtServiceInterface {
     String extractUsername(String token);
 
     /**
+     * Extract username from JWT token while allowing expired tokens. Signature and token structure
+     * must still be valid.
+     *
+     * @param token the JWT token
+     * @return username extracted from token
+     */
+    String extractUsernameAllowExpired(String token);
+
+    /**
      * Extract all claims from JWT token
      *
      * @param token the JWT token
      * @return map of claims
      */
     Map<String, Object> extractClaims(String token);
+
+    /**
+     * Extract all claims from JWT token while allowing expired tokens. Signature and token
+     * structure must still be valid.
+     *
+     * @param token the JWT token
+     * @return map of claims
+     */
+    Map<String, Object> extractClaimsAllowExpired(String token);
 
     /**
      * Check if token is expired

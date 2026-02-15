@@ -542,7 +542,14 @@ export class AuthService {
         }
       );
 
-      const { token } = response.data;
+      const token = response.data?.session?.access_token ?? response.data?.token;
+
+      if (!token) {
+        console.error('[Desktop AuthService] Refresh response missing token payload');
+        this.setAuthStatus('unauthenticated', null);
+        await this.logout();
+        return false;
+      }
 
       // Save token to all storage locations
       await this.saveTokenEverywhere(token);

@@ -34,6 +34,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPassMfa;
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -180,7 +181,12 @@ public class AuthController {
             return ResponseEntity.ok(
                     Map.of(
                             "user", buildUserResponse(user),
-                            "session", Map.of("access_token", token, "expires_in", 3600)));
+                            "session",
+                                    Map.of(
+                                            "access_token",
+                                            token,
+                                            "expires_in",
+                                            getTokenExpirySeconds())));
 
         } catch (UsernameNotFoundException e) {
             String username = request.getUsername();
@@ -272,8 +278,7 @@ public class AuthController {
                         .body(Map.of("error", "No token found"));
             }
 
-            jwtService.validateToken(token);
-            String username = jwtService.extractUsername(token);
+            String username = jwtService.extractUsernameAllowExpired(token);
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             User user = (User) userDetails;
@@ -289,8 +294,17 @@ public class AuthController {
             return ResponseEntity.ok(
                     Map.of(
                             "user", buildUserResponse(user),
-                            "session", Map.of("access_token", newToken, "expires_in", 3600)));
+                            "session",
+                                    Map.of(
+                                            "access_token",
+                                            newToken,
+                                            "expires_in",
+                                            getTokenExpirySeconds())));
 
+        } catch (AuthenticationFailureException e) {
+            log.error("Token refresh error", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Token refresh failed"));
         } catch (Exception e) {
             log.error("Token refresh error", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -530,6 +544,12 @@ public class AuthController {
         userMap.put("user_metadata", userMetadata);
 
         return userMap;
+    }
+
+    private long getTokenExpirySeconds() {
+        int configuredMinutes = securityProperties.getJwt().getTokenExpiryMinutes();
+        int expiryMinutes = configuredMinutes > 0 ? configuredMinutes : 720;
+        return expiryMinutes * 60L;
     }
 
     private ResponseEntity<?> ensureWebAuth(User user) {
