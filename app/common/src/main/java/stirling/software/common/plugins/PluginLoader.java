@@ -8,6 +8,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,9 +33,16 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PluginLoader {
+    private static final String JAR_EXTENSION = ".jar";
+    private static final String JAR_MIME_TYPE = "application/java-archive";
     private static final String METADATA_RESOURCE = "META-INF/stirling-plugin.json";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    /**
+     * Discovers plugin jar files in the configured plugins directory.
+     *
+     * @return sorted list of valid plugin jar paths
+     */
     public static List<Path> listPluginJars() {
         Path pluginDir = ensurePluginDirectory();
         if (!Files.isDirectory(pluginDir)) {
@@ -42,22 +50,11 @@ public final class PluginLoader {
         }
         try (Stream<Path> stream = Files.list(pluginDir)) {
             return stream.filter(Files::isRegularFile)
-                    .filter(path -> path.toString().toLowerCase().endsWith(".jar"))
-                    .filter(
-                            path -> {
-                                try {
-                                    String mimeType = Files.probeContentType(path);
-                                    return mimeType != null
-                                            && mimeType.equals("application/java-archive");
-                                } catch (IOException e) {
-                                    log.warn(
-                                            "Failed to probe content type of {}: {}",
-                                            path,
-                                            e.getMessage());
-                                    return false;
-                                }
-                            })
-                    .sorted(Comparator.comparing(Path::getFileName))
+                    .filter(PluginLoader::looksLikeJarFile)
+                    .filter(PluginLoader::isReadableJarArchive)
+                    .sorted(
+                            Comparator.comparing(
+                                    path -> path.getFileName().toString().toLowerCase()))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             log.warn("Failed to list plugin directory {}: {}", pluginDir, e.getMessage());
@@ -65,6 +62,11 @@ public final class PluginLoader {
         }
     }
 
+    /**
+     * Converts discovered plugin jar paths into URL entries suitable for class/resource loading.
+     *
+     * @return immutable-style list of valid jar URLs
+     */
     public static List<URL> pluginJarUrls() {
         List<Path> jars = listPluginJars();
         if (jars.isEmpty()) {
@@ -81,6 +83,12 @@ public final class PluginLoader {
         return urls;
     }
 
+    /**
+     * Creates a class loader that can load classes/resources from installed plugins.
+     *
+     * @param parent parent class loader
+     * @return plugin-aware class loader or parent when no plugin jars exist
+     */
     public static ClassLoader buildPluginClassLoader(ClassLoader parent) {
         List<URL> urls = pluginJarUrls();
         if (urls.isEmpty()) {
@@ -93,6 +101,11 @@ public final class PluginLoader {
         return new URLClassLoader(urls.toArray(URL[]::new), parent);
     }
 
+    /**
+     * Loads descriptors for all discovered plugin jars.
+     *
+     * @return immutable list of successfully parsed descriptors
+     */
     public static List<PluginDescriptor> loadDescriptors() {
         List<Path> jars = listPluginJars();
         if (jars.isEmpty()) {
@@ -108,6 +121,12 @@ public final class PluginLoader {
         return Collections.unmodifiableList(descriptors);
     }
 
+    /**
+     * Loads metadata for one plugin jar and maps it to a descriptor.
+     *
+     * @param jarPath plugin jar path
+     * @return descriptor when valid metadata exists, otherwise {@code null}
+     */
     public static PluginDescriptor loadDescriptor(Path jarPath) {
         return readDescriptorFromJar(jarPath);
     }
@@ -123,6 +142,10 @@ public final class PluginLoader {
     }
 
     private static PluginDescriptor readDescriptorFromJar(Path jarPath) {
+        if (!Files.isRegularFile(jarPath)) {
+            log.warn("Plugin jar {} is not a regular file, skipping", jarPath);
+            return null;
+        }
         try (JarFile jarFile = new JarFile(jarPath.toFile())) {
             JarEntry entry = jarFile.getJarEntry(METADATA_RESOURCE);
             if (entry == null) {
@@ -134,8 +157,7 @@ public final class PluginLoader {
                 metadata = OBJECT_MAPPER.readValue(inputStream, PluginMetadata.class);
             }
 
-            BasicFileAttributes attrs = Files.readAttributes(jarPath, BasicFileAttributes.class);
-            String createdAt = attrs.creationTime().toInstant().toString();
+            String createdAt = resolveJarTimestamp(jarPath);
 
             if (metadata.getId() == null || metadata.getId().isBlank()) {
                 log.warn("Plugin metadata in {} is missing required id, ignoring", jarPath);
@@ -201,5 +223,39 @@ public final class PluginLoader {
             return "/";
         }
         return path.startsWith("/") ? path : "/" + path;
+    }
+
+    private static boolean looksLikeJarFile(Path path) {
+        return path.getFileName().toString().toLowerCase().endsWith(JAR_EXTENSION);
+    }
+
+    private static boolean isReadableJarArchive(Path path) {
+        try {
+            String mimeType = Files.probeContentType(path);
+            if (mimeType != null && !JAR_MIME_TYPE.equals(mimeType)) {
+                log.debug("Ignoring non-jar mime type {} for {}", mimeType, path);
+                return false;
+            }
+        } catch (IOException e) {
+            log.debug("Unable to probe mime type for {}: {}", path, e.getMessage());
+        }
+
+        try (JarFile ignored = new JarFile(path.toFile())) {
+            return true;
+        } catch (IOException e) {
+            log.warn("Skipping invalid jar archive {}: {}", path, e.getMessage());
+            return false;
+        }
+    }
+
+    private static String resolveJarTimestamp(Path jarPath) throws IOException {
+        BasicFileAttributes attrs = Files.readAttributes(jarPath, BasicFileAttributes.class);
+        FileTime creationTime = attrs.creationTime();
+        FileTime lastModifiedTime = attrs.lastModifiedTime();
+        FileTime preferredTime =
+                creationTime == null || creationTime.toMillis() <= 0
+                        ? lastModifiedTime
+                        : creationTime;
+        return preferredTime.toInstant().toString();
     }
 }

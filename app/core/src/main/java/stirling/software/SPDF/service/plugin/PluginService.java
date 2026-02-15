@@ -9,10 +9,13 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.plugins.PluginDescriptor;
 import stirling.software.common.plugins.PluginLoader;
 
 @Service
+@Slf4j
 public class PluginService {
     private final List<PluginDescriptor> plugins;
     private final Map<String, Path> pluginJarPaths;
@@ -24,10 +27,22 @@ public class PluginService {
 
         for (Path jar : jars) {
             PluginDescriptor descriptor = PluginLoader.loadDescriptor(jar);
-            if (descriptor != null) {
-                descriptors.add(descriptor);
-                jarMap.put(descriptor.getId(), jar);
+            if (descriptor == null) {
+                continue;
             }
+
+            String pluginId = descriptor.getId();
+            if (jarMap.containsKey(pluginId)) {
+                log.warn(
+                        "Duplicate plugin id '{}' detected in {}. Keeping first jar at {}",
+                        pluginId,
+                        jar,
+                        jarMap.get(pluginId));
+                continue;
+            }
+
+            descriptors.add(descriptor);
+            jarMap.put(pluginId, jar);
         }
 
         this.plugins = Collections.unmodifiableList(descriptors);

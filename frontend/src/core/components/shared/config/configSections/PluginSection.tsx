@@ -53,29 +53,29 @@ const PluginSection: React.FC = () => {
             {t("settings.plugins.title", "Plugins")}
           </Text>
           <Badge variant="outline" color="gray">
-            {t("settings.plugins.count", "Installierte Plugins {{count}}", { count: plugins.length })}
+            {t("settings.plugins.count", "Installed plugins {{count}}", { count: plugins.length })}
           </Badge>
         </Group>
         <Text size="sm" c="dimmed" mt="xs">
-          {t("settings.plugins.description", "Erweiterungen durchsuchen, installieren und konfigurieren.")}
+          {t("settings.plugins.description", "Browse, install, and configure extensions.")}
         </Text>
       </Paper>
 
       {loading && (
         <Text size="sm" c="dimmed">
-          {t("settings.plugins.loading", "Plugins werden geladen...")}
+          {t("settings.plugins.loading", "Loading plugins...")}
         </Text>
       )}
 
       {error && plugins.length > 0 && (
         <Text size="sm" c="red">
-          {t("settings.plugins.error", "Fehler beim Laden der Plugins")}
+          {t("settings.plugins.error", "Failed to load plugins")}
         </Text>
       )}
 
       {!loading && plugins.length === 0 && (
         <Text size="sm" c="dimmed">
-          {t("settings.plugins.empty", "Keine Plugins gefunden. Droppe eine Plugin-JAR in {{path}}.", { path: pluginPath })}
+          {t("settings.plugins.empty", "No plugins found. Drop a plugin JAR in {{path}}.", { path: pluginPath })}
         </Text>
       )}
 
@@ -108,7 +108,7 @@ const PluginSection: React.FC = () => {
               </Stack>
             </Group>
             <Text size="sm" c="dimmed">
-              {plugin.description || t("settings.plugins.noDescription", "Keine Beschreibung")}
+              {plugin.description || t("settings.plugins.noDescription", "No description")}
             </Text>
             {plugin.backendEndpoints.length > 0 && (
               <Group gap="xs">
@@ -124,14 +124,14 @@ const PluginSection: React.FC = () => {
             <Divider />
             <Group gap="xs" wrap="nowrap">
               <Text size="xs" c="dimmed">
-                {t("settings.plugins.author", "Autor: {{author}}", {
-                  author: plugin.author || t("settings.plugins.unknownAuthor", "unbekannt"),
+                {t("settings.plugins.author", "Author: {{author}}", {
+                  author: plugin.author || t("settings.plugins.unknownAuthor", "unknown"),
                 })}
               </Text>
             </Group>
             {plugin.jarCreatedAt && (
               <Text size="xs" c="dimmed">
-                {t("settings.plugins.createdAt", "Erstellt am {{date}}", {
+                {t("settings.plugins.createdAt", "Created on {{date}}", {
                   date: new Date(plugin.jarCreatedAt).toLocaleString(),
                 })}
               </Text>

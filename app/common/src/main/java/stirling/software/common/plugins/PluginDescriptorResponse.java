@@ -8,6 +8,11 @@ import lombok.Value;
 
 @Value
 @Builder
+/**
+ * API-facing representation of a plugin descriptor with a fully resolved frontend URL.
+ *
+ * <p>This DTO is returned to clients so they can render plugin metadata and open plugin UIs.
+ */
 public class PluginDescriptorResponse {
     String id;
     String icon;
@@ -24,6 +29,13 @@ public class PluginDescriptorResponse {
     List<String> backendEndpoints;
     Map<String, String> metadata;
 
+    /**
+     * Creates a response object from an internal {@link PluginDescriptor}.
+     *
+     * @param descriptor loaded plugin descriptor
+     * @param baseUrl optional API base URL used to build an absolute frontend URL
+     * @return normalized response payload for API clients
+     */
     public static PluginDescriptorResponse from(PluginDescriptor descriptor, String baseUrl) {
         String frontendPath = descriptor.getFrontendPath();
         String normalizedBase = baseUrl != null ? baseUrl.replaceAll("/+$", "") : "";

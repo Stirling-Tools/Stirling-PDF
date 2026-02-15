@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
+/** Model for deserializing {@code META-INF/stirling-plugin.json} from a plugin jar. */
 public class PluginMetadata {
     private String id;
     private String icon;
@@ -23,6 +24,7 @@ public class PluginMetadata {
     private List<String> backendEndpoints;
     private Map<String, String> metadata;
 
+    /** Frontend-specific metadata block declared inside plugin metadata JSON. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)

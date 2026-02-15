@@ -8,8 +8,10 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+/** Registers MVC resource handlers that expose static assets from plugin jars. */
 public class PluginResourceConfig implements WebMvcConfigurer {
 
+    /** Adds {@code /plugins/**} static resource mappings for every discovered plugin jar. */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         List<String> locations =

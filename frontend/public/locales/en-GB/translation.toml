@@ -4844,6 +4844,7 @@ account = "Account"
 activity = "Activity"
 adminSettings = "Admin Settings"
 allTools = "Tools"
+plugins = "Plugins"
 automate = "Automate"
 config = "Config"
 files = "Files"
@@ -5589,6 +5590,20 @@ title = "Policies & Privacy"
 [settings.preferences]
 title = "Preferences"
 
+[settings.plugins]
+author = "Author: {{author}}"
+count = "Installed plugins {{count}}"
+createdAt = "Created on {{date}}"
+description = "Browse, install, and configure extensions."
+empty = "No plugins found. Drop a plugin JAR in {{path}}."
+error = "Failed to load plugins"
+label = "Plugins"
+loading = "Loading plugins..."
+noDescription = "No description"
+sectionTitle = "Extensions"
+title = "Plugins"
+unknownAuthor = "unknown"
+
 [settings.security]
 description = "Update your password to keep your account secure."
 title = "Security"
@@ -6236,6 +6251,13 @@ verification = "Verification"
 [tools]
 noSearchResults = "No tools found"
 noTools = "No tools available"
+
+[plugins]
+open = "Open UI"
+refresh = "Refresh"
+shortTitle = "Plugins"
+title = "Installed plugins"
+version = "v{{version}}"
 
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
