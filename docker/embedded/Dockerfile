@@ -109,7 +109,6 @@ RUN set -eux; \
         /opt/calibre/resources/editor \
         /opt/calibre/resources/viewer \
         /opt/calibre/resources/recipes \
-        /opt/calibre/resources/localization \
         /opt/calibre/share \
         /opt/calibre/man \
     \
