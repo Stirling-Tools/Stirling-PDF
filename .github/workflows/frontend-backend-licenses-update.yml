@@ -344,6 +344,11 @@ jobs:
       - name: Check licenses and generate report
         id: license-check
         run: |
+          # NOTE: --no-parallel is intentional here. Running the license-checking tasks in parallel has
+          # previously caused intermittent concurrency issues in CI (e.g. flaky failures in the license
+          # plugin/Gradle when multiple projects are evaluated concurrently). Disabling parallelism trades
+          # some build speed for more reliable license reports. If the underlying issues are resolved in
+          # future Gradle or plugin versions, this flag can be reconsidered.
           ./gradlew checkLicense generateLicenseReport --no-parallel || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}

@@ -221,6 +221,11 @@ jobs:
           gradle-version: 8.14
 
       - name: check the licenses for compatibility
+        # NOTE: --no-parallel is intentional here. Running the checkLicense task in parallel with other
+        # Gradle tasks has been observed to cause intermittent failures with the dependency license
+        # checking plugin on this Gradle version. Disabling parallel execution trades some build speed
+        # for more reliable, deterministic license checks. If upgrading Gradle or the plugin, consider
+        # re-evaluating whether this flag is still required before removing it.
         run: ./gradlew checkLicense --no-parallel
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}

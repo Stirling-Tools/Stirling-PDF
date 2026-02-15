@@ -2,7 +2,7 @@
 # Single JAR contains both frontend and backend
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:jdk25 AS build
+FROM gradle:9.3.1-jdk25 AS build
 
 # Install Node.js and npm for frontend build
 RUN apt-get update && apt-get install -y \
@@ -79,7 +79,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
     \
     # Clean up installer-only packages
-    && apt-get purge -y xz-utils xdg-utils \
+    && apt-get purge -y xz-utils gpgv xdg-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 

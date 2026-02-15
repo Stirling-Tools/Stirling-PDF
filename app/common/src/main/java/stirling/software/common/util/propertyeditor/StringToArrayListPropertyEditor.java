@@ -19,7 +19,7 @@ public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
     private final ObjectMapper objectMapper =
             JsonMapper.builder()
                     .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-                    .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                     .build();
 
     @Override
