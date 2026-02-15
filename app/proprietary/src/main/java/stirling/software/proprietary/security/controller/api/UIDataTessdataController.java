@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,7 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class UIDataTessdataController {
 
+    private static final Pattern INVALID_LANG_CHARS_PATTERN = Pattern.compile("[^A-Za-z0-9_+\\-]");
     private final RuntimePathConfig runtimePathConfig;
     private static volatile List<String> cachedRemoteTessdata = null;
     private static volatile long cachedRemoteTessdataExpiry = 0L;
@@ -88,7 +90,7 @@ public class UIDataTessdataController {
                 failed.add(language);
                 continue;
             }
-            String safeLang = language.replaceAll("[^A-Za-z0-9_+\\-]", "");
+            String safeLang = INVALID_LANG_CHARS_PATTERN.matcher(language).replaceAll("");
             if (!safeLang.equals(language)) {
                 failed.add(language);
                 continue;

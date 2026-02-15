@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.regex.Pattern;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -33,6 +34,7 @@ public class TotpService {
     private static final String HMAC_ALGORITHM = "HmacSHA1";
     private static final String DEFAULT_ISSUER = "Stirling PDF";
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final Pattern TOTP_CODE_PATTERN = Pattern.compile("\\d{6}");
 
     private final ApplicationProperties applicationProperties;
 
@@ -71,7 +73,7 @@ public class TotpService {
         }
 
         String normalizedCode = code.replace(" ", "");
-        if (!normalizedCode.matches("\\d{6}")) {
+        if (!TOTP_CODE_PATTERN.matcher(normalizedCode).matches()) {
             return null;
         }
 

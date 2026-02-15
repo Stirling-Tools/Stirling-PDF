@@ -38,6 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
@@ -133,6 +134,9 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class PdfJsonConversionService {
 
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    private static final Pattern WHITESPACE_DASH_UNDERSCORE_PATTERN = Pattern.compile("[\\s\\-_]");
+    private static final Pattern FONT_SUBSET_PREFIX_PATTERN = Pattern.compile("^[A-Z]{6}\\+");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final EndpointConfiguration endpointConfiguration;
@@ -531,7 +535,10 @@ public class PdfJsonConversionService {
                                                             : "Unknown";
                                             // Clean up subset prefix (e.g., "ABCDEF+TimesNewRoman"
                                             // -> "TimesNewRoman")
-                                            String cleanName = name.replaceAll("^[A-Z]{6}\\+", "");
+                                            String cleanName =
+                                                    FONT_SUBSET_PREFIX_PATTERN
+                                                            .matcher(name)
+                                                            .replaceAll("");
                                             return String.format("%s (%s)", cleanName, subtype);
                                         })
                                 .collect(java.util.stream.Collectors.toList());
@@ -1442,9 +1449,9 @@ public class PdfJsonConversionService {
             if (!fallbackFontService.canEncodeFully(font, text)) {
                 String fontName =
                         fontModel != null && fontModel.getBaseName() != null
-                                ? fontModel
-                                        .getBaseName()
-                                        .replaceAll("^[A-Z]{6}\\+", "") // Remove subset prefix
+                                ? FONT_SUBSET_PREFIX_PATTERN
+                                        .matcher(fontModel.getBaseName())
+                                        .replaceAll("") // Remove subset prefix
                                 : (font != null ? font.getName() : "unknown");
                 String fontKey = fontName + ":" + element.getFontId() + ":" + pageNumber;
                 if (!warnedFonts.contains(fontKey)) {
@@ -1902,7 +1909,10 @@ public class PdfJsonConversionService {
         if (plusIndex >= 0 && plusIndex < normalized.length() - 1) {
             normalized = normalized.substring(plusIndex + 1);
         }
-        normalized = normalized.toLowerCase(Locale.ROOT).replaceAll("[\\s\\-_]", "");
+        normalized =
+                WHITESPACE_DASH_UNDERSCORE_PATTERN
+                        .matcher(normalized.toLowerCase(Locale.ROOT))
+                        .replaceAll("");
 
         // Exact match after normalization
         try {
@@ -3256,7 +3266,7 @@ public class PdfJsonConversionService {
         if (value == null) {
             return "";
         }
-        String trimmed = value.replaceAll("\s+", " ").trim();
+        String trimmed = WHITESPACE_PATTERN.matcher(value).replaceAll(" ").trim();
         if (trimmed.length() <= 32) {
             return trimmed;
         }

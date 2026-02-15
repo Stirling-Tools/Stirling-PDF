@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.core.io.Resource;
@@ -44,6 +45,7 @@ import tools.jackson.databind.ObjectMapper;
 public class PipelineDirectoryProcessor {
 
     private static final int MAX_DIRECTORY_DEPTH = 50; // Prevent excessive recursion
+    private static final Pattern WATCHED_FOLDERS_PATTERN = Pattern.compile("\\\\?watchedFolders");
 
     private final ObjectMapper objectMapper;
     private final ApiDocService apiDocService;
@@ -433,10 +435,12 @@ public class PipelineDirectoryProcessor {
 
     private Path determineOutputPath(PipelineConfig config, Path dir) {
         String outputDir =
-                config.getOutputDir()
-                        .replace("{outputFolder}", finishedFoldersDir)
-                        .replace("{folderName}", dir.toString())
-                        .replaceAll("\\\\?watchedFolders", "");
+                WATCHED_FOLDERS_PATTERN
+                        .matcher(
+                                config.getOutputDir()
+                                        .replace("{outputFolder}", finishedFoldersDir)
+                                        .replace("{folderName}", dir.toString()))
+                        .replaceAll("");
         return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
     }
 

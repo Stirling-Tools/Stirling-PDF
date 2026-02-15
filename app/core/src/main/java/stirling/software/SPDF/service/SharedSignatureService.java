@@ -9,6 +9,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class SharedSignatureService {
 
+    private static final Pattern FILENAME_VALIDATION_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     private final String SIGNATURE_BASE_PATH;
     private final String ALL_USERS_FOLDER = "ALL_USERS";
     private final ObjectMapper objectMapper;
@@ -105,7 +107,7 @@ public class SharedSignatureService {
             throw new IllegalArgumentException("Invalid filename");
         }
         // Only allow alphanumeric, hyphen, underscore, and dot (for extensions)
-        if (!fileName.matches("^[a-zA-Z0-9_.-]+$")) {
+        if (!FILENAME_VALIDATION_PATTERN.matcher(fileName).matches()) {
             throw new IllegalArgumentException("Filename contains invalid characters");
         }
     }
@@ -113,7 +115,7 @@ public class SharedSignatureService {
     private String validateAndNormalizeExtension(String extension) {
         String normalized = extension.toLowerCase().trim();
         // Whitelist only safe image extensions
-        if (normalized.equals("png") || normalized.equals("jpg") || normalized.equals("jpeg")) {
+        if ("png".equals(normalized) || "jpg".equals(normalized) || "jpeg".equals(normalized)) {
             return normalized;
         }
         throw new IllegalArgumentException("Unsupported image extension: " + extension);
