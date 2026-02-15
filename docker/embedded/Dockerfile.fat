@@ -241,8 +241,6 @@ ENV QT_QPA_PLATFORM=offscreen \
 # Expose web UI port
 EXPOSE 8080/tcp
 
-# Ensure container runs as root so init.sh can fix permissions
-USER root
 
 STOPSIGNAL SIGTERM
 
