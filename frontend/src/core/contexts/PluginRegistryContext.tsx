@@ -1,10 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface PluginResponse {
   id: string;
+  icon: string;
   name: string;
   description?: string;
   version?: string;
@@ -14,9 +15,13 @@ interface PluginResponse {
   iconPath?: string;
   hasFrontend?: boolean;
   backendEndpoints?: string[];
+  minHostVersion: string;
+  iconUrl?: string;
+  jarCreatedAt?: string;
 }
 
 export interface PluginInfo {
+  icon: ReactNode;
   id: string;
   name: string;
   description: string;
@@ -27,6 +32,9 @@ export interface PluginInfo {
   frontendLabel?: string;
   iconPath?: string;
   backendEndpoints: string[];
+  minHostVersion: string;
+  iconUrl?: string;
+  jarCreatedAt?: string;
 }
 
 interface PluginRegistryState {
@@ -45,8 +53,23 @@ const buildFrontendUrl = (response: PluginResponse): string | undefined => {
   return response.frontendUrl;
 };
 
-  const buildPluginInfo = (response: PluginResponse): PluginInfo => ({
+const buildIconUrl = (path?: string, baseUrl?: string): string | undefined => {
+  if (!path) return undefined;
+  if (path.startsWith("http")) return path;
+  const normalizedBase =
+    baseUrl?.replace(/\/+$/, "") || (typeof window !== "undefined" ? window.location.origin.replace(/\/+$/, "") : "");
+  if (!normalizedBase) return path;
+  return `${normalizedBase}${path.startsWith("/") ? path : `/${path}`}`;
+};
+
+const buildPluginInfo = (response: PluginResponse, baseUrl?: string): PluginInfo => {
+  const frontendBase = response.frontendUrl
+    ? new URL(response.frontendUrl).origin
+    : baseUrl;
+
+  return {
     id: response.id,
+    icon: response.icon,
     name: response.name,
     description: response.description || "",
     version: response.version,
@@ -56,10 +79,14 @@ const buildFrontendUrl = (response: PluginResponse): string | undefined => {
     frontendLabel: response.frontendLabel,
     iconPath: response.iconPath,
     backendEndpoints: response.backendEndpoints ?? [],
-  });
+    minHostVersion: response.minHostVersion,
+    iconUrl: buildIconUrl(response.iconPath, frontendBase),
+    jarCreatedAt: response.jarCreatedAt,
+  };
+};
 
 export const PluginRegistryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { loading: configLoading } = useAppConfig();
+  const { loading: configLoading, config } = useAppConfig();
   const [plugins, setPlugins] = useState<PluginInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +96,9 @@ export const PluginRegistryProvider: React.FC<{ children: React.ReactNode }> = (
     setError(null);
     try {
       const response = await apiClient.get<PluginResponse[]>("/api/v1/config/plugins");
-      const normalized = response.data.map(buildPluginInfo).sort((a, b) => a.name.localeCompare(b.name));
+      const normalized = response.data
+        .map((plugin) => buildPluginInfo(plugin, config?.baseUrl))
+        .sort((a, b) => a.name.localeCompare(b.name));
       setPlugins(normalized);
     } catch (err: any) {
       if (err?.response?.status === 401) {

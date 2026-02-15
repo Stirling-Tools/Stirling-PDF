@@ -27,7 +27,6 @@ import {
   getActiveNavButton,
 } from '@app/components/shared/quickAccessBar/QuickAccessBar';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
-import PluginExplorerModal from '@app/components/shared/PluginExplorerModal';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
@@ -199,15 +198,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       onClick: () => {
         // This will be overridden by the wrapper logic
       },
-    },
-    {
-      id: 'plugins',
-      name: t("quickAccess.plugins", "Plugins"),
-      icon: <LocalIcon icon="extension-rounded" width="1.25rem" height="1.25rem" />,
-      isRound: true,
-      size: 'md',
-      type: 'action',
-      onClick: () => setPluginExplorerOpen(true),
     },
     ...(shouldHideSettingsButton ? [] : [{
       id: 'config',
@@ -394,10 +384,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       <AppConfigModal
         opened={configModalOpen}
         onClose={() => setConfigModalOpen(false)}
-      />
-      <PluginExplorerModal
-        opened={pluginExplorerOpen}
-        onClose={() => setPluginExplorerOpen(false)}
       />
     </div>
   );

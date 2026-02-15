@@ -139,12 +139,14 @@ const cloneNodeWithResolvedUrls = (node: ChildNode, base: string | null): Node |
 
 export default function PluginPage() {
   const { id } = useParams<{ id: string }>();
-  const { plugins, loading } = usePluginRegistry();
+  const pluginRegistry = usePluginRegistry();
+  const plugins = pluginRegistry?.plugins ?? [];
+  const loading = pluginRegistry?.loading ?? false;
   const navigate = useNavigate();
 
   const location = useLocation();
   const navigationPlugin = location.state?.plugin as PluginInfo | undefined;
-  const plugin = useMemo(() => navigationPlugin ?? plugins.find((p) => p.id === id), [navigationPlugin, plugins, id]);
+  const plugin = useMemo(() => navigationPlugin ?? plugins.find((p: { id: any; }) => p.id === id), [navigationPlugin, plugins, id]);
   const pluginBaseUrl = useMemo(() => {
     if (!plugin?.frontendUrl) {
       return null;

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { NavKey } from '@app/components/shared/config/types';
 import HotkeysSection from '@app/components/shared/config/configSections/HotkeysSection';
 import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
+import PluginSection from '@app/components/shared/config/configSections/PluginSection';
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -50,6 +51,17 @@ export const useConfigNavSections = (
           label: t('settings.hotkeys.title', 'Keyboard Shortcuts'),
           icon: 'keyboard-rounded',
           component: <HotkeysSection />
+        },
+      ],
+    },
+    {
+      title: t('settings.plugins.sectionTitle', 'Extensions'),
+      items: [
+        {
+          key: 'plugins',
+          label: t('settings.plugins.label', 'Plugins'),
+          icon: 'extension-rounded',
+          component: <PluginSection />
         },
       ],
     },

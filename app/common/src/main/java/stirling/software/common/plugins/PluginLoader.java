@@ -7,6 +7,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,6 +43,20 @@ public final class PluginLoader {
         try (Stream<Path> stream = Files.list(pluginDir)) {
             return stream.filter(Files::isRegularFile)
                     .filter(path -> path.toString().toLowerCase().endsWith(".jar"))
+                    .filter(
+                            path -> {
+                                try {
+                                    String mimeType = Files.probeContentType(path);
+                                    return mimeType != null
+                                            && mimeType.equals("application/java-archive");
+                                } catch (IOException e) {
+                                    log.warn(
+                                            "Failed to probe content type of {}: {}",
+                                            path,
+                                            e.getMessage());
+                                    return false;
+                                }
+                            })
                     .sorted(Comparator.comparing(Path::getFileName))
                     .collect(Collectors.toList());
         } catch (IOException e) {
@@ -75,7 +90,7 @@ public final class PluginLoader {
                 "Scanning {} plugin jars in {}",
                 urls.size(),
                 InstallationPathConfig.getPluginsPath());
-        return new URLClassLoader(urls.toArray(new URL[0]), parent);
+        return new URLClassLoader(urls.toArray(URL[]::new), parent);
     }
 
     public static List<PluginDescriptor> loadDescriptors() {
@@ -111,28 +126,40 @@ public final class PluginLoader {
         try (JarFile jarFile = new JarFile(jarPath.toFile())) {
             JarEntry entry = jarFile.getJarEntry(METADATA_RESOURCE);
             if (entry == null) {
-                log.debug(
-                        "Plugin jar {} does not include {}, skipping", jarPath, METADATA_RESOURCE);
+                log.info("Plugin jar {} does not include {}, skipping", jarPath, METADATA_RESOURCE);
                 return null;
             }
+            PluginMetadata metadata;
             try (InputStream inputStream = jarFile.getInputStream(entry)) {
-                PluginMetadata metadata =
-                        OBJECT_MAPPER.readValue(inputStream, PluginMetadata.class);
-                if (metadata.getId() == null || metadata.getId().isBlank()) {
-                    log.warn("Plugin metadata in {} is missing required id, ignoring", jarPath);
-                    return null;
-                }
-                return buildDescriptor(metadata);
+                metadata = OBJECT_MAPPER.readValue(inputStream, PluginMetadata.class);
             }
+
+            BasicFileAttributes attrs = Files.readAttributes(jarPath, BasicFileAttributes.class);
+            String createdAt = attrs.creationTime().toInstant().toString();
+
+            if (metadata.getId() == null || metadata.getId().isBlank()) {
+                log.warn("Plugin metadata in {} is missing required id, ignoring", jarPath);
+                return null;
+            }
+
+            String pluginId = metadata.getId();
+            log.info(
+                    "Loaded metadata for plugin '{}': name='{}' version='{}'",
+                    pluginId,
+                    metadata.getName(),
+                    metadata.getVersion());
+
+            return buildDescriptor(metadata, createdAt);
         } catch (IOException e) {
             log.warn("Failed to inspect plugin jar {}: {}", jarPath, e.getMessage());
             return null;
         }
     }
 
-    private static PluginDescriptor buildDescriptor(PluginMetadata metadata) {
+    private static PluginDescriptor buildDescriptor(PluginMetadata metadata, String jarCreatedAt) {
         PluginMetadata.PluginFrontend frontend = metadata.getFrontend();
         String id = metadata.getId();
+        String icon = metadata.getIcon();
 
         String frontendPath =
                 (frontend != null
@@ -143,6 +170,7 @@ public final class PluginLoader {
 
         return PluginDescriptor.builder()
                 .id(id)
+                .icon(defaultIfEmpty(icon, null))
                 .name(defaultIfEmpty(metadata.getName(), id))
                 .description(defaultIfEmpty(metadata.getDescription(), ""))
                 .version(defaultIfEmpty(metadata.getVersion(), "0.0.0"))
@@ -153,13 +181,14 @@ public final class PluginLoader {
                 .hasFrontend(frontend != null)
                 .backendEndpoints(
                         metadata.getBackendEndpoints() == null
-                                        ? Collections.emptyList()
-                                        : metadata.getBackendEndpoints())
+                                ? Collections.emptyList()
+                                : metadata.getBackendEndpoints())
                 .metadata(
                         metadata.getMetadata() == null
-                                        ? Collections.emptyMap()
-                                        : metadata.getMetadata())
+                                ? Collections.emptyMap()
+                                : metadata.getMetadata())
                 .minHostVersion(defaultIfEmpty(metadata.getMinHostVersion(), null))
+                .jarCreatedAt(jarCreatedAt)
                 .build();
     }
 

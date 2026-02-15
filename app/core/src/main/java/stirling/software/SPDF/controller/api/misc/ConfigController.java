@@ -24,6 +24,7 @@ import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.SPDF.service.plugin.PluginService;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.plugins.PluginDescriptorResponse;
 import stirling.software.common.service.ServerCertificateServiceInterface;
@@ -296,6 +297,10 @@ public class ConfigController {
             } catch (Exception e) {
                 // Version/machine info not available
             }
+
+            // config directory path
+            configData.put("basePath", InstallationPathConfig.getPath());
+            configData.put("pluginsPath", InstallationPathConfig.getPluginsPath());
 
             return ResponseEntity.ok(configData);
 

@@ -16,6 +16,7 @@ import lombok.Value;
 public class PluginDescriptor {
 
     String id;
+    String icon;
     String name;
     String description;
     String version;
@@ -24,10 +25,10 @@ public class PluginDescriptor {
     String frontendPath;
     String iconPath;
     String minHostVersion;
+    String jarCreatedAt;
 
     @Builder.Default boolean hasFrontend = false;
 
     @Builder.Default List<String> backendEndpoints = Collections.emptyList();
-
     @Builder.Default Map<String, String> metadata = Collections.emptyMap();
 }

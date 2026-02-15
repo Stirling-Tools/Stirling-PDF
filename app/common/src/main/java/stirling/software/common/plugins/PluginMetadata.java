@@ -13,6 +13,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PluginMetadata {
     private String id;
+    private String icon;
     private String name;
     private String description;
     private String version;

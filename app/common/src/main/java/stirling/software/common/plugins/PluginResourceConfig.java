@@ -19,7 +19,7 @@ public class PluginResourceConfig implements WebMvcConfigurer {
 
         if (!locations.isEmpty()) {
             registry.addResourceHandler("/plugins/**")
-                    .addResourceLocations(locations.toArray(new String[0]))
+                    .addResourceLocations(locations.toArray(String[]::new))
                     .setCachePeriod(0);
         }
     }

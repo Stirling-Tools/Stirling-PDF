@@ -10,6 +10,7 @@ import lombok.Value;
 @Builder
 public class PluginDescriptorResponse {
     String id;
+    String icon;
     String name;
     String description;
     String version;
@@ -18,6 +19,7 @@ public class PluginDescriptorResponse {
     String frontendLabel;
     String iconPath;
     String minHostVersion;
+    String jarCreatedAt;
     boolean hasFrontend;
     List<String> backendEndpoints;
     Map<String, String> metadata;
@@ -33,6 +35,7 @@ public class PluginDescriptorResponse {
 
         return PluginDescriptorResponse.builder()
                 .id(descriptor.getId())
+                .icon(descriptor.getIcon())
                 .name(descriptor.getName())
                 .description(descriptor.getDescription())
                 .version(descriptor.getVersion())
@@ -44,6 +47,7 @@ public class PluginDescriptorResponse {
                 .backendEndpoints(descriptor.getBackendEndpoints())
                 .metadata(descriptor.getMetadata())
                 .minHostVersion(descriptor.getMinHostVersion())
+                .jarCreatedAt(descriptor.getJarCreatedAt())
                 .build();
     }
 }
