@@ -189,4 +189,3 @@ export function getSimulatedLicenseInfo(): LicenseInfo | null {
 }
 
 export const DEV_TESTING_ENABLED = DEV_TESTING_MODE;
-
