@@ -108,12 +108,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const mountId = Math.random().toString(36).substring(7);
     console.log(`[Auth:${mountId}] 🔵 AuthProvider mounted`);
 
-    const initializeAuth = async () => {
+    const initializeAuth = async (showLoading = false) => {
       try {
+        if (showLoading) {
+          setLoading(true);
+        }
         console.debug(`[Auth:${mountId}] Initializing auth...`);
         console.debug(`[Auth:${mountId}] Path: ${window.location.pathname} Search: ${window.location.search}`);
-        // Clear any platform-specific cached auth on login page init.
-        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
+        // Clear platform auth cache on login init only when no local JWT exists yet.
+        // This avoids wiping freshly-saved desktop tokens during jwt-available re-init.
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname.startsWith('/login') &&
+          !localStorage.getItem('stirling_jwt')
+        ) {
           await clearPlatformAuthOnLoginInit();
         }
 
@@ -147,18 +155,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    initializeAuth();
+    initializeAuth(true);
 
     // Listen for jwt-available event (triggered by desktop auth or other sources)
     const handleJwtAvailable = () => {
       console.log(`[Auth:${mountId}] ════════════════════════════════════`);
       console.log(`[Auth:${mountId}] 🔄 JWT available event received`);
-      console.log(`[Auth:${mountId}] Current state: loading=${loading}, hasSession=${!!session}`);
-      console.log(`[Auth:${mountId}] Setting loading=true to stabilize auth state`);
-      setLoading(true); // Prevent unstable renders during auth state transition
       setError(null);
-      console.log(`[Auth:${mountId}] Refreshing session...`);
-      void initializeAuth();
+      console.log(`[Auth:${mountId}] Refreshing session in background...`);
+      void initializeAuth(false);
     };
 
     window.addEventListener('jwt-available', handleJwtAvailable);

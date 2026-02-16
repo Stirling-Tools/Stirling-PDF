@@ -38,7 +38,7 @@ const FREE_LICENSE_INFO: LicenseInfo = {
 
 const BASE_NO_LOGIN_CONFIG: AppConfig = {
   enableAnalytics: true,
-  appVersion: '2.4.6',
+  appVersion: '2.5.0',
   serverCertificateEnabled: false,
   enableAlphaFunctionality: false,
   serverPort: 8080,
@@ -189,4 +189,3 @@ export function getSimulatedLicenseInfo(): LicenseInfo | null {
 }
 
 export const DEV_TESTING_ENABLED = DEV_TESTING_MODE;
-

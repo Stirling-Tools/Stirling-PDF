@@ -25,6 +25,12 @@ setupApiInterceptors(apiClient as unknown as AxiosInstance);
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Let the auth-refresh interceptor handle first-pass 401s silently.
+    // If refresh/retry fails, the request is marked `_retry` and will fall through
+    // to normal global handling below.
+    if (error?.response?.status === 401 && error?.config?._retry !== true) {
+      return Promise.reject(error);
+    }
     await handleHttpError(error); // Handle error (shows toast unless suppressed)
     return Promise.reject(error);
   }

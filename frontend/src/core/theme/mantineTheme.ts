@@ -356,11 +356,10 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '&[data-active]': {
-            backgroundColor: 'var(--bg-surface)',
-            color: 'var(--text-primary)',
-            boxShadow: 'var(--shadow-sm)',
-          },
+        },
+        indicator: {
+          backgroundColor: 'var(--bg-surface)',
+          boxShadow: 'var(--shadow-sm)',
         },
       },
     },

@@ -208,7 +208,7 @@ export function useOnboardingOrchestrator(
 
       try {
         const [accountData, loginPageData] = await Promise.all([
-          accountService.getAccountData(),
+          accountService.getAccountData({ suppressErrorToast: true }),
           accountService.getLoginPageData(),
         ]);
 

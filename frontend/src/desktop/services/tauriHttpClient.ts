@@ -118,6 +118,16 @@ class TauriHttpClient {
     return error;
   }
 
+  private isResponseLike(value: unknown): value is TauriHttpResponse {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Partial<TauriHttpResponse>;
+    return (
+      typeof candidate.status === 'number' &&
+      'data' in candidate &&
+      candidate.config !== undefined
+    );
+  }
+
   private buildUrl(config: TauriHttpRequestConfig): string {
     let url = config.url || '';
 
@@ -314,6 +324,46 @@ class TauriHttpClient {
       // If it's already a TauriHttpError with interceptors run, re-throw
       if (error && typeof error === 'object' && 'isAxiosError' in error) {
         throw error;
+      }
+
+      // Some layers may throw a response-like object directly.
+      // Handle it by status instead of incorrectly wrapping as ERR_NETWORK.
+      if (this.isResponseLike(error)) {
+        if (error.status >= 200 && error.status < 300) {
+          return error as TauriHttpResponse<T>;
+        }
+
+        const errorCode =
+          error.status === 401
+            ? 'ERR_UNAUTHORIZED'
+            : error.status === 403
+            ? 'ERR_FORBIDDEN'
+            : error.status === 404
+            ? 'ERR_NOT_FOUND'
+            : error.status >= 500
+            ? 'ERR_SERVER_ERROR'
+            : 'ERR_BAD_REQUEST';
+
+        const errorMessage = `Request failed with status code ${error.status}`;
+        const httpError = this.createError(
+          errorMessage,
+          finalConfig,
+          errorCode,
+          error as TauriHttpResponse,
+          error
+        );
+
+        let finalError: unknown = httpError;
+        for (const handler of this.interceptors.response.handlers) {
+          if (handler.rejected) {
+            try {
+              finalError = await Promise.resolve(handler.rejected(finalError));
+            } catch (e) {
+              finalError = e;
+            }
+          }
+        }
+        throw finalError;
       }
 
       // Create detailed error messages for network/other failures

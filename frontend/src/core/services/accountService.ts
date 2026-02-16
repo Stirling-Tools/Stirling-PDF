@@ -35,8 +35,11 @@ export const accountService = {
   /**
    * Get current user account data
    */
-  async getAccountData(): Promise<AccountData> {
-    const response = await apiClient.get<AccountData>('/api/v1/proprietary/ui-data/account');
+  async getAccountData(options?: { suppressErrorToast?: boolean; skipAuthRedirect?: boolean }): Promise<AccountData> {
+    const response = await apiClient.get<AccountData>('/api/v1/proprietary/ui-data/account', {
+      suppressErrorToast: options?.suppressErrorToast,
+      skipAuthRedirect: options?.skipAuthRedirect,
+    });
     return response.data;
   },
 

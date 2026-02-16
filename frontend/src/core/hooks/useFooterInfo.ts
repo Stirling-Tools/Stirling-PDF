@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@app/services/apiClient';
+import { AxiosError } from 'axios';
 
 export interface FooterInfo {
   analyticsEnabled?: boolean;
@@ -29,8 +30,14 @@ export function useFooterInfo() {
         setFooterInfo(response.data);
         setError(null);
       } catch (err) {
-        console.error('[useFooterInfo] Failed to fetch footer info:', err);
-        setError(err as Error);
+        const status = err instanceof AxiosError ? err.response?.status : undefined;
+        if (status !== 404) {
+          console.error('[useFooterInfo] Failed to fetch footer info:', err);
+          setError(err as Error);
+        } else {
+          // Older servers may not expose this endpoint.
+          setError(null);
+        }
         // Set defaults on error
         setFooterInfo({
           analyticsEnabled: false,

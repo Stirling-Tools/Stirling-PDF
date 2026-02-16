@@ -22,6 +22,9 @@ interface SecuritySettingsData {
     enableKeyRotation?: boolean;
     enableKeyCleanup?: boolean;
     keyRetentionDays?: number;
+    tokenExpiryMinutes?: number;
+    allowedClockSkewSeconds?: number;
+    refreshGraceMinutes?: number;
     secureCookie?: boolean;
   };
   audit?: {
@@ -132,6 +135,9 @@ export default function AdminSecuritySection() {
         'security.jwt.enableKeyRotation': securitySettings.jwt?.enableKeyRotation,
         'security.jwt.enableKeyCleanup': securitySettings.jwt?.enableKeyCleanup,
         'security.jwt.keyRetentionDays': securitySettings.jwt?.keyRetentionDays,
+        'security.jwt.tokenExpiryMinutes': securitySettings.jwt?.tokenExpiryMinutes,
+        'security.jwt.allowedClockSkewSeconds': securitySettings.jwt?.allowedClockSkewSeconds,
+        'security.jwt.refreshGraceMinutes': securitySettings.jwt?.refreshGraceMinutes,
         'security.jwt.secureCookie': securitySettings.jwt?.secureCookie,
         // Premium audit settings
         'premium.enterpriseFeatures.audit.enabled': audit?.enabled,
@@ -392,10 +398,64 @@ export default function AdminSecuritySection() {
                 </Group>
               }
               description={t('admin.settings.security.jwt.keyRetentionDays.description', 'Number of days to retain old JWT keys for verification')}
-              value={settings?.jwt?.keyRetentionDays || 7}
+              value={settings?.jwt?.keyRetentionDays || 30}
               onChange={(value) => setSettings({ ...settings, jwt: { ...settings?.jwt, keyRetentionDays: Number(value) } })}
               min={1}
               max={365}
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div>
+            <NumberInput
+              name="jwt_tokenExpiryMinutes"
+              label={
+                <Group component="span" gap="xs">
+                  <span>{t('admin.settings.security.jwt.tokenExpiryMinutes.label', 'Token Expiry (minutes)')}</span>
+                  <PendingBadge show={isFieldPending('jwt.tokenExpiryMinutes')} />
+                </Group>
+              }
+              description={t('admin.settings.security.jwt.tokenExpiryMinutes.description', 'Access token lifetime in minutes')}
+              value={settings?.jwt?.tokenExpiryMinutes ?? 1440}
+              onChange={(value) => setSettings({ ...settings, jwt: { ...settings?.jwt, tokenExpiryMinutes: Number(value) } })}
+              min={1}
+              max={10080}
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div>
+            <NumberInput
+              name="jwt_allowedClockSkewSeconds"
+              label={
+                <Group component="span" gap="xs">
+                  <span>{t('admin.settings.security.jwt.allowedClockSkewSeconds.label', 'Allowed Clock Skew (seconds)')}</span>
+                  <PendingBadge show={isFieldPending('jwt.allowedClockSkewSeconds')} />
+                </Group>
+              }
+              description={t('admin.settings.security.jwt.allowedClockSkewSeconds.description', 'Tolerance for client/server clock drift during token validation')}
+              value={settings?.jwt?.allowedClockSkewSeconds ?? 60}
+              onChange={(value) => setSettings({ ...settings, jwt: { ...settings?.jwt, allowedClockSkewSeconds: Number(value) } })}
+              min={0}
+              max={300}
+              disabled={!loginEnabled}
+            />
+          </div>
+
+          <div>
+            <NumberInput
+              name="jwt_refreshGraceMinutes"
+              label={
+                <Group component="span" gap="xs">
+                  <span>{t('admin.settings.security.jwt.refreshGraceMinutes.label', 'Refresh Grace (minutes)')}</span>
+                  <PendingBadge show={isFieldPending('jwt.refreshGraceMinutes')} />
+                </Group>
+              }
+              description={t('admin.settings.security.jwt.refreshGraceMinutes.description', 'Allow refresh with an expired access token only within this grace period')}
+              value={settings?.jwt?.refreshGraceMinutes ?? 15}
+              onChange={(value) => setSettings({ ...settings, jwt: { ...settings?.jwt, refreshGraceMinutes: Number(value) } })}
+              min={0}
+              max={1440}
               disabled={!loginEnabled}
             />
           </div>
