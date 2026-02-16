@@ -38,6 +38,7 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
+import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -55,6 +56,7 @@ class AuthControllerLoginTest {
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private MfaService mfaService;
     @Mock private TotpService totpService;
+    @Mock private RefreshRateLimitService refreshRateLimitService;
 
     @BeforeEach
     void setUp() {
@@ -71,6 +73,7 @@ class AuthControllerLoginTest {
                         loginAttemptService,
                         mfaService,
                         totpService,
+                        refreshRateLimitService,
                         securityProperties);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
@@ -183,6 +186,7 @@ class AuthControllerLoginTest {
         claims.put("sub", "user@example.com");
         claims.put("exp", new Date(System.currentTimeMillis() + 60_000));
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
+        when(refreshRateLimitService.isRefreshAllowed(any(), any(Long.class))).thenReturn(true);
         when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
         when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
                 .thenReturn("new-token");
@@ -191,7 +195,11 @@ class AuthControllerLoginTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user").exists())
                 .andExpect(jsonPath("$.session.access_token").value("new-token"))
-                .andExpect(jsonPath("$.session.expires_in").value(3600));
+                .andExpect(
+                        jsonPath("$.session.expires_in")
+                                .value(3600)); // 60 minutes * 60 = 3600 seconds
+
+        verify(refreshRateLimitService).clearRefreshAttempts(any());
     }
 
     @Test
@@ -199,7 +207,11 @@ class AuthControllerLoginTest {
         when(jwtService.extractToken(any())).thenReturn("old");
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", "user@example.com");
-        claims.put("exp", new Date(System.currentTimeMillis() - (10 * 60_000)));
+        claims.put(
+                "exp",
+                new Date(
+                        System.currentTimeMillis()
+                                - (10 * 60_000))); // 10 minutes ago, beyond 5 minute grace
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
 
         mockMvc.perform(post("/api/v1/auth/refresh"))
@@ -207,6 +219,7 @@ class AuthControllerLoginTest {
                 .andExpect(jsonPath("$.error").value("Token refresh failed"));
 
         verify(userDetailsService, never()).loadUserByUsername(any());
+        verify(refreshRateLimitService, never()).isRefreshAllowed(any(), any(Long.class));
     }
 
     @Test
@@ -215,8 +228,13 @@ class AuthControllerLoginTest {
         when(jwtService.extractToken(any())).thenReturn("old");
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", "user@example.com");
-        claims.put("exp", new Date(System.currentTimeMillis() - (60_000)));
+        claims.put(
+                "exp",
+                new Date(
+                        System.currentTimeMillis()
+                                - 60_000)); // 1 minute ago, within 5 minute grace
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
+        when(refreshRateLimitService.isRefreshAllowed(any(), any(Long.class))).thenReturn(true);
         when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
         when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
                 .thenReturn("new-token");
@@ -224,6 +242,26 @@ class AuthControllerLoginTest {
         mockMvc.perform(post("/api/v1/auth/refresh"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.session.access_token").value("new-token"));
+
+        verify(refreshRateLimitService).clearRefreshAttempts(any());
+    }
+
+    @Test
+    void refreshRejectsWhenRateLimitExceeded() throws Exception {
+        when(jwtService.extractToken(any())).thenReturn("old");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", "user@example.com");
+        claims.put("exp", new Date(System.currentTimeMillis() - 60_000)); // 1 minute ago
+        when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
+        when(refreshRateLimitService.isRefreshAllowed(any(), any(Long.class))).thenReturn(false);
+
+        mockMvc.perform(post("/api/v1/auth/refresh"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.error").value("Too many refresh attempts"))
+                .andExpect(jsonPath("$.max_attempts").exists());
+
+        verify(userDetailsService, never()).loadUserByUsername(any());
+        verify(refreshRateLimitService, never()).clearRefreshAttempts(any());
     }
 
     @Test

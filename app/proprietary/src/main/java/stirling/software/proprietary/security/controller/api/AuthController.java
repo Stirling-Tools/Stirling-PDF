@@ -26,6 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
@@ -39,6 +40,7 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
+import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -49,8 +51,6 @@ import stirling.software.proprietary.security.service.UserService;
 @Slf4j
 @Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 public class AuthController {
-    private static final int DEFAULT_EXPIRY_MINUTES = 1440;
-    private static final int DEFAULT_REFRESH_GRACE_MINUTES = 15;
 
     private final UserService userService;
     private final JwtServiceInterface jwtService;
@@ -58,6 +58,7 @@ public class AuthController {
     private final LoginAttemptService loginAttemptService;
     private final MfaService mfaService;
     private final TotpService totpService;
+    private final RefreshRateLimitService refreshRateLimitService;
     private final ApplicationProperties.Security securityProperties;
 
     /**
@@ -280,11 +281,28 @@ public class AuthController {
                         .body(Map.of("error", "No token found"));
             }
 
+            // Generate token hash for rate limiting (avoid storing actual tokens)
+            String tokenHash = generateTokenHash(token);
+
             Map<String, Object> claims = jwtService.extractClaimsAllowExpired(token);
             if (!isRefreshWithinGrace(claims)) {
                 log.warn("Token refresh rejected: token expired beyond configured grace window");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Token refresh failed"));
+            }
+
+            // Check rate limit for expired token refresh
+            if (!refreshRateLimitService.isRefreshAllowed(tokenHash, getRefreshGraceMillis())) {
+                log.warn(
+                        "Token refresh rejected: rate limit exceeded (max {} attempts allowed)",
+                        JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "Too many refresh attempts",
+                                        "max_attempts",
+                                        JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE));
             }
 
             Object usernameClaim = claims.get("sub");
@@ -303,6 +321,9 @@ public class AuthController {
             newClaims.put("role", user.getRolesAsString());
 
             String newToken = jwtService.generateToken(username, newClaims);
+
+            // Clear rate limit tracking after successful refresh
+            refreshRateLimitService.clearRefreshAttempts(tokenHash);
 
             log.debug("Token refreshed for user: {}", username);
 
@@ -563,8 +584,11 @@ public class AuthController {
 
     private long getTokenExpirySeconds() {
         int configuredMinutes = securityProperties.getJwt().getTokenExpiryMinutes();
-        int expiryMinutes = configuredMinutes > 0 ? configuredMinutes : DEFAULT_EXPIRY_MINUTES;
-        return expiryMinutes * 60L;
+        int expiryMinutes =
+                configuredMinutes > 0
+                        ? configuredMinutes
+                        : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+        return expiryMinutes * JwtConstants.SECONDS_PER_MINUTE;
     }
 
     private boolean isRefreshWithinGrace(Map<String, Object> claims) {
@@ -585,8 +609,10 @@ public class AuthController {
     private long getRefreshGraceMillis() {
         int configuredMinutes = securityProperties.getJwt().getRefreshGraceMinutes();
         int graceMinutes =
-                configuredMinutes >= 0 ? configuredMinutes : DEFAULT_REFRESH_GRACE_MINUTES;
-        return graceMinutes * 60_000L;
+                configuredMinutes >= 0
+                        ? configuredMinutes
+                        : JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
+        return graceMinutes * JwtConstants.MILLIS_PER_MINUTE;
     }
 
     private long extractEpochMillis(Object claimValue) {
@@ -604,6 +630,35 @@ public class AuthController {
         }
 
         return -1L;
+    }
+
+    /**
+     * Generate a hash of the token for rate limiting purposes.
+     *
+     * <p>Uses SHA-256 to avoid storing actual token values in memory.
+     *
+     * @param token the JWT token
+     * @return hex-encoded SHA-256 hash of the token
+     */
+    private String generateTokenHash(String token) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes =
+                    digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            // Fallback to hashCode if SHA-256 is not available (should never happen)
+            log.warn("SHA-256 not available, using hashCode for token tracking", e);
+            return String.valueOf(token.hashCode());
+        }
     }
 
     private ResponseEntity<?> ensureWebAuth(User user) {

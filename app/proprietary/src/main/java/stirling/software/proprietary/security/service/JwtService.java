@@ -34,6 +34,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
@@ -43,10 +44,6 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 @Service
 public class JwtService implements JwtServiceInterface {
 
-    private static final String ISSUER = "https://stirling.com";
-    private static final long ONE_MINUTE_MILLIS = 60_000L;
-    private static final int DEFAULT_EXPIRY_MINUTES = 1440;
-    private static final long DEFAULT_CLOCK_SKEW_SECONDS = 60L;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final KeyPersistenceServiceInterface keyPersistenceService;
@@ -95,7 +92,7 @@ public class JwtService implements JwtServiceInterface {
                     Jwts.builder()
                             .claims(claims)
                             .subject(username)
-                            .issuer(ISSUER)
+                            .issuer(JwtConstants.ISSUER)
                             .issuedAt(new Date())
                             .expiration(
                                     new Date(System.currentTimeMillis() + getExpirationMillis()))
@@ -226,9 +223,12 @@ public class JwtService implements JwtServiceInterface {
             throw new AuthenticationFailureException("Invalid token", e);
         } catch (ExpiredJwtException e) {
             if (allowExpired) {
+                log.debug(
+                        "Extracting claims from expired token (allowed for refresh grace period): {}",
+                        e.getMessage());
                 return e.getClaims();
             }
-            log.debug("The token has expired: {}", e.getMessage());
+            log.warn("Token validation failed - token has expired: {}", e.getMessage());
             throw new AuthenticationFailureException("The token has expired", e);
         } catch (UnsupportedJwtException e) {
             log.warn("The token is unsupported: {}", e.getMessage());
@@ -254,8 +254,11 @@ public class JwtService implements JwtServiceInterface {
                     .getPayload();
         } catch (ExpiredJwtException e) {
             if (allowExpired) {
+                log.debug(
+                        "Extracting claims from expired token (allowed for refresh grace period)");
                 return e.getClaims();
             }
+            log.warn("Token validation failed - token has expired");
             throw new AuthenticationFailureException("The token has expired", e);
         } catch (SignatureException
                 | NoSuchAlgorithmException
@@ -316,10 +319,22 @@ public class JwtService implements JwtServiceInterface {
         return v2Enabled;
     }
 
+    /**
+     * Extract key ID from JWT header without validating the token.
+     *
+     * <p>Parses the Base64-encoded JWT header to retrieve the "kid" (key ID) claim. Returns null if
+     * the header cannot be parsed or does not contain a key ID.
+     *
+     * @param token the JWT token
+     * @return the key ID, or null if not found or parsing fails
+     */
     private String extractKeyId(String token) {
         try {
             String[] tokenParts = token.split("\\.");
             if (tokenParts.length < 2) {
+                log.debug(
+                        "Token does not have enough parts (expected at least 2, got {})",
+                        tokenParts.length);
                 return null;
             }
 
@@ -329,20 +344,26 @@ public class JwtService implements JwtServiceInterface {
                             headerBytes, new TypeReference<Map<String, Object>>() {});
             Object keyId = header.get("kid");
             return keyId instanceof String ? (String) keyId : null;
-        } catch (Exception e) {
-            log.debug("Failed to extract key ID from token header: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.debug("Failed to decode Base64 JWT header: {}", e.getMessage());
+            return null;
+        } catch (java.io.IOException e) {
+            log.debug("Failed to parse JWT header as JSON: {}", e.getMessage());
             return null;
         }
     }
 
     private long getExpirationMillis() {
         int configuredMinutes = securityProperties.getJwt().getTokenExpiryMinutes();
-        int expiryMinutes = configuredMinutes > 0 ? configuredMinutes : DEFAULT_EXPIRY_MINUTES;
-        return expiryMinutes * ONE_MINUTE_MILLIS;
+        int expiryMinutes =
+                configuredMinutes > 0
+                        ? configuredMinutes
+                        : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+        return expiryMinutes * JwtConstants.MILLIS_PER_MINUTE;
     }
 
     private long getAllowedClockSkewSeconds() {
         int configuredSeconds = securityProperties.getJwt().getAllowedClockSkewSeconds();
-        return configuredSeconds >= 0 ? configuredSeconds : DEFAULT_CLOCK_SKEW_SECONDS;
+        return configuredSeconds >= 0 ? configuredSeconds : JwtConstants.DEFAULT_CLOCK_SKEW_SECONDS;
     }
 }

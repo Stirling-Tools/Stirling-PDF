@@ -161,11 +161,47 @@ class SpringAuthClient {
     } catch (error: unknown) {
       console.error('[SpringAuth] getSession error:', error);
 
-      // If 401/403, token is invalid - clear it
+      // If 401/403, token might be expired but could be auto-refreshed
+      // Don't clear token here - let the auto-refresh interceptor handle it
+      // If auto-refresh succeeds, the token will be updated
+      // If auto-refresh fails, the interceptor will clear the token and redirect
       if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 403)) {
-        localStorage.removeItem('stirling_jwt');
-        console.debug('[SpringAuth] getSession: Not authenticated');
-        return { data: { session: null }, error: null };
+        console.debug('[SpringAuth] getSession: 401/403 error - token may be expired (auto-refresh may be in progress)');
+
+        // Check if we still have a token (auto-refresh might have updated it)
+        const currentToken = localStorage.getItem('stirling_jwt');
+        if (!currentToken) {
+          // Token was cleared (auto-refresh failed or not within grace period)
+          return { data: { session: null }, error: null };
+        }
+
+        // Token still exists - auto-refresh might be in progress or succeeded
+        // Wait a moment and retry to see if auto-refresh completed
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        try {
+          // Retry the session check
+          const retryResponse = await apiClient.get('/api/v1/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${currentToken}`,
+            },
+            suppressErrorToast: true,
+          });
+
+          const session: Session = {
+            user: retryResponse.data.user,
+            access_token: currentToken,
+            expires_in: 3600,
+            expires_at: Date.now() + 3600 * 1000,
+          };
+
+          console.debug('[SpringAuth] getSession: Session retrieved successfully after retry');
+          return { data: { session }, error: null };
+        } catch (retryError) {
+          // Still failing - token is truly invalid
+          console.debug('[SpringAuth] getSession: Token invalid after retry');
+          return { data: { session: null }, error: null };
+        }
       }
 
       // Don't clear token for other errors (e.g., backend not ready, network issues)

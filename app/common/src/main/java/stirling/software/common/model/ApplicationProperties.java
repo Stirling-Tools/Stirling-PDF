@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.YamlPropertySourceFactory;
+import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
@@ -393,15 +394,60 @@ public class ApplicationProperties {
             }
         }
 
+        /**
+         * JWT token configuration.
+         *
+         * <p><b>BREAKING CHANGE (v2.0):</b> Default token expiry increased from 12 hours (720
+         * minutes) to 24 hours (1440 minutes). If you require the previous behavior, explicitly set
+         * {@code tokenExpiryMinutes: 720} in your configuration.
+         */
         @Data
         public static class Jwt {
             private boolean enableKeystore = true;
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
-            private int keyRetentionDays = 30;
-            private int tokenExpiryMinutes = 1440;
-            private int allowedClockSkewSeconds = 60;
-            private int refreshGraceMinutes = 15;
+
+            /**
+             * Number of days to retain old JWT signing keys after rotation.
+             *
+             * <p>Default: {@value JwtConstants#DEFAULT_KEY_RETENTION_DAYS} days.
+             */
+            private int keyRetentionDays = JwtConstants.DEFAULT_KEY_RETENTION_DAYS;
+
+            /**
+             * JWT access token lifetime in minutes.
+             *
+             * <p>Default: {@value JwtConstants#DEFAULT_TOKEN_EXPIRY_MINUTES} minutes (24 hours).
+             *
+             * <p><b>BREAKING CHANGE:</b> Previously hardcoded to 720 minutes (12 hours). Now
+             * defaults to 1440 minutes (24 hours).
+             */
+            private int tokenExpiryMinutes = JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+
+            /**
+             * Allowed clock skew in seconds for JWT validation.
+             *
+             * <p>Tolerates small time drift between client and server clocks. Tokens that are
+             * slightly expired or slightly in the future (within this window) will still be
+             * accepted.
+             *
+             * <p>Default: {@value JwtConstants#DEFAULT_CLOCK_SKEW_SECONDS} seconds.
+             */
+            private int allowedClockSkewSeconds = JwtConstants.DEFAULT_CLOCK_SKEW_SECONDS;
+
+            /**
+             * Grace period in minutes for refreshing expired tokens.
+             *
+             * <p>Allows token refresh using an expired access token if the token expired within
+             * this many minutes. This provides better UX by allowing users to refresh slightly
+             * expired tokens without re-authentication.
+             *
+             * <p>Rate limiting is applied to prevent abuse of expired tokens within the grace
+             * window (max {@value JwtConstants#MAX_REFRESH_ATTEMPTS_IN_GRACE} attempts).
+             *
+             * <p>Default: {@value JwtConstants#DEFAULT_REFRESH_GRACE_MINUTES} minutes.
+             */
+            private int refreshGraceMinutes = JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
         }
 
         @Data
