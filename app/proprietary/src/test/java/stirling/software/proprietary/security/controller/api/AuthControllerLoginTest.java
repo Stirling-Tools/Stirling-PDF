@@ -65,6 +65,9 @@ class AuthControllerLoginTest {
         securityProperties.getJwt().setTokenExpiryMinutes(60);
         securityProperties.getJwt().setRefreshGraceMinutes(5);
 
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        applicationProperties.setSecurity(securityProperties);
+
         AuthController controller =
                 new AuthController(
                         userService,
@@ -74,7 +77,8 @@ class AuthControllerLoginTest {
                         mfaService,
                         totpService,
                         refreshRateLimitService,
-                        securityProperties);
+                        securityProperties,
+                        applicationProperties);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

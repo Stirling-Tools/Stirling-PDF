@@ -14,6 +14,9 @@ public final class JwtConstants {
     /** Default JWT access token lifetime in minutes (24 hours). */
     public static final int DEFAULT_TOKEN_EXPIRY_MINUTES = 1440;
 
+    /** Default desktop client token lifetime in minutes (30 days). */
+    public static final int DEFAULT_DESKTOP_TOKEN_EXPIRY_MINUTES = 43200;
+
     /**
      * Default refresh grace period in minutes.
      *
@@ -27,9 +30,6 @@ public final class JwtConstants {
      * <p>Tolerates small time drift between client and server clocks during validation.
      */
     public static final int DEFAULT_CLOCK_SKEW_SECONDS = 60;
-
-    /** Default key retention period in days. */
-    public static final int DEFAULT_KEY_RETENTION_DAYS = 30;
 
     /** Milliseconds per minute. */
     public static final long MILLIS_PER_MINUTE = 60_000L;

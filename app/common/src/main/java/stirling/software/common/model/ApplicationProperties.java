@@ -408,14 +408,7 @@ public class ApplicationProperties {
             private boolean enableKeyCleanup = true;
 
             /**
-             * Number of days to retain old JWT signing keys after rotation.
-             *
-             * <p>Default: {@value JwtConstants#DEFAULT_KEY_RETENTION_DAYS} days.
-             */
-            private int keyRetentionDays = JwtConstants.DEFAULT_KEY_RETENTION_DAYS;
-
-            /**
-             * JWT access token lifetime in minutes.
+             * JWT access token lifetime in minutes for web clients.
              *
              * <p>Default: {@value JwtConstants#DEFAULT_TOKEN_EXPIRY_MINUTES} minutes (24 hours).
              *
@@ -423,6 +416,21 @@ public class ApplicationProperties {
              * defaults to 1440 minutes (24 hours).
              */
             private int tokenExpiryMinutes = JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+
+            /**
+             * JWT access token lifetime in minutes for desktop clients (Tauri app).
+             *
+             * <p>Desktop clients are automatically detected via User-Agent header and receive
+             * longer-lived tokens because they run on personal devices with OS-level encrypted
+             * storage (macOS Keychain, Windows Credential Manager, Linux Secret Service).
+             *
+             * <p>This provides better UX (login once per month) while maintaining security through
+             * device encryption and secure storage, matching the behavior of popular desktop apps
+             * like Slack, Discord, VS Code, etc.
+             *
+             * <p>Default: 43200 minutes (30 days).
+             */
+            private int desktopTokenExpiryMinutes = 43200;
 
             /**
              * Allowed clock skew in seconds for JWT validation.
@@ -448,6 +456,45 @@ public class ApplicationProperties {
              * <p>Default: {@value JwtConstants#DEFAULT_REFRESH_GRACE_MINUTES} minutes.
              */
             private int refreshGraceMinutes = JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
+
+            /**
+             * Calculate number of days to retain old JWT signing keys.
+             *
+             * <p>Automatically calculated based on the longest token lifetime plus a proportional
+             * safety buffer. Keys must be retained for at least as long as the tokens they signed
+             * remain valid, otherwise token verification will fail.
+             *
+             * <p>Formula: ceil((maxTokenExpiry + 10% buffer + refreshGrace + clockSkew) / 1440)
+             *
+             * <p>The buffer includes:
+             *
+             * <ul>
+             *   <li>10% of token lifetime (scales with token duration)
+             *   <li>Token refresh grace period ({@link #refreshGraceMinutes})
+             *   <li>Clock skew tolerance ({@link #allowedClockSkewSeconds} converted to minutes)
+             * </ul>
+             *
+             * @return calculated key retention period in days
+             */
+            public int getKeyRetentionDays() {
+                final int MINUTES_PER_DAY = 1440;
+                final double BUFFER_PERCENTAGE = 0.10; // 10% buffer
+
+                int maxTokenExpiryMinutes = Math.max(tokenExpiryMinutes, desktopTokenExpiryMinutes);
+
+                // Add 10% buffer (scales with token lifetime)
+                int bufferMinutes = (int) Math.ceil(maxTokenExpiryMinutes * BUFFER_PERCENTAGE);
+
+                // Add refresh grace period
+                bufferMinutes += refreshGraceMinutes;
+
+                // Add clock skew (convert seconds to minutes, round up)
+                bufferMinutes += (int) Math.ceil(allowedClockSkewSeconds / 60.0);
+
+                // Total retention in minutes, convert to days (round up)
+                int totalMinutes = maxTokenExpiryMinutes + bufferMinutes;
+                return (int) Math.ceil(totalMinutes / (double) MINUTES_PER_DAY);
+            }
         }
 
         @Data

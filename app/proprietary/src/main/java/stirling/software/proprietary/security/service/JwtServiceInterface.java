@@ -26,6 +26,16 @@ public interface JwtServiceInterface {
     String generateToken(String username, Map<String, Object> claims);
 
     /**
+     * Generate a JWT token for a specific username with custom expiry
+     *
+     * @param username the username for which to generate the token
+     * @param claims additional claims to include in the token
+     * @param expiryMinutes custom token lifetime in minutes
+     * @return JWT token as a string
+     */
+    String generateToken(String username, Map<String, Object> claims, int expiryMinutes);
+
+    /**
      * Validate a JWT token
      *
      * @param token the JWT token to validate

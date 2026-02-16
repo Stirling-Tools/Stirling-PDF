@@ -110,6 +110,40 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
+    public String generateToken(String username, Map<String, Object> claims, int expiryMinutes) {
+        try {
+            JwtVerificationKey activeKey = keyPersistenceService.getActiveKey();
+            Optional<KeyPair> keyPairOpt = keyPersistenceService.getKeyPair(activeKey.getKeyId());
+
+            if (keyPairOpt.isEmpty()) {
+                throw new RuntimeException("Unable to retrieve key pair for active key");
+            }
+
+            KeyPair keyPair = keyPairOpt.get();
+            long customExpirationMillis = expiryMinutes * JwtConstants.MILLIS_PER_MINUTE;
+
+            var builder =
+                    Jwts.builder()
+                            .claims(claims)
+                            .subject(username)
+                            .issuer(JwtConstants.ISSUER)
+                            .issuedAt(new Date())
+                            .expiration(
+                                    new Date(System.currentTimeMillis() + customExpirationMillis))
+                            .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
+
+            String keyId = activeKey.getKeyId();
+            if (keyId != null) {
+                builder.header().keyId(keyId);
+            }
+
+            return builder.compact();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate token with custom expiry", e);
+        }
+    }
+
+    @Override
     public void validateToken(String token) throws AuthenticationFailureException {
         extractAllClaims(token);
 
