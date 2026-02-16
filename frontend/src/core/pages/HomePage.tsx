@@ -22,6 +22,7 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
+import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 
 import "@app/pages/HomePage.css";
 
@@ -60,21 +61,23 @@ export default function HomePage() {
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
 
-  // Auto-switch to viewer when going from 0 to 1 file
-  // Skip this if PDF Text Editor is active - it handles its own empty state
+  // Startup/open transition behavior:
+  // - opening exactly 1 file from empty -> viewer (unless already in fileEditor)
+  // - opening 2+ files from empty -> fileEditor
   useEffect(() => {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
-    if (
-      navigationState.workbench !== 'fileEditor' &&
-      prevCount === 0 &&
-      currentCount === 1
-    ) {
-      // PDF Text Editor handles its own empty state with a dropzone
-      if (selectedToolKey !== 'pdfTextEditor') {
-        actions.setWorkbench('viewer');
-        setActiveFileIndex(0);
+    const action = getStartupNavigationAction(
+      prevCount,
+      currentCount,
+      selectedToolKey,
+      navigationState.workbench
+    );
+    if (action) {
+      actions.setWorkbench(action.workbench);
+      if (typeof action.activeFileIndex === 'number') {
+        setActiveFileIndex(action.activeFileIndex);
       }
     }
 
