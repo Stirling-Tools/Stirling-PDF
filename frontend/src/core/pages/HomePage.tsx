@@ -68,17 +68,30 @@ export default function HomePage() {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
+    console.log('[HomePage] Navigation effect triggered:', {
+      prevCount,
+      currentCount,
+      currentWorkbench: navigationState.workbench,
+      selectedToolKey,
+    });
+
     const action = getStartupNavigationAction(
       prevCount,
       currentCount,
       selectedToolKey,
       navigationState.workbench
     );
+
+    console.log('[HomePage] Navigation action returned:', action);
+
     if (action) {
+      console.log('[HomePage] Applying navigation:', action);
       actions.setWorkbench(action.workbench);
       if (typeof action.activeFileIndex === 'number') {
         setActiveFileIndex(action.activeFileIndex);
       }
+    } else {
+      console.log('[HomePage] No navigation - staying in current workbench');
     }
 
     prevFileCountRef.current = currentCount;
