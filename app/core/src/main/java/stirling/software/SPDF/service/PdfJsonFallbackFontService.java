@@ -426,7 +426,8 @@ public class PdfJsonFallbackFontService {
             String normalized =
                     WHITESPACE_PATTERN
                             .matcher(
-                                    PATTERN.matcher(originalFontName).replaceAll("") // Remove subset prefix
+                                    PATTERN.matcher(originalFontName)
+                                            .replaceAll("") // Remove subset prefix
                                             .toLowerCase())
                             .replaceAll(""); // Remove spaces (e.g. "Times New Roman" ->
             // "timesnewroman")

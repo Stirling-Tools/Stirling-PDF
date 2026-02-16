@@ -1236,9 +1236,21 @@ label = "Enable Key Cleanup"
 description = "Automatically rotate JWT signing keys periodically"
 label = "Enable Key Rotation"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Number of days to retain old JWT keys for verification"
-label = "Key Retention Days"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)"
+label = "Web Token Expiry (minutes)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)"
+label = "Desktop Token Expiry (minutes)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerance for client/server time drift during token validation (default: 60 seconds)"
+label = "Clock Skew Tolerance (seconds)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Allow token refresh within this many minutes after expiry (default: 15 minutes, max 3 attempts)"
+label = "Refresh Grace Period (minutes)"
 
 [admin.settings.security.jwt.persistence]
 description = "Store JWT keys persistently to survive server restarts"

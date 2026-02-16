@@ -64,7 +64,10 @@ security:
     persistence: true # Set to 'true' to enable JWT key store
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
-    keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
+    tokenExpiryMinutes: 1440 # JWT access token lifetime in minutes for web clients (1 day).
+    desktopTokenExpiryMinutes: 43200 # JWT access token lifetime in minutes for desktop clients (30 days). 
+    allowedClockSkewSeconds: 60 # Allowed JWT validation clock skew in seconds to tolerate small client/server time drift.
+    refreshGraceMinutes: 15 # Allow refresh using an expired access token only within this many minutes after expiry.
   validation: # PDF signature validation settings
     trust:
       serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)

@@ -37,13 +37,19 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
         oauth2Props.setAutoCreateUser(true);
         oauth2Props.setBlockRegistration(false);
 
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        ApplicationProperties.Security securityProperties = new ApplicationProperties.Security();
+        securityProperties.setOauth2(oauth2Props);
+        applicationProperties.setSecurity(securityProperties);
+
         CustomOAuth2AuthenticationSuccessHandler handler =
                 new CustomOAuth2AuthenticationSuccessHandler(
                         loginAttemptService,
                         oauth2Props,
                         userService,
                         jwtService,
-                        licenseSettingsService);
+                        licenseSettingsService,
+                        applicationProperties);
 
         when(userService.usernameExistsIgnoreCase("user")).thenReturn(false);
         when(licenseSettingsService.isOAuthEligible(null)).thenReturn(true);
