@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -26,6 +27,18 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class StampControllerTest {
 
+    private static final Pattern UUID_HEX_PATTERN = Pattern.compile("[0-9a-f]{8}");
+    private static final Pattern DATE_LITERAL_REGEX =
+            Pattern.compile("@date is \\d{4}-\\d{2}-\\d{2}");
+    private static final Pattern DATE_TIME_MIN_PATTERN =
+            Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}");
+    private static final Pattern DATE_SLASH_PATTERN = Pattern.compile("\\d{2}/\\d{2}/\\d{4}");
+    private static final Pattern DAY_LABEL_PATTERN = Pattern.compile("Day: \\d{2}");
+    private static final Pattern MONTH_LABEL_PATTERN = Pattern.compile("Month: \\d{2}");
+    private static final Pattern DATE_TIME_FULL_PATTERN =
+            Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
+    private static final Pattern TIME_LABEL_PATTERN = Pattern.compile("Time: \\d{2}:\\d{2}:\\d{2}");
+    private static final Pattern DATE_LABEL_PATTERN = Pattern.compile("Date: \\d{4}-\\d{2}-\\d{2}");
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
 
@@ -173,7 +186,7 @@ class StampControllerTest {
         void testDateReplacement() throws Exception {
             String result = invokeProcessStampText("Date: @date", 1, 1, "test.pdf", null);
             assertTrue(
-                    result.matches("Date: \\d{4}-\\d{2}-\\d{2}"),
+                    DATE_LABEL_PATTERN.matcher(result).matches(),
                     "Date should match YYYY-MM-DD format");
         }
 
@@ -182,7 +195,7 @@ class StampControllerTest {
         void testTimeReplacement() throws Exception {
             String result = invokeProcessStampText("Time: @time", 1, 1, "test.pdf", null);
             assertTrue(
-                    result.matches("Time: \\d{2}:\\d{2}:\\d{2}"),
+                    TIME_LABEL_PATTERN.matcher(result).matches(),
                     "Time should match HH:mm:ss format");
         }
 
@@ -192,7 +205,7 @@ class StampControllerTest {
             String result = invokeProcessStampText("@datetime", 1, 1, "test.pdf", null);
             // DateTime format: YYYY-MM-DD HH:mm:ss
             assertTrue(
-                    result.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"),
+                    DATE_TIME_FULL_PATTERN.matcher(result).matches(),
                     "DateTime should match YYYY-MM-DD HH:mm:ss format");
         }
 
@@ -208,14 +221,15 @@ class StampControllerTest {
         @DisplayName("Should replace @month with zero-padded month")
         void testMonthReplacement() throws Exception {
             String result = invokeProcessStampText("Month: @month", 1, 1, "test.pdf", null);
-            assertTrue(result.matches("Month: \\d{2}"), "Month should be zero-padded");
+            assertTrue(
+                    MONTH_LABEL_PATTERN.matcher(result).matches(), "Month should be zero-padded");
         }
 
         @Test
         @DisplayName("Should replace @day with zero-padded day")
         void testDayReplacement() throws Exception {
             String result = invokeProcessStampText("Day: @day", 1, 1, "test.pdf", null);
-            assertTrue(result.matches("Day: \\d{2}"), "Day should be zero-padded");
+            assertTrue(DAY_LABEL_PATTERN.matcher(result).matches(), "Day should be zero-padded");
         }
     }
 
@@ -228,7 +242,7 @@ class StampControllerTest {
         void testCustomDateFormatSlash() throws Exception {
             String result = invokeProcessStampText("@date{dd/MM/yyyy}", 1, 1, "test.pdf", null);
             assertTrue(
-                    result.matches("\\d{2}/\\d{2}/\\d{4}"),
+                    DATE_SLASH_PATTERN.matcher(result).matches(),
                     "Should match dd/MM/yyyy format: " + result);
         }
 
@@ -238,7 +252,7 @@ class StampControllerTest {
             String result =
                     invokeProcessStampText("@date{yyyy-MM-dd HH:mm}", 1, 1, "test.pdf", null);
             assertTrue(
-                    result.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}"),
+                    DATE_TIME_MIN_PATTERN.matcher(result).matches(),
                     "Should match yyyy-MM-dd HH:mm format: " + result);
         }
 
@@ -345,7 +359,7 @@ class StampControllerTest {
             // @@date should become @date, and @date should be replaced with actual date
             assertTrue(result.startsWith("@date is "), "Should start with literal @date");
             assertTrue(
-                    result.matches("@date is \\d{4}-\\d{2}-\\d{2}"),
+                    DATE_LITERAL_REGEX.matcher(result).matches(),
                     "Should have date after: " + result);
         }
 
@@ -463,7 +477,9 @@ class StampControllerTest {
         @DisplayName("UUID should contain only hex characters")
         void testUuidFormat() throws Exception {
             String result = invokeProcessStampText("@uuid", 1, 1, "test.pdf", null);
-            assertTrue(result.matches("[0-9a-f]{8}"), "UUID should be 8 hex characters: " + result);
+            assertTrue(
+                    UUID_HEX_PATTERN.matcher(result).matches(),
+                    "UUID should be 8 hex characters: " + result);
         }
     }
 
