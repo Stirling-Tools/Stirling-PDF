@@ -324,8 +324,11 @@ public class AuthController {
                         .body(Map.of("error", "Token refresh failed"));
             }
 
-            // Check rate limit for expired token refresh
-            if (!refreshRateLimitService.isRefreshAllowed(tokenHash, getRefreshGraceMillis())) {
+            // Only apply rate limiting if token is actually expired (not for valid tokens)
+            // This prevents false-positive 429 errors with multiple tabs, retries, etc.
+            long expMillis = extractEpochMillis(claims.get("exp"));
+            boolean isExpired = expMillis > 0 && expMillis < System.currentTimeMillis();
+            if (isExpired && !refreshRateLimitService.isRefreshAllowed(tokenHash, getRefreshGraceMillis())) {
                 log.warn(
                         "Token refresh rejected: rate limit exceeded (max {} attempts allowed)",
                         JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
