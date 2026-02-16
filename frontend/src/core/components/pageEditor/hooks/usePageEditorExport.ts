@@ -295,6 +295,21 @@ export const usePageEditorExport = ({
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));
       }
 
+      if (sourceFileIds.length === 1 && newStirlingFiles.length === 1) {
+        const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
+        if (sourceStub?.localFilePath) {
+          actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
+            localFilePath: sourceStub.localFilePath,
+            isDirty: true
+          });
+        }
+      }
+
+      // Remove source files from context
+      if (sourceFileIds.length > 0) {
+        await actions.removeFiles(sourceFileIds, true);
+      }
+
       setHasUnsavedChanges(false);
       setSplitPositions(new Set());
       setExportLoading(false);

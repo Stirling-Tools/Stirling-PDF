@@ -3,7 +3,7 @@ import { ActionIcon, Divider } from '@mantine/core';
 import '@app/components/shared/rightRail/RightRail.css';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useRightRail } from '@app/contexts/RightRailContext';
-import { useFileState, useFileSelection } from '@app/contexts/FileContext';
+import { useFileState, useFileSelection, useFileActions } from '@app/contexts/FileContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
@@ -22,6 +22,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
+import { downloadFile } from '@app/services/downloadService';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
@@ -59,6 +60,7 @@ export default function RightRail() {
 
   const { selectors } = useFileState();
   const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { actions: fileActions } = useFileActions();
   const { signaturesApplied } = useSignature();
 
   const activeFiles = selectors.getFiles();
@@ -141,7 +143,7 @@ export default function RightRail() {
         alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
         return;
       }
-      viewerContext?.exportActions?.download();
+      viewerContext?.exportActions?.download?.();
       return;
     }
 
@@ -150,23 +152,43 @@ export default function RightRail() {
       return;
     }
 
-    const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-    filesToDownload.forEach(file => {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(file);
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    });
+    const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+    const stubsToExport = selectedFiles.length > 0
+      ? selectors.getSelectedStirlingFileStubs()
+      : selectors.getStirlingFileStubs();
+
+    if (filesToExport.length > 0) {
+      for (let i = 0; i < filesToExport.length; i++) {
+        const file = filesToExport[i];
+        const stub = stubsToExport[i];
+        console.log('[RightRail] Exporting file:', { fileName: file.name, stubId: stub?.id, localFilePath: stub?.localFilePath, isDirty: stub?.isDirty });
+        const result = await downloadFile({
+          data: file,
+          filename: file.name,
+          localPath: stub?.localFilePath
+        });
+        console.log('[RightRail] Export complete, checking dirty state:', { localFilePath: stub?.localFilePath, isDirty: stub?.isDirty, savedPath: result.savedPath });
+        // Mark file as clean after successful save to disk
+        if (stub && result.savedPath) {
+          console.log('[RightRail] Marking file as clean:', stub.id);
+          fileActions.updateStirlingFileStub(stub.id, {
+            localFilePath: stub.localFilePath ?? result.savedPath,
+            isDirty: false
+          });
+        } else {
+          console.log('[RightRail] Skipping clean mark:', { savedPath: result.savedPath, isDirty: stub?.isDirty });
+        }
+      }
+    }
   }, [
     currentView,
     selectedFiles,
     activeFiles,
     pageEditorFunctions,
     viewerContext,
-    signaturesApplied
+    signaturesApplied,
+    selectors,
+    fileActions,
   ]);
 
   const downloadTooltip = useMemo(() => {

@@ -4,6 +4,7 @@
 
 import { AutomationConfig } from '@app/types/automation';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import { downloadFile } from '@app/services/downloadService';
 import { ToolId } from '@app/types/toolId';
 
 /**
@@ -95,16 +96,5 @@ export function downloadFolderScanningConfig(
   const config = convertToFolderScanningConfig(automation, toolRegistry);
   const json = JSON.stringify(config, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${automation.name}.json`;
-  a.style.display = 'none';
-
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  URL.revokeObjectURL(url);
+  void downloadFile({ data: blob, filename: `${automation.name}.json` });
 }
