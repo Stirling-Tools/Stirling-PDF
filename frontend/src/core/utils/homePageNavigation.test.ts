@@ -30,18 +30,43 @@ describe('getStartupNavigationAction', () => {
     expect(getStartupNavigationAction(2, 1, null, 'viewer' as WorkbenchType)).toBeNull();
   });
 
-  it('does not navigate away from fileEditor when user is already there', () => {
-    // User deletes all files in fileEditor, then uploads 1 file -> stay in fileEditor
-    expect(getStartupNavigationAction(0, 1, null, 'fileEditor' as WorkbenchType)).toBeNull();
-    // User uploads 2 files while in fileEditor -> stay in fileEditor
-    expect(getStartupNavigationAction(0, 2, null, 'fileEditor' as WorkbenchType)).toBeNull();
-    // User adds more files while in fileEditor -> stay in fileEditor
+  it('does not navigate when user already has files (N→M transitions)', () => {
+    // User has 1 file, adds another -> no navigation (stay in current workbench)
+    expect(getStartupNavigationAction(1, 2, null, 'viewer' as WorkbenchType)).toBeNull();
+    expect(getStartupNavigationAction(1, 2, null, 'fileEditor' as WorkbenchType)).toBeNull();
+
+    // User has 3 files, adds more -> no navigation
     expect(getStartupNavigationAction(3, 4, null, 'fileEditor' as WorkbenchType)).toBeNull();
+
+    // User has 2 files, deletes 1 -> no navigation
+    expect(getStartupNavigationAction(2, 1, null, 'viewer' as WorkbenchType)).toBeNull();
   });
 
-  it('does not navigate from custom workbenches', () => {
-    // Custom workbenches should behave like fileEditor (no auto-navigation)
-    expect(getStartupNavigationAction(0, 1, null, 'custom:formFill' as WorkbenchType)).toBeNull();
-    expect(getStartupNavigationAction(0, 3, null, 'custom:myTool' as WorkbenchType)).toBeNull();
+  it('handles all workbench types consistently for 0→N transitions', () => {
+    // 0→1 always goes to viewer regardless of current workbench (since default is viewer)
+    expect(getStartupNavigationAction(0, 1, null, 'viewer' as WorkbenchType)).toEqual({
+      workbench: 'viewer',
+      activeFileIndex: 0,
+    });
+    expect(getStartupNavigationAction(0, 1, null, 'fileEditor' as WorkbenchType)).toEqual({
+      workbench: 'viewer',
+      activeFileIndex: 0,
+    });
+    expect(getStartupNavigationAction(0, 1, null, 'pageEditor' as WorkbenchType)).toEqual({
+      workbench: 'viewer',
+      activeFileIndex: 0,
+    });
+    expect(getStartupNavigationAction(0, 1, null, 'custom:formFill' as WorkbenchType)).toEqual({
+      workbench: 'viewer',
+      activeFileIndex: 0,
+    });
+
+    // 0→N (N>1) always goes to fileEditor
+    expect(getStartupNavigationAction(0, 3, null, 'viewer' as WorkbenchType)).toEqual({
+      workbench: 'fileEditor',
+    });
+    expect(getStartupNavigationAction(0, 3, null, 'custom:myTool' as WorkbenchType)).toEqual({
+      workbench: 'fileEditor',
+    });
   });
 });
