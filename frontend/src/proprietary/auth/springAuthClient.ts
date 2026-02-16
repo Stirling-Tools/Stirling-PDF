@@ -197,7 +197,7 @@ class SpringAuthClient {
 
           console.debug('[SpringAuth] getSession: Session retrieved successfully after retry');
           return { data: { session }, error: null };
-        } catch (retryError) {
+        } catch {
           // Still failing - token is truly invalid
           console.debug('[SpringAuth] getSession: Token invalid after retry');
           return { data: { session: null }, error: null };
