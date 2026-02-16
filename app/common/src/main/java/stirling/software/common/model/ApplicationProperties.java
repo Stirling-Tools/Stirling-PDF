@@ -398,7 +398,10 @@ public class ApplicationProperties {
             private boolean enableKeystore = true;
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
-            private int keyRetentionDays = 7;
+            private int keyRetentionDays = 30;
+            private int tokenExpiryMinutes = 1440;
+            private int allowedClockSkewSeconds = 60;
+            private int refreshGraceMinutes = 15;
         }
 
         @Data

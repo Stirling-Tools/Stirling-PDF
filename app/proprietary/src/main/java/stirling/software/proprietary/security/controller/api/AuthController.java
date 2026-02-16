@@ -34,6 +34,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPassMfa;
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -48,6 +49,8 @@ import stirling.software.proprietary.security.service.UserService;
 @Slf4j
 @Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 public class AuthController {
+    private static final int DEFAULT_EXPIRY_MINUTES = 1440;
+    private static final int DEFAULT_REFRESH_GRACE_MINUTES = 15;
 
     private final UserService userService;
     private final JwtServiceInterface jwtService;
@@ -180,7 +183,12 @@ public class AuthController {
             return ResponseEntity.ok(
                     Map.of(
                             "user", buildUserResponse(user),
-                            "session", Map.of("access_token", token, "expires_in", 3600)));
+                            "session",
+                                    Map.of(
+                                            "access_token",
+                                            token,
+                                            "expires_in",
+                                            getTokenExpirySeconds())));
 
         } catch (UsernameNotFoundException e) {
             String username = request.getUsername();
@@ -272,25 +280,46 @@ public class AuthController {
                         .body(Map.of("error", "No token found"));
             }
 
-            jwtService.validateToken(token);
-            String username = jwtService.extractUsername(token);
+            Map<String, Object> claims = jwtService.extractClaimsAllowExpired(token);
+            if (!isRefreshWithinGrace(claims)) {
+                log.warn("Token refresh rejected: token expired beyond configured grace window");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token refresh failed"));
+            }
+
+            Object usernameClaim = claims.get("sub");
+            String username = usernameClaim != null ? usernameClaim.toString() : null;
+            if (username == null || username.isBlank()) {
+                log.warn("Token refresh rejected: missing subject claim");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token refresh failed"));
+            }
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             User user = (User) userDetails;
 
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("authType", user.getAuthenticationType());
-            claims.put("role", user.getRolesAsString());
+            Map<String, Object> newClaims = new HashMap<>();
+            newClaims.put("authType", user.getAuthenticationType());
+            newClaims.put("role", user.getRolesAsString());
 
-            String newToken = jwtService.generateToken(username, claims);
+            String newToken = jwtService.generateToken(username, newClaims);
 
             log.debug("Token refreshed for user: {}", username);
 
             return ResponseEntity.ok(
                     Map.of(
                             "user", buildUserResponse(user),
-                            "session", Map.of("access_token", newToken, "expires_in", 3600)));
+                            "session",
+                                    Map.of(
+                                            "access_token",
+                                            newToken,
+                                            "expires_in",
+                                            getTokenExpirySeconds())));
 
+        } catch (AuthenticationFailureException e) {
+            log.warn("Token refresh failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Token refresh failed"));
         } catch (Exception e) {
             log.error("Token refresh error", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -530,6 +559,51 @@ public class AuthController {
         userMap.put("user_metadata", userMetadata);
 
         return userMap;
+    }
+
+    private long getTokenExpirySeconds() {
+        int configuredMinutes = securityProperties.getJwt().getTokenExpiryMinutes();
+        int expiryMinutes = configuredMinutes > 0 ? configuredMinutes : DEFAULT_EXPIRY_MINUTES;
+        return expiryMinutes * 60L;
+    }
+
+    private boolean isRefreshWithinGrace(Map<String, Object> claims) {
+        long expMillis = extractEpochMillis(claims.get("exp"));
+        if (expMillis <= 0) {
+            return false;
+        }
+
+        long now = System.currentTimeMillis();
+        if (expMillis >= now) {
+            return true;
+        }
+
+        long expiredForMillis = now - expMillis;
+        return expiredForMillis <= getRefreshGraceMillis();
+    }
+
+    private long getRefreshGraceMillis() {
+        int configuredMinutes = securityProperties.getJwt().getRefreshGraceMinutes();
+        int graceMinutes =
+                configuredMinutes >= 0 ? configuredMinutes : DEFAULT_REFRESH_GRACE_MINUTES;
+        return graceMinutes * 60_000L;
+    }
+
+    private long extractEpochMillis(Object claimValue) {
+        if (claimValue == null) {
+            return -1L;
+        }
+
+        if (claimValue instanceof java.util.Date date) {
+            return date.getTime();
+        }
+
+        if (claimValue instanceof Number number) {
+            long epochSeconds = number.longValue();
+            return epochSeconds * 1000L;
+        }
+
+        return -1L;
     }
 
     private ResponseEntity<?> ensureWebAuth(User user) {

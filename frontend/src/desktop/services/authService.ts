@@ -52,7 +52,11 @@ export class AuthService {
   /**
    * Save token to all storage locations and notify listeners
    */
-  private async saveTokenEverywhere(token: string, refreshToken?: string | null): Promise<void> {
+  private async saveTokenEverywhere(
+    token: string,
+    refreshToken?: string | null,
+    emitJwtAvailable = true
+  ): Promise<void> {
     // Validate token before caching
     if (!token || token.trim().length === 0) {
       console.warn('[Desktop AuthService] Attempted to save invalid/empty token');
@@ -95,9 +99,11 @@ export class AuthService {
       }
     }
 
-    // Notify other parts of the system
-    window.dispatchEvent(new CustomEvent('jwt-available'));
-    console.log('[Desktop AuthService] Dispatched jwt-available event');
+    if (emitJwtAvailable) {
+      // Notify other parts of the system when a brand-new auth session is established.
+      window.dispatchEvent(new CustomEvent('jwt-available'));
+      console.log('[Desktop AuthService] Dispatched jwt-available event');
+    }
   }
 
   /**
@@ -478,6 +484,46 @@ export class AuthService {
     }
   }
 
+  async awaitRefreshIfInProgress(): Promise<boolean> {
+    if (!this.refreshPromise) {
+      return false;
+    }
+    try {
+      console.debug('[Desktop AuthService] Waiting for in-flight refresh to complete');
+      return await this.refreshPromise;
+    } catch (error) {
+      console.warn('[Desktop AuthService] In-flight refresh failed while waiting', error);
+      return false;
+    }
+  }
+
+  isTokenExpiringSoon(token: string, leewaySeconds = 30): boolean {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) {
+        return true;
+      }
+
+      const base64Url = parts[1];
+      const base64 = base64Url
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(Math.ceil(base64Url.length / 4) * 4, '=');
+      const payload = JSON.parse(atob(base64));
+      const expSeconds = typeof payload?.exp === 'number' ? payload.exp : 0;
+
+      if (!expSeconds) {
+        return true;
+      }
+
+      const nowWithLeeway = Math.floor(Date.now() / 1000) + Math.max(0, leewaySeconds);
+      return expSeconds <= nowWithLeeway;
+    } catch {
+      // If parsing fails, treat token as unsafe/stale and force refresh path.
+      return true;
+    }
+  }
+
   async isAuthenticated(): Promise<boolean> {
     const token = await this.getAuthToken();
     return token !== null;
@@ -542,10 +588,20 @@ export class AuthService {
         }
       );
 
-      const { token } = response.data;
+      const token =
+        response.data?.session?.access_token ??
+        response.data?.access_token ??
+        response.data?.token;
+
+      if (!token) {
+        console.error('[Desktop AuthService] Refresh response missing token payload');
+        this.setAuthStatus('unauthenticated', null);
+        await this.logout();
+        return false;
+      }
 
       // Save token to all storage locations
-      await this.saveTokenEverywhere(token);
+      await this.saveTokenEverywhere(token, undefined, false);
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus('authenticated', userInfo);
@@ -607,7 +663,7 @@ export class AuthService {
       const { access_token, refresh_token: newRefreshToken } = response.data;
 
       // Save new tokens
-      await this.saveTokenEverywhere(access_token, newRefreshToken);
+      await this.saveTokenEverywhere(access_token, newRefreshToken, false);
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus('authenticated', userInfo);
