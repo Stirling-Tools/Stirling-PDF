@@ -1,5 +1,8 @@
 package stirling.software.proprietary.workflow.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +14,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Request object for signing a document. Combines certificate submission data with optional wet
- * signature (visual signature) metadata.
+ * signature (visual signature) metadata. Supports multiple wet signatures.
  */
 @Data
 @NoArgsConstructor
@@ -30,52 +33,40 @@ public class SignDocumentRequest {
     private MultipartFile privateKeyFile;
     private MultipartFile certFile;
 
-    // Wet signature metadata fields (optional)
-    private String wetSignatureType; // "canvas" | "image" | "text"
-    private String wetSignatureData; // Base64 image data or text
-    private Integer wetSignaturePage; // Zero-indexed page number
-    private Double wetSignatureX; // X coordinate in PDF points
-    private Double wetSignatureY; // Y coordinate in PDF points (top-left origin)
-    private Double wetSignatureWidth; // Width in PDF points
-    private Double wetSignatureHeight; // Height in PDF points
+    // Signature metadata (participant can override owner defaults)
+    private String reason; // Participant's reason for signing
+    private String location; // Participant's location when signing
+
+    // Wet signatures as JSON string (from frontend FormData)
+    private String wetSignaturesData;
+
+    // Parsed wet signatures (populated by controller/service)
+    private List<WetSignatureMetadata> wetSignatures;
 
     /**
      * Checks if this request includes wet signature metadata.
      *
-     * @return true if wet signature data is present
+     * @return true if wet signatures list is not empty
      */
-    public boolean hasWetSignature() {
-        return wetSignatureType != null
-                && wetSignatureData != null
-                && wetSignaturePage != null
-                && wetSignatureX != null
-                && wetSignatureY != null
-                && wetSignatureWidth != null
-                && wetSignatureHeight != null;
+    public boolean hasWetSignatures() {
+        return wetSignatures != null && !wetSignatures.isEmpty();
     }
 
     /**
-     * Extracts wet signature metadata into a dedicated DTO.
+     * Extracts and validates wet signature metadata.
      *
-     * @return WetSignatureMetadata object if wet signature is present, null otherwise
+     * @return List of validated WetSignatureMetadata objects
      */
-    public WetSignatureMetadata extractWetSignatureMetadata() {
-        if (!hasWetSignature()) {
-            return null;
+    public List<WetSignatureMetadata> extractWetSignatureMetadata() {
+        List<WetSignatureMetadata> signatures = new ArrayList<>();
+
+        if (hasWetSignatures()) {
+            for (WetSignatureMetadata signature : wetSignatures) {
+                signature.validate();
+                signatures.add(signature);
+            }
         }
 
-        WetSignatureMetadata metadata = new WetSignatureMetadata();
-        metadata.setType(wetSignatureType);
-        metadata.setData(wetSignatureData);
-        metadata.setPage(wetSignaturePage);
-        metadata.setX(wetSignatureX);
-        metadata.setY(wetSignatureY);
-        metadata.setWidth(wetSignatureWidth);
-        metadata.setHeight(wetSignatureHeight);
-
-        // Validate the metadata
-        metadata.validate();
-
-        return metadata;
+        return signatures;
     }
 }

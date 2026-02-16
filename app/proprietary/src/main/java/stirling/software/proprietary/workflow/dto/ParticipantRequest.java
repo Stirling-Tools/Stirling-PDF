@@ -37,4 +37,7 @@ public class ParticipantRequest {
 
     /** Whether to send notification immediately */
     private boolean sendNotification = true;
+
+    /** Owner-set default reason for this participant's signature */
+    private String defaultReason;
 }

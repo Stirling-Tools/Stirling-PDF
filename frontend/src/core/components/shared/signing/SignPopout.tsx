@@ -51,6 +51,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [creating, setCreating] = useState(false);
+  const [includeSummaryPage, setIncludeSummaryPage] = useState(false);
 
   // Hooks
   const { selectedFiles } = useFileSelection();
@@ -276,6 +277,14 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       if (dueDate) formData.append('dueDate', dueDate);
       formData.append('notifyOnCreate', 'true');
 
+      // Send includeSummaryPage setting as workflowMetadata if enabled
+      if (includeSummaryPage) {
+        const workflowMetadata = JSON.stringify({
+          includeSummaryPage: true,
+        });
+        formData.append('workflowMetadata', workflowMetadata);
+      }
+
       await apiClient.post('/api/v1/security/cert-sign/sessions', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -290,6 +299,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
 
       setSelectedUserIds([]);
       setDueDate('');
+      setIncludeSummaryPage(false);
       setShowCreatePanel(false);
       await fetchData();
     } catch (error) {
@@ -304,7 +314,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
     } finally {
       setCreating(false);
     }
-  }, [selectedUserIds, dueDate, selectedFiles, fetchData, t]);
+  }, [selectedUserIds, dueDate, selectedFiles, fetchData, t, includeSummaryPage]);
 
   // Handle clicking a sign request
   const handleSignRequestClick = useCallback(async (request: SignRequestSummary) => {
@@ -516,6 +526,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       reason: settings.reason,
       location: settings.location,
       showLogo: settings.showLogo,
+      includeSummaryPage: settings.includeSummaryPage || false,
     });
     await handleRefreshSession(sessionId);
   };
@@ -644,6 +655,8 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
               dueDate={dueDate}
               onDueDateChange={setDueDate}
               creating={creating}
+              includeSummaryPage={includeSummaryPage}
+              onIncludeSummaryPageChange={setIncludeSummaryPage}
             />
           ) : activeTab === 'active' ? (
             <ActiveSessionsPanel

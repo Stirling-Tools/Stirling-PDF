@@ -93,6 +93,19 @@ public class FileStorageService {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unsupported user principal");
     }
 
+    /**
+     * Lists all files accessible to a user, excluding workflow-shared files from participants'
+     * view.
+     *
+     * <p>Returns: - All files owned by the user (including their workflow files) - Files shared
+     * with the user via regular file sharing
+     *
+     * <p>Explicitly excludes: - Files shared with the user as a workflow participant (these are
+     * accessible via workflow-specific endpoints instead)
+     *
+     * @param user The user to query accessible files for
+     * @return List of accessible StoredFile entities
+     */
     public List<StoredFile> listAccessibleFiles(User user) {
         ensureStorageEnabled();
         return storedFileRepository.findAccessibleFiles(user);

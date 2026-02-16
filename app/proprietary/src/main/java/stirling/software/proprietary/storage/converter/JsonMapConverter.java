@@ -55,7 +55,17 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
             try {
                 JsonNode node = objectMapper.readTree(dbData);
                 if (node.isTextual()) {
-                    log.warn("Found double-encoded JSON data, parsing with fallback");
+                    log.warn(
+                            "╔════════════════════════════════════════════════════════════════════╗");
+                    log.warn(
+                            "║ WARNING: DOUBLE-ENCODED JSON DETECTED - LEGACY DATA FOUND         ║");
+                    log.warn(
+                            "║ This should not occur in newly created records.                   ║");
+                    log.warn(
+                            "║ Data preview: {}",
+                            dbData.length() > 100 ? dbData.substring(0, 100) + "..." : dbData);
+                    log.warn(
+                            "╚════════════════════════════════════════════════════════════════════╝");
                     return objectMapper.readValue(
                             node.asText(), new TypeReference<Map<String, Object>>() {});
                 }

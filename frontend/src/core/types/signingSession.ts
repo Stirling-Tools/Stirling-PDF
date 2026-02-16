@@ -1,3 +1,13 @@
+export interface WetSignatureMetadata {
+  type: 'canvas' | 'image' | 'text';
+  data: string; // Base64-encoded image data or text content
+  page: number; // Zero-indexed page number
+  x: number; // X coordinate in PDF points
+  y: number; // Y coordinate in PDF points (top-left origin)
+  width: number; // Width in PDF points
+  height: number; // Height in PDF points
+}
+
 export interface SessionSummary {
   sessionId: string;
   documentName: string;
@@ -31,6 +41,8 @@ export interface ParticipantInfo {
   reason?: string;
   location?: string;
   showLogo?: boolean;
+  // Wet signatures (visual annotations placed by participant)
+  wetSignatures?: WetSignatureMetadata[];
 }
 
 export interface UserSummary {

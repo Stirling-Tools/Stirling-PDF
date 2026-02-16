@@ -7,6 +7,7 @@ export interface SignatureSettings {
   reason?: string;
   location?: string;
   showLogo?: boolean;
+  includeSummaryPage?: boolean;
 }
 
 interface SignatureSettingsInputProps {
@@ -91,6 +92,16 @@ const SignatureSettingsInput = ({ value, onChange, disabled = false }: Signature
           />
         </Stack>
       )}
+
+      {/* Summary Page Toggle */}
+      <Switch
+        label={t('certSign.collab.sessionCreation.includeSummaryPage', 'Include Signature Summary Page')}
+        description={t('certSign.collab.sessionCreation.includeSummaryPageHelp', 'A summary page will be added at the end with all signature metadata. The digital certificate signature boxes on individual pages will be suppressed (wet signatures are unaffected).')}
+        checked={value.includeSummaryPage || false}
+        onChange={(event) => handleChange('includeSummaryPage', event.currentTarget.checked)}
+        disabled={disabled}
+        size="sm"
+      />
     </Stack>
   );
 };

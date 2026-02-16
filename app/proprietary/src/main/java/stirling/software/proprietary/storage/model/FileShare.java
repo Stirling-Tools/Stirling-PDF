@@ -26,6 +26,15 @@ import lombok.Setter;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 
+/**
+ * Represents a file sharing relationship between a file and a user or token.
+ *
+ * <p>Two types of shares: 1. Regular shares: workflowParticipant is NULL - appears in file manager
+ * 2. Workflow shares: workflowParticipant is NOT NULL - hidden from file manager, accessible only
+ * via workflow endpoints
+ *
+ * <p>Use isWorkflowShare() to distinguish between the two types.
+ */
 @Entity
 @Table(
         name = "file_shares",

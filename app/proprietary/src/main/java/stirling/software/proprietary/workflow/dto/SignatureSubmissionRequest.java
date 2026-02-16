@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Request DTO for submitting a signature (wet signature or certificate). Used when a participant
- * completes their signing action.
+ * completes their signing action. Supports multiple wet signatures.
  */
 @Data
 @NoArgsConstructor
@@ -26,8 +26,8 @@ public class SignatureSubmissionRequest {
     private String reason;
     private Boolean showLogo;
 
-    // Wet signature fields (JSON string with coordinates and image data)
-    private String wetSignatureData;
+    // Wet signatures (JSON array string with coordinates and image data)
+    private String wetSignaturesData;
 
     // Participant identification
     private String participantToken;

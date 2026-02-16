@@ -2,13 +2,25 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -133,8 +145,10 @@ public class SigningSessionController {
         try {
             User owner = getCurrentUser(principal);
             WorkflowSession session = workflowSessionService.getSessionForOwner(sessionId, owner);
+            // Include wet signatures in response for owner preview
             return ResponseEntity.ok(
-                    stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session));
+                    stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(
+                            session, objectMapper));
         } catch (Exception e) {
             log.error("Error fetching session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -253,7 +267,28 @@ public class SigningSessionController {
                 // Continue with certificate signing even if wet signatures fail
             }
 
-            // Step 2: Apply digital certificates in participant order
+            // Extract session settings
+            SessionSignatureSettings sessionSettings = extractSessionSettings(session);
+
+            // Step 1.5: Add summary page BEFORE digital signing (if enabled)
+            // CRITICAL: Must be done before signing to avoid invalidating signatures
+            if (sessionSettings.includeSummaryPage) {
+                log.info("Adding summary page before digital signing for session {}", sessionId);
+                pdf = appendSignatureSummaryPage(pdf, session);
+            }
+
+            // Suppress DIGITAL CERTIFICATE visual signatures if summary page is enabled
+            // NOTE: This does NOT affect wet signatures (hand-drawn images), which were
+            // already applied in Step 1 and will still appear on pages
+            Boolean showVisualSignature =
+                    sessionSettings.includeSummaryPage ? false : sessionSettings.showSignature;
+
+            log.info(
+                    "Finalization settings: includeSummaryPage={}, showVisualSignature={}",
+                    sessionSettings.includeSummaryPage,
+                    showVisualSignature);
+
+            // Step 2: Apply digital certificates with per-participant settings
             for (WorkflowParticipant participant : session.getParticipants()) {
                 if (participant.getStatus() != ParticipantStatus.SIGNED) {
                     log.debug(
@@ -273,7 +308,7 @@ public class SigningSessionController {
                                                         HttpStatus.INTERNAL_SERVER_ERROR,
                                                         "Participant not found"));
 
-                // Extract certificate submission from participant metadata
+                // Extract certificate submission
                 CertificateSubmission submission = extractCertificateSubmission(freshParticipant);
                 if (submission == null) {
                     log.warn(
@@ -282,8 +317,27 @@ public class SigningSessionController {
                     continue;
                 }
 
-                // Apply digital signature
-                pdf = applyDigitalSignature(pdf, freshParticipant, submission);
+                // Extract per-participant reason/location
+                ParticipantSignatureMetadata participantMetadata =
+                        extractParticipantSignatureMetadata(freshParticipant, submission);
+
+                log.info(
+                        "Applying signature for {} with reason='{}', location='{}'",
+                        freshParticipant.getEmail(),
+                        participantMetadata.reason,
+                        participantMetadata.location);
+
+                // Apply digital signature with per-participant settings
+                pdf =
+                        applyDigitalSignature(
+                                pdf,
+                                freshParticipant,
+                                submission,
+                                showVisualSignature, // Suppressed if summary page enabled
+                                sessionSettings.pageNumber,
+                                participantMetadata.reason, // Per-participant
+                                participantMetadata.location, // Per-participant
+                                sessionSettings.showLogo);
             }
 
             // Step 3: Store processed file
@@ -443,9 +497,12 @@ public class SigningSessionController {
      * digital certificates.
      */
     private byte[] applyWetSignatures(byte[] pdfBytes, WorkflowSession session) throws Exception {
+        log.info("Starting wet signature extraction for session {}", session.getSessionId());
         List<WetSignatureMetadata> wetSignatures = extractAllWetSignatures(session);
         if (wetSignatures.isEmpty()) {
-            log.debug("No wet signatures to apply for session {}", session.getSessionId());
+            log.warn(
+                    "No wet signatures to apply for session {} - this may indicate participants haven't placed signatures",
+                    session.getSessionId());
             return pdfBytes;
         }
 
@@ -520,6 +577,216 @@ public class SigningSessionController {
         }
     }
 
+    /**
+     * Appends a custom signature summary page to the end of the PDF. Shows Stirling logo, session
+     * metadata, and all participant signatures.
+     */
+    private byte[] appendSignatureSummaryPage(byte[] pdfBytes, WorkflowSession session)
+            throws Exception {
+        log.info("Appending signature summary page to session {}", session.getSessionId());
+
+        try (PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes))) {
+            // Create new A4 page at end
+            PDPage summaryPage = new PDPage(PDRectangle.A4);
+            document.addPage(summaryPage);
+
+            PDPageContentStream contentStream =
+                    new PDPageContentStream(
+                            document,
+                            summaryPage,
+                            PDPageContentStream.AppendMode.APPEND,
+                            true,
+                            true);
+
+            try {
+                PDRectangle pageSize = summaryPage.getMediaBox();
+                float margin = 50;
+                float yPosition = pageSize.getHeight() - margin;
+
+                // === HEADER SECTION ===
+
+                // Load Stirling logo
+                ClassPathResource logoResource =
+                        new ClassPathResource("static/images/signature.png");
+                PDImageXObject logoImage;
+                try (InputStream logoStream = logoResource.getInputStream()) {
+                    File tempLogo = Files.createTempFile("summary-logo", ".png").toFile();
+                    FileUtils.copyInputStreamToFile(logoStream, tempLogo);
+                    logoImage = PDImageXObject.createFromFileByExtension(tempLogo, document);
+                    tempLogo.delete();
+                }
+
+                // Draw logo (top-left, 60x60)
+                contentStream.drawImage(logoImage, margin, yPosition - 60, 60, 60);
+
+                // Title next to logo
+                PDFont titleFont = new PDType1Font(FontName.TIMES_BOLD);
+                contentStream.beginText();
+                contentStream.setFont(titleFont, 20);
+                contentStream.newLineAtOffset(margin + 70, yPosition - 30);
+                contentStream.showText("Signature Summary");
+                contentStream.endText();
+
+                yPosition -= 80;
+
+                // === DOCUMENT INFO SECTION ===
+
+                PDFont headerFont = new PDType1Font(FontName.TIMES_BOLD);
+                PDFont bodyFont = new PDType1Font(FontName.TIMES_ROMAN);
+
+                contentStream.beginText();
+                contentStream.setFont(headerFont, 12);
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText("Document: " + session.getDocumentName());
+                contentStream.endText();
+                yPosition -= 20;
+
+                contentStream.beginText();
+                contentStream.setFont(bodyFont, 10);
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText("Session Owner: " + session.getOwner().getUsername());
+                contentStream.endText();
+                yPosition -= 15;
+
+                contentStream.beginText();
+                contentStream.setFont(bodyFont, 10);
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText(
+                        "Finalized: "
+                                + java.time.LocalDateTime.now()
+                                        .format(
+                                                java.time.format.DateTimeFormatter.ofPattern(
+                                                        "yyyy-MM-dd HH:mm:ss")));
+                contentStream.endText();
+                yPosition -= 30;
+
+                // Draw separator line
+                contentStream.setLineWidth(1f);
+                contentStream.moveTo(margin, yPosition);
+                contentStream.lineTo(pageSize.getWidth() - margin, yPosition);
+                contentStream.stroke();
+                yPosition -= 20;
+
+                // === SIGNATURES SECTION ===
+
+                contentStream.beginText();
+                contentStream.setFont(headerFont, 14);
+                contentStream.newLineAtOffset(margin, yPosition);
+                contentStream.showText("Signatures");
+                contentStream.endText();
+                yPosition -= 25;
+
+                // Iterate through participants
+                for (WorkflowParticipant participant : session.getParticipants()) {
+                    // Only show SIGNED or DECLINED participants (skip PENDING/VIEWED)
+                    if (participant.getStatus() != ParticipantStatus.SIGNED
+                            && participant.getStatus() != ParticipantStatus.DECLINED) {
+                        continue;
+                    }
+
+                    // Check if we need a new page
+                    if (yPosition < 100) {
+                        contentStream.close();
+                        summaryPage = new PDPage(PDRectangle.A4);
+                        document.addPage(summaryPage);
+                        contentStream =
+                                new PDPageContentStream(
+                                        document,
+                                        summaryPage,
+                                        PDPageContentStream.AppendMode.APPEND,
+                                        true,
+                                        true);
+                        yPosition = pageSize.getHeight() - margin;
+                    }
+
+                    // Participant name/email
+                    contentStream.beginText();
+                    contentStream.setFont(headerFont, 11);
+                    contentStream.newLineAtOffset(margin, yPosition);
+                    contentStream.showText(
+                            participant.getName() + " <" + participant.getEmail() + ">");
+                    contentStream.endText();
+                    yPosition -= 15;
+
+                    // Status
+                    contentStream.beginText();
+                    contentStream.setFont(bodyFont, 9);
+                    contentStream.newLineAtOffset(margin + 10, yPosition);
+                    contentStream.showText("Status: " + participant.getStatus().toString());
+                    contentStream.endText();
+                    yPosition -= 12;
+
+                    if (participant.getStatus() == ParticipantStatus.SIGNED) {
+                        // Extract metadata for this participant
+                        CertificateSubmission submission =
+                                extractCertificateSubmission(participant);
+                        ParticipantSignatureMetadata metadata =
+                                submission != null
+                                        ? extractParticipantSignatureMetadata(
+                                                participant, submission)
+                                        : new ParticipantSignatureMetadata("Document Signing", "");
+
+                        // Timestamp
+                        contentStream.beginText();
+                        contentStream.setFont(bodyFont, 9);
+                        contentStream.newLineAtOffset(margin + 10, yPosition);
+                        contentStream.showText(
+                                "Signed: "
+                                        + participant
+                                                .getLastUpdated()
+                                                .format(
+                                                        java.time.format.DateTimeFormatter
+                                                                .ofPattern("yyyy-MM-dd HH:mm:ss")));
+                        contentStream.endText();
+                        yPosition -= 12;
+
+                        // Reason (if provided and not default)
+                        if (metadata.reason != null
+                                && !metadata.reason.isEmpty()
+                                && !"Document Signing".equals(metadata.reason)) {
+                            contentStream.beginText();
+                            contentStream.setFont(bodyFont, 9);
+                            contentStream.newLineAtOffset(margin + 10, yPosition);
+                            contentStream.showText("Reason: " + metadata.reason);
+                            contentStream.endText();
+                            yPosition -= 12;
+                        }
+
+                        // Location (if provided)
+                        if (metadata.location != null && !metadata.location.isEmpty()) {
+                            contentStream.beginText();
+                            contentStream.setFont(bodyFont, 9);
+                            contentStream.newLineAtOffset(margin + 10, yPosition);
+                            contentStream.showText("Location: " + metadata.location);
+                            contentStream.endText();
+                            yPosition -= 12;
+                        }
+
+                        // Certificate type
+                        if (submission != null) {
+                            contentStream.beginText();
+                            contentStream.setFont(bodyFont, 9);
+                            contentStream.newLineAtOffset(margin + 10, yPosition);
+                            contentStream.showText("Certificate Type: " + submission.getCertType());
+                            contentStream.endText();
+                            yPosition -= 12;
+                        }
+                    }
+
+                    yPosition -= 10; // Space between participants
+                }
+
+            } finally {
+                contentStream.close();
+            }
+
+            // Save modified document to bytes
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            document.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
     /** Extracts base64 data from data URL format. */
     private String extractBase64Data(String data) {
         if (data == null) {
@@ -533,17 +800,104 @@ public class SigningSessionController {
     }
 
     /**
+     * Extracts session-level signature settings from workflowMetadata. Includes new
+     * includeSummaryPage flag.
+     */
+    private SessionSignatureSettings extractSessionSettings(WorkflowSession session) {
+        Map<String, Object> workflowMetadata = session.getWorkflowMetadata();
+
+        Boolean showSignature = false;
+        Integer pageNumber = null;
+        Boolean showLogo = false;
+        Boolean includeSummaryPage = false;
+
+        if (workflowMetadata != null && !workflowMetadata.isEmpty()) {
+            showSignature =
+                    workflowMetadata.containsKey("showSignature")
+                            ? (Boolean) workflowMetadata.get("showSignature")
+                            : false;
+            pageNumber =
+                    workflowMetadata.containsKey("pageNumber")
+                            ? ((Number) workflowMetadata.get("pageNumber")).intValue()
+                            : null;
+            showLogo =
+                    workflowMetadata.containsKey("showLogo")
+                            ? (Boolean) workflowMetadata.get("showLogo")
+                            : false;
+            includeSummaryPage =
+                    workflowMetadata.containsKey("includeSummaryPage")
+                            ? (Boolean) workflowMetadata.get("includeSummaryPage")
+                            : false;
+        }
+
+        return new SessionSignatureSettings(
+                showSignature, pageNumber, showLogo, includeSummaryPage);
+    }
+
+    /**
+     * Extracts per-participant reason and location with proper fallback logic: - Reason:
+     * participant override > owner default > "Document Signing" - Location: participant provided
+     * (no default)
+     */
+    private ParticipantSignatureMetadata extractParticipantSignatureMetadata(
+            WorkflowParticipant participant, CertificateSubmission submission) {
+
+        // Reason resolution: participant > owner default > fallback
+        String reason = "Document Signing"; // Fallback
+
+        // Check participant's override first
+        if (submission != null
+                && submission.getReason() != null
+                && !submission.getReason().isBlank()) {
+            reason = submission.getReason();
+        } else {
+            // Check owner's default
+            Map<String, Object> metadata = participant.getParticipantMetadata();
+            if (metadata != null && metadata.containsKey("defaultReason")) {
+                reason = (String) metadata.get("defaultReason");
+            }
+        }
+
+        // Location: only from participant (no default)
+        String location =
+                submission != null && submission.getLocation() != null
+                        ? submission.getLocation()
+                        : "";
+
+        return new ParticipantSignatureMetadata(reason, location);
+    }
+
+    /**
      * Applies a digital signature using the participant's certificate.
      *
      * @param pdfBytes Current PDF bytes
      * @param participant Participant applying the signature
      * @param submission Certificate submission details
+     * @param showSignature Whether to show visible signature (from session settings)
+     * @param pageNumber Page number for signature (from session settings)
+     * @param reason Signing reason (from session settings)
+     * @param location Signing location (from session settings)
+     * @param showLogo Whether to show logo (from session settings)
      * @return PDF bytes with digital signature applied
      */
     private byte[] applyDigitalSignature(
-            byte[] pdfBytes, WorkflowParticipant participant, CertificateSubmission submission)
+            byte[] pdfBytes,
+            WorkflowParticipant participant,
+            CertificateSubmission submission,
+            Boolean showSignature,
+            Integer pageNumber,
+            String reason,
+            String location,
+            Boolean showLogo)
             throws Exception {
-        log.info("Applying digital signature for participant {}", participant.getEmail());
+        log.info(
+                "Applying digital signature for participant {} with settings: showSignature={}, pageNumber={}, reason={}, location={}, showLogo={}",
+                participant.getEmail(),
+                showSignature,
+                pageNumber,
+                reason,
+                location,
+                showLogo);
 
         // Build keystore from submission
         KeyStore keystore = buildKeystore(submission, participant);
@@ -560,18 +914,19 @@ public class SigningSessionController {
         ByteArrayMultipartFile inputFile =
                 new ByteArrayMultipartFile(pdfBytes, "document.pdf", "application/pdf");
 
-        // Apply digital signature using CertSignController
+        // Apply digital signature using CertSignController with SESSION settings (not submission
+        // settings)
         CertSignController.sign(
                 pdfDocumentFactory,
                 inputFile,
                 outputStream,
                 createSignature,
-                submission.getShowSignature(),
-                submission.getPageNumber() != null ? submission.getPageNumber() - 1 : null,
+                showSignature != null ? showSignature : false,
+                pageNumber != null ? pageNumber - 1 : null,
                 participant.getName() != null ? participant.getName() : "Shared Signing",
-                submission.getLocation() != null ? submission.getLocation() : "",
-                submission.getReason() != null ? submission.getReason() : "Document Signing",
-                submission.getShowLogo());
+                location != null ? location : "",
+                reason != null ? reason : "Document Signing",
+                showLogo != null ? showLogo : false);
 
         byte[] signedBytes = outputStream.toByteArray();
 
@@ -740,12 +1095,36 @@ public class SigningSessionController {
         List<WetSignatureMetadata> signatures = new java.util.ArrayList<>();
 
         for (WorkflowParticipant participant : session.getParticipants()) {
-            Map<String, Object> metadata = participant.getParticipantMetadata();
-            if (metadata == null || metadata.isEmpty()) {
+            // Reload participant from database to get fresh metadata (same as certificate
+            // extraction)
+            WorkflowParticipant freshParticipant;
+            try {
+                freshParticipant =
+                        participantRepository
+                                .findById(participant.getId())
+                                .orElseThrow(
+                                        () ->
+                                                new RuntimeException(
+                                                        "Participant not found: "
+                                                                + participant.getId()));
+            } catch (Exception e) {
+                log.error(
+                        "Failed to reload participant {}: {}",
+                        participant.getEmail(),
+                        e.getMessage());
                 continue;
             }
 
-            if (!metadata.containsKey("wetSignature")) {
+            Map<String, Object> metadata = freshParticipant.getParticipantMetadata();
+            if (metadata == null || metadata.isEmpty()) {
+                log.debug("No metadata found for participant {}", freshParticipant.getEmail());
+                continue;
+            }
+
+            if (!metadata.containsKey("wetSignatures")) {
+                log.debug(
+                        "No wetSignatures key found for participant {}",
+                        freshParticipant.getEmail());
                 continue;
             }
 
@@ -753,20 +1132,35 @@ public class SigningSessionController {
                 // Convert metadata to JsonNode for processing
                 var node = objectMapper.valueToTree(metadata);
 
-                if (node.has("wetSignature")) {
-                    WetSignatureMetadata wetSig =
-                            objectMapper.treeToValue(
-                                    node.get("wetSignature"), WetSignatureMetadata.class);
-                    signatures.add(wetSig);
+                if (node.has("wetSignatures")) {
+                    // wetSignatures is an array of signatures
+                    var wetSigsNode = node.get("wetSignatures");
+                    if (wetSigsNode.isArray()) {
+                        log.info(
+                                "Found {} wet signature(s) for participant {}",
+                                wetSigsNode.size(),
+                                freshParticipant.getEmail());
+                        for (var wetSigNode : wetSigsNode) {
+                            WetSignatureMetadata wetSig =
+                                    objectMapper.treeToValue(
+                                            wetSigNode, WetSignatureMetadata.class);
+                            signatures.add(wetSig);
+                            log.debug(
+                                    "Extracted wet signature at page {} for participant {}",
+                                    wetSig.getPage(),
+                                    freshParticipant.getEmail());
+                        }
+                    }
                 }
             } catch (Exception e) {
                 log.error(
-                        "Failed to parse wet signature from participant {} metadata",
-                        participant.getEmail(),
+                        "Failed to parse wet signatures from participant {} metadata",
+                        freshParticipant.getEmail(),
                         e);
             }
         }
 
+        log.info("Total wet signatures extracted: {}", signatures.size());
         return signatures;
     }
 
@@ -783,11 +1177,11 @@ public class SigningSessionController {
                 continue;
             }
 
-            if (metadata.containsKey("wetSignature")) {
-                metadata.remove("wetSignature");
+            if (metadata.containsKey("wetSignatures")) {
+                metadata.remove("wetSignatures");
                 participant.setParticipantMetadata(metadata);
                 participantRepository.save(participant);
-                log.debug("Cleared wet signature for participant {}", participant.getEmail());
+                log.debug("Cleared wet signatures for participant {}", participant.getEmail());
             }
         }
     }
@@ -957,6 +1351,36 @@ public class SigningSessionController {
 
         public void setData(String data) {
             this.data = data;
+        }
+    }
+
+    /** Session-level signature settings extracted from workflowMetadata */
+    private static class SessionSignatureSettings {
+        final Boolean showSignature;
+        final Integer pageNumber;
+        final Boolean showLogo;
+        final Boolean includeSummaryPage;
+
+        SessionSignatureSettings(
+                Boolean showSignature,
+                Integer pageNumber,
+                Boolean showLogo,
+                Boolean includeSummaryPage) {
+            this.showSignature = showSignature;
+            this.pageNumber = pageNumber;
+            this.showLogo = showLogo;
+            this.includeSummaryPage = includeSummaryPage;
+        }
+    }
+
+    /** Per-participant signature metadata (reason + location) */
+    private static class ParticipantSignatureMetadata {
+        final String reason;
+        final String location;
+
+        ParticipantSignatureMetadata(String reason, String location) {
+            this.reason = reason;
+            this.location = location;
         }
     }
 

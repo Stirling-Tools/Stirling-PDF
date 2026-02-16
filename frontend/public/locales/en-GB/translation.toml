@@ -6897,7 +6897,7 @@ placeholder = "Select users..."
 drawSignature = "Draw your signature below"
 uploadSignature = "Upload your signature image"
 typeSignature = "Type your name to create a signature"
-signatureType = "Signature Type"
+signatureTypeLabel = "Signature Type"
 certificateChoice = "Certificate Choice"
 usePersonalCert = "Use My Personal Certificate"
 usePersonalCertDesc = "Auto-generated for your account"
@@ -6925,3 +6925,338 @@ message = "Message"
 dueDate = "Due Date"
 signatureInfo = "These settings are configured by the document owner"
 noCertificate = "Please select a certificate file"
+penColor = "Pen Color"
+penSize = "Pen Size: {{size}}px"
+clearSignature = "Clear Signature"
+uploadHint = "Supports PNG, JPG, and other image formats. Transparent backgrounds recommended for best results."
+removeImage = "Remove Image"
+invalidFileType = "Please select an image file"
+fileTooLarge = "File size must be less than 5MB"
+typeHint = "Type your name and customize the font style to create a professional text signature."
+signatureText = "Signature Text"
+signatureTextPlaceholder = "Enter your name..."
+fontFamily = "Font Family"
+fontSize = "Font Size: {{size}}px"
+textColor = "Text Color"
+invalidCertFile = "Please select a P12 or PFX certificate file"
+uploadCertHint = "Upload a PKCS#12 certificate file (.p12 or .pfx) and enter its password."
+removeCertFile = "Remove File"
+passwordPlaceholder = "Enter password..."
+# Sign controls strip
+signingTitle = "Signing"
+changeSignature = "Change signature"
+deleteSelected = "Delete selected signature"
+completeAndSign = "Complete & Sign"
+noSignatures = "Please place at least one signature on the PDF"
+decline = "Decline Request"
+startSigning = "Start Signing"
+selectSignatureTitle = "Select or Create Signature"
+savedSignatures = "Saved Signatures"
+createNewSignature = "Create New Signature"
+advancedSettings = "Advanced Settings"
+reason = "Reason (Optional)"
+reasonPlaceholder = "Why are you signing?"
+location = "Location (Optional)"
+locationPlaceholder = "Where are you signing from?"
+# Mode toggle
+[certSign.collab.signRequest.mode]
+title = "Sign or move mode"
+place = "Place Signature"
+move = "Move Signature"
+# Saved signatures dropdown
+[certSign.collab.signRequest.saved]
+none = "No saved signatures"
+defaultLabel = "Signature"
+defaultCanvasLabel = "Drawing signature"
+defaultImageLabel = "Uploaded signature"
+defaultTextLabel = "Typed signature"
+createNew = "Create New +"
+# Modals
+[certSign.collab.signRequest.modeTabs]
+draw = "Draw Signature"
+text = "Type Signature"
+image = "Upload Image"
+[certSign.collab.signRequest.text]
+modalHint = "Enter your name, then click Continue to place it on the PDF."
+label = "Signature Text"
+placeholder = "Enter your name..."
+fontLabel = "Font"
+fontSizeLabel = "Size"
+fontSizePlaceholder = "16"
+colorLabel = "Color"
+[certSign.collab.signRequest.image]
+hint = "Upload a PNG or JPG image of your signature"
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Choose stroke colour"
+continue = "Continue"
+# Preview
+[certSign.collab.signRequest.preview]
+textFallback = "Signature"
+imageAlt = "Selected signature"
+missing = "No preview"
+# Certificate modal
+[certSign.collab.signRequest.certModal]
+title = "Configure Certificate"
+description = "You have placed {{count}} signature(s). Choose your certificate to complete signing."
+sign = "Sign Document"
+
+# Certificate Signing - Signature Request Steps
+[certSign.collab.signRequest.signatureType]
+draw = "Draw"
+upload = "Upload"
+type = "Type"
+
+[certSign.collab.signRequest.steps]
+back = "Back"
+continue = "Continue to Certificate Selection"
+continueToNext = "Continue to Certificate Selection"
+continueToPlacement = "Continue to Placement"
+continueToReview = "Continue to Review"
+clickToPlace = "Click on the PDF where you would like your signature to appear."
+signaturePlaced = "Signature placed on page {{page}}. You can adjust the position by clicking again or continue to review."
+pdfShownRight = "PDF viewer is shown on the right. Click to place your signature."
+createSignature = "Create Signature"
+addSignatures = "Add Signatures"
+selectCertificate = "Select Certificate"
+placeOnPdf = "Place on PDF"
+cancelPlacement = "Cancel Placement"
+reviewAndSign = "Review & Sign"
+reviewTitle = "Review Before Signing"
+yourSignature = "Your Signature"
+yourSignatures = "Your Signatures ({{count}})"
+signatureNum = "Signature {{num}}"
+onPage = "Page {{page}}"
+placedSignatures = "Placed Signatures ({{count}})"
+addAnother = "Add Another Signature"
+createFirst = "Create Your First Signature"
+clickPdfToPlace = "Click PDF to Place"
+placeThisSignature = "Place This Signature"
+clickAnywhere = "Click anywhere on the PDF above to place your signature"
+clickMultipleTimes = "Click on the PDF multiple times to place signatures. Drag any signature to move or resize it."
+clickToPlaceOne = "Click on the PDF to place your signature. To place more, click \"Place on PDF\" again."
+signaturesPlaced = "{{count}} signature(s) placed on PDF"
+certificate = "Certificate"
+placement = "Placement"
+placementInfo = "Page {{page}}"
+visibility = "Visibility:"
+visible = "Visible"
+invisible = "Invisible"
+reason = "Reason:"
+location = "Location:"
+stepLabel = "Step {{number}}"
+current = "Current"
+completed = "Completed"
+
+# Group Signing Tooltips
+[groupSigning.tooltip]
+header = "About Group Signing"
+
+[groupSigning.tooltip.sequential]
+title = "Sequential Signing"
+description = "Participants sign documents in the order you specify. Each signer receives a notification when it is their turn."
+bullet1 = "First participant must sign before the second can access the document"
+bullet2 = "Ensures proper signing order for legal compliance"
+bullet3 = "You can reorder participants by dragging them in the list"
+
+[groupSigning.tooltip.roles]
+title = "Participant Roles"
+description = "You control the signature appearance settings for all participants."
+bullet1 = "Owner (you): Creates session, configures signature defaults, finalises document"
+bullet2 = "Participants: Create their signature, choose certificate, place on PDF"
+bullet3 = "Participants cannot modify signature visibility, reason, or location settings"
+
+[groupSigning.tooltip.finalization]
+title = "Finalisation Process"
+description = "Once all participants have signed (or you choose to finalise early), you can generate the final signed PDF."
+bullet1 = "All signatures are applied in the participant order you specified"
+bullet2 = "You can finalise with partial signatures if needed"
+bullet3 = "Once finalised, the session cannot be modified"
+
+# Wet Signature Tooltips
+[wetSignature.tooltip]
+header = "Signature Creation Methods"
+
+[wetSignature.tooltip.draw]
+title = "Draw Signature"
+description = "Create a handwritten signature using your mouse or touchscreen. Best for personal, authentic signatures."
+bullet1 = "Customise pen colour and thickness"
+bullet2 = "Clear and redraw until satisfied"
+bullet3 = "Works on touch devices (tablets, phones)"
+
+[wetSignature.tooltip.upload]
+title = "Upload Signature Image"
+description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
+bullet1 = "Supports PNG, JPG, and other image formats"
+bullet2 = "Transparent backgrounds recommended for best results"
+bullet3 = "Image will be resized to fit signature area"
+
+[wetSignature.tooltip.type]
+title = "Type Signature"
+description = "Generate a signature from typed text. Fast and consistent, suitable for business documents."
+bullet1 = "Choose from multiple fonts"
+bullet2 = "Customise text size and colour"
+bullet3 = "Perfect for standardised signatures"
+
+# Certificate Choice Tooltips
+[certificateChoice.tooltip]
+header = "Certificate Types"
+
+[certificateChoice.tooltip.personal]
+title = "Personal Certificate"
+description = "An auto-generated certificate unique to your user account. Suitable for individual signatures."
+bullet1 = "Generated automatically on first use"
+bullet2 = "Tied to your user account"
+bullet3 = "Cannot be shared with other users"
+bullet4 = "Best for: Personal documents, individual accountability"
+
+[certificateChoice.tooltip.organization]
+title = "Organisation Certificate"
+description = "A shared certificate provided by your organisation. Used for company-wide signing authority."
+bullet1 = "Managed by system administrators"
+bullet2 = "Shared across authorised users"
+bullet3 = "Represents company identity, not individual"
+bullet4 = "Best for: Official documents, team signatures"
+
+[certificateChoice.tooltip.upload]
+title = "Upload Custom P12"
+description = "Use your own PKCS#12 certificate file. Provides full control over certificate properties."
+bullet1 = "Requires P12/PFX file and password"
+bullet2 = "Can be issued by external Certificate Authorities"
+bullet3 = "Higher trust level for legal documents"
+bullet4 = "Best for: Legally binding contracts, external validation"
+
+# Signature Settings Tooltips
+[signatureSettings.tooltip]
+header = "Signature Appearance Settings"
+
+[signatureSettings.tooltip.visibility]
+title = "Signature Visibility"
+description = "Controls whether the signature is visible on the document or embedded invisibly."
+bullet1 = "<b>Visible</b>: Signature appears on PDF with custom appearance"
+bullet2 = "<b>Invisible</b>: Certificate embedded without visual mark"
+bullet3 = "Invisible signatures still provide cryptographic validation"
+
+[signatureSettings.tooltip.reason]
+title = "Signature Reason"
+description = "Optional text explaining why the document is being signed. Stored in certificate metadata."
+bullet1 = "Examples: \"Approval\", \"Contract Agreement\", \"Review Complete\""
+bullet2 = "Visible in PDF signature properties"
+bullet3 = "Useful for audit trails and compliance"
+
+[signatureSettings.tooltip.location]
+title = "Signature Location"
+description = "Optional geographic location where the signature was applied. Stored in certificate metadata."
+bullet1 = "Examples: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Not the same as page position"
+bullet3 = "May be required for certain legal jurisdictions"
+
+[signatureSettings.tooltip.logo]
+title = "Company Logo"
+description = "Add a company logo to visible signatures for branding and authenticity."
+bullet1 = "Displayed alongside signature and text"
+bullet2 = "Supports PNG, JPG formats"
+bullet3 = "Enhances professional appearance"
+
+# Session Management Tooltips
+[sessionManagement.tooltip]
+header = "Managing Signing Sessions"
+
+[sessionManagement.tooltip.addParticipants]
+title = "Adding Participants"
+description = "You can add more participants to an active session at any time before finalisation."
+bullet1 = "New participants added to the end of signing order"
+bullet2 = "Cannot add participants after session is finalised"
+bullet3 = "Each participant receives a notification when it's their turn"
+
+[sessionManagement.tooltip.finalization]
+title = "Session Finalisation"
+description = "Finalisation combines all signatures into a single signed PDF. This action cannot be undone."
+bullet1 = "<b>Full finalisation</b>: All participants have signed"
+bullet2 = "<b>Partial finalisation</b>: Some participants haven't signed yet"
+bullet3 = "Unsigned participants will be excluded from the final document"
+bullet4 = "Once finalised, you can load the signed PDF into active files"
+
+[sessionManagement.tooltip.signatureOrder]
+title = "Signature Order"
+description = "The order you specify when creating the session determines who signs first."
+bullet1 = "Each signature is applied sequentially to the PDF"
+bullet2 = "Later signers can see earlier signatures"
+bullet3 = "Critical for approval workflows and legal chains of custody"
+
+[sessionManagement.tooltip.participantRemoval]
+title = "Removing Participants"
+description = "Participants can be removed from sessions before they sign."
+bullet1 = "Cannot remove participants who have already signed"
+bullet2 = "Removed participants no longer receive notifications"
+bullet3 = "Signing order adjusts automatically"
+
+# Group Signing Steps
+[groupSigning.steps]
+stepLabel = "Step {{number}}"
+current = "Current"
+completed = "Completed"
+back = "Back"
+
+[groupSigning.steps.selectDocument]
+title = "Select Document"
+noFile = "Please select a single PDF file from your active files to create a signing session."
+selectedFile = "Selected document"
+info = "This document will be sent to participants for signing. You can configure signature settings for each participant in the next steps."
+continue = "Continue to Participant Selection"
+
+[groupSigning.steps.selectParticipants]
+title = "Choose Participants"
+label = "Select participants"
+placeholder = "Choose participants to sign..."
+orderTitle = "Signing Order"
+orderInfo = "Participants will sign the document in the order listed above. Each person will be notified when it is their turn."
+count = "{{count}} participant(s) selected"
+continue = "Continue to Signature Settings"
+
+[groupSigning.steps.configureDefaults]
+title = "Configure Signature Settings"
+info = "These settings will apply to all participants by default. You can adjust individual settings after creating the session."
+preview = "Preview"
+visible = "Signatures will be visible on page {{page}}"
+invisible = "Signatures will be invisible (metadata only)"
+reasonLabel = "Reason:"
+locationLabel = "Location:"
+continue = "Continue to Review"
+
+[groupSigning.steps.review]
+title = "Review Session Details"
+titleShort = "Review & Send"
+document = "Document"
+participants = "Participants"
+participantCount = "{{count}} participant(s) will sign in order"
+participantCount_one = "{{count}} participant will sign"
+participantCount_other = "{{count}} participants will sign in order"
+signatureSettings = "Signature Settings"
+visibility = "Visibility:"
+visible = "Visible on page {{page}}"
+invisible = "Invisible (metadata only)"
+reason = "Reason:"
+location = "Location:"
+logo = "Logo:"
+logoShown = "Stirling PDF logo shown"
+logoHidden = "No logo"
+dueDate = "Due Date (Optional)"
+dueDatePlaceholder = "Select due date..."
+send = "Send Signing Requests"
+
+[certSign.collab.addParticipants]
+selectUsers = "Select Users"
+configureSignatures = "Configure Signature Settings"
+continue = "Continue to Signature Settings"
+back = "Back"
+add = "Add {{count}} Participant(s)"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Include Signature Summary Page"
+includeSummaryPageHelp = "A summary page will be added at the end with all signature metadata. The digital certificate signature boxes on individual pages will be suppressed (wet signatures are unaffected)."
+defaultReason = "Default Reason (Optional)"
+defaultReasonHelp = "Set a default reason for this participant. They can override it when signing."
+
+[certSign.collab.sessionDetail]
+finalizedMessage = "This session has been finalized."
+noAdditionalInfo = "No additional information"

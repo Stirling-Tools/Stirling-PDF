@@ -1,6 +1,7 @@
 package stirling.software.proprietary.workflow.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,4 +30,5 @@ public class ParticipantResponse {
     private LocalDateTime lastUpdated;
     private boolean hasCompleted;
     private boolean isExpired;
+    private List<WetSignatureMetadata> wetSignatures;
 }

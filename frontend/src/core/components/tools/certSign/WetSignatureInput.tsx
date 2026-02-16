@@ -194,7 +194,7 @@ const WetSignatureInput = ({
       {/* Signature Type Selector */}
       <Stack gap="xs">
         <Text size="sm" fw={600}>
-          {t('certSign.collab.signRequest.signatureType', 'Signature Type')}
+          {t('certSign.collab.signRequest.signatureTypeLabel', 'Signature Type')}
         </Text>
         <SegmentedControl
           value={signatureType}

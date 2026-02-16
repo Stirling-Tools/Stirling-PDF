@@ -1,30 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Stack,
-  Paper,
-  Text,
-  Group,
-  Badge,
-  Button,
-  List,
-  ActionIcon,
-  Divider,
-  Alert,
-  Modal,
-} from '@mantine/core';
+import { Stack, Paper, Text, Group, Badge, Button, Divider, Modal } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PendingIcon from '@mui/icons-material/Pending';
-import CancelIcon from '@mui/icons-material/Cancel';
-import AddIcon from '@mui/icons-material/Add';
-import InfoIcon from '@mui/icons-material/Info';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
+import { Z_INDEX_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import { SessionDetail } from '@app/types/signingSession';
-import UserSelector from '@app/components/shared/UserSelector';
-import SignatureSettingsInput, { SignatureSettings } from '@app/components/tools/certSign/SignatureSettingsInput';
-import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
+import { SignatureSettings } from '@app/components/tools/certSign/SignatureSettingsInput';
+import { LocalEmbedPDFWithAnnotations, SignaturePreview, AnnotationAPI } from '@app/components/viewer/LocalEmbedPDFWithAnnotations';
+import { ParticipantListPanel } from '@app/components/tools/certSign/panels/ParticipantListPanel';
+import { SessionActionsPanel } from '@app/components/tools/certSign/panels/SessionActionsPanel';
+import { AddParticipantsFlow } from '@app/components/tools/certSign/modals/AddParticipantsFlow';
 
 export interface SessionDetailWorkbenchData {
   session: SessionDetail;
@@ -44,21 +33,26 @@ interface SessionDetailWorkbenchViewProps {
 
 const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) => {
   const { t } = useTranslation();
-  const { session, pdfFile, onFinalize, onLoadSignedPdf, onAddParticipants, onRemoveParticipant, onDelete, onBack, onRefresh } = data;
+  const {
+    session,
+    pdfFile,
+    onFinalize,
+    onLoadSignedPdf,
+    onAddParticipants,
+    onRemoveParticipant,
+    onDelete,
+    onBack,
+    onRefresh,
+  } = data;
 
-  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [signatureSettings, setSignatureSettings] = useState<SignatureSettings>({
-    showSignature: false,
-    pageNumber: 1,
-    reason: '',
-    location: '',
-    showLogo: false,
-  });
+  // Ref for annotation API (to access zoom controls)
+  const annotationApiRef = useRef<AnnotationAPI | null>(null);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [addParticipantsModalOpen, setAddParticipantsModalOpen] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
-  const [addingParticipants, setAddingParticipants] = useState(false);
 
   // Auto-refresh every 30 seconds when not finalized
   useEffect(() => {
@@ -70,13 +64,9 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     }
   }, [session.finalized, onRefresh]);
 
-  const handleAddParticipants = async () => {
-    if (selectedUserIds.length === 0) return;
-
-    setAddingParticipants(true);
+  const handleAddParticipants = async (userIds: number[], settings: SignatureSettings) => {
     try {
-      await onAddParticipants(selectedUserIds, signatureSettings);
-      setSelectedUserIds([]);
+      await onAddParticipants(userIds, settings);
       alert({
         alertType: 'success',
         title: t('success'),
@@ -88,8 +78,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
         title: t('error'),
         body: t('certSign.collab.sessionDetail.addParticipantsError', 'Failed to add participants'),
       });
-    } finally {
-      setAddingParticipants(false);
+      throw _error; // Re-throw so modal can handle loading state
     }
   };
 
@@ -160,18 +149,36 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     }
   };
 
+  // Extract wet signatures from all participants for preview
+  const wetSignaturePreviews = useMemo<SignaturePreview[]>(() => {
+    const previews: SignaturePreview[] = [];
+
+    session.participants.forEach((participant, participantIndex) => {
+      if (participant.wetSignatures && participant.wetSignatures.length > 0) {
+        participant.wetSignatures.forEach((wetSig, sigIndex) => {
+          previews.push({
+            id: `participant-${participant.userId}-sig-${sigIndex}`,
+            pageIndex: wetSig.page,
+            x: wetSig.x,
+            y: wetSig.y,
+            width: wetSig.width,
+            height: wetSig.height,
+            signatureData: wetSig.data,
+          });
+        });
+      }
+    });
+
+    return previews;
+  }, [session.participants]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       {/* Top Control Bar */}
-      <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: 10 }}>
+      <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE }}>
         <Group justify="space-between">
           <Group gap="md">
-            <Button
-              leftSection={<ArrowBackIcon />}
-              variant="subtle"
-              onClick={onBack}
-              size="sm"
-            >
+            <Button leftSection={<ArrowBackIcon />} variant="subtle" onClick={onBack} size="sm">
               {t('certSign.collab.sessionDetail.backToList', 'Back to Sessions')}
             </Button>
             <Divider orientation="vertical" />
@@ -194,17 +201,48 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
             </Stack>
           </Group>
 
-          {!session.finalized && (
-            <Button
-              leftSection={<DeleteIcon />}
-              color="red"
-              variant="outline"
-              onClick={() => setDeleteModalOpen(true)}
-              size="sm"
-            >
-              {t('certSign.collab.sessionDetail.deleteSession', 'Delete Session')}
-            </Button>
-          )}
+          <Group gap="xs">
+            {/* Zoom Controls */}
+            <Button.Group>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => annotationApiRef.current?.zoomOut()}
+                title={t('viewer.zoomOut', 'Zoom out')}
+              >
+                <ZoomOutIcon fontSize="small" />
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => annotationApiRef.current?.resetZoom()}
+                title={t('viewer.resetZoom', 'Reset zoom')}
+              >
+                <ZoomOutMapIcon fontSize="small" />
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => annotationApiRef.current?.zoomIn()}
+                title={t('viewer.zoomIn', 'Zoom in')}
+              >
+                <ZoomInIcon fontSize="small" />
+              </Button>
+            </Button.Group>
+
+            {/* Delete Session Button */}
+            {!session.finalized && (
+              <Button
+                leftSection={<DeleteIcon />}
+                color="red"
+                variant="outline"
+                onClick={() => setDeleteModalOpen(true)}
+                size="sm"
+              >
+                {t('certSign.collab.sessionDetail.deleteSession', 'Delete Session')}
+              </Button>
+            )}
+          </Group>
         </Group>
       </Paper>
 
@@ -218,68 +256,27 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
             width: '280px',
             flexShrink: 0,
             overflowY: 'auto',
-            borderRight: '1px solid var(--mantine-color-gray-3)'
+            borderRight: '1px solid var(--mantine-color-gray-3)',
           }}
         >
-          <Stack gap="md">
-            <Text size="md" fw={600}>
-              {t('certSign.collab.sessionDetail.participants', 'Participants')}
-            </Text>
-
-            <List spacing={8} size="sm">
-              {session.participants.map((participant) => {
-                const isSigned = participant.status === 'SIGNED';
-                const isDeclined = participant.status === 'DECLINED';
-                const getIcon = () => {
-                  if (isSigned) return <CheckCircleIcon style={{ color: 'green', fontSize: '1rem' }} />;
-                  if (isDeclined) return <CancelIcon style={{ color: 'red', fontSize: '1rem' }} />;
-                  return <PendingIcon style={{ color: 'orange', fontSize: '1rem' }} />;
-                };
-                const getColor = () => {
-                  if (isSigned) return 'green';
-                  if (isDeclined) return 'red';
-                  return 'orange';
-                };
-
-                return (
-                  <List.Item key={participant.userId} icon={getIcon()}>
-                    <Group justify="space-between" wrap="nowrap" gap={4}>
-                      <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                        <Text size="xs" truncate>
-                          {participant.name}
-                        </Text>
-                        <Text size="xs" c="dimmed" truncate>
-                          @{participant.email}
-                        </Text>
-                        <Badge size="xs" color={getColor()} variant="light">
-                          {t(`certSign.collab.status.${participant.status.toLowerCase()}`, participant.status)}
-                        </Badge>
-                      </Stack>
-                      {!session.finalized && !isSigned && !isDeclined && (
-                        <ActionIcon
-                          size="sm"
-                          variant="subtle"
-                          color="red"
-                          onClick={() => handleRemoveParticipant(participant.userId)}
-                          title={t('certSign.collab.sessionDetail.removeParticipant', 'Remove')}
-                        >
-                          <DeleteIcon style={{ fontSize: '1rem' }} />
-                        </ActionIcon>
-                      )}
-                    </Group>
-                  </List.Item>
-                );
-              })}
-            </List>
-          </Stack>
+          <ParticipantListPanel
+            participants={session.participants}
+            finalized={session.finalized}
+            onRemove={handleRemoveParticipant}
+          />
         </Paper>
 
         {/* Center - PDF Viewer */}
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-          <LocalEmbedPDF file={pdfFile} />
+          <LocalEmbedPDFWithAnnotations
+            ref={annotationApiRef}
+            file={pdfFile}
+            initialSignatures={wetSignaturePreviews}
+            readOnly={true}
+          />
         </div>
 
-        {/* Right Panel - Session Info and Actions */}
+        {/* Right Panel - Session Actions */}
         <Paper
           p="md"
           shadow="sm"
@@ -287,105 +284,26 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
             width: '320px',
             flexShrink: 0,
             overflowY: 'auto',
-            borderLeft: '1px solid var(--mantine-color-gray-3)'
+            borderLeft: '1px solid var(--mantine-color-gray-3)',
           }}
         >
-          <Stack gap="md">
-            <div>
-              <Text size="md" fw={600} mb="sm">
-                {t('certSign.collab.sessionDetail.sessionInfo', 'Session Info')}
-              </Text>
-              <Stack gap="xs">
-                {session.dueDate && (
-                  <Paper p="xs" withBorder>
-                    <Text size="xs" fw={600} c="dimmed">
-                      {t('certSign.collab.sessionDetail.dueDate', 'Due Date')}
-                    </Text>
-                    <Text size="xs">{session.dueDate}</Text>
-                  </Paper>
-                )}
-                {session.message && (
-                  <Paper p="xs" withBorder>
-                    <Text size="xs" fw={600} c="dimmed">
-                      {t('certSign.collab.sessionDetail.messageLabel', 'Message')}
-                    </Text>
-                    <Text size="xs">{session.message}</Text>
-                  </Paper>
-                )}
-              </Stack>
-            </div>
-
-            {!session.finalized && (
-              <>
-                <Divider />
-                <div>
-                  <Text size="md" fw={600} mb="sm">
-                    {t('certSign.collab.sessionDetail.addParticipants', 'Add Participants')}
-                  </Text>
-                  <Stack gap="sm">
-                    <UserSelector
-                      value={selectedUserIds}
-                      onChange={setSelectedUserIds}
-                      placeholder={t('certSign.collab.sessionDetail.selectUsers', 'Select users...')}
-                      size="sm"
-                    />
-                    <SignatureSettingsInput value={signatureSettings} onChange={setSignatureSettings} />
-                    <Button
-                      leftSection={<AddIcon />}
-                      onClick={handleAddParticipants}
-                      disabled={selectedUserIds.length === 0}
-                      loading={addingParticipants}
-                      size="sm"
-                      fullWidth
-                    >
-                      {t('certSign.collab.sessionDetail.addButton', 'Add Participants')}
-                    </Button>
-                  </Stack>
-                </div>
-              </>
-            )}
-
-            <Divider />
-
-            {!session.finalized ? (
-              <>
-                <Alert icon={<InfoIcon />} color="blue" variant="light" p="xs">
-                  <Text size="xs">
-                    {session.participants.every(p => p.status === 'SIGNED')
-                      ? t('certSign.allSigned', 'All participants have signed. Ready to finalize.')
-                      : t('certSign.partialNote', 'You can finalize early with current signatures. Unsigned participants will be excluded.')
-                    }
-                  </Text>
-                </Alert>
-                <Button
-                  leftSection={<CheckCircleIcon />}
-                  size="sm"
-                  color={session.participants.every(p => p.status === 'SIGNED') ? 'green' : 'orange'}
-                  fullWidth
-                  onClick={handleFinalize}
-                  loading={finalizing}
-                >
-                  {session.participants.every(p => p.status === 'SIGNED')
-                    ? t('certSign.collab.finalize.button', 'Finalize and load signed PDF')
-                    : t('certSign.collab.finalize.early', 'Finalize with current signatures')
-                  }
-                </Button>
-              </>
-            ) : (
-              <Button
-                leftSection={<CheckCircleIcon />}
-                size="sm"
-                color="blue"
-                fullWidth
-                onClick={handleLoadSignedPdf}
-                loading={loadingPdf}
-              >
-                {t('certSign.collab.sessionDetail.loadSignedPdf', 'Load signed PDF into active files')}
-              </Button>
-            )}
-          </Stack>
+          <SessionActionsPanel
+            session={session}
+            onAddParticipants={() => setAddParticipantsModalOpen(true)}
+            onFinalize={handleFinalize}
+            onLoadSignedPdf={handleLoadSignedPdf}
+            finalizing={finalizing}
+            loadingPdf={loadingPdf}
+          />
         </Paper>
       </div>
+
+      {/* Add Participants Modal */}
+      <AddParticipantsFlow
+        opened={addParticipantsModalOpen}
+        onClose={() => setAddParticipantsModalOpen(false)}
+        onSubmit={handleAddParticipants}
+      />
 
       {/* Delete Confirmation Modal */}
       <Modal

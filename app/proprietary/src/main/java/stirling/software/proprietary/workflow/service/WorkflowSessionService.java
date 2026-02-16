@@ -188,6 +188,20 @@ public class WorkflowSessionService {
                 }
             }
 
+            // Store defaultReason in participant metadata if provided
+            if (request.getDefaultReason() != null && !request.getDefaultReason().isBlank()) {
+                Map<String, Object> metadata = participant.getParticipantMetadata();
+                if (metadata == null) {
+                    metadata = new HashMap<>();
+                }
+                metadata.put("defaultReason", request.getDefaultReason());
+                participant.setParticipantMetadata(metadata);
+                log.debug(
+                        "Set default reason for participant {}: {}",
+                        request.getEmail(),
+                        request.getDefaultReason());
+            }
+
             participant.setStatus(ParticipantStatus.PENDING);
 
             // Set user or email
@@ -523,12 +537,30 @@ public class WorkflowSessionService {
         dto.setCreatedAt(session.getCreatedAt().toString());
         dto.setMyStatus(participant.getStatus());
 
-        // TODO: Add signature appearance settings when they're implemented
-        dto.setShowSignature(false);
-        dto.setPageNumber(null);
-        dto.setReason(null);
-        dto.setLocation(null);
-        dto.setShowLogo(false);
+        // Load signature appearance settings from workflow metadata
+        Map<String, Object> metadata = session.getWorkflowMetadata();
+        if (metadata != null && !metadata.isEmpty()) {
+            dto.setShowSignature(
+                    metadata.containsKey("showSignature")
+                            ? (Boolean) metadata.get("showSignature")
+                            : false);
+            dto.setPageNumber(
+                    metadata.containsKey("pageNumber")
+                            ? ((Number) metadata.get("pageNumber")).intValue()
+                            : null);
+            dto.setReason(metadata.containsKey("reason") ? (String) metadata.get("reason") : null);
+            dto.setLocation(
+                    metadata.containsKey("location") ? (String) metadata.get("location") : null);
+            dto.setShowLogo(
+                    metadata.containsKey("showLogo") ? (Boolean) metadata.get("showLogo") : false);
+        } else {
+            // Default values if no metadata
+            dto.setShowSignature(false);
+            dto.setPageNumber(null);
+            dto.setReason(null);
+            dto.setLocation(null);
+            dto.setShowLogo(false);
+        }
 
         // Update status to VIEWED if it was NOTIFIED
         if (participant.getStatus() == ParticipantStatus.NOTIFIED) {
@@ -622,40 +654,65 @@ public class WorkflowSessionService {
 
         metadata.put("certificateSubmission", certSubmission);
 
-        // 2. Store wet signature metadata if provided
-        if (request.hasWetSignature()) {
-            WetSignatureMetadata wetSig = request.extractWetSignatureMetadata();
-            Map<String, Object> wetSignature = new HashMap<>();
-            wetSignature.put("type", wetSig.getType());
-            wetSignature.put("data", wetSig.getData());
-            wetSignature.put("page", wetSig.getPage());
-            wetSignature.put("x", wetSig.getX());
-            wetSignature.put("y", wetSig.getY());
-            wetSignature.put("width", wetSig.getWidth());
-            wetSignature.put("height", wetSig.getHeight());
-
-            metadata.put("wetSignature", wetSignature);
-            log.info("Stored wet signature metadata for participant {}", user.getUsername());
+        // 2. Parse wet signatures from JSON string if provided
+        if (request.getWetSignaturesData() != null && !request.getWetSignaturesData().isBlank()) {
+            try {
+                List<WetSignatureMetadata> wetSigs =
+                        objectMapper.readValue(
+                                request.getWetSignaturesData(),
+                                new com.fasterxml.jackson.core.type.TypeReference<
+                                        List<WetSignatureMetadata>>() {});
+                request.setWetSignatures(wetSigs);
+                log.info("Parsed {} wet signatures from wetSignaturesData", wetSigs.size());
+            } catch (JsonProcessingException e) {
+                log.error("Failed to parse wetSignaturesData: {}", e.getMessage());
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Invalid wet signatures data");
+            }
         }
 
-        // 3. Store metadata in participant (no manual JSON serialization needed)
-        try {
-            String metadataJson = objectMapper.writeValueAsString(metadata);
+        // 3. Store wet signatures metadata if provided (supports multiple signatures)
+        if (request.hasWetSignatures()) {
+            List<WetSignatureMetadata> wetSigs = request.extractWetSignatureMetadata();
+            List<Map<String, Object>> wetSignatures = new ArrayList<>();
+
+            for (WetSignatureMetadata wetSig : wetSigs) {
+                Map<String, Object> wetSignature = new HashMap<>();
+                wetSignature.put("type", wetSig.getType());
+                wetSignature.put("data", wetSig.getData());
+                wetSignature.put("page", wetSig.getPage());
+                wetSignature.put("x", wetSig.getX());
+                wetSignature.put("y", wetSig.getY());
+                wetSignature.put("width", wetSig.getWidth());
+                wetSignature.put("height", wetSig.getHeight());
+                wetSignatures.add(wetSignature);
+            }
+
+            // Always store as array
+            metadata.put("wetSignatures", wetSignatures);
+
             log.info(
-                    "Storing metadata for participant ID {}, email {}: {}",
-                    participant.getId(),
-                    user.getUsername(),
-                    metadataJson);
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to log metadata JSON (logging only)", e);
+                    "Stored {} wet signature(s) metadata for participant {}",
+                    wetSignatures.size(),
+                    user.getUsername());
         }
-        participant.setParticipantMetadata(metadata);
 
-        // 4. Update participant status
+        // 4. Store metadata in participant (JPA converter handles JSON serialization)
+        participant.setParticipantMetadata(metadata);
+        log.info(
+                "Stored signature metadata for participant ID {}, email {}: {} wet signatures, cert type: {}",
+                participant.getId(),
+                user.getUsername(),
+                metadata.containsKey("wetSignatures")
+                        ? ((List<?>) metadata.get("wetSignatures")).size()
+                        : 0,
+                ((Map<?, ?>) metadata.get("certificateSubmission")).get("certType"));
+
+        // 5. Update participant status
         participant.setStatus(ParticipantStatus.SIGNED);
         workflowParticipantRepository.save(participant);
 
-        // 5. Force flush to database and clear persistence context
+        // 6. Force flush to database and clear persistence context
         // This ensures metadata is immediately persisted and visible to subsequent queries
         entityManager.flush();
         entityManager.clear();
@@ -697,7 +754,7 @@ public class WorkflowSessionService {
      */
     private WorkflowParticipant getParticipantForUser(WorkflowSession session, User user) {
         return session.getParticipants().stream()
-                .filter(p -> p.getUser().equals(user))
+                .filter(p -> p.getUser() != null && p.getUser().equals(user))
                 .findFirst()
                 .orElseThrow(
                         () ->

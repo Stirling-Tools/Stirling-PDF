@@ -13,7 +13,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -32,7 +31,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.storage.converter.JsonMapConverter;
 import stirling.software.proprietary.storage.model.StoredFile;
 
 /**
@@ -111,7 +109,7 @@ public class WorkflowSession implements Serializable {
     // For signing: signature appearance settings, wet signature metadata
     // For review: review guidelines, comment templates
     // For approval: approval criteria, decision options
-    @Convert(converter = JsonMapConverter.class)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "workflow_metadata", columnDefinition = "jsonb")
     private Map<String, Object> workflowMetadata = new HashMap<>();
 

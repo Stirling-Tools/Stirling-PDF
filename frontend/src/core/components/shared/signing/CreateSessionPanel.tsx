@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Text } from '@mantine/core';
+import { Text, Switch } from '@mantine/core';
 import UserSelector from '@app/components/shared/UserSelector';
 import type { FileState } from '@app/types/file';
 
@@ -10,6 +10,8 @@ interface CreateSessionPanelProps {
   dueDate: string;
   onDueDateChange: (date: string) => void;
   creating: boolean;
+  includeSummaryPage: boolean;
+  onIncludeSummaryPageChange: (value: boolean) => void;
 }
 
 const CreateSessionPanel = ({
@@ -19,6 +21,8 @@ const CreateSessionPanel = ({
   dueDate,
   onDueDateChange,
   creating,
+  includeSummaryPage,
+  onIncludeSummaryPageChange,
 }: CreateSessionPanelProps) => {
   const { t } = useTranslation();
 
@@ -64,9 +68,14 @@ const CreateSessionPanel = ({
           </div>
 
           <div className="quick-access-popout__section">
-            <div className="quick-access-popout__row-subtitle">
-              {t('quickAccess.signatureHint', 'Signature settings can be configured by each participant.')}
-            </div>
+            <Switch
+              label={t('certSign.collab.sessionCreation.includeSummaryPage', 'Include Signature Summary Page')}
+              description={t('certSign.collab.sessionCreation.includeSummaryPageHelp', 'Add a summary page at the end with all signature details')}
+              checked={includeSummaryPage}
+              onChange={(e) => onIncludeSummaryPageChange(e.currentTarget.checked)}
+              disabled={creating}
+              size="sm"
+            />
           </div>
         </>
       )}

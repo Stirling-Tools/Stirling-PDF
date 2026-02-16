@@ -11,7 +11,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -30,7 +29,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.storage.converter.JsonMapConverter;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 
 /**
@@ -93,7 +91,7 @@ public class WorkflowParticipant implements Serializable {
     // For signing: wet signature coordinates, signature appearance settings
     // For review: assigned review sections, comment preferences
     // For approval: decision criteria, approval authority level
-    @Convert(converter = JsonMapConverter.class)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "participant_metadata", columnDefinition = "jsonb")
     private Map<String, Object> participantMetadata = new HashMap<>();
 

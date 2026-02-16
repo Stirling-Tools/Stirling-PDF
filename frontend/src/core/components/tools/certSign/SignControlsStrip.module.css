@@ -1,0 +1,643 @@
+.topBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 16px;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Mobile split: title-only bar at top (keep border-bottom) */
+.topBar[data-mobile-section="title"] {
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Mobile split: controls-only bar at bottom; right section fills and centers */
+.topBar[data-mobile-section="controls"] .right {
+  flex: 1;
+  justify-content: center;
+}
+
+.left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.fileTitle {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viewerFileRow {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  overflow: hidden;
+  justify-content: flex-start;
+}
+
+.fileName {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subText {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activeFilesRow {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fileEditorHeaderRow {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.fileEditorActions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.activeFilesContent {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.activeFilesSummary {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.downloadSlot {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.actionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+}
+
+.actionIcon > * {
+  flex-shrink: 0;
+  display: block;
+}
+
+.actionLabel {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.viewerControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Responsive: stack controls under the title row on narrow widths */
+@media (max-width: 1200px) {
+  .topBar {
+    height: auto;
+    min-height: 52px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  /* Keep the long viewer toolbar usable if it still overflows */
+  .viewerControls {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .viewerControls::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Save horizontal space on smaller screens */
+  .zoomSlider {
+    width: 64px;
+  }
+
+  /* Keep download pinned to the far right on row 2 */
+  .downloadSlot {
+    margin-left: auto;
+  }
+
+  /* In file editor (Active files), keep BOTH actions on the left */
+  .topBar[data-view="fileEditor"] .downloadSlot {
+    margin-left: 0;
+  }
+
+  .topBar[data-view="fileEditor"] .right {
+    flex-wrap: wrap;
+  }
+}
+
+/* When the title and controls wrap to two rows, center both rows */
+.topBar[data-wrapped="true"] .left,
+.topBar[data-wrapped="true"] .right {
+  flex: 0 0 100%;
+  width: 100%;
+  justify-content: center;
+}
+
+.topBar[data-wrapped="true"] .viewerFileRow {
+  justify-content: center;
+}
+
+/* On very narrow viewports, prefer wrapping to extra rows over horizontal scrolling */
+@media (max-width: 560px) {
+  .topBar[data-view="viewer"][data-mobile="false"] .right {
+    flex-wrap: wrap;
+  }
+
+  .topBar[data-view="viewer"][data-mobile="false"] .viewerControls {
+    overflow: visible;
+    padding-bottom: 0;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .topBar[data-view="viewer"][data-mobile="false"] .viewerControls .divider {
+    display: none;
+  }
+
+  /* Push zoom controls to their own row when space is tight */
+  .topBar[data-view="viewer"][data-mobile="false"] .zoomPill {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  /* Make download drop to its own row if needed */
+  .topBar[data-view="viewer"][data-mobile="false"] .downloadSlot {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+}
+
+/* Mobile workbench tweaks (use runtime mobile mode, not viewport width) */
+@media (max-width: 1200px) {
+  .topBar[data-view="viewer"][data-mobile="true"] .downloadSlot {
+    margin-left: 0;
+  }
+}
+
+.topBar[data-view="viewer"][data-mobile="true"][data-wrapped="false"] .right {
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.topBar[data-view="viewer"][data-mobile="true"][data-wrapped="false"] .viewerControls {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+/* Tighten sizing specifically inside the viewer toolbar cluster */
+.viewerControls .iconButton {
+  width: 28px;
+  height: 28px;
+}
+
+.pagePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.pageInput {
+  width: 30px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  padding: 0;
+}
+
+.pageInput::-webkit-outer-spin-button,
+.pageInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pageDivider {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.pageTotal {
+  min-width: 18px;
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.zoomPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.zoomButton {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.zoomButton:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.zoomSlider {
+  width: 80px;
+  accent-color: var(--mantine-color-blue-6, #3b82f6);
+}
+
+.zoomLabel {
+  min-width: 36px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-default);
+  margin: 0 4px;
+}
+
+.iconButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.iconButton.iconTextButton {
+  width: auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+@media (max-width: 420px) {
+  .iconButton.iconTextButton {
+    padding: 0 10px;
+  }
+
+  .iconButton.iconTextButton .actionLabel {
+    display: none;
+  }
+}
+
+.iconButton:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.iconButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.iconButton:disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+/* --- Sign controls strip (part of normal layout) --- */
+.signStrip {
+  position: relative;
+  width: 100%;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-toolbar);
+}
+
+.signStrip[data-open="true"] {
+  /* Always visible when open */
+}
+
+.signStripInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.signStripControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.signStripOptions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+.signStripActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.signStripSpacer {
+  flex: 1 1 auto;
+}
+
+.signStripHint {
+  display: inline-flex;
+  margin-left: 6px;
+}
+
+.signStripButton {
+  color: var(--text-secondary);
+}
+
+.signStripPill {
+  height: 28px;
+  border-radius: 999px;
+}
+
+/* --- Signing UI (strip) --- */
+.signingRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.signingLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  order: 0;
+}
+
+.signingCenter {
+  flex: 1 1 auto;
+  min-width: 120px;
+  order: 1;
+}
+
+.signingMode {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  order: 2;
+}
+
+.signingRight {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  order: 3;
+}
+
+.signingPreviewButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.signingPreviewButton:hover {
+  background: color-mix(in srgb, var(--bg-toolbar) 75%, transparent);
+}
+
+.signingPreviewFrame {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+}
+
+.signingPreviewChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.signingHint {
+  margin-left: 0;
+}
+
+.signingHintUnit {
+  margin: 0 12px;
+}
+
+.keyCap {
+  display: inline-flex;
+  vertical-align: middle;
+  color: var(--text-secondary);
+  margin: 0 8px;
+}
+
+.signingStatus {
+  white-space: nowrap;
+}
+
+.signingDivider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-default);
+  margin: 0 6px;
+  flex: 0 0 auto;
+}
+
+.signStripCloseButton {
+  width: 28px;
+  height: 28px;
+}
+
+/* Mobile-only delete button (no Backspace key); hidden on desktop */
+.signStripMobileDelete {
+  display: none;
+}
+
+/* Sign strip mode: Place vs Move (radio-style segmented control) */
+.signStripModeRadio {
+  flex: 0 0 auto;
+}
+
+.signStripModeRadio [data-mantine-segmented-control-indicator] {
+  background: var(--bg-elevated);
+  border-radius: var(--mantine-radius-xl);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.signingTitle {
+  /* Add styles for signing title */
+}
+
+/* Mobile: row 1 = close + radio (no title); row 2 = preview + apply */
+@media (max-width: 720px) {
+  .signingLeft {
+    order: 0;
+  }
+
+  .signingTitle {
+    display: none;
+  }
+
+  .signingCenter {
+    flex: 1 1 auto;
+    min-width: 0;
+    order: 2;
+  }
+
+  .signingMode {
+    order: 1;
+  }
+
+  .signingRight {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .signStripMobileDelete {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* When the strip gets narrow, split into two rows:
+   options on row 1, actions on row 2 (with divider line). */
+@media (max-width: 720px) {
+  .signStripOptions {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .signStripActions {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+}

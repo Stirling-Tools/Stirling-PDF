@@ -1,6 +1,8 @@
 package stirling.software.proprietary.workflow.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -143,13 +144,9 @@ public class WorkflowParticipantController {
         }
 
         try {
-            // Build metadata JSON with certificate and wet signature data
-            ObjectNode metadata = buildSubmissionMetadata(request);
-            // Convert JsonNode to Map<String, Object> for entity storage
-            @SuppressWarnings("unchecked")
-            java.util.Map<String, Object> metadataMap =
-                    objectMapper.convertValue(metadata, java.util.Map.class);
-            participant.setParticipantMetadata(metadataMap);
+            // Build metadata map with certificate and wet signature data
+            Map<String, Object> metadata = buildSubmissionMetadata(request);
+            participant.setParticipantMetadata(metadata);
 
             // Update status to SIGNED
             participant.setStatus(ParticipantStatus.SIGNED);
@@ -251,16 +248,16 @@ public class WorkflowParticipantController {
     }
 
     /**
-     * Builds JSON metadata from signature submission request. Includes certificate submission and
+     * Builds metadata map from signature submission request. Includes certificate submission and
      * wet signature data.
      */
-    private ObjectNode buildSubmissionMetadata(SignatureSubmissionRequest request)
+    private Map<String, Object> buildSubmissionMetadata(SignatureSubmissionRequest request)
             throws IOException {
-        ObjectNode metadata = objectMapper.createObjectNode();
+        Map<String, Object> metadata = new HashMap<>();
 
         // Add certificate submission if provided
         if (request.getCertType() != null) {
-            ObjectNode certSubmission = objectMapper.createObjectNode();
+            Map<String, Object> certSubmission = new HashMap<>();
             certSubmission.put("certType", request.getCertType());
             certSubmission.put("password", request.getPassword());
             certSubmission.put("showSignature", request.getShowSignature());
@@ -283,12 +280,18 @@ public class WorkflowParticipantController {
                                 .encodeToString(request.getJksFile().getBytes()));
             }
 
-            metadata.set("certificateSubmission", certSubmission);
+            metadata.put("certificateSubmission", certSubmission);
         }
 
-        // Add wet signature data if provided
-        if (request.getWetSignatureData() != null && !request.getWetSignatureData().isBlank()) {
-            metadata.set("wetSignature", objectMapper.readTree(request.getWetSignatureData()));
+        // Add wet signatures data if provided - parse once and store as List directly
+        if (request.getWetSignaturesData() != null && !request.getWetSignaturesData().isBlank()) {
+            @SuppressWarnings("unchecked")
+            java.util.List<Map<String, Object>> wetSigs =
+                    objectMapper.readValue(
+                            request.getWetSignaturesData(),
+                            new com.fasterxml.jackson.core.type.TypeReference<
+                                    java.util.List<Map<String, Object>>>() {});
+            metadata.put("wetSignatures", wetSigs);
         }
 
         return metadata;
