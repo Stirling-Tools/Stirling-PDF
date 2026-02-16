@@ -322,8 +322,8 @@ public class AuthController {
 
             String newToken = jwtService.generateToken(username, newClaims);
 
-            // Clear rate limit tracking after successful refresh
-            refreshRateLimitService.clearRefreshAttempts(tokenHash);
+            // Don't clear rate limit tracking - let it expire naturally after grace period
+            // This prevents reusing the same expired token indefinitely
 
             log.debug("Token refreshed for user: {}", username);
 

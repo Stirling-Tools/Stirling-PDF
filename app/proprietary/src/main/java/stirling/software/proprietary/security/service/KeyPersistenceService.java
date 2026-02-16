@@ -90,15 +90,17 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                 return;
             }
 
-            List<Path> keyFiles =
-                    Files.list(keyDirectory)
-                            .filter(path -> path.toString().endsWith(KEY_SUFFIX))
-                            .sorted(
-                                    (a, b) ->
-                                            b.getFileName()
-                                                    .compareTo(
-                                                            a.getFileName())) // Most recent first
-                            .collect(Collectors.toList());
+            List<Path> keyFiles;
+            try (var stream = Files.list(keyDirectory)) {
+                keyFiles =
+                        stream.filter(path -> path.toString().endsWith(KEY_SUFFIX))
+                                .sorted(
+                                        (a, b) ->
+                                                b.getFileName().compareTo(a.getFileName())) // Most
+                                // recent
+                                // first
+                                .collect(Collectors.toList());
+            }
 
             if (keyFiles.isEmpty()) {
                 log.info("No existing keys found in directory, generating new keypair");

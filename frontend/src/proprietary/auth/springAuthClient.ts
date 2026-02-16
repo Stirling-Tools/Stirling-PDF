@@ -180,17 +180,23 @@ class SpringAuthClient {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         try {
-          // Retry the session check
+          // Re-read token in case auto-refresh updated it during the delay
+          const refreshedToken = localStorage.getItem('stirling_jwt');
+          if (!refreshedToken) {
+            return { data: { session: null }, error: null };
+          }
+
+          // Retry the session check with potentially refreshed token
           const retryResponse = await apiClient.get('/api/v1/auth/me', {
             headers: {
-              'Authorization': `Bearer ${currentToken}`,
+              'Authorization': `Bearer ${refreshedToken}`,
             },
             suppressErrorToast: true,
           });
 
           const session: Session = {
             user: retryResponse.data.user,
-            access_token: currentToken,
+            access_token: refreshedToken,
             expires_in: 3600,
             expires_at: Date.now() + 3600 * 1000,
           };

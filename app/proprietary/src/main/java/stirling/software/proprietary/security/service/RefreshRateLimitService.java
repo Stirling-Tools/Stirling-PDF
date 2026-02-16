@@ -5,12 +5,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
+import stirling.software.common.model.ApplicationProperties;
 
 /**
  * Service to rate limit token refresh attempts within the grace period.
@@ -21,6 +23,13 @@ import stirling.software.common.constants.JwtConstants;
 @Service
 @Slf4j
 public class RefreshRateLimitService {
+
+    private final ApplicationProperties.Security.Jwt jwtProperties;
+
+    @Autowired
+    public RefreshRateLimitService(ApplicationProperties applicationProperties) {
+        this.jwtProperties = applicationProperties.getSecurity().getJwt();
+    }
 
     private static class RefreshAttempt {
         private final AtomicInteger count = new AtomicInteger(0);
@@ -82,8 +91,13 @@ public class RefreshRateLimitService {
     /** Clean up expired tracking entries every 5 minutes. */
     @Scheduled(fixedRate = 300000)
     public void cleanupExpiredEntries() {
-        Instant cutoff =
-                Instant.now().minusMillis(JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES * 60000L);
+        // Use configured grace period with same normalization as runtime checks
+        int configuredMinutes = jwtProperties.getRefreshGraceMinutes();
+        int graceMinutes =
+                configuredMinutes >= 0
+                        ? configuredMinutes
+                        : JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
+        Instant cutoff = Instant.now().minusMillis(graceMinutes * 60000L);
         int removed =
                 attempts.entrySet().stream()
                         .filter(entry -> entry.getValue().getFirstAttempt().isBefore(cutoff))
