@@ -190,7 +190,7 @@ class AuthControllerLoginTest {
         claims.put("sub", "user@example.com");
         claims.put("exp", new Date(System.currentTimeMillis() + 60_000));
         when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
-        when(refreshRateLimitService.isRefreshAllowed(any(), any(Long.class))).thenReturn(true);
+        // Rate limiting is not checked for valid tokens, so no stub needed
         when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
         when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
                 .thenReturn("new-token");

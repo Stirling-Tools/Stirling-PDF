@@ -328,7 +328,9 @@ public class AuthController {
             // This prevents false-positive 429 errors with multiple tabs, retries, etc.
             long expMillis = extractEpochMillis(claims.get("exp"));
             boolean isExpired = expMillis > 0 && expMillis < System.currentTimeMillis();
-            if (isExpired && !refreshRateLimitService.isRefreshAllowed(tokenHash, getRefreshGraceMillis())) {
+            if (isExpired
+                    && !refreshRateLimitService.isRefreshAllowed(
+                            tokenHash, getRefreshGraceMillis())) {
                 log.warn(
                         "Token refresh rejected: rate limit exceeded (max {} attempts allowed)",
                         JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
