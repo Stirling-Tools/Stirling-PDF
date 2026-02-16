@@ -58,7 +58,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
           // If another request is already refreshing, wait before attaching token.
           await authService.awaitRefreshIfInProgress();
-          let token = await authService.getAuthToken();
+          const token = await authService.getAuthToken();
 
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
