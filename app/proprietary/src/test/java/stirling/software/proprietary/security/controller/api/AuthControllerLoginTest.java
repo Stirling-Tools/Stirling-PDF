@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,6 +60,8 @@ class AuthControllerLoginTest {
     void setUp() {
         securityProperties = new ApplicationProperties.Security();
         securityProperties.setLoginMethod("all");
+        securityProperties.getJwt().setTokenExpiryMinutes(60);
+        securityProperties.getJwt().setRefreshGraceMinutes(5);
 
         AuthController controller =
                 new AuthController(
@@ -175,7 +179,10 @@ class AuthControllerLoginTest {
     void refreshReturnsNewTokenWhenValid() throws Exception {
         User user = buildUser();
         when(jwtService.extractToken(any())).thenReturn("old");
-        when(jwtService.extractUsername("old")).thenReturn("user@example.com");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", "user@example.com");
+        claims.put("exp", new Date(System.currentTimeMillis() + 60_000));
+        when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
         when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
         when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
                 .thenReturn("new-token");
@@ -185,6 +192,38 @@ class AuthControllerLoginTest {
                 .andExpect(jsonPath("$.user").exists())
                 .andExpect(jsonPath("$.session.access_token").value("new-token"))
                 .andExpect(jsonPath("$.session.expires_in").value(3600));
+    }
+
+    @Test
+    void refreshRejectsTokenExpiredBeyondGrace() throws Exception {
+        when(jwtService.extractToken(any())).thenReturn("old");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", "user@example.com");
+        claims.put("exp", new Date(System.currentTimeMillis() - (10 * 60_000)));
+        when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
+
+        mockMvc.perform(post("/api/v1/auth/refresh"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Token refresh failed"));
+
+        verify(userDetailsService, never()).loadUserByUsername(any());
+    }
+
+    @Test
+    void refreshAcceptsTokenExpiredWithinGrace() throws Exception {
+        User user = buildUser();
+        when(jwtService.extractToken(any())).thenReturn("old");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", "user@example.com");
+        claims.put("exp", new Date(System.currentTimeMillis() - (60_000)));
+        when(jwtService.extractClaimsAllowExpired("old")).thenReturn(claims);
+        when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
+        when(jwtService.generateToken(eq("user@example.com"), any(Map.class)))
+                .thenReturn("new-token");
+
+        mockMvc.perform(post("/api/v1/auth/refresh"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.session.access_token").value("new-token"));
     }
 
     @Test
