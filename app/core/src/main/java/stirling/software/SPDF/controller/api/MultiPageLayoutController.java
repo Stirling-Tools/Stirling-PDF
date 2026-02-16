@@ -48,25 +48,101 @@ public class MultiPageLayoutController {
     public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 
-        int pagesPerSheet = request.getPagesPerSheet();
-        MultipartFile file = request.getFileInput();
-        boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
+        int MAX_PAGES = 100000;
+        int MAX_COLS = 300;
+        int MAX_ROWS = 300;
 
-        if (pagesPerSheet != 2
-                && pagesPerSheet != 3
-                && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat",
-                    "Invalid {0} format: {1}",
-                    "pagesPerSheet",
-                    "must be 2, 3 or a perfect square");
+        String mode = request.getMode();
+        if (mode == null || mode.trim().isEmpty()) {
+            mode = "DEFAULT";
         }
 
-        int cols =
-                pagesPerSheet == 2 || pagesPerSheet == 3
+        int rows;
+        int cols;
+        int pagesPerSheet;
+        switch (mode) {
+            case "DEFAULT":
+                pagesPerSheet = request.getPagesPerSheet();
+                if (pagesPerSheet != 2
+                    && pagesPerSheet != 3
+                    && pagesPerSheet
+                    != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        "pagesPerSheet",
+                        "must be 2, 3 or a perfect square");
+                }
+
+                cols =
+                    pagesPerSheet == 2 || pagesPerSheet == 3
                         ? pagesPerSheet
                         : (int) Math.sqrt(pagesPerSheet);
-        int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
+                rows =
+                    pagesPerSheet == 2 || pagesPerSheet == 3
+                        ? 1
+                        : (int) Math.sqrt(pagesPerSheet);
+                break;
+            case "CUSTOM":
+                rows = request.getRows();
+                cols = request.getCols();
+                if (rows <= 0 || cols <= 0) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        "rows and cols",
+                        "only strictly positive values are allowed");
+                }
+                pagesPerSheet = cols * rows;
+                break;
+            default:
+                throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "mode",
+                    "only 'DEFAULT' and 'CUSTOM' are supported");
+        }
+
+        if (pagesPerSheet > MAX_PAGES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid {0} format: {1}",
+                    "pagesPerSheet",
+                    "must be less than " + MAX_PAGES);
+        }
+        if (cols > MAX_COLS) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.invalidArgument",
+                "Invalid {0} format: {1}",
+                "cols",
+                "must be less than " + MAX_COLS);
+        }
+        if (rows > MAX_ROWS) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.invalidArgument",
+                "Invalid {0} format: {1}",
+                "rows",
+                "must be less than " + MAX_ROWS);
+        }
+
+        MultipartFile file = request.getFileInput();
+        String orientation = request.getOrientation();
+        if (orientation == null || orientation.trim().isEmpty()) {
+            orientation = "PORTRAIT";
+        }
+        if (!"PORTRAIT".equals(orientation) && !"LANDSCAPE".equals(orientation)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                "error.invalidFormat",
+                "Invalid {0} format: {1}",
+                "orientation",
+                "only 'PORTRAIT' and 'LANDSCAPE' are supported");
+        }
+        String pageOrder = request.getPageOrder();
+        if (pageOrder == null || pageOrder.trim().isEmpty()) {
+            pageOrder = "LR_TD";
+        }
+
+        boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
             try (PDDocument newDocument =
@@ -83,7 +159,13 @@ public class MultiPageLayoutController {
                 // for each group
                 for (int i = 0; i < totalPages; i += pagesPerSheet) {
                     // Create a new output page for each group of pagesPerSheet
-                    PDPage newPage = new PDPage(PDRectangle.A4);
+                    // Create a new A4 landscape rectangle that we use when orientation is landscape
+                    PDRectangle a4Landscape =
+                        new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
+                    PDPage newPage =
+                        "PORTRAIT".equals(orientation)
+                            ? new PDPage(PDRectangle.A4)
+                            : new PDPage(a4Landscape);
                     newDocument.addPage(newPage);
 
                     // Use try-with-resources for each content stream to ensure proper cleanup
@@ -109,8 +191,36 @@ public class MultiPageLayoutController {
                             float scale = Math.min(scaleWidth, scaleHeight);
 
                             int adjustedPageIndex = j % pagesPerSheet;
-                            int rowIndex = adjustedPageIndex / cols;
-                            int colIndex = adjustedPageIndex % cols;
+                            int rowIndex;
+                            int colIndex;
+
+                            switch (pageOrder) {
+                                case "LR_TD": // Left→Right, then Top→Down
+                                    rowIndex = adjustedPageIndex / cols;
+                                    colIndex = adjustedPageIndex % cols;
+                                    break;
+
+                                case "RL_TD": // Right→Left, then Top→Down
+                                    rowIndex = adjustedPageIndex / cols;
+                                    colIndex = cols - 1 - (adjustedPageIndex % cols);
+                                    break;
+
+                                case "TD_LR": // Top→Down, then Left→Right
+                                    colIndex = adjustedPageIndex / rows;
+                                    rowIndex = adjustedPageIndex % rows;
+                                    break;
+
+                                case "TD_RL": // Top→Down, then Right→Left
+                                    colIndex = cols - 1 - (adjustedPageIndex / rows);
+                                    rowIndex = adjustedPageIndex % rows;
+                                    break;
+                                default:
+                                    throw ExceptionUtils.createIllegalArgumentException(
+                                        "error.invalidFormat",
+                                        "Invalid {0} format: {1}",
+                                        "pageOrder",
+                                        "only 'LR_TD', 'RL_TD', 'TD_LR', and 'TD_RL' are supported");
+                            }
 
                             float x =
                                     colIndex * cellWidth
@@ -145,7 +255,7 @@ public class MultiPageLayoutController {
 
                 // If any source page is rotated, skip form copying/transformation entirely
                 boolean hasRotation = GeneralFormCopyUtils.hasAnyRotatedPage(sourceDocument);
-                if (hasRotation) {
+                if (hasRotation || "LANDSCAPE".equals(orientation)) {
                     log.info("Source document has rotated pages; skipping form field copying.");
                 } else {
                     try {
