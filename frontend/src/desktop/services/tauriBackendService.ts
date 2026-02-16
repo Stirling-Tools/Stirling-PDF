@@ -164,10 +164,12 @@ export class TauriBackendService {
     } else {
       // SaaS mode - check bundled local backend
       if (!this.backendStarted) {
+        console.debug('[TauriBackendService] Health check: backend not started');
         this.setStatus('stopped');
         return false;
       }
       if (!this.backendPort) {
+        console.debug('[TauriBackendService] Health check: backend port not available');
         return false;
       }
       baseUrl = `http://localhost:${this.backendPort}`;
@@ -176,6 +178,7 @@ export class TauriBackendService {
     // Check if backend is ready (dependencies checked)
     try {
       const configUrl = `${baseUrl}/api/v1/config/app-config`;
+      console.debug(`[TauriBackendService] Checking backend health at: ${configUrl}`);
 
       // For self-hosted mode, include auth token if available
       const headers: Record<string, string> = {};
@@ -183,6 +186,9 @@ export class TauriBackendService {
         const token = await this.getAuthToken();
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
+          console.debug(`[TauriBackendService] Adding auth token to health check`);
+        } else {
+          console.debug(`[TauriBackendService] No auth token available for health check`);
         }
       }
 
@@ -192,16 +198,24 @@ export class TauriBackendService {
         headers,
       });
 
+      console.debug(`[TauriBackendService] Health check response: status=${response.status}, ok=${response.ok}`);
+
       if (!response.ok) {
+        console.warn(`[TauriBackendService] Health check failed: response not ok (status ${response.status})`);
         this.setStatus('unhealthy');
         return false;
       }
 
       const data = await response.json();
+      console.debug(`[TauriBackendService] Health check data:`, data);
+
       const dependenciesReady = data.dependenciesReady === true;
+      console.debug(`[TauriBackendService] dependenciesReady=${dependenciesReady}`);
+
       this.setStatus(dependenciesReady ? 'healthy' : 'starting');
       return dependenciesReady;
-    } catch {
+    } catch (error) {
+      console.error('[TauriBackendService] Health check error:', error);
       this.setStatus('unhealthy');
       return false;
     }

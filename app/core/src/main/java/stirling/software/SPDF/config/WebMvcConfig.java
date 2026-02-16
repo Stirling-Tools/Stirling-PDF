@@ -82,6 +82,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
             logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
             registry.addMapping("/**")
                     .allowedOriginPatterns(
+                            "http://localhost:*",
+                            "https://localhost:*",
+                            "tauri://*", // Add this for Tauri apps
                             "tauri://localhost",
                             "http://tauri.localhost",
                             "https://tauri.localhost")

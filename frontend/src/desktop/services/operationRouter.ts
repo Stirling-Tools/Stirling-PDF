@@ -1,5 +1,6 @@
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
 
 export type ExecutionTarget = 'local' | 'remote';
 
@@ -39,12 +40,40 @@ export class OperationRouter {
   }
 
   /**
+   * Check if endpoint should route to SaaS backend (not local)
+   * @param endpoint - The endpoint path to check
+   * @returns true if endpoint should route to SaaS backend
+   */
+  private isSaaSBackendEndpoint(endpoint?: string): boolean {
+    if (!endpoint) return false;
+
+    const saasBackendPatterns = [
+      /^\/api\/v1\/team\//,  // Team endpoints
+      // Add more SaaS-specific patterns here as needed
+    ];
+
+    return saasBackendPatterns.some(pattern => pattern.test(endpoint));
+  }
+
+  /**
    * Gets the base URL for an operation based on execution target
-   * @param _operation - The operation name (for future operation classification)
+   * @param operation - The operation endpoint path (for endpoint classification)
    * @returns Base URL for API calls
    */
-  async getBaseUrl(_operation?: string): Promise<string> {
-    const target = await this.getExecutionTarget(_operation);
+  async getBaseUrl(operation?: string): Promise<string> {
+    const mode = await connectionModeService.getCurrentMode();
+
+    // In SaaS mode, check if this endpoint should go to SaaS backend
+    if (mode === 'saas' && this.isSaaSBackendEndpoint(operation)) {
+      if (!STIRLING_SAAS_BACKEND_API_URL) {
+        throw new Error('VITE_SAAS_BACKEND_API_URL not configured');
+      }
+      console.debug(`[operationRouter] Routing ${operation} to SaaS backend: ${STIRLING_SAAS_BACKEND_API_URL}`);
+      return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, '');
+    }
+
+    // Existing logic for local/remote routing
+    const target = await this.getExecutionTarget(operation);
 
     if (target === 'local') {
       // Use dynamically assigned port from backend service
@@ -81,6 +110,17 @@ export class OperationRouter {
   async isSaaSMode(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
     return mode === 'saas';
+  }
+
+  /**
+   * Checks if an endpoint should skip the local backend readiness check
+   * Returns true if the endpoint routes to SaaS backend (not local backend)
+   * @param endpoint - The endpoint path to check
+   * @returns true if endpoint should skip backend readiness check
+   */
+  shouldSkipBackendReadyCheck(endpoint?: string): boolean {
+    // SaaS backend endpoints don't depend on local backend being ready
+    return this.isSaaSBackendEndpoint(endpoint);
   }
 
   // Future enhancement: operation classification

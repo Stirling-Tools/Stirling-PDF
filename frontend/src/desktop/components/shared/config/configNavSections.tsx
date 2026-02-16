@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useConfigNavSections as useProprietaryConfigNavSections, createConfigNavSections as createProprietaryConfigNavSections } from '@proprietary/components/shared/config/configNavSections';
 import { ConfigNavSection } from '@core/components/shared/config/configNavSections';
 import { ConnectionSettings } from '@app/components/ConnectionSettings';
+import { DesktopPlanSection } from '@app/components/shared/config/configSections/DesktopPlanSection';
 
 /**
  * Hook version of desktop config nav sections with proper i18n support
@@ -25,6 +26,19 @@ export const useConfigNavSections = (
         label: t('settings.connection.title', 'Connection Mode'),
         icon: 'desktop-cloud-rounded',
         component: <ConnectionSettings />,
+      },
+    ],
+  });
+
+  // Add Plan & Billing section (after Connection Mode)
+  sections.splice(2, 0, {
+    title: t('settings.planBilling.title', 'Plan & Billing'),
+    items: [
+      {
+        key: 'planBilling',
+        label: t('settings.planBilling.title', 'Plan & Billing'),
+        icon: 'credit-card',
+        component: <DesktopPlanSection />,
       },
     ],
   });
@@ -55,6 +69,19 @@ export const createConfigNavSections = (
         label: 'Connection Mode',
         icon: 'desktop-cloud-rounded',
         component: <ConnectionSettings />,
+      },
+    ],
+  });
+
+  // Add Plan & Billing section (after Connection Mode)
+  sections.splice(2, 0, {
+    title: 'Plan & Billing',
+    items: [
+      {
+        key: 'planBilling',
+        label: 'Plan & Billing',
+        icon: 'credit-card',
+        component: <DesktopPlanSection />,
       },
     ],
   });
