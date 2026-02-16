@@ -16,6 +16,7 @@ import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { Util } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {
   PdfJsonDocument,
+  PdfJsonFont,
   PdfJsonImageElement,
   PdfJsonPage,
   TextGroup,
@@ -450,14 +451,25 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const start = performance.now();
 
       try {
-        const response = await apiClient.get(
-          `/api/v1/convert/pdf/text-editor/page/${cachedJobId}/${pageNumber}`,
-          {
-            responseType: 'json',
-          },
-        );
+        const [pageResponse, pageFontsResponse] = await Promise.all([
+          apiClient.get(
+            `/api/v1/convert/pdf/text-editor/page/${cachedJobId}/${pageNumber}`,
+            {
+              responseType: 'json',
+            },
+          ),
+          apiClient.get(
+            `/api/v1/convert/pdf/text-editor/fonts/${cachedJobId}/${pageNumber}`,
+            {
+              responseType: 'json',
+            },
+          ),
+        ]);
 
-        const pageData = response.data as PdfJsonPage;
+        const pageData = pageResponse.data as PdfJsonPage;
+        const pageFonts = Array.isArray(pageFontsResponse.data)
+          ? (pageFontsResponse.data as PdfJsonFont[])
+          : [];
         const normalizedImages = (pageData.imageElements ?? []).map(cloneImageElement);
 
         if (imagesByPageRef.current.length <= pageIndex) {
@@ -471,12 +483,31 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           }
           const nextPages = [...prevDoc.pages];
           const existingPage = nextPages[pageIndex] ?? {};
+          const fontMap = new Map<string, PdfJsonFont>();
+          for (const existingFont of prevDoc.fonts ?? []) {
+            if (!existingFont) {
+              continue;
+            }
+            const existingKey = existingFont.uid || `${existingFont.pageNumber ?? -1}:${existingFont.id ?? ''}`;
+            fontMap.set(existingKey, existingFont);
+          }
+          if (pageFonts.length > 0) {
+            for (const font of pageFonts) {
+              if (!font) {
+                continue;
+              }
+              const key = font.uid || `${font.pageNumber ?? -1}:${font.id ?? ''}`;
+              fontMap.set(key, font);
+            }
+          }
+          const nextFonts = Array.from(fontMap.values());
           nextPages[pageIndex] = {
             ...existingPage,
             imageElements: normalizedImages.map(cloneImageElement),
           };
           return {
             ...prevDoc,
+            fonts: nextFonts,
             pages: nextPages,
           };
         });
@@ -1087,8 +1118,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const canUseIncremental =
         isLazyMode &&
         cachedJobId &&
-        dirtyPageIndices.length > 0 &&
-        dirtyPageIndices.length < totalPages;
+        dirtyPageIndices.length > 0;
 
       if (canUseIncremental) {
         await ensureImagesForPages(dirtyPageIndices);
@@ -1105,10 +1135,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             document.pages?.filter((_, index) => dirtyPageSet.has(index)) ?? [];
 
           const partialDocument: PdfJsonDocument = {
-            metadata: document.metadata,
-            xmpMetadata: document.xmpMetadata,
-            fonts: document.fonts,
-            lazyImages: true,
+            // Incremental export only needs changed pages.
+            // Fonts/resources/content streams are resolved from server-side cache.
             pages: partialPages,
           };
 
@@ -1135,11 +1163,13 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           setErrorMessage(null);
           return;
         } catch (incrementalError) {
+          if (isLazyMode && cachedJobIdRef.current) {
+            throw new Error('Incremental export failed for cached document. Please reload and retry.');
+          }
           console.warn(
             '[handleGeneratePdf] Incremental export failed, falling back to full export',
             incrementalError,
           );
-          // Fall through to full export below
         }
       }
 
@@ -1272,8 +1302,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const canUseIncremental =
         isLazyMode &&
         cachedJobId &&
-        dirtyPageIndices.length > 0 &&
-        dirtyPageIndices.length < totalPages;
+        dirtyPageIndices.length > 0;
 
       if (canUseIncremental) {
         await ensureImagesForPages(dirtyPageIndices);
@@ -1290,10 +1319,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             document.pages?.filter((_, index) => dirtyPageSet.has(index)) ?? [];
 
           const partialDocument: PdfJsonDocument = {
-            metadata: document.metadata,
-            xmpMetadata: document.xmpMetadata,
-            fonts: document.fonts,
-            lazyImages: true,
+            // Incremental export only needs changed pages.
+            // Fonts/resources/content streams are resolved from server-side cache.
             pages: partialPages,
           };
 
@@ -1312,6 +1339,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           downloadName = detectedName || expectedName;
           pdfBlob = response.data;
         } catch (incrementalError) {
+          if (isLazyMode && cachedJobId) {
+            throw new Error('Incremental export failed for cached document. Please reload and retry.');
+          }
           console.warn(
             '[handleSaveToWorkbench] Incremental export failed, falling back to full export',
             incrementalError,
