@@ -3,7 +3,8 @@ import { useDocumentState } from '@embedpdf/core/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
-import { usePdfLibLinks, type PdfLibLink } from '@app/hooks/usePdfLibLinks';
+import { usePdfLibLinks } from '@app/hooks/usePdfLibLinks';
+import type { PdfLibLink } from '@app/utils/pdfLinkUtils';
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)

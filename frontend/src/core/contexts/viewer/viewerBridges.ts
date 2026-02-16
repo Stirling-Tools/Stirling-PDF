@@ -227,7 +227,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
 export function registerBridge<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
   type: K,
-  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
 ): void {
   registry[type] = ref as ViewerBridgeRegistry[K];
 }
