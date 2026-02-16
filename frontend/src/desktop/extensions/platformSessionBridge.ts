@@ -9,7 +9,7 @@ export async function isDesktopSaaSAuthMode(): Promise<boolean> {
     // Return true for ANY desktop auth mode (SaaS or self-hosted with desktop authService)
     // This skips redundant backend validation in springAuthClient since desktop authService
     // already manages the token lifecycle
-    return mode === 'saas' || mode === 'self-hosted';
+    return mode === 'saas' || mode === 'selfhosted';
   } catch {
     return false;
   }
@@ -35,7 +35,7 @@ export async function refreshPlatformSession(): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
     if (mode === 'saas') {
       return await authService.refreshSupabaseToken(STIRLING_SAAS_URL);
-    } else if (mode === 'self-hosted') {
+    } else if (mode === 'selfhosted') {
       const serverConfig = await connectionModeService.getServerConfig();
       if (!serverConfig) {
         return false;
