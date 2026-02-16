@@ -199,7 +199,7 @@ class AuthControllerLoginTest {
                         jsonPath("$.session.expires_in")
                                 .value(3600)); // 60 minutes * 60 = 3600 seconds
 
-        verify(refreshRateLimitService).clearRefreshAttempts(any());
+        // clearRefreshAttempts is intentionally not called - tokens expire naturally after grace period
     }
 
     @Test
@@ -243,7 +243,7 @@ class AuthControllerLoginTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.session.access_token").value("new-token"));
 
-        verify(refreshRateLimitService).clearRefreshAttempts(any());
+        // clearRefreshAttempts is intentionally not called - tokens expire naturally after grace period
     }
 
     @Test
