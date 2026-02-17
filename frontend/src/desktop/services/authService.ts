@@ -42,6 +42,7 @@ export class AuthService {
   private lastTokenSaveTime: number = 0;
   private authListeners = new Set<(status: AuthStatus, userInfo: UserInfo | null) => void>();
   private refreshPromise: Promise<boolean> | null = null;
+  private selfHostedDeepLinkFlowActive = false;
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -174,6 +175,10 @@ export class AuthService {
     return () => {
       this.authListeners.delete(listener);
     };
+  }
+
+  isSelfHostedDeepLinkFlowActive(): boolean {
+    return this.selfHostedDeepLinkFlowActive;
   }
 
   private notifyListeners() {
@@ -801,6 +806,8 @@ export class AuthService {
       throw new Error('Deep link authentication is only supported in Tauri desktop app.');
     }
 
+    this.selfHostedDeepLinkFlowActive = true;
+
     return new Promise<UserInfo>((resolve, reject) => {
       let completed = false;
       let unlisten: (() => void) | null = null;
@@ -810,6 +817,7 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
           reject(new Error('SSO login timed out. Please try again.'));
         }
       }, 120_000);
@@ -828,6 +836,7 @@ export class AuthService {
             if (unlisten) unlisten();
             clearTimeout(timeoutId);
             sessionStorage.removeItem('oauth_nonce');
+            this.selfHostedDeepLinkFlowActive = false;
             reject(new Error(error || 'Authentication was not successful.'));
             return;
           }
@@ -848,6 +857,7 @@ export class AuthService {
             if (unlisten) unlisten();
             clearTimeout(timeoutId);
             sessionStorage.removeItem('oauth_nonce');
+            this.selfHostedDeepLinkFlowActive = false;
             console.error('[Desktop AuthService] Nonce validation failed - potential CSRF attack');
             reject(new Error('Invalid authentication state. Nonce validation failed.'));
             return;
@@ -857,6 +867,7 @@ export class AuthService {
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
           sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
           console.log('[Desktop AuthService] Nonce validated successfully');
 
           const userInfo = await this.completeSelfHostedSession(serverUrl, token);
@@ -873,6 +884,7 @@ export class AuthService {
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
           sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
           reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
         }
       }).then(async (fn) => {
@@ -892,6 +904,7 @@ export class AuthService {
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
           sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
           reject(err instanceof Error ? err : new Error('Failed to start SSO login'));
         }
       }).catch((err) => {
@@ -902,6 +915,7 @@ export class AuthService {
         if (unlisten) unlisten();
         clearTimeout(timeoutId);
         sessionStorage.removeItem('oauth_nonce');
+        this.selfHostedDeepLinkFlowActive = false;
         reject(err instanceof Error ? err : new Error('Failed to listen for deep link events'));
       });
     });
