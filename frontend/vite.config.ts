@@ -1,15 +1,21 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig(({ mode }) => {
+
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the
+  // `VITE_` prefix.
+  const env = loadEnv(mode, process.cwd(), '')
+
   // When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
   const isProprietary = process.env.DISABLE_ADDITIONAL_FEATURES !== 'true';
   const isDesktopMode =
     mode === 'desktop' ||
-    process.env.STIRLING_DESKTOP === 'true' ||
-    process.env.VITE_DESKTOP === 'true';
+    env.STIRLING_DESKTOP === 'true' ||
+    env.VITE_DESKTOP === 'true';
 
   // Validate required environment variables for desktop builds
   if (isDesktopMode) {
@@ -18,7 +24,7 @@ export default defineConfig(({ mode }) => {
       'VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
     ];
 
-    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+    const missingVars = requiredEnvVars.filter(varName => !env[varName]);
 
     if (missingVars.length > 0) {
       throw new Error(
@@ -108,6 +114,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    base: process.env.RUN_SUBPATH ? `/${process.env.RUN_SUBPATH}` : './',
+    base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : './',
   };
 });
