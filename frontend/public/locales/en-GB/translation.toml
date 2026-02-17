@@ -4999,18 +4999,38 @@ zoomOut = "Zoom out"
 placeholder = "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
 title = "Pages"
 
+[redact.modeSelector]
+automatic = "Automatic"
+automaticDesc = "Automatically detect and redact sensitive information like PII."
+automaticDisabledTooltip = "Automatic redaction is currently disabled"
+manual = "Manual Redaction"
+manualComingSoon = "Coming Soon"
+manualDesc = "Manually select areas to redact on each page."
+mode = "Redaction Mode"
+searchAndRedact = "Search & Redact"
+searchAndRedactDisabledTooltip = "Search & Redact is only available for PDF files"
+title = "Choose Redaction Method"
+
+[redact.searchAndRedact]
+caseSensitive = "Case sensitive"
+colorLabel = "Redaction Colour"
+controlsTitle = "Search & Redact Controls"
+instructions = "Enter text to find in the PDF. You can then redact all matches at once."
+matchesFound = "{{count}} matches found on {{pages}} page(s)"
+noMatches = "No matches found"
+noMatchesRedacted = "No matches found to redact"
+onPages = "Pages: {{pages}}"
+redactButton = "Redact All Matches"
+redactFailed = "Redaction failed"
+searchButton = "Search"
+searchFailed = "Search failed"
+searchLabel = "Search Text"
+searchPlaceholder = "Enter text to search for..."
+title = "Search & Redact"
+
 [redact.manual.redactionColor]
 title = "Redaction Colour"
 
-[redact.modeSelector]
-automatic = "Automatic"
-automaticDesc = "Redact text based on search terms"
-automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
-manual = "Manual"
-manualComingSoon = "Manual redaction coming soon"
-manualDesc = "Click and drag to redact specific areas"
-mode = "Mode"
-title = "Redaction Method"
 
 [redact.tooltip.advanced.color]
 text = "Customise the appearance of redaction boxes. Black is standard, but you can choose any colour. Padding adds extra space around the found text."
