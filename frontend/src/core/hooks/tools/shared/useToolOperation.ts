@@ -217,7 +217,15 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const backendReady = await ensureBackendReady();
+    // Get endpoint (static or dynamic) for backend readiness check
+    const endpoint = config.customProcessor
+      ? undefined // Custom processors may not have endpoints
+      : typeof config.endpoint === 'function'
+        ? config.endpoint(params)
+        : config.endpoint;
+
+    // Backend readiness check (will skip for SaaS-routed endpoints)
+    const backendReady = await ensureBackendReady(endpoint);
     if (!backendReady) {
       actions.setError(t('backendHealth.offline', 'Embedded backend is offline. Please try again shortly.'));
       return;

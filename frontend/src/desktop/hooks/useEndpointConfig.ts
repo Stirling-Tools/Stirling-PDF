@@ -50,7 +50,9 @@ export function useEndpointEnabled(endpoint: string): {
   refetch: () => Promise<void>;
 } {
   const { t } = useTranslation();
-  const [enabled, setEnabled] = useState<boolean | null>(null);
+  // DESKTOP: Start optimistically as enabled (most desktop users are in SaaS mode)
+  // This prevents UI from being disabled while backend starts or checks are in progress
+  const [enabled, setEnabled] = useState<boolean | null>(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -92,7 +94,20 @@ export function useEndpointEnabled(endpoint: string): {
         suppressErrorToast: true,
       });
 
-      setEnabled(response.data);
+      const locallyEnabled = response.data;
+
+      // DESKTOP ENHANCEMENT: In SaaS mode, assume all endpoints are available
+      // Even if not supported locally, they will route to SaaS backend
+      if (!locallyEnabled) {
+        const mode = await connectionModeService.getCurrentMode();
+        if (mode === 'saas') {
+          console.debug(`[useEndpointEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`);
+          setEnabled(true); // Available via SaaS
+          return;
+        }
+      }
+
+      setEnabled(locallyEnabled);
     } catch (err: unknown) {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
@@ -106,6 +121,15 @@ export function useEndpointEnabled(endpoint: string): {
           }, RETRY_DELAY_MS);
         }
       } else {
+        // DESKTOP ENHANCEMENT: In SaaS mode, assume available even on check failure
+        const mode = await connectionModeService.getCurrentMode();
+        if (mode === 'saas') {
+          console.debug(`[useEndpointEnabled] Endpoint ${endpoint} check failed but available via SaaS routing`);
+          setEnabled(true); // Available via SaaS
+          setError(null);
+          return;
+        }
+
         setError(message);
         setEnabled(false);
       }
@@ -212,6 +236,19 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
         return acc;
       }, {} as Record<string, boolean>);
 
+      // DESKTOP ENHANCEMENT: In SaaS mode, mark all disabled endpoints as available
+      // They will route to SaaS backend
+      const mode = await connectionModeService.getCurrentMode();
+      if (mode === 'saas') {
+        const disabledEndpoints = Object.keys(details).filter(key => !details[key].enabled);
+
+        for (const endpoint of disabledEndpoints) {
+          console.debug(`[useMultipleEndpointsEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`);
+          statusMap[endpoint] = true; // Mark as enabled via SaaS
+          details[endpoint] = { enabled: true, reason: null };
+        }
+      }
+
       setEndpointDetails(prev => ({ ...prev, ...details }));
       setEndpointStatus(prev => ({ ...prev, ...statusMap }));
     } catch (err: unknown) {
@@ -234,6 +271,17 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           acc.details[endpointName] = fallbackDetail;
           return acc;
         }, { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> });
+
+        // DESKTOP ENHANCEMENT: In SaaS mode, mark all endpoints as available
+        const mode = await connectionModeService.getCurrentMode();
+        if (mode === 'saas') {
+          for (const endpoint of endpoints) {
+            console.debug(`[useMultipleEndpointsEnabled] Endpoint ${endpoint} check failed but available via SaaS routing`);
+            fallbackStatus.status[endpoint] = true;
+            fallbackStatus.details[endpoint] = { enabled: true, reason: null };
+          }
+        }
+
         setEndpointStatus(fallbackStatus.status);
         setEndpointDetails(prev => ({ ...prev, ...fallbackStatus.details }));
       }

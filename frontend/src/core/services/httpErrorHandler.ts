@@ -126,6 +126,30 @@ export async function handleHttpError(error: any): Promise<boolean> {
     console.debug('[httpErrorHandler] Suppressing 401 on auth page:', pathname);
     return true;
   }
+
+  // Handle SaaS backend errors (desktop only) - provide specific error message
+  const baseURL = error?.config?.baseURL;
+  if (baseURL && typeof baseURL === 'string') {
+    // Check if this is a SaaS backend request
+    // STIRLING_SAAS_BACKEND_API_URL is typically something like 'https://api.stirlingpdf.com' or contains 'saas'
+    const isSaaSBackend = baseURL.includes('saas-backend-api') || baseURL.includes('api.stirlingpdf');
+
+    if (isSaaSBackend) {
+      const { title: originalTitle, body: originalBody } = extractAxiosErrorMessage(error);
+
+      alert({
+        alertType: 'error',
+        title: 'Cloud Processing Failed',
+        body: `This tool requires cloud processing but encountered an error: ${originalBody}. Please check your connection and try again.`,
+        expandable: true,
+        isPersistentPopup: false,
+      });
+
+      console.error('[httpErrorHandler] SaaS backend error:', { status, baseURL, originalTitle, originalBody });
+      return true; // Handled - suppress further processing
+    }
+  }
+
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);
 

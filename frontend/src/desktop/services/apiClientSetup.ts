@@ -39,7 +39,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       // IMPORTANT: Check BEFORE URL modification so we can check the original endpoint path
       const skipCheck = extendedConfig.skipBackendReadyCheck === true;
       const isSaaS = await operationRouter.isSaaSMode();
-      const skipForSaaSBackend = operationRouter.shouldSkipBackendReadyCheck(extendedConfig.url);
+      const skipForSaaSBackend = await operationRouter.shouldSkipBackendReadyCheck(extendedConfig.url);
 
       const backendHealthy = tauriBackendService.isBackendHealthy();
       const backendStatus = tauriBackendService.getBackendStatus();
