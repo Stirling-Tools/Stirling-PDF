@@ -5027,6 +5027,7 @@ searchFailed = "Search failed"
 searchLabel = "Search Text"
 searchPlaceholder = "Enter text to search for..."
 title = "Search & Redact"
+wholeWord = "Whole word"
 
 [redact.manual.redactionColor]
 title = "Redaction Colour"
