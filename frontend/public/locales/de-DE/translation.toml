@@ -1236,10 +1236,6 @@ label = "Schlüsselbereinigung aktivieren"
 description = "JWT-Signaturschlüssel automatisch regelmäßig rotieren"
 label = "Schlüsselrotation aktivieren"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Anzahl der Tage, die alte JWT-Schlüssel zur Verifikation aufbewahrt werden"
-label = "Schlüsselaufbewahrung (Tage)"
-
 [admin.settings.security.jwt.persistence]
 description = "JWT-Schlüssel persistent speichern, damit Serverneustarts überstanden werden"
 label = "Schlüsselpersistenz aktivieren"
@@ -1247,6 +1243,22 @@ label = "Schlüsselpersistenz aktivieren"
 [admin.settings.security.jwt.secureCookie]
 description = "HTTPS für JWT-Cookies erforderlich (für Produktion empfohlen)"
 label = "Sicheres Cookie"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerance for client/server time drift during token validation (default: 60 seconds)"
+label = "Clock Skew Tolerance (seconds)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)"
+label = "Desktop Token Expiry (minutes)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Allow token refresh within this many minutes after expiry (default: 15 minutes, max 3 attempts)"
+label = "Refresh Grace Period (minutes)"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)"
+label = "Web Token Expiry (minutes)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximale Anzahl fehlgeschlagener Anmeldeversuche vor Kontosperre"
@@ -1500,6 +1512,11 @@ title = "Annotieren"
 underline = "Unterstreichen"
 undo = "Rückgängig"
 unsupportedType = "Dieser Anmerkungstyp wird für die Bearbeitung nicht vollständig unterstützt."
+changeColor = "Change Colour"
+delete = "Delete"
+duplicate = "Duplicate"
+properties = "Properties"
+width = "Width"
 
 [app]
 description = "Die kostenlose Adobe Acrobat Alternative (über 10 Millionen Downloads)"
