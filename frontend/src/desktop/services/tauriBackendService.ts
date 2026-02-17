@@ -117,20 +117,15 @@ export class TauriBackendService {
   }
 
   /**
-   * Get auth token from any available source (localStorage or Tauri store)
+   * Get auth token with expiry validation
+   * Delegates to authService which handles caching and expiry checking
    */
   private async getAuthToken(): Promise<string | null> {
-    // Check localStorage first (web layer token)
-    const localStorageToken = localStorage.getItem('stirling_jwt');
-    if (localStorageToken) {
-      return localStorageToken;
-    }
-
-    // Fallback to Tauri store
     try {
-      return await invoke<string | null>('get_auth_token');
-    } catch {
-      console.debug('[TauriBackendService] No auth token available');
+      const { authService } = await import('./authService');
+      return await authService.getAuthToken();
+    } catch (error) {
+      console.debug('[TauriBackendService] Failed to get auth token:', error);
       return null;
     }
   }

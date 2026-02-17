@@ -16,6 +16,7 @@ let lastBackendToast = 0;
 interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   operationName?: string;
   skipBackendReadyCheck?: boolean;
+  skipAuthRedirect?: boolean;
   _retry?: boolean;
 }
 
@@ -34,35 +35,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   client.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       const extendedConfig = config as ExtendedRequestConfig;
-
-      // Backend readiness check (for local backend only)
-      // IMPORTANT: Check BEFORE URL modification so we can check the original endpoint path
-      const skipCheck = extendedConfig.skipBackendReadyCheck === true;
-      const isSaaS = await operationRouter.isSaaSMode();
-      const skipForSaaSBackend = await operationRouter.shouldSkipBackendReadyCheck(extendedConfig.url);
-
-      const backendHealthy = tauriBackendService.isBackendHealthy();
-      const backendStatus = tauriBackendService.getBackendStatus();
-      const backendPort = tauriBackendService.getBackendPort();
-
-      console.debug(`[apiClientSetup] Backend readiness check for ${extendedConfig.url}: isSaaS=${isSaaS}, skipCheck=${skipCheck}, skipForSaaSBackend=${skipForSaaSBackend}, backendHealthy=${backendHealthy}, backendStatus=${backendStatus}, backendPort=${backendPort}`);
-
-      if (isSaaS && !skipCheck && !skipForSaaSBackend && !backendHealthy) {
-        const method = (extendedConfig.method || 'get').toLowerCase();
-        if (method !== 'get') {
-          const now = Date.now();
-          if (now - lastBackendToast > BACKEND_TOAST_COOLDOWN_MS) {
-            lastBackendToast = now;
-            alert({
-              alertType: 'error',
-              title: i18n.t('backendHealth.offline', 'Backend Offline'),
-              body: i18n.t('backendHealth.wait', 'Please wait for the backend to finish launching and try again.'),
-              isPersistentPopup: false,
-            });
-          }
-        }
-        return Promise.reject(createBackendNotReadyError());
-      }
 
       try {
         // Get the appropriate base URL for this request
@@ -92,7 +64,10 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           // Enable credentials for session management
           extendedConfig.withCredentials = true;
 
+          // If another request is already refreshing, wait before attaching token
+          await authService.awaitRefreshIfInProgress();
           const token = await authService.getAuthToken();
+
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
             console.debug(`[apiClientSetup] Added auth token for request to: ${extendedConfig.url}`);
@@ -109,6 +84,34 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         // This ensures requests aren't blocked by interceptor errors
       }
 
+      // Backend readiness check (for local backend)
+      const skipCheck = extendedConfig.skipBackendReadyCheck === true;
+      const isSaaS = await operationRouter.isSaaSMode();
+      const skipForSaaSBackend = await operationRouter.shouldSkipBackendReadyCheck(extendedConfig.url);
+
+      const backendHealthy = tauriBackendService.isBackendHealthy();
+      const backendStatus = tauriBackendService.getBackendStatus();
+      const backendPort = tauriBackendService.getBackendPort();
+
+      console.debug(`[apiClientSetup] Backend readiness check for ${extendedConfig.url}: isSaaS=${isSaaS}, skipCheck=${skipCheck}, skipForSaaSBackend=${skipForSaaSBackend}, backendHealthy=${backendHealthy}, backendStatus=${backendStatus}, backendPort=${backendPort}`);
+
+      if (isSaaS && !skipCheck && !skipForSaaSBackend && !backendHealthy) {
+        const method = (extendedConfig.method || 'get').toLowerCase();
+        if (method !== 'get') {
+          const now = Date.now();
+          if (now - lastBackendToast > BACKEND_TOAST_COOLDOWN_MS) {
+            lastBackendToast = now;
+            alert({
+              alertType: 'error',
+              title: i18n.t('backendHealth.offline', 'Backend Offline'),
+              body: i18n.t('backendHealth.wait', 'Please wait for the backend to finish launching and try again.'),
+              isPersistentPopup: false,
+            });
+          }
+        }
+        return Promise.reject(createBackendNotReadyError());
+      }
+
       return extendedConfig;
     },
     (error) => Promise.reject(error)
@@ -121,9 +124,16 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     },
     async (error) => {
       const originalRequest = error.config as ExtendedRequestConfig;
+      const requestUrl = String(originalRequest?.url || '');
+      const isAuthProbeRequest = requestUrl.includes('/api/v1/auth/me');
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
+        // `/auth/me` is used as a probe by session bootstrap; refreshing here can
+        // create recursion (refresh -> save token -> jwt-available -> /auth/me).
+        if (isAuthProbeRequest) {
+          return Promise.reject(error);
+        }
         if (typeof window !== 'undefined') {
           console.warn('[apiClientSetup] 401 on path:', window.location.pathname, 'url:', originalRequest.url);
         }
