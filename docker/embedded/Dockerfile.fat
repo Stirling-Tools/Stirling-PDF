@@ -100,11 +100,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install LibreOffice (nogui) from Ubuntu repositories
 RUN set -eux; \
-    . /etc/os-release; \
-    # Ensure VERSION_CODENAME is set, usually in /etc/os-release but just in case
-    if [ -z "${VERSION_CODENAME:-}" ]; then VERSION_CODENAME=bookworm; fi; \
-    echo "deb http://deb.debian.org/debian ${VERSION_CODENAME}-backports main" > /etc/apt/sources.list.d/backports.list; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui libreoffice-java-common; \
