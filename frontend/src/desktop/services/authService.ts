@@ -782,18 +782,21 @@ export class AuthService {
       // ignore URL parsing failures
     }
 
-    // Open in system browser and wait for deep link callback
-    if (await this.openInSystemBrowser(authUrl)) {
-      return this.waitForDeepLinkCompletion(trimmedServer);
-    }
-
-    throw new Error('Unable to open system browser for SSO. Please check your system settings.');
+    // Register deep-link listener before opening browser to avoid callback races on first launch.
+    return this.waitForDeepLinkCompletion(trimmedServer, async () => {
+      if (!(await this.openInSystemBrowser(authUrl))) {
+        throw new Error('Unable to open system browser for SSO. Please check your system settings.');
+      }
+    });
   }
 
   /**
    * Wait for a deep-link event to complete self-hosted SSO after system browser OAuth
    */
-  private async waitForDeepLinkCompletion(serverUrl: string): Promise<UserInfo> {
+  private async waitForDeepLinkCompletion(
+    serverUrl: string,
+    startFlow?: () => Promise<void>
+  ): Promise<UserInfo> {
     if (!isTauri()) {
       throw new Error('Deep link authentication is only supported in Tauri desktop app.');
     }
@@ -872,8 +875,34 @@ export class AuthService {
           sessionStorage.removeItem('oauth_nonce');
           reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
         }
-      }).then((fn) => {
+      }).then(async (fn) => {
         unlisten = fn;
+
+        if (!startFlow || completed) {
+          return;
+        }
+
+        try {
+          await startFlow();
+        } catch (err) {
+          if (completed) {
+            return;
+          }
+          completed = true;
+          if (unlisten) unlisten();
+          clearTimeout(timeoutId);
+          sessionStorage.removeItem('oauth_nonce');
+          reject(err instanceof Error ? err : new Error('Failed to start SSO login'));
+        }
+      }).catch((err) => {
+        if (completed) {
+          return;
+        }
+        completed = true;
+        if (unlisten) unlisten();
+        clearTimeout(timeoutId);
+        sessionStorage.removeItem('oauth_nonce');
+        reject(err instanceof Error ? err : new Error('Failed to listen for deep link events'));
       });
     });
   }

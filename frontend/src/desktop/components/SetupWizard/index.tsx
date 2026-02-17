@@ -213,26 +213,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         const params = new URLSearchParams(hash);
         const accessToken = params.get('access_token');
         const type = params.get('type') || parsed.searchParams.get('type');
-        const accessTokenFromHash = params.get('access_token');
-        const accessTokenFromQuery = parsed.searchParams.get('access_token');
-        const serverFromQuery = parsed.searchParams.get('server');
-
-        // Handle self-hosted SSO deep link
+        // Self-hosted SSO deep links are handled by authService.loginWithSelfHostedOAuth
+        // to avoid duplicate session completion/reload races in first-launch setup.
         if (type === 'sso' || type === 'sso-selfhosted') {
-          const token = accessTokenFromHash || accessTokenFromQuery;
-          const serverUrl = serverFromQuery || serverConfig?.url || STIRLING_SAAS_URL;
-          if (!token || !serverUrl) {
-            console.error('[SetupWizard] Deep link missing token or server for SSO completion');
-            return;
-          }
-
-          setLoading(true);
-          setError(null);
-
-          await authService.completeSelfHostedSession(serverUrl, token);
-          await connectionModeService.switchToSelfHosted({ url: serverUrl });
-          await tauriBackendService.initializeExternalBackend();
-          onComplete();
           return;
         }
 
