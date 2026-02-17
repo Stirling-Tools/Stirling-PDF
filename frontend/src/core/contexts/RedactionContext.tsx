@@ -9,7 +9,6 @@ import { RedactionMode } from '@embedpdf/plugin-redaction';
 export interface SearchRedactOptions {
   caseSensitive?: boolean;
   wholeWord?: boolean;
-  regex?: boolean;
 }
 
 export interface SearchTextResult {

@@ -25,7 +25,6 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
   const [query, setQuery] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
-  const [useRegex, setUseRegex] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isRedacting, setIsRedacting] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchTextResult | null>(null);
@@ -43,29 +42,19 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
 
-    // Validate regex if enabled
-    if (useRegex) {
-      try {
-        new RegExp(query, caseSensitive ? '' : 'i');
-      } catch {
-        setError(t('redact.searchAndRedact.invalidRegex', 'Invalid regular expression'));
-        return;
-      }
-    }
-
     setIsSearching(true);
     setError(null);
     setSearchResults(null);
 
     try {
-      const result = await searchText(query, { caseSensitive, wholeWord, regex: useRegex });
+      const result = await searchText(query, { caseSensitive, wholeWord });
       setSearchResults(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('redact.searchAndRedact.searchFailed', 'Search failed'));
     } finally {
       setIsSearching(false);
     }
-  }, [query, caseSensitive, wholeWord, useRegex, searchText, t]);
+  }, [query, caseSensitive, wholeWord, searchText, t]);
 
   const handleRedact = useCallback(async () => {
     if (!query.trim()) return;
@@ -74,7 +63,7 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
     setError(null);
 
     try {
-      const result = await redactText(query, { caseSensitive, wholeWord, regex: useRegex });
+      const result = await redactText(query, { caseSensitive, wholeWord });
       if (result) {
         // Redaction annotations created successfully — clear search results
         setSearchResults(null);
@@ -87,7 +76,7 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
     } finally {
       setIsRedacting(false);
     }
-  }, [query, caseSensitive, wholeWord, useRegex, redactText, t]);
+  }, [query, caseSensitive, wholeWord, redactText, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -123,10 +112,7 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
         <TextInput
           ref={inputRef}
           label={t('redact.searchAndRedact.searchLabel', 'Search Text')}
-          placeholder={useRegex
-            ? t('redact.searchAndRedact.regexPlaceholder', 'Enter regex pattern...')
-            : t('redact.searchAndRedact.searchPlaceholder', 'Enter text to search for...')
-          }
+          placeholder={t('redact.searchAndRedact.searchPlaceholder', 'Enter text to search for...')}
           value={query}
           onChange={(e) => {
             setQuery(e.currentTarget.value);
@@ -157,20 +143,6 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
             onChange={(e) => {
               setWholeWord(e.currentTarget.checked);
               setSearchResults(null);
-            }}
-            disabled={disabled || !isApiReady || isSearching || isRedacting || useRegex}
-            size="sm"
-          />
-          <Checkbox
-            label={t('redact.searchAndRedact.regex', 'Regex')}
-            checked={useRegex}
-            onChange={(e) => {
-              setUseRegex(e.currentTarget.checked);
-              setSearchResults(null);
-              // Disable whole word when regex is active
-              if (e.currentTarget.checked) {
-                setWholeWord(false);
-              }
             }}
             disabled={disabled || !isApiReady || isSearching || isRedacting}
             size="sm"

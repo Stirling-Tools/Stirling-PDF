@@ -24,6 +24,8 @@ const Redact = (props: BaseToolProps) => {
   const { setRedactionConfig, setRedactionMode, redactionConfig, deactivateRedact } = useRedaction();
   const { workbench } = useNavigationState();
   const hasOpenedViewer = useRef(false);
+  const isSwitching = useRef(false);
+  const lastRequestedMode = useRef<RedactMode | null>(null);
 
   const base = useBaseTool(
     'redact',
@@ -43,8 +45,13 @@ const Redact = (props: BaseToolProps) => {
   // Auto-set manual mode if we're in the viewer and redaction config is set to manual
   // This ensures when opening redact from viewer, it automatically selects manual mode
   useEffect(() => {
+    // Skip if we are currently in the middle of a requested mode switch
+    if (isSwitching.current) return;
+
     if (workbench === 'viewer' && redactionConfig?.mode === 'manual' && base.params.parameters.mode !== 'manual') {
-      // Set immediately when conditions are met
+      // Don't revert if we explicitly just requested a different mode
+      if (lastRequestedMode.current !== null && lastRequestedMode.current !== 'manual') return;
+      
       base.params.updateParameter('mode', 'manual');
     }
   }, [workbench, redactionConfig, base.params.parameters.mode, base.params.updateParameter]);
@@ -52,23 +59,33 @@ const Redact = (props: BaseToolProps) => {
   // Handle mode change - navigate to viewer for both modes
   // Both modes work with the EmbedPDF viewer
   const handleModeChange = (mode: RedactMode) => {
+    console.log(`[Redact] Mode switch requested: ${base.params.parameters.mode} -> ${mode}`);
+    isSwitching.current = true;
+    lastRequestedMode.current = mode;
+
     // Deactivate manual redaction tool when switching away from manual mode
     if (base.params.parameters.mode === 'manual' && mode !== 'manual') {
+      console.log('[Redact] Deactivating manual redaction tool');
       try { deactivateRedact(); } catch { /* ignore if bridge not ready */ }
     }
 
     base.params.updateParameter('mode', mode);
     
     if (hasAnyFiles) {
-      // Construct config with the NEW mode value explicitly.
-      // base.params.parameters still has the old mode (React state is async),
-      // so we override it here to prevent the useEffect from reverting the switch.
+      console.log('[Redact] Updating redaction config and navigating to viewer');
       const newConfig = { ...base.params.parameters, mode };
       setRedactionConfig(newConfig);
       setRedactionMode(true);
       navActions.setWorkbench('viewer');
       hasOpenedViewer.current = true;
     }
+
+    // Reset switching flag after state updates have had a chance to propogate
+    // Using a longer timeout to be safe with context propagation and viewer initialization
+    setTimeout(() => {
+      console.log('[Redact] Mode switch transition complete');
+      isSwitching.current = false;
+    }, 1000); // 1s is long but safer for slower environments
   };
 
   // When files are added and in any mode, navigate to viewer
