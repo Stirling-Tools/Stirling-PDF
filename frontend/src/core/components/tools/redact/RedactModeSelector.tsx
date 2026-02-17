@@ -6,7 +6,6 @@ interface RedactModeSelectorProps {
   mode: RedactMode;
   onModeChange: (mode: RedactMode) => void;
   disabled?: boolean;
-  hasFilesSelected?: boolean;  // Files are selected in workbench
   hasAnyFiles?: boolean;       // Any files exist in workbench (for manual mode)
 }
 
@@ -14,7 +13,6 @@ export default function RedactModeSelector({
   mode, 
   onModeChange, 
   disabled, 
-  hasFilesSelected = false,
   hasAnyFiles = false 
 }: RedactModeSelectorProps) {
   const { t } = useTranslation();

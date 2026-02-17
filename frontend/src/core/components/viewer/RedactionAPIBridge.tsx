@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useCallback, useRef } from 'react';
 import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
-import { useSearch, useSearchPlugin } from '@embedpdf/plugin-search/react';
+import { useSearch } from '@embedpdf/plugin-search/react';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, boundingRect, MatchFlag } from '@embedpdf/models';
 import type { PdfRedactAnnoObject, SearchResult } from '@embedpdf/models';
