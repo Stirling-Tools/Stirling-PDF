@@ -343,18 +343,13 @@ const EmbedPdfViewerContent = ({
             return;
           case 's':
           case 'S':
-            // Ctrl+S: Save/apply changes; Ctrl+Shift+S: Download
-            event.preventDefault();
-            if (event.shiftKey) {
-              exportActions.download();
-            } else if (viewerApplyChanges) {
-              viewerApplyChanges();
+            // Ctrl+S: Save/apply changes
+            if (!event.shiftKey) {
+              event.preventDefault();
+              if (viewerApplyChanges) {
+                viewerApplyChanges();
+              }
             }
-            return;
-          case 'd':
-          case 'D':
-            event.preventDefault();
-            exportActions.download();
             return;
           case 'z':
           case 'Z':
