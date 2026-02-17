@@ -364,7 +364,8 @@ public class SecurityConfiguration {
                                                     securityProperties.getOauth2(),
                                                     userService,
                                                     jwtService,
-                                                    licenseSettingsService))
+                                                    licenseSettingsService,
+                                                    applicationProperties))
                                     .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
                                     // Add existing Authorities from the database
                                     .userInfoEndpoint(
