@@ -1252,11 +1252,11 @@ message = "I provider di autenticazione OAuth2 e SAML2 sono stati spostati nel m
 title = "Cerchi le impostazioni SSO/SAML?"
 
 [admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
-label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
+deny = "Nega (impedisce ogni framing"
+description = "Controlla se l'applicazione può essere incorporata in iframe"
+disabled = "Disabilitato (nessuna intestazione X-Frame-Options)"
+label = "Opzioni X-Frame"
+sameorigin = "Stessa origine (consenti il ​​framing dallo stesso dominio)"
 
 [admin.settings.telegram]
 description = "Configura la connettività del bot Telegram, i controlli di accesso e il comportamento dei messaggi di feedback."
@@ -3284,7 +3284,7 @@ title = "Aggiungi numeri di pagina"
 
 [home.addPassword]
 desc = "Crittografa il tuo PDF con una password."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+tags = "crittografare,password,bloccare,proteggere,sicurezza,crittografia,salvaguardare,riservato,privato,limitare l'accesso"
 title = "Aggiungi Password"
 
 [home.addStamp]
@@ -3344,7 +3344,7 @@ title = "Modifica Proprietà"
 
 [home.changePermissions]
 desc = "Modifica restrizioni e permessi del documento"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "permessi,restrizioni,diritti,controllo di accesso,consentire,negare,stampa,copia,modifica,modificare i permessi,impostazioni di sicurezza,diritti utente"
 title = "Cambia Permessi"
 
 [home.compare]
@@ -3369,7 +3369,7 @@ title = "Ritaglia PDF"
 
 [home.devAirgapped]
 desc = "Link alla guida per setup air‑gapped"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "isolatamento,offline,isolato,senza internet,disconnesso,sicuro,isolamento di rete,autonomo"
 title = "Setup isolato (air‑gapped)"
 
 [home.devApi]
@@ -3384,7 +3384,7 @@ title = "Scansione automatica cartelle"
 
 [home.devSsoGuide]
 desc = "Link alla guida SSO"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,Single Sign-On,Autenticazione,SAML,OAuth,OIDC,Accesso,Aziendale,Provider di identità,IdP"
 title = "Guida SSO"
 
 [home.editTableOfContents]
@@ -3444,7 +3444,7 @@ title = "OCR / Pulisci scansioni"
 
 [home.overlay-pdfs]
 desc = "Sovrapponi un PDF sopra un altro"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
+tags = "sovrapposizione,combina,unisci,strato,sovrapponi,sovrapponi PDF,sovrapponi PDF,combina PDF,impila,sovrapponi pagine,sfondo,primo piano,composito"
 title = "Sovrapponi PDF"
 
 [home.pageLayout]
@@ -3459,7 +3459,7 @@ title = "Organizza"
 
 [home.pdfTextEditor]
 desc = "Modifica testo e immagini esistenti nei PDF"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
+tags = "modificare testo,modificare testo,cambiare testo,modificare contenuto,aggiornare testo,riscrivere,correggere,emendare,correggere,rivedere,editor di testo,editor di contenuto"
 title = "Editor di testo PDF"
 
 [home.pdfToSinglePage]
@@ -3519,7 +3519,7 @@ title = "Ripara"
 
 [home.replaceColor]
 desc = "Sostituisci o inverti i colori nei documenti PDF"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
+tags = "sostituisci colore,inverti colore,sostituzione colore,scambia colori,cambia colore,inverti,negativo,scambia colore,trova e sostituisci colore,converti colore,cambia colore"
 title = "Sostituisci e inverti colore"
 
 [home.rotate]
@@ -4914,7 +4914,7 @@ upload = "Carica"
 zoom = "Zoom"
 zoomIn = "Ingrandisci"
 zoomOut = "Riduci"
-applyRedactions = "Apply Redactions"
+applyRedactions = "Applica redazioni"
 
 [redact.manual.pageRedactionNumbers]
 placeholder = "(es. 1,2,8 o 4,7,12-16 o 2n-1)"
