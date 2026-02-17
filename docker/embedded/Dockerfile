@@ -46,10 +46,18 @@ ENV LANG=C.UTF-8 \
 
 ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
-# Install core runtime dependencies + tools required by Stirling-PDF features
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# ---------------------------------------------------------------------------
+# Install ALL runtime deps, Calibre, LibreOffice in ONE layer.
+# Strip bloat and clean up in the SAME layer so deleted bytes never persist.
+# ---------------------------------------------------------------------------
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+    # Core
     ca-certificates tzdata tini bash fontconfig \
     ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
+    gosu unpaper qpdf \
+    # Fonts
     fonts-dejavu \
     fonts-liberation fonts-liberation2 \
     fonts-crosextra-caladea fonts-crosextra-carlito \
@@ -58,15 +66,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-color-emoji \
     ttf-wqy-zenhei \
     fonts-arphic-ukai fonts-arphic-uming \
+    # Python + UNO bridge
     python3 python3-venv python3-uno \
+    # OCR
     tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
     tesseract-ocr-por tesseract-ocr-chi-sim \
+    # Graphics / AWT headless
     libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
-    gosu unpaper qpdf \
-    # AWT headless support (required for some Java graphics operations)
     libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
     libxinerama1 libxkbcommon0 libxkbfile1 libsm6 libice6 \
-    # Qt WebEngine dependencies for Calibre
+    # Qt/X11 dependencies for Calibre
     libegl1 libopengl0 libgl1 libxdamage1 libxfixes3 libxshmfence1 libdrm2 libgbm1 \
     libxkbcommon-x11-0 libxrandr2 libxcomposite1 libnss3 libx11-xcb1 \
     libxcb-cursor0 libdbus-1-3 libglib2.0-0 \
@@ -76,23 +85,59 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xz-utils curl \
     \
     # Install Calibre from official installer script
-    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin install_dir=/opt/calibre isolated=y \
+    && echo "=== Downloading Calibre installer..." \
+    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh -o /tmp/calibre-installer.sh \
+    && echo "=== Running Calibre installer..." \
+    && sh /tmp/calibre-installer.sh \
+    && rm /tmp/calibre-installer.sh \
     \
-    # Clean up installer-only packages
+    # Verify Calibre was installed successfully
+    && echo "=== Verifying Calibre installation..." \
+    && { test -f /opt/calibre/ebook-convert || { echo "ERROR: Calibre ebook-convert not found!"; exit 1; }; } \
+    && /opt/calibre/ebook-convert --version \
+    && echo "=== Calibre installed successfully" \
+    \
+    # Remove GUI components, keep ebook-convert and its libs
+    && rm -rf \
+        /opt/calibre/lib/calibre/gui2 \
+        /opt/calibre/lib/calibre/ebooks/docx/images \
+        /opt/calibre/resources/images \
+        /opt/calibre/resources/icons \
+        /opt/calibre/resources/content-server \
+        /opt/calibre/resources/editor \
+        /opt/calibre/resources/viewer \
+        /opt/calibre/resources/recipes \
+        /opt/calibre/share \
+        /opt/calibre/man \
+    \
+    # Make ebook-convert available in PATH
+    && ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
+    \
+    # Clean up installer-only packages (KEEP curl)
     && apt-get purge -y xz-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install LibreOffice (nogui) from backports
+
 RUN set -eux; \
+    . /etc/os-release; \
+    # Ensure VERSION_CODENAME is set, defaults to bookworm if missing
+    if [ -z "${VERSION_CODENAME:-}" ]; then VERSION_CODENAME=bookworm; fi; \
+    echo "deb http://deb.debian.org/debian ${VERSION_CODENAME}-backports main" > /etc/apt/sources.list.d/backports.list; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        libreoffice libreoffice-java-common; \
+        libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui libreoffice-java-common; \
     rm -rf /var/lib/apt/lists/*; \
     libreoffice --version
 
-# Make ebook-convert available in PATH
-RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
-    && /opt/calibre/ebook-convert --version
+# Remove docs, man pages, and locale data not needed at runtime
+RUN rm -rf /usr/share/doc/* \
+           /usr/share/man/* \
+           /usr/share/info/* \
+           /usr/share/lintian/* \
+           /usr/share/linda/* \
+           /var/cache/fontconfig/*
 
 # ==============================================================================
 # Create non-root user (stirlingpdfuser) with configurable UID/GID
@@ -122,6 +167,10 @@ RUN set -eux; \
 # Compatibility alias for older entrypoint scripts expecting su-exec
 RUN ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 
+# Create heap dump directory writable by stirlingpdfuser
+RUN mkdir -p /tmp/stirling-pdf/heap_dumps \
+    && chown stirlingpdfuser:stirlingpdfgroup /tmp/stirling-pdf/heap_dumps
+
 # Copy application files from build stage
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
@@ -148,7 +197,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, API, Spring Boot, Re
 # Runtime environment variables
 # ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Xlog:gc*:file=/configs/gc.log:time,uptime,level,tags:filecount=5,filesize=10M -XX:+UseStringDeduplication -Djava.awt.headless=true" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Xlog:gc*:file=/configs/gc.log:time,uptime,level,tags:filecount=5,filesize=10M -XX:+UseStringDeduplication -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
@@ -164,18 +213,14 @@ ENV VERSION_TAG=$VERSION_TAG \
 # ==============================================================================
 # Python virtual environment for additional Python tools (WeasyPrint, OpenCV, etc.)
 # ==============================================================================
+ARG UNOSERVER_VERSION=3.6
 RUN python3 -m venv /opt/venv --system-site-packages \
     && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
+    && python3 -m venv /opt/unoserver-venv --system-site-packages \
+    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}" \
+    && ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
+    && ln -sf /opt/unoserver-venv/bin/unoserver /opt/venv/bin/unoserver \
     && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
-
-# Separate venv for unoserver (keeps it isolated)
-ARG UNOSERVER_VERSION=3.6
-RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}"
-
-# Make unoserver tools available in main venv PATH
-RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
-    && ln -sf /opt/unoserver-venv/bin/unoserver /opt/venv/bin/unoserver
 
 # Extend PATH to include both virtual environments
 ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
@@ -200,6 +245,7 @@ ENV QT_QPA_PLATFORM=offscreen \
 
 # Expose web UI port
 EXPOSE 8080/tcp
+
 
 STOPSIGNAL SIGTERM
 
