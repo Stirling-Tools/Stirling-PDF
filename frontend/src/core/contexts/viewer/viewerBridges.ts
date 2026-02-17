@@ -43,7 +43,7 @@ export interface ZoomAPIWrapper {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: number | string) => void;
+  requestZoom: (level: number | string, center?: { vx: number; vy: number }) => void;
 }
 
 export interface PanAPIWrapper {
