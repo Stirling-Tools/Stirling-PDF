@@ -131,6 +131,14 @@ welcome = "Willkommen"
 white = "Weiß"
 WorkInProgess = "In Arbeit: funktioniert möglicherweise nicht oder ist fehlerhaft. Bitte melden Sie alle Probleme."
 yes = "Ja"
+confirmCloseDiscard = "Discard changes and close"
+confirmCloseSave = "Save and close"
+confirmCloseSaveFailed = "Saved with errors. {{count}} file{{plural}} could not be saved."
+confirmCloseSaveFailedTitle = "Save Failed"
+confirmCloseUnsaved = "This file has unsaved changes."
+confirmCloseUnsavedList = "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}"
+fileNotSavedToDisk = "Not saved to disk"
+fileSavedToDisk = "File saved to disk"
 
 [account]
 accountSettings = "Kontoeinstellungen"
@@ -829,8 +837,9 @@ label = "Benutzername"
 [admin.settings.endpoints]
 description = "Steuern, welche API-Endpunkte und Endpunktgruppen verfügbar sind."
 management = "Endpunktverwaltung"
-note = "Hinweis: Das Deaktivieren von Endpunkten beschränkt den API-Zugriff, entfernt jedoch keine UI-Komponenten. Neustart erforderlich, damit Änderungen wirksam werden."
 title = "API-Endpunkte"
+userDefaults = "User Preference Defaults"
+userDefaultsDescription = "Set default values for user preferences. Users can override these in their personal settings."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Zu deaktivierende Endpunktgruppen auswählen"
@@ -839,6 +848,14 @@ label = "Deaktivierte Endpunktgruppen"
 [admin.settings.endpoints.toRemove]
 description = "Einzelne zu deaktivierende Endpunkte auswählen"
 label = "Deaktivierte Endpunkte"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Remove disabled conversion options instead of showing them greyed out"
+label = "Hide unavailable conversions by default"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Remove disabled tools instead of showing them greyed out"
+label = "Hide unavailable tools by default"
 
 [admin.settings.enterpriseRequired]
 message = "Für den Zugriff auf {{featureName}} ist eine Enterprise-Lizenz erforderlich. Sie sehen zu Referenzzwecken Demodaten."
@@ -3596,6 +3613,10 @@ desc = "Fügen Sie ein eigenes Wasserzeichen zu Ihrem PDF hinzu"
 tags = "stempel,markierung,überlagerung"
 title = "Wasserzeichen hinzufügen"
 
+[home.formFill]
+desc = "Fill PDF form fields interactively with a visual editor"
+title = "Fill Form"
+
 [HTMLToPDF]
 credit = "Verwendet WeasyPrint"
 cssMediaType = "CSS-Medientyp der Seite ändern"
@@ -4915,6 +4936,9 @@ upload = "Hochladen"
 zoom = "Zoom"
 zoomIn = "Hineinzoomen"
 zoomOut = "Herauszoomen"
+activate = "Activate Redaction Tool"
+active = "Redaction Mode Active"
+colorLabel = "Redaction Colour"
 
 [redact.manual.pageRedactionNumbers]
 placeholder = "(z.B. 1,2,8 oder 4,7,12-16 oder 2n-1)"
@@ -5315,6 +5339,8 @@ toggleAnnotations = "Anmerkungen ein-/ausblenden"
 toggleBookmarks = "Lesezeichen ein-/ausblenden"
 toggleSidebar = "Seitenleiste umschalten"
 toggleTheme = "Design wechseln"
+formFill = "Fill Form"
+toggleAttachments = "Toggle Attachments"
 
 [rotate]
 rotateLeft = "Gegen den Uhrzeigersinn drehen"
@@ -6445,6 +6471,24 @@ singlePageView = "Einzelseitenansicht"
 unknownFile = "Unbekannte Datei"
 zoomIn = "Vergrößern"
 zoomOut = "Verkleinern"
+
+[viewer.attachments]
+empty = "No attachments in this document"
+loading = "Loading attachments..."
+noDocument = "Open a PDF to view its attachments."
+noMatch = "No attachments match your search"
+noSupport = "Attachment support is unavailable for this viewer."
+searchPlaceholder = "Search attachments"
+title = "Attachments"
+
+[viewer.formBar]
+apply = "Apply Changes"
+dismiss = "Dismiss"
+download = "Download PDF"
+hasFieldsDesc = "This PDF contains fillable fields"
+title = "Form Fields"
+unsavedBadge = "Unsaved"
+unsavedDesc = "You have unsaved changes"
 
 [viewPdf]
 header = "PDF anzeigen"
