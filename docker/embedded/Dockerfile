@@ -1,251 +1,295 @@
-# Stirling-PDF Dockerfile - Full version with embedded frontend
-# Single JAR contains both frontend and backend
+# syntax=docker/dockerfile:1.7
+# ─────────────────────────────────────────────────────────────
+# Stirling-PDF – Full version (embedded frontend)
+# ─────────────────────────────────────────────────────────────
 
-# Stage 1: Build application with embedded frontend
-FROM gradle:9.3.1-jdk25 AS build
+# ╔═══════════════════════════════════════════════════════════╗
+# ║  Stage 1 — Calibre: install, strip, verify                ║
+# ║  saved by removing WebEngine, GUI libs, unneeded modules) ║
+# ╚═══════════════════════════════════════════════════════════╝
+FROM ubuntu:noble AS calibre-build
 
-# Install Node.js and npm for frontend build
-RUN apt-get update && apt-get install -y \
-    curl \
+# Pin the version for reproducible builds
+ARG CALIBRE_VERSION=9.2.1
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl xz-utils libnss3 libfontconfig1 libgl1 libegl1 libdbus-1-3 \
+    libasound2t64 libxcomposite1 libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0; \
+    rm -rf /var/lib/apt/lists/*; \
+    \
+    # Auto-detect architecture for Calibre download
+    case "$(uname -m)" in \
+      x86_64)  CALIBRE_ARCH="x86_64" ;; \
+      aarch64) CALIBRE_ARCH="aarch64" ;; \
+      *)       echo "Unsupported arch: $(uname -m)"; exit 1 ;; \
+    esac; \
+    \
+    # Download pinned tarball directly (faster & reproducible vs installer script)
+    curl -fsSL \
+      "https://download.calibre-ebook.com/${CALIBRE_VERSION}/calibre-${CALIBRE_VERSION}-${CALIBRE_ARCH}.txz" \
+      -o /tmp/calibre.txz; \
+    mkdir -p /opt/calibre; \
+    tar xJf /tmp/calibre.txz -C /opt/calibre; \
+    rm /tmp/calibre.txz; \
+    \
+    # Remove GUI-only Qt modules (keep WebEngine, Quick, Qml, OpenGL for PDF output)
+    # We only remove Designer as others are likely needed by WebEngine
+    rm -f  /opt/calibre/lib/libQt6Designer*; \
+    \
+    # Remove GUI-only Qt plugins
+    rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
+           /opt/calibre/lib/qt6/plugins/wayland* \
+           /opt/calibre/lib/qt6/plugins/xcbglintegrations; \
+    \
+    # Remove GUI executables (keep only ebook-convert + ebook-meta)
+    rm -f  /opt/calibre/calibre \
+           /opt/calibre/calibre-server \
+           /opt/calibre/calibre-smtp \
+           /opt/calibre/calibre-debug \
+           /opt/calibre/calibre-customize \
+           /opt/calibre/ebook-viewer \
+           /opt/calibre/ebook-edit \
+           /opt/calibre/ebook-polish \
+           /opt/calibre/ebook-device \
+           /opt/calibre/fetch-ebook-metadata \
+           /opt/calibre/lrf2lrs \
+           /opt/calibre/lrs2lrf \
+           /opt/calibre/web2disk; \
+    \
+    # Remove Calibre Python modules not needed for conversion
+    rm -rf /opt/calibre/lib/calibre/gui2 \
+           /opt/calibre/lib/calibre/devices \
+           /opt/calibre/lib/calibre/library \
+           /opt/calibre/lib/calibre/db \
+           /opt/calibre/lib/calibre/srv \
+           /opt/calibre/lib/calibre/spell \
+           /opt/calibre/lib/calibre/live; \
+    \
+    # Remove resources not needed for CLI conversion
+    rm -rf /opt/calibre/resources/images \
+           /opt/calibre/resources/icons \
+           /opt/calibre/resources/content-server \
+           /opt/calibre/resources/editor \
+           /opt/calibre/resources/viewer \
+           /opt/calibre/resources/recipes \
+           /opt/calibre/resources/dictionaries \
+           /opt/calibre/resources/hyphenation \
+           /opt/calibre/lib/calibre/ebooks/docx/images \
+           /opt/calibre/share \
+           /opt/calibre/man; \
+    \
+    # Verify conversion still works after stripping
+    /opt/calibre/ebook-convert --version; \
+    echo "Hello" > /tmp/test.txt; \
+    export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox"; \
+    /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.pdf; \
+    rm /tmp/test.*; \
+    echo "=== Calibre stripped successfully ==="
+
+
+# ╔═══════════════════════════════════════════════════════════╗
+# ║  Stage 2 — Build the Java application + frontend          ║
+# ╚═══════════════════════════════════════════════════════════╝
+FROM gradle:9.3.1-jdk25 AS app-build
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && npm --version \
-    && node --version \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy gradle files for dependency resolution
-COPY build.gradle .
-COPY settings.gradle .
-COPY gradlew .
-COPY gradle gradle/
-COPY app/core/build.gradle core/.
-COPY app/common/build.gradle common/.
-COPY app/proprietary/build.gradle proprietary/.
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
-
-# Set working directory
 WORKDIR /app
 
-# Copy entire project
+# Dependency-cache layer (rebuild only when build files change)
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle/                               gradle/
+COPY app/core/build.gradle                  app/core/
+COPY app/common/build.gradle                app/common/
+COPY app/proprietary/build.gradle           app/proprietary/
+
+RUN ./gradlew dependencies --no-daemon || true
+
+# Full source copy + build
 COPY . .
 
-# Build JAR with embedded frontend (includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
-    ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
+    ./gradlew clean build \
+      -PbuildWithFrontend=true \
+      -x spotlessApply -x spotlessCheck -x test -x sonarqube \
+      --no-daemon
 
-# Stage 2: Runtime image based on Eclipse Temurin (Java 25)
-# Contains Java runtime + LibreOffice + Calibre + all PDF tools
-FROM eclipse-temurin:25-jre
+
+# ╔═══════════════════════════════════════════════════════════╗
+# ║  Stage 3 — Runtime image                                  ║
+# ╚═══════════════════════════════════════════════════════════╝
+FROM eclipse-temurin:25-jre AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive
 
-ENV LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
-
-ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
 # ---------------------------------------------------------------------------
-# Install ALL runtime deps, Calibre, LibreOffice in ONE layer.
-# Strip bloat and clean up in the SAME layer so deleted bytes never persist.
+# Single layer: ALL runtime apt packages + LibreOffice + Python venvs + cleanup
+#
+# Keeping everything in one RUN ensures that files deleted at the end
+# (docs, man pages, caches) never occupy layer bytes.
 # ---------------------------------------------------------------------------
+ARG UNOSERVER_VERSION=3.6
+
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-    # Core
-    ca-certificates tzdata tini bash fontconfig \
-    ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
-    gosu unpaper qpdf \
-    # Fonts
-    fonts-dejavu \
-    fonts-liberation fonts-liberation2 \
-    fonts-crosextra-caladea fonts-crosextra-carlito \
-    fonts-linuxlibertine \
-    fonts-noto-core fonts-noto-cjk fonts-noto-mono fonts-noto-ui-core \
-    fonts-noto-color-emoji \
-    ttf-wqy-zenhei \
-    fonts-arphic-ukai fonts-arphic-uming \
-    # Python + UNO bridge
-    python3 python3-venv python3-uno \
-    # OCR
-    tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
-    tesseract-ocr-por tesseract-ocr-chi-sim \
-    # Graphics / AWT headless
-    libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
-    libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
-    libxinerama1 libxkbcommon0 libxkbfile1 libsm6 libice6 \
-    # Qt/X11 dependencies for Calibre
-    libegl1 libopengl0 libgl1 libxdamage1 libxfixes3 libxshmfence1 libdrm2 libgbm1 \
-    libxkbcommon-x11-0 libxrandr2 libxcomposite1 libnss3 libx11-xcb1 \
-    libxcb-cursor0 libdbus-1-3 libglib2.0-0 \
-    # Virtual framebuffer (required for headless LibreOffice)
-    xvfb x11-utils coreutils \
-    # Temporary packages only needed for Calibre installer
-    xz-utils curl \
+      # Core tools
+      ca-certificates tzdata tini bash fontconfig curl \
+      ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
+      gosu unpaper qpdf \
+      # Fonts (deduplicated)
+      fonts-dejavu \
+      fonts-liberation2 \
+      fonts-crosextra-caladea fonts-crosextra-carlito \
+      fonts-noto-core fonts-noto-mono fonts-noto-color-emoji \
+      fonts-noto-cjk \
+      # Python + UNO bridge
+      python3 python3-venv python3-uno \
+      # OCR (all language packs retained per user request)
+      tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
+      tesseract-ocr-por tesseract-ocr-chi-sim \
+      # Graphics / AWT headless
+      libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
+      libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
+      libxinerama1 libxkbcommon0 libsm6 libice6 \
+      # Minimal Qt/EGL dependencies for Calibre CLI
+      libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 libasound2t64 libxcomposite1 libxrandr2 \
+      # Virtual framebuffer for headless LibreOffice
+      xvfb \
+      # LibreOffice (merged into same layer so cleanup works)
+      libreoffice-writer-nogui libreoffice-calc-nogui \
+      libreoffice-impress-nogui libreoffice-java-common \
+    ; \
     \
-    # Install Calibre from official installer script
-    && echo "=== Downloading Calibre installer..." \
-    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh -o /tmp/calibre-installer.sh \
-    && echo "=== Running Calibre installer..." \
-    && sh /tmp/calibre-installer.sh \
-    && rm /tmp/calibre-installer.sh \
+    # Python virtual environments
+    python3 -m venv /opt/venv --system-site-packages; \
+    /opt/venv/bin/pip install --no-cache-dir \
+      weasyprint pdf2image opencv-python-headless; \
     \
-    # Verify Calibre was installed successfully
-    && echo "=== Verifying Calibre installation..." \
-    && { test -f /opt/calibre/ebook-convert || { echo "ERROR: Calibre ebook-convert not found!"; exit 1; }; } \
-    && /opt/calibre/ebook-convert --version \
-    && echo "=== Calibre installed successfully" \
+    python3 -m venv /opt/unoserver-venv --system-site-packages; \
+    /opt/unoserver-venv/bin/pip install --no-cache-dir \
+      "unoserver==${UNOSERVER_VERSION}"; \
     \
-    # Remove GUI components, keep ebook-convert and its libs
-    && rm -rf \
-        /opt/calibre/lib/calibre/gui2 \
-        /opt/calibre/lib/calibre/ebooks/docx/images \
-        /opt/calibre/resources/images \
-        /opt/calibre/resources/icons \
-        /opt/calibre/resources/content-server \
-        /opt/calibre/resources/editor \
-        /opt/calibre/resources/viewer \
-        /opt/calibre/resources/recipes \
-        /opt/calibre/share \
-        /opt/calibre/man \
+    ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert; \
+    ln -sf /opt/unoserver-venv/bin/unoserver  /opt/venv/bin/unoserver; \
     \
-    # Make ebook-convert available in PATH
-    && ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
+    # Verify
+    libreoffice --version; \
+    /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
     \
-    # Clean up installer-only packages (KEEP curl)
-    && apt-get purge -y xz-utils \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+    # Purge docs, man, locale, caches (same layer = bytes never committed)
+    rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* \
+           /usr/share/lintian/* /usr/share/linda/* \
+           /var/cache/fontconfig/* /tmp/*; \
+    \
+    # Strip LibreOffice extras
+    rm -rf /usr/lib/libreoffice/share/gallery \
+           /usr/lib/libreoffice/share/template \
+           /usr/lib/libreoffice/share/wizards \
+           /usr/lib/libreoffice/share/autotext \
+           /usr/lib/libreoffice/help \
+           /usr/lib/libreoffice/share/config/images_*.zip
 
-# Install LibreOffice (nogui) from Ubuntu repositories
-RUN set -eux; \
-    apt-get update; \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui libreoffice-java-common; \
-    rm -rf /var/lib/apt/lists/*; \
-    libreoffice --version
-
-# Remove docs, man pages, and locale data not needed at runtime
-RUN rm -rf /usr/share/doc/* \
-           /usr/share/man/* \
-           /usr/share/info/* \
-           /usr/share/lintian/* \
-           /usr/share/linda/* \
-           /var/cache/fontconfig/*
+# Copy pre-stripped Calibre from stage 1 (only the slim result)
+COPY --from=calibre-build /opt/calibre /opt/calibre
+RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert
 
 # ==============================================================================
-# Create non-root user (stirlingpdfuser) with configurable UID/GID
+# Non-root user
 # ==============================================================================
 ARG PUID=1000
 ARG PGID=1000
 
 RUN set -eux; \
-    # Create group if it doesn't exist
     if ! getent group stirlingpdfgroup >/dev/null 2>&1; then \
-    if getent group "${PGID}" >/dev/null 2>&1; then \
-    groupadd -o -g "${PGID}" stirlingpdfgroup; \
-    else \
-    groupadd -g "${PGID}" stirlingpdfgroup; \
+      groupadd -g "${PGID}" stirlingpdfgroup 2>/dev/null \
+        || groupadd stirlingpdfgroup; \
     fi; \
-    fi; \
-    # Create user if it doesn't exist, avoid UID conflicts
     if ! id -u stirlingpdfuser >/dev/null 2>&1; then \
-    if getent passwd | awk -F: -v id="${PUID}" '$3==id{found=1} END{exit !found}'; then \
-    echo "UID ${PUID} already in use – creating stirlingpdfuser with automatic UID"; \
-    useradd -m -g stirlingpdfgroup -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
-    else \
-    useradd -m -u "${PUID}" -g stirlingpdfgroup -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
+      useradd -m -u "${PUID}" -g stirlingpdfgroup \
+        -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser 2>/dev/null \
+        || useradd -m -g stirlingpdfgroup \
+          -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
     fi; \
-    fi
+    ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 
-# Compatibility alias for older entrypoint scripts expecting su-exec
-RUN ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
+# ==============================================================================
+# Application files
+# ==============================================================================
+COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+     /app/app/core/build/libs/*.jar /app.jar
+COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+     /app/build/libs/restart-helper.jar /restart-helper.jar
+COPY --link --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
+COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
-# Create heap dump directory writable by stirlingpdfuser
-RUN mkdir -p /tmp/stirling-pdf/heap_dumps \
-    && chown stirlingpdfuser:stirlingpdfgroup /tmp/stirling-pdf/heap_dumps
+# ==============================================================================
+# Directories, permissions, font cache
+# ==============================================================================
+RUN set -eux; \
+    chmod +x /scripts/*; \
+    mkdir -p /configs /logs /customFiles \
+             /pipeline/watchedFolders /pipeline/finishedFolders \
+             /tmp/stirling-pdf/heap_dumps; \
+    chown -R stirlingpdfuser:stirlingpdfgroup \
+      /home/stirlingpdfuser /configs /logs /customFiles /pipeline \
+      /tmp/stirling-pdf /app.jar /restart-helper.jar /scripts \
+      /usr/share/fonts/truetype; \
+    chmod 1777 /tmp/stirling-pdf; \
+    fc-cache -f
 
-# Copy application files from build stage
-COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
-COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY scripts/ /scripts/
-COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
-
-# Optional version tag (can be passed at build time)
+# ==============================================================================
+# Environment
+# ==============================================================================
 ARG VERSION_TAG
-
-# Metadata labels
-LABEL org.opencontainers.image.title="Stirling-PDF"
-LABEL org.opencontainers.image.description="Stirling-PDF with embedded frontend - Full version with Calibre, LibreOffice, Tesseract, OCRmyPDF, and more"
-LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="Stirling-Tools"
-LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
-LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
-LABEL maintainer="Stirling-Tools"
-LABEL org.opencontainers.image.authors="Stirling-Tools"
-LABEL org.opencontainers.image.version="${VERSION_TAG}"
-LABEL org.opencontainers.image.keywords="PDF, manipulation, API, Spring Boot, React"
-
-# ==============================================================================
-# Runtime environment variables
-# ==============================================================================
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Xlog:gc*:file=/configs/gc.log:time,uptime,level,tags:filecount=5,filesize=10M -XX:+UseStringDeduplication -Djava.awt.headless=true" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -XX:+UseStringDeduplication -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
     PGID=${PGID} \
     UMASK=022 \
+    PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}" \
     UNO_PATH=/usr/lib/libreoffice/program \
     LIBREOFFICE_BIN_PATH=/usr/lib/libreoffice/program/soffice.bin \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
-    TMP=/tmp/stirling-pdf
+    TMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf \
+    QT_QPA_PLATFORM=offscreen \
+    QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox"
 
 # ==============================================================================
-# Python virtual environment for additional Python tools (WeasyPrint, OpenCV, etc.)
+# Metadata
 # ==============================================================================
-ARG UNOSERVER_VERSION=3.6
-RUN python3 -m venv /opt/venv --system-site-packages \
-    && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
-    && python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir "unoserver==${UNOSERVER_VERSION}" \
-    && ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
-    && ln -sf /opt/unoserver-venv/bin/unoserver /opt/venv/bin/unoserver \
-    && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
+LABEL org.opencontainers.image.title="Stirling-PDF" \
+      org.opencontainers.image.description="Full version with Calibre, LibreOffice, Tesseract, OCRmyPDF" \
+      org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="Stirling-Tools" \
+      org.opencontainers.image.url="https://www.stirlingpdf.com" \
+      org.opencontainers.image.documentation="https://docs.stirlingpdf.com" \
+      maintainer="Stirling-Tools" \
+      org.opencontainers.image.authors="Stirling-Tools" \
+      org.opencontainers.image.version="${VERSION_TAG}" \
+      org.opencontainers.image.keywords="PDF, manipulation, API, Spring Boot, React"
 
-# Extend PATH to include both virtual environments
-ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
-
-# ==============================================================================
-# Final permissions, directories and font cache
-# ==============================================================================
-RUN set -eux; \
-    chmod +x /scripts/*; \
-    mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
-    chown -R stirlingpdfuser:stirlingpdfgroup \
-    /home/stirlingpdfuser /configs /logs /customFiles /pipeline /tmp/stirling-pdf \
-    /app.jar /restart-helper.jar /usr/share/fonts/truetype /scripts; \
-    chmod -R 755 /tmp/stirling-pdf
-
-# Rebuild font cache
-RUN fc-cache -f -v
-
-# Force Qt/WebEngine to run headlessly (required for Calibre in Docker)
-ENV QT_QPA_PLATFORM=offscreen \
-    QTWEBENGINE_CHROMIUM_FLAGS="--disable-gpu --disable-dev-shm-usage"
-
-# Expose web UI port
 EXPOSE 8080/tcp
-
-
 STOPSIGNAL SIGTERM
 
-# Use tini as init (handles signals and zombies correctly)
-ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:8080/api/v1/info/status || exit 1
 
-# CMD is empty – actual start command is defined in init.sh
+ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []

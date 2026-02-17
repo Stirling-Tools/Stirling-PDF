@@ -14,25 +14,28 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy gradle files for dependency resolution
-COPY build.gradle .
-COPY settings.gradle .
-COPY gradlew .
-COPY gradle gradle/
-COPY app/core/build.gradle core/.
-COPY app/common/build.gradle common/.
-COPY app/proprietary/build.gradle proprietary/.
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
-
-# Set working directory
 WORKDIR /app
+
+# Copy gradle files for dependency resolution
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle/                               gradle/
+COPY app/core/build.gradle                  app/core/
+COPY app/common/build.gradle                app/common/
+COPY app/proprietary/build.gradle           app/proprietary/
+
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
+    ./gradlew dependencies --no-daemon || true
 
 # Copy entire project
 COPY . .
 
 # Build ultra-lite JAR with embedded frontend (minimal features)
-RUN DISABLE_ADDITIONAL_FEATURES=true \
-    ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
+    DISABLE_ADDITIONAL_FEATURES=true \
+    ./gradlew clean build \
+      -PbuildWithFrontend=true \
+      -x spotlessApply -x spotlessCheck -x test -x sonarqube \
+      --no-daemon
 
 # Stage 2: Runtime image
 FROM eclipse-temurin:25-jre-alpine
@@ -43,17 +46,17 @@ ENV LANG=C.UTF-8 \
 ARG VERSION_TAG
 
 # Labels
-LABEL org.opencontainers.image.title="Stirling-PDF Ultra-Lite"
-LABEL org.opencontainers.image.description="Stirling-PDF with embedded frontend - Ultra-lite version with minimal dependencies"
-LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="Stirling-Tools"
-LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
-LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
-LABEL maintainer="Stirling-Tools"
-LABEL org.opencontainers.image.authors="Stirling-Tools"
-LABEL org.opencontainers.image.version="${VERSION_TAG}"
-LABEL org.opencontainers.image.keywords="PDF, manipulation, ultra-lite, API, Spring Boot, React"
+LABEL org.opencontainers.image.title="Stirling-PDF Ultra-Lite" \
+      org.opencontainers.image.description="Stirling-PDF with embedded frontend - Ultra-lite version with minimal dependencies" \
+      org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="Stirling-Tools" \
+      org.opencontainers.image.url="https://www.stirlingpdf.com" \
+      org.opencontainers.image.documentation="https://docs.stirlingpdf.com" \
+      maintainer="Stirling-Tools" \
+      org.opencontainers.image.authors="Stirling-Tools" \
+      org.opencontainers.image.version="${VERSION_TAG}" \
+      org.opencontainers.image.keywords="PDF, manipulation, ultra-lite, API, Spring Boot, React"
 
 # Copy scripts
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
@@ -64,9 +67,9 @@ COPY scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
 COPY --from=build /app/app/core/build/libs/*.jar /app.jar
 COPY --from=build /app/build/libs/restart-helper.jar /restart-helper.jar
 
-# Environment Variables
+# Environment Variables (removed GC file-logging)
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Xlog:gc*:file=/configs/gc.log:time,uptime,level,tags:filecount=5,filesize=10M -XX:+UseStringDeduplication" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \
