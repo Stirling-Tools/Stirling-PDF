@@ -27,10 +27,10 @@ export default function RedactModeSelector({
       options={[
         {
           value: 'automatic' as const,
-          label: t('redact.modeSelector.automatic', 'Automatic'),
-          disabled: !hasFilesSelected, // Automatic requires files to be selected
-          tooltip: !hasFilesSelected 
-            ? t('redact.modeSelector.automaticDisabledTooltip', 'Select files in the file manager to redact multiple files at once')
+          label: t('redact.modeSelector.searchAndRedact', 'Search & Redact'),
+          disabled: !hasAnyFiles,
+          tooltip: !hasAnyFiles 
+            ? t('redact.modeSelector.searchAndRedactDisabledTooltip', 'Add files to the workbench to use Search & Redact')
             : undefined,
         },
         {
