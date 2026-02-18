@@ -278,6 +278,8 @@ RUN set -eux; \
     \
     # Strip debug symbols from ALL shared libraries
     find /usr/lib -name '*.so*' -type f \
+        -not -path '*/jvm/*' \
+        -not -path '*/libreoffice/*' \
         -exec strip --strip-unneeded {} + 2>/dev/null || true; \
     \
     # System-wide Python cache cleanup
