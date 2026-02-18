@@ -19,6 +19,7 @@ import NavigationWarningModal from '@app/components/shared/NavigationWarningModa
 import { isStirlingFile } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
+import { RulerOverlay } from '@app/components/viewer/RulerOverlay';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
@@ -688,8 +689,11 @@ const EmbedPdfViewerContent = ({
     };
   }, [applyChanges, setApplyChanges]);
 
+  // Ruler / measurement tool state
+  const [isRulerActive, setIsRulerActive] = useState(false);
+
   // Register viewer right-rail buttons
-  useViewerRightRailButtons();
+  useViewerRightRailButtons(isRulerActive, setIsRulerActive);
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
   // In normal viewer mode, this uses pdf-lib (frontend-only).
@@ -818,6 +822,10 @@ const EmbedPdfViewerContent = ({
               containerRef={pdfContainerRef}
               isActive={isPlacementOverlayActive}
               signatureConfig={signatureConfig}
+            />
+            <RulerOverlay
+              containerRef={pdfContainerRef}
+              isActive={isRulerActive}
             />
           </Box>
         </>
