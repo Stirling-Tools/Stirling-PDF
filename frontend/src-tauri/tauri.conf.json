@@ -23,6 +23,7 @@
     },
     "bundle": {
         "active": true,
+        "publisher": "Stirling PDF Inc.",
         "targets": [
             "deb",
             "rpm",
