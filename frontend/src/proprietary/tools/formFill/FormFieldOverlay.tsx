@@ -71,13 +71,14 @@ function WidgetInputInner({
     height,
     zIndex: 10,
     boxSizing: 'border-box',
-    border: `2px solid ${borderColor}`,
-    borderRadius: 2,
-    background: bgColor,
+    border: `1px solid ${borderColor}`,
+    borderRadius: 1,
+    background: isActive ? bgColor : 'transparent',
     transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
-    boxShadow: isActive
-      ? `0 0 0 2px ${error ? 'rgba(244, 67, 54, 0.25)' : 'rgba(33, 150, 243, 0.25)'}`
-      : 'none',
+    boxShadow:
+      isActive && field.type !== 'radio' && field.type !== 'checkbox'
+        ? `0 0 0 2px ${error ? 'rgba(244, 67, 54, 0.25)' : 'rgba(33, 150, 243, 0.25)'}`
+        : 'none',
     cursor: field.readOnly ? 'default' : 'text',
     pointerEvents: 'auto',
     display: 'flex',
@@ -122,8 +123,8 @@ function WidgetInputInner({
   const fontSize = widget.fontSize
     ? widget.fontSize * scaleY
     : field.multiline
-      ? Math.max(8, Math.min(height * 0.65, 14))
-      : Math.max(8, height * 0.7);
+      ? Math.max(6, Math.min(height * 0.60, 14))
+      : Math.max(6, height * 0.65);
 
   const inputBaseStyle: React.CSSProperties = {
     width: '100%',
@@ -192,9 +193,11 @@ function WidgetInputInner({
           {...commonProps}
           style={{
             ...commonStyle,
+            border: isActive ? commonStyle.border : '1px solid rgba(0,0,0,0.15)',
+            background: isActive ? bgColor : 'transparent',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center', // Keep center for checkboxes as they are usually square hitboxes
             cursor: field.readOnly ? 'default' : 'pointer',
           }}
           title={error || field.tooltip || field.label}
@@ -207,11 +210,22 @@ function WidgetInputInner({
         >
           <span
             style={{
-              fontSize: `${Math.max(12, height * 0.7)}px`,
+              width: '85%',
+              height: '85%',
+              maxWidth: height * 0.9, // Prevent it from getting too wide in rectangular boxes
+              maxHeight: width * 0.9,
+              fontSize: `${Math.max(10, height * 0.75)}px`,
               lineHeight: 1,
               color: isChecked ? '#2196F3' : 'transparent',
+              background: '#FFF',
+              border: isChecked || isActive ? '1px solid #2196F3' : '1.5px solid #666',
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               fontWeight: 700,
               userSelect: 'none',
+              boxShadow: isActive ? '0 0 0 2px rgba(33, 150, 243, 0.2)' : 'none',
             }}
           >
             ✓
@@ -282,9 +296,12 @@ function WidgetInputInner({
           {...commonProps}
           style={{
             ...commonStyle,
+            border: isActive ? commonStyle.border : 'none',
+            background: 'transparent',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'flex-start', // Align to start (left) instead of center for radio buttons
+            paddingLeft: Math.max(1, (height - Math.min(width, height) * 0.8) / 2), // Slight offset
             cursor: field.readOnly ? 'default' : 'pointer',
           }}
           title={error || field.tooltip || `${field.label}: ${optionValue}`}
@@ -297,12 +314,16 @@ function WidgetInputInner({
         >
           <span
             style={{
-              width: Math.max(8, height * 0.5),
-              height: Math.max(8, height * 0.5),
+              width: Math.min(width, height) * 0.8,
+              height: Math.min(width, height) * 0.8,
               borderRadius: '50%',
-              border: '2px solid #666',
-              background: isSelected ? '#2196F3' : 'transparent',
-              display: 'block',
+              border: `1.5px solid ${isSelected || isActive ? '#2196F3' : '#666'}`,
+              background: isSelected ? '#2196F3' : '#FFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isSelected ? 'inset 0 0 0 2px white' : 'none',
+              transition: 'background 0.15s, border-color 0.15s',
             }}
           />
         </div>

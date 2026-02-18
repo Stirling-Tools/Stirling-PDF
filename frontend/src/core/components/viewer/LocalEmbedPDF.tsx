@@ -126,7 +126,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: true,
+        withForms: !enableFormFill,
         withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
