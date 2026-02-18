@@ -278,8 +278,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/share/numbertext \
            /usr/lib/libreoffice/share/shell \
            /usr/lib/libreoffice/share/palette \
-           /usr/lib/libreoffice/share/theme_definitions \
-           /usr/lib/libreoffice/share/config/soffice.cfg; \
+           /usr/lib/libreoffice/share/theme_definitions; \
     \
     find /usr/lib -name '*.so*' -type f \
         -not -path '*/jvm/*' \
