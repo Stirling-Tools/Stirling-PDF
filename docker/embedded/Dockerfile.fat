@@ -376,11 +376,11 @@ RUN set -eux; \
 # ---------------------------------------------------------------------------
 # Application files (--chown set at copy time → no later chown needed)
 # ---------------------------------------------------------------------------
-COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --link --from=app-build --chown=1000:1000 \
      /app/app/core/build/libs/*.jar /app.jar
-COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --link --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
+COPY --link --chown=1000:1000 scripts/ /scripts/
 
 # Fonts go to system dir — root ownership is correct (world-readable)
 COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
