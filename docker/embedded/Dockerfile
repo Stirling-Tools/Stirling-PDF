@@ -51,8 +51,7 @@ RUN set -eux; \
            /opt/calibre/lib/libswscale.so.* \
            /opt/calibre/lib/libmtp.so.* \
            /opt/calibre/lib/libncursesw.so.* \
-           /opt/calibre/lib/libespeak-ng.so.* \
-           /opt/calibre/lib/calibre-extensions/PIL._imaging.so*; \
+           /opt/calibre/lib/libespeak-ng.so.*; \
     rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
            /opt/calibre/lib/qt6/plugins/wayland* \
            /opt/calibre/lib/qt6/plugins/xcbglintegrations \
