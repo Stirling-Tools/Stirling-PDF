@@ -95,7 +95,6 @@ RUN set -eux; \
            /opt/calibre/share \
            /opt/calibre/man; \
     \
-    # ── CHANGED: remove translations + localization (LANG=C.UTF-8) ──
     # Keep iso639.calibre_msgpack (required)
     rm -rf /opt/calibre/lib/qt6/translations \
            /opt/calibre/translations \
@@ -104,11 +103,9 @@ RUN set -eux; \
            /opt/calibre/resources/localization/website-languages.txt; \
     find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
     \
-    # ── CHANGED: strip debug symbols from shared libraries ──
     find /opt/calibre/lib -name '*.so*' \
       -exec strip --strip-unneeded {} + 2>/dev/null || true; \
     \
-    # ── CHANGED: remove Python bytecode caches ──
     find /opt/calibre -type d -name __pycache__ \
       -exec rm -rf {} + 2>/dev/null || true; \
     find /opt/calibre -name '*.pyc' -delete 2>/dev/null || true; \
@@ -153,6 +150,31 @@ RUN DISABLE_ADDITIONAL_FEATURES=false \
 
 
 # ╔═══════════════════════════════════════════════════════════╗
+# ║  Stage 3 — Python Builder: Install and isolate venv       ║
+# ╚═══════════════════════════════════════════════════════════╝
+FROM ubuntu:noble AS python-build
+
+ARG UNOSERVER_VERSION=3.6
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 python3-venv python3-dev \
+      build-essential \
+      # Build dependencies for ocrmypdf/weasyprint/opencv
+      zlib1g-dev libjpeg-dev libffi-dev libpango1.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /opt/venv --system-site-packages
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Build all heavy python packages here
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install \
+      weasyprint pdf2image opencv-python-headless ocrmypdf \
+      "unoserver==${UNOSERVER_VERSION}"
+
+
+# ╔═══════════════════════════════════════════════════════════╗
 # ║  Stage 3 — Runtime image                                  ║
 # ╚═══════════════════════════════════════════════════════════╝
 FROM eclipse-temurin:25-jre AS runtime
@@ -169,60 +191,56 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # ---------------------------------------------------------------------------
 ARG UNOSERVER_VERSION=3.6
 
-RUN set -eux; \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,target=/root/.cache/pip \
+    set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
-      gosu unpaper qpdf \
+      ffmpeg poppler-utils imagemagick fontforge ghostscript \
+      gosu unpaper qpdf pngquant \
       # Fonts — fat version includes extra fonts for air-gapped environments
-      fonts-dejavu \
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
-      fonts-noto-core fonts-noto-mono fonts-noto-color-emoji \
+      fonts-noto-core fonts-noto-mono \
       fonts-noto-cjk \
       fonts-freefont-ttf fonts-terminus \
-      # Python + UNO bridge
-      python3 python3-venv python3-uno \
+      # Python runtime & UNO bridge (python3-full -> python3 optimization)
+      python3 python3-uno \
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
       # Graphics / AWT headless
-      libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
+      libcairo2 libpango-1.0-0 libpangoft2-1.0-0 \
       libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 \
       libxtst6 libxi6 libxinerama1 libxkbcommon0 libsm6 libice6 \
       # Qt/EGL for Calibre CLI
       libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 \
       libasound2t64 libxcomposite1 libxrandr2 \
       # Headless LibreOffice
-      xvfb \
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-java-common \
     ; \
     \
-    # ── Python virtual environments ──
-    python3 -m venv /opt/venv --system-site-packages; \
-    /opt/venv/bin/pip install --no-cache-dir \
-      weasyprint pdf2image opencv-python-headless; \
+    # ── FIX: Enable PDF/PS processing in ImageMagick (disabled by default on Ubuntu) ──
+    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' \
+      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
+    sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' \
+      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
+    sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' \
+      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
     \
-    python3 -m venv /opt/unoserver-venv --system-site-packages; \
-    /opt/unoserver-venv/bin/pip install --no-cache-dir \
-      "unoserver==${UNOSERVER_VERSION}"; \
-    \
-    ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert; \
-    ln -sf /opt/unoserver-venv/bin/unoserver  /opt/venv/bin/unoserver; \
-    \
-    # ── Verify ──
+    # ── Verify CLI availability ──
     libreoffice --version; \
-    /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
     \
     # ══════════════════════════════════════════════════════════
-    #  CLEANUP — everything below is in the same layer, so
+    #  CLEANUP: everything below is in the same layer, so
     #  deleted bytes are never committed to the image
     # ══════════════════════════════════════════════════════════
     \
-    # CHANGED: apt lists + cache (was missing — ~30-50 MB!)
+    # apt clean not strictly needed with cache mounts, but good for reducing layer metadata
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     \
@@ -245,23 +263,96 @@ RUN set -eux; \
            /usr/lib/libreoffice/share/basic \
            /usr/lib/libreoffice/share/Scripts; \
     \
-    # CHANGED: Python caches + pip/setuptools from both venvs (~15-25 MB)
-    find /opt/venv /opt/unoserver-venv -type d -name __pycache__ \
-      -exec rm -rf {} + 2>/dev/null || true; \
-    find /opt/venv /opt/unoserver-venv \
-      \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
-    rm -rf /opt/venv/lib/python*/site-packages/pip \
-           /opt/venv/lib/python*/site-packages/setuptools \
-           /opt/unoserver-venv/lib/python*/site-packages/pip \
-           /opt/unoserver-venv/lib/python*/site-packages/setuptools; \
+    # Additional LibreOffice cleanup
+    rm -rf /usr/lib/libreoffice/share/autocorr \
+           /usr/lib/libreoffice/share/classification \
+           /usr/lib/libreoffice/share/wordbook \
+           /usr/lib/libreoffice/share/extensions \
+           /usr/lib/libreoffice/share/fingerprint \
+           /usr/lib/libreoffice/share/xdg \
+           /usr/lib/libreoffice/share/numbertext \
+           /usr/lib/libreoffice/share/shell \
+           /usr/lib/libreoffice/share/palette \
+           /usr/lib/libreoffice/share/theme_definitions \
+           /usr/lib/libreoffice/share/config/soffice.cfg; \
+    \
+    # Strip debug symbols from ALL shared libraries (FIX: Exclude JRE)
+    find /usr/lib -name '*.so*' -type f \
+        -not -path '*/jvm/*' \
+        -exec strip --strip-unneeded {} + 2>/dev/null || true; \
+    \
+    # System-wide Python cache cleanup
+    find /usr/lib/python3* -type d -name __pycache__ \
+        -exec rm -rf {} + 2>/dev/null || true; \
+    find /usr/lib/python3* \( -name '*.pyc' -o -name '*.pyi' \) \
+        -delete 2>/dev/null || true; \
+    \
+    # Additional metadata cleanup
+    # FIX: Only remove ImageMagick doc/www, NOT the whole dir (preserves policy.xml/delegates.xml)
+    rm -rf /usr/share/bug /usr/share/lintian /usr/share/linda \
+           /var/lib/dpkg/info/*.md5sums \
+           /var/log/dpkg.log /var/log/apt/* \
+           /usr/share/ghostscript/*/doc \
+           /usr/share/ghostscript/*/examples \
+           /usr/share/ImageMagick-*/doc \
+           /usr/share/ImageMagick-*/www; \
+    \
+    # NEW: Ghostscript CID resources (redundant with Noto CJK)
+    rm -rf /usr/share/ghostscript/*/Resource/CIDFSubst \
+           /usr/share/ghostscript/*/Resource/CIDFont; \
+    \
+    # NEW: Tesseract training configs (not needed for OCR)
+    rm -rf /usr/share/tesseract-ocr/*/tessdata/configs \
+           /usr/share/tesseract-ocr/*/tessdata/tessconfigs; \
+    \
+    # Trim CJK fonts to Regular weight only (FIX: Broadened path)
+    find /usr/share/fonts -name '*CJK*' \
+        ! -name '*Regular*' -type f -delete 2>/dev/null || true; \
     \
     # Misc caches
     rm -rf /var/cache/fontconfig/* /tmp/* /root/.cache
 
 # ---------------------------------------------------------------------------
+# Python venv (copied from builder stage, eliminates build dependencies)
+# ---------------------------------------------------------------------------
+COPY --link --from=python-build /opt/venv /opt/venv
+
+RUN set -eux; \
+    ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
+    ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver; \
+    # Verify python libs are accessible
+    /opt/venv/bin/python -c "import cv2; import ocrmypdf; import weasyprint; print('Python libs verified')"; \
+    # Cleanup venv from builder leftovers
+    find /opt/venv -type d -name __pycache__ \
+      -exec rm -rf {} + 2>/dev/null || true; \
+    find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
+    rm -rf /opt/venv/lib/python*/site-packages/pip \
+           /opt/venv/lib/python*/site-packages/setuptools;
+
+# ---------------------------------------------------------------------------
 # Calibre (pre-stripped in stage 1)
 # ---------------------------------------------------------------------------
-COPY --from=calibre-build /opt/calibre /opt/calibre
+COPY --link --from=calibre-build /opt/calibre /opt/calibre
+
+RUN set -eux; \
+    # ── Conservative extra cleanup of Calibre multimedia/GUI libraries ──
+    # These are often pulled in by the base Calibre build but unused in headless conversion
+    rm -f /opt/calibre/lib/libQt6Multimedia* \
+          /opt/calibre/lib/libQt6Pdf* \
+          /opt/calibre/lib/libQt6Positioning* \
+          /opt/calibre/lib/libQt6Quick* \
+          /opt/calibre/lib/libQt6WebChannel* \
+          /opt/calibre/lib/libQt6Qml* \
+          /opt/calibre/lib/libQt6OpenGL* \
+          /opt/calibre/lib/libQt6NetworkAuth.so.* \
+          /opt/calibre/lib/libspeex.so.* \
+          /opt/calibre/lib/libFLAC.so.* \
+          /opt/calibre/lib/libopus.so.* \
+          /opt/calibre/lib/libvorbis*.so.* \
+          /opt/calibre/lib/libasyncns.so.* \
+          /opt/calibre/lib/libspeechd.so.*; \
+    # Clean pycache again just in case leftovers survived the builder sweep
+    find /opt/calibre -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true;
 
 # ---------------------------------------------------------------------------
 # Non-root user
@@ -285,24 +376,17 @@ RUN set -eux; \
 # ---------------------------------------------------------------------------
 # Application files (--chown set at copy time → no later chown needed)
 # ---------------------------------------------------------------------------
-COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/app/core/build/libs/*.jar /app.jar
-COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
+COPY --link --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
 
 # Fonts go to system dir — root ownership is correct (world-readable)
 COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # ---------------------------------------------------------------------------
 # Directories + permissions + font cache
-#
-# CHANGED: removed chown of /app.jar, /restart-helper.jar, /scripts,
-#          /usr/share/fonts/truetype — they already have correct ownership
-#          from COPY --chown or are system files (fonts).
-#          This was duplicating ~240 MB of files into a new layer (~94 MB).
-#          Now this layer is < 1 MB (just empty dirs + fc-cache output).
-# CHANGED: merged calibre symlink here to eliminate a separate layer.
 # ---------------------------------------------------------------------------
 RUN set -eux; \
     ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert; \
@@ -314,7 +398,11 @@ RUN set -eux; \
       /home/stirlingpdfuser /configs /logs /customFiles /pipeline \
       /tmp/stirling-pdf; \
     chmod 1777 /tmp/stirling-pdf; \
-    fc-cache -f
+    fc-cache -f; \
+    \
+    # Clean Calibre pycache that may have been generated during stage-1 verify
+    find /opt/calibre -type d -name __pycache__ \
+      -exec rm -rf {} + 2>/dev/null || true
 
 # ==============================================================================
 # Environment
@@ -329,7 +417,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     UMASK=022 \
     FAT_DOCKER=true \
     INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
-    PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}" \
+    PATH="/opt/venv/bin:${PATH}" \
     UNO_PATH=/usr/lib/libreoffice/program \
     LIBREOFFICE_BIN_PATH=/usr/lib/libreoffice/program/soffice.bin \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \

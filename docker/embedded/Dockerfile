@@ -4,7 +4,7 @@
 # ─────────────────────────────────────────────────────────────
 
 # ╔═══════════════════════════════════════════════════════════╗
-# ║  Stage 1 — Calibre: install, strip, verify               ║
+# ║  Stage 1 — Calibre: install, strip, verify                ║
 # ╚═══════════════════════════════════════════════════════════╝
 FROM ubuntu:noble AS calibre-build
 
@@ -184,14 +184,20 @@ RUN set -eux; \
       ca-certificates tzdata tini bash fontconfig curl \
       ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
       gosu unpaper qpdf \
-      # Fonts — full CJK coverage retained
+      # Fonts: full CJK coverage retained
       fonts-dejavu \
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
-      fonts-noto-core fonts-noto-mono fonts-noto-color-emoji \
+      fonts-noto-core fonts-noto-mono \
       fonts-noto-cjk \
-      # Python + UNO bridge
-      python3 python3-venv python3-uno \
+      # We install these via apt to avoid downloading "fat wheels" from pip
+      python3-full python3-venv python3-uno \
+      python3-numpy \
+      python3-pil \
+      python3-fonttools \
+      python3-cffi \
+      python3-lxml \
+      python3-packaging \
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
@@ -203,33 +209,27 @@ RUN set -eux; \
       libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 \
       libasound2t64 libxcomposite1 libxrandr2 \
       # Headless LibreOffice
-      xvfb \
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-java-common \
     ; \
     \
-    # ── Python virtual environments ──
+    # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
     python3 -m venv /opt/venv --system-site-packages; \
     /opt/venv/bin/pip install --no-cache-dir \
-      weasyprint pdf2image opencv-python-headless; \
-    \
-    python3 -m venv /opt/unoserver-venv --system-site-packages; \
-    /opt/unoserver-venv/bin/pip install --no-cache-dir \
+      weasyprint pdf2image opencv-python-headless \
       "unoserver==${UNOSERVER_VERSION}"; \
     \
-    ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert; \
-    ln -sf /opt/unoserver-venv/bin/unoserver  /opt/venv/bin/unoserver; \
+    ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
+    ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver; \
     \
     # ── Verify ──
     libreoffice --version; \
     /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
     \
     # ══════════════════════════════════════════════════════════
-    #  CLEANUP — everything below is in the same layer, so
-    #  deleted bytes are never committed to the image
+    #  CLEANUP
     # ══════════════════════════════════════════════════════════
     \
-    # CHANGED: apt lists + cache (was missing — ~30-50 MB!)
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     \
@@ -237,10 +237,12 @@ RUN set -eux; \
     rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* \
            /usr/share/lintian/* /usr/share/linda/*; \
     \
-    # CHANGED: system locale data (LANG=C.UTF-8 doesn't use them — ~10-20 MB)
     find /usr/share/locale -mindepth 1 -maxdepth 1 -type d \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /usr/share/i18n/locales; \
+    \
+    # OPTIMIZATION: Delete Icons/Themes (LibreOffice pulls these, ~20-50MB)
+    rm -rf /usr/share/icons/* /usr/share/themes/*; \
     \
     # LibreOffice extras
     rm -rf /usr/lib/libreoffice/share/gallery \
@@ -252,7 +254,7 @@ RUN set -eux; \
            /usr/lib/libreoffice/share/basic \
            /usr/lib/libreoffice/share/Scripts; \
     \
-    # CHANGED: Python caches + pip/setuptools from both venvs (~15-25 MB)
+    # Python caches + pip/setuptools from both venvs
     find /opt/venv /opt/unoserver-venv -type d -name __pycache__ \
       -exec rm -rf {} + 2>/dev/null || true; \
     find /opt/venv /opt/unoserver-venv \
@@ -262,13 +264,48 @@ RUN set -eux; \
            /opt/unoserver-venv/lib/python*/site-packages/pip \
            /opt/unoserver-venv/lib/python*/site-packages/setuptools; \
     \
+    # Additional LibreOffice cleanup
+    rm -rf /usr/lib/libreoffice/share/autocorr \
+           /usr/lib/libreoffice/share/classification \
+           /usr/lib/libreoffice/share/wordbook \
+           /usr/lib/libreoffice/share/extensions \
+           /usr/lib/libreoffice/share/fingerprint \
+           /usr/lib/libreoffice/share/xdg \
+           /usr/lib/libreoffice/share/numbertext \
+           /usr/lib/libreoffice/share/shell \
+           /usr/lib/libreoffice/share/palette \
+           /usr/lib/libreoffice/share/theme_definitions \
+           /usr/lib/libreoffice/share/config/soffice.cfg; \
+    \
+    # Strip debug symbols from ALL shared libraries
+    find /usr/lib -name '*.so*' -type f \
+        -exec strip --strip-unneeded {} + 2>/dev/null || true; \
+    \
+    # System-wide Python cache cleanup
+    find /usr/lib/python3* -type d -name __pycache__ \
+        -exec rm -rf {} + 2>/dev/null || true; \
+    find /usr/lib/python3* \( -name '*.pyc' -o -name '*.pyi' \) \
+        -delete 2>/dev/null || true; \
+    \
+    # Additional metadata cleanup
+    rm -rf /usr/share/bug /usr/share/lintian /usr/share/linda \
+           /var/lib/dpkg/info/*.md5sums \
+           /var/log/dpkg.log /var/log/apt/* \
+           /usr/share/ghostscript/*/doc \
+           /usr/share/ghostscript/*/examples \
+           /usr/share/ImageMagick-*; \
+    \
+    # Trim CJK fonts to Regular weight only
+    find /usr/share/fonts/opentype/noto -name '*CJK*' \
+        ! -name '*Regular*' -type f -delete 2>/dev/null || true; \
+    \
     # Misc caches
     rm -rf /var/cache/fontconfig/* /tmp/* /root/.cache
 
 # ---------------------------------------------------------------------------
 # Calibre (pre-stripped in stage 1)
 # ---------------------------------------------------------------------------
-COPY --from=calibre-build /opt/calibre /opt/calibre
+COPY --link --from=calibre-build /opt/calibre /opt/calibre
 
 # ---------------------------------------------------------------------------
 # Non-root user
@@ -292,24 +329,17 @@ RUN set -eux; \
 # ---------------------------------------------------------------------------
 # Application files (--chown set at copy time → no later chown needed)
 # ---------------------------------------------------------------------------
-COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/app/core/build/libs/*.jar /app.jar
-COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
+COPY --link --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
 
 # Fonts go to system dir — root ownership is correct (world-readable)
 COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # ---------------------------------------------------------------------------
 # Directories + permissions + font cache
-#
-# CHANGED: removed chown of /app.jar, /restart-helper.jar, /scripts,
-#          /usr/share/fonts/truetype — they already have correct ownership
-#          from COPY --chown or are system files (fonts).
-#          This was duplicating ~240 MB of files into a new layer (~94 MB).
-#          Now this layer is < 1 MB (just empty dirs + fc-cache output).
-# CHANGED: merged calibre symlink here to eliminate a separate layer.
 # ---------------------------------------------------------------------------
 RUN set -eux; \
     ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert; \
@@ -334,7 +364,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     PUID=${PUID} \
     PGID=${PGID} \
     UMASK=022 \
-    PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}" \
+    PATH="/opt/venv/bin:${PATH}" \
     UNO_PATH=/usr/lib/libreoffice/program \
     LIBREOFFICE_BIN_PATH=/usr/lib/libreoffice/program/soffice.bin \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
