@@ -230,7 +230,7 @@ RUN set -eux; \
     # Rebuild UNO bridge type database
     /usr/lib/libreoffice/program/soffice.bin --headless --convert-to pdf /dev/null 2>/dev/null || true; \
     # Force font cache rebuild and verify filters are available
-    fc-cache -f -v 2>&1 | head -20; \
+    fc-cache -f -v 2>&1 | { head -20; cat > /dev/null; }; \
     /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
     /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')"; \
     \

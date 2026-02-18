@@ -238,7 +238,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Rebuild UNO bridge type database
     /usr/lib/libreoffice/program/soffice.bin --headless --convert-to pdf /dev/null 2>/dev/null || true; \
     # Force font cache rebuild and verify filters are available
-    fc-cache -f -v 2>&1 | head -20; \
+    fc-cache -f -v 2>&1 | { head -20; cat > /dev/null; }; \
     \
     # ══════════════════════════════════════════════════════════
     #  CLEANUP: everything below is in the same layer, so
