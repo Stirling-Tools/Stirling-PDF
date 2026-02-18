@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,9 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -320,11 +318,13 @@ public class ConfigController {
 
     @GetMapping("/endpoints-availability")
     public ResponseEntity<Map<String, EndpointAvailability>> getEndpointAvailability(
-            @RequestParam(name = "endpoints")
-                    @Size(min = 1, max = 100, message = "Must provide between 1 and 100 endpoints")
-                    List<@NotBlank String> endpoints) {
+            @RequestParam(name = "endpoints", required = false) List<String> endpoints) {
+        Collection<String> toCheck =
+                (endpoints == null || endpoints.isEmpty())
+                        ? endpointConfiguration.getAllEndpoints()
+                        : endpoints;
         Map<String, EndpointAvailability> result = new HashMap<>();
-        for (String endpoint : endpoints) {
+        for (String endpoint : toCheck) {
             String trimmedEndpoint = endpoint.trim();
             result.put(
                     trimmedEndpoint,
