@@ -8,17 +8,25 @@ interface Point {
   y: number;
 }
 
+/**
+ * A point anchored to a specific PDF page in PDF-unit space.
+ * x and y are in PDF points (1/72 inch) relative to the page's top-left corner.
+ *
+ * This is the only truly zoom-invariant representation. Screen positions are
+ * recovered at render time via getBoundingClientRect on the page element, so
+ * scroll, zoom, and fixed page margins are all handled by the browser — we never
+ * have to track them ourselves.
+ */
+interface PagePoint {
+  pageIndex: number;
+  x: number;
+  y: number;
+}
+
 interface Measurement {
   id: string;
-  /**
-   * Both endpoints in *PDF point space*:
-   *   pt = (screenX + scrollLeft) / zoom
-   *
-   * This is zoom-invariant — the values don't change when the user zooms or
-   * scrolls, so measurements always stay anchored to the correct PDF position.
-   */
-  start: Point;
-  end: Point;
+  start: PagePoint;
+  end: PagePoint;
 }
 
 export interface RulerOverlayHandle {
@@ -47,30 +55,26 @@ function perpUnit(a: Point, b: Point): { nx: number; ny: number } {
   return { nx: -dy / len, ny: dx / len };
 }
 
-/** Angle from horizontal 0°–90° (0° = flat, 90° = vertical). */
+/** Angle from horizontal 0°–90°. Computed from screen-space points (same angle as PDF space). */
 function angleDeg(a: Point, b: Point): number {
   return Math.atan2(Math.abs(b.y - a.y), Math.abs(b.x - a.x)) * (180 / Math.PI);
 }
 
-/**
- * PDF point distance → human-readable mm/cm string.
- * 1 PDF point = 1/72 inch (no zoom factor — we store in point space already).
- */
 function formatDist(pts: number): string {
   const mm = (pts / 72) * 25.4;
-  if (mm < 100) return `${mm.toFixed(1)} mm`;
-  return `${(mm / 10).toFixed(1)} cm`;
+  if (mm < 100)  return `${mm.toFixed(1)} mm`;
+  if (mm < 1000) return `${(mm / 10).toFixed(1)} cm`;
+  return `${(mm / 1000).toFixed(2)} m`;
 }
 
-/** PDF point distance → inches string. */
 function formatInches(pts: number): string {
   const inches = pts / 72;
-  return `${inches.toFixed(2)} in`;
+  if (inches < 12) return `${inches.toFixed(2)} in`;
+  return `${(inches / 12).toFixed(2)} ft`;
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 
-/** Find the first scrollable descendant of root (the EmbedPDF Viewport div). */
 function findScrollEl(root: HTMLElement): HTMLElement | null {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
   let node: Node | null;
@@ -85,38 +89,58 @@ function findScrollEl(root: HTMLElement): HTMLElement | null {
   return null;
 }
 
-/** Returns true when the mouse is over an actual PDF page (not the grey margin). */
 function isOverPage(e: MouseEvent): boolean {
   return !!(e.target as Element).closest?.('[data-page-index]');
 }
 
 /**
- * Given a cursor position in container-relative screen space, find the nearest
- * point on any visible page boundary. Used to clamp the live line when the
- * cursor drifts off the page after the first anchor is placed.
+ * Find the nearest point on any page boundary and return it as both
+ * an SVG screen coordinate and a PagePoint (page-relative PDF units).
+ * Used to clamp the live line when the cursor drifts off the page.
  */
-function nearestPageEdgePoint(cursor: Point, container: HTMLElement): Point | null {
+function nearestPageDocPt(
+  cursor: Point,
+  container: HTMLElement,
+  zoom: number,
+): { screenPt: Point; docPt: PagePoint } | null {
   const pages = container.querySelectorAll('[data-page-index]');
   if (!pages.length) return null;
 
   const cr = container.getBoundingClientRect();
   let bestDist = Infinity;
-  let best: Point | null = null;
+  let best: { screenPt: Point; docPt: PagePoint } | null = null;
 
-  pages.forEach(page => {
-    const r = page.getBoundingClientRect();
-    // Page rect relative to container
-    const left = r.left - cr.left;
-    const top = r.top - cr.top;
-    const right = r.right - cr.left;
+  pages.forEach(pageNode => {
+    const pageEl = pageNode as HTMLElement;
+    const r = pageEl.getBoundingClientRect();
+    const pageIndex = parseInt(pageEl.dataset.pageIndex ?? '0', 10);
+
+    // Page bounds in SVG (container-relative) space
+    const left   = r.left   - cr.left;
+    const top    = r.top    - cr.top;
+    const right  = r.right  - cr.left;
     const bottom = r.bottom - cr.top;
 
-    // Nearest point on this rect to cursor
-    const cx = Math.max(left, Math.min(right, cursor.x));
-    const cy = Math.max(top, Math.min(bottom, cursor.y));
-    const d = Math.sqrt((cursor.x - cx) ** 2 + (cursor.y - cy) ** 2);
+    // Nearest point on this rect to the cursor (SVG space)
+    const cx = Math.max(left, Math.min(right,  cursor.x));
+    const cy = Math.max(top,  Math.min(bottom, cursor.y));
+    const d  = Math.sqrt((cursor.x - cx) ** 2 + (cursor.y - cy) ** 2);
 
-    if (d < bestDist) { bestDist = d; best = { x: cx, y: cy }; }
+    if (d < bestDist) {
+      bestDist = d;
+      // Convert SVG-space point (cx, cy) → page-relative viewport → PDF points:
+      //   viewport position of cx = cr.left + cx
+      //   page-relative position  = (cr.left + cx) - r.left
+      //   PDF units               = page-relative / zoom
+      best = {
+        screenPt: { x: cx, y: cy },
+        docPt: {
+          pageIndex,
+          x: (cr.left + cx - r.left) / zoom,
+          y: (cr.top  + cy - r.top ) / zoom,
+        },
+      };
+    }
   });
 
   return best;
@@ -126,60 +150,75 @@ function nearestPageEdgePoint(cursor: Point, container: HTMLElement): Point | nu
 
 const TICK = 10;
 const DOT_R = 5;
-const LH = 26;       // label height (normal)
-const LH2 = 44;      // label height (hovered — shows angle too)
-const LP = 10;       // label horizontal padding
+const LH  = 26;   // label height (normal)
+const LH2 = 44;   // label height (hovered — shows angle too)
+const LP  = 10;   // label horizontal padding
 const DEL_R = 8;
 
 interface MeasurementLineProps {
-  measurement: Measurement;
-  startS: Point;   // screen-space (already converted)
+  id: string;
+  startS: Point;
   endS: Point;
+  /** Physical distance in PDF points (= screen pixel distance / zoom). */
+  distPts: number;
   hovered: boolean;
   onDelete: (id: string) => void;
   onHover: (id: string | null) => void;
 }
 
-function MeasurementLine({ measurement, startS, endS, hovered, onDelete, onHover }: MeasurementLineProps) {
-  const d = dist(measurement.start, measurement.end); // PDF points — accurate regardless of zoom
+function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover }: MeasurementLineProps) {
   const mid = midpoint(startS, endS);
   const { nx, ny } = perpUnit(startS, endS);
-  const ang = angleDeg(measurement.start, measurement.end);
-  const distLabel = formatDist(d);
-  // On hover show "33.2 mm / 1.31 in" combined, otherwise just mm/cm
-  const distHoverLabel = `${formatDist(d)} / ${formatInches(d)}`;
+  const ang = angleDeg(startS, endS);
+  const distLabel = formatDist(distPts);
+  const distHoverLabel = `${formatDist(distPts)} / ${formatInches(distPts)}`;
   const angLabel = `∠ ${ang.toFixed(1)}°`;
   const lh = hovered ? LH2 : LH;
-  const lw = Math.max(
-    hovered
-      ? Math.max(distHoverLabel.length, angLabel.length) * 8 + LP * 2
-      : distLabel.length * 8 + LP * 2,
-    80
-  );
+
+  // Pre-compute both label widths so the X button position never changes on hover.
+  const lwNormal = Math.max(distLabel.length * 8 + LP * 2, 80);
+  const lwHover  = Math.max(Math.max(distHoverLabel.length, angLabel.length) * 8 + LP * 2, 80);
+  const lw = hovered ? lwHover : lwNormal;
   const sw = hovered ? 3 : 2;
-  const delX = mid.x + lw / 2 + DEL_R * 0.6;
-  const delY = mid.y - lh / 2 - DEL_R * 0.6;
+
+  // X button: always positioned relative to the wider (hover) label width and
+  // vertically centered at mid.y — it never moves when hover state changes.
+  const delX = mid.x + lwHover / 2 + DEL_R + 4;
+  const delY = mid.y;
+
+  // Transparent hit-capture rect sized for the maximum (hover) state.
+  // Eliminates the dead-zone gap that caused hover to oscillate when moving
+  // toward the X button.
+  const hitLeft   = mid.x - lwHover / 2 - 4;
+  const hitTop    = mid.y - LH2 / 2 - 4;
+  const hitWidth  = (delX + DEL_R + 4) - hitLeft;
+  const hitHeight = LH2 + 8;
 
   return (
     <g
-      onMouseEnter={() => onHover(measurement.id)}
+      onMouseEnter={() => onHover(id)}
       onMouseLeave={() => onHover(null)}
       style={{ pointerEvents: 'all' }}
     >
+      {/* Background hit area — rendered first so elements above can still receive clicks */}
+      <rect
+        x={hitLeft} y={hitTop}
+        width={hitWidth} height={hitHeight}
+        fill="transparent" stroke="none"
+        style={{ pointerEvents: 'all' }}
+      />
+
       <line x1={startS.x} y1={startS.y} x2={endS.x} y2={endS.y}
         stroke="#1e88e5" strokeWidth={sw} strokeLinecap="round" />
-      {/* Tick marks */}
       <line x1={startS.x + nx * TICK / 2} y1={startS.y + ny * TICK / 2}
             x2={startS.x - nx * TICK / 2} y2={startS.y - ny * TICK / 2}
             stroke="#1e88e5" strokeWidth={sw} strokeLinecap="round" />
       <line x1={endS.x + nx * TICK / 2} y1={endS.y + ny * TICK / 2}
             x2={endS.x - nx * TICK / 2} y2={endS.y - ny * TICK / 2}
             stroke="#1e88e5" strokeWidth={sw} strokeLinecap="round" />
-      {/* Dots */}
       <circle cx={startS.x} cy={startS.y} r={DOT_R} fill="#1e88e5" stroke="white" strokeWidth={2} />
       <circle cx={endS.x} cy={endS.y} r={DOT_R} fill="#1e88e5" stroke="white" strokeWidth={2} />
 
-      {/* Label */}
       <g style={{ pointerEvents: 'all', cursor: 'default' }}>
         <rect x={mid.x - lw / 2} y={mid.y - lh / 2} width={lw} height={lh}
           rx={5} fill="white" stroke="#1e88e5" strokeWidth={1.5} filter="url(#ruler-shadow)" />
@@ -199,8 +238,8 @@ function MeasurementLine({ measurement, startS, endS, hovered, onDelete, onHover
             {angLabel}
           </text>
         )}
-        {/* Delete button */}
-        <g style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); onDelete(measurement.id); }}>
+        {/* Delete button — fixed position, never moves when hover state changes */}
+        <g style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); onDelete(id); }}>
           <circle cx={delX} cy={delY} r={DEL_R} fill="#ef5350" stroke="white" strokeWidth={1.5} />
           <text x={delX} y={delY} textAnchor="middle" dominantBaseline="middle"
             fill="white" fontSize={12} fontWeight={700} style={{ userSelect: 'none' }}>×</text>
@@ -213,15 +252,14 @@ function MeasurementLine({ measurement, startS, endS, hovered, onDelete, onHover
 interface LiveLineProps {
   startS: Point;
   endS: Point;
-  startDoc: Point;
-  endDoc: Point;
+  zoom: number;
 }
 
-function LiveLine({ startS, endS, startDoc, endDoc }: LiveLineProps) {
-  const d = dist(startDoc, endDoc); // PDF points
+function LiveLine({ startS, endS, zoom }: LiveLineProps) {
+  const d = dist(startS, endS) / zoom; // PDF points from screen distance
   const mid = midpoint(startS, endS);
   const { nx, ny } = perpUnit(startS, endS);
-  const ang = angleDeg(startDoc, endDoc);
+  const ang = angleDeg(startS, endS);
   const distLabel = formatDist(d);
   const lw = Math.max(distLabel.length * 8 + LP * 2, 80);
 
@@ -262,26 +300,30 @@ function LiveLine({ startS, endS, startDoc, endDoc }: LiveLineProps) {
 export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayProps>(
   ({ containerRef, isActive }, ref) => {
     const [measurements, setMeasurements] = useState<Measurement[]>([]);
-    /** First anchor in PDF point space. */
-    const [firstPt, setFirstPt] = useState<Point | null>(null);
-    /** Current cursor in *screen space* (container-relative px) — for live crosshair. */
+    const [firstPt, setFirstPt] = useState<PagePoint | null>(null);
+    /** Current cursor in SVG screen-space — for live crosshair and live line rendering. */
     const [cursorS, setCursorS] = useState<Point | null>(null);
-    /** Current cursor in *PDF point space* — for live distance label. */
-    const [cursorDoc, setCursorDoc] = useState<Point | null>(null);
+    /** Current cursor in page-relative PDF units — for finalising off-page clicks. */
+    const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
     const [hoveredId, setHoveredId] = useState<string | null>(null);
-    const [scrollOffset, setScrollOffset] = useState<Point>({ x: 0, y: 0 });
+
+    /**
+     * Incremented on scroll to trigger re-renders.
+     * We no longer store the scroll value — getBoundingClientRect handles that
+     * automatically and is always accurate regardless of scroll position.
+     */
+    const [, setScrollVersion] = useState(0);
 
     const scrollElRef = useRef<HTMLElement | null>(null);
+    const scrollCleanupRef = useRef<(() => void) | null>(null);
     const idCounter = useRef(0);
 
-    // Refs so event-listener closures always read current values without re-attaching
-    const firstPtRef = useRef<Point | null>(null);
+    const firstPtRef = useRef<PagePoint | null>(null);
     useEffect(() => { firstPtRef.current = firstPt; }, [firstPt]);
 
-    // Latest cursor position in PDF point space (updated in onMove, read in onClick)
-    const cursorDocRef = useRef<Point | null>(null);
+    const cursorDocRef = useRef<PagePoint | null>(null);
 
-    // ── Zoom as reactive state ─────────────────────────────────────────────────
+    // ── Zoom ──────────────────────────────────────────────────────────────────
     const viewer = useViewer();
     const { registerImmediateZoomUpdate } = viewer;
 
@@ -290,37 +332,56 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
       catch { return 1.4; }
     });
 
-    // Keep a ref so event-listener closures always see the latest zoom
     const zoomRef = useRef(zoom);
     useEffect(() => { zoomRef.current = zoom; }, [zoom]);
 
     useEffect(() => {
-      return registerImmediateZoomUpdate((pct) => setZoom(pct / 100));
+      return registerImmediateZoomUpdate((pct) => {
+        const newZoom = pct / 100;
+        zoomRef.current = newZoom; // immediate for event-listener closures
+        setZoom(newZoom);          // re-render #1: zoom updated, but PDF.js DOM may not be yet
+        // re-render #2: after PDF.js has updated page element dimensions in the DOM,
+        // so getBoundingClientRect returns the correct positions for the new zoom level.
+        requestAnimationFrame(() => setScrollVersion(n => n + 1));
+      });
     }, [registerImmediateZoomUpdate]);
 
     // ── Scroll tracking ────────────────────────────────────────────────────────
+    // We only need re-renders on scroll; getBoundingClientRect gives us accurate
+    // positions without needing to know the scroll offset ourselves.
+
+    const attachScrollEl = useCallback((el: HTMLElement) => {
+      scrollCleanupRef.current?.();
+      scrollElRef.current = el;
+      const handler = () => setScrollVersion(n => n + 1);
+      el.addEventListener('scroll', handler, { passive: true });
+      scrollCleanupRef.current = () => el.removeEventListener('scroll', handler);
+    }, []);
+
     useEffect(() => {
       const container = containerRef.current;
       if (!container) return;
 
-      const attach = (el: HTMLElement) => {
-        scrollElRef.current = el;
-        setScrollOffset({ x: el.scrollLeft, y: el.scrollTop });
-        const onScroll = () => setScrollOffset({ x: el.scrollLeft, y: el.scrollTop });
-        el.addEventListener('scroll', onScroll, { passive: true });
-        return () => el.removeEventListener('scroll', onScroll);
+      const tryAttach = () => {
+        const el = findScrollEl(container);
+        if (el) { attachScrollEl(el); return true; }
+        return false;
       };
 
-      const el = findScrollEl(container);
-      if (el) return attach(el);
+      if (!tryAttach()) {
+        const timer = setTimeout(() => tryAttach(), 600);
+        return () => { clearTimeout(timer); scrollCleanupRef.current?.(); };
+      }
+      return () => scrollCleanupRef.current?.();
+    }, [containerRef, attachScrollEl]);
 
-      // PDF viewer may not be mounted yet — retry once
-      const timer = setTimeout(() => {
-        const found = findScrollEl(container);
-        if (found) attach(found);
-      }, 600);
-      return () => clearTimeout(timer);
-    }, [containerRef]);
+    // Re-find scroll element when zoom changes (PDF.js may recreate the scroll DOM).
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+      const el = findScrollEl(container);
+      if (el && el !== scrollElRef.current) attachScrollEl(el);
+    }, [zoom, containerRef, attachScrollEl]);
 
     // ── Imperative handle ──────────────────────────────────────────────────────
     React.useImperativeHandle(ref, () => ({
@@ -337,27 +398,22 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
       const el = containerRef.current;
       if (!isActive || !el) return;
 
-      /** Screen position relative to the container (matches SVG coordinate space). */
       const toScreenPt = (e: MouseEvent): Point => {
         const r = el.getBoundingClientRect();
         return { x: e.clientX - r.left, y: e.clientY - r.top };
       };
 
-      /** Convert to PDF point space: add scroll, divide by zoom. */
-      const toDocPt = (e: MouseEvent): Point => {
-        const r = el.getBoundingClientRect();
-        const s = scrollElRef.current;
+      /**
+       * Convert a mouse event to a page-relative PagePoint.
+       * Returns null if the cursor is not directly over a page element.
+       */
+      const toDocPagePt = (e: MouseEvent): PagePoint | null => {
+        const pageEl = (e.target as Element).closest?.('[data-page-index]') as HTMLElement | null;
+        if (!pageEl) return null;
+        const pageIndex = parseInt(pageEl.dataset.pageIndex ?? '0', 10);
+        const r = pageEl.getBoundingClientRect();
         const z = zoomRef.current;
-        return {
-          x: (e.clientX - r.left + (s?.scrollLeft ?? 0)) / z,
-          y: (e.clientY - r.top + (s?.scrollTop ?? 0)) / z,
-        };
-      };
-
-      const setCursorFromDocPt = (screenPt: Point, docPt: Point) => {
-        setCursorS(screenPt);
-        setCursorDoc(docPt);
-        cursorDocRef.current = docPt;
+        return { pageIndex, x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z };
       };
 
       const clearCursor = () => {
@@ -370,23 +426,21 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
         const screenPt = toScreenPt(e);
 
         if (isOverPage(e)) {
-          // Normal: cursor is over a page
           el.style.cursor = 'crosshair';
-          setCursorFromDocPt(screenPt, toDocPt(e));
+          const docPt = toDocPagePt(e);
+          setCursorS(screenPt);
+          setCursorDoc(docPt);
+          cursorDocRef.current = docPt;
         } else if (firstPtRef.current !== null) {
           // First point placed, cursor wandered off page — clamp to nearest edge
           el.style.cursor = 'crosshair';
-          const clamped = nearestPageEdgePoint(screenPt, el);
-          if (clamped) {
-            const s = scrollElRef.current;
-            const z = zoomRef.current;
-            setCursorFromDocPt(clamped, {
-              x: (clamped.x + (s?.scrollLeft ?? 0)) / z,
-              y: (clamped.y + (s?.scrollTop ?? 0)) / z,
-            });
+          const result = nearestPageDocPt(screenPt, el, zoomRef.current);
+          if (result) {
+            setCursorS(result.screenPt);
+            setCursorDoc(result.docPt);
+            cursorDocRef.current = result.docPt;
           }
         } else {
-          // No first point and off page — hide cursor indicator
           el.style.cursor = 'default';
           clearCursor();
         }
@@ -397,12 +451,10 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
         if ((e.target as Element).closest?.('[data-ruler-interactive]')) return;
 
         const overPage = isOverPage(e);
-        // Allow placement only on-page, OR when finalising a measurement at a clamped edge
         if (!overPage && firstPtRef.current === null) return;
         e.preventDefault();
 
-        // Use actual position when over page, clamped doc position when off-page
-        const dp = overPage ? toDocPt(e) : cursorDocRef.current;
+        const dp = overPage ? toDocPagePt(e) : cursorDocRef.current;
         if (!dp) return;
 
         setFirstPt(prev => {
@@ -414,8 +466,6 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
         });
       };
 
-      // When cursor leaves the container: only clear if no first point is placed
-      // (if measuring, keep the live line at the last clamped edge position)
       const onLeave = () => {
         el.style.cursor = '';
         if (firstPtRef.current === null) clearCursor();
@@ -443,17 +493,31 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
 
     if (!isActive && measurements.length === 0) return null;
 
-    // ── PDF point → screen conversion ─────────────────────────────────────────
+    // ── PagePoint → SVG screen coordinates ────────────────────────────────────
     /**
-     * Convert a PDF-point-space coordinate to screen space (SVG pixels).
-     * screen = pt * zoom − scroll
+     * Convert a page-anchored point to SVG screen coordinates.
+     *
+     * Uses getBoundingClientRect so the browser computes the exact screen position
+     * accounting for scroll, zoom, page margins, centering — everything. This is
+     * why we no longer need to track scroll offsets.
+     *
+     * Returns null if the page element isn't in the DOM (shouldn't happen with
+     * PDF.js placeholder divs, but guard anyway).
      */
-    const toScreen = (pt: Point): Point => ({
-      x: pt.x * zoom - scrollOffset.x,
-      y: pt.y * zoom - scrollOffset.y,
-    });
+    const pagePointToScreen = (pt: PagePoint): Point | null => {
+      const container = containerRef.current;
+      if (!container) return null;
+      const pageEl = container.querySelector(`[data-page-index="${pt.pageIndex}"]`) as HTMLElement | null;
+      if (!pageEl) return null;
+      const pageRect = pageEl.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      return {
+        x: pageRect.left - containerRect.left + pt.x * zoom,
+        y: pageRect.top  - containerRect.top  + pt.y * zoom,
+      };
+    };
 
-    const firstPtS = firstPt ? toScreen(firstPt) : null;
+    const firstPtS = firstPt ? pagePointToScreen(firstPt) : null;
 
     return (
       <svg
@@ -475,21 +539,27 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
         </defs>
 
         {/* Completed measurements */}
-        {measurements.map(m => (
-          <MeasurementLine
-            key={m.id}
-            measurement={m}
-            startS={toScreen(m.start)}
-            endS={toScreen(m.end)}
-            hovered={hoveredId === m.id}
-            onDelete={deleteMeasurement}
-            onHover={setHoveredId}
-          />
-        ))}
+        {measurements.map(m => {
+          const startS = pagePointToScreen(m.start);
+          const endS   = pagePointToScreen(m.end);
+          if (!startS || !endS) return null;
+          return (
+            <MeasurementLine
+              key={m.id}
+              id={m.id}
+              startS={startS}
+              endS={endS}
+              distPts={dist(startS, endS) / zoom}
+              hovered={hoveredId === m.id}
+              onDelete={deleteMeasurement}
+              onHover={setHoveredId}
+            />
+          );
+        })}
 
         {/* Live line while drawing */}
-        {isActive && firstPtS && cursorS && cursorDoc && firstPt && (
-          <LiveLine startS={firstPtS} endS={cursorS} startDoc={firstPt} endDoc={cursorDoc} />
+        {isActive && firstPtS && cursorS && (
+          <LiveLine startS={firstPtS} endS={cursorS} zoom={zoom} />
         )}
 
         {/* First-point anchor dot */}
@@ -505,7 +575,6 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
             <circle cx={cursorS.x} cy={cursorS.y} r={2} fill="#1e88e5" />
           </g>
         )}
-
 
         {/* Clear all */}
         {measurements.length > 0 && (
