@@ -76,7 +76,8 @@
             "minimumSystemVersion": "10.15",
             "signingIdentity": null,
             "entitlements": null,
-            "providerShortName": null
+            "providerShortName": null,
+            "infoPlist": "Info.plist"
         }
     },
     "plugins": {
