@@ -158,6 +158,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-venv python3-dev \
+      python3-packaging \
       build-essential \
       # Build dependencies for ocrmypdf/weasyprint/opencv
       zlib1g-dev libjpeg-dev libffi-dev libpango1.0-dev \
@@ -207,7 +208,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-noto-cjk \
       fonts-freefont-ttf fonts-terminus \
       # Python runtime & UNO bridge (python3-full -> python3 optimization)
-      python3 python3-uno \
+      python3 python3-uno python3-packaging \
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \

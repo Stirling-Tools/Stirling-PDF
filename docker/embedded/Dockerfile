@@ -181,7 +181,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
+      ffmpeg poppler-utils imagemagick fontforge ghostscript \
       gosu unpaper qpdf \
       # Fonts: full CJK coverage retained
       fonts-dejavu \
@@ -215,7 +215,7 @@ RUN set -eux; \
     # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
     python3 -m venv /opt/venv --system-site-packages; \
     /opt/venv/bin/pip install --no-cache-dir \
-      weasyprint pdf2image opencv-python-headless \
+      weasyprint pdf2image opencv-python-headless ocrmypdf \
       "unoserver==${UNOSERVER_VERSION}"; \
     \
     ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
@@ -224,6 +224,7 @@ RUN set -eux; \
     # ── Verify ──
     libreoffice --version; \
     /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
+    /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')"; \
     \
     # ══════════════════════════════════════════════════════════
     #  CLEANUP
@@ -253,15 +254,13 @@ RUN set -eux; \
            /usr/lib/libreoffice/share/basic \
            /usr/lib/libreoffice/share/Scripts; \
     \
-    # Python caches + pip/setuptools from both venvs
-    find /opt/venv /opt/unoserver-venv -type d -name __pycache__ \
+    # Python caches + pip/setuptools cleanup
+    find /opt/venv -type d -name __pycache__ \
       -exec rm -rf {} + 2>/dev/null || true; \
-    find /opt/venv /opt/unoserver-venv \
+    find /opt/venv \
       \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
-           /opt/venv/lib/python*/site-packages/setuptools \
-           /opt/unoserver-venv/lib/python*/site-packages/pip \
-           /opt/unoserver-venv/lib/python*/site-packages/setuptools; \
+           /opt/venv/lib/python*/site-packages/setuptools; \
     \
     # Additional LibreOffice cleanup
     rm -rf /usr/lib/libreoffice/share/autocorr \
