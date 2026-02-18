@@ -16,10 +16,7 @@ export async function fetchFormFieldsWithCoordinates(
 
   const response = await apiClient.post<FormField[]>(
     '/api/v1/form/fields-with-coordinates',
-    formData,
-    {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }
+    formData
   );
   return response.data;
 }
@@ -42,7 +39,6 @@ export async function fillFormFields(
   formData.append('flatten', String(flatten));
 
   const response = await apiClient.post('/api/v1/form/fill', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     responseType: 'blob',
   });
   return response.data;
