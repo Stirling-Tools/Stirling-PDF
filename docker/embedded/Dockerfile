@@ -300,7 +300,7 @@ RUN set -eux; \
         ! -name '*Regular*' -type f -delete 2>/dev/null || true; \
     \
     # Misc caches
-    rm -rf /var/cache/fontconfig/* /tmp/* /root/.cache
+    rm -rf /var/cache/fontconfig/* /tmp/*
 
 # ---------------------------------------------------------------------------
 # Calibre (pre-stripped in stage 1)
