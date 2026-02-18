@@ -221,7 +221,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       libasound2t64 libxcomposite1 libxrandr2 \
       # Headless LibreOffice
       libreoffice-writer-nogui libreoffice-calc-nogui \
-      libreoffice-impress-nogui libreoffice-java-common \
+      libreoffice-impress-nogui libreoffice-draw-nogui \
+      libreoffice-java-common \
     ; \
     \
     # ── FIX: Enable PDF/PS processing in ImageMagick (disabled by default on Ubuntu) ──

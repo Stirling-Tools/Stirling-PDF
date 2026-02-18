@@ -209,7 +209,8 @@ RUN set -eux; \
       libasound2t64 libxcomposite1 libxrandr2 \
       # Headless LibreOffice
       libreoffice-writer-nogui libreoffice-calc-nogui \
-      libreoffice-impress-nogui libreoffice-java-common \
+      libreoffice-impress-nogui libreoffice-draw-nogui \
+      libreoffice-java-common \
     ; \
     \
     # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
