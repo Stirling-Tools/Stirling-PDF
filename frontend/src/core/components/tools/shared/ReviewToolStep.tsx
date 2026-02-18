@@ -12,6 +12,7 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { saveOperationResults } from "@app/services/operationResultsSaveService";
 import { useFileActions, useFileState } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/fileContext";
+import i18n from "@app/i18n";
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -151,10 +152,8 @@ export function createReviewToolStep<TParams = unknown>(
   ) => React.ReactElement,
   props: ReviewToolStepProps<TParams>
 ): React.ReactElement {
-  const { t } = useTranslation();
-
   return createStep(
-    t("review", "Review"),
+    i18n.t("review", "Review"),
     {
       isVisible: props.isVisible,
       isCollapsed: props.isCollapsed,

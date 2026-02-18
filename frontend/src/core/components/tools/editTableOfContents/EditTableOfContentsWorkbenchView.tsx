@@ -43,6 +43,16 @@ interface EditTableOfContentsWorkbenchViewProps {
 const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbenchViewProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
+  const files = data?.files ?? [];
+  const thumbnails = data?.thumbnails ?? [];
+  const previewFiles = useMemo(
+    () =>
+      files.map((file, index) => ({
+        file,
+        thumbnail: thumbnails[index],
+      })),
+    [files, thumbnails]
+  );
 
   if (!data) {
     return (
@@ -63,8 +73,6 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
     bookmarks,
     selectedFileName,
     disabled,
-    files,
-    thumbnails,
     downloadUrl,
     downloadFilename,
     errorMessage,
@@ -77,15 +85,6 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
     onUndo,
     onFileClick,
   } = data;
-
-  const previewFiles = useMemo(
-    () =>
-      files?.map((file, index) => ({
-        file,
-        thumbnail: thumbnails[index],
-      })) ?? [],
-    [files, thumbnails]
-  );
 
   const showResults = Boolean(
     previewFiles.length > 0 || downloadUrl || errorMessage
