@@ -25,10 +25,18 @@ API_HEADERS = {"X-API-KEY": "123456789"}
 def step_generate_pdf(context, fileInput):
     context.param_name = fileInput
     context.file_name = "genericNonCustomisableName.pdf"
-    writer = PdfWriter()
-    writer.add_blank_page(width=72, height=72)  # Single blank page
+    # Generate a PDF with proper size and content (Letter size: 612x792 points)
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    # Add some text content so OCR and other tools can process it
+    c.drawString(100, height - 100, "This is a test PDF document")
+    c.showPage()
+    c.save()
+
     with open(context.file_name, "wb") as f:
-        writer.write(f)
+        f.write(buffer.getvalue())
+
     if not hasattr(context, "files"):
         context.files = {}
     context.files[context.param_name] = open(context.file_name, "rb")
@@ -51,11 +59,16 @@ def step_use_example_file(context, filePath, fileInput):
 
 @given("the pdf contains {page_count:d} pages")
 def step_pdf_contains_pages(context, page_count):
-    writer = PdfWriter()
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
     for i in range(page_count):
-        writer.add_blank_page(width=72, height=72)
+        c.drawString(100, height - 100, f"Page {i + 1} of {page_count}")
+        c.showPage()
+    c.save()
+
     with open(context.file_name, "wb") as f:
-        writer.write(f)
+        f.write(buffer.getvalue())
     context.files[context.param_name].close()
     context.files[context.param_name] = open(context.file_name, "rb")
 
@@ -63,11 +76,17 @@ def step_pdf_contains_pages(context, page_count):
 # Duplicate for now...
 @given("the pdf contains {page_count:d} blank pages")
 def step_pdf_contains_blank_pages(context, page_count):
-    writer = PdfWriter()
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
     for i in range(page_count):
-        writer.add_blank_page(width=72, height=72)
+        # Add minimal text to ensure PDF is valid and can be processed by tools
+        c.drawString(100, height - 100, f"Blank page {i + 1}")
+        c.showPage()
+    c.save()
+
     with open(context.file_name, "wb") as f:
-        writer.write(f)
+        f.write(buffer.getvalue())
     context.files[context.param_name].close()
     context.files[context.param_name] = open(context.file_name, "rb")
 

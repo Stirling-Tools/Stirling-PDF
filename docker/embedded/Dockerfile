@@ -105,11 +105,13 @@ RUN set -eux; \
     # ── CHANGED: remove translations + localization (LANG=C.UTF-8) ──
     # Keep iso639.calibre_msgpack (required)
     rm -rf /opt/calibre/lib/qt6/translations \
-           /opt/calibre/translations \
-           /opt/calibre/resources/localization/locales.zip \
-           /opt/calibre/resources/localization/stats.calibre_msgpack \
-           /opt/calibre/resources/localization/website-languages.txt; \
-    find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
+           /opt/calibre/translations; \
+    if [ -d /opt/calibre/resources/localization ]; then \
+      rm -rf /opt/calibre/resources/localization/locales.zip \
+             /opt/calibre/resources/localization/stats.calibre_msgpack \
+             /opt/calibre/resources/localization/website-languages.txt; \
+      find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
+    fi; \
     \
     # ── CHANGED: strip debug symbols from shared libraries ──
     find /opt/calibre/lib -name '*.so*' \

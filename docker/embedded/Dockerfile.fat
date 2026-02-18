@@ -232,7 +232,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
     sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' \
       /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
-    \
     # ── Verify CLI availability ──
     libreoffice --version; \
     \

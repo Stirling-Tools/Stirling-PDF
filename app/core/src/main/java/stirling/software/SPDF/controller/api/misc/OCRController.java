@@ -378,11 +378,10 @@ public class OCRController {
                         List<String> command = new ArrayList<>();
                         command.add("tesseract");
                         command.add(imagePath.toString());
-                        command.add(
-                                new File(
-                                                tempOutputDir,
-                                                String.format(Locale.ROOT, "page_%d", pageNum))
-                                        .toString());
+                        String outputBase =
+                                new File(tempOutputDir, String.format(Locale.ROOT, "page_%d", pageNum))
+                                        .toString();
+                        command.add(outputBase);
                         command.add("-l");
                         command.add(String.join("+", selectedLanguages));
                         command.add("pdf"); // Always output PDF
@@ -398,6 +397,18 @@ public class OCRController {
                                     null,
                                     "Tesseract",
                                     result.getRc());
+                        }
+
+                        // Verify the OCR'd PDF was created
+                        if (!pageOutputPath.exists()) {
+                            log.warn(
+                                    "Tesseract did not create expected output file: {}. Page may be blank or unreadable.",
+                                    pageOutputPath.getAbsolutePath());
+                            // Save original page without OCR as fallback
+                            try (PDDocument pageDoc = new PDDocument()) {
+                                pageDoc.addPage(page);
+                                pageDoc.save(pageOutputPath);
+                            }
                         }
 
                         // Add OCR'd PDF to merger
