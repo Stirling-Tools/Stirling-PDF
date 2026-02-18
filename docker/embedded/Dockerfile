@@ -31,18 +31,42 @@ RUN set -eux; \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
-    # ── Remove GUI-only Qt libs ──
-    rm -f  /opt/calibre/lib/libQt6Designer*; \
+    # ── Remove GUI-only Qt libs + WebEngineCore + others ──
+    rm -f  /opt/calibre/lib/libQt6Designer* \
+           /opt/calibre/lib/libonnxruntime.so.* \
+           /opt/calibre/lib/libavcodec.so.* \
+           /opt/calibre/lib/libavfilter.so.* \
+           /opt/calibre/lib/libavformat.so.* \
+           /opt/calibre/lib/libgio-2.0.so.* \
+           /opt/calibre/lib/libQt6Multimedia.so.* \
+           /opt/calibre/lib/libQt6WaylandClient.so.* \
+           /opt/calibre/lib/libzstd.so.* \
+           /opt/calibre/lib/libavutil.so.* \
+           /opt/calibre/lib/libQt6SpatialAudio.so.* \
+           /opt/calibre/lib/libhunspell-1.7.so.* \
+           /opt/calibre/lib/libbrotlienc.so.* \
+           /opt/calibre/lib/libQt6XcbQpa.so.* \
+           /opt/calibre/lib/libQt6Svg.so.* \
+           /opt/calibre/lib/libstemmer.so.* \
+           /opt/calibre/lib/libswscale.so.* \
+           /opt/calibre/lib/libmtp.so.* \
+           /opt/calibre/lib/libncursesw.so.* \
+           /opt/calibre/lib/libespeak-ng.so.* \
+           /opt/calibre/lib/calibre-extensions/PIL._imaging.so*; \
     rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
            /opt/calibre/lib/qt6/plugins/wayland* \
-           /opt/calibre/lib/qt6/plugins/xcbglintegrations; \
+           /opt/calibre/lib/qt6/plugins/xcbglintegrations \
+           /opt/calibre/lib/qt6/plugins/multimedia \
+           /opt/calibre/lib/qt6/plugins/designer \
+           /opt/calibre/lib/qt6/plugins/qmltooling; \
     \
-    # ── Remove GUI executables (keep ebook-convert + ebook-meta) ──
+    # ── Remove GUI executables (keep ebook-convert + ebook-meta + calibre-parallel) ──
     rm -f  /opt/calibre/calibre \
            /opt/calibre/calibre-server \
            /opt/calibre/calibre-smtp \
            /opt/calibre/calibre-debug \
            /opt/calibre/calibre-customize \
+           /opt/calibre/calibredb \
            /opt/calibre/ebook-viewer \
            /opt/calibre/ebook-edit \
            /opt/calibre/ebook-polish \
@@ -50,6 +74,7 @@ RUN set -eux; \
            /opt/calibre/fetch-ebook-metadata \
            /opt/calibre/lrf2lrs \
            /opt/calibre/lrs2lrf \
+           /opt/calibre/markdown-calibre \
            /opt/calibre/web2disk; \
     \
     # ── Remove Python modules not needed for conversion ──
@@ -65,18 +90,26 @@ RUN set -eux; \
     rm -rf /opt/calibre/resources/images \
            /opt/calibre/resources/icons \
            /opt/calibre/resources/content-server \
-           /opt/calibre/resources/editor \
+           /opt/calibre/resources/editor* \
            /opt/calibre/resources/viewer \
            /opt/calibre/resources/recipes \
            /opt/calibre/resources/dictionaries \
            /opt/calibre/resources/hyphenation \
+           /opt/calibre/resources/catalog \
+           /opt/calibre/resources/calibre-mimetypes.xml \
+           /opt/calibre/resources/changelog.json \
+           /opt/calibre/resources/user-agent-data.json \
            /opt/calibre/lib/calibre/ebooks/docx/images \
            /opt/calibre/share \
            /opt/calibre/man; \
     \
     # ── CHANGED: remove translations + localization (LANG=C.UTF-8) ──
-    # Keep iso639.calibre_msgpack as it is required by ebook-convert
-    rm -rf /opt/calibre/lib/qt6/translations; \
+    # Keep iso639.calibre_msgpack (required)
+    rm -rf /opt/calibre/lib/qt6/translations \
+           /opt/calibre/translations \
+           /opt/calibre/resources/localization/locales.zip \
+           /opt/calibre/resources/localization/stats.calibre_msgpack \
+           /opt/calibre/resources/localization/website-languages.txt; \
     find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
     \
     # ── CHANGED: strip debug symbols from shared libraries ──
