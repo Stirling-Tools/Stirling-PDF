@@ -277,9 +277,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/share/theme_definitions \
            /usr/lib/libreoffice/share/config/soffice.cfg; \
     \
-    # Strip debug symbols from ALL shared libraries (FIX: Exclude JRE)
     find /usr/lib -name '*.so*' -type f \
         -not -path '*/jvm/*' \
+        -not -path '*/libreoffice/*' \
         -exec strip --strip-unneeded {} + 2>/dev/null || true; \
     \
     # System-wide Python cache cleanup
