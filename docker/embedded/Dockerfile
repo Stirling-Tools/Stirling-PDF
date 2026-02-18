@@ -226,11 +226,11 @@ RUN set -eux; \
 # ==============================================================================
 # Application files
 # ==============================================================================
-COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/app/core/build/libs/*.jar /app.jar
-COPY --link --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
+COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --link --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
+COPY --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
 COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # ==============================================================================
