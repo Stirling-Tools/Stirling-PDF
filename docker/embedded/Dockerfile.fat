@@ -219,10 +219,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       # Qt/EGL for Calibre CLI
       libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 \
       libasound2t64 libxcomposite1 libxrandr2 \
-      # Headless LibreOffice
+      # Headless LibreOffice (base needed for PDF import filters)
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-draw-nogui \
-      libreoffice-java-common \
+      libreoffice-base-nogui libreoffice-java-common \
     ; \
     \
     # ── FIX: Enable PDF/PS processing in ImageMagick (disabled by default on Ubuntu) ──
@@ -232,8 +232,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
     sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' \
       /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
-    # ── Verify CLI availability ──
+    # ── Fix LibreOffice UNO bridge and filter availability ──
     libreoffice --version; \
+    soffice --version 2>/dev/null || true; \
+    # Rebuild UNO bridge type database
+    /usr/lib/libreoffice/program/soffice.bin --headless --convert-to pdf /dev/null 2>/dev/null || true; \
+    # Force font cache rebuild and verify filters are available
+    fc-cache -f -v 2>&1 | head -20; \
     \
     # ══════════════════════════════════════════════════════════
     #  CLEANUP: everything below is in the same layer, so

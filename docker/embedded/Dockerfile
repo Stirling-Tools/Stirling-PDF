@@ -209,10 +209,10 @@ RUN set -eux; \
       # Qt/EGL for Calibre CLI
       libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 \
       libasound2t64 libxcomposite1 libxrandr2 \
-      # Headless LibreOffice
+      # Headless LibreOffice (base needed for PDF import filters)
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-draw-nogui \
-      libreoffice-java-common \
+      libreoffice-base-nogui libreoffice-java-common \
     ; \
     \
     # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
@@ -224,8 +224,13 @@ RUN set -eux; \
     ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
     ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver; \
     \
-    # ── Verify ──
+    # ── Verify and fix LibreOffice ──
     libreoffice --version; \
+    soffice --version 2>/dev/null || true; \
+    # Rebuild UNO bridge type database
+    /usr/lib/libreoffice/program/soffice.bin --headless --convert-to pdf /dev/null 2>/dev/null || true; \
+    # Force font cache rebuild and verify filters are available
+    fc-cache -f -v 2>&1 | head -20; \
     /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
     /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')"; \
     \
