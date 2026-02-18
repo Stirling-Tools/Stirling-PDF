@@ -209,11 +209,9 @@ RUN set -eux; \
       # Qt/EGL for Calibre CLI
       libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 \
       libasound2t64 libxcomposite1 libxrandr2 \
-      # Headless LibreOffice (base needed for PDF import filters)
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-draw-nogui \
       libreoffice-base-nogui libreoffice-java-common \
-      libreoffice-pdfimport \
     ; \
     \
     # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
@@ -250,10 +248,9 @@ RUN set -eux; \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /usr/share/i18n/locales; \
     \
-    # OPTIMIZATION: Delete Icons/Themes (LibreOffice pulls these, ~20-50MB)
     rm -rf /usr/share/icons/* /usr/share/themes/*; \
     \
-    # LibreOffice extras
+    # LibreOffice extras: Only remove specific directories as requested
     rm -rf /usr/lib/libreoffice/share/gallery \
            /usr/lib/libreoffice/share/template \
            /usr/lib/libreoffice/share/wizards \
@@ -270,18 +267,6 @@ RUN set -eux; \
       \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
            /opt/venv/lib/python*/site-packages/setuptools; \
-    \
-    # Additional LibreOffice cleanup
-    rm -rf /usr/lib/libreoffice/share/autocorr \
-           /usr/lib/libreoffice/share/classification \
-           /usr/lib/libreoffice/share/wordbook \
-           /usr/lib/libreoffice/share/fingerprint \
-           /usr/lib/libreoffice/share/xdg \
-           /usr/lib/libreoffice/share/numbertext \
-           /usr/lib/libreoffice/share/shell \
-           /usr/lib/libreoffice/share/palette \
-           /usr/lib/libreoffice/share/theme_definitions \
-           /usr/lib/libreoffice/share/config/soffice.cfg; \
     \
     # Strip debug symbols from ALL shared libraries
     find /usr/lib -name '*.so*' -type f \
