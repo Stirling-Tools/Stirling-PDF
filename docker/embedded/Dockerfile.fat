@@ -22,7 +22,7 @@ RUN set -eux; \
     # Auto-detect architecture for Calibre download
     case "$(uname -m)" in \
       x86_64)  CALIBRE_ARCH="x86_64" ;; \
-      aarch64) CALIBRE_ARCH="aarch64" ;; \
+      aarch64) CALIBRE_ARCH="arm64" ;; \
       *)       echo "Unsupported arch: $(uname -m)"; exit 1 ;; \
     esac; \
     \
