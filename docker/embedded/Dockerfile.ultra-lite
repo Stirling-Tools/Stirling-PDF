@@ -5,10 +5,10 @@
 FROM gradle:9.3.1-jdk25 AS build
 
 # Install Node.js and npm for frontend build
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y --no-install-recommends nodejs \
     && npm --version \
     && node --version \
     && apt-get clean \
@@ -63,11 +63,14 @@ COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
 
-# Copy built JAR from build stage
-COPY --from=build /app/app/core/build/libs/*.jar /app.jar
-COPY --from=build /app/build/libs/restart-helper.jar /restart-helper.jar
+# Copy built JARs from build stage
+# Use numeric UID:GID (1000:1000) since the named user doesn't exist yet at COPY time
+COPY --from=build --chown=1000:1000 \
+     /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build --chown=1000:1000 \
+     /app/build/libs/restart-helper.jar /restart-helper.jar
 
-# Environment Variables (removed GC file-logging)
+# Environment Variables
 ENV VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders" \
     JAVA_CUSTOM_OPTS="" \
@@ -82,6 +85,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 # Install minimal dependencies
+# CHANGED: --chown on COPY above removes need to chown /app.jar and /restart-helper.jar here
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
@@ -99,8 +103,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     chmod +x /scripts/*.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /configs /customFiles /pipeline /tmp/stirling-pdf
 
 EXPOSE 8080/tcp
 

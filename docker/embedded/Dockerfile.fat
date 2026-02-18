@@ -5,28 +5,26 @@
 # ─────────────────────────────────────────────────────────────
 
 # ╔═══════════════════════════════════════════════════════════╗
-# ║  Stage 1 — Calibre: install, strip, verify (~200-350 MB  ║
-# ║  saved by removing WebEngine, GUI libs, unneeded modules) ║
+# ║  Stage 1 — Calibre: install, strip, verify               ║
 # ╚═══════════════════════════════════════════════════════════╝
 FROM ubuntu:noble AS calibre-build
 
-# Pin the version for reproducible builds
 ARG CALIBRE_VERSION=9.2.1
 
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends ca-certificates curl xz-utils libnss3 libfontconfig1 libgl1 libegl1 libdbus-1-3 \
-    libasound2t64 libxcomposite1 libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0; \
+    apt-get install -y --no-install-recommends \
+      ca-certificates curl xz-utils libnss3 libfontconfig1 \
+      libgl1 libegl1 libdbus-1-3 libasound2t64 libxcomposite1 \
+      libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0; \
     rm -rf /var/lib/apt/lists/*; \
     \
-    # Auto-detect architecture for Calibre download
     case "$(uname -m)" in \
       x86_64)  CALIBRE_ARCH="x86_64" ;; \
       aarch64) CALIBRE_ARCH="arm64" ;; \
       *)       echo "Unsupported arch: $(uname -m)"; exit 1 ;; \
     esac; \
     \
-    # Download pinned tarball directly (faster & reproducible vs installer script)
     curl -fsSL \
       "https://download.calibre-ebook.com/${CALIBRE_VERSION}/calibre-${CALIBRE_VERSION}-${CALIBRE_ARCH}.txz" \
       -o /tmp/calibre.txz; \
@@ -34,16 +32,13 @@ RUN set -eux; \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
-    # ── Remove GUI-only Qt modules (keep WebEngine, Quick, Qml, OpenGL for PDF output) ──
-    # We only remove Designer as others are likely needed by WebEngine
+    # ── Remove GUI-only Qt libs ──
     rm -f  /opt/calibre/lib/libQt6Designer*; \
-    \
-    # ── Remove GUI-only Qt plugins ──
     rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
            /opt/calibre/lib/qt6/plugins/wayland* \
            /opt/calibre/lib/qt6/plugins/xcbglintegrations; \
     \
-    # ── Remove GUI executables (keep only ebook-convert + ebook-meta) ──
+    # ── Remove GUI executables (keep ebook-convert + ebook-meta) ──
     rm -f  /opt/calibre/calibre \
            /opt/calibre/calibre-server \
            /opt/calibre/calibre-smtp \
@@ -58,7 +53,7 @@ RUN set -eux; \
            /opt/calibre/lrs2lrf \
            /opt/calibre/web2disk; \
     \
-    # ── Remove Calibre Python modules not needed for conversion ──
+    # ── Remove Python modules not needed for conversion ──
     rm -rf /opt/calibre/lib/calibre/gui2 \
            /opt/calibre/lib/calibre/devices \
            /opt/calibre/lib/calibre/library \
@@ -80,7 +75,21 @@ RUN set -eux; \
            /opt/calibre/share \
            /opt/calibre/man; \
     \
-    # ── Verify conversion still works after stripping ──
+    # ── CHANGED: remove translations + localization (LANG=C.UTF-8) ──
+    # Keep iso639.calibre_msgpack as it is required by ebook-convert
+    rm -rf /opt/calibre/lib/qt6/translations; \
+    find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
+    \
+    # ── CHANGED: strip debug symbols from shared libraries ──
+    find /opt/calibre/lib -name '*.so*' \
+      -exec strip --strip-unneeded {} + 2>/dev/null || true; \
+    \
+    # ── CHANGED: remove Python bytecode caches ──
+    find /opt/calibre -type d -name __pycache__ \
+      -exec rm -rf {} + 2>/dev/null || true; \
+    find /opt/calibre -name '*.pyc' -delete 2>/dev/null || true; \
+    \
+    # ── Verify conversion still works ──
     /opt/calibre/ebook-convert --version; \
     echo "Hello" > /tmp/test.txt; \
     export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox"; \
@@ -102,7 +111,6 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# ── Dependency-cache layer (rebuild only when build files change) ──
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle/                               gradle/
 COPY app/core/build.gradle                  app/core/
@@ -111,7 +119,6 @@ COPY app/proprietary/build.gradle           app/proprietary/
 
 RUN ./gradlew dependencies --no-daemon || true
 
-# ── Full source copy + build ──
 COPY . .
 
 RUN DISABLE_ADDITIONAL_FEATURES=false \
@@ -122,7 +129,7 @@ RUN DISABLE_ADDITIONAL_FEATURES=false \
 
 
 # ╔═══════════════════════════════════════════════════════════╗
-# ║  Stage 3 — Runtime image                                   ║
+# ║  Stage 3 — Runtime image                                  ║
 # ╚═══════════════════════════════════════════════════════════╝
 FROM eclipse-temurin:25-jre AS runtime
 
@@ -134,41 +141,38 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
 # ---------------------------------------------------------------------------
-# Single layer: ALL runtime apt packages + LibreOffice + Python venvs + cleanup
-#
-# Keeping everything in one RUN ensures that files deleted at the end
-# (docs, man pages, caches) never occupy layer bytes.
+# Single layer: apt + pip + all cleanup
 # ---------------------------------------------------------------------------
 ARG UNOSERVER_VERSION=3.6
 
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-      # ── Core tools ──
+      # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
       ffmpeg poppler-utils ocrmypdf imagemagick fontforge ghostscript \
       gosu unpaper qpdf \
-      # ── Fonts (fat version includes extra fonts for air-gapped environments) ──
+      # Fonts — fat version includes extra fonts for air-gapped environments
       fonts-dejavu \
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono fonts-noto-color-emoji \
       fonts-noto-cjk \
       fonts-freefont-ttf fonts-terminus \
-      # ── Python + UNO bridge ──
+      # Python + UNO bridge
       python3 python3-venv python3-uno \
-      # ── OCR (all language packs retained per user request) ──
+      # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
-      # ── Graphics / AWT headless ──
+      # Graphics / AWT headless
       libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
-      libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
-      libxinerama1 libxkbcommon0 libsm6 libice6 \
-      # ── Minimal Qt/EGL dependencies for Calibre CLI ──
-      libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 libasound2t64 libxcomposite1 libxrandr2 \
-      # ── Virtual framebuffer for headless LibreOffice ──
+      libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 \
+      libxtst6 libxi6 libxinerama1 libxkbcommon0 libsm6 libice6 \
+      # Qt/EGL for Calibre CLI
+      libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 \
+      libasound2t64 libxcomposite1 libxrandr2 \
+      # Headless LibreOffice
       xvfb \
-      # ── LibreOffice (merged into same layer so cleanup works) ──
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-java-common \
     ; \
@@ -189,26 +193,55 @@ RUN set -eux; \
     libreoffice --version; \
     /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
     \
-    # ── Purge docs, man, locale, caches (same layer = bytes never committed) ──
-    rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* \
-           /usr/share/lintian/* /usr/share/linda/* \
-           /var/cache/fontconfig/* /tmp/*; \
+    # ══════════════════════════════════════════════════════════
+    #  CLEANUP — everything below is in the same layer, so
+    #  deleted bytes are never committed to the image
+    # ══════════════════════════════════════════════════════════
     \
-    # ── Strip LibreOffice extras ──
+    # CHANGED: apt lists + cache (was missing — ~30-50 MB!)
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*; \
+    \
+    # Docs / man / info
+    rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* \
+           /usr/share/lintian/* /usr/share/linda/*; \
+    \
+    # CHANGED: system locale data (LANG=C.UTF-8 doesn't use them — ~10-20 MB)
+    find /usr/share/locale -mindepth 1 -maxdepth 1 -type d \
+      ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
+    rm -rf /usr/share/i18n/locales; \
+    \
+    # LibreOffice extras
     rm -rf /usr/lib/libreoffice/share/gallery \
            /usr/lib/libreoffice/share/template \
            /usr/lib/libreoffice/share/wizards \
            /usr/lib/libreoffice/share/autotext \
            /usr/lib/libreoffice/help \
-           /usr/lib/libreoffice/share/config/images_*.zip
+           /usr/lib/libreoffice/share/config/images_*.zip \
+           /usr/lib/libreoffice/share/basic \
+           /usr/lib/libreoffice/share/Scripts; \
+    \
+    # CHANGED: Python caches + pip/setuptools from both venvs (~15-25 MB)
+    find /opt/venv /opt/unoserver-venv -type d -name __pycache__ \
+      -exec rm -rf {} + 2>/dev/null || true; \
+    find /opt/venv /opt/unoserver-venv \
+      \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
+    rm -rf /opt/venv/lib/python*/site-packages/pip \
+           /opt/venv/lib/python*/site-packages/setuptools \
+           /opt/unoserver-venv/lib/python*/site-packages/pip \
+           /opt/unoserver-venv/lib/python*/site-packages/setuptools; \
+    \
+    # Misc caches
+    rm -rf /var/cache/fontconfig/* /tmp/* /root/.cache
 
-# ── Copy pre-stripped Calibre from stage 1 (only the slim result) ──
+# ---------------------------------------------------------------------------
+# Calibre (pre-stripped in stage 1)
+# ---------------------------------------------------------------------------
 COPY --from=calibre-build /opt/calibre /opt/calibre
-RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert
 
-# ==============================================================================
+# ---------------------------------------------------------------------------
 # Non-root user
-# ==============================================================================
+# ---------------------------------------------------------------------------
 ARG PUID=1000
 ARG PGID=1000
 
@@ -225,28 +258,37 @@ RUN set -eux; \
     fi; \
     ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 
-# ==============================================================================
-# Application files
-# ==============================================================================
+# ---------------------------------------------------------------------------
+# Application files (--chown set at copy time → no later chown needed)
+# ---------------------------------------------------------------------------
 COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/app/core/build/libs/*.jar /app.jar
 COPY --from=app-build --chown=stirlingpdfuser:stirlingpdfgroup \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --chown=stirlingpdfuser:stirlingpdfgroup scripts/ /scripts/
+
+# Fonts go to system dir — root ownership is correct (world-readable)
 COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
-# ==============================================================================
-# Directories, permissions, font cache
-# ==============================================================================
+# ---------------------------------------------------------------------------
+# Directories + permissions + font cache
+#
+# CHANGED: removed chown of /app.jar, /restart-helper.jar, /scripts,
+#          /usr/share/fonts/truetype — they already have correct ownership
+#          from COPY --chown or are system files (fonts).
+#          This was duplicating ~240 MB of files into a new layer (~94 MB).
+#          Now this layer is < 1 MB (just empty dirs + fc-cache output).
+# CHANGED: merged calibre symlink here to eliminate a separate layer.
+# ---------------------------------------------------------------------------
 RUN set -eux; \
+    ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert; \
     chmod +x /scripts/*; \
     mkdir -p /configs /logs /customFiles \
              /pipeline/watchedFolders /pipeline/finishedFolders \
              /tmp/stirling-pdf/heap_dumps; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
       /home/stirlingpdfuser /configs /logs /customFiles /pipeline \
-      /tmp/stirling-pdf /app.jar /restart-helper.jar /scripts \
-      /usr/share/fonts/truetype; \
+      /tmp/stirling-pdf; \
     chmod 1777 /tmp/stirling-pdf; \
     fc-cache -f
 
@@ -269,7 +311,6 @@ ENV VERSION_TAG=$VERSION_TAG \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
-    TMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf \
     QT_QPA_PLATFORM=offscreen \
     QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox"

@@ -54,7 +54,11 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, unified, API, Spring
 # Copy backend files
 COPY scripts /scripts
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY --from=backend-build /app/app/core/build/libs/*.jar app.jar
+
+# Copy built JAR
+# Use numeric UID:GID (1000:1000) since the named user doesn't exist yet at COPY time
+COPY --from=backend-build --chown=1000:1000 \
+     /app/app/core/build/libs/*.jar app.jar
 
 # Copy frontend files
 COPY --from=frontend-build /app/dist /usr/share/nginx/html
@@ -84,6 +88,8 @@ ENV VERSION_TAG=$VERSION_TAG \
     VITE_API_BASE_URL=http://localhost:8080
 
 # Install all dependencies
+# CHANGED: removed 'pip install --upgrade pip setuptools' (wasteful before --no-cache-dir installs)
+# CHANGED: /app.jar chown moved to COPY --chown above (avoids overlayfs copy of the JAR)
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
@@ -122,11 +128,14 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     py3-pillow@testing \
     py3-pdf2image@testing && \
     python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip setuptools && \
-    /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
+    /opt/venv/bin/pip install --no-cache-dir unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
+    # CHANGED: clean up pip + setuptools from venv (~5-10 MB)
+    find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true; \
+    rm -rf /opt/venv/lib/python*/site-packages/pip \
+           /opt/venv/lib/python*/site-packages/setuptools && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     mkdir -p /var/lib/nginx/tmp /var/log/nginx && \
@@ -135,8 +144,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     chmod +x /entrypoint.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf /var/lib/nginx /var/log/nginx /usr/share/nginx && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf /var/lib/nginx /var/log/nginx /usr/share/nginx
 
 EXPOSE 8080/tcp
 
