@@ -213,6 +213,7 @@ RUN set -eux; \
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-draw-nogui \
       libreoffice-base-nogui libreoffice-java-common \
+      libreoffice-pdfimport \
     ; \
     \
     # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
@@ -274,7 +275,6 @@ RUN set -eux; \
     rm -rf /usr/lib/libreoffice/share/autocorr \
            /usr/lib/libreoffice/share/classification \
            /usr/lib/libreoffice/share/wordbook \
-           /usr/lib/libreoffice/share/extensions \
            /usr/lib/libreoffice/share/fingerprint \
            /usr/lib/libreoffice/share/xdg \
            /usr/lib/libreoffice/share/numbertext \
