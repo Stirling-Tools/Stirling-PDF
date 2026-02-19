@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+
 # ─────────────────────────────────────────────────────────────
 # Stirling-PDF – Full version (embedded frontend)
 # ─────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ RUN set -eux; \
            /opt/calibre/lib/libavfilter.so.* \
            /opt/calibre/lib/libavformat.so.* \
            /opt/calibre/lib/libgio-2.0.so.* \
-           /opt/calibre/lib/libQt6Multimedia.so.* \
+           /opt/calibre/lib/libQt6Multimedia* \
            /opt/calibre/lib/libQt6WaylandClient.so.* \
            /opt/calibre/lib/libzstd.so.* \
            /opt/calibre/lib/libavutil.so.* \
@@ -51,7 +51,20 @@ RUN set -eux; \
            /opt/calibre/lib/libswscale.so.* \
            /opt/calibre/lib/libmtp.so.* \
            /opt/calibre/lib/libncursesw.so.* \
-           /opt/calibre/lib/libespeak-ng.so.*; \
+           /opt/calibre/lib/libespeak-ng.so.* \
+           /opt/calibre/lib/libQt6Pdf* \
+           /opt/calibre/lib/libQt6Positioning* \
+           /opt/calibre/lib/libQt6Quick* \
+           /opt/calibre/lib/libQt6WebChannel* \
+           /opt/calibre/lib/libQt6Qml* \
+           /opt/calibre/lib/libQt6OpenGL* \
+           /opt/calibre/lib/libQt6NetworkAuth.so.* \
+           /opt/calibre/lib/libspeex.so.* \
+           /opt/calibre/lib/libFLAC.so.* \
+           /opt/calibre/lib/libopus.so.* \
+           /opt/calibre/lib/libvorbis*.so.* \
+           /opt/calibre/lib/libasyncns.so.* \
+           /opt/calibre/lib/libspeechd.so.*; \
     rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
            /opt/calibre/lib/qt6/plugins/wayland* \
            /opt/calibre/lib/qt6/plugins/xcbglintegrations \
@@ -216,6 +229,13 @@ RUN set -eux; \
       libreoffice-base-nogui libreoffice-java-common \
     ; \
     \
+    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' \
+      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
+    sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' \
+      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
+    sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' \
+      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
+    \
     # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
     python3 -m venv /opt/venv --system-site-packages; \
     /opt/venv/bin/pip install --no-cache-dir \
@@ -239,6 +259,7 @@ RUN set -eux; \
     #  CLEANUP
     # ══════════════════════════════════════════════════════════
     \
+    # apt clean not strictly needed with cache mounts, but good for reducing layer metadata
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     \
@@ -250,7 +271,7 @@ RUN set -eux; \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /usr/share/i18n/locales; \
     \
-    rm -rf /usr/share/icons/* /usr/share/themes/*; \
+    # rm -rf /usr/share/icons/* /usr/share/themes/*; \
     \
     # LibreOffice extras: Only remove specific directories as requested
     rm -rf /usr/lib/libreoffice/share/gallery \
@@ -293,15 +314,25 @@ RUN set -eux; \
         -delete 2>/dev/null || true; \
     \
     # Additional metadata cleanup
+    # FIX: Only remove ImageMagick doc/www, NOT the whole dir (preserves policy.xml/delegates.xml)
     rm -rf /usr/share/bug /usr/share/lintian /usr/share/linda \
            /var/lib/dpkg/info/*.md5sums \
            /var/log/dpkg.log /var/log/apt/* \
            /usr/share/ghostscript/*/doc \
            /usr/share/ghostscript/*/examples \
-           /usr/share/ImageMagick-*; \
+           /usr/share/ImageMagick-*/doc \
+           /usr/share/ImageMagick-*/www; \
     \
-    # Trim CJK fonts to Regular weight only
-    find /usr/share/fonts/opentype/noto -name '*CJK*' \
+    # NEW: Ghostscript CID resources (redundant with Noto CJK)
+    rm -rf /usr/share/ghostscript/*/Resource/CIDFSubst \
+           /usr/share/ghostscript/*/Resource/CIDFont; \
+    \
+    # NEW: Tesseract training configs (not needed for OCR)
+    rm -rf /usr/share/tesseract-ocr/*/tessdata/configs \
+           /usr/share/tesseract-ocr/*/tessdata/tessconfigs; \
+    \
+    # Trim CJK fonts to Regular weight only (FIX: Broadened path)
+    find /usr/share/fonts -name '*CJK*' \
         ! -name '*Regular*' -type f -delete 2>/dev/null || true; \
     \
     # Misc caches
@@ -310,7 +341,7 @@ RUN set -eux; \
 # ---------------------------------------------------------------------------
 # Calibre (pre-stripped in stage 1)
 # ---------------------------------------------------------------------------
-COPY --link --from=calibre-build /opt/calibre /opt/calibre
+COPY --from=calibre-build /opt/calibre /opt/calibre
 
 # ---------------------------------------------------------------------------
 # Non-root user
@@ -334,14 +365,14 @@ RUN set -eux; \
 # ---------------------------------------------------------------------------
 # Application files (--chown set at copy time → no later chown needed)
 # ---------------------------------------------------------------------------
-COPY --link --from=app-build --chown=1000:1000 \
+COPY --from=app-build --chown=1000:1000 \
      /app/app/core/build/libs/*.jar /app.jar
-COPY --link --from=app-build --chown=1000:1000 \
+COPY --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --link --chown=1000:1000 scripts/ /scripts/
+COPY --chown=1000:1000 scripts/ /scripts/
 
 # Fonts go to system dir — root ownership is correct (world-readable)
-COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
+COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # ---------------------------------------------------------------------------
 # Directories + permissions + font cache
