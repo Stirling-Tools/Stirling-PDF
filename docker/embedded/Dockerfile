@@ -513,26 +513,30 @@ RUN set -eux; \
     fc-cache -f; \
     # Generate AppCDS archive for faster startup.
     # BouncyCastle is excluded to prevent signature conflicts.
+    # NOTE: Do NOT specify UseCompressedOops or UseCompressedClassPointers here.
+    # In Java 25+ with Lilliput (UseCompactObjectHeaders), UseCompressedClassPointers
+    # is deprecated. The CDS archive stores these flag states and they MUST match
+    # the runtime defaults exactly, otherwise the archive will be rejected.
     echo "Performing AppCDS training run..."; \
-    java -XX:DumpLoadedClassList=/tmp/classes.lst -Dspring.context.exit=onRefresh org.springframework.boot.loader.launch.JarLauncher || true; \
+    java -XX:+UseCompactObjectHeaders \
+         -XX:DumpLoadedClassList=/tmp/classes.lst \
+         -Dspring.context.exit=onRefresh \
+         org.springframework.boot.loader.launch.JarLauncher || true; \
     grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst; \
     echo "Dumping AppCDS archive..."; \
     java -Xshare:dump \
          -XX:+UseCompactObjectHeaders \
-         -XX:-UseCompressedOops \
-         -XX:-UseCompressedClassPointers \
-         -XX:+UseStringDeduplication \
          -XX:SharedClassListFile=/tmp/filtered-classes.lst \
          -XX:SharedArchiveFile=/app/stirling.jsa \
          org.springframework.boot.loader.launch.JarLauncher || true; \
-    rm /tmp/classes.lst /tmp/filtered-classes.lst
+    rm -f /tmp/classes.lst /tmp/filtered-classes.lst
 
 # Environment variables.
 ARG VERSION_TAG
 ENV VERSION_TAG=$VERSION_TAG \
     STIRLING_JVM_PROFILE="balanced" \
-    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:-UseCompressedOops -XX:-UseCompressedClassPointers -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
-    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=20 -XX:MaxRAMPercentage=75 -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:MaxMetaspaceSize=512m -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:-UseCompressedOops -XX:-UseCompressedClassPointers -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
+    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
+    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=20 -XX:MaxRAMPercentage=75 -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:MaxMetaspaceSize=512m -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \

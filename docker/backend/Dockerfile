@@ -138,19 +138,22 @@ COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/l
 # BouncyCastle is excluded to prevent signature conflicts.
 RUN set -eux; \
     echo "Performing AppCDS training run..."; \
-    java -XX:DumpLoadedClassList=/tmp/classes.lst -Dspring.context.exit=onRefresh -jar /app.jar || true; \
-    grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst; \
-    echo "Dumping AppCDS archive..."; \
-    java -Xshare:dump \
-         -XX:+UnlockExperimentalVMOptions \
-         -XX:+UseStringDeduplication \
-         -XX:+UseCompactObjectHeaders \
-         -XX:-UseCompressedOops \
-         -XX:-UseCompressedClassPointers \
-         -XX:SharedClassListFile=/tmp/filtered-classes.lst \
-         -XX:SharedArchiveFile=/app/stirling.jsa \
+    java -XX:+UseCompactObjectHeaders \
+         -XX:DumpLoadedClassList=/tmp/classes.lst \
+         -Dspring.context.exit=onRefresh \
          -jar /app.jar || true; \
-    rm /tmp/classes.lst /tmp/filtered-classes.lst
+    if [ -f /tmp/classes.lst ]; then \
+      grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst; \
+      echo "Dumping AppCDS archive..."; \
+      java -Xshare:dump \
+           -XX:+UseCompactObjectHeaders \
+           -XX:SharedClassListFile=/tmp/filtered-classes.lst \
+           -XX:SharedArchiveFile=/app/stirling.jsa \
+           -cp /app.jar || true; \
+    else \
+      echo "AppCDS training run failed; skipping CDS archive."; \
+    fi; \
+    rm -f /tmp/classes.lst /tmp/filtered-classes.lst
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY scripts/ /scripts/
 COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
@@ -179,10 +182,10 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring
 ENV VERSION_TAG=$VERSION_TAG \
     DISABLE_ADDITIONAL_FEATURES=true \
     JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps \
-    -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
+    -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
     -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
     -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
-    -XX:+UseCompactObjectHeaders -XX:-UseCompressedOops -XX:-UseCompressedClassPointers \
+    -XX:+UseCompactObjectHeaders \
     -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \

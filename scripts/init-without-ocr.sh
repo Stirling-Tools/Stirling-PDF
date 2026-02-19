@@ -335,7 +335,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
         log "JVM profile: balanced (G1GC)"
       else
         log "JAVA_BASE_OPTS and profiles unset; applying fallback defaults."
-        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:-UseCompressedOops -XX:-UseCompressedClassPointers -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto"
+        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
       fi
       ;;
   esac
@@ -354,6 +354,33 @@ if java -XX:+UseCompactObjectHeaders -version >/dev/null 2>&1; then
 else
   log "JVM does not support Compact Object Headers. Skipping Project Lilliput flags."
 fi
+
+# ---------- Clean deprecated/invalid JVM flags ----------
+# Remove UseCompressedClassPointers (deprecated in Java 25+ with Lilliput)
+JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedClassPointers//g')
+# Remove UseCompressedOops (let JVM use defaults; explicitly disabling wastes memory)
+JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:-UseCompressedOops//g')
+
+# ---------- AppCDS Validation ----------
+# Verify the CDS archive file exists before referencing it.
+# If the archive is missing, strip SharedArchiveFile and Xshare flags to avoid
+# startup errors. With -Xshare:auto the JVM would only warn, but removing the
+# reference avoids noise and keeps logs clean.
+CDS_FILE=""
+if echo "$JAVA_BASE_OPTS" | grep -q 'SharedArchiveFile'; then
+  CDS_FILE=$(echo "$JAVA_BASE_OPTS" | grep -oP '(?<=SharedArchiveFile=)\S+')
+fi
+if [ -n "$CDS_FILE" ] && [ -f "$CDS_FILE" ]; then
+  log "AppCDS archive found: $CDS_FILE"
+else
+  if [ -n "$CDS_FILE" ]; then
+    log "AppCDS archive not found at $CDS_FILE; disabling AppCDS"
+  fi
+  JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:SharedArchiveFile=[^ ]+//g; s/-Xshare:auto//g; s/-Xshare:on//g')
+fi
+
+# Collapse duplicate whitespace
+JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | tr -s ' ')
 
 # ---------- JAVA_OPTS ----------
 # Configure Java runtime options.
