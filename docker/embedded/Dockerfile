@@ -137,7 +137,8 @@ RUN set -eux; \
 FROM gradle:9.3.1-jdk25 AS app-build
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && update-ca-certificates \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -150,12 +151,13 @@ COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
-RUN ./gradlew dependencies --no-daemon || true
+# Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
+RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
 RUN DISABLE_ADDITIONAL_FEATURES=false \
-    ./gradlew clean build \
+    gradle clean build \
       -PbuildWithFrontend=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
