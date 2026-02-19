@@ -36,6 +36,7 @@ export interface RulerOverlayHandle {
 interface RulerOverlayProps {
   containerRef: React.RefObject<HTMLElement | null>;
   isActive: boolean;
+  pageMeasureScales?: PageMeasureScales | null;
 }
 
 // ─── Math ─────────────────────────────────────────────────────────────────────
@@ -71,6 +72,104 @@ function formatInches(pts: number): string {
   const inches = pts / 72;
   if (inches < 12) return `${inches.toFixed(2)} in`;
   return `${(inches / 12).toFixed(2)} ft`;
+}
+
+export interface MeasureScale {
+  /** real_world_value = pdf_points * factor */
+  factor: number;
+  /** e.g. "ft", "m" */
+  unit: string;
+  /** Human-readable ratio from PDF, e.g. "1 in = 10 ft" */
+  ratioLabel: string;
+}
+
+export interface ViewportScale {
+  /** BBox in PDF user space (bottom-left origin). null = entire page. */
+  bbox: [number, number, number, number] | null;
+  scale: MeasureScale;
+}
+
+export interface PageScaleInfo {
+  viewports: ViewportScale[];
+  /** Page height in PDF points — used to flip screen-y (top=0) to PDF-y (bottom=0). */
+  pageHeight: number;
+}
+
+export type PageMeasureScales = Map<number, PageScaleInfo>;
+
+/**
+ * Given the start/end PagePoints of a measurement, find the scale from the
+ * viewport whose BBox contains the midpoint. Falls back to the first viewport
+ * if none contains it (handles whole-page viewports with bbox=null).
+ */
+function pickScale(
+  start: PagePoint,
+  end: PagePoint,
+  pageMeasureScales: PageMeasureScales,
+): MeasureScale | null {
+  if (start.pageIndex !== end.pageIndex) return null;
+  const info = pageMeasureScales.get(start.pageIndex);
+  if (!info?.viewports.length) return null;
+
+  // Midpoint in screen-space page coords (x left→right, y top→bottom, PDF points)
+  const mx = (start.x + end.x) / 2;
+  // Flip y: screen y=0 is page top; PDF user space y=0 is page bottom
+  const my = info.pageHeight - (start.y + end.y) / 2;
+
+  for (const { bbox, scale } of info.viewports) {
+    if (!bbox) return scale; // whole-page viewport
+    const [x0, y0, x1, y1] = bbox;
+    if (mx >= Math.min(x0, x1) && mx <= Math.max(x0, x1) &&
+        my >= Math.min(y0, y1) && my <= Math.max(y0, y1)) {
+      return scale;
+    }
+  }
+  return null;
+}
+
+function formatScaled(pts: number, scale: MeasureScale): string {
+  const val = pts * scale.factor;
+  if (val >= 1000) return `${val.toFixed(0)} ${scale.unit}`;
+  if (val >= 100)  return `${val.toFixed(1)} ${scale.unit}`;
+  if (val >= 10)   return `${val.toFixed(2)} ${scale.unit}`;
+  return `${val.toFixed(3)} ${scale.unit}`;
+}
+
+// Conversion factors to metres for known units
+const TO_METRES: Record<string, number> = {
+  m: 1, cm: 0.01, mm: 0.001, km: 1000,
+  ft: 0.3048, in: 0.0254, yd: 0.9144, mi: 1609.344,
+};
+
+function isImperialUnit(unit: string): boolean {
+  return ['ft', 'in', 'yd', 'mi'].includes(unit.toLowerCase().trim());
+}
+
+function formatMetricFromMetres(m: number): string {
+  if (m >= 1000) return `${(m / 1000).toFixed(2)} km`;
+  if (m >= 1)    return `${m.toFixed(1)} m`;
+  if (m >= 0.1)  return `${(m * 100).toFixed(1)} cm`;
+  return `${(m * 1000).toFixed(1)} mm`;
+}
+
+function formatImperialFromFeet(ft: number): string {
+  if (ft >= 1) return `${ft.toFixed(2)} ft`;
+  return `${(ft * 12).toFixed(2)} in`;
+}
+
+/**
+ * Returns the scaled real-world value in the *other* unit system, or null if
+ * the unit is not a recognised metric/imperial unit.
+ * e.g. 72 pts, scale {factor:0.138889, unit:"ft"} → "3.048 m"
+ *      72 pts, scale {factor:0.352778, unit:"m"}  → "1.157 ft" (approx)
+ */
+function scaledCross(pts: number, scale: MeasureScale): string | null {
+  const toM = TO_METRES[scale.unit.toLowerCase().trim()];
+  if (!toM) return null;
+  const metres = pts * scale.factor * toM;
+  return isImperialUnit(scale.unit)
+    ? formatMetricFromMetres(metres)
+    : formatImperialFromFeet(metres / 0.3048);
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -150,8 +249,9 @@ function nearestPageDocPt(
 
 const TICK = 10;
 const DOT_R = 5;
-const LH  = 26;   // label height (normal)
-const LH2 = 44;   // label height (hovered — shows angle too)
+const LH  = 26;   // label height (normal — 1 line)
+const LH2 = 44;   // label height (hovered, no scale — 2 lines)
+const LH3 = 62;   // label height (hovered, with scale — 3 lines)
 const LP  = 10;   // label horizontal padding
 const DEL_R = 8;
 
@@ -164,35 +264,69 @@ interface MeasurementLineProps {
   hovered: boolean;
   onDelete: (id: string) => void;
   onHover: (id: string | null) => void;
+  measureScale?: MeasureScale | null;
 }
 
-function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover }: MeasurementLineProps) {
+function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover, measureScale }: MeasurementLineProps) {
   const mid = midpoint(startS, endS);
   const { nx, ny } = perpUnit(startS, endS);
   const ang = angleDeg(startS, endS);
-  const distLabel = formatDist(distPts);
-  const distHoverLabel = `${formatDist(distPts)} / ${formatInches(distPts)}`;
   const angLabel = `∠ ${ang.toFixed(1)}°`;
-  const lh = hovered ? LH2 : LH;
 
-  // Pre-compute both label widths so the X button position never changes on hover.
+  // Whether the PDF's unit is imperial — determines display order (imperial-first vs metric-first)
+  const imperialFirst = !!measureScale && isImperialUnit(measureScale.unit);
+
+  // Idle: scaled primary if scale present, else physical metric
+  const distLabel = measureScale ? formatScaled(distPts, measureScale) : formatDist(distPts);
+
+  // Hover line 1 — both real-world values ordered by PDF unit system:
+  //   imperial PDF: "10.000 ft / 3.048 m"
+  //   metric PDF:   "142.5 m / 467.5 ft"
+  //   no scale:     "25.4 mm / 1.00 in"  (metric first, default)
+  const hoverLine1 = measureScale
+    ? (() => {
+        const primary  = formatScaled(distPts, measureScale);
+        const cross    = scaledCross(distPts, measureScale);
+        return cross ? `${primary} / ${cross}` : primary;
+      })()
+    : `${formatDist(distPts)} / ${formatInches(distPts)}`;
+
+  // Hover line 2 — both physical paper values, same order as line 1:
+  //   imperial PDF: "1.00 in / 25.4 mm"
+  //   metric PDF or no scale: "25.4 mm / 1.00 in"
+  const hoverLine2 = measureScale
+    ? (imperialFirst
+        ? `${formatInches(distPts)} / ${formatDist(distPts)}`
+        : `${formatDist(distPts)} / ${formatInches(distPts)}`)
+    : null;
+
+  // Hover line 3 (scaled) / line 2 (no scale) — ratio label + angle
+  const contextLabel = measureScale?.ratioLabel
+    ? `${measureScale.ratioLabel}   ${angLabel}`
+    : angLabel;
+
+  const maxHoverLh = measureScale ? LH3 : LH2;
+  const lh = hovered ? maxHoverLh : LH;
+
   const lwNormal = Math.max(distLabel.length * 8 + LP * 2, 80);
-  const lwHover  = Math.max(Math.max(distHoverLabel.length, angLabel.length) * 8 + LP * 2, 80);
+  const lwHover  = Math.max(
+    hoverLine1.length * 8 + LP * 2,
+    (hoverLine2?.length ?? 0) * 8 + LP * 2,
+    contextLabel.length * 8 + LP * 2,
+    80,
+  );
   const lw = hovered ? lwHover : lwNormal;
   const sw = hovered ? 3 : 2;
 
-  // X button: always positioned relative to the wider (hover) label width and
-  // vertically centered at mid.y — it never moves when hover state changes.
   const delX = mid.x + lwHover / 2 + DEL_R + 4;
   const delY = mid.y;
 
-  // Transparent hit-capture rect sized for the maximum (hover) state.
-  // Eliminates the dead-zone gap that caused hover to oscillate when moving
-  // toward the X button.
   const hitLeft   = mid.x - lwHover / 2 - 4;
-  const hitTop    = mid.y - LH2 / 2 - 4;
+  const hitTop    = mid.y - maxHoverLh / 2 - 4;
   const hitWidth  = (delX + DEL_R + 4) - hitLeft;
-  const hitHeight = LH2 + 8;
+  const hitHeight = maxHoverLh + 8;
+
+  const mono = "'Roboto Mono','Consolas',monospace";
 
   return (
     <g
@@ -200,13 +334,8 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
       onMouseLeave={() => onHover(null)}
       style={{ pointerEvents: 'all' }}
     >
-      {/* Background hit area — rendered first so elements above can still receive clicks */}
-      <rect
-        x={hitLeft} y={hitTop}
-        width={hitWidth} height={hitHeight}
-        fill="transparent" stroke="none"
-        style={{ pointerEvents: 'all' }}
-      />
+      <rect x={hitLeft} y={hitTop} width={hitWidth} height={hitHeight}
+        fill="transparent" stroke="none" style={{ pointerEvents: 'all' }} />
 
       <line x1={startS.x} y1={startS.y} x2={endS.x} y2={endS.y}
         stroke="#1e88e5" strokeWidth={sw} strokeLinecap="round" />
@@ -222,23 +351,37 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
       <g style={{ pointerEvents: 'all', cursor: 'default' }}>
         <rect x={mid.x - lw / 2} y={mid.y - lh / 2} width={lw} height={lh}
           rx={5} fill="white" stroke="#1e88e5" strokeWidth={1.5} filter="url(#ruler-shadow)" />
-        <text x={mid.x} y={hovered ? mid.y - 6 : mid.y + 1}
-          textAnchor="middle" dominantBaseline="middle"
-          fill="#1e88e5" fontSize={12}
-          fontFamily="'Roboto Mono','Consolas',monospace" fontWeight={600}
-          style={{ userSelect: 'none' }}>
-          {hovered ? distHoverLabel : distLabel}
-        </text>
-        {hovered && (
-          <text x={mid.x} y={mid.y + 13}
-            textAnchor="middle" dominantBaseline="middle"
-            fill="#5c6bc0" fontSize={11}
-            fontFamily="'Roboto Mono','Consolas',monospace" fontWeight={500}
-            style={{ userSelect: 'none' }}>
-            {angLabel}
-          </text>
+
+        {hovered && measureScale ? (
+          // 3-line scaled hover
+          <>
+            <text x={mid.x} y={mid.y - 17} textAnchor="middle" dominantBaseline="middle"
+              fill="#1e88e5" fontSize={12} fontFamily={mono} fontWeight={600}
+              style={{ userSelect: 'none' }}>{hoverLine1}</text>
+            <text x={mid.x} y={mid.y} textAnchor="middle" dominantBaseline="middle"
+              fill="#546e7a" fontSize={11} fontFamily={mono} fontWeight={500}
+              style={{ userSelect: 'none' }}>{hoverLine2}</text>
+            <text x={mid.x} y={mid.y + 17} textAnchor="middle" dominantBaseline="middle"
+              fill="#5c6bc0" fontSize={10} fontFamily={mono} fontWeight={500}
+              style={{ userSelect: 'none' }}>{contextLabel}</text>
+          </>
+        ) : hovered ? (
+          // 2-line no-scale hover
+          <>
+            <text x={mid.x} y={mid.y - 6} textAnchor="middle" dominantBaseline="middle"
+              fill="#1e88e5" fontSize={12} fontFamily={mono} fontWeight={600}
+              style={{ userSelect: 'none' }}>{hoverLine1}</text>
+            <text x={mid.x} y={mid.y + 13} textAnchor="middle" dominantBaseline="middle"
+              fill="#5c6bc0" fontSize={11} fontFamily={mono} fontWeight={500}
+              style={{ userSelect: 'none' }}>{contextLabel}</text>
+          </>
+        ) : (
+          // Idle — single line
+          <text x={mid.x} y={mid.y + 1} textAnchor="middle" dominantBaseline="middle"
+            fill="#1e88e5" fontSize={12} fontFamily={mono} fontWeight={600}
+            style={{ userSelect: 'none' }}>{distLabel}</text>
         )}
-        {/* Delete button — fixed position, never moves when hover state changes */}
+
         <g style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); onDelete(id); }}>
           <circle cx={delX} cy={delY} r={DEL_R} fill="#ef5350" stroke="white" strokeWidth={1.5} />
           <text x={delX} y={delY} textAnchor="middle" dominantBaseline="middle"
@@ -253,14 +396,15 @@ interface LiveLineProps {
   startS: Point;
   endS: Point;
   zoom: number;
+  measureScale?: MeasureScale | null;
 }
 
-function LiveLine({ startS, endS, zoom }: LiveLineProps) {
+function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
   const d = dist(startS, endS) / zoom; // PDF points from screen distance
   const mid = midpoint(startS, endS);
   const { nx, ny } = perpUnit(startS, endS);
   const ang = angleDeg(startS, endS);
-  const distLabel = formatDist(d);
+  const distLabel = measureScale ? formatScaled(d, measureScale) : formatDist(d);
   const lw = Math.max(distLabel.length * 8 + LP * 2, 80);
 
   return (
@@ -298,7 +442,7 @@ function LiveLine({ startS, endS, zoom }: LiveLineProps) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayProps>(
-  ({ containerRef, isActive }, ref) => {
+  ({ containerRef, isActive, pageMeasureScales }, ref) => {
     const [measurements, setMeasurements] = useState<Measurement[]>([]);
     const [firstPt, setFirstPt] = useState<PagePoint | null>(null);
     /** Current cursor in SVG screen-space — for live crosshair and live line rendering. */
@@ -543,6 +687,7 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
           const startS = pagePointToScreen(m.start);
           const endS   = pagePointToScreen(m.end);
           if (!startS || !endS) return null;
+          const mScale = pageMeasureScales ? pickScale(m.start, m.end, pageMeasureScales) : null;
           return (
             <MeasurementLine
               key={m.id}
@@ -553,13 +698,19 @@ export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayPro
               hovered={hoveredId === m.id}
               onDelete={deleteMeasurement}
               onHover={setHoveredId}
+              measureScale={mScale}
             />
           );
         })}
 
         {/* Live line while drawing */}
         {isActive && firstPtS && cursorS && (
-          <LiveLine startS={firstPtS} endS={cursorS} zoom={zoom} />
+          <LiveLine
+            startS={firstPtS} endS={cursorS} zoom={zoom}
+            measureScale={pageMeasureScales && firstPt && cursorDoc
+              ? pickScale(firstPt, cursorDoc, pageMeasureScales)
+              : null}
+          />
         )}
 
         {/* First-point anchor dot */}
