@@ -410,7 +410,8 @@ subprojects {
             jvmArgs = [
                 "-XX:+UseG1GC",
                 "-XX:MaxGCPauseMillis=200",
-                "-XX:+DisableExplicitGC",
+                "-XX:G1HeapRegionSize=4m",
+                "-XX:+ExplicitGCInvokesConcurrent",
                 "-XX:+UseStringDeduplication",
                 "-XX:+UseCompactObjectHeaders"
             ]

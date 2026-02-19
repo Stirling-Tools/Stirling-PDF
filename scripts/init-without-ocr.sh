@@ -254,17 +254,42 @@ if [ -z "${VERSION_TAG:-}" ] && [ -f /etc/stirling_version ]; then
   export VERSION_TAG
 fi
 
-# Check if JVM supports Project Lilliput (Compact Object Headers)
-# Also set default modern flags if JAVA_BASE_OPTS is unset (e.g. running outside Docker)
+# ---------- JVM Profile Selection ----------
+# Resolve JAVA_BASE_OPTS from profile system or user override.
+# Priority: JAVA_BASE_OPTS (explicit override) > STIRLING_JVM_PROFILE > fallback defaults
 if [ -z "${JAVA_BASE_OPTS:-}" ]; then
-  log "JAVA_BASE_OPTS unset; applying modern defaults."
-  JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Xlog:gc*:file=/configs/gc.log:time,uptime,level,tags:filecount=5,filesize=10M -XX:+UseStringDeduplication"
+  case "${STIRLING_JVM_PROFILE:-balanced}" in
+    performance)
+      if [ -n "${_JVM_OPTS_PERFORMANCE:-}" ]; then
+        JAVA_BASE_OPTS="${_JVM_OPTS_PERFORMANCE}"
+        log "JVM profile: performance (Shenandoah generational)"
+      else
+        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED:-}"
+        log "Performance profile not available in this image; falling back to balanced"
+      fi
+      ;;
+    *)
+      if [ -n "${_JVM_OPTS_BALANCED:-}" ]; then
+        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED}"
+        log "JVM profile: balanced (G1GC)"
+      else
+        log "JAVA_BASE_OPTS and profiles unset; applying fallback defaults."
+        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
+      fi
+      ;;
+  esac
 fi
 
-# Check if Project Lilliput is supported (Standard in Java 25+)
+# Check if Project Lilliput is supported (standard in Java 25+)
 if java -XX:+UseCompactObjectHeaders -version >/dev/null 2>&1; then
-  log "JVM supports Compact Object Headers (Standard). Enabling Project Lilliput..."
-  JAVA_BASE_OPTS="${JAVA_BASE_OPTS:-} -XX:+UseCompactObjectHeaders"
+  # Only append if not already present in JAVA_BASE_OPTS
+  case "${JAVA_BASE_OPTS}" in
+    *UseCompactObjectHeaders*) ;;
+    *)
+      log "JVM supports Compact Object Headers. Enabling Project Lilliput..."
+      JAVA_BASE_OPTS="${JAVA_BASE_OPTS:-} -XX:+UseCompactObjectHeaders"
+      ;;
+  esac
 else
   log "JVM does not support Compact Object Headers. Skipping Project Lilliput flags."
 fi
@@ -272,7 +297,11 @@ fi
 # ---------- JAVA_OPTS ----------
 # Configure Java runtime options.
 export JAVA_TOOL_OPTIONS="${JAVA_BASE_OPTS:-} ${JAVA_CUSTOM_OPTS:-}"
-export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true ${JAVA_TOOL_OPTIONS}"
+# Prepend headless flag only if not already present
+case "${JAVA_TOOL_OPTIONS}" in
+  *java.awt.headless*) ;;
+  *) export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true ${JAVA_TOOL_OPTIONS}" ;;
+esac
 log "running with JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}"
 log "Running Stirling PDF with DISABLE_ADDITIONAL_FEATURES=${DISABLE_ADDITIONAL_FEATURES:-} and VERSION_TAG=${VERSION_TAG:-<unset>}"
 
@@ -333,7 +362,7 @@ fi
 # ---------- Permissions ----------
 # Ensure required directories exist and set correct permissions.
 log "Setting permissions..."
-mkdir -p /tmp/stirling-pdf /logs /configs /configs/heap_dumps /customFiles /pipeline || true
+mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /customFiles /pipeline || true
 CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
 CHOWN_OK=true

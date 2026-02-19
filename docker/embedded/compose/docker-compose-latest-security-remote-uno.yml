@@ -33,6 +33,8 @@ services:
       PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_PROTOCOL: "http"
       # Session limit should match endpoint count for optimal concurrency
       PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "2"
+      # STIRLING_JVM_PROFILE: "balanced"  # Options: balanced (G1GC, default), performance (Shenandoah)
+      # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active profile
       PUID: 1002
       PGID: 1002
       UMASK: "022"
