@@ -503,9 +503,16 @@ RUN set -eux; \
     mkdir -p /configs /logs /customFiles \
              /pipeline/watchedFolders /pipeline/finishedFolders \
              /tmp/stirling-pdf/heap_dumps; \
+    # Create symlinks to allow app to find these in /app/
+    ln -s /logs /app/logs; \
+    ln -s /configs /app/configs; \
+    ln -s /customFiles /app/customFiles; \
+    ln -s /pipeline /app/pipeline; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
       /home/stirlingpdfuser /configs /logs /customFiles /pipeline \
       /tmp/stirling-pdf; \
+    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline; \
+    chown stirlingpdfuser:stirlingpdfgroup /app; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
