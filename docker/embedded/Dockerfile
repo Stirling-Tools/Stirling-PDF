@@ -264,8 +264,8 @@ RUN set -eux; \
       fonts-dejavu \
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
-      fonts-noto-core fonts-noto-mono \
-      fonts-noto-cjk \
+      fonts-noto-core fonts-noto-mono fonts-noto-extra \
+      fonts-noto-cjk poppler-data \
       # We install these via apt to avoid downloading "fat wheels" from pip
       # python3-full replaced with minimal set
       python3 python3-dev python3-venv python3-uno \
