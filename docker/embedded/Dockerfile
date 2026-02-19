@@ -39,7 +39,6 @@ RUN set -eux; \
            /opt/calibre/lib/libQt6WaylandClient.so.* \
            /opt/calibre/lib/libQt6SpatialAudio.so.* \
            /opt/calibre/lib/libQt6XcbQpa.so.* \
-           /opt/calibre/lib/libQt6Pdf* \
            /opt/calibre/lib/libQt6NetworkAuth.so.* \
            /opt/calibre/lib/libQt6Concurrent.so.* \
            /opt/calibre/lib/libQt6PrintSupport.so.* \
@@ -78,7 +77,6 @@ RUN set -eux; \
            /opt/calibre/lib/libstemmer.so.* \
            /opt/calibre/lib/libmtp.so.* \
            /opt/calibre/lib/libncursesw.so.* \
-           /opt/calibre/lib/libpoppler.so.* \
            /opt/calibre/lib/libchm.so.* \
            /opt/calibre/lib/libgcrypt.so.* \
            /opt/calibre/lib/libgpg-error.so.* \
@@ -136,9 +134,7 @@ RUN set -eux; \
            /opt/calibre/resources/user-agent-data.json \
            /opt/calibre/resources/builtin_recipes.zip \
            /opt/calibre/resources/builtin_recipes.xml \
-           /opt/calibre/resources/qtwebengine_devtools_resources.pak \
-           /opt/calibre/resources/qtwebengine_resources_100p.pak \
-           /opt/calibre/resources/qtwebengine_resources_200p.pak \
+           /opt/calibre/resources/builtin_recipes.xml \
            /opt/calibre/resources/stylelint-bundle.min.js \
            /opt/calibre/resources/stylelint.js \
            /opt/calibre/resources/rapydscript \
@@ -158,7 +154,6 @@ RUN set -eux; \
            /opt/calibre/resources/jacket \
            /opt/calibre/resources/editor-functions.json \
            /opt/calibre/resources/calibre-ebook-root-CA.crt \
-           /opt/calibre/resources/locales \
            /opt/calibre/resources/csscolorparser.js \
            /opt/calibre/resources/lookup.js \
            /opt/calibre/resources/pdf-mathjax-loader.js \
@@ -173,8 +168,9 @@ RUN set -eux; \
     \
     # ── CHANGED: remove translations + localization (LANG=C.UTF-8) ──
     # Keep iso639.calibre_msgpack (required)
-    rm -rf /opt/calibre/lib/qt6/translations \
-           /opt/calibre/translations; \
+    # Keep qtwebengine_locales (required for WebEngine)
+    rm -rf /opt/calibre/lib/qt6/translations; \
+    find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} +; \
     if [ -d /opt/calibre/resources/localization ]; then \
       rm -rf /opt/calibre/resources/localization/locales.zip \
              /opt/calibre/resources/localization/stats.calibre_msgpack \
@@ -286,6 +282,8 @@ RUN set -eux; \
       # Qt/EGL for Calibre CLI
       libegl1 libgl1 libopengl0 libdbus-1-3 libglib2.0-0 libnss3 \
       libasound2t64 libxcomposite1 libxrandr2 \
+      # Virtual framebuffer (required for headless LibreOffice Impress/Draw)
+      xvfb x11-utils coreutils \
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-draw-nogui \
       libreoffice-java-common \
