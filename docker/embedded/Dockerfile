@@ -291,7 +291,20 @@ RUN set -eux; \
            /usr/lib/libreoffice/share/shell \
            /usr/lib/libreoffice/share/palette \
            /usr/lib/libreoffice/share/theme_definitions \
-           /usr/lib/libreoffice/share/config/soffice.cfg; \
+           /usr/lib/libreoffice/share/xslt \
+           /usr/lib/libreoffice/share/labels \
+           /usr/lib/libreoffice/share/dtd \
+           /usr/lib/libreoffice/share/tipoftheday \
+           /usr/lib/libreoffice/share/toolbarmode \
+           /usr/lib/libreoffice/share/psprint; \
+    \
+    # Trim soffice.cfg: keep only svt/, simpress/ and modules/simpress/ui (~5.6 MB vs 25 MB)
+    find /usr/lib/libreoffice/share/config/soffice.cfg -mindepth 1 -maxdepth 1 -type d \
+      ! -name svt ! -name simpress ! -name modules -exec rm -rf {} +; \
+    find /usr/lib/libreoffice/share/config/soffice.cfg/modules -mindepth 1 -maxdepth 1 -type d \
+      ! -name simpress -exec rm -rf {} +; \
+    find /usr/lib/libreoffice/share/config/soffice.cfg/modules/simpress -mindepth 1 -maxdepth 1 -type d \
+      ! -name ui -exec rm -rf {} + 2>/dev/null || true; \
     \
     # Python caches + pip/setuptools cleanup
     find /opt/venv -type d -name __pycache__ \
