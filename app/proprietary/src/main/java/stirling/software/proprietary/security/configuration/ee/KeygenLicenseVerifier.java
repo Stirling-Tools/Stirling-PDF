@@ -12,9 +12,6 @@ import org.bouncycastle.crypto.signers.Ed25519Signer;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.stereotype.Service;
 
-import com.posthog.java.shaded.org.json.JSONException;
-import com.posthog.java.shaded.org.json.JSONObject;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -136,11 +133,11 @@ public class KeygenLicenseVerifier {
             String algorithm = "";
 
             try {
-                JSONObject attrs = new JSONObject(payload);
-                encryptedData = (String) attrs.get("enc");
-                encodedSignature = (String) attrs.get("sig");
-                algorithm = (String) attrs.get("alg");
-            } catch (JSONException e) {
+                JsonNode attrs = objectMapper.readTree(payload);
+                encryptedData = attrs.path("enc").asText("");
+                encodedSignature = attrs.path("sig").asText("");
+                algorithm = attrs.path("alg").asText("");
+            } catch (Exception e) {
                 log.error("Failed to parse license file: {}", e.getMessage());
                 return false;
             }
@@ -216,11 +213,11 @@ public class KeygenLicenseVerifier {
 
     private boolean processCertificateData(String certData, LicenseContext context) {
         try {
-            JSONObject licenseData = new JSONObject(certData);
-            JSONObject metaObj = licenseData.optJSONObject("meta");
-            if (metaObj != null) {
-                String issuedStr = metaObj.optString("issued", null);
-                String expiryStr = metaObj.optString("expiry", null);
+            JsonNode licenseData = objectMapper.readTree(certData);
+            JsonNode metaObj = licenseData.path("meta");
+            if (!metaObj.isMissingNode() && metaObj.isObject()) {
+                String issuedStr = metaObj.path("issued").isNull() ? null : metaObj.path("issued").asText(null);
+                String expiryStr = metaObj.path("expiry").isNull() ? null : metaObj.path("expiry").asText(null);
 
                 if (issuedStr != null && expiryStr != null) {
                     java.time.Instant issued = java.time.Instant.parse(issuedStr);
@@ -245,31 +242,31 @@ public class KeygenLicenseVerifier {
             }
 
             // Get the main license data
-            JSONObject dataObj = licenseData.optJSONObject("data");
-            if (dataObj == null) {
+            JsonNode dataObj = licenseData.path("data");
+            if (dataObj.isMissingNode() || !dataObj.isObject()) {
                 log.error("No data object found in certificate");
                 return false;
             }
 
             // Extract license or machine information
-            JSONObject attributesObj = dataObj.optJSONObject("attributes");
-            if (attributesObj != null) {
+            JsonNode attributesObj = dataObj.path("attributes");
+            if (!attributesObj.isMissingNode() && attributesObj.isObject()) {
                 log.info("Found attributes in certificate data");
 
                 // Check for floating license
-                context.isFloatingLicense = attributesObj.optBoolean("floating", false);
-                context.maxMachines = attributesObj.optInt("maxMachines", 1);
+                context.isFloatingLicense = attributesObj.path("floating").asBoolean(false);
+                context.maxMachines = attributesObj.path("maxMachines").asInt(1);
 
                 // Extract metadata
-                JSONObject metadataObj = attributesObj.optJSONObject("metadata");
-                if (metadataObj != null) {
+                JsonNode metadataObj = attributesObj.path("metadata");
+                if (!metadataObj.isMissingNode() && metadataObj.isObject()) {
                     // Check if this is an old license (no planType) with isEnterprise flag
-                    context.isEnterpriseLicense = metadataObj.optBoolean("isEnterprise", false);
+                    context.isEnterpriseLicense = metadataObj.path("isEnterprise").asBoolean(false);
 
                     // Extract user count - default based on license type
                     // Old licenses: Only had isEnterprise flag
                     // New licenses: Have planType field with "server" or "enterprise"
-                    int users = metadataObj.optInt("users", context.isEnterpriseLicense ? 1 : 0);
+                    int users = metadataObj.path("users").asInt(context.isEnterpriseLicense ? 1 : 0);
 
                     // SERVER license (isEnterprise=false, users=0) = unlimited
                     // ENTERPRISE license (isEnterprise=true, users>0) = limited seats
@@ -283,7 +280,7 @@ public class KeygenLicenseVerifier {
                 }
 
                 // Check license status if available
-                String status = attributesObj.optString("status", null);
+                String status = attributesObj.path("status").asText(null);
                 if (status != null
                         && !"ACTIVE".equals(status)
                         && !"EXPIRING".equals(status)) { // Accept "EXPIRING" status as valid
@@ -373,11 +370,11 @@ public class KeygenLicenseVerifier {
         try {
             log.info("Processing license payload: {}", payload);
 
-            JSONObject licenseData = new JSONObject(payload);
+            JsonNode licenseData = objectMapper.readTree(payload);
 
-            JSONObject licenseObj = licenseData.optJSONObject("license");
-            if (licenseObj == null) {
-                String id = licenseData.optString("id", null);
+            JsonNode licenseObj = licenseData.path("license");
+            if (licenseObj.isMissingNode() || !licenseObj.isObject()) {
+                String id = licenseData.path("id").asText(null);
                 if (id != null) {
                     log.info("Found license ID: {}", id);
                     licenseObj = licenseData; // Use the root object as the license object
@@ -387,18 +384,18 @@ public class KeygenLicenseVerifier {
                 }
             }
 
-            String licenseId = licenseObj.optString("id", "unknown");
+            String licenseId = licenseObj.path("id").asText("unknown");
             log.info("Processing license with ID: {}", licenseId);
 
             // Check for floating license in license object
-            context.isFloatingLicense = licenseObj.optBoolean("floating", false);
-            context.maxMachines = licenseObj.optInt("maxMachines", 1);
+            context.isFloatingLicense = licenseObj.path("floating").asBoolean(false);
+            context.maxMachines = licenseObj.path("maxMachines").asInt(1);
             if (context.isFloatingLicense) {
                 log.info("Detected floating license with max machines: {}", context.maxMachines);
             }
 
             // Check expiry date
-            String expiryStr = licenseObj.optString("expiry", null);
+            String expiryStr = licenseObj.path("expiry").asText(null);
             if (expiryStr != null && !"null".equals(expiryStr)) {
                 java.time.Instant expiry = java.time.Instant.parse(expiryStr);
                 java.time.Instant now = java.time.Instant.now();
@@ -414,9 +411,9 @@ public class KeygenLicenseVerifier {
             }
 
             // Extract account, product, policy info
-            JSONObject accountObj = licenseData.optJSONObject("account");
-            if (accountObj != null) {
-                String accountId = accountObj.optString("id", "unknown");
+            JsonNode accountObj = licenseData.path("account");
+            if (!accountObj.isMissingNode() && accountObj.isObject()) {
+                String accountId = accountObj.path("id").asText("unknown");
                 log.info("License belongs to account: {}", accountId);
 
                 // Verify this matches your expected account ID
@@ -427,14 +424,14 @@ public class KeygenLicenseVerifier {
             }
 
             // Extract policy information if available
-            JSONObject policyObj = licenseData.optJSONObject("policy");
-            if (policyObj != null) {
-                String policyId = policyObj.optString("id", "unknown");
+            JsonNode policyObj = licenseData.path("policy");
+            if (!policyObj.isMissingNode() && policyObj.isObject()) {
+                String policyId = policyObj.path("id").asText("unknown");
                 log.info("License uses policy: {}", policyId);
 
                 // Check for floating license in policy
-                boolean policyFloating = policyObj.optBoolean("floating", false);
-                int policyMaxMachines = policyObj.optInt("maxMachines", 1);
+                boolean policyFloating = policyObj.path("floating").asBoolean(false);
+                int policyMaxMachines = policyObj.path("maxMachines").asInt(1);
 
                 // Policy settings take precedence
                 if (policyFloating) {
@@ -446,16 +443,16 @@ public class KeygenLicenseVerifier {
                 }
 
                 // Extract max users and isEnterprise from policy or metadata
-                context.isEnterpriseLicense = policyObj.optBoolean("isEnterprise", false);
-                int users = policyObj.optInt("users", -1);
+                context.isEnterpriseLicense = policyObj.path("isEnterprise").asBoolean(false);
+                int users = policyObj.path("users").asInt(-1);
 
                 if (users == -1) {
                     // Try to get users from metadata if not at policy level
-                    Object metadataObj = policyObj.opt("metadata");
-                    if (metadataObj instanceof JSONObject metadata) {
+                    JsonNode metadataObj = policyObj.path("metadata");
+                    if (!metadataObj.isMissingNode() && metadataObj.isObject()) {
                         context.isEnterpriseLicense =
-                                metadata.optBoolean("isEnterprise", context.isEnterpriseLicense);
-                        users = metadata.optInt("users", context.isEnterpriseLicense ? 1 : 0);
+                                metadataObj.path("isEnterprise").asBoolean(context.isEnterpriseLicense);
+                        users = metadataObj.path("users").asInt(context.isEnterpriseLicense ? 1 : 0);
                     } else {
                         // Default based on license type
                         users = context.isEnterpriseLicense ? 1 : 0;
@@ -745,35 +742,28 @@ public class KeygenLicenseVerifier {
             hostname = "Unknown";
         }
 
-        JSONObject body =
-                new JSONObject()
-                        .put(
-                                "data",
-                                new JSONObject()
-                                        .put("type", "machines")
-                                        .put(
-                                                "attributes",
-                                                new JSONObject()
-                                                        .put("fingerprint", machineFingerprint)
-                                                        .put(
-                                                                "platform",
-                                                                System.getProperty("os.name"))
-                                                        .put("name", hostname))
-                                        .put(
-                                                "relationships",
-                                                new JSONObject()
-                                                        .put(
-                                                                "license",
-                                                                new JSONObject()
-                                                                        .put(
-                                                                                "data",
-                                                                                new JSONObject()
-                                                                                        .put(
-                                                                                                "type",
-                                                                                                "licenses")
-                                                                                        .put(
-                                                                                                "id",
-                                                                                                licenseId)))));
+        tools.jackson.databind.node.ObjectNode attributes = objectMapper.createObjectNode();
+        attributes.put("fingerprint", machineFingerprint);
+        attributes.put("platform", System.getProperty("os.name"));
+        attributes.put("name", hostname);
+
+        tools.jackson.databind.node.ObjectNode licenseRef = objectMapper.createObjectNode();
+        licenseRef.put("type", "licenses");
+        licenseRef.put("id", licenseId);
+
+        tools.jackson.databind.node.ObjectNode licenseRelation = objectMapper.createObjectNode();
+        licenseRelation.set("data", licenseRef);
+
+        tools.jackson.databind.node.ObjectNode relationships = objectMapper.createObjectNode();
+        relationships.set("license", licenseRelation);
+
+        tools.jackson.databind.node.ObjectNode data = objectMapper.createObjectNode();
+        data.put("type", "machines");
+        data.set("attributes", attributes);
+        data.set("relationships", relationships);
+
+        tools.jackson.databind.node.ObjectNode body = objectMapper.createObjectNode();
+        body.set("data", data);
 
         HttpRequest request =
                 HttpRequest.newBuilder()

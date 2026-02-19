@@ -431,8 +431,15 @@ JAVA_CMD=(
   java
   -Dfile.encoding=UTF-8
   -Djava.io.tmpdir=/tmp/stirling-pdf
-  -jar /app.jar
 )
+
+if [ -f "/app.jar" ]; then
+  JAVA_CMD+=("-jar" "/app.jar")
+else
+  # Layered JAR structure
+  export JAVA_MAIN_CLASS=org.springframework.boot.loader.launch.JarLauncher
+  JAVA_CMD+=("org.springframework.boot.loader.launch.JarLauncher")
+fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
   exec "${JAVA_CMD[@]}"

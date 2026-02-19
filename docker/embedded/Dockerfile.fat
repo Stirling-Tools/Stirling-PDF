@@ -453,8 +453,9 @@ RUN set -eux; \
       -exec rm -rf {} + 2>/dev/null || true; \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
+           /opt/venv/lib/python*/site-packages/pip-*.dist-info \
            /opt/venv/lib/python*/site-packages/setuptools \
-           /opt/venv/lib/python*/site-packages/*.dist-info;
+           /opt/venv/lib/python*/site-packages/setuptools-*.dist-info;
 
 # ---------------------------------------------------------------------------
 # Calibre (pre-stripped in stage 1)

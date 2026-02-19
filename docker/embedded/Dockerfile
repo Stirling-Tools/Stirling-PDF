@@ -231,11 +231,19 @@ RUN DISABLE_ADDITIONAL_FEATURES=false \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
+# ╔═══════════════════════════════════════════════════════════╗
+# ║  Stage 2.5 — Extract Spring Boot Layers                   ║
+# ╚═══════════════════════════════════════════════════════════╝
+FROM eclipse-temurin:25-jre-noble AS jar-extract
+WORKDIR /tmp
+COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
+RUN java -Djarmode=layertools -jar app.jar extract --destination /layers
+
 
 # ╔═══════════════════════════════════════════════════════════╗
 # ║  Stage 3 — Runtime image                                  ║
 # ╚═══════════════════════════════════════════════════════════╝
-FROM eclipse-temurin:25-jre AS runtime
+FROM eclipse-temurin:25-jre-noble AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -263,16 +271,14 @@ RUN set -eux; \
       fonts-noto-core fonts-noto-mono \
       fonts-noto-cjk \
       # We install these via apt to avoid downloading "fat wheels" from pip
-      python3-full python3-venv python3-uno \
-      python3-numpy \
-      python3-pil \
-      python3-fonttools \
-      python3-cffi \
-      python3-lxml \
-      python3-packaging \
+      # python3-full replaced with minimal set
+      python3 python3-dev python3-venv python3-uno \
+      # Python dependencies via pip to avoid conflicts, so we don't install them here
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
+      # Tesseract OSD for orientation detection
+      tesseract-ocr-osd \
       # Graphics / AWT headless
       libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
       libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 \
@@ -282,7 +288,7 @@ RUN set -eux; \
       libasound2t64 libxcomposite1 libxrandr2 \
       libreoffice-writer-nogui libreoffice-calc-nogui \
       libreoffice-impress-nogui libreoffice-draw-nogui \
-      libreoffice-base-nogui libreoffice-java-common \
+      libreoffice-java-common \
     ; \
     \
     sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' \
@@ -315,7 +321,7 @@ RUN set -eux; \
     #  CLEANUP
     # ══════════════════════════════════════════════════════════
     \
-    # apt clean not strictly needed with cache mounts, but good for reducing layer metadata
+    # apt clean needed without cache mounts
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     \
@@ -362,13 +368,15 @@ RUN set -eux; \
            /usr/lib/libreoffice/share/toolbarmode \
            /usr/lib/libreoffice/share/psprint; \
     \
-    # Trim soffice.cfg: keep only svt/, simpress/ and modules/simpress/ui (~5.6 MB vs 25 MB)
-    find /usr/lib/libreoffice/share/config/soffice.cfg -mindepth 1 -maxdepth 1 -type d \
-      ! -name svt ! -name simpress ! -name modules -exec rm -rf {} +; \
-    find /usr/lib/libreoffice/share/config/soffice.cfg/modules -mindepth 1 -maxdepth 1 -type d \
-      ! -name simpress -exec rm -rf {} +; \
-    find /usr/lib/libreoffice/share/config/soffice.cfg/modules/simpress -mindepth 1 -maxdepth 1 -type d \
-      ! -name ui -exec rm -rf {} + 2>/dev/null || true; \
+    # Trim soffice.cfg — keep all installed application module configs
+    find /usr/lib/libreoffice/share/config/soffice.cfg \
+      -mindepth 1 -maxdepth 1 -type d \
+      ! -name svt ! -name modules \
+      -exec rm -rf {} +; \
+    find /usr/lib/libreoffice/share/config/soffice.cfg/modules \
+      -mindepth 1 -maxdepth 1 -type d \
+      ! -name swriter ! -name scalc ! -name sdraw ! -name simpress \
+      -exec rm -rf {} +; \
     \
     # Python caches + pip/setuptools cleanup
     find /opt/venv -type d -name __pycache__ \
@@ -376,8 +384,9 @@ RUN set -eux; \
     find /opt/venv \
       \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
+           /opt/venv/lib/python*/site-packages/pip-*.dist-info \
            /opt/venv/lib/python*/site-packages/setuptools \
-           /opt/venv/lib/python*/site-packages/*.dist-info; \
+           /opt/venv/lib/python*/site-packages/setuptools-*.dist-info; \
     \
     # Python stdlib: remove unused modules (~71 MB)
     rm -rf /usr/lib/python3.12/test \
@@ -391,10 +400,13 @@ RUN set -eux; \
            /usr/lib/python3/dist-packages/sympy \
            /usr/lib/python3/dist-packages/mpmath; \
     \
-    # Duplicate system packages (superseded by venv versions, ~55 MB)
-    rm -rf /usr/lib/python3/dist-packages/numpy \
-           /usr/lib/python3/dist-packages/fontTools \
-           /usr/lib/python3/dist-packages/PIL; \
+    # Remove system cffi superseded by venv cffi 2.0
+    rm -rf \
+      /usr/lib/python3/dist-packages/cffi \
+      /usr/lib/python3/dist-packages/cffi-*.dist-info \
+      /usr/lib/python3/dist-packages/_cffi_backend*.so \
+      /usr/lib/python3/dist-packages/_cffi_backend*.cpython*.so \
+      2>/dev/null || true; \
     \
     # Strip debug symbols from ALL shared libraries
     find /usr/lib -name '*.so*' -type f \
@@ -405,9 +417,13 @@ RUN set -eux; \
     # NOTE: Do NOT remove ffmpeg codec libs (libcodec2, libx265, libaom, etc.)
     # They are directly linked into ffmpeg/unpaper binaries and cannot be removed
     \
-    # Remove Mesa/LLVM GPU backends (~179 MB, not needed for headless/offscreen)
-    rm -f /usr/lib/x86_64-linux-gnu/libLLVM*.so* \
-          /usr/lib/x86_64-linux-gnu/libgallium*.so*; \
+    # ── Remove Mesa/LLVM GPU backends (~179 MB, architecture-agnostic) ──
+    MULTIARCH_LIBDIR=$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null \
+      || find /usr/lib -maxdepth 1 -type d -name '*-linux-gnu' | head -1); \
+    rm -f \
+      "${MULTIARCH_LIBDIR}"/libLLVM*.so* \
+      "${MULTIARCH_LIBDIR}"/libgallium*.so* \
+      2>/dev/null || true; \
     \
     # System-wide Python cache cleanup
     find /usr/lib/python3* -type d -name __pycache__ \
@@ -464,10 +480,13 @@ RUN set -eux; \
     ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 
 # ---------------------------------------------------------------------------
-# Application files (--chown set at copy time → no later chown needed)
+# Application files (Layered JARs)
 # ---------------------------------------------------------------------------
-COPY --from=app-build --chown=1000:1000 \
-     /app/app/core/build/libs/*.jar /app.jar
+COPY --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
+COPY --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
+COPY --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
+COPY --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+
 COPY --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --chown=1000:1000 scripts/ /scripts/
@@ -487,7 +506,8 @@ RUN set -eux; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
       /home/stirlingpdfuser /configs /logs /customFiles /pipeline \
       /tmp/stirling-pdf; \
-    chmod 1777 /tmp/stirling-pdf; \
+    chmod 750 /tmp/stirling-pdf; \
+    chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
 
 # ==============================================================================
@@ -495,7 +515,7 @@ RUN set -eux; \
 # ==============================================================================
 ARG VERSION_TAG
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -XX:+UseStringDeduplication -Djava.awt.headless=true -XX:+UseCompactObjectHeaders" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational -XX:+UseCompactObjectHeaders -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
@@ -530,7 +550,7 @@ EXPOSE 8080/tcp
 STOPSIGNAL SIGTERM
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/api/v1/info/status || exit 1
+  CMD curl -fs --show-error http://localhost:8080/api/v1/info/status || exit 1
 
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []
