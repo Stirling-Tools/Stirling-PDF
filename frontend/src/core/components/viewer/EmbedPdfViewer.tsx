@@ -24,6 +24,8 @@ import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
 
+import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
+
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
 async function extractPageMeasureScales(file: Blob): Promise<PageMeasureScales | null> {
