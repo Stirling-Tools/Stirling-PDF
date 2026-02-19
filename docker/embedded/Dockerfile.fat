@@ -1,12 +1,6 @@
-# syntax=docker/dockerfile:1.7
-# ─────────────────────────────────────────────────────────────
-# Stirling-PDF – Fat version (embedded frontend)
+# Stirling-PDF - Fat version (embedded frontend)
 # Extra fonts for air-gapped environments
-# ─────────────────────────────────────────────────────────────
 
-# ╔═══════════════════════════════════════════════════════════╗
-# ║  Stage 1 — Calibre: install, strip, verify               ║
-# ╚═══════════════════════════════════════════════════════════╝
 FROM ubuntu:noble AS calibre-build
 
 ARG CALIBRE_VERSION=9.2.1
@@ -32,9 +26,8 @@ RUN set -eux; \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
-    # ── Remove GUI-only / unused shared libraries ──
-    # NOTE: Do NOT remove libQt6WebChannel, libQt6Qml*, libQt6Quick,
-    #       libQt6Positioning, libQt6OpenGL — all required by WebEngine PDF output
+    # Remove GUI-only shared libraries.
+    # Libs required by WebEngine PDF output are preserved.
     rm -f  /opt/calibre/lib/libQt6Designer* \
            /opt/calibre/lib/libQt6Multimedia* \
            /opt/calibre/lib/libQt6WaylandClient.so.* \
@@ -91,7 +84,7 @@ RUN set -eux; \
            /opt/calibre/lib/qt6/plugins/designer \
            /opt/calibre/lib/qt6/plugins/qmltooling; \
     \
-    # ── Remove GUI executables (keep ebook-convert + ebook-meta + calibre-parallel) ──
+    # Remove GUI executables but keep ebook-convert, ebook-meta, and calibre-parallel.
     rm -f  /opt/calibre/calibre \
            /opt/calibre/calibre-server \
            /opt/calibre/calibre-smtp \
@@ -108,7 +101,7 @@ RUN set -eux; \
            /opt/calibre/markdown-calibre \
            /opt/calibre/web2disk; \
     \
-    # ── Remove Python modules not needed for conversion ──
+    # Remove Python modules not needed for conversion.
     rm -rf /opt/calibre/lib/calibre/gui2 \
            /opt/calibre/lib/calibre/devices \
            /opt/calibre/lib/calibre/library \
@@ -117,7 +110,7 @@ RUN set -eux; \
            /opt/calibre/lib/calibre/spell \
            /opt/calibre/lib/calibre/live; \
     \
-    # ── Remove resources not needed for CLI conversion ──
+    # Remove resources not needed for CLI conversion.
     rm -rf /opt/calibre/resources/images \
            /opt/calibre/resources/icons \
            /opt/calibre/resources/icons.rcc \
@@ -167,8 +160,7 @@ RUN set -eux; \
            /opt/calibre/share \
            /opt/calibre/man; \
     \
-    # Keep iso639.calibre_msgpack (required)
-    # Keep qtwebengine_locales (required for WebEngine)
+    # Remove translations and localization while keeping required libraries.
     rm -rf /opt/calibre/lib/qt6/translations; \
     find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} +; \
     rm -rf /opt/calibre/resources/localization/locales.zip \
@@ -183,7 +175,7 @@ RUN set -eux; \
       -exec rm -rf {} + 2>/dev/null || true; \
     find /opt/calibre -name '*.pyc' -delete 2>/dev/null || true; \
     \
-    # ── Verify conversion still works ──
+    # Verify conversion functionality.
     /opt/calibre/ebook-convert --version; \
     echo "Hello" > /tmp/test.txt; \
     export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox"; \
@@ -192,9 +184,7 @@ RUN set -eux; \
     echo "=== Calibre stripped successfully ==="
 
 
-# ╔═══════════════════════════════════════════════════════════╗
-# ║  Stage 2 — Build the Java application + frontend          ║
-# ╚═══════════════════════════════════════════════════════════╝
+# Build the Java application and frontend.
 FROM gradle:9.3.1-jdk25 AS app-build
 
 RUN apt-get update \
@@ -224,9 +214,7 @@ RUN DISABLE_ADDITIONAL_FEATURES=false \
       --no-daemon
 
 
-# ╔═══════════════════════════════════════════════════════════╗
-# ║  Stage 3 — Python Builder: Install and isolate venv       ║
-# ╚═══════════════════════════════════════════════════════════╝
+# Python Builder stage.
 FROM ubuntu:noble AS python-build
 
 ARG UNOSERVER_VERSION=3.6
@@ -250,9 +238,35 @@ RUN --mount=type=cache,target=/root/.cache/pip \
       "unoserver==${UNOSERVER_VERSION}"
 
 
-# ╔═══════════════════════════════════════════════════════════╗
-# ║  Stage 3 — Runtime image                                  ║
-# ╚═══════════════════════════════════════════════════════════╝
+# Build PDF Tools (QPDF and ImageMagick 7).
+FROM ubuntu:noble AS pdf-tools-build
+ARG QPDF_VERSION=12.3.2
+ARG IM_VERSION=7.1.1-43
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
+      libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
+      libltdl-dev libtool && \
+    # Build QPDF
+    curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz && \
+    cd "qpdf-${QPDF_VERSION}" && \
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DALLOW_CRYPTO_OPENSSL=ON -DDEFAULT_CRYPTO=openssl && \
+    cmake --build build --parallel "$(nproc)" && \
+    cmake --install build && \
+    cd .. && \
+    # Build ImageMagick 7
+    curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz && \
+    cd "ImageMagick-${IM_VERSION}" && \
+    ./configure --prefix=/usr/local --with-modules --with-perl=no --with-magick-plus-plus=no --with-quantum-depth=16 --disable-static --enable-shared && \
+    make -j"$(nproc)" && \
+    make install && \
+    # Enable PDF/PS/EPS in policy
+    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /usr/local/etc/ImageMagick-7/policy.xml && \
+    sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
+    sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
+    ldconfig /usr/local/lib
+
+
+# Final runtime image.
 FROM eclipse-temurin:25-jre AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -262,9 +276,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
     TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
-# ---------------------------------------------------------------------------
-# Single layer: apt + pip + all cleanup
-# ---------------------------------------------------------------------------
 ARG UNOSERVER_VERSION=3.6
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -275,8 +286,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils imagemagick fontforge ghostscript \
-      gosu unpaper qpdf pngquant \
+      ffmpeg poppler-utils fontforge ghostscript \
+      gosu unpaper pngquant \
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono fonts-noto-extra \
@@ -301,13 +312,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       libreoffice-base-nogui libreoffice-java-common \
     ; \
     \
-    # ── FIX: Enable PDF/PS processing in ImageMagick (disabled by default on Ubuntu) ──
-    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' \
-      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
-    sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' \
-      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
-    sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' \
-      /etc/ImageMagick-*/policy.xml 2>/dev/null || true; \
     # ── Fix LibreOffice UNO bridge and filter availability ──
     libreoffice --version; \
     soffice --version 2>/dev/null || true; \
@@ -316,10 +320,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Force font cache rebuild and verify filters are available
     fc-cache -f -v 2>&1 | awk 'NR <= 20'; \
     \
-    # ══════════════════════════════════════════════════════════
-    #  CLEANUP: everything below is in the same layer, so
-    #  deleted bytes are never committed to the image
-    # ══════════════════════════════════════════════════════════
+    # Cleanup stage.
     \
     # apt clean not strictly needed with cache mounts, but good for reducing layer metadata
     apt-get clean; \
@@ -367,8 +368,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/share/toolbarmode \
            /usr/lib/libreoffice/share/psprint; \
     \
-    # NOTE: soffice.cfg is NOT trimmed — LibreOffice needs all module configs
-    # (simpress/styles.xml, swriter/styles.xml, etc.) to load documents
+    # Preserving soffice.cfg because LibreOffice needs it to load documents.
     \
     \
     \
@@ -377,8 +377,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         -not -path '*/libreoffice/*' \
         -exec strip --strip-unneeded {} + 2>/dev/null || true; \
     \
-    # NOTE: Do NOT remove ffmpeg codec libs (libcodec2, libx265, libaom, etc.)
-    # They are directly linked into ffmpeg/unpaper binaries and cannot be removed
+    # Preserving ffmpeg codec libs as they are directly linked.
     \
     # Remove Mesa/LLVM GPU backends (~179 MB, not needed for headless/offscreen)
     rm -f /usr/lib/x86_64-linux-gnu/libLLVM*.so* \
@@ -431,9 +430,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Misc caches
     rm -rf /var/cache/fontconfig/* /tmp/*
 
-# ---------------------------------------------------------------------------
-# Python venv (copied from builder stage, eliminates build dependencies)
-# ---------------------------------------------------------------------------
+# Python virtual environment.
 COPY --link --from=python-build /opt/venv /opt/venv
 
 RUN set -eux; \
@@ -450,18 +447,19 @@ RUN set -eux; \
            /opt/venv/lib/python*/site-packages/setuptools \
            /opt/venv/lib/python*/site-packages/setuptools-*.dist-info;
 
-# ---------------------------------------------------------------------------
-# Calibre (pre-stripped in stage 1)
-# ---------------------------------------------------------------------------
+# Calibre and PDF Tools.
 COPY --link --from=calibre-build /opt/calibre /opt/calibre
+COPY --link --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
+COPY --link --from=pdf-tools-build /usr/local/bin/magick /usr/bin/magick
+COPY --link --from=pdf-tools-build /usr/local/lib/libMagick* /usr/local/lib/
+COPY --link --from=pdf-tools-build /usr/local/etc/ImageMagick-7 /usr/local/etc/ImageMagick-7
 
 RUN set -eux; \
+    ldconfig /usr/local/lib; \
     # Clean pycache that may have been generated during stage-1 verify
     find /opt/calibre -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true;
 
-# ---------------------------------------------------------------------------
-# Non-root user
-# ---------------------------------------------------------------------------
+# Non-root user.
 ARG PUID=1000
 ARG PGID=1000
 
@@ -478,9 +476,7 @@ RUN set -eux; \
     fi; \
     ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 
-# ---------------------------------------------------------------------------
-# Application files (--chown set at copy time → no later chown needed)
-# ---------------------------------------------------------------------------
+# Application files.
 COPY --link --from=app-build --chown=1000:1000 \
      /app/app/core/build/libs/*.jar /app.jar
 COPY --link --from=app-build --chown=1000:1000 \
@@ -490,11 +486,14 @@ COPY --link --chown=1000:1000 scripts/ /scripts/
 # Fonts go to system dir — root ownership is correct (world-readable)
 COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
-# ---------------------------------------------------------------------------
-# Directories + permissions + font cache
-# ---------------------------------------------------------------------------
+# Permissions and configuration.
 RUN set -eux; \
     ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert; \
+    ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
+    ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver; \
+    ln -sf /opt/venv/bin/ocrmypdf   /usr/local/bin/ocrmypdf; \
+    ln -sf /opt/venv/bin/weasyprint /usr/local/bin/weasyprint; \
+    ln -sf /opt/venv/bin/unoping    /usr/local/bin/unoping; \
     chmod +x /scripts/*; \
     mkdir -p /configs /logs /customFiles \
              /pipeline/watchedFolders /pipeline/finishedFolders \
@@ -512,19 +511,29 @@ RUN set -eux; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
     chmod 1777 /tmp/stirling-pdf; \
     fc-cache -f; \
+    # Generate AppCDS archive for faster startup.
+    # BouncyCastle is excluded to prevent signature conflicts.
+    echo "Performing AppCDS training run..."; \
+    java -XX:DumpLoadedClassList=/tmp/classes.lst -Dspring.context.exit=onRefresh org.springframework.boot.loader.launch.JarLauncher || true; \
+    grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst; \
+    echo "Dumping AppCDS archive..."; \
+    java -Xshare:dump \
+         -XX:+UseCompactObjectHeaders \
+         -XX:SharedClassListFile=/tmp/filtered-classes.lst \
+         -XX:SharedArchiveFile=/app/stirling.jsa \
+         org.springframework.boot.loader.launch.JarLauncher || true; \
+    rm /tmp/classes.lst /tmp/filtered-classes.lst; \
     \
     # Clean Calibre pycache that may have been generated during stage-1 verify
     find /opt/calibre -type d -name __pycache__ \
       -exec rm -rf {} + 2>/dev/null || true
 
-# ==============================================================================
-# Environment
-# ==============================================================================
+# Environment variables.
 ARG VERSION_TAG
 ENV VERSION_TAG=$VERSION_TAG \
     STIRLING_JVM_PROFILE="balanced" \
-    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+AutoCreateSharedArchive -XX:SharedArchiveFile=/configs/stirling.jsa -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
-    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=20 -XX:MaxRAMPercentage=75 -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:MaxMetaspaceSize=512m -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+AutoCreateSharedArchive -XX:SharedArchiveFile=/configs/stirling.jsa -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
+    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=20 -XX:MaxRAMPercentage=75 -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:MaxMetaspaceSize=512m -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
@@ -542,9 +551,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-software-rasterizer" \
     DBUS_SESSION_BUS_ADDRESS=/dev/null
 
-# ==============================================================================
-# Metadata
-# ==============================================================================
+# Metadata labels.
 LABEL org.opencontainers.image.title="Stirling-PDF Fat" \
       org.opencontainers.image.description="Fat version with extra fonts for air-gapped environments, includes Calibre, LibreOffice, Tesseract, OCRmyPDF" \
       org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \

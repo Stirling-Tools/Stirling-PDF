@@ -2,7 +2,13 @@
 # This script initializes Stirling PDF without OCR features.
 set -euo pipefail
 
-log() { printf '%s\n' "$*" >&2; }
+log() {
+  if [ $# -eq 0 ]; then
+    cat >&2
+  else
+    printf '%s\n' "$*" >&2
+  fi
+}
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 if [ -d /scripts ] && [[ ":${PATH}:" != *":/scripts:"* ]]; then
@@ -17,6 +23,39 @@ if [ -x /scripts/stirling-diagnostics.sh ]; then
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/debug
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostic
 fi
+
+print_versions() {
+  set +o pipefail
+  log "--- Binary Versions ---"
+  command_exists java && java -version 2>&1 | head -n 1 | log
+  command_exists qpdf && qpdf --version | head -n 1 | log
+  command_exists magick && magick --version | head -n 1 | log
+  # Use python to get versions of pip-installed tools to be sure
+  command_exists ocrmypdf && ocrmypdf --version 2>&1 | head -n 1 | printf "ocrmypdf %s\n" "$(cat)" | log
+  command_exists soffice && soffice --version | head -n 1 | log
+  command_exists unoserver && unoserver --version 2>&1 | head -n 1 | log
+  command_exists tesseract && tesseract --version | head -n 1 | log
+  command_exists gs && gs --version | printf "Ghostscript %s\n" "$(cat)" | log
+  command_exists ffmpeg && ffmpeg -version | head -n 1 | log
+  command_exists pdfinfo && pdfinfo -v 2>&1 | head -n 1 | log
+  command_exists fontforge && fontforge --version 2>&1 | head -n 1 | log
+  command_exists unpaper && unpaper --version 2>&1 | head -n 1 | log
+  log "-----------------------"
+  set -o pipefail
+}
+
+cleanup() {
+  log "Shutdown signal received. Cleaning up..."
+  # Kill background processes (unoservers, watchdog, Xvfb)
+  pkill -P $$ || true
+  # Kill Java if it was backgrounded (though it handles its own shutdown)
+  [ -n "${JAVA_PID:-}" ] && kill -TERM "$JAVA_PID" 2>/dev/null || true
+  log "Cleanup complete."
+}
+
+trap cleanup SIGTERM EXIT
+
+print_versions
 
 run_with_timeout() {
   local secs=$1; shift
@@ -46,8 +85,54 @@ tcp_port_check() {
     return $result
   fi
 
-  # No TCP check method available
-  return 2
+  return 1
+}
+
+check_unoserver_port_ready() {
+  local port=$1
+  local silent=${2:-}
+
+  # Try unoping first (best - checks actual server health)
+  if [ -n "${UNOPING_BIN:-}" ]; then
+    if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
+      return 0
+    fi
+    if [ "$silent" != "silent" ]; then
+      log "unoserver health check failed (unoping) for port ${port}, trying TCP fallback"
+    fi
+  fi
+
+  # Fallback to TCP port check (verifies service is listening)
+  tcp_port_check "127.0.0.1" "$port" 5
+  local tcp_rc=$?
+  if [ $tcp_rc -eq 0 ]; then
+    return 0
+  elif [ $tcp_rc -eq 2 ]; then
+    if [ "$silent" != "silent" ]; then
+      log "No TCP check available; falling back to PID-only for port ${port}"
+    fi
+    return 0
+  else
+    if [ "$silent" != "silent" ]; then
+      log "unoserver TCP check failed for port ${port}"
+    fi
+  fi
+
+  return 1
+}
+
+check_unoserver_ready() {
+  local silent=${1:-}
+  if [ "${#UNOSERVER_PORTS[@]}" -eq 0 ]; then
+    log "Skipping unoserver readiness check (no local ports started)"
+    return 0
+  fi
+  for port in "${UNOSERVER_PORTS[@]}"; do
+    if ! check_unoserver_port_ready "$port" "$silent"; then
+      return 1
+    fi
+  done
+  return 0
 }
 
 UNOSERVER_PIDS=()
@@ -160,37 +245,12 @@ start_unoserver_watchdog() {
         local uno_port=${UNOSERVER_UNO_PORTS[$i]}
         local needs_restart=false
 
-        # Check 1: PID exists
+        # Check PID and Health
         if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
           log "unoserver PID ${pid} not found for port ${port}"
           needs_restart=true
-        else
-          # PID exists, now check if server is actually healthy
-          local health_ok=false
-
-          # Check 2A: Health check with unoping (best - checks actual server health)
-          if [ -n "$UNOPING_BIN" ]; then
-            if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
-              health_ok=true
-            else
-              log "unoserver health check failed (unoping) for port ${port}, trying TCP fallback"
-            fi
-          fi
-
-          # Check 2B: Fallback to TCP port check (verifies service is listening)
-          if [ "$health_ok" = false ]; then
-            tcp_port_check "127.0.0.1" "$port" 5
-            local tcp_rc=$?
-            if [ $tcp_rc -eq 0 ]; then
-              health_ok=true
-            elif [ $tcp_rc -eq 2 ]; then
-              log "No TCP check available; falling back to PID-only for port ${port}"
-              health_ok=true
-            else
-              log "unoserver TCP check failed for port ${port}"
-              needs_restart=true
-            fi
-          fi
+        elif ! check_unoserver_port_ready "$port"; then
+          needs_restart=true
         fi
 
         if [ "$needs_restart" = true ]; then
@@ -244,7 +304,8 @@ start_unoserver_pool() {
     i=$((i + 1))
   done
 
-  start_unoserver_watchdog
+  # Small delay to let servers bind
+  sleep 2
 }
 
 # ---------- VERSION_TAG ----------
@@ -274,7 +335,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
         log "JVM profile: balanced (G1GC)"
       else
         log "JAVA_BASE_OPTS and profiles unset; applying fallback defaults."
-        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
+        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto"
       fi
       ;;
   esac
@@ -396,50 +457,19 @@ if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   start_unoserver_pool
   log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE)"
 
-  check_unoserver_port_ready() {
-    local port=$1
-
-    # Try unoping first (best - checks actual server health)
-    if [ -n "$UNOPING_BIN" ]; then
-      if run_as_runtime_user_with_timeout 5 "$UNOPING_BIN" --host 127.0.0.1 --port "$port" >/dev/null 2>&1; then
-        return 0
-      fi
-    fi
-
-    # Fallback to TCP port check (verifies service is listening)
-    tcp_port_check "127.0.0.1" "$port" 5
-    local tcp_rc=$?
-    if [ $tcp_rc -eq 0 ] || [ $tcp_rc -eq 2 ]; then
-      # Success or unsupported (assume ready if can't check)
-      return 0
-    fi
-
-    return 1
-  }
-
-  check_unoserver_ready() {
-    if [ "${#UNOSERVER_PORTS[@]}" -eq 0 ]; then
-      log "Skipping unoserver readiness check (no local ports started)"
-      return 0
-    fi
-    for port in "${UNOSERVER_PORTS[@]}"; do
-      if ! check_unoserver_port_ready "$port"; then
-        return 1
-      fi
-    done
-    return 0
-  }
 
   # Wait until UNO server is ready.
   log "Waiting for unoserver..."
   for _ in {1..20}; do
-    if check_unoserver_ready; then
+    # Pass 'silent' to check_unoserver_ready to suppress unoping failure logs during wait
+    if check_unoserver_ready "silent"; then
       log "unoserver is ready!"
       break
     fi
-    log "unoserver not ready yet; retrying..."
     sleep 1
   done
+
+  start_unoserver_watchdog
 
   if ! check_unoserver_ready; then
     log "ERROR: unoserver failed!"
@@ -460,6 +490,8 @@ JAVA_CMD=(
   java
   -Dfile.encoding=UTF-8
   -Djava.io.tmpdir=/tmp/stirling-pdf
+  -XX:SharedArchiveFile=/app/stirling.jsa
+  -Xshare:auto
 )
 
 if [ -f "/app.jar" ]; then
@@ -471,10 +503,13 @@ else
 fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
-  exec "${JAVA_CMD[@]}"
+  "${JAVA_CMD[@]}" &
 elif [ "$CURRENT_UID" -eq 0 ] && [ -n "$SU_EXEC_BIN" ]; then
-  exec "$SU_EXEC_BIN" "$RUNTIME_USER" "${JAVA_CMD[@]}"
+  "$SU_EXEC_BIN" "$RUNTIME_USER" "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
-  exec "${JAVA_CMD[@]}"
+  "${JAVA_CMD[@]}" &
 fi
+
+JAVA_PID=$!
+wait "$JAVA_PID"

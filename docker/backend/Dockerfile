@@ -1,11 +1,6 @@
-# ==============================================================================
-# Multi-stage Dockerfile for Stirling-PDF – image with everything included
-# Includes: LibreOffice, Calibre, Tesseract, OCRmyPDF, unoserver, WeasyPrint, etc.
-# ==============================================================================
+# Stirling-PDF - Full backend version
 
-# ========================================
-# STAGE 1: Build stage - Alpine with Gradle
-# ========================================
+# Build stage.
 FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
 
 COPY build.gradle .
@@ -27,10 +22,34 @@ COPY . .
 RUN DISABLE_ADDITIONAL_FEATURES=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
-# ========================================
-# STAGE 2: Runtime image based on Debian stable-slim
-# Contains Java runtime + LibreOffice + Calibre + all PDF tools
-# ========================================
+# Build PDF Tools (QPDF and ImageMagick 7).
+FROM ubuntu:noble AS pdf-tools-build
+ARG QPDF_VERSION=12.3.2
+ARG IM_VERSION=7.1.1-43
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
+      libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
+      libltdl-dev libtool && \
+    # Build QPDF
+    curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz && \
+    cd "qpdf-${QPDF_VERSION}" && \
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DALLOW_CRYPTO_OPENSSL=ON -DDEFAULT_CRYPTO=openssl && \
+    cmake --build build --parallel "$(nproc)" && \
+    cmake --install build && \
+    cd .. && \
+    # Build ImageMagick 7
+    curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz && \
+    cd "ImageMagick-${IM_VERSION}" && \
+    ./configure --prefix=/usr/local --with-modules --with-perl=no --with-magick-plus-plus=no --with-quantum-depth=16 --disable-static --enable-shared && \
+    make -j"$(nproc)" && \
+    make install && \
+    # Enable PDF/PS/EPS in policy
+    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /usr/local/etc/ImageMagick-7/policy.xml && \
+    sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
+    sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
+    ldconfig /usr/local/lib
+
+# Final runtime image.
 FROM debian:stable-slim@sha256:7cb087f19bcc175b96fbe4c2aef42ed00733a659581a80f6ebccfd8fe3185a3d
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -42,9 +61,9 @@ ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
     openjdk-21-jre-headless \
-    ffmpeg poppler-utils ocrmypdf \
+    ffmpeg poppler-utils \
     libreoffice-nogui libreoffice-java-common \
-    python3 python3-venv python3-uno \
+    python3 python3-venv python3-uno python3-dev build-essential libffi-dev libpango1.0-dev zlib1g-dev \
     tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
     tesseract-ocr-por tesseract-ocr-chi-sim \
     libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
@@ -80,11 +99,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Make ebook-convert available in PATH
 RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
-    && /opt/calibre/ebook-convert --version
+    && /opt/calibre/ebook-convert --version \
+    && python3 -m venv /opt/venv --system-site-packages \
+    && /opt/venv/bin/pip install --no-cache-dir ocrmypdf unoserver \
+    && ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert \
+    && ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver
 
-# ==============================================================================
-# Create non-root user (stirlingpdfuser) with configurable UID/GID
-# ==============================================================================
+# Create non-root user.
 ARG PUID=1000
 ARG PGID=1000
 
@@ -112,8 +133,27 @@ RUN ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 
 # Copy application files from build stage
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
+
+# Generate AppCDS archive for faster startup.
+# BouncyCastle is excluded to prevent signature conflicts.
+RUN set -eux; \
+    echo "Performing AppCDS training run..."; \
+    java -XX:DumpLoadedClassList=/tmp/classes.lst -Dspring.context.exit=onRefresh -jar /app.jar || true; \
+    grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst; \
+    echo "Dumping AppCDS archive..."; \
+    java -Xshare:dump \
+         -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication \
+         -XX:SharedClassListFile=/tmp/filtered-classes.lst \
+         -XX:SharedArchiveFile=/app/stirling.jsa \
+         -jar /app.jar || true; \
+    rm /tmp/classes.lst /tmp/filtered-classes.lst
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY scripts/ /scripts/
+COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
+COPY --from=pdf-tools-build /usr/local/bin/magick /usr/bin/magick
+COPY --from=pdf-tools-build /usr/local/lib/libMagick* /usr/local/lib/
+COPY --from=pdf-tools-build /usr/local/etc/ImageMagick-7 /usr/local/etc/ImageMagick-7
+RUN ldconfig /usr/local/lib
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # Optional version tag (can be passed at build time)
@@ -131,16 +171,14 @@ LABEL org.opencontainers.image.authors="Stirling-Tools"
 LABEL org.opencontainers.image.version="${VERSION_TAG}"
 LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring Boot"
 
-# ==============================================================================
-# Runtime environment variables
-# ==============================================================================
+# Runtime environment variables.
 ENV VERSION_TAG=$VERSION_TAG \
     DISABLE_ADDITIONAL_FEATURES=true \
     JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps \
     -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
     -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
     -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
-    -Djava.awt.headless=true" \
+    -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
@@ -152,27 +190,26 @@ ENV VERSION_TAG=$VERSION_TAG \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf
 
-# ==============================================================================
-# Python virtual environment for additional Python tools (WeasyPrint, OpenCV, etc.)
-# ==============================================================================
+# Python virtual environments.
 RUN python3 -m venv /opt/venv --system-site-packages \
-    && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
-    && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
+    && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless ocrmypdf \
+    && /opt/venv/bin/python -c "import cv2; import ocrmypdf; print('Python tools verified')"
 
 # Separate venv for unoserver (keeps it isolated)
 RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
     && /opt/unoserver-venv/bin/pip install --no-cache-dir unoserver
 
-# Make unoserver tools available in main venv PATH
-RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
-    && ln -sf /opt/unoserver-venv/bin/unoserver /opt/venv/bin/unoserver
+# Make Python tools available in /usr/local/bin
+RUN ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert \
+    && ln -sf /opt/venv/bin/unoserver /usr/local/bin/unoserver \
+    && ln -sf /opt/venv/bin/ocrmypdf /usr/local/bin/ocrmypdf \
+    && ln -sf /opt/venv/bin/weasyprint /usr/local/bin/weasyprint \
+    && ln -sf /opt/venv/bin/unoping /usr/local/bin/unoping
 
 # Extend PATH to include both virtual environments
 ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 
-# ==============================================================================
-# Final permissions, directories and font cache
-# ==============================================================================
+# Final permissions and font cache.
 RUN set -eux; \
     chmod +x /scripts/*; \
     mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
