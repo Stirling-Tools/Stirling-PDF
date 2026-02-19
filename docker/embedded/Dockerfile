@@ -31,40 +31,60 @@ RUN set -eux; \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
-    # ── Remove GUI-only Qt libs + WebEngineCore + others ──
+    # ── Remove GUI-only / unused shared libraries ──
+    # NOTE: Do NOT remove libQt6WebChannel, libQt6Qml*, libQt6Quick,
+    #       libQt6Positioning, libQt6OpenGL — all required by WebEngine PDF output
     rm -f  /opt/calibre/lib/libQt6Designer* \
-           /opt/calibre/lib/libonnxruntime.so.* \
+           /opt/calibre/lib/libQt6Multimedia* \
+           /opt/calibre/lib/libQt6WaylandClient.so.* \
+           /opt/calibre/lib/libQt6SpatialAudio.so.* \
+           /opt/calibre/lib/libQt6XcbQpa.so.* \
+           /opt/calibre/lib/libQt6Pdf* \
+           /opt/calibre/lib/libQt6NetworkAuth.so.* \
+           /opt/calibre/lib/libQt6Concurrent.so.* \
+           /opt/calibre/lib/libQt6PrintSupport.so.* \
+           /opt/calibre/lib/libQt6Sensors.so.* \
+           /opt/calibre/lib/libQt6Sql.so.* \
+           /opt/calibre/lib/libQt6TextToSpeech.so.* \
+           /opt/calibre/lib/libQt6Xml.so.* \
+           /opt/calibre/lib/libQt6WebEngineWidgets.so.* \
+           /opt/calibre/lib/libQt6OpenGLWidgets.so.* \
+           /opt/calibre/lib/libQt6QuickWidgets.so.* \
+           # AV / multimedia (not used for ebook conversion)
            /opt/calibre/lib/libavcodec.so.* \
            /opt/calibre/lib/libavfilter.so.* \
            /opt/calibre/lib/libavformat.so.* \
-           /opt/calibre/lib/libgio-2.0.so.* \
-           /opt/calibre/lib/libQt6Multimedia* \
-           /opt/calibre/lib/libQt6WaylandClient.so.* \
-           /opt/calibre/lib/libzstd.so.* \
            /opt/calibre/lib/libavutil.so.* \
-           /opt/calibre/lib/libQt6SpatialAudio.so.* \
-           /opt/calibre/lib/libhunspell-1.7.so.* \
-           /opt/calibre/lib/libbrotlienc.so.* \
-           /opt/calibre/lib/libQt6XcbQpa.so.* \
-           /opt/calibre/lib/libQt6Svg.so.* \
-           /opt/calibre/lib/libstemmer.so.* \
+           /opt/calibre/lib/libavdevice.so.* \
+           /opt/calibre/lib/libpostproc.so.* \
+           /opt/calibre/lib/libswresample.so.* \
            /opt/calibre/lib/libswscale.so.* \
-           /opt/calibre/lib/libmtp.so.* \
-           /opt/calibre/lib/libncursesw.so.* \
-           /opt/calibre/lib/libespeak-ng.so.* \
-           /opt/calibre/lib/libQt6Pdf* \
-           /opt/calibre/lib/libQt6Positioning* \
-           /opt/calibre/lib/libQt6Quick* \
-           /opt/calibre/lib/libQt6WebChannel* \
-           /opt/calibre/lib/libQt6Qml* \
-           /opt/calibre/lib/libQt6OpenGL* \
-           /opt/calibre/lib/libQt6NetworkAuth.so.* \
+           # Audio / speech / TTS
            /opt/calibre/lib/libspeex.so.* \
            /opt/calibre/lib/libFLAC.so.* \
            /opt/calibre/lib/libopus.so.* \
            /opt/calibre/lib/libvorbis*.so.* \
            /opt/calibre/lib/libasyncns.so.* \
-           /opt/calibre/lib/libspeechd.so.*; \
+           /opt/calibre/lib/libspeechd.so.* \
+           /opt/calibre/lib/libespeak-ng.so.* \
+           # Other unused libs
+           /opt/calibre/lib/libonnxruntime.so.* \
+           /opt/calibre/lib/libgio-2.0.so.* \
+           /opt/calibre/lib/libzstd.so.* \
+           /opt/calibre/lib/libhunspell-1.7.so.* \
+           /opt/calibre/lib/libbrotlienc.so.* \
+           /opt/calibre/lib/libbrotlicommon.so.* \
+           /opt/calibre/lib/libbrotlidec.so.* \
+           /opt/calibre/lib/libstemmer.so.* \
+           /opt/calibre/lib/libmtp.so.* \
+           /opt/calibre/lib/libncursesw.so.* \
+           /opt/calibre/lib/libpoppler.so.* \
+           /opt/calibre/lib/libchm.so.* \
+           /opt/calibre/lib/libgcrypt.so.* \
+           /opt/calibre/lib/libgpg-error.so.* \
+           /opt/calibre/lib/libicuio.so.* \
+           /opt/calibre/lib/libreadline.so.* \
+           /opt/calibre/lib/libusb-1.0.so.*; \
     rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
            /opt/calibre/lib/qt6/plugins/wayland* \
            /opt/calibre/lib/qt6/plugins/xcbglintegrations \
@@ -101,9 +121,12 @@ RUN set -eux; \
     # ── Remove resources not needed for CLI conversion ──
     rm -rf /opt/calibre/resources/images \
            /opt/calibre/resources/icons \
+           /opt/calibre/resources/icons.rcc \
            /opt/calibre/resources/content-server \
            /opt/calibre/resources/editor* \
            /opt/calibre/resources/viewer \
+           /opt/calibre/resources/viewer.js \
+           /opt/calibre/resources/viewer.html \
            /opt/calibre/resources/recipes \
            /opt/calibre/resources/dictionaries \
            /opt/calibre/resources/hyphenation \
@@ -111,6 +134,39 @@ RUN set -eux; \
            /opt/calibre/resources/calibre-mimetypes.xml \
            /opt/calibre/resources/changelog.json \
            /opt/calibre/resources/user-agent-data.json \
+           /opt/calibre/resources/builtin_recipes.zip \
+           /opt/calibre/resources/builtin_recipes.xml \
+           /opt/calibre/resources/qtwebengine_devtools_resources.pak \
+           /opt/calibre/resources/qtwebengine_resources_100p.pak \
+           /opt/calibre/resources/qtwebengine_resources_200p.pak \
+           /opt/calibre/resources/stylelint-bundle.min.js \
+           /opt/calibre/resources/stylelint.js \
+           /opt/calibre/resources/rapydscript \
+           /opt/calibre/resources/quick_start \
+           /opt/calibre/resources/piper-voices.json \
+           /opt/calibre/resources/images.qrc \
+           /opt/calibre/resources/mozilla-ca-certs.pem \
+           /opt/calibre/resources/ebook-convert-complete.calibre_msgpack \
+           /opt/calibre/resources/mathjax \
+           /opt/calibre/resources/common-english-words.txt \
+           /opt/calibre/resources/calibre-portable.sh \
+           /opt/calibre/resources/calibre-portable.bat \
+           /opt/calibre/resources/metadata_sqlite.sql \
+           /opt/calibre/resources/notes_sqlite.sql \
+           /opt/calibre/resources/fts_sqlite.sql \
+           /opt/calibre/resources/fts_triggers.sql \
+           /opt/calibre/resources/jacket \
+           /opt/calibre/resources/editor-functions.json \
+           /opt/calibre/resources/calibre-ebook-root-CA.crt \
+           /opt/calibre/resources/locales \
+           /opt/calibre/resources/csscolorparser.js \
+           /opt/calibre/resources/lookup.js \
+           /opt/calibre/resources/pdf-mathjax-loader.js \
+           /opt/calibre/resources/scraper.js \
+           /opt/calibre/resources/toc.js \
+           /opt/calibre/resources/user-manual-translation-stats.json \
+           /opt/calibre/resources/pin-template.svg \
+           /opt/calibre/resources/scripts.calibre_msgpack \
            /opt/calibre/lib/calibre/ebooks/docx/images \
            /opt/calibre/share \
            /opt/calibre/man; \
@@ -263,15 +319,23 @@ RUN set -eux; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     \
-    # Docs / man / info
+    # Docs / man / info / icons / themes / GUI assets (headless server)
     rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* \
-           /usr/share/lintian/* /usr/share/linda/*; \
+           /usr/share/lintian/* /usr/share/linda/* \
+           /usr/share/icons/* /usr/share/themes/* \
+           /usr/share/javascript/* \
+           /usr/share/unicode/* \
+           /usr/share/gtk-3.0/* \
+           /usr/share/fontforge/pixmaps \
+           /usr/share/liblangtag/* \
+           /usr/share/libreoffice/* \
+           /usr/share/poppler/cMap \
+           /usr/share/tcltk/* \
+           /usr/share/python-wheels/*; \
     \
     find /usr/share/locale -mindepth 1 -maxdepth 1 -type d \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
-    rm -rf /usr/share/i18n/locales; \
-    \
-    # rm -rf /usr/share/icons/* /usr/share/themes/*; \
+    rm -rf /usr/share/i18n/locales /usr/share/i18n/charmaps; \
     \
     # LibreOffice extras: Only remove specific directories as requested
     rm -rf /usr/lib/libreoffice/share/gallery \
@@ -312,13 +376,38 @@ RUN set -eux; \
     find /opt/venv \
       \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
-           /opt/venv/lib/python*/site-packages/setuptools; \
+           /opt/venv/lib/python*/site-packages/setuptools \
+           /opt/venv/lib/python*/site-packages/*.dist-info; \
+    \
+    # Python stdlib: remove unused modules (~71 MB)
+    rm -rf /usr/lib/python3.12/test \
+           /usr/lib/python3.12/idlelib \
+           /usr/lib/python3.12/tkinter \
+           /usr/lib/python3.12/lib2to3 \
+           /usr/lib/python3.12/pydoc_data; \
+    \
+    # System Python packages not needed at runtime (~153 MB)
+    rm -rf /usr/lib/python3/dist-packages/scipy \
+           /usr/lib/python3/dist-packages/sympy \
+           /usr/lib/python3/dist-packages/mpmath; \
+    \
+    # Duplicate system packages (superseded by venv versions, ~55 MB)
+    rm -rf /usr/lib/python3/dist-packages/numpy \
+           /usr/lib/python3/dist-packages/fontTools \
+           /usr/lib/python3/dist-packages/PIL; \
     \
     # Strip debug symbols from ALL shared libraries
     find /usr/lib -name '*.so*' -type f \
         -not -path '*/jvm/*' \
         -not -path '*/libreoffice/*' \
         -exec strip --strip-unneeded {} + 2>/dev/null || true; \
+    \
+    # NOTE: Do NOT remove ffmpeg codec libs (libcodec2, libx265, libaom, etc.)
+    # They are directly linked into ffmpeg/unpaper binaries and cannot be removed
+    \
+    # Remove Mesa/LLVM GPU backends (~179 MB, not needed for headless/offscreen)
+    rm -f /usr/lib/x86_64-linux-gnu/libLLVM*.so* \
+          /usr/lib/x86_64-linux-gnu/libgallium*.so*; \
     \
     # System-wide Python cache cleanup
     find /usr/lib/python3* -type d -name __pycache__ \
@@ -340,9 +429,8 @@ RUN set -eux; \
     rm -rf /usr/share/ghostscript/*/Resource/CIDFSubst \
            /usr/share/ghostscript/*/Resource/CIDFont; \
     \
-    # NEW: Tesseract training configs (not needed for OCR)
-    rm -rf /usr/share/tesseract-ocr/*/tessdata/configs \
-           /usr/share/tesseract-ocr/*/tessdata/tessconfigs; \
+    # NEW: Tesseract training configs (not needed for OCR, but keep configs/ for hocr/txt output)
+    rm -rf /usr/share/tesseract-ocr/*/tessdata/tessconfigs; \
     \
     # Trim CJK fonts to Regular weight only (FIX: Broadened path)
     find /usr/share/fonts -name '*CJK*' \
