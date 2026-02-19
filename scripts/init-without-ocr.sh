@@ -315,11 +315,153 @@ if [ -z "${VERSION_TAG:-}" ] && [ -f /etc/stirling_version ]; then
   export VERSION_TAG
 fi
 
+# ---------- Dynamic Memory Detection ----------
+# Detects the container memory limit (in MB) from cgroups v2/v1 or /proc/meminfo.
+detect_container_memory_mb() {
+  local mem_bytes=""
+  # cgroups v2
+  if [ -f /sys/fs/cgroup/memory.max ]; then
+    mem_bytes=$(cat /sys/fs/cgroup/memory.max 2>/dev/null)
+    if [ "$mem_bytes" = "max" ]; then
+      mem_bytes=""
+    fi
+  fi
+  # cgroups v1 fallback
+  if [ -z "$mem_bytes" ] && [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+    mem_bytes=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null)
+    # Values near max uint64 mean "unlimited"
+    if [ "${mem_bytes:-0}" -gt 9000000000000000000 ] 2>/dev/null; then
+      mem_bytes=""
+    fi
+  fi
+  # Fallback to system total memory
+  if [ -z "$mem_bytes" ]; then
+    mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+  fi
+  if [ -n "$mem_bytes" ] && [ "$mem_bytes" -gt 0 ] 2>/dev/null; then
+    echo $(( mem_bytes / 1048576 ))
+  else
+    echo "0"
+  fi
+}
+
+# Computes dynamic JVM memory flags based on detected container memory and profile.
+# Sets: DYNAMIC_INITIAL_RAM_PCT, DYNAMIC_MAX_RAM_PCT, DYNAMIC_MAX_METASPACE
+compute_dynamic_memory() {
+  local mem_mb=$1
+  local profile=${2:-balanced}
+
+  if [ "$mem_mb" -le 0 ] 2>/dev/null; then
+    # Cannot detect memory; use safe defaults
+    DYNAMIC_INITIAL_RAM_PCT=10
+    DYNAMIC_MAX_RAM_PCT=75
+    DYNAMIC_MAX_METASPACE=256
+    return
+  fi
+
+  log "Detected container memory: ${mem_mb}MB"
+
+  if [ "$mem_mb" -le 512 ]; then
+    DYNAMIC_INITIAL_RAM_PCT=50
+    DYNAMIC_MAX_RAM_PCT=70
+    DYNAMIC_MAX_METASPACE=128
+  elif [ "$mem_mb" -le 1024 ]; then
+    DYNAMIC_INITIAL_RAM_PCT=40
+    DYNAMIC_MAX_RAM_PCT=75
+    DYNAMIC_MAX_METASPACE=192
+  elif [ "$mem_mb" -le 2048 ]; then
+    DYNAMIC_INITIAL_RAM_PCT=25
+    DYNAMIC_MAX_RAM_PCT=75
+    DYNAMIC_MAX_METASPACE=256
+  elif [ "$mem_mb" -le 4096 ]; then
+    DYNAMIC_INITIAL_RAM_PCT=15
+    DYNAMIC_MAX_RAM_PCT=75
+    DYNAMIC_MAX_METASPACE=256
+  else
+    # Large memory: be conservative to leave room for off-heap (LibreOffice, Calibre, etc.)
+    if [ "$profile" = "performance" ]; then
+      DYNAMIC_INITIAL_RAM_PCT=20
+      DYNAMIC_MAX_RAM_PCT=75
+      DYNAMIC_MAX_METASPACE=512
+    else
+      DYNAMIC_INITIAL_RAM_PCT=10
+      DYNAMIC_MAX_RAM_PCT=50
+      DYNAMIC_MAX_METASPACE=256
+    fi
+  fi
+
+  log "Dynamic memory: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
+}
+
+# ---------- First-Boot AppCDS Generation ----------
+# Generates an AppCDS archive at runtime, ensuring the archive matches the
+# exact JVM version, architecture, and flag state of the current container.
+# This is more robust than build-time generation which can produce mismatched
+# archives when building multi-arch images or when runtime flags differ.
+generate_appcds_archive() {
+  local jsa_path=$1
+  shift
+  # Remaining args are the classpath/main-class arguments for the training run
+
+  local jsa_dir
+  jsa_dir=$(dirname "$jsa_path")
+  mkdir -p "$jsa_dir" 2>/dev/null || true
+
+  log "Generating AppCDS archive on first boot (this may take 30-60s)..."
+
+  # Training run - collect loaded class list
+  java -XX:+UseCompactObjectHeaders \
+       -XX:DumpLoadedClassList=/tmp/classes.lst \
+       -Dspring.context.exit=onRefresh \
+       "$@" 2>/dev/null || true
+
+  if [ ! -f /tmp/classes.lst ]; then
+    log "AppCDS training run produced no class list; skipping CDS."
+    return 1
+  fi
+
+  # Filter out BouncyCastle to prevent signature conflicts
+  grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst || true
+
+  # Determine classpath for dump
+  local cp_arg=""
+  if [ -f /app/app.jar ] && [ -d /app/lib ]; then
+    cp_arg="/app/app.jar:/app/lib/*"
+  elif [ -f /app.jar ]; then
+    cp_arg="/app.jar"
+  else
+    log "Cannot determine classpath for CDS dump; skipping."
+    rm -f /tmp/classes.lst /tmp/filtered-classes.lst
+    return 1
+  fi
+
+  # Dump the shared archive
+  if java -Xshare:dump \
+       -XX:+UseCompactObjectHeaders \
+       -XX:SharedClassListFile=/tmp/filtered-classes.lst \
+       -XX:SharedArchiveFile="$jsa_path" \
+       -cp "$cp_arg" 2>/dev/null; then
+    log "AppCDS archive created successfully: $jsa_path"
+    rm -f /tmp/classes.lst /tmp/filtered-classes.lst
+    return 0
+  else
+    log "AppCDS dump failed; running without CDS."
+    rm -f /tmp/classes.lst /tmp/filtered-classes.lst "$jsa_path"
+    return 1
+  fi
+}
+
+# ---------- Memory Detection ----------
+CONTAINER_MEM_MB=$(detect_container_memory_mb)
+JVM_PROFILE="${STIRLING_JVM_PROFILE:-balanced}"
+compute_dynamic_memory "$CONTAINER_MEM_MB" "$JVM_PROFILE"
+MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
+
 # ---------- JVM Profile Selection ----------
 # Resolve JAVA_BASE_OPTS from profile system or user override.
 # Priority: JAVA_BASE_OPTS (explicit override) > STIRLING_JVM_PROFILE > fallback defaults
 if [ -z "${JAVA_BASE_OPTS:-}" ]; then
-  case "${STIRLING_JVM_PROFILE:-balanced}" in
+  case "$JVM_PROFILE" in
     performance)
       if [ -n "${_JVM_OPTS_PERFORMANCE:-}" ]; then
         JAVA_BASE_OPTS="${_JVM_OPTS_PERFORMANCE}"
@@ -335,10 +477,31 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
         log "JVM profile: balanced (G1GC)"
       else
         log "JAVA_BASE_OPTS and profiles unset; applying fallback defaults."
-        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:InitialRAMPercentage=10 -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=256m -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
+        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
       fi
       ;;
   esac
+
+  # Strip any hardcoded memory/CDS flags from the profile (managed dynamically)
+  JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
+    's/-XX:InitialRAMPercentage=[^ ]*//g;
+     s/-XX:MinRAMPercentage=[^ ]*//g;
+     s/-XX:MaxRAMPercentage=[^ ]*//g;
+     s/-XX:MaxMetaspaceSize=[^ ]*//g;
+     s/-XX:SharedArchiveFile=[^ ]*//g;
+     s/-Xshare:(auto|on|off)//g')
+
+  # Append computed dynamic memory flags
+  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${MEMORY_FLAGS}"
+else
+  # JAVA_BASE_OPTS explicitly set by user or Dockerfile
+  # Only add dynamic memory if not already present
+  if ! echo "$JAVA_BASE_OPTS" | grep -q 'MaxRAMPercentage'; then
+    JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${MEMORY_FLAGS}"
+    log "Appended dynamic memory flags to JAVA_BASE_OPTS"
+  else
+    log "JAVA_BASE_OPTS already contains memory flags; keeping user values"
+  fi
 fi
 
 # Check if Project Lilliput is supported (standard in Java 25+)
@@ -348,7 +511,7 @@ if java -XX:+UseCompactObjectHeaders -version >/dev/null 2>&1; then
     *UseCompactObjectHeaders*) ;;
     *)
       log "JVM supports Compact Object Headers. Enabling Project Lilliput..."
-      JAVA_BASE_OPTS="${JAVA_BASE_OPTS:-} -XX:+UseCompactObjectHeaders"
+      JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:+UseCompactObjectHeaders"
       ;;
   esac
 else
@@ -361,22 +524,36 @@ JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedClassPo
 # Remove UseCompressedOops (let JVM use defaults; explicitly disabling wastes memory)
 JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:-UseCompressedOops//g')
 
-# ---------- AppCDS Validation ----------
-# Verify the CDS archive file exists before referencing it.
-# If the archive is missing, strip SharedArchiveFile and Xshare flags to avoid
-# startup errors. With -Xshare:auto the JVM would only warn, but removing the
-# reference avoids noise and keeps logs clean.
-CDS_FILE=""
-if echo "$JAVA_BASE_OPTS" | grep -q 'SharedArchiveFile'; then
-  CDS_FILE=$(echo "$JAVA_BASE_OPTS" | grep -oP '(?<=SharedArchiveFile=)\S+')
-fi
-if [ -n "$CDS_FILE" ] && [ -f "$CDS_FILE" ]; then
-  log "AppCDS archive found: $CDS_FILE"
+# ---------- AppCDS Management ----------
+# Strip any existing CDS references from base opts (we manage CDS dynamically below)
+JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:SharedArchiveFile=[^ ]*//g; s/-Xshare:(auto|on|off)//g')
+
+CDS_ARCHIVE="/app/stirling.jsa"
+
+if [ -f "$CDS_ARCHIVE" ]; then
+  # Archive exists (either build-time or from a previous first-boot)
+  log "AppCDS archive found: $CDS_ARCHIVE"
+  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:SharedArchiveFile=${CDS_ARCHIVE} -Xshare:auto"
+elif [ "${STIRLING_CDS_DISABLE:-false}" = "true" ]; then
+  log "AppCDS disabled via STIRLING_CDS_DISABLE=true"
 else
-  if [ -n "$CDS_FILE" ]; then
-    log "AppCDS archive not found at $CDS_FILE; disabling AppCDS"
+  # First-boot CDS generation
+  CDS_GENERATED=false
+  if [ -f /app/app.jar ] && [ -d /app/lib ]; then
+    if generate_appcds_archive "$CDS_ARCHIVE" -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication; then
+      CDS_GENERATED=true
+    fi
+  elif [ -f /app.jar ]; then
+    if generate_appcds_archive "$CDS_ARCHIVE" -jar /app.jar; then
+      CDS_GENERATED=true
+    fi
   fi
-  JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:SharedArchiveFile=[^ ]+//g; s/-Xshare:auto//g; s/-Xshare:on//g')
+
+  if [ "$CDS_GENERATED" = true ] && [ -f "$CDS_ARCHIVE" ]; then
+    JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:SharedArchiveFile=${CDS_ARCHIVE} -Xshare:auto"
+  else
+    log "Running without AppCDS (set STIRLING_CDS_DISABLE=true to skip generation attempts)"
+  fi
 fi
 
 # Collapse duplicate whitespace
@@ -517,13 +694,16 @@ JAVA_CMD=(
   java
   -Dfile.encoding=UTF-8
   -Djava.io.tmpdir=/tmp/stirling-pdf
-  -Xshare:auto
 )
 
 if [ -f "/app.jar" ]; then
   JAVA_CMD+=("-jar" "/app.jar")
+elif [ -f "/app/app.jar" ]; then
+  # Spring Boot 4 layered JAR structure (exploded via extract --layers).
+  # Use -cp (not -jar) so the classpath matches the AppCDS archive exactly.
+  JAVA_CMD+=("-cp" "/app/app.jar:/app/lib/*" "stirling.software.SPDF.SPDFApplication")
 else
-  # Layered JAR structure
+  # Legacy fallback for Spring Boot 3 layered layout
   export JAVA_MAIN_CLASS=org.springframework.boot.loader.launch.JarLauncher
   JAVA_CMD+=("org.springframework.boot.loader.launch.JarLauncher")
 fi

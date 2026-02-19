@@ -134,26 +134,9 @@ RUN ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 # Copy application files from build stage
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
 
-# Generate AppCDS archive for faster startup.
-# BouncyCastle is excluded to prevent signature conflicts.
-RUN set -eux; \
-    echo "Performing AppCDS training run..."; \
-    java -XX:+UseCompactObjectHeaders \
-         -XX:DumpLoadedClassList=/tmp/classes.lst \
-         -Dspring.context.exit=onRefresh \
-         -jar /app.jar || true; \
-    if [ -f /tmp/classes.lst ]; then \
-      grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst; \
-      echo "Dumping AppCDS archive..."; \
-      java -Xshare:dump \
-           -XX:+UseCompactObjectHeaders \
-           -XX:SharedClassListFile=/tmp/filtered-classes.lst \
-           -XX:SharedArchiveFile=/app/stirling.jsa \
-           -cp /app.jar || true; \
-    else \
-      echo "AppCDS training run failed; skipping CDS archive."; \
-    fi; \
-    rm -f /tmp/classes.lst /tmp/filtered-classes.lst
+# NOTE: AppCDS archive is generated at first boot by init-without-ocr.sh.
+# This ensures the archive matches the exact JVM version, architecture,
+# and flag state of the runtime container (no build-time/runtime mismatches).
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY scripts/ /scripts/
 COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
@@ -181,12 +164,9 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring
 # Runtime environment variables.
 ENV VERSION_TAG=$VERSION_TAG \
     DISABLE_ADDITIONAL_FEATURES=true \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps \
-    -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
-    -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
-    -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
-    -XX:+UseCompactObjectHeaders \
-    -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
+    STIRLING_JVM_PROFILE="balanced" \
+    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 -XX:+UseCompactObjectHeaders -Djava.awt.headless=true" \
+    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \
