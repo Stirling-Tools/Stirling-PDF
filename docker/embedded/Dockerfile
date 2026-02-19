@@ -334,7 +334,6 @@ RUN set -eux; \
            /usr/share/gtk-3.0/* \
            /usr/share/fontforge/pixmaps \
            /usr/share/liblangtag/* \
-           /usr/share/libreoffice/* \
            /usr/share/poppler/cMap \
            /usr/share/tcltk/* \
            /usr/share/python-wheels/*; \
@@ -516,7 +515,7 @@ RUN set -eux; \
 # ==============================================================================
 ARG VERSION_TAG
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational -XX:+UseCompactObjectHeaders -Djava.awt.headless=true" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \

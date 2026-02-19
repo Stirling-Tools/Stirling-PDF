@@ -336,7 +336,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/share/gtk-3.0/* \
            /usr/share/fontforge/pixmaps \
            /usr/share/liblangtag/* \
-           /usr/share/libreoffice/* \
            /usr/share/poppler/cMap \
            /usr/share/tcltk/* \
            /usr/share/python-wheels/*; \
@@ -370,13 +369,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/share/toolbarmode \
            /usr/lib/libreoffice/share/psprint; \
     \
-    # Trim soffice.cfg: keep only svt/, simpress/ and modules/simpress/ui (~5.6 MB vs 25 MB)
-    find /usr/lib/libreoffice/share/config/soffice.cfg -mindepth 1 -maxdepth 1 -type d \
-      ! -name svt ! -name simpress ! -name modules -exec rm -rf {} +; \
-    find /usr/lib/libreoffice/share/config/soffice.cfg/modules -mindepth 1 -maxdepth 1 -type d \
-      ! -name simpress -exec rm -rf {} +; \
-    find /usr/lib/libreoffice/share/config/soffice.cfg/modules/simpress -mindepth 1 -maxdepth 1 -type d \
-      ! -name ui -exec rm -rf {} + 2>/dev/null || true; \
+    # Trim soffice.cfg — keep all installed application module configs
+    find /usr/lib/libreoffice/share/config/soffice.cfg \
+      -mindepth 1 -maxdepth 1 -type d \
+      ! -name svt ! -name modules \
+      -exec rm -rf {} +; \
+    find /usr/lib/libreoffice/share/config/soffice.cfg/modules \
+      -mindepth 1 -maxdepth 1 -type d \
+      ! -name swriter ! -name scalc ! -name sdraw ! -name simpress \
+      -exec rm -rf {} +; \
     \
     \
     find /usr/lib -name '*.so*' -type f \
@@ -521,7 +522,7 @@ RUN set -eux; \
 # ==============================================================================
 ARG VERSION_TAG
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -XX:+UseStringDeduplication -Djava.awt.headless=true -XX:+UseCompactObjectHeaders" \
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:MaxRAMPercentage=75 -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \

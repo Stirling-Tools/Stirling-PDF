@@ -379,7 +379,9 @@ public class OCRController {
                         command.add("tesseract");
                         command.add(imagePath.toString());
                         String outputBase =
-                                new File(tempOutputDir, String.format(Locale.ROOT, "page_%d", pageNum))
+                                new File(
+                                                tempOutputDir,
+                                                String.format(Locale.ROOT, "page_%d", pageNum))
                                         .toString();
                         command.add(outputBase);
                         command.add("-l");
