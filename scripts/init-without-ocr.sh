@@ -462,7 +462,7 @@ generate_appcds_archive() {
 CONTAINER_MEM_MB=$(detect_container_memory_mb)
 JVM_PROFILE="${STIRLING_JVM_PROFILE:-balanced}"
 compute_dynamic_memory "$CONTAINER_MEM_MB" "$JVM_PROFILE"
-MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MinRAMPercentage=10 -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
+MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
 
 # ---------- JVM Profile Selection ----------
 # Resolve JAVA_BASE_OPTS from profile system or user override.
