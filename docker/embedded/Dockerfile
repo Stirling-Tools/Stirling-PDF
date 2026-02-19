@@ -365,15 +365,9 @@ RUN set -eux; \
            /usr/lib/libreoffice/share/toolbarmode \
            /usr/lib/libreoffice/share/psprint; \
     \
-    # Trim soffice.cfg — keep all installed application module configs
-    find /usr/lib/libreoffice/share/config/soffice.cfg \
-      -mindepth 1 -maxdepth 1 -type d \
-      ! -name svt ! -name modules \
-      -exec rm -rf {} +; \
-    find /usr/lib/libreoffice/share/config/soffice.cfg/modules \
-      -mindepth 1 -maxdepth 1 -type d \
-      ! -name swriter ! -name scalc ! -name sdraw ! -name simpress \
-      -exec rm -rf {} +; \
+    # NOTE: soffice.cfg is NOT trimmed — LibreOffice needs all module configs
+    # (simpress/styles.xml, swriter/styles.xml, etc.) to load documents
+    \
     \
     # Python caches + pip/setuptools cleanup
     find /opt/venv -type d -name __pycache__ \
