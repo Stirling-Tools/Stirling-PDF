@@ -380,8 +380,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Preserving ffmpeg codec libs as they are directly linked.
     \
     # Remove Mesa/LLVM GPU backends (~179 MB, not needed for headless/offscreen)
-    rm -f /usr/lib/x86_64-linux-gnu/libLLVM*.so* \
-          /usr/lib/x86_64-linux-gnu/libgallium*.so*; \
+    MULTIARCH_LIBDIR=$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null \
+      || find /usr/lib -maxdepth 1 -type d -name '*-linux-gnu' | head -1); \
+    rm -f \
+      "${MULTIARCH_LIBDIR}"/libLLVM*.so* \
+      "${MULTIARCH_LIBDIR}"/libgallium*.so* \
+      2>/dev/null || true; \
     \
     # Python stdlib: remove unused modules (~71 MB)
     rm -rf /usr/lib/python3.12/test \
