@@ -260,7 +260,17 @@ RUN set -eux; \
            /usr/lib/libreoffice/help \
            /usr/lib/libreoffice/share/config/images_*.zip \
            /usr/lib/libreoffice/share/basic \
-           /usr/lib/libreoffice/share/Scripts; \
+           /usr/lib/libreoffice/share/Scripts \
+           /usr/lib/libreoffice/share/autocorr \
+           /usr/lib/libreoffice/share/classification \
+           /usr/lib/libreoffice/share/wordbook \
+           /usr/lib/libreoffice/share/fingerprint \
+           /usr/lib/libreoffice/share/xdg \
+           /usr/lib/libreoffice/share/numbertext \
+           /usr/lib/libreoffice/share/shell \
+           /usr/lib/libreoffice/share/palette \
+           /usr/lib/libreoffice/share/theme_definitions \
+           /usr/lib/libreoffice/share/config/soffice.cfg; \
     \
     # Python caches + pip/setuptools cleanup
     find /opt/venv -type d -name __pycache__ \

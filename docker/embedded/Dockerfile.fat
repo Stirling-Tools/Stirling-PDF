@@ -203,7 +203,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       ca-certificates tzdata tini bash fontconfig curl \
       ffmpeg poppler-utils imagemagick fontforge ghostscript \
       gosu unpaper qpdf pngquant \
-      # Fonts — fat version includes extra fonts for air-gapped environments
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono \
@@ -259,7 +258,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /usr/share/i18n/locales; \
     \
-    # LibreOffice extras: Only remove specific directories as requested
     rm -rf /usr/lib/libreoffice/share/gallery \
            /usr/lib/libreoffice/share/template \
            /usr/lib/libreoffice/share/wizards \
@@ -267,7 +265,17 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/help \
            /usr/lib/libreoffice/share/config/images_*.zip \
            /usr/lib/libreoffice/share/basic \
-           /usr/lib/libreoffice/share/Scripts; \
+           /usr/lib/libreoffice/share/Scripts \
+           /usr/lib/libreoffice/share/autocorr \
+           /usr/lib/libreoffice/share/classification \
+           /usr/lib/libreoffice/share/wordbook \
+           /usr/lib/libreoffice/share/fingerprint \
+           /usr/lib/libreoffice/share/xdg \
+           /usr/lib/libreoffice/share/numbertext \
+           /usr/lib/libreoffice/share/shell \
+           /usr/lib/libreoffice/share/palette \
+           /usr/lib/libreoffice/share/theme_definitions \
+           /usr/lib/libreoffice/share/config/soffice.cfg; \
     \
     \
     find /usr/lib -name '*.so*' -type f \
