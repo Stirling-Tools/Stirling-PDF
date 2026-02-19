@@ -537,8 +537,8 @@ ENV VERSION_TAG=$VERSION_TAG \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf \
-    QT_QPA_PLATFORM=offscreen \
-    QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox"
+    QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-software-rasterizer" \
+    DBUS_SESSION_BUS_ADDRESS=/dev/null
 
 # ==============================================================================
 # Metadata
