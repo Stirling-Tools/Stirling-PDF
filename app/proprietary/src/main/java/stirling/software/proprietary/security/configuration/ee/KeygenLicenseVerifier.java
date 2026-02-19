@@ -216,8 +216,14 @@ public class KeygenLicenseVerifier {
             JsonNode licenseData = objectMapper.readTree(certData);
             JsonNode metaObj = licenseData.path("meta");
             if (!metaObj.isMissingNode() && metaObj.isObject()) {
-                String issuedStr = metaObj.path("issued").isNull() ? null : metaObj.path("issued").asText(null);
-                String expiryStr = metaObj.path("expiry").isNull() ? null : metaObj.path("expiry").asText(null);
+                String issuedStr =
+                        metaObj.path("issued").isNull()
+                                ? null
+                                : metaObj.path("issued").asText(null);
+                String expiryStr =
+                        metaObj.path("expiry").isNull()
+                                ? null
+                                : metaObj.path("expiry").asText(null);
 
                 if (issuedStr != null && expiryStr != null) {
                     java.time.Instant issued = java.time.Instant.parse(issuedStr);
@@ -266,7 +272,8 @@ public class KeygenLicenseVerifier {
                     // Extract user count - default based on license type
                     // Old licenses: Only had isEnterprise flag
                     // New licenses: Have planType field with "server" or "enterprise"
-                    int users = metadataObj.path("users").asInt(context.isEnterpriseLicense ? 1 : 0);
+                    int users =
+                            metadataObj.path("users").asInt(context.isEnterpriseLicense ? 1 : 0);
 
                     // SERVER license (isEnterprise=false, users=0) = unlimited
                     // ENTERPRISE license (isEnterprise=true, users>0) = limited seats
@@ -451,8 +458,13 @@ public class KeygenLicenseVerifier {
                     JsonNode metadataObj = policyObj.path("metadata");
                     if (!metadataObj.isMissingNode() && metadataObj.isObject()) {
                         context.isEnterpriseLicense =
-                                metadataObj.path("isEnterprise").asBoolean(context.isEnterpriseLicense);
-                        users = metadataObj.path("users").asInt(context.isEnterpriseLicense ? 1 : 0);
+                                metadataObj
+                                        .path("isEnterprise")
+                                        .asBoolean(context.isEnterpriseLicense);
+                        users =
+                                metadataObj
+                                        .path("users")
+                                        .asInt(context.isEnterpriseLicense ? 1 : 0);
                     } else {
                         // Default based on license type
                         users = context.isEnterpriseLicense ? 1 : 0;

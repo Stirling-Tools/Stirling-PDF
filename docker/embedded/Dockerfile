@@ -482,6 +482,7 @@ RUN set -eux; \
 # ---------------------------------------------------------------------------
 # Application files (Layered JARs)
 # ---------------------------------------------------------------------------
+WORKDIR /app
 COPY --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
 COPY --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
 COPY --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
