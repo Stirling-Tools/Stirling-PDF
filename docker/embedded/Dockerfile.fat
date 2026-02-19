@@ -171,7 +171,7 @@ RUN set -eux; \
     # Keep qtwebengine_locales (required for WebEngine)
     rm -rf /opt/calibre/lib/qt6/translations; \
     find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} +; \
-           /opt/calibre/resources/localization/locales.zip \
+    rm -rf /opt/calibre/resources/localization/locales.zip \
            /opt/calibre/resources/localization/stats.calibre_msgpack \
            /opt/calibre/resources/localization/website-languages.txt; \
     find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
