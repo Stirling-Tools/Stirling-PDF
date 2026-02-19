@@ -1,7 +1,7 @@
 # Stirling-PDF - Full backend version
 
 # Build stage.
-FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
+FROM gradle:9.0-jdk25 AS build
 
 COPY build.gradle .
 COPY settings.gradle .
@@ -60,7 +60,7 @@ ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 # Install core runtime dependencies + tools required by Stirling-PDF features
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata tini bash fontconfig \
-    openjdk-21-jre-headless \
+    openjdk-25-jre-headless \
     ffmpeg poppler-utils \
     libreoffice-nogui libreoffice-java-common \
     python3 python3-venv python3-uno python3-dev build-essential libffi-dev libpango1.0-dev zlib1g-dev \
@@ -142,7 +142,11 @@ RUN set -eux; \
     grep -Ev "^org/bouncycastle|^org/spongycastle" /tmp/classes.lst > /tmp/filtered-classes.lst; \
     echo "Dumping AppCDS archive..."; \
     java -Xshare:dump \
-         -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication \
+         -XX:+UnlockExperimentalVMOptions \
+         -XX:+UseStringDeduplication \
+         -XX:+UseCompactObjectHeaders \
+         -XX:-UseCompressedOops \
+         -XX:-UseCompressedClassPointers \
          -XX:SharedClassListFile=/tmp/filtered-classes.lst \
          -XX:SharedArchiveFile=/app/stirling.jsa \
          -jar /app.jar || true; \
@@ -178,6 +182,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
     -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
     -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
+    -XX:+UseCompactObjectHeaders -XX:-UseCompressedOops -XX:-UseCompressedClassPointers \
     -Djava.awt.headless=true -XX:SharedArchiveFile=/app/stirling.jsa -Xshare:auto" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
