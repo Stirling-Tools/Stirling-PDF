@@ -281,7 +281,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono fonts-noto-extra \
       fonts-noto-cjk poppler-data \
-      fonts-freefont-ttf fonts-terminus fonts-google-symbols \
+      fonts-freefont-ttf fonts-terminus \
       # Python runtime & UNO bridge (python3-full -> python3 optimization)
       python3 python3-uno python3-packaging \
       # OCR
