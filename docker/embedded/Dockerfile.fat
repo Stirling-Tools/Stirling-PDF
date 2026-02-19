@@ -35,12 +35,6 @@ RUN set -eux; \
            /opt/calibre/lib/libQt6XcbQpa.so.* \
            /opt/calibre/lib/libQt6NetworkAuth.so.* \
            /opt/calibre/lib/libQt6Concurrent.so.* \
-           /opt/calibre/lib/libQt6PrintSupport.so.* \
-           /opt/calibre/lib/libQt6Sensors.so.* \
-           /opt/calibre/lib/libQt6Sql.so.* \
-           /opt/calibre/lib/libQt6TextToSpeech.so.* \
-           /opt/calibre/lib/libQt6Xml.so.* \
-           /opt/calibre/lib/libQt6WebEngineWidgets.so.* \
            /opt/calibre/lib/libQt6OpenGLWidgets.so.* \
            /opt/calibre/lib/libQt6QuickWidgets.so.* \
            # AV / multimedia

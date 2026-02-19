@@ -361,27 +361,33 @@ compute_dynamic_memory() {
 
   log "Detected container memory: ${mem_mb}MB"
 
+  # NOTE: MaxRAMPercentage governs HEAP only. Total JVM footprint also includes:
+  # - Metaspace (MaxMetaspaceSize)
+  # - Code cache (~100-200MB)
+  # - Thread stacks (~1MB each × virtual threads)
+  # - Direct byte buffers, native memory
+  # Rule of thumb: heap% + (metaspace + ~200MB overhead) should fit in container.
   if [ "$mem_mb" -le 512 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=50
-    DYNAMIC_MAX_RAM_PCT=70
-    DYNAMIC_MAX_METASPACE=128
+    DYNAMIC_INITIAL_RAM_PCT=30
+    DYNAMIC_MAX_RAM_PCT=55
+    DYNAMIC_MAX_METASPACE=96
   elif [ "$mem_mb" -le 1024 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=40
-    DYNAMIC_MAX_RAM_PCT=75
-    DYNAMIC_MAX_METASPACE=192
-  elif [ "$mem_mb" -le 2048 ]; then
     DYNAMIC_INITIAL_RAM_PCT=25
-    DYNAMIC_MAX_RAM_PCT=75
-    DYNAMIC_MAX_METASPACE=256
+    DYNAMIC_MAX_RAM_PCT=60
+    DYNAMIC_MAX_METASPACE=128
+  elif [ "$mem_mb" -le 2048 ]; then
+    DYNAMIC_INITIAL_RAM_PCT=20
+    DYNAMIC_MAX_RAM_PCT=65
+    DYNAMIC_MAX_METASPACE=192
   elif [ "$mem_mb" -le 4096 ]; then
     DYNAMIC_INITIAL_RAM_PCT=15
-    DYNAMIC_MAX_RAM_PCT=75
+    DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=256
   else
     # Large memory: be conservative to leave room for off-heap (LibreOffice, Calibre, etc.)
     if [ "$profile" = "performance" ]; then
       DYNAMIC_INITIAL_RAM_PCT=20
-      DYNAMIC_MAX_RAM_PCT=75
+      DYNAMIC_MAX_RAM_PCT=70
       DYNAMIC_MAX_METASPACE=512
     else
       DYNAMIC_INITIAL_RAM_PCT=10
@@ -410,7 +416,8 @@ generate_appcds_archive() {
   log "Generating AppCDS archive on first boot (this may take 30-60s)..."
 
   # Training run - collect loaded class list
-  java -XX:+UseCompactObjectHeaders \
+  # Use -Xmx256m to limit memory usage (training doesn't need full heap)
+  java -Xmx256m -XX:+UseCompactObjectHeaders \
        -XX:DumpLoadedClassList=/tmp/classes.lst \
        -Dspring.context.exit=onRefresh \
        "$@" 2>/dev/null || true
