@@ -431,7 +431,7 @@ generate_appcds_archive() {
   fi
 
   # Filter out BouncyCastle to prevent signature conflicts and JFR events that can't be archived
-  grep -Ev "^org/bouncycastle|^org/spongycastle|^jdk/internal/event/Event" /tmp/classes.lst > /tmp/filtered-classes.lst || true
+  grep -Ev "org/bouncycastle|org/spongycastle|jdk/internal/event/" /tmp/classes.lst > /tmp/filtered-classes.lst || true
 
   # Determine classpath for dump
   local cp_arg=""
