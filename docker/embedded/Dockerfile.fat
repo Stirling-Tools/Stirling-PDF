@@ -174,11 +174,14 @@ RUN set -eux; \
     find /opt/calibre -name '*.pyc' -delete 2>/dev/null || true; \
     \
     # Verify conversion functionality.
+    # NOTE: txt→epub used intentionally NOT txt→pdf.
+    # Calibre 7+ uses WebEngine (Chromium) for PDF output, which requires kernel
+    # capabilities unavailable in Docker RUN steps and segfaults under QEMU.
+    # epub output exercises the same Python/plugin stack without touching WebEngine.
     /opt/calibre/ebook-convert --version; \
     echo "Hello" > /tmp/test.txt; \
-    export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox"; \
-    /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.pdf; \
-    rm /tmp/test.*; \
+    /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.epub; \
+    rm -f /tmp/test.txt /tmp/test.epub; \
     echo "=== Calibre stripped successfully ==="
 
 
