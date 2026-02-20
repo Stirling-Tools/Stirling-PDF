@@ -17,6 +17,12 @@ confirmClose = "Konfirmasi Penutupan"
 confirmCloseCancel = "Batal"
 confirmCloseConfirm = "Tutup File"
 confirmCloseMessage = "Apakah Anda yakin ingin menutup file ini?"
+confirmCloseDiscard = "Abaikan perubahan dan tutup"
+confirmCloseSave = "Simpan dan tutup"
+confirmCloseUnsaved = "File ini memiliki perubahan yang belum disimpan."
+confirmCloseUnsavedList = "Anda memiliki {{count}} file{{plural}} dengan perubahan yang belum disimpan.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Gagal Menyimpan"
+confirmCloseSaveFailed = "Tersimpan dengan kesalahan. {{count}} file{{plural}} tidak dapat disimpan."
 confirmPasswordErrorMessage = "Kata Sandi Baru dan Konfirmasi Kata Sandi Baru harus sama."
 custom = "Kustom..."
 customPosition = "Posisi Kustom"
@@ -39,6 +45,8 @@ edit = "Edit"
 editYourNewFiles = "Edit file baru Anda"
 exportAndContinue = "Ekspor & Lanjutkan"
 false = "Salah"
+fileSavedToDisk = "File disimpan ke disk"
+fileNotSavedToDisk = "Tidak disimpan ke disk"
 fileSelected = "Dipilih: {{filename}}"
 filesSelected = "berkas dipilih"
 font = "Jenis huruf"
@@ -829,8 +837,9 @@ label = "Nama Pengguna"
 [admin.settings.endpoints]
 description = "Kendalikan endpoint API dan grup endpoint mana yang tersedia."
 management = "Manajemen Endpoint"
-note = "Catatan: Menonaktifkan endpoint membatasi akses API tetapi tidak menghapus komponen UI. Diperlukan mulai ulang agar perubahan diterapkan."
 title = "Endpoint API"
+userDefaults = "Bawaan Preferensi Pengguna"
+userDefaultsDescription = "Atur nilai bawaan untuk preferensi pengguna. Pengguna dapat menimpanya di setelan pribadi mereka."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Pilih grup endpoint untuk dinonaktifkan"
@@ -839,6 +848,14 @@ label = "Grup Endpoint Dinonaktifkan"
 [admin.settings.endpoints.toRemove]
 description = "Pilih endpoint individual untuk dinonaktifkan"
 label = "Endpoint Dinonaktifkan"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Hapus alat yang dinonaktifkan alih-alih menampilkannya dalam warna abu-abu"
+label = "Sembunyikan alat yang tidak tersedia secara bawaan"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Hapus opsi konversi yang dinonaktifkan alih-alih menampilkannya dalam warna abu-abu"
+label = "Sembunyikan konversi yang tidak tersedia secara bawaan"
 
 [admin.settings.enterpriseRequired]
 message = "Lisensi Enterprise diperlukan untuk mengakses {{featureName}}. Anda sedang melihat data demo sebagai referensi."
@@ -1219,9 +1236,21 @@ label = "Aktifkan Pembersihan Kunci"
 description = "Putar kunci penandatangan JWT secara otomatis secara berkala"
 label = "Aktifkan Rotasi Kunci"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Jumlah hari untuk mempertahankan kunci JWT lama untuk verifikasi"
-label = "Hari Retensi Kunci"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Masa berlaku token akses dalam menit untuk klien web (bawaan: 1440 = 24 jam)"
+label = "Kedaluwarsa Token Web (menit)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Masa berlaku token akses dalam menit untuk klien desktop. Aplikasi desktop terdeteksi secara otomatis melalui User-Agent dan menerima sesi yang lebih lama untuk UX yang lebih baik (bawaan: 43200 = 30 hari)"
+label = "Kedaluwarsa Token Desktop (menit)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Toleransi pergeseran waktu klien/server selama validasi token (bawaan: 60 detik)"
+label = "Toleransi Ketidaksinkronan Waktu (detik)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Izinkan penyegaran token dalam sejumlah menit ini setelah kedaluwarsa (bawaan: 15 menit, maks 3 percobaan)"
+label = "Masa Tenggang Penyegaran (menit)"
 
 [admin.settings.security.jwt.persistence]
 description = "Simpan kunci JWT secara persisten agar tetap ada saat server dimulai ulang"
@@ -1422,13 +1451,16 @@ applyChanges = "Terapkan Perubahan"
 backgroundColor = "Warna latar"
 borderOff = "Bingkai: Nonaktif"
 borderOn = "Bingkai: Aktif"
+changeColor = "Ubah Warna"
 chooseColor = "Pilih warna"
 circle = "Lingkaran"
 clearBackground = "Hapus latar belakang"
 color = "Warna"
 contents = "Teks"
+delete = "Hapus"
 desc = "Gunakan sorotan, pena, teks, dan catatan. Perubahan tetap aktif—tidak perlu flattening."
 drawing = "Gambar"
+duplicate = "Gandakan"
 editCircle = "Edit Lingkaran"
 editInk = "Edit Pena"
 editLine = "Edit Garis"
@@ -1458,6 +1490,7 @@ notesStamps = "Catatan & Stempel"
 opacity = "Opasitas"
 pen = "Pena"
 polygon = "Poligon"
+properties = "Properti"
 rectangle = "Persegi panjang"
 redo = "Ulangi"
 saveChanges = "Simpan Perubahan"
@@ -1483,6 +1516,7 @@ title = "Anotasi"
 underline = "Garis bawah"
 undo = "Urungkan"
 unsupportedType = "Jenis anotasi ini belum sepenuhnya didukung untuk pengeditan."
+width = "Lebar"
 
 [app]
 description = "Alternatif Adobe Acrobat Gratis (10M+ Unduhan)"
@@ -3312,6 +3346,10 @@ desc = "Bangun alur kerja multi-langkah dengan merangkai tindakan PDF. Ideal unt
 tags = "alur-kerja,urutan,otomasi"
 title = "Otomasi"
 
+[home.formFill]
+desc = "Isi bidang formulir PDF secara interaktif dengan editor visual"
+title = "Isi Formulir"
+
 [home.autoRename]
 desc = "Mengganti nama file PDF secara otomatis berdasarkan header yang terdeteksi"
 tags = "deteksi-otomatis,berbasis-header,atur,ganti-nama"
@@ -4209,6 +4247,75 @@ title = "Editor Halaman"
 zoomIn = "Perbesar"
 zoomOut = "Perkecil"
 
+[viewer]
+cannotPreviewFile = "Tidak dapat menampilkan pratinjau file"
+dualPageView = "Tampilan Dua Halaman"
+firstPage = "Halaman Pertama"
+lastPage = "Halaman Terakhir"
+nextPage = "Halaman Berikutnya"
+onlyPdfSupported = "Penampil hanya mendukung file PDF. File ini tampaknya memiliki format yang berbeda."
+previousPage = "Halaman Sebelumnya"
+singlePageView = "Tampilan Satu Halaman"
+unknownFile = "File tidak dikenal"
+zoomIn = "Perbesar"
+zoomOut = "Perkecil"
+
+[viewer.attachments]
+title = "Lampiran"
+searchPlaceholder = "Cari lampiran"
+noSupport = "Dukungan lampiran tidak tersedia untuk penampil ini."
+noDocument = "Buka PDF untuk melihat lampirannya."
+loading = "Memuat lampiran..."
+empty = "Tidak ada lampiran dalam dokumen ini"
+noMatch = "Tidak ada lampiran yang cocok dengan pencarian Anda"
+
+[viewer.formBar]
+title = "Bidang Formulir"
+unsavedBadge = "Belum Disimpan"
+unsavedDesc = "Anda memiliki perubahan yang belum disimpan"
+hasFieldsDesc = "PDF ini berisi bidang yang dapat diisi"
+dismiss = "Abaikan"
+apply = "Terapkan Perubahan"
+download = "Unduh PDF"
+
+[rightRail]
+closeSelected = "Tutup File Terpilih"
+selectAll = "Pilih Semua"
+deselectAll = "Batalkan Semua Pilihan"
+selectByNumber = "Pilih berdasarkan Nomor Halaman"
+deleteSelected = "Hapus Halaman Terpilih"
+closePdf = "Tutup PDF"
+exportAll = "Ekspor PDF"
+downloadSelected = "Unduh File Terpilih"
+annotations = "Anotasi"
+exportSelected = "Ekspor Halaman Terpilih"
+formFill = "Isi Formulir"
+saveChanges = "Simpan Perubahan"
+toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
+toggleTheme = "Alihkan Tema"
+language = "Bahasa"
+toggleAnnotations = "Alihkan Visibilitas Anotasi"
+search = "Cari PDF"
+panMode = "Mode Geser"
+applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
+rotateLeft = "Putar Kiri"
+rotateRight = "Putar Kanan"
+toggleSidebar = "Alihkan Sidebar"
+toggleBookmarks = "Tampilkan/Sembunyikan Bookmark"
+print = "Cetak PDF"
+ruler = "Penggaris / Ukur"
+draw = "Gambar"
+redact = "Redaksi"
+exitRedaction = "Keluar dari Mode Redaksi"
+save = "Simpan"
+downloadAll = "Unduh Semua"
+saveAll = "Simpan Semua"
+
+[textAlign]
+left = "Kiri"
+center = "Tengah"
+right = "Kanan"
+
 [pageExtracter]
 header = "Ekstrak Halaman"
 placeholder = "(misalnya 1,2,8 atau 4,7,12-16 atau 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Penerapan permanen, tidak dapat dibatalkan dan data di bawahnya akan dihapus"
 boxRedaction = "Penyensoran dengan menggambar kotak"
 colourPicker = "Pemilih Warna"
+colorLabel = "Warna Sensor"
+active = "Mode Sensor Aktif"
+activate = "Aktifkan Alat Sensor"
 controlsTitle = "Kontrol Redaksi Manual"
 convertPDFToImageLabel = "Konversi PDF ke PDF-Image (Digunakan untuk menghapus teks di belakang kotak)"
 export = "Ekspor"
@@ -5285,36 +5395,6 @@ title = "Kontras Tinggi"
 [replaceColor.tooltip.invertAll]
 text = "Membalik semua warna dalam PDF sepenuhnya, menciptakan efek seperti negatif. Berguna untuk membuat versi mode gelap dokumen atau mengurangi ketegangan mata dalam kondisi cahaya rendah."
 title = "Balik Semua Warna"
-
-[rightRail]
-annotations = "Anotasi"
-applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
-closePdf = "Tutup PDF"
-closeSelected = "Tutup File Terpilih"
-deleteSelected = "Hapus Halaman Terpilih"
-deselectAll = "Batalkan Semua Pilihan"
-downloadAll = "Unduh Semua"
-downloadSelected = "Unduh File Terpilih"
-draw = "Gambar"
-exitRedaction = "Keluar dari Mode Redaksi"
-exportAll = "Ekspor PDF"
-exportSelected = "Ekspor Halaman Terpilih"
-language = "Bahasa"
-panMode = "Mode Geser"
-print = "Cetak PDF"
-redact = "Redaksi"
-rotateLeft = "Putar Kiri"
-rotateRight = "Putar Kanan"
-save = "Simpan"
-saveAll = "Simpan Semua"
-saveChanges = "Simpan Perubahan"
-search = "Cari PDF"
-selectAll = "Pilih Semua"
-selectByNumber = "Pilih berdasarkan Nomor Halaman"
-toggleAnnotations = "Alihkan Visibilitas Anotasi"
-toggleBookmarks = "Tampilkan/Sembunyikan Bookmark"
-toggleSidebar = "Alihkan Sidebar"
-toggleTheme = "Alihkan Tema"
 
 [rotate]
 rotateLeft = "Putar Berlawanan Arah Jarum Jam"
@@ -6153,11 +6233,6 @@ title = "Dokumentasi API"
 [tableExtraxt]
 tags = "CSV, Ekstraksi Tabel, ekstrak, konversi"
 
-[textAlign]
-center = "Tengah"
-left = "Kiri"
-right = "Kanan"
-
 [theme]
 toggle = "Alihkan Tema"
 
@@ -6432,19 +6507,6 @@ invalid = "Sertifikat tidak ada di trust store - sumber tidak dapat diverifikasi
 fileManager = "Pengelola File"
 pageEditor = "Editor Halaman"
 viewer = "Penampil"
-
-[viewer]
-cannotPreviewFile = "Tidak dapat menampilkan pratinjau file"
-dualPageView = "Tampilan Dua Halaman"
-firstPage = "Halaman Pertama"
-lastPage = "Halaman Terakhir"
-nextPage = "Halaman Berikutnya"
-onlyPdfSupported = "Penampil hanya mendukung file PDF. File ini tampaknya memiliki format yang berbeda."
-previousPage = "Halaman Sebelumnya"
-singlePageView = "Tampilan Satu Halaman"
-unknownFile = "File tidak dikenal"
-zoomIn = "Perbesar"
-zoomOut = "Perkecil"
 
 [viewPdf]
 header = "Lihat PDF"

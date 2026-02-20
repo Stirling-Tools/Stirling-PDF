@@ -17,6 +17,12 @@ confirmClose = "Confirma el tancament"
 confirmCloseCancel = "Cancel·la"
 confirmCloseConfirm = "Tanca el fitxer"
 confirmCloseMessage = "Segur que vols tancar aquest fitxer?"
+confirmCloseDiscard = "Descarta els canvis i tanca"
+confirmCloseSave = "Desa i tanca"
+confirmCloseUnsaved = "Aquest fitxer té canvis no desats."
+confirmCloseUnsavedList = "Tens {{count}} fitxer{{plural}} amb canvis no desats.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Error en desar"
+confirmCloseSaveFailed = "S'ha desat amb errors. No s'ha pogut desar {{count}} fitxer{{plural}}."
 confirmPasswordErrorMessage = "La contrasenya no pot estar buida ni tenir espais al principi o al final."
 custom = "Personalitzat..."
 customPosition = "Posició personalitzada"
@@ -39,6 +45,8 @@ edit = "Edita"
 editYourNewFiles = "Edita els fitxers nous"
 exportAndContinue = "Exporta i continua"
 false = "Fals"
+fileSavedToDisk = "Fitxer desat al disc"
+fileNotSavedToDisk = "No s'ha desat al disc"
 fileSelected = "Seleccionat: {{filename}}"
 filesSelected = "fitxers seleccionats"
 font = "Tipus de lletra"
@@ -829,8 +837,9 @@ label = "Nom d'usuari"
 [admin.settings.endpoints]
 description = "Controleu quins endpoints i grups d'endpoints de l'API estan disponibles."
 management = "Gestió d'endpoints"
-note = "Nota: Deshabilitar endpoints restringeix l'accés a l'API però no elimina components de la IU. Cal reiniciar perquè els canvis tinguin efecte."
 title = "Endpoints de l'API"
+userDefaults = "Valors per defecte de les preferències d'usuari"
+userDefaultsDescription = "Defineix els valors per defecte de les preferències d'usuari. Els usuaris poden sobreescriure'ls a la configuració personal."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Seleccioneu grups d'endpoints per deshabilitar"
@@ -839,6 +848,14 @@ label = "Grups d'endpoints deshabilitats"
 [admin.settings.endpoints.toRemove]
 description = "Seleccioneu endpoints individuals per deshabilitar"
 label = "Endpoints deshabilitats"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Elimina les eines deshabilitades en lloc de mostrar-les en gris"
+label = "Amaga per defecte les eines no disponibles"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Elimina les opcions de conversió deshabilitades en lloc de mostrar-les en gris"
+label = "Amaga per defecte les conversions no disponibles"
 
 [admin.settings.enterpriseRequired]
 message = "Es requereix una llicència Enterprise per accedir a {{featureName}}. Esteu veient dades de demostració com a referència."
@@ -1219,9 +1236,21 @@ label = "Habilita la neteja de claus"
 description = "Rota automàticament periòdicament les claus de signatura JWT"
 label = "Habilita la rotació de claus"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Nombre de dies per conservar claus JWT antigues per a verificació"
-label = "Dies de retenció de claus"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Durada en minuts del token d'accés per als clients web (per defecte: 1440 = 24 hores)"
+label = "Caducitat del token web (minuts)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Durada en minuts del token d'accés per als clients d'escriptori. Les aplicacions d'escriptori es detecten automàticament mitjançant el User-Agent i reben sessions més llargues per a una millor experiència d'usuari (per defecte: 43200 = 30 dies)"
+label = "Caducitat del token d'escriptori (minuts)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerància a la desviació horària client/servidor durant la validació del token (per defecte: 60 segons)"
+label = "Tolerància de desviació horària (segons)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Permet renovar el token dins d'aquest nombre de minuts després de la caducitat (per defecte: 15 minuts, màxim 3 intents)"
+label = "Període de gràcia de renovació (minuts)"
 
 [admin.settings.security.jwt.persistence]
 description = "Desa les claus JWT de manera persistent per sobreviure als reinicis del servidor"
@@ -1422,13 +1451,16 @@ applyChanges = "Aplica els canvis"
 backgroundColor = "Color de fons"
 borderOff = "Vora: desactivada"
 borderOn = "Vora: activada"
+changeColor = "Canvia el color"
 chooseColor = "Tria el color"
 circle = "Cercle"
 clearBackground = "Elimina el fons"
 color = "Color"
 contents = "Text"
+delete = "Suprimeix"
 desc = "Utilitza ressaltador, ploma, text i notes. Els canvis es mantenen en viu—no cal aplanar."
 drawing = "Dibuix"
+duplicate = "Duplica"
 editCircle = "Edita el cercle"
 editInk = "Edita la ploma"
 editLine = "Edita la línia"
@@ -1458,6 +1490,7 @@ notesStamps = "Notes i segells"
 opacity = "Opacitat"
 pen = "Ploma"
 polygon = "Polígon"
+properties = "Propietats"
 rectangle = "Rectangle"
 redo = "Refés"
 saveChanges = "Desa els canvis"
@@ -1483,6 +1516,7 @@ title = "Anota"
 underline = "Subratllat"
 undo = "Desfés"
 unsupportedType = "Aquest tipus d’anotació no és totalment compatible amb l’edició."
+width = "Amplada"
 
 [app]
 description = "L'alternativa gratuïta a Adobe Acrobat (més de 10 M de descàrregues)"
@@ -3312,6 +3346,10 @@ desc = "Construeix fluxos de treball multietapa enllaçant accions PDF. Ideal pe
 tags = "flux de treball,seqüència,automatització"
 title = "Automatitza"
 
+[home.formFill]
+desc = "Omple els camps de formulari del PDF de manera interactiva amb un editor visual"
+title = "Omple el formulari"
+
 [home.autoRename]
 desc = "Canvia automàticament el nom d'un fitxer PDF en funció de la capçalera detectada"
 tags = "detecció automàtica,basat en capçalera,organitza,reenomena"
@@ -4209,6 +4247,75 @@ title = "Editor de pàgines"
 zoomIn = "Amplia"
 zoomOut = "Redueix"
 
+[viewer]
+cannotPreviewFile = "No es pot previsualitzar el fitxer"
+dualPageView = "Vista de dues pàgines"
+firstPage = "Primera pàgina"
+lastPage = "Última pàgina"
+nextPage = "Pàgina següent"
+onlyPdfSupported = "El visualitzador només admet fitxers PDF. Aquest fitxer sembla ser d'un format diferent."
+previousPage = "Pàgina anterior"
+singlePageView = "Vista d'una sola pàgina"
+unknownFile = "Fitxer desconegut"
+zoomIn = "Amplia"
+zoomOut = "Redueix"
+
+[viewer.attachments]
+title = "Adjunts"
+searchPlaceholder = "Cerca adjunts"
+noSupport = "Aquest visor no admet adjunts."
+noDocument = "Obre un PDF per veure'n els adjunts."
+loading = "Carregant els adjunts..."
+empty = "No hi ha adjunts en aquest document"
+noMatch = "No hi ha adjunts que coincideixin amb la cerca"
+
+[viewer.formBar]
+title = "Camps del formulari"
+unsavedBadge = "No desats"
+unsavedDesc = "Tens canvis no desats"
+hasFieldsDesc = "Aquest PDF conté camps emplenables"
+dismiss = "Descarta"
+apply = "Aplica els canvis"
+download = "Descarrega el PDF"
+
+[rightRail]
+closeSelected = "Tanca els fitxers seleccionats"
+selectAll = "Selecciona-ho tot"
+deselectAll = "Desselecciona-ho tot"
+selectByNumber = "Selecciona per números de pàgina"
+deleteSelected = "Suprimeix les pàgines seleccionades"
+closePdf = "Tanca el PDF"
+exportAll = "Exporta el PDF"
+downloadSelected = "Descarrega els fitxers seleccionats"
+annotations = "Anotacions"
+exportSelected = "Exporta les pàgines seleccionades"
+formFill = "Omplir formulari"
+saveChanges = "Desa els canvis"
+toggleAttachments = "Mostra/amaga els adjunts"
+toggleTheme = "Canvia el tema"
+language = "Idioma"
+toggleAnnotations = "Mostra/oculta les anotacions"
+search = "Cerca al PDF"
+panMode = "Mode de desplaçament"
+applyRedactionsFirst = "Aplica primer les redaccions"
+rotateLeft = "Gira a l'esquerra"
+rotateRight = "Gira a la dreta"
+toggleSidebar = "Mostra/oculta la barra lateral"
+toggleBookmarks = "Mostra/amaga marcadors"
+print = "Imprimeix el PDF"
+ruler = "Regle / Mesura"
+draw = "Dibuixa"
+redact = "Redacta"
+exitRedaction = "Surt del mode de redacció"
+save = "Desa"
+downloadAll = "Descarrega-ho tot"
+saveAll = "Desa-ho tot"
+
+[textAlign]
+left = "Esquerra"
+center = "Centre"
+right = "Dreta"
+
 [pageExtracter]
 header = "Extreu Pàgines"
 placeholder = "(p. ex. 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Aplicació permanent: no es pot desfer i les dades que hi ha a sota s'eliminaran"
 boxRedaction = "Redacció dibuixant quadres"
 colourPicker = "Selector de color"
+colorLabel = "Color d'ocultació"
+active = "Mode d'ocultació actiu"
+activate = "Activa l'eina d'ocultació"
 controlsTitle = "Controls de redacció manuals"
 convertPDFToImageLabel = "Converteix PDF a PDF-imatge (S'utilitza per eliminar el text darrere del quadre)"
 export = "Exporta"
@@ -5285,36 +5395,6 @@ title = "Alt contrast"
 [replaceColor.tooltip.invertAll]
 text = "Inverteix completament tots els colors del PDF, creant un efecte similar a un negatiu. Útil per crear versions en mode fosc dels documents o reduir la fatiga visual en condicions de poca llum."
 title = "Inverteix tots els colors"
-
-[rightRail]
-annotations = "Anotacions"
-applyRedactionsFirst = "Aplica primer les redaccions"
-closePdf = "Tanca el PDF"
-closeSelected = "Tanca els fitxers seleccionats"
-deleteSelected = "Suprimeix les pàgines seleccionades"
-deselectAll = "Desselecciona-ho tot"
-downloadAll = "Descarrega-ho tot"
-downloadSelected = "Descarrega els fitxers seleccionats"
-draw = "Dibuixa"
-exitRedaction = "Surt del mode de redacció"
-exportAll = "Exporta el PDF"
-exportSelected = "Exporta les pàgines seleccionades"
-language = "Idioma"
-panMode = "Mode de desplaçament"
-print = "Imprimeix el PDF"
-redact = "Redacta"
-rotateLeft = "Gira a l'esquerra"
-rotateRight = "Gira a la dreta"
-save = "Desa"
-saveAll = "Desa-ho tot"
-saveChanges = "Desa els canvis"
-search = "Cerca al PDF"
-selectAll = "Selecciona-ho tot"
-selectByNumber = "Selecciona per números de pàgina"
-toggleAnnotations = "Mostra/oculta les anotacions"
-toggleBookmarks = "Mostra/amaga marcadors"
-toggleSidebar = "Mostra/oculta la barra lateral"
-toggleTheme = "Canvia el tema"
 
 [rotate]
 rotateLeft = "Gira en sentit antihorari"
@@ -6153,11 +6233,6 @@ title = "Documentació de l'API"
 [tableExtraxt]
 tags = "CSV,Extracció de taules,extreure,convertir"
 
-[textAlign]
-center = "Centre"
-left = "Esquerra"
-right = "Dreta"
-
 [theme]
 toggle = "Commuta el tema"
 
@@ -6432,19 +6507,6 @@ invalid = "El certificat no es troba en el magatzem de confiança - no es pot ve
 fileManager = "Gestor de fitxers"
 pageEditor = "Editor de pàgines"
 viewer = "Visor"
-
-[viewer]
-cannotPreviewFile = "No es pot previsualitzar el fitxer"
-dualPageView = "Vista de dues pàgines"
-firstPage = "Primera pàgina"
-lastPage = "Última pàgina"
-nextPage = "Pàgina següent"
-onlyPdfSupported = "El visualitzador només admet fitxers PDF. Aquest fitxer sembla ser d'un format diferent."
-previousPage = "Pàgina anterior"
-singlePageView = "Vista d'una sola pàgina"
-unknownFile = "Fitxer desconegut"
-zoomIn = "Amplia"
-zoomOut = "Redueix"
 
 [viewPdf]
 header = "Visualitza PDF"
