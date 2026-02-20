@@ -3,3 +3,4 @@ requests
 pypdf
 reportlab
 PyCryptodome
+qrcode[pil]
