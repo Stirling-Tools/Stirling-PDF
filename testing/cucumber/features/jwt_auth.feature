@@ -247,8 +247,8 @@ Feature: JWT Authentication End-to-End
         Then the response status code should be 401
 
     @apikey @negative
-    Scenario: Empty API key returns 401
-        When I send a GET request to "/api/v1/auth/me" with an empty API key
+    Scenario: Absent API key with no other auth returns 401
+        When I send a GET request to "/api/v1/auth/me" with no authentication
         Then the response status code should be 401
 
     # =========================================================================

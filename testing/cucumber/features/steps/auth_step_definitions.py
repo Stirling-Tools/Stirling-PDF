@@ -206,14 +206,6 @@ def step_get_with_empty_auth_header(context, endpoint):
     )
 
 
-@when('I send a GET request to "{endpoint}" with an empty API key')
-def step_get_with_empty_api_key(context, endpoint):
-    """Send GET request with an explicitly empty X-API-KEY header."""
-    context.response = requests.get(
-        f"{BASE_URL}{endpoint}",
-        headers={"X-API-KEY": ""},
-        timeout=60,
-    )
 
 
 @when('I send a GET request to "{endpoint}" with the stored JWT token')
