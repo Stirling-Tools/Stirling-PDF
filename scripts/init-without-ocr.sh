@@ -431,7 +431,9 @@ generate_appcds_archive() {
   fi
 
   # Filter out BouncyCastle to prevent signature conflicts and JFR events that can't be archived
-  grep -Ev "org/bouncycastle|org/spongycastle|jdk/internal/event/" /tmp/classes.lst > /tmp/filtered-classes.lst || true
+  # Also filter out optional dependencies that cause Preload Warnings (log4j2, reactive, cache providers, freemarker, bytebuddy, etc.)
+  EXCLUDED_CLASSES="org/bouncycastle|org/spongycastle|jdk/internal/event|org/springframework/boot/logging/log4j2|org/springframework/security/web/server|io/micrometer/core/instrument/binder/logging|org/springframework/boot/cache/autoconfigure|org/springframework/cache/jcache|org/springframework/cache/interceptor|org/springframework/transaction/interceptor|org/hibernate/type/format/jakartajson|org/hibernate/type/format/jackson|net/bytebuddy/utility|io/vavr|org/xmlbeam|org/springframework/data/repository/util/QueryExecutionConverters|org/springframework/security/config/annotation/authentication/configurers/ldap|org/springframework/data/web/config/SpringDataWebConfiguration|org/springframework/security/config/annotation/web/configurers/oauth2|org/springframework/security/config/annotation/web/configurers/ChannelSecurityConfigurer|org/springframework/security/config/annotation/web/configurers/WebAuthnConfigurer|org/springframework/core/ReactiveAdapterRegistry|org/springframework/transaction/reactive|org/springframework/data/web/XmlBeamHttpMessageConverter|org/springframework/web/servlet/view/freemarker"
+  grep -Ev "(${EXCLUDED_CLASSES})" /tmp/classes.lst > /tmp/filtered-classes.lst || true
 
   # Determine classpath for dump
   local cp_arg=""

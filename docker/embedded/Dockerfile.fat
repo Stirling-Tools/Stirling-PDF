@@ -425,7 +425,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -rf /var/cache/fontconfig/* /tmp/*
 
 # Python virtual environment.
-COPY --link --from=python-build /opt/venv /opt/venv
+COPY --from=python-build /opt/venv /opt/venv
 
 RUN set -eux; \
     ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
