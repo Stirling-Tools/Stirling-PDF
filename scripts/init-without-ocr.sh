@@ -430,8 +430,12 @@ generate_aot_cache() {
   # RECORD — starts Spring context, observes class loading + collects method profiles (JEP 515).
   # -Dspring.context.exit=onRefresh stops after Spring context loads (good training coverage).
   # Uses -Xmx512m: enough for Spring context init without starving the running application.
+  # -Xlog:aot=error suppresses harmless "Skipping"/"Preload Warning" messages for proxies,
+  #   signed JARs (BouncyCastle), JFR events, CGLIB classes, etc. The JVM handles all of
+  #   these internally they are informational, not errors.
   # Non-zero exit is expected — onRefresh triggers controlled shutdown.
   java -Xmx512m -XX:+UseCompactObjectHeaders \
+       -Xlog:aot=error \
        -XX:AOTMode=record \
        -XX:AOTConfiguration="$aot_conf" \
        -Dspring.context.exit=onRefresh \
@@ -446,10 +450,12 @@ generate_aot_cache() {
 
   log "AOT: Phase 2/2 — Creating AOT cache from recorded profile..."
 
-  # CREATE, does NOT start the application. Processes the recorded configuration
+  # CREATE — does NOT start the application. Processes the recorded configuration
   # to build the AOT cache with pre-linked classes and optimized native code.
   # Uses less memory than the training run.
+  # -Xlog:aot=error: same as record phase — suppress harmless skip/preload warnings.
   if java -Xmx256m -XX:+UseCompactObjectHeaders \
+       -Xlog:aot=error \
        -XX:AOTMode=create \
        -XX:AOTConfiguration="$aot_conf" \
        -XX:AOTCache="$aot_path" \
