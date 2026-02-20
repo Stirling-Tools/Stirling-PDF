@@ -2,6 +2,7 @@ import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
+import { CONVERSION_ENDPOINTS, ENDPOINT_NAMES } from '@app/constants/convertConstants';
 
 export type ExecutionTarget = 'local' | 'remote';
 
@@ -85,6 +86,7 @@ export class OperationRouter {
    * - "/api/v1/ui-data/ocr-pdf" -> "ocr-pdf"
    * - "/api/v1/misc/repair" -> "repair"
    * - "/api/v1/general/merge-pdfs" -> "merge-pdfs"
+   * - "/api/v1/convert/pdf/presentation" -> "pdf-to-presentation"
    */
   private extractEndpointName(endpoint: string): string {
     // UI data endpoints: /api/v1/ui-data/{endpoint-name}
@@ -93,8 +95,25 @@ export class OperationRouter {
       return uiDataMatch[1];
     }
 
+    // Convert endpoints: Use reverse lookup from actual constants
+    if (endpoint.startsWith('/api/v1/convert/')) {
+      // Find the key in CONVERSION_ENDPOINTS that matches this path
+      for (const [key, path] of Object.entries(CONVERSION_ENDPOINTS)) {
+        if (path === endpoint) {
+          // Use that key to get the endpoint name from ENDPOINT_NAMES
+          return ENDPOINT_NAMES[key as keyof typeof ENDPOINT_NAMES];
+        }
+      }
+      // Fallback to pattern-based extraction if not found in constants
+      const convertMatch = endpoint.match(/^\/api\/v1\/convert\/([^/]+)\/([^/]+)$/);
+      if (convertMatch) {
+        const [, from, to] = convertMatch;
+        return `${from}-to-${to}`;
+      }
+    }
+
     // Tool operation endpoints: /api/v1/{category}/{endpoint-name}
-    const toolMatch = endpoint.match(/^\/api\/v1\/(?:general|convert|misc|security|filter|multi-tool)\/(.+)$/);
+    const toolMatch = endpoint.match(/^\/api\/v1\/(?:general|misc|security|filter|multi-tool)\/(.+)$/);
     if (toolMatch) {
       return toolMatch[1];
     }
@@ -131,7 +150,19 @@ export class OperationRouter {
       console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
 
       if (!supportedLocally) {
-        // Local backend doesn't support this - route to SaaS backend
+        // Local backend doesn't support this - check if SaaS supports it
+        const supportedOnSaaS = await endpointAvailabilityService.isEndpointSupportedOnSaaS(endpointToCheck);
+        console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`);
+
+        if (!supportedOnSaaS) {
+          // Neither local nor SaaS support this - throw error
+          console.error(`[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`);
+          throw new Error(
+            `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`
+          );
+        }
+
+        // SaaS supports it - route to SaaS backend
         if (!STIRLING_SAAS_BACKEND_API_URL) {
           console.error('[operationRouter] VITE_SAAS_BACKEND_API_URL not configured');
           throw new Error(
@@ -139,7 +170,7 @@ export class OperationRouter {
             'Please check your environment configuration.'
           );
         }
-        console.debug(`[operationRouter] Routing ${operation} to SaaS backend (not supported locally)`);
+        console.debug(`[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`);
         return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, '');
       }
 

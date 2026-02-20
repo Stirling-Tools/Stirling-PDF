@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useConfigNavSections as useProprietaryConfigNavSections, createConfigNavSections as createProprietaryConfigNavSections } from '@proprietary/components/shared/config/configNavSections';
 import { ConfigNavSection } from '@core/components/shared/config/configNavSections';
 import { ConnectionSettings } from '@app/components/ConnectionSettings';
-import { DesktopPlanSection } from '@app/components/shared/config/configSections/DesktopPlanSection';
+import { SaasPlanSection } from '@app/components/shared/config/configSections/SaasPlanSection';
 import { SaaSTeamsSection } from '@app/components/shared/config/configSections/SaaSTeamsSection';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
@@ -82,21 +82,21 @@ export const useConfigNavSections = (
     ],
   });
 
-  // Add Plan & Billing section (after Connection Mode)
-  sections.splice(2, 0, {
-    title: t('settings.planBilling.title', 'Plan & Billing'),
-    items: [
-      {
-        key: 'planBilling',
-        label: t('settings.planBilling.title', 'Plan & Billing'),
-        icon: 'credit-card',
-        component: <DesktopPlanSection />,
-      },
-    ],
-  });
-
-  // Add Team Management section for SaaS users (only when logged into SaaS)
+  // Add Plan & Billing section (only when logged into SaaS)
   if (isSaasMode && isAuthenticated) {
+    sections.splice(2, 0, {
+      title: t('settings.planBilling.title', 'Plan & Billing'),
+      items: [
+        {
+          key: 'planBilling',
+          label: t('settings.planBilling.title', 'Plan & Billing'),
+          icon: 'credit-card',
+          component: <SaasPlanSection />,
+        },
+      ],
+    });
+
+    // Add Team Management section (after Plan & Billing)
     sections.splice(3, 0, {
       title: t('settings.team.title', 'Team'),
       items: [
@@ -148,7 +148,7 @@ export const createConfigNavSections = (
         key: 'planBilling',
         label: 'Plan & Billing',
         icon: 'credit-card',
-        component: <DesktopPlanSection />,
+        component: <SaasPlanSection />,
       },
     ],
   });

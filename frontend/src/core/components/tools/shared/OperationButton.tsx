@@ -1,7 +1,8 @@
-import { Button } from '@mantine/core';
+import { Button, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { useBackendHealth } from '@app/hooks/useBackendHealth';
+import { CloudBadge } from '@app/components/shared/CloudBadge';
 
 export interface OperationButtonProps {
   onClick?: () => void;
@@ -14,6 +15,7 @@ export interface OperationButtonProps {
   fullWidth?: boolean;
   mt?: string;
   type?: 'button' | 'submit' | 'reset';
+  showCloudBadge?: boolean;
   'data-testid'?: string;
   'data-tour'?: string;
 }
@@ -29,6 +31,7 @@ const OperationButton = ({
   fullWidth = false,
   mt = 'md',
   type = 'button',
+  showCloudBadge = false,
   'data-testid': dataTestId,
   'data-tour': dataTour
 }: OperationButtonProps) => {
@@ -54,12 +57,17 @@ const OperationButton = ({
       color={color}
       data-testid={dataTestId}
       data-tour={dataTour}
-      style={{ minHeight: '2.5rem'  }}
+      style={{ minHeight: '2.5rem', position: 'relative' }}
     >
       {isLoading
         ? (loadingText || t("loading", "Loading..."))
         : (submitText || t("submit", "Submit"))
       }
+      {showCloudBadge && (
+        <Box style={{ position: 'absolute', top: 4, right: 4 }}>
+          <CloudBadge />
+        </Box>
+      )}
     </Button>
   );
 

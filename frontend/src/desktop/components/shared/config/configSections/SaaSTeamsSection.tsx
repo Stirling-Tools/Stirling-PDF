@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, TextInput, Group, Text, Stack, Alert, Table, Badge, ActionIcon, Menu, List, ThemeIcon, Modal, CloseButton, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSaaSTeam } from '@app/contexts/SaaSTeamContext';
-import { useDesktopBilling } from '@app/hooks/useDesktopBilling';
+import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import apiClient from '@app/services/apiClient';
@@ -27,8 +27,8 @@ export function SaaSTeamsSection() {
     refreshTeams,
   } = useSaaSTeam();
 
-  // Check Pro status via desktop billing
-  const { tier } = useDesktopBilling();
+  // Check Pro status via billing context
+  const { tier } = useSaaSBilling();
   const isPro = tier !== 'free';
 
   const [inviteEmail, setInviteEmail] = useState('');

@@ -14,6 +14,9 @@ import { endpointAvailabilityService } from '@app/services/endpointAvailabilityS
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
 import { SaaSTeamProvider } from '@app/contexts/SaaSTeamContext';
+import { SaasBillingProvider } from '@app/contexts/SaasBillingContext';
+import { SaaSCheckoutProvider } from '@app/contexts/SaaSCheckoutContext';
+import { CreditModalBootstrap } from '@app/components/shared/modals/CreditModalBootstrap';
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
@@ -195,10 +198,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
       }}
     >
       <SaaSTeamProvider>
-        <DesktopConfigSync />
-        <DesktopBannerInitializer />
-        <SaveShortcutListener />
-        {children}
+        <SaasBillingProvider>
+          <SaaSCheckoutProvider>
+            <DesktopConfigSync />
+            <DesktopBannerInitializer />
+            <SaveShortcutListener />
+            <CreditModalBootstrap />
+            {children}
+          </SaaSCheckoutProvider>
+        </SaasBillingProvider>
       </SaaSTeamProvider>
     </ProprietaryAppProviders>
   );

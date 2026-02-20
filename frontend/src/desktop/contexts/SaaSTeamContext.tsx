@@ -122,6 +122,12 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
       setTeams(response.data);
 
       const activeTeam = response.data[0];
+      console.log('[SaaSTeamContext] Current team set:', {
+        teamId: activeTeam?.teamId,
+        name: activeTeam?.name,
+        isPersonal: activeTeam?.isPersonal,
+        isLeader: activeTeam?.isLeader,
+      });
       setCurrentTeam(activeTeam || null);
       return activeTeam || null;
     } catch (error) {

@@ -2,7 +2,7 @@ import { Card, Text, Group, Badge, Stack, Tooltip, ActionIcon } from '@mantine/c
 import GroupIcon from '@mui/icons-material/Group';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
-import type { BillingStatus } from '@app/services/desktopBillingService';
+import type { BillingStatus } from '@app/services/saasBillingService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface TeamData {

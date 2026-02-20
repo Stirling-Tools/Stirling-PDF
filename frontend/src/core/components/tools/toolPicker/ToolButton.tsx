@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -15,6 +15,7 @@ import { ToolId } from "@app/types/toolId";
 import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
+import { useToolCloudStatus } from "@app/hooks/useToolCloudStatus";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -38,41 +39,10 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
   const fav = isFavorite(id as ToolId);
-  const [usesCloud, setUsesCloud] = useState(false);
 
   // Check if this tool will route to SaaS backend (desktop only)
-  useEffect(() => {
-    const checkCloudRouting = async () => {
-      try {
-        // Dynamic import to avoid loading desktop modules in web builds
-        const { connectionModeService } = await import('@app/services/connectionModeService');
-        const { endpointAvailabilityService } = await import('@app/services/endpointAvailabilityService');
-
-        // Get endpoint name (not full path) for capability check
-        const endpointName = tool.endpoints?.[0];
-        if (!endpointName) {
-          setUsesCloud(false);
-          return;
-        }
-
-        // Check if in SaaS mode and if endpoint is not supported locally
-        const mode = await connectionModeService.getCurrentMode();
-        if (mode !== 'saas') {
-          setUsesCloud(false);
-          return;
-        }
-
-        const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointName);
-        setUsesCloud(!supportedLocally);
-      } catch (error) {
-        // Desktop modules don't exist in web builds - that's expected
-        // Silently ignore the error
-        setUsesCloud(false);
-      }
-    };
-
-    checkCloudRouting();
-  }, [tool.endpoints]);
+  const endpointName = tool.endpoints?.[0];
+  const usesCloud = useToolCloudStatus(endpointName);
 
   const handleClick = (id: ToolId) => {
     if (isUnavailable) return;

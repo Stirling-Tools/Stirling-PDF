@@ -2908,6 +2908,7 @@ copyStack = "Copy Stack Trace"
 discordSubmit = "Discord - Submit Support post"
 dismissAllErrors = "Dismiss All Errors"
 encryptedPdfMustRemovePassword = "This PDF is encrypted or password-protected. Please unlock it before converting to PDF/A."
+generic = "An error occurred"
 github = "Submit a ticket on GitHub"
 githubSubmit = "GitHub - Submit a ticket"
 incorrectPasswordProvided = "The PDF password is incorrect or not provided."
@@ -4425,6 +4426,10 @@ upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your
 upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
+checkoutOpened = "Checkout Opened in Browser"
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+refreshBilling = "I've Completed Payment - Refresh Billing"
+closeLater = "I'll Do This Later"
 
 [payment.emailStage]
 continue = "Continue"
@@ -4804,6 +4809,7 @@ customPricing = "Custom"
 featureComparison = "Feature Comparison"
 from = "From"
 hideComparison = "Hide Feature Comparison"
+included = "Included"
 includedInCurrent = "Included in Your Plan"
 licensedSeats = "Licensed: {{count}} seats"
 manage = "Manage"
@@ -4821,9 +4827,11 @@ title = "Active Plan"
 
 [plan.availablePlans]
 subtitle = "Choose the plan that fits your needs"
+loadError = "Unable to load plan pricing. Using default values."
 title = "Available Plans"
 
 [plan.enterprise]
+siteLicense = "Site License"
 highlight1 = "Custom pricing"
 highlight2 = "Dedicated support"
 highlight3 = "Latest features"
@@ -4896,6 +4904,35 @@ instructions = "Complete your purchase in the Stripe tab. Once your payment is c
 keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
+
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
+[credits.modal]
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+fullyPrivateFiles = "Fully private files"
+standardThroughput = "Standard throughput"
+customSmartFolders = "Custom Smart Folders"
+apiSandbox = "API sandbox"
+unlimitedSeats = "Unlimited seats"
+fasterThroughput = "10x faster throughput"
+largeFileProcessing = "Large file processing"
+premiumAiModels = "Premium AI models"
+secureApiAccess = "Secure API access"
+prioritySupport = "Priority support"
+orgWideAccess = "Org-wide access controls"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+unlimitedApiAccess = "Unlimited API access"
+advancedMonitoring = "Advanced monitoring"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+
+[credits.modal.features]
+forRegularWork = "For regular PDF work:"
+everythingInFree = "Everything in Free, plus:"
+everythingInCredits = "Everything in Credits, plus:"
+
 
 [printFile]
 header = "Print File to Printer"
@@ -5707,6 +5744,9 @@ requiresEnterprise = "Requires Enterprise license"
 people = "People"
 teams = "Teams"
 title = "Workspace"
+
+[settings.team]
+title = "Team"
 
 [setup]
 description = "Get started by choosing how you want to use Stirling PDF"
@@ -6984,3 +7024,78 @@ cancel = "Cancel"
 confirm = "Extract"
 message = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
+
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.invitationBanner]
+message = "has invited you to join"
+acceptButton = "Accept"
+rejectButton = "Decline"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"

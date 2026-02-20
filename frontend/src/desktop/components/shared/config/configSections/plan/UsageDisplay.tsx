@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Text, Stack, Group, Progress, Alert } from '@mantine/core';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
-import type { BillingStatus } from '@app/services/desktopBillingService';
+import type { BillingStatus } from '@app/services/saasBillingService';
 
 interface UsageDisplayProps {
   tier: BillingStatus['tier'];

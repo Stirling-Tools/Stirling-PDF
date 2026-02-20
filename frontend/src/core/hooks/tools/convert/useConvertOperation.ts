@@ -1,10 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters, defaultParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';
 import { useToolOperation, ToolType, CustomProcessorResult } from '@app/hooks/tools/shared/useToolOperation';
-import { getEndpointUrl, isImageFormat, isWebFormat, isOfficeFormat } from '@app/utils/convertUtils';
+import { getEndpointUrl, getEndpointName, isImageFormat, isWebFormat, isOfficeFormat } from '@app/utils/convertUtils';
+import { useToolCloudStatus } from '@app/hooks/useToolCloudStatus';
 
 // Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (
@@ -193,8 +194,20 @@ export const convertOperationConfig = {
   defaultParameters,
 } as const;
 
-export const useConvertOperation = () => {
+export const useConvertOperation = (parameters?: ConvertParameters) => {
   const { t } = useTranslation();
+
+  // Calculate current endpoint name for cloud detection
+  const currentEndpointName = useMemo(() => {
+    if (!parameters?.fromExtension || !parameters?.toExtension) return undefined;
+
+    // Map PDF/X to use PDF/A endpoint (same as in convertProcessor)
+    const actualToExtension = parameters.toExtension === 'pdfx' ? 'pdfa' : parameters.toExtension;
+    return getEndpointName(parameters.fromExtension, actualToExtension);
+  }, [parameters?.fromExtension, parameters?.toExtension]);
+
+  // Check if current conversion will use cloud
+  const willUseCloud = useToolCloudStatus(currentEndpointName);
 
   const customConvertProcessor = useCallback(async (
     parameters: ConvertParameters,
@@ -203,7 +216,7 @@ export const useConvertOperation = () => {
     return convertProcessor(parameters, selectedFiles);
   }, []);
 
-  return useToolOperation<ConvertParameters>({
+  const operation = useToolOperation<ConvertParameters>({
     ...convertOperationConfig,
     customProcessor: customConvertProcessor, // Use instance-specific processor for translation support
     getErrorMessage: (error) => {
@@ -216,4 +229,10 @@ export const useConvertOperation = () => {
       return t("convert.errorConversion", "An error occurred while converting the file.");
     },
   });
+
+  // Override willUseCloud with our calculated value
+  return {
+    ...operation,
+    willUseCloud,
+  };
 };

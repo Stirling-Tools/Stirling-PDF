@@ -27,6 +27,7 @@ import {
   getActiveNavButton,
 } from '@app/components/shared/quickAccessBar/QuickAccessBar';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import { QuickAccessBarFooterExtensions } from '@app/components/quickAccessBar/QuickAccessBarFooterExtensions';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
@@ -379,6 +380,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           </Stack>
         </div>
       </div>
+
+      <QuickAccessBarFooterExtensions className="quick-access-footer" />
 
       <AppConfigModal
         opened={configModalOpen}

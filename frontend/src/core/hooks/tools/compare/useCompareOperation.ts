@@ -532,6 +532,7 @@ export const useCompareOperation = (): CompareOperationHook => {
       status,
       errorMessage,
       progress: null,
+      willUseCloud: false,
       executeOperation,
       resetResults,
       clearError,

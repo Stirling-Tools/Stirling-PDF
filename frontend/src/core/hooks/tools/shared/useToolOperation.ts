@@ -15,6 +15,7 @@ import { createNewStirlingFileStub } from '@app/types/fileContext';
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
+import { useWillUseCloud } from '@app/hooks/useWillUseCloud';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -147,6 +148,7 @@ export interface ToolOperationHook<TParams = void> {
   status: string;
   errorMessage: string | null;
   progress: ProcessingProgress | null;
+  willUseCloud: boolean;
 
   // Actions
   executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
@@ -182,6 +184,14 @@ export const useToolOperation = <TParams>(
   const { actions: fileActions } = useFileContext();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
+
+  // Determine endpoint for cloud usage check
+  const endpointString = config.toolType !== ToolType.custom && config.endpoint
+    ? (typeof config.endpoint === 'function'
+        ? (config.defaultParameters ? config.endpoint(config.defaultParameters) : undefined)
+        : config.endpoint)
+    : undefined;
+  const willUseCloud = useWillUseCloud(endpointString);
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -223,6 +233,44 @@ export const useToolOperation = <TParams>(
       : typeof config.endpoint === 'function'
         ? config.endpoint(params)
         : config.endpoint;
+
+    // Credit check for cloud operations (desktop SaaS mode only)
+    if (willUseCloud && endpoint) {
+      try {
+        // Dynamic import to avoid dependency in core
+        const { getToolCreditCost } = await import('@app/utils/creditCosts');
+        const { useSaaSBilling } = await import('@app/contexts/SaasBillingContext');
+        const { CREDIT_EVENTS } = await import('@app/constants/creditEvents');
+
+        // Get credit balance (this will be undefined in non-desktop builds)
+        const billingContext = useSaaSBilling?.();
+        if (billingContext) {
+          const { creditBalance, loading: billingLoading } = billingContext;
+          const requiredCredits = getToolCreditCost(config.operationType);
+
+          // Block operation if insufficient credits (and not loading)
+          if (!billingLoading && creditBalance < requiredCredits) {
+            window.dispatchEvent(new CustomEvent(CREDIT_EVENTS.INSUFFICIENT, {
+              detail: {
+                operationType: config.operationType,
+                requiredCredits,
+                currentBalance: creditBalance,
+              }
+            }));
+            actions.setError(
+              t('credits.insufficient', 'Insufficient credits. You need {{required}} credits but have {{current}}.', {
+                required: requiredCredits,
+                current: creditBalance,
+              })
+            );
+            return;
+          }
+        }
+      } catch (e) {
+        // Silently continue if credit checking fails (not in desktop build or other error)
+        console.debug('[useToolOperation] Credit check skipped:', e);
+      }
+    }
 
     // Backend readiness check (will skip for SaaS-routed endpoints)
     const backendReady = await ensureBackendReady(endpoint);
@@ -599,6 +647,7 @@ export const useToolOperation = <TParams>(
     status: state.status,
     errorMessage: state.errorMessage,
     progress: state.progress,
+    willUseCloud,
 
     // Actions
     executeOperation,

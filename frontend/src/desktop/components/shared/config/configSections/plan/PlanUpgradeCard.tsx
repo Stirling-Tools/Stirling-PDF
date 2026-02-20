@@ -4,9 +4,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTranslation } from 'react-i18next';
 import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import type { TierLevel } from '@app/types/billing';
 
 interface PlanUpgradeCardProps {
-  currentTier: 'free' | 'team' | 'enterprise';
+  currentTier: TierLevel;
 }
 
 export function PlanUpgradeCard({ currentTier }: PlanUpgradeCardProps) {
