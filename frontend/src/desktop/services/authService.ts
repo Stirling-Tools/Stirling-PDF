@@ -4,6 +4,7 @@ import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import axios from 'axios';
+import tauriHttpClient from '@app/services/tauriHttpClient';
 import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
 export interface UserInfo {
@@ -559,8 +560,9 @@ export class AuthService {
         return false;
       }
 
-      // Call the server's refresh endpoint
-      const response = await axios.post(
+      // Call the server's refresh endpoint using Tauri HTTP client so the desktop
+      // User-Agent is sent - the backend uses it to issue long-lived desktop tokens.
+      const response = await tauriHttpClient.post(
         `${serverUrl}/api/v1/auth/refresh`,
         {},
         {

@@ -336,6 +336,7 @@ pub async fn login(
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .timeout(std::time::Duration::from_secs(30))
+        .user_agent("StirlingPDF-Desktop/1.0 Tauri")
         .build()
         .map_err(|e| {
             log::error!("Failed to create HTTP client: {}", e);
@@ -689,6 +690,7 @@ async fn exchange_code_for_token(
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .timeout(std::time::Duration::from_secs(30))
+        .user_agent("StirlingPDF-Desktop/1.0 Tauri")
         .build()
         .map_err(|e| {
             log::error!("Failed to create HTTP client: {}", e);
