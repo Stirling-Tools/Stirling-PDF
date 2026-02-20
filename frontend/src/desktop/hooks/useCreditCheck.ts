@@ -34,7 +34,7 @@ export function useCreditCheck(operationType?: string) {
       }));
 
       return t(
-        'credits.insufficient',
+        'credits.insufficient.brief',
         'Insufficient credits. You need {{required}} credits but have {{current}}.',
         { required: requiredCredits, current: creditBalance },
       );
