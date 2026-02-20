@@ -107,7 +107,7 @@ Feature: User Management API
         Given I am logged in as admin
         When I send a POST request to "/api/v1/user/admin/saveUser" with JWT authentication and params "username=bdd_mgmt_test_user&password=TestPass123!&role=ROLE_USER&authType=web&forceChange=false"
         Then the response status code should be one of "200, 201"
-        When I send a POST request to "/api/v1/user/admin/changePasswordForUser" with JWT authentication and params "username=bdd_mgmt_test_user&password=NewTestPass456!"
+        When I send a POST request to "/api/v1/user/admin/changePasswordForUser" with JWT authentication and params "username=bdd_mgmt_test_user&newPassword=NewTestPass456!"
         Then the response status code should be 200
         # Clean up
         When I send a POST request to "/api/v1/user/admin/deleteUser/bdd_mgmt_test_user" with JWT authentication

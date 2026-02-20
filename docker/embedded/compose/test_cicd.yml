@@ -31,5 +31,6 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SYSTEM_ENABLEMOBILESCANNER: "true"
+      MAIL_ENABLEINVITES: "true"
       SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
     restart: on-failure:5
