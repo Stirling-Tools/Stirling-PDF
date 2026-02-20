@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 public class MobileScannerService {
 
     private static final long SESSION_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+    private static final Pattern FILENAME_SANITIZE_PATTERN = Pattern.compile("[^a-zA-Z0-9._-]");
+    private static final Pattern SESSION_ID_VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9-]+");
+    private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
     private final Map<String, SessionData> activeSessions = new ConcurrentHashMap<>();
     private final Path tempDirectory;
 
@@ -121,7 +125,8 @@ public class MobileScannerService {
             // Handle duplicate filenames
             int counter = 1;
             while (Files.exists(filePath)) {
-                String nameWithoutExt = safeFilename.replaceFirst("[.][^.]+$", "");
+                String nameWithoutExt =
+                        FILE_EXTENSION_PATTERN.matcher(safeFilename).replaceFirst("");
                 String ext =
                         safeFilename.contains(".")
                                 ? safeFilename.substring(safeFilename.lastIndexOf("."))
@@ -271,14 +276,14 @@ public class MobileScannerService {
             throw new IllegalArgumentException("Session ID cannot be empty");
         }
         // Basic validation: alphanumeric and hyphens only
-        if (!sessionId.matches("[a-zA-Z0-9-]+")) {
+        if (!SESSION_ID_VALIDATION_PATTERN.matcher(sessionId).matches()) {
             throw new IllegalArgumentException("Invalid session ID format");
         }
     }
 
     private String sanitizeFilename(String filename) {
         // Remove path traversal attempts and dangerous characters
-        String sanitized = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String sanitized = FILENAME_SANITIZE_PATTERN.matcher(filename).replaceAll("_");
         // Ensure we have a non-empty, safe filename
         if (sanitized.isBlank()) {
             sanitized = "upload-" + System.currentTimeMillis();

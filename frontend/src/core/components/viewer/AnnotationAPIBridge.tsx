@@ -8,6 +8,7 @@ import type {
   AnnotationEvent,
   AnnotationPatch,
 } from '@app/components/viewer/viewerTypes';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
 type NoteIcon = NonNullable<AnnotationToolOptions['icon']>;
 
@@ -290,6 +291,7 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
 export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function AnnotationAPIBridge(_props, ref) {
   // Use the provided annotation API just like SignatureAPIBridge/HistoryAPIBridge
   const { provides: annotationApi } = useAnnotationCapability();
+  const documentReady = useDocumentReady();
 
   const buildAnnotationDefaults = useCallback(
     (toolId: AnnotationToolId, options?: AnnotationToolOptions) =>
@@ -323,6 +325,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       activateAnnotationTool: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
         configureAnnotationTool(toolId, options);
       },
+      isReady: () => !!annotationApi && documentReady,
       setAnnotationStyle: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
         const defaults = buildAnnotationDefaults(toolId, options);
         const api = annotationApi as AnnotationApiSurface | undefined;
