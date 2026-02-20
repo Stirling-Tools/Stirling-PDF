@@ -75,10 +75,18 @@ public class DatabaseConfig {
     }
 
     private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
+        // Support AOT training: override URL via system property to avoid H2 file lock
+        // conflicts when the AOT RECORD phase starts a second Spring context
+        String overrideUrl = System.getProperty("stirling.datasource.url");
+        String url =
+                (overrideUrl != null && !overrideUrl.isBlank())
+                        ? overrideUrl
+                        : DATASOURCE_DEFAULT_URL;
+
         log.info("Using default H2 database");
 
         dataSourceBuilder
-                .url(DATASOURCE_DEFAULT_URL)
+                .url(url)
                 .driverClassName(DatabaseDriver.H2.getDriverClassName())
                 .username(DEFAULT_USERNAME);
 

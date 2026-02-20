@@ -435,12 +435,14 @@ generate_aot_cache() {
   #   these internally they are informational, not errors.
   # Non-zero exit is expected — onRefresh triggers controlled shutdown.
   # Uses in-memory H2 database to avoid file-lock conflicts with the running application.
+  # Note: DatabaseConfig reads System.getProperty("stirling.datasource.url") to override
+  # the default file-based H2 URL. We use MODE=PostgreSQL to match the production config.
   java -Xmx512m -XX:+UseCompactObjectHeaders \
        -Xlog:aot=error \
        -XX:AOTMode=record \
        -XX:AOTConfiguration="$aot_conf" \
        -Dspring.context.exit=onRefresh \
-       -Dspring.datasource.url=jdbc:h2:mem:aottraining \
+       -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
        "$@" 2>/tmp/aot-record.log || true
 
   if [ ! -f "$aot_conf" ]; then
