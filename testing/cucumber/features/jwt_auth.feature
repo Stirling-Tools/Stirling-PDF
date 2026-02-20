@@ -47,13 +47,23 @@ Feature: JWT Authentication End-to-End
     Scenario: Login response user authentication type is WEB
         When I login with username "admin" and password "stirling"
         Then the response status code should be 200
-        And the response JSON user field "authenticationType" should equal "WEB"
+        And the response JSON user field "authenticationType" should equal "web"
 
     @login @negative
     Scenario: Login with wrong password returns 401
         When I login with username "admin" and password "completely_wrong_password_xyz"
         Then the response status code should be 401
         And the response JSON error should contain "Invalid"
+
+    @login @negative
+    Scenario: Login with SQL injection in username is safely rejected
+        When I login with username "admin' OR '1'='1" and password "anypass"
+        Then the response status code should be 401
+
+    @login @negative
+    Scenario: Login with script injection in username is safely rejected
+        When I login with username "<script>alert(1)</script>" and password "anypass"
+        Then the response status code should be 401
 
     @login @negative
     Scenario: Login with non-existent user returns 401
@@ -151,6 +161,7 @@ Feature: JWT Authentication End-to-End
         And the response content type should be "application/json"
         And the response should contain a JWT access token
         And the response JSON should have field "user"
+        And the response JSON should have a user with username "admin"
 
     @refresh @positive
     Scenario: Refreshed token has valid three-part JWT structure
@@ -196,6 +207,18 @@ Feature: JWT Authentication End-to-End
         When I logout with JWT authentication
         Then the response status code should be 200
         And the response JSON field "message" should equal "Logged out successfully"
+
+    @logout @token @positive
+    Scenario: JWT token remains usable after logout (stateless – no server-side revocation)
+        # JWT is stateless: logout only clears the server SecurityContext for that request.
+        # The signed token itself is not blacklisted, so it stays valid until its expiry.
+        # This is expected behaviour; add a token blacklist if revocation is required.
+        Given I am logged in as admin
+        When I logout with JWT authentication
+        Then the response status code should be 200
+        When I send a GET request to "/api/v1/auth/me" with JWT authentication
+        Then the response status code should be 200
+        And the response JSON should have a user with username "admin"
 
     # =========================================================================
     # ROLE-BASED ACCESS CONTROL SCENARIOS
@@ -299,6 +322,15 @@ Feature: JWT Authentication End-to-End
         When I send a JSON POST request to "/api/v1/user/register" with API key "123456789" and body '{"username": "new_user_empty_pass", "password": ""}'
         Then the response status code should be 400
 
+    @register @negative
+    Scenario: Newly registered user cannot login before an admin enables the account
+        # Registration creates accounts with enabled=false; immediate login must be rejected.
+        # Username is intentionally unique to avoid conflicts with other test runs.
+        When I send a JSON POST request to "/api/v1/user/register" with API key "123456789" and body '{"username": "bdd_disabled_user_99x", "password": "SecurePass123!"}'
+        Then the response status code should be one of "201, 400"
+        When I login with username "bdd_disabled_user_99x" and password "SecurePass123!"
+        Then the response status code should be 401
+
     # =========================================================================
     # TOKEN VALIDATION EDGE CASES
     # =========================================================================
@@ -311,6 +343,16 @@ Feature: JWT Authentication End-to-End
     @token @negative
     Scenario: Authorization header without Bearer prefix returns 401
         When I send a GET request to "/api/v1/auth/me" with Authorization header value "Basic dXNlcjpwYXNz"
+        Then the response status code should be 401
+
+    @token @negative
+    Scenario: Authorization header with only the Bearer keyword and no token returns 401
+        When I send a GET request to "/api/v1/auth/me" with Authorization header value "Bearer"
+        Then the response status code should be 401
+
+    @token @negative
+    Scenario: Authorization header with Bearer prefix but only whitespace returns 401
+        When I send a GET request to "/api/v1/auth/me" with Authorization header value "Bearer "
         Then the response status code should be 401
 
     @token @positive

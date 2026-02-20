@@ -253,6 +253,8 @@ jobs:
     #     )
 
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
 
     steps:
       - name: Harden Runner
