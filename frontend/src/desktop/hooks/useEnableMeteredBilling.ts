@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@app/auth/supabase';
+import { authService } from '@app/services/authService';
 
 /**
  * Shared hook for enabling metered (overage) billing via Supabase edge function.
@@ -27,8 +28,14 @@ export function useEnableMeteredBilling(
     setMeteringError(null);
 
     try {
+      const token = await authService.getAuthToken();
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
       const { data, error } = await supabase.functions.invoke('create-meter-subscription', {
         method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (error) {

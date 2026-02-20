@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Text, Button, Group } from '@mantine/core';
+import { Box, Text, Stack } from '@mantine/core';
 import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
@@ -53,9 +53,6 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
     return null;
   }
 
-  const isExhausted = creditBalance <= 0;
-  const textColor = isExhausted ? 'red' : 'orange';
-
   const handleClick = () => {
     // Dispatch low credits event to open upgrade modal
     window.dispatchEvent(new CustomEvent(CREDIT_EVENTS.LOW, {
@@ -65,27 +62,14 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
 
   return (
     <Box className={className} style={{ padding: '0.5rem', cursor: 'pointer' }} onClick={handleClick}>
-      <Group gap="xs" justify="center">
-        <Text size="xs" c={textColor} fw={500}>
+      <Stack gap={2} align="center">
+        <Text size="xs" c="dimmed" fw={500}>
           {creditBalance} {creditBalance === 1 ? 'credit' : 'credits'}
         </Text>
-        <Button
-          variant="subtle"
-          size="xs"
-          style={{
-            fontSize: '0.65rem',
-            padding: '0.125rem 0.5rem',
-            height: 'auto',
-            minHeight: 'auto',
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
-        >
+        <Text size="xs" c="dimmed" style={{ textDecoration: 'underline' }}>
           Upgrade
-        </Button>
-      </Group>
+        </Text>
+      </Stack>
     </Box>
   );
 }

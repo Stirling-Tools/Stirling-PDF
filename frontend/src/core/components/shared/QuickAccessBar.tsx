@@ -266,6 +266,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           {/* Spacer to push bottom buttons to bottom */}
           <div className="spacer" />
 
+          <QuickAccessBarFooterExtensions className="quick-access-footer" />
+
           {/* Bottom section */}
           <Stack gap="lg" align="stretch">
             {bottomButtons.map((buttonConfig, index) => {
@@ -380,8 +382,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           </Stack>
         </div>
       </div>
-
-      <QuickAccessBarFooterExtensions className="quick-access-footer" />
 
       <AppConfigModal
         opened={configModalOpen}
