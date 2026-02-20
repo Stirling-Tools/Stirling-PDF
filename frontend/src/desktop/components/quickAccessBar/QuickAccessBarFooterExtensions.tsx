@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Text, Button, Group } from '@mantine/core';
 import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
-import { useSaaSTeam } from '@app/contexts/SaaSTeamContext';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
 import { CREDIT_EVENTS } from '@app/constants/creditEvents';
@@ -16,8 +15,7 @@ interface QuickAccessBarFooterExtensionsProps {
 }
 
 export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFooterExtensionsProps) {
-  const { creditBalance, loading } = useSaaSBilling();
-  const { isManagedTeamMember } = useSaaSTeam();
+  const { creditBalance, loading, isManagedTeamMember } = useSaaSBilling();
   const [isSaasMode, setIsSaasMode] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -74,7 +72,6 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
         <Button
           variant="subtle"
           size="xs"
-          compact
           style={{
             fontSize: '0.65rem',
             padding: '0.125rem 0.5rem',

@@ -3,6 +3,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
 import type { BillingStatus } from '@app/services/saasBillingService';
+import { BILLING_CONFIG, getFormattedOveragePrice } from '@app/config/billing';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 
 interface TeamData {
@@ -87,7 +88,11 @@ export function ActiveSubscriptionCard({
 
   // Format overage cost
   const formatOverageCost = (cents: number, credits: number): string => {
-    return `Current overage cost: $${(cents / 100).toFixed(2)} (${credits} credits)`;
+    return t('settings.planBilling.billing.overageCost', {
+      amount: `$${(cents / 100).toFixed(2)}`,
+      credits,
+      defaultValue: `Current overage cost: $${(cents / 100).toFixed(2)} (${credits} credits)`,
+    });
   };
 
   // Pro/Team card
@@ -111,12 +116,20 @@ export function ActiveSubscriptionCard({
                   label={
                     <div style={{ maxWidth: 300 }}>
                       <Text size="sm" mb="xs">
-                        Team plan includes 500 credits/month.
+                        {t('settings.planBilling.tier.teamTooltipCredits', {
+                          credits: BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH,
+                          defaultValue: `Team plan includes ${BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} credits/month.`,
+                        })}
                       </Text>
                       <Text size="sm" mb="xs">
-                        Automatic overage billing at $0.05/credit ensures uninterrupted service.
+                        {t('settings.planBilling.tier.teamTooltipOverage', {
+                          price: getFormattedOveragePrice(),
+                          defaultValue: `Automatic overage billing at ${getFormattedOveragePrice()}/credit ensures uninterrupted service.`,
+                        })}
                       </Text>
-                      <Text size="sm">Only pay for what you use beyond included credits.</Text>
+                      <Text size="sm">
+                        {t('settings.planBilling.tier.teamTooltipFineprint', 'Only pay for what you use beyond included credits.')}
+                      </Text>
                     </div>
                   }
                   multiline

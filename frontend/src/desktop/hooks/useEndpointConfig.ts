@@ -35,7 +35,8 @@ async function checkDependenciesReady(): Promise<boolean> {
       suppressErrorToast: true,
     });
     return response.data?.dependenciesReady ?? false;
-  } catch {
+  } catch (error) {
+    console.debug('[useEndpointConfig] Dependencies not ready yet:', error);
     return false;
   }
 }

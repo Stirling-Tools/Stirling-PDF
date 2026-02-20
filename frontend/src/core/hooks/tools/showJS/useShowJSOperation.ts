@@ -119,7 +119,6 @@ export const useShowJSOperation = (): ShowJSOperationHook => {
 		status,
 		errorMessage,
 		progress: null,
-		willUseCloud: false,
 
 		// Custom state
 		scriptText,

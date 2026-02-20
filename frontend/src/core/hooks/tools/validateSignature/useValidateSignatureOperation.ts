@@ -207,7 +207,6 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
       status,
       errorMessage,
       progress: null,
-      willUseCloud: false,
       executeOperation,
       resetResults,
       clearError,

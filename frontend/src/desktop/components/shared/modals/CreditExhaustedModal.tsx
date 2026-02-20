@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Modal, Stack, Card, Text, Group, Badge, Button, Alert } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -10,7 +9,7 @@ import { CreditUsageBanner } from '@app/components/shared/modals/CreditUsageBann
 import { FeatureListItem } from '@app/components/shared/modals/FeatureListItem';
 import { FREE_PLAN_FEATURES, TEAM_PLAN_FEATURES, ENTERPRISE_PLAN_FEATURES } from '@app/config/planFeatures';
 import { useSaaSCheckout } from '@app/contexts/SaaSCheckoutContext';
-import { supabase } from '@app/auth/supabase';
+import { useEnableMeteredBilling } from '@app/hooks/useEnableMeteredBilling';
 
 interface CreditExhaustedModalProps {
   opened: boolean;
@@ -24,13 +23,15 @@ interface CreditExhaustedModalProps {
  */
 export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalProps) {
   const { t } = useTranslation();
-  const { creditBalance, tier, plans, refreshBilling } = useSaaSBilling();
-  const { isManagedTeamMember, isTeamLeader } = useSaaSTeam();
+  const { creditBalance, tier, plans, refreshBilling, isManagedTeamMember } = useSaaSBilling();
+  const { isTeamLeader } = useSaaSTeam();
   const { openCheckout } = useSaaSCheckout();
 
-  // State for enabling metered billing
-  const [enablingMetering, setEnablingMetering] = useState(false);
-  const [meteringError, setMeteringError] = useState<string | null>(null);
+  const { enablingMetering, meteringError, handleEnableMetering } = useEnableMeteredBilling(
+    refreshBilling,
+    onClose,
+    'CreditExhaustedModal'
+  );
 
   // Managed team members have unlimited credits via team
   if (isManagedTeamMember) {
@@ -59,38 +60,6 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
   // Team users should enable overage billing
   // Only team leaders can enable metered billing, members see different UI
   if (tier === 'team') {
-    const handleEnableMetering = async () => {
-      console.debug('[CreditExhausted] Enabling metered billing');
-      setEnablingMetering(true);
-      setMeteringError(null);
-
-      try {
-        const { data, error } = await supabase.functions.invoke('create-meter-subscription', {
-          method: 'POST'
-        });
-
-        if (error) {
-          throw new Error(error.message || 'Failed to enable metered billing');
-        }
-
-        if (!data?.success) {
-          throw new Error(data?.error || data?.message || 'Failed to enable metered billing');
-        }
-
-        console.debug('[CreditExhausted] ✅ Metered billing enabled successfully');
-
-        // Refresh billing status to pick up the new flag
-        await refreshBilling();
-
-        // Close modal
-        onClose();
-      } catch (err: any) {
-        console.error('[CreditExhausted] Failed to enable metered billing:', err);
-        setMeteringError(err.message || 'Failed to enable metered billing');
-      } finally {
-        setEnablingMetering(false);
-      }
-    };
 
     const teamPlan = plans.get('team');
     const teamCurrency = teamPlan?.currency ?? '$';
@@ -165,12 +134,18 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
               </Group>
 
               <Text size="sm" c="dimmed">
-                {t('credits.modal.meteringExplanation', 'Your Team plan includes 500 credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working.')}
+                {t('credits.modal.meteringExplanation', {
+                  credits: BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH,
+                  defaultValue: `Your Team plan includes ${BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working.`,
+                })}
               </Text>
 
               <Stack gap="xs">
                 <FeatureListItem included>
-                  {t('credits.modal.meteringIncluded', '500 credits/month included with Team')}
+                  {t('credits.modal.meteringIncluded', {
+                    credits: BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH,
+                    defaultValue: `${BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} credits/month included with Team`,
+                  })}
                 </FeatureListItem>
                 <FeatureListItem included>
                   {t('credits.modal.meteringPrice', 'Additional credits at {{price}}/credit', {
@@ -486,7 +461,7 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
         </Group>
 
         <Text size="sm" ta="center" c="dimmed" mt="md">
-          Want to self host?{' '}
+          {t('credits.modal.selfHostPrompt', 'Want to self host?')}{' '}
           <Text
             component="a"
             href="https://www.stirling.com/pricing"
@@ -501,7 +476,7 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
               e.currentTarget.style.textDecoration = 'none';
             }}
           >
-            Review the docs and plans
+            {t('credits.modal.selfHostLink', 'Review the docs and plans')}
           </Text>
         </Text>
       </Stack>

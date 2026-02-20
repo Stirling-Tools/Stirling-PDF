@@ -168,7 +168,6 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
       status,
       errorMessage,
       progress: null,
-      willUseCloud: false,
       executeOperation,
       resetResults,
       clearError,

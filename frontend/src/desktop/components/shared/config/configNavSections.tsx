@@ -46,31 +46,26 @@ export const useConfigNavSections = (
   }, []);
 
   // Get the proprietary sections (includes core Preferences + admin sections)
-  let sections = useProprietaryConfigNavSections(isAdmin, runningEE, loginEnabled);
+  const sections = useProprietaryConfigNavSections(isAdmin, runningEE, loginEnabled);
 
-  // Hide self-hosted admin sections when in SaaS mode
-  if (isSaasMode) {
-    // Keep only: Preferences, Developer (if exists)
-    // Remove: Workspace, Configuration, Security & Auth, Licensing & Analytics, Policies & Privacy
-    const selfHostedSectionTitles = [
-      'Workspace',
-      'Configuration',
-      'Security & Authentication',
-      'Licensing & Analytics',
-      'Policies & Privacy',
-      // Translated versions
-      t('settings.workspace.title', 'Workspace'),
-      t('settings.configuration.title', 'Configuration'),
-      t('settings.securityAuth.title', 'Security & Authentication'),
-      t('settings.licensingAnalytics.title', 'Licensing & Analytics'),
-      t('settings.policiesPrivacy.title', 'Policies & Privacy'),
-    ];
+  // Identifies self-hosted admin sections by their first item's stable key.
+  // Using item keys avoids dependency on translated section titles (#17).
+  const SELF_HOSTED_SECTION_FIRST_KEYS = new Set([
+    'people',        // Workspace section
+    'adminGeneral',  // Configuration section
+    'adminSecurity', // Security & Authentication section
+    'adminPlan',     // Licensing & Analytics section
+    'adminLegal',    // Policies & Privacy section
+  ]);
 
-    sections = sections.filter(section => !selfHostedSectionTitles.includes(section.title));
-  }
+  // Build the result array explicitly instead of splice with hardcoded indices (#18).
+  const result: ConfigNavSection[] = [];
 
-  // Add Connection section at the beginning (after Preferences)
-  sections.splice(1, 0, {
+  // Preferences is always first
+  if (sections.length > 0) result.push(sections[0]);
+
+  // Connection Mode always sits immediately after Preferences
+  result.push({
     title: t('settings.connection.title', 'Connection Mode'),
     items: [
       {
@@ -82,9 +77,9 @@ export const useConfigNavSections = (
     ],
   });
 
-  // Add Plan & Billing section (only when logged into SaaS)
+  // Plan & Billing and Team sections only when authenticated in SaaS mode
   if (isSaasMode && isAuthenticated) {
-    sections.splice(2, 0, {
+    result.push({
       title: t('settings.planBilling.title', 'Plan & Billing'),
       items: [
         {
@@ -95,9 +90,7 @@ export const useConfigNavSections = (
         },
       ],
     });
-
-    // Add Team Management section (after Plan & Billing)
-    sections.splice(3, 0, {
+    result.push({
       title: t('settings.team.title', 'Team'),
       items: [
         {
@@ -110,7 +103,16 @@ export const useConfigNavSections = (
     });
   }
 
-  return sections;
+  // Append remaining proprietary sections, skipping self-hosted admin sections in SaaS mode
+  for (const section of sections.slice(1)) {
+    const firstItemKey = section.items[0]?.key;
+    if (isSaasMode && firstItemKey && SELF_HOSTED_SECTION_FIRST_KEYS.has(firstItemKey)) {
+      continue;
+    }
+    result.push(section);
+  }
+
+  return result;
 };
 
 /**

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useSaaSTeam } from '@app/contexts/SaaSTeamContext';
 import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
 import { CreditExhaustedModal } from '@app/components/shared/modals/CreditExhaustedModal';
 import { InsufficientCreditsModal } from '@app/components/shared/modals/InsufficientCreditsModal';
@@ -19,8 +18,7 @@ export function CreditModalBootstrap() {
     requiredCredits?: number;
   }>({});
 
-  const { isManagedTeamMember } = useSaaSTeam();
-  const { creditBalance } = useSaaSBilling();
+  const { creditBalance, isManagedTeamMember } = useSaaSBilling();
 
   // Monitor credit balance and dispatch events
   useCreditEvents();
@@ -39,7 +37,8 @@ export function CreditModalBootstrap() {
       if (isManagedTeamMember) {
         return;
       }
-      setExhaustedOpen(true);
+      // Low credits = show insufficient credits modal as a low-balance warning (no specific tool)
+      setInsufficientOpen(true);
     };
 
     const handleInsufficient = (e: Event) => {

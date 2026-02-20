@@ -46,26 +46,32 @@ export function useConversionCloudStatus(): ConversionStatus {
       const cloudStatus: Record<string, boolean> = {};
       const localOnly: Record<string, boolean> = {};
 
-      // Check all possible conversions using the service helper
+      // Collect all conversion pairs first, then check all in parallel
+      const pairs: [string, string, string][] = [];
       for (const fromExt of Object.keys(EXTENSION_TO_ENDPOINT)) {
         for (const toExt of Object.keys(EXTENSION_TO_ENDPOINT[fromExt] || {})) {
           const endpointName = getEndpointName(fromExt, toExt);
-          if (endpointName) {
-            try {
-              const combined = await endpointAvailabilityService.checkEndpointCombined(endpointName);
-              const key = `${fromExt}-${toExt}`;
-
-              availability[key] = combined.isAvailable;
-              cloudStatus[key] = combined.willUseCloud;
-              localOnly[key] = combined.localOnly;
-            } catch {
-              const key = `${fromExt}-${toExt}`;
-              availability[key] = false;
-              cloudStatus[key] = false;
-              localOnly[key] = false;
-            }
-          }
+          if (endpointName) pairs.push([fromExt, toExt, endpointName]);
         }
+      }
+
+      const results = await Promise.all(
+        pairs.map(async ([fromExt, toExt, endpointName]) => {
+          const key = `${fromExt}-${toExt}`;
+          try {
+            const combined = await endpointAvailabilityService.checkEndpointCombined(endpointName);
+            return { key, isAvailable: combined.isAvailable, willUseCloud: combined.willUseCloud, localOnly: combined.localOnly };
+          } catch (error) {
+            console.error(`[useConversionCloudStatus] Endpoint check failed for ${key}:`, error);
+            return { key, isAvailable: false, willUseCloud: false, localOnly: false };
+          }
+        })
+      );
+
+      for (const { key, isAvailable, willUseCloud: wuc, localOnly: lo } of results) {
+        availability[key] = isAvailable;
+        cloudStatus[key] = wuc;
+        localOnly[key] = lo;
       }
 
       setStatus({ availability, cloudStatus, localOnly });

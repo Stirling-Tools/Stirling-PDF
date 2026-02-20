@@ -48,7 +48,6 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
   getPdfInfo: CREDIT_COSTS.MEDIUM,
   validateSignature: CREDIT_COSTS.SMALL,
   read: CREDIT_COSTS.SMALL,
-  edit: CREDIT_COSTS.MEDIUM,
 
   // Medium operations (3 credits)
   split: CREDIT_COSTS.MEDIUM,
@@ -70,13 +69,14 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
   removeCertSign: CREDIT_COSTS.MEDIUM,
   scannerEffect: CREDIT_COSTS.MEDIUM,
   replaceColor: CREDIT_COSTS.MEDIUM,
+  annotate: CREDIT_COSTS.MEDIUM,
+  formFill: CREDIT_COSTS.MEDIUM,
 
   // Large operations (5 credits)
   compress: CREDIT_COSTS.LARGE,
   convert: CREDIT_COSTS.LARGE,
   ocr: CREDIT_COSTS.LARGE,
   certSign: CREDIT_COSTS.LARGE,
-  create: CREDIT_COSTS.LARGE,
 
   // Extra large operations (10 credits)
   automate: CREDIT_COSTS.XLARGE,

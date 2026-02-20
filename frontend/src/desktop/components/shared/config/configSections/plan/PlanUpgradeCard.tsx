@@ -4,6 +4,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTranslation } from 'react-i18next';
 import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import { BILLING_CONFIG } from '@app/config/billing';
 import type { TierLevel } from '@app/types/billing';
 
 interface PlanUpgradeCardProps {
@@ -39,7 +40,7 @@ export function PlanUpgradeCard({ currentTier }: PlanUpgradeCardProps) {
 
         {/* Team plan benefits */}
         <Text size="sm" c="dimmed">
-          Upgrade to Team for:
+          {t('settings.planBilling.upgrade.subtitle', 'Upgrade to Team for:')}
         </Text>
 
         <List
@@ -51,11 +52,17 @@ export function PlanUpgradeCard({ currentTier }: PlanUpgradeCardProps) {
             </ThemeIcon>
           }
         >
-          <List.Item>500 credits per month (vs 50 on Free)</List.Item>
-          <List.Item>Unlimited team members</List.Item>
-          <List.Item>Faster processing throughput</List.Item>
-          <List.Item>API access for automation</List.Item>
-          <List.Item>Priority support</List.Item>
+          <List.Item>
+            {t('settings.planBilling.upgrade.featureCredits', {
+              teamCredits: BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH,
+              freeCredits: BILLING_CONFIG.FREE_CREDITS_PER_MONTH,
+              defaultValue: `${BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} credits per month (vs ${BILLING_CONFIG.FREE_CREDITS_PER_MONTH} on Free)`,
+            })}
+          </List.Item>
+          <List.Item>{t('settings.planBilling.upgrade.featureMembers', 'Unlimited team members')}</List.Item>
+          <List.Item>{t('settings.planBilling.upgrade.featureThroughput', 'Faster processing throughput')}</List.Item>
+          <List.Item>{t('settings.planBilling.upgrade.featureApi', 'API access for automation')}</List.Item>
+          <List.Item>{t('settings.planBilling.upgrade.featureSupport', 'Priority support')}</List.Item>
         </List>
 
         {/* Upgrade button */}
@@ -64,7 +71,7 @@ export function PlanUpgradeCard({ currentTier }: PlanUpgradeCardProps) {
         </Button>
 
         <Text size="xs" c="dimmed" ta="center">
-          Opens in browser to complete upgrade
+          {t('settings.planBilling.upgrade.opensInBrowser', 'Opens in browser to complete upgrade')}
         </Text>
       </Stack>
     </Card>

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Modal, Stack, Text, Button, Alert, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
@@ -6,7 +5,7 @@ import { useSaaSTeam } from '@app/contexts/SaaSTeamContext';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useSaaSCheckout } from '@app/contexts/SaaSCheckoutContext';
 import WarningIcon from '@mui/icons-material/Warning';
-import { supabase } from '@app/auth/supabase';
+import { useEnableMeteredBilling } from '@app/hooks/useEnableMeteredBilling';
 
 interface InsufficientCreditsModalProps {
   opened: boolean;
@@ -26,48 +25,17 @@ export function InsufficientCreditsModal({
   requiredCredits,
 }: InsufficientCreditsModalProps) {
   const { t } = useTranslation();
-  const { creditBalance, tier, refreshBilling } = useSaaSBilling();
-  const { isManagedTeamMember, isTeamLeader } = useSaaSTeam();
+  const { creditBalance, tier, refreshBilling, isManagedTeamMember } = useSaaSBilling();
+  const { isTeamLeader } = useSaaSTeam();
   const { openCheckout } = useSaaSCheckout();
 
-  // State for enabling metered billing
-  const [enablingMetering, setEnablingMetering] = useState(false);
-  const [meteringError, setMeteringError] = useState<string | null>(null);
+  const { enablingMetering, meteringError, handleEnableMetering } = useEnableMeteredBilling(
+    refreshBilling,
+    onClose,
+    'InsufficientCreditsModal'
+  );
 
   const toolName = toolId ? t(`tool.${toolId}.name`, toolId) : t('common.operation', 'this operation');
-
-  const handleEnableMetering = async () => {
-    console.debug('[InsufficientCredits] Enabling metered billing');
-    setEnablingMetering(true);
-    setMeteringError(null);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-meter-subscription', {
-        method: 'POST'
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to enable metered billing');
-      }
-
-      if (!data?.success) {
-        throw new Error(data?.error || data?.message || 'Failed to enable metered billing');
-      }
-
-      console.debug('[InsufficientCredits] ✅ Metered billing enabled successfully');
-
-      // Refresh billing status
-      await refreshBilling();
-
-      // Close modal
-      onClose();
-    } catch (err: any) {
-      console.error('[InsufficientCredits] Failed to enable metered billing:', err);
-      setMeteringError(err.message || 'Failed to enable metered billing');
-    } finally {
-      setEnablingMetering(false);
-    }
-  };
 
   return (
     <Modal

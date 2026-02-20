@@ -12,7 +12,7 @@ interface CreditUsageBannerProps {
  */
 export function CreditUsageBanner({ currentCredits, totalCredits }: CreditUsageBannerProps) {
   const { t } = useTranslation();
-  const percentageRemaining = (currentCredits / totalCredits) * 100;
+  const percentageRemaining = totalCredits > 0 ? (currentCredits / totalCredits) * 100 : 0;
 
   return (
     <Stack gap="md">

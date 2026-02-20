@@ -5,6 +5,7 @@ import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL, SUPABASE_KEY } from '@app/constants/connection';
 import type { TierLevel, SubscriptionStatus, StripePlanId } from '@app/types/billing';
+import { getCurrencySymbol } from '@app/config/billing';
 
 /**
  * Billing status returned from Supabase edge function
@@ -80,17 +81,6 @@ export class SaasBillingService {
     token: string,
     currencyCode: string = 'usd'
   ): Promise<{ price: number; currency: string }> {
-    const currencySymbols: { [key: string]: string } = {
-      gbp: '£',
-      usd: '$',
-      eur: '€',
-      cny: '¥',
-      inr: '₹',
-      brl: 'R$',
-      idr: 'Rp',
-      jpy: '¥',
-    };
-
     try {
       const { data, error } = await supabase.functions.invoke<{
         prices: Record<string, { unit_amount: number; currency: string }>;
@@ -116,7 +106,7 @@ export class SaasBillingService {
       const proPrice = data.prices['plan:pro'];
       if (proPrice) {
         const price = proPrice.unit_amount / 100; // Convert cents to dollars
-        const currency = currencySymbols[proPrice.currency.toLowerCase()] || proPrice.currency.toUpperCase();
+        const currency = getCurrencySymbol(proPrice.currency);
         return { price, currency };
       }
 
@@ -165,18 +155,14 @@ export class SaasBillingService {
         throw new Error(`RPC call failed: ${response.status} ${response.statusText}`);
       }
 
-      const billingDataRaw = await response.json() as {
+      // RPC may return an array or a single object — normalise to array then take first element
+      const raw = await response.json() as unknown;
+      const billingDataArray = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+      const billingData = billingDataArray[0] as {
         user_id: string;
         has_metered_billing_enabled: boolean;
         is_pro: boolean;
-      }[] | {
-        user_id: string;
-        has_metered_billing_enabled: boolean;
-        is_pro: boolean;
-      } | null;
-
-      // RPC returns an array with a single object, so extract first element
-      const billingData = Array.isArray(billingDataRaw) ? billingDataRaw[0] : billingDataRaw;
+      } | undefined;
 
       // Determine tier based on pro status
       const isPro = billingData?.is_pro || false;
@@ -348,17 +334,6 @@ export class SaasBillingService {
       throw new Error('No authentication token available');
     }
 
-    const currencySymbols: { [key: string]: string } = {
-      gbp: '£',
-      usd: '$',
-      eur: '€',
-      cny: '¥',
-      inr: '₹',
-      brl: 'R$',
-      idr: 'Rp',
-      jpy: '¥',
-    };
-
     try {
       const { data, error } = await supabase.functions.invoke<{
         prices: Record<string, { unit_amount: number; currency: string }>;
@@ -389,7 +364,7 @@ export class SaasBillingService {
       if (proPrice) {
         plans.set('team', {
           price: proPrice.unit_amount / 100,
-          currency: currencySymbols[proPrice.currency.toLowerCase()] || '$',
+          currency: getCurrencySymbol(proPrice.currency),
           overagePrice: overagePrice ? overagePrice.unit_amount / 100 : 0.05,
         });
       }

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { alert } from '@app/components/toast';
 import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from '@app/services/errorUtils';
 import { showSpecialErrorToast } from '@app/services/specialErrorToasts';
+import { handleSaaSError } from '@app/services/saasErrorInterceptor';
 
 const FRIENDLY_FALLBACK = 'There was an error processing your request.';
 const MAX_TOAST_BODY_CHARS = 400; // avoid massive, unreadable toasts
@@ -29,7 +30,7 @@ function titleForStatus(status?: number): string {
   return 'Request failed';
 }
 
-function extractAxiosErrorMessage(error: any): { title: string; body: string } {
+export function extractAxiosErrorMessage(error: any): { title: string; body: string } {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const _statusText = error.response?.statusText || '';
@@ -127,28 +128,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
     return true;
   }
 
-  // Handle SaaS backend errors (desktop only) - provide specific error message
-  const baseURL = error?.config?.baseURL;
-  if (baseURL && typeof baseURL === 'string') {
-    // Check if this is a SaaS backend request
-    // STIRLING_SAAS_BACKEND_API_URL is typically something like 'https://api.stirlingpdf.com' or contains 'saas'
-    const isSaaSBackend = baseURL.includes('saas-backend-api') || baseURL.includes('api.stirlingpdf');
-
-    if (isSaaSBackend) {
-      const { title: originalTitle, body: originalBody } = extractAxiosErrorMessage(error);
-
-      alert({
-        alertType: 'error',
-        title: 'Cloud Processing Failed',
-        body: `This tool requires cloud processing but encountered an error: ${originalBody}. Please check your connection and try again.`,
-        expandable: true,
-        isPersistentPopup: false,
-      });
-
-      console.error('[httpErrorHandler] SaaS backend error:', { status, baseURL, originalTitle, originalBody });
-      return true; // Handled - suppress further processing
-    }
-  }
+  if (handleSaaSError(error)) return true;
 
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);

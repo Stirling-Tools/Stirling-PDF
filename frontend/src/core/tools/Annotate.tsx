@@ -458,7 +458,6 @@ const Annotate = (_props: BaseToolProps) => {
         status: '',
         errorMessage: null,
         progress: null,
-        willUseCloud: false,
         executeOperation: async () => {},
         resetResults: () => {},
         clearError: () => {},

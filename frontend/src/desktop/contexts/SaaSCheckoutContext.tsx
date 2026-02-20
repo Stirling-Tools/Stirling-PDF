@@ -47,7 +47,11 @@ export const SaaSCheckoutProvider: React.FC<SaaSCheckoutProviderProps> = ({
   const handleCheckoutSuccess = useCallback(async () => {
     // Wait for webhooks to process (2 seconds)
     await new Promise(resolve => setTimeout(resolve, 2000));
-    await refreshBilling();
+    try {
+      await refreshBilling();
+    } catch (error) {
+      console.error('[SaaSCheckoutContext] Failed to refresh billing after checkout:', error);
+    }
   }, [refreshBilling]);
 
   return (

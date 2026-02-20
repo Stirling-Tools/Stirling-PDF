@@ -246,9 +246,9 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
         });
 
         // Dispatch exhausted event if credits hit 0
-        if (newBalance <= 0 && billingStatus.creditBalance > 0) {
+        if (newBalance <= 0 && (billingStatus.creditBalance ?? 0) > 0) {
           window.dispatchEvent(new CustomEvent('credits:exhausted', {
-            detail: { previousBalance: billingStatus.creditBalance, currentBalance: newBalance }
+            detail: { previousBalance: billingStatus.creditBalance ?? 0, currentBalance: newBalance }
           }));
         }
       }

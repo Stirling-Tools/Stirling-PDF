@@ -106,7 +106,7 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
             disabled={config.executeButton.disabled}
             loadingText={config.executeButton.loadingText}
             submitText={config.executeButton.text}
-            showCloudBadge={config.executeButton.showCloudBadge ?? config.review.operation.willUseCloud}
+            showCloudBadge={config.executeButton.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
             data-testid={config.executeButton.testId}
             data-tour="run-button"
           />

@@ -3,6 +3,7 @@ import { Card, Text, Stack, Group, Progress, Alert } from '@mantine/core';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
 import type { BillingStatus } from '@app/services/saasBillingService';
+import { BILLING_CONFIG, getFormattedOveragePrice } from '@app/config/billing';
 
 interface UsageDisplayProps {
   tier: BillingStatus['tier'];
@@ -16,13 +17,13 @@ export function UsageDisplay({ tier, usage }: UsageDisplayProps) {
   const getMonthlyCredits = (): number => {
     switch (tier) {
       case 'free':
-        return 50;
+        return BILLING_CONFIG.FREE_CREDITS_PER_MONTH;
       case 'team':
-        return 500;
+        return BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH;
       case 'enterprise':
-        return 1000; // Placeholder
+        return 1000; // Placeholder — enterprise credits are custom
       default:
-        return 50;
+        return BILLING_CONFIG.FREE_CREDITS_PER_MONTH;
     }
   };
 
@@ -83,8 +84,10 @@ export function UsageDisplay({ tier, usage }: UsageDisplayProps) {
 
             <Alert color="blue" variant="light" icon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}>
               <Text size="xs">
-                Overage credits are billed at $0.05 per credit. You'll only pay for what you use beyond your monthly
-                allowance.
+                {t('settings.planBilling.credits.overageInfo', {
+                  price: getFormattedOveragePrice(),
+                  defaultValue: `Overage credits are billed at ${getFormattedOveragePrice()} per credit. You'll only pay for what you use beyond your monthly allowance.`,
+                })}
               </Text>
             </Alert>
           </>
@@ -94,7 +97,10 @@ export function UsageDisplay({ tier, usage }: UsageDisplayProps) {
         {(!usage || usage.currentPeriodCredits === 0) && tier !== 'free' && (
           <Alert color="green" variant="light">
             <Text size="sm">
-              No overage charges this month. You're using your included {monthlyCredits} credits.
+              {t('settings.planBilling.credits.noOverage', {
+                count: monthlyCredits,
+                defaultValue: `No overage charges this month. You're using your included ${monthlyCredits} credits.`,
+              })}
             </Text>
           </Alert>
         )}
@@ -103,8 +109,11 @@ export function UsageDisplay({ tier, usage }: UsageDisplayProps) {
         {tier === 'free' && (
           <Alert color="blue" variant="light">
             <Text size="sm">
-              Free plan includes {monthlyCredits} credits per month. Upgrade to Team for 500 credits/month and pay-as-you-go
-              overage billing.
+              {t('settings.planBilling.credits.freeTierInfo', {
+                freeCredits: BILLING_CONFIG.FREE_CREDITS_PER_MONTH,
+                teamCredits: BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH,
+                defaultValue: `Free plan includes ${BILLING_CONFIG.FREE_CREDITS_PER_MONTH} credits per month. Upgrade to Team for ${BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} credits/month and pay-as-you-go overage billing.`,
+              })}
             </Text>
           </Alert>
         )}

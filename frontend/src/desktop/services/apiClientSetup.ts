@@ -18,6 +18,7 @@ interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
   _retry?: boolean;
+  _isSaaSRequest?: boolean;
 }
 
 /**
@@ -63,6 +64,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         const isRemote = await operationRouter.isSelfHostedMode();
         const isSaaSBackendRequest = baseUrl === STIRLING_SAAS_BACKEND_API_URL;
         const needsAuth = isRemote || isSaaSBackendRequest;
+
+        // Tag request so error handler can identify SaaS backend errors without URL matching
+        extendedConfig._isSaaSRequest = isSaaSBackendRequest;
 
         console.debug(`[apiClientSetup] Auth check: isRemote=${isRemote}, isSaaSBackendRequest=${isSaaSBackendRequest}, needsAuth=${needsAuth}, baseUrl=${baseUrl}`);
 
