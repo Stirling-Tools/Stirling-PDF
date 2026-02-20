@@ -4,6 +4,7 @@ import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import axios from 'axios';
+import tauriHttpClient from '@app/services/tauriHttpClient';
 import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from '@app/constants/connection';
 
 export interface UserInfo {
@@ -42,6 +43,7 @@ export class AuthService {
   private lastTokenSaveTime: number = 0;
   private authListeners = new Set<(status: AuthStatus, userInfo: UserInfo | null) => void>();
   private refreshPromise: Promise<boolean> | null = null;
+  private selfHostedDeepLinkFlowActive = false;
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -174,6 +176,10 @@ export class AuthService {
     return () => {
       this.authListeners.delete(listener);
     };
+  }
+
+  isSelfHostedDeepLinkFlowActive(): boolean {
+    return this.selfHostedDeepLinkFlowActive;
   }
 
   private notifyListeners() {
@@ -554,8 +560,9 @@ export class AuthService {
         return false;
       }
 
-      // Call the server's refresh endpoint
-      const response = await axios.post(
+      // Call the server's refresh endpoint using Tauri HTTP client so the desktop
+      // User-Agent is sent - the backend uses it to issue long-lived desktop tokens.
+      const response = await tauriHttpClient.post(
         `${serverUrl}/api/v1/auth/refresh`,
         {},
         {
@@ -782,21 +789,26 @@ export class AuthService {
       // ignore URL parsing failures
     }
 
-    // Open in system browser and wait for deep link callback
-    if (await this.openInSystemBrowser(authUrl)) {
-      return this.waitForDeepLinkCompletion(trimmedServer);
-    }
-
-    throw new Error('Unable to open system browser for SSO. Please check your system settings.');
+    // Register deep-link listener before opening browser to avoid callback races on first launch.
+    return this.waitForDeepLinkCompletion(trimmedServer, async () => {
+      if (!(await this.openInSystemBrowser(authUrl))) {
+        throw new Error('Unable to open system browser for SSO. Please check your system settings.');
+      }
+    });
   }
 
   /**
    * Wait for a deep-link event to complete self-hosted SSO after system browser OAuth
    */
-  private async waitForDeepLinkCompletion(serverUrl: string): Promise<UserInfo> {
+  private async waitForDeepLinkCompletion(
+    serverUrl: string,
+    startFlow?: () => Promise<void>
+  ): Promise<UserInfo> {
     if (!isTauri()) {
       throw new Error('Deep link authentication is only supported in Tauri desktop app.');
     }
+
+    this.selfHostedDeepLinkFlowActive = true;
 
     return new Promise<UserInfo>((resolve, reject) => {
       let completed = false;
@@ -807,6 +819,7 @@ export class AuthService {
           completed = true;
           if (unlisten) unlisten();
           sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
           reject(new Error('SSO login timed out. Please try again.'));
         }
       }, 120_000);
@@ -825,6 +838,7 @@ export class AuthService {
             if (unlisten) unlisten();
             clearTimeout(timeoutId);
             sessionStorage.removeItem('oauth_nonce');
+            this.selfHostedDeepLinkFlowActive = false;
             reject(new Error(error || 'Authentication was not successful.'));
             return;
           }
@@ -845,6 +859,7 @@ export class AuthService {
             if (unlisten) unlisten();
             clearTimeout(timeoutId);
             sessionStorage.removeItem('oauth_nonce');
+            this.selfHostedDeepLinkFlowActive = false;
             console.error('[Desktop AuthService] Nonce validation failed - potential CSRF attack');
             reject(new Error('Invalid authentication state. Nonce validation failed.'));
             return;
@@ -854,6 +869,7 @@ export class AuthService {
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
           sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
           console.log('[Desktop AuthService] Nonce validated successfully');
 
           const userInfo = await this.completeSelfHostedSession(serverUrl, token);
@@ -870,10 +886,39 @@ export class AuthService {
           if (unlisten) unlisten();
           clearTimeout(timeoutId);
           sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
           reject(err instanceof Error ? err : new Error('Failed to complete SSO'));
         }
-      }).then((fn) => {
+      }).then(async (fn) => {
         unlisten = fn;
+
+        if (!startFlow || completed) {
+          return;
+        }
+
+        try {
+          await startFlow();
+        } catch (err) {
+          if (completed) {
+            return;
+          }
+          completed = true;
+          if (unlisten) unlisten();
+          clearTimeout(timeoutId);
+          sessionStorage.removeItem('oauth_nonce');
+          this.selfHostedDeepLinkFlowActive = false;
+          reject(err instanceof Error ? err : new Error('Failed to start SSO login'));
+        }
+      }).catch((err) => {
+        if (completed) {
+          return;
+        }
+        completed = true;
+        if (unlisten) unlisten();
+        clearTimeout(timeoutId);
+        sessionStorage.removeItem('oauth_nonce');
+        this.selfHostedDeepLinkFlowActive = false;
+        reject(err instanceof Error ? err : new Error('Failed to listen for deep link events'));
       });
     });
   }
