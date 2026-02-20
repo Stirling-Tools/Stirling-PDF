@@ -223,18 +223,20 @@ get_unoserver_count() {
 start_unoserver_instance() {
   local port=$1
   local uno_port=$2
+  # Suppress repetitive POST /RPC2 access logs from health checks
   run_as_runtime_user "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
+    2> >(grep --line-buffered -v "POST /RPC2" >&2) \
     &
   LAST_UNOSERVER_PID=$!
 }
 
 start_unoserver_watchdog() {
-  local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
+  local interval=${UNO_SERVER_HEALTH_INTERVAL:-120}
   case "$interval" in
-    ''|*[!0-9]*) interval=30 ;;
+    ''|*[!0-9]*) interval=120 ;;
   esac
   (
     while true; do
