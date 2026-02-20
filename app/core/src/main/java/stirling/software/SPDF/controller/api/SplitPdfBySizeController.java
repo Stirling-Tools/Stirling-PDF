@@ -82,7 +82,13 @@ public class SplitPdfBySizeController {
 
                         if (type == 0) {
                             log.debug("Processing split by size");
-                            long maxBytes = GeneralUtils.convertSizeToBytes(value);
+                            Long maxBytes = GeneralUtils.convertSizeToBytes(value);
+                            if (maxBytes == null || maxBytes <= 0) {
+                                throw ExceptionUtils.createIllegalArgumentException(
+                                        "error.invalidArgument",
+                                        "Invalid argument: {0}",
+                                        "split value: " + value);
+                            }
                             log.debug("Max bytes per document: {}", maxBytes);
                             handleSplitBySize(sourceDocument, maxBytes, zipOut, filename);
                         } else if (type == 1) {
