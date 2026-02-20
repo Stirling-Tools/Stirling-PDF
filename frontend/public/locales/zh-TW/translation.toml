@@ -17,6 +17,12 @@ confirmClose = "確認關閉"
 confirmCloseCancel = "取消"
 confirmCloseConfirm = "關閉檔案"
 confirmCloseMessage = "確定要關閉此檔案嗎？"
+confirmCloseDiscard = "捨棄變更並關閉"
+confirmCloseSave = "儲存並關閉"
+confirmCloseUnsaved = "此檔案有未儲存的變更。"
+confirmCloseUnsavedList = "您有 {{count}} 個檔案{{plural}}有未儲存的變更。\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "儲存失敗"
+confirmCloseSaveFailed = "已儲存但有錯誤。{{count}} 個檔案{{plural}}無法儲存。"
 confirmPasswordErrorMessage = "新密碼與確認新密碼必須相符。"
 custom = "自訂..."
 customPosition = "自訂位置"
@@ -39,6 +45,8 @@ edit = "編輯"
 editYourNewFiles = "編輯新檔案"
 exportAndContinue = "匯出並繼續"
 false = "否"
+fileSavedToDisk = "檔案已儲存至磁碟"
+fileNotSavedToDisk = "未儲存至磁碟"
 fileSelected = "已選取：{{filename}}"
 filesSelected = "已選擇的檔案"
 font = "字型"
@@ -829,8 +837,9 @@ label = "使用者名稱"
 [admin.settings.endpoints]
 description = "控制可用的 API 端點與端點群組。"
 management = "端點管理"
-note = "注意：停用端點會限制 API 存取，但不會移除 UI 元件。需重新啟動才會生效。"
 title = "API 端點"
+userDefaults = "使用者偏好預設值"
+userDefaultsDescription = "設定使用者偏好的預設值。使用者可在個人設定中覆寫。"
 
 [admin.settings.endpoints.groupsToRemove]
 description = "選擇要停用的端點群組"
@@ -839,6 +848,14 @@ label = "已停用的端點群組"
 [admin.settings.endpoints.toRemove]
 description = "選擇要停用的個別端點"
 label = "已停用的端點"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "移除已停用的工具，而非以灰色顯示"
+label = "預設隱藏不可用的工具"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "移除已停用的轉換選項，而非以灰色顯示"
+label = "預設隱藏不可用的轉換"
 
 [admin.settings.enterpriseRequired]
 message = "存取 {{featureName}} 需要企業版授權。您目前看到的是示範資料，供參考。"
@@ -1219,9 +1236,21 @@ label = "啟用金鑰清理"
 description = "定期自動輪替 JWT 簽署金鑰"
 label = "啟用金鑰輪替"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "保留舊 JWT 金鑰以供驗證的天數"
-label = "金鑰保留天數"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "網頁用戶端的存取權杖有效期限（分鐘）（預設：1440 = 24 小時）"
+label = "Web 權杖到期（分鐘）"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "桌面用戶端的存取權杖有效期限（分鐘）。會透過 User-Agent 自動偵測桌面應用程式，並提供較長的工作階段以提升 UX（預設：43200 = 30 天）"
+label = "桌面權杖到期（分鐘）"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "權杖驗證期間允許的用戶端/伺服器時間偏差（預設：60 秒）"
+label = "時鐘偏差容許值（秒）"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "允許在到期後於此分鐘數內更新權杖（預設：15 分鐘，最多 3 次嘗試）"
+label = "更新寬限期（分鐘）"
 
 [admin.settings.security.jwt.persistence]
 description = "持久儲存 JWT 金鑰，以在伺服器重啟後保留"
@@ -1422,13 +1451,16 @@ applyChanges = "套用變更"
 backgroundColor = "背景顏色"
 borderOff = "邊框：關"
 borderOn = "邊框：開"
+changeColor = "變更顏色"
 chooseColor = "選擇顏色"
 circle = "圓形"
 clearBackground = "移除背景"
 color = "顏色"
 contents = "文字"
+delete = "刪除"
 desc = "使用螢光標記、筆、文字與註釋。變更即時生效—無需扁平化。"
 drawing = "繪圖"
+duplicate = "複製"
 editCircle = "編輯圓形"
 editInk = "編輯筆"
 editLine = "編輯線條"
@@ -1458,6 +1490,7 @@ notesStamps = "註釋與圖章"
 opacity = "不透明度"
 pen = "筆"
 polygon = "多邊形"
+properties = "屬性"
 rectangle = "長方形"
 redo = "重做"
 saveChanges = "儲存變更"
@@ -1483,6 +1516,7 @@ title = "註解"
 underline = "底線"
 undo = "復原"
 unsupportedType = "此註解類型尚未完全支援編輯。"
+width = "寬度"
 
 [app]
 description = "免費的 Adobe Acrobat 替代方案（下載量 10M+）"
@@ -3312,6 +3346,10 @@ desc = "將多個 PDF 動作串接，建立多步驟工作流程。適合重複�
 tags = "工作流程,序列,自動化"
 title = "自動化"
 
+[home.formFill]
+desc = "使用視覺化編輯器互動式填寫 PDF 表單欄位"
+title = "填寫表單"
+
 [home.autoRename]
 desc = "依偵測到的標頭自動重新命名 PDF 檔案"
 tags = "自動偵測,依標頭,整理,重新命名"
@@ -4209,6 +4247,75 @@ title = "頁面編輯器"
 zoomIn = "放大"
 zoomOut = "縮小"
 
+[viewer]
+cannotPreviewFile = "無法預覽檔案"
+dualPageView = "雙頁檢視"
+firstPage = "第一頁"
+lastPage = "最後一頁"
+nextPage = "下一頁"
+onlyPdfSupported = "此檢視器僅支援 PDF 檔案。此檔案似乎是其他格式。"
+previousPage = "上一頁"
+singlePageView = "單頁檢視"
+unknownFile = "未知檔案"
+zoomIn = "放大"
+zoomOut = "縮小"
+
+[viewer.attachments]
+title = "附件"
+searchPlaceholder = "搜尋附件"
+noSupport = "此檢視器不支援附件。"
+noDocument = "開啟 PDF 以檢視其附件。"
+loading = "正在載入附件..."
+empty = "此文件沒有附件"
+noMatch = "沒有符合搜尋的附件"
+
+[viewer.formBar]
+title = "表單欄位"
+unsavedBadge = "未儲存"
+unsavedDesc = "您有未儲存的變更"
+hasFieldsDesc = "此 PDF 包含可填寫欄位"
+dismiss = "關閉"
+apply = "套用變更"
+download = "下載 PDF"
+
+[rightRail]
+closeSelected = "關閉已選檔案"
+selectAll = "全選"
+deselectAll = "取消全選"
+selectByNumber = "依頁碼選取"
+deleteSelected = "刪除所選頁面"
+closePdf = "關閉 PDF"
+exportAll = "匯出 PDF"
+downloadSelected = "下載選取的檔案"
+annotations = "註解"
+exportSelected = "匯出選取的頁面"
+formFill = "填寫表單"
+saveChanges = "儲存變更"
+toggleAttachments = "切換附件"
+toggleTheme = "切換主題"
+language = "語言"
+toggleAnnotations = "切換註解可見度"
+search = "搜尋 PDF"
+panMode = "平移模式"
+applyRedactionsFirst = "請先套用塗黑"
+rotateLeft = "向左旋轉"
+rotateRight = "向右旋轉"
+toggleSidebar = "切換側邊欄"
+toggleBookmarks = "切換書籤"
+print = "列印 PDF"
+ruler = "尺規 / 量測"
+draw = "繪圖"
+redact = "塗黑"
+exitRedaction = "退出塗黑模式"
+save = "儲存"
+downloadAll = "全部下載"
+saveAll = "全部儲存"
+
+[textAlign]
+left = "靠左"
+center = "置中"
+right = "靠右"
+
 [pageExtracter]
 header = "提取頁面"
 placeholder = "（例如 1,2,8 或 4,7,12-16 或 2n-1）"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ 永久套用，無法復原，且底層資料將被刪除"
 boxRedaction = "方框繪製遮蔽"
 colourPicker = "顏色選擇器"
+colorLabel = "遮蔽顏色"
+active = "遮蔽模式已啟用"
+activate = "啟用遮蔽工具"
 controlsTitle = "手動塗黑控制"
 convertPDFToImageLabel = "將 PDF 轉為 PDF-Image（用於移除方框後方文字）"
 export = "匯出"
@@ -5285,36 +5395,6 @@ title = "高對比"
 [replaceColor.tooltip.invertAll]
 text = "完全反轉 PDF 中的所有顏色，形成類似負片的效果。可用於建立文件的深色模式版本，或在低光環境下減輕眼睛疲勞。"
 title = "反轉所有顏色"
-
-[rightRail]
-annotations = "註解"
-applyRedactionsFirst = "請先套用塗黑"
-closePdf = "關閉 PDF"
-closeSelected = "關閉已選檔案"
-deleteSelected = "刪除所選頁面"
-deselectAll = "取消全選"
-downloadAll = "全部下載"
-downloadSelected = "下載選取的檔案"
-draw = "繪圖"
-exitRedaction = "退出塗黑模式"
-exportAll = "匯出 PDF"
-exportSelected = "匯出選取的頁面"
-language = "語言"
-panMode = "平移模式"
-print = "列印 PDF"
-redact = "塗黑"
-rotateLeft = "向左旋轉"
-rotateRight = "向右旋轉"
-save = "儲存"
-saveAll = "全部儲存"
-saveChanges = "儲存變更"
-search = "搜尋 PDF"
-selectAll = "全選"
-selectByNumber = "依頁碼選取"
-toggleAnnotations = "切換註解可見度"
-toggleBookmarks = "切換書籤"
-toggleSidebar = "切換側邊欄"
-toggleTheme = "切換主題"
 
 [rotate]
 rotateLeft = "逆時針旋轉"
@@ -6153,11 +6233,6 @@ title = "API 文件"
 [tableExtraxt]
 tags = "CSV,表格提取,提取,轉換"
 
-[textAlign]
-center = "置中"
-left = "靠左"
-right = "靠右"
-
 [theme]
 toggle = "切換主題"
 
@@ -6432,19 +6507,6 @@ invalid = "憑證不在信任儲存區中 - 無法驗證來源"
 fileManager = "檔案管理器"
 pageEditor = "頁面編輯器"
 viewer = "檢視器"
-
-[viewer]
-cannotPreviewFile = "無法預覽檔案"
-dualPageView = "雙頁檢視"
-firstPage = "第一頁"
-lastPage = "最後一頁"
-nextPage = "下一頁"
-onlyPdfSupported = "此檢視器僅支援 PDF 檔案。此檔案似乎是其他格式。"
-previousPage = "上一頁"
-singlePageView = "單頁檢視"
-unknownFile = "未知檔案"
-zoomIn = "放大"
-zoomOut = "縮小"
 
 [viewPdf]
 header = "檢視 PDF"

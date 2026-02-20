@@ -17,6 +17,12 @@ confirmClose = "Confirmer la fermeture"
 confirmCloseCancel = "Annuler"
 confirmCloseConfirm = "Fermer le fichier"
 confirmCloseMessage = "Voulez-vous vraiment fermer ce fichier ?"
+confirmCloseDiscard = "Fermer sans enregistrer"
+confirmCloseSave = "Enregistrer et fermer"
+confirmCloseUnsaved = "Ce fichier contient des modifications non enregistrées."
+confirmCloseUnsavedList = "Vous avez {{count}} fichier{{plural}} avec des modifications non enregistrées.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Échec de l’enregistrement"
+confirmCloseSaveFailed = "Enregistré avec des erreurs. Enregistrement impossible pour {{count}} fichier{{plural}}."
 confirmPasswordErrorMessage = "Le nouveau mot de passe et sa confirmation doivent être identiques."
 custom = "Personnalisé…"
 customPosition = "Position personnalisée"
@@ -39,6 +45,8 @@ edit = "Modifier"
 editYourNewFiles = "Modifier votre/vos nouveau(x) fichier(s)"
 exportAndContinue = "Exporter et continuer"
 false = "Faux"
+fileSavedToDisk = "Fichier enregistré sur le disque"
+fileNotSavedToDisk = "Non enregistré sur le disque"
 fileSelected = "Sélectionné : {{filename}}"
 filesSelected = "fichiers sélectionnés"
 font = "Police"
@@ -829,8 +837,9 @@ label = "Nom d’utilisateur"
 [admin.settings.endpoints]
 description = "Contrôler quels points de terminaison API et groupes de points sont disponibles."
 management = "Gestion des points de terminaison"
-note = "Remarque : la désactivation des points de terminaison limite l’accès à l’API mais ne supprime pas les composants de l’interface. Un redémarrage est requis pour que les changements prennent effet."
 title = "Points de terminaison API"
+userDefaults = "Valeurs par défaut des préférences utilisateur"
+userDefaultsDescription = "Définissez les valeurs par défaut des préférences utilisateur. Les utilisateurs peuvent les remplacer dans leurs paramètres personnels."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Sélectionner les groupes de points de terminaison à désactiver"
@@ -839,6 +848,14 @@ label = "Groupes de points de terminaison désactivés"
 [admin.settings.endpoints.toRemove]
 description = "Sélectionner les points de terminaison individuels à désactiver"
 label = "Points de terminaison désactivés"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Supprimer les outils désactivés au lieu de les afficher en grisé"
+label = "Masquer par défaut les outils indisponibles"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Supprimer les options de conversion désactivées au lieu de les afficher en grisé"
+label = "Masquer par défaut les conversions indisponibles"
 
 [admin.settings.enterpriseRequired]
 message = "Une licence Entreprise est requise pour accéder à {{featureName}}. Vous consultez des données de démonstration à titre de référence."
@@ -1219,9 +1236,21 @@ label = "Activer le nettoyage des clés"
 description = "Faire pivoter automatiquement les clés de signature JWT périodiquement"
 label = "Activer la rotation des clés"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Nombre de jours de conservation des anciennes clés JWT pour vérification"
-label = "Jours de rétention des clés"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Durée de vie du jeton d’accès en minutes pour les clients Web (par défaut : 1440 = 24 heures)"
+label = "Expiration du jeton Web (minutes)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Durée de vie du jeton d’accès en minutes pour les clients de bureau. Les applications de bureau sont automatiquement détectées via l’User-Agent et reçoivent des sessions plus longues pour une meilleure expérience utilisateur (par défaut : 43200 = 30 jours)"
+label = "Expiration du jeton de bureau (minutes)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolérance de dérive horaire client/serveur lors de la validation du jeton (par défaut : 60 secondes)"
+label = "Tolérance de dérive horaire (secondes)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Autoriser l’actualisation du jeton pendant ce nombre de minutes après l’expiration (par défaut : 15 minutes, 3 tentatives maximum)"
+label = "Période de grâce pour l’actualisation (minutes)"
 
 [admin.settings.security.jwt.persistence]
 description = "Stocker les clés JWT de manière persistante pour survivre aux redémarrages du serveur"
@@ -1422,13 +1451,16 @@ applyChanges = "Appliquer les modifications"
 backgroundColor = "Couleur d’arrière-plan"
 borderOff = "Bordure : désactivée"
 borderOn = "Bordure : activée"
+changeColor = "Changer la couleur"
 chooseColor = "Choisir une couleur"
 circle = "Cercle"
 clearBackground = "Supprimer l’arrière-plan"
 color = "Couleur"
 contents = "Texte"
+delete = "Supprimer"
 desc = "Utilisez surlignage, stylo, texte et notes. Les modifications restent actives—aucun aplatissement requis."
 drawing = "Dessin"
+duplicate = "Dupliquer"
 editCircle = "Modifier le cercle"
 editInk = "Modifier le stylo"
 editLine = "Modifier la ligne"
@@ -1458,6 +1490,7 @@ notesStamps = "Notes et tampons"
 opacity = "Opacité"
 pen = "Stylo"
 polygon = "Polygone"
+properties = "Propriétés"
 rectangle = "Rectangle"
 redo = "Rétablir"
 saveChanges = "Enregistrer les modifications"
@@ -1483,6 +1516,7 @@ title = "Annoter"
 underline = "Souligner"
 undo = "Annuler"
 unsupportedType = "Ce type d’annotation n’est pas entièrement pris en charge pour l’édition."
+width = "Largeur"
 
 [app]
 description = "L’alternative gratuite à Adobe Acrobat (10M+ téléchargements)"
@@ -3312,6 +3346,10 @@ desc = "Créez des workflows multi-étapes en enchaînant des actions PDF. Idéa
 tags = "workflow,séquence,automatisation"
 title = "Automatiser"
 
+[home.formFill]
+desc = "Remplissez les champs de formulaire PDF de manière interactive avec un éditeur visuel"
+title = "Remplir un formulaire"
+
 [home.autoRename]
 desc = "Renomme automatiquement un fichier PDF sur la base de son en-tête détecté"
 tags = "détection automatique,basé-en-tête,organiser,renommer"
@@ -4209,6 +4247,75 @@ title = "Éditeur de pages"
 zoomIn = "Zoom avant"
 zoomOut = "Zoom arrière"
 
+[viewer]
+cannotPreviewFile = "Impossible d’afficher un aperçu du fichier"
+dualPageView = "Vue double page"
+firstPage = "Première page"
+lastPage = "Dernière page"
+nextPage = "Page suivante"
+onlyPdfSupported = "Le visualiseur prend uniquement en charge les fichiers PDF. Ce fichier semble être d’un autre format."
+previousPage = "Page précédente"
+singlePageView = "Vue page unique"
+unknownFile = "Fichier inconnu"
+zoomIn = "Zoom avant"
+zoomOut = "Zoom arrière"
+
+[viewer.attachments]
+title = "Pièces jointes"
+searchPlaceholder = "Rechercher des pièces jointes"
+noSupport = "La prise en charge des pièces jointes n’est pas disponible pour cette visionneuse."
+noDocument = "Ouvrez un PDF pour afficher ses pièces jointes."
+loading = "Chargement des pièces jointes..."
+empty = "Aucune pièce jointe dans ce document"
+noMatch = "Aucune pièce jointe ne correspond à votre recherche"
+
+[viewer.formBar]
+title = "Champs de formulaire"
+unsavedBadge = "Non enregistré"
+unsavedDesc = "Vous avez des modifications non enregistrées"
+hasFieldsDesc = "Ce PDF contient des champs remplissables"
+dismiss = "Fermer"
+apply = "Appliquer les modifications"
+download = "Télécharger le PDF"
+
+[rightRail]
+closeSelected = "Fermer les fichiers sélectionnés"
+selectAll = "Tout sélectionner"
+deselectAll = "Tout déselectionner"
+selectByNumber = "Sélectionner par numéros de page"
+deleteSelected = "Supprimer les pages sélectionnées"
+closePdf = "Fermer le PDF"
+exportAll = "Exporter le PDF"
+downloadSelected = "Télécharger les fichiers sélectionnés"
+annotations = "Annotations"
+exportSelected = "Exporter les pages sélectionnées"
+formFill = "Remplir un formulaire"
+saveChanges = "Enregistrer les modifications"
+toggleAttachments = "Afficher/Masquer les pièces jointes"
+toggleTheme = "Changer de thème"
+language = "Langue"
+toggleAnnotations = "Afficher/masquer les annotations"
+search = "Rechercher dans le PDF"
+panMode = "Mode panoramique"
+applyRedactionsFirst = "Appliquez d’abord les caviardages"
+rotateLeft = "Pivoter à gauche"
+rotateRight = "Pivoter à droite"
+toggleSidebar = "Afficher/masquer la barre latérale"
+toggleBookmarks = "Afficher/Masquer les signets"
+print = "Imprimer le PDF"
+ruler = "Règle / Mesure"
+draw = "Dessiner"
+redact = "Caviarder"
+exitRedaction = "Quitter le mode de caviardage"
+save = "Enregistrer"
+downloadAll = "Tout télécharger"
+saveAll = "Tout enregistrer"
+
+[textAlign]
+left = "Gauche"
+center = "Centre"
+right = "Droite"
+
 [pageExtracter]
 header = "Extraire des pages"
 placeholder = "(par exemple : 1,2,8 ou 4,7,12-16 ou 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Application permanente, irréversible, et les données sous-jacentes seront supprimées"
 boxRedaction = "Occultation par boîte dessinée"
 colourPicker = "Sélecteur de couleur"
+colorLabel = "Couleur de rédaction"
+active = "Mode de rédaction actif"
+activate = "Activer l’outil de rédaction"
 controlsTitle = "Contrôles de caviardage manuel"
 convertPDFToImageLabel = "Convertir le PDF en PDF-image (permet de supprimer le texte derrière la boîte)"
 export = "Exporter"
@@ -5285,36 +5395,6 @@ title = "Haut contraste"
 [replaceColor.tooltip.invertAll]
 text = "Inverser complètement toutes les couleurs du PDF, créant un effet de négatif. Utile pour créer des versions en mode sombre des documents ou réduire la fatigue visuelle en faible luminosité."
 title = "Inverser toutes les couleurs"
-
-[rightRail]
-annotations = "Annotations"
-applyRedactionsFirst = "Appliquez d’abord les caviardages"
-closePdf = "Fermer le PDF"
-closeSelected = "Fermer les fichiers sélectionnés"
-deleteSelected = "Supprimer les pages sélectionnées"
-deselectAll = "Tout déselectionner"
-downloadAll = "Tout télécharger"
-downloadSelected = "Télécharger les fichiers sélectionnés"
-draw = "Dessiner"
-exitRedaction = "Quitter le mode de caviardage"
-exportAll = "Exporter le PDF"
-exportSelected = "Exporter les pages sélectionnées"
-language = "Langue"
-panMode = "Mode panoramique"
-print = "Imprimer le PDF"
-redact = "Caviarder"
-rotateLeft = "Pivoter à gauche"
-rotateRight = "Pivoter à droite"
-save = "Enregistrer"
-saveAll = "Tout enregistrer"
-saveChanges = "Enregistrer les modifications"
-search = "Rechercher dans le PDF"
-selectAll = "Tout sélectionner"
-selectByNumber = "Sélectionner par numéros de page"
-toggleAnnotations = "Afficher/masquer les annotations"
-toggleBookmarks = "Afficher/Masquer les signets"
-toggleSidebar = "Afficher/masquer la barre latérale"
-toggleTheme = "Changer de thème"
 
 [rotate]
 rotateLeft = "Pivoter dans le sens antihoraire"
@@ -6153,11 +6233,6 @@ title = "Documentation de l’API"
 [tableExtraxt]
 tags = "CSV, Extraction de table, extraction, conversion"
 
-[textAlign]
-center = "Centre"
-left = "Gauche"
-right = "Droite"
-
 [theme]
 toggle = "Changer de thème"
 
@@ -6432,19 +6507,6 @@ invalid = "Le certificat n'est pas dans le magasin de confiance - la source ne p
 fileManager = "Gestionnaire de fichiers"
 pageEditor = "Éditeur de pages"
 viewer = "Visionneuse"
-
-[viewer]
-cannotPreviewFile = "Impossible d’afficher un aperçu du fichier"
-dualPageView = "Vue double page"
-firstPage = "Première page"
-lastPage = "Dernière page"
-nextPage = "Page suivante"
-onlyPdfSupported = "Le visualiseur prend uniquement en charge les fichiers PDF. Ce fichier semble être d’un autre format."
-previousPage = "Page précédente"
-singlePageView = "Vue page unique"
-unknownFile = "Fichier inconnu"
-zoomIn = "Zoom avant"
-zoomOut = "Zoom arrière"
 
 [viewPdf]
 header = "Visualiser un PDF"

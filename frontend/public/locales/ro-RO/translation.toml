@@ -17,6 +17,12 @@ confirmClose = "Confirmare închidere"
 confirmCloseCancel = "Anulare"
 confirmCloseConfirm = "Închideți fișierul"
 confirmCloseMessage = "Sigur doriți să închideți acest fișier?"
+confirmCloseDiscard = "Renunță la modificări și închide"
+confirmCloseSave = "Salvează și închide"
+confirmCloseUnsaved = "Acest fișier are modificări nesalvate."
+confirmCloseUnsavedList = "Ai {{count}} file{{plural}} cu modificări nesalvate.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Salvare eșuată"
+confirmCloseSaveFailed = "Salvat cu erori. Salvarea a eșuat pentru {{count}} file{{plural}}."
 confirmPasswordErrorMessage = "Noua Parolă și Confirmarea Noii Parole trebuie să se potrivească."
 custom = "Personalizat..."
 customPosition = "Poziție personalizată"
@@ -39,6 +45,8 @@ edit = "Editare"
 editYourNewFiles = "Editați noile fișiere"
 exportAndContinue = "Exportați și continuați"
 false = "Fals"
+fileSavedToDisk = "Fișier salvat pe disc"
+fileNotSavedToDisk = "Nesalvat pe disc"
 fileSelected = "Selectat: {{filename}}"
 filesSelected = "fișiere selectate"
 font = "Font"
@@ -829,8 +837,9 @@ label = "Nume de utilizator"
 [admin.settings.endpoints]
 description = "Controlați ce puncte finale API și grupuri de puncte finale sunt disponibile."
 management = "Administrare puncte finale"
-note = "Notă: Dezactivarea punctelor finale restricționează accesul API, dar nu elimină componentele UI. Repornirea este necesară pentru ca modificările să intre în vigoare."
 title = "Puncte finale API"
+userDefaults = "Valori implicite pentru preferințele utilizatorilor"
+userDefaultsDescription = "Stabilește valorile implicite pentru preferințele utilizatorilor. Utilizatorii le pot suprascrie în setările personale."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Selectați grupuri de puncte finale pentru dezactivare"
@@ -839,6 +848,14 @@ label = "Grupuri de puncte finale dezactivate"
 [admin.settings.endpoints.toRemove]
 description = "Selectați puncte finale individuale pentru dezactivare"
 label = "Puncte finale dezactivate"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Elimină instrumentele dezactivate în loc să le afișezi gri"
+label = "Ascunde instrumentele indisponibile în mod implicit"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Elimină opțiunile de conversie dezactivate în loc să le afișezi gri"
+label = "Ascunde conversiile indisponibile în mod implicit"
 
 [admin.settings.enterpriseRequired]
 message = "Este necesară o licență Enterprise pentru a accesa {{featureName}}. Vizualizați date demonstrative pentru referință."
@@ -1219,9 +1236,21 @@ label = "Activează curățarea cheilor"
 description = "Rotește automat periodic cheile de semnare JWT"
 label = "Activează rotația cheilor"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Numărul de zile de păstrare a vechilor chei JWT pentru verificare"
-label = "Zile de păstrare a cheilor"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Valabilitatea tokenului de acces, în minute, pentru clienții web (implicit: 1440 = 24 de ore)"
+label = "Expirare token web (minute)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Valabilitatea tokenului de acces, în minute, pentru clienții desktop. Aplicațiile desktop sunt detectate automat prin User-Agent și primesc sesiuni mai lungi pentru o experiență mai bună (UX) (implicit: 43200 = 30 de zile)"
+label = "Expirare token desktop (minute)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Toleranță pentru diferența de timp client/server în timpul validării tokenului (implicit: 60 de secunde)"
+label = "Toleranță diferență de ceas (secunde)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Permite reîmprospătarea tokenului în acest număr de minute după expirare (implicit: 15 minute, max. 3 încercări)"
+label = "Perioadă de grație pentru reîmprospătare (minute)"
 
 [admin.settings.security.jwt.persistence]
 description = "Stochează persistent cheile JWT pentru a supraviețui repornirilor serverului"
@@ -1422,13 +1451,16 @@ applyChanges = "Aplică modificările"
 backgroundColor = "Culoare fundal"
 borderOff = "Chenar: Inactiv"
 borderOn = "Chenar: Activ"
+changeColor = "Schimbă culoarea"
 chooseColor = "Alege culoarea"
 circle = "Cerc"
 clearBackground = "Elimină fundalul"
 color = "Culoare"
 contents = "Text"
+delete = "Șterge"
 desc = "Folosiți evidențierea, stiloul, textul și notele. Modificările rămân active — nu este necesară aplatizarea."
 drawing = "Desen"
+duplicate = "Duplică"
 editCircle = "Editează cercul"
 editInk = "Editează stiloul"
 editLine = "Editează linia"
@@ -1458,6 +1490,7 @@ notesStamps = "Note și ștampile"
 opacity = "Opacitate"
 pen = "Stilou"
 polygon = "Poligon"
+properties = "Proprietăți"
 rectangle = "Dreptunghi"
 redo = "Refă"
 saveChanges = "Salvează modificările"
@@ -1483,6 +1516,7 @@ title = "Anotare"
 underline = "Subliniere"
 undo = "Anulează"
 unsupportedType = "Acest tip de anotare nu este pe deplin suportat pentru editare."
+width = "Lățime"
 
 [app]
 description = "Alternativa gratuită la Adobe Acrobat (10M+ descărcări)"
@@ -3312,6 +3346,10 @@ desc = "Construiți fluxuri cu mai mulți pași legând acțiuni PDF. Ideal pent
 tags = "flux,secvență,automatizare"
 title = "Automatizare"
 
+[home.formFill]
+desc = "Completează interactiv câmpurile formularului PDF cu un editor vizual"
+title = "Completează formularul"
+
 [home.autoRename]
 desc = "Redenumește automat un fișier PDF pe baza antetului detectat"
 tags = "auto-detectare,bazat-pe-antet,organizează,re-etichetează"
@@ -4209,6 +4247,75 @@ title = "Editor de pagini"
 zoomIn = "Măriți"
 zoomOut = "Micșorați"
 
+[viewer]
+cannotPreviewFile = "Nu se poate previzualiza fișierul"
+dualPageView = "Vizualizare cu două pagini"
+firstPage = "Prima pagină"
+lastPage = "Ultima pagină"
+nextPage = "Pagina următoare"
+onlyPdfSupported = "Vizualizatorul acceptă doar fișiere PDF. Acest fișier pare a fi într-un format diferit."
+previousPage = "Pagina anterioară"
+singlePageView = "Vizualizare cu o singură pagină"
+unknownFile = "Fișier necunoscut"
+zoomIn = "Măriți"
+zoomOut = "Micșorați"
+
+[viewer.attachments]
+title = "Atașamente"
+searchPlaceholder = "Caută în atașamente"
+noSupport = "Suportul pentru atașamente nu este disponibil în acest vizualizator."
+noDocument = "Deschide un PDF pentru a-i vedea atașamentele."
+loading = "Se încarcă atașamentele..."
+empty = "Nu există atașamente în acest document"
+noMatch = "Niciun atașament nu corespunde căutării tale"
+
+[viewer.formBar]
+title = "Câmpuri formular"
+unsavedBadge = "Nesalvate"
+unsavedDesc = "Ai modificări nesalvate"
+hasFieldsDesc = "Acest PDF conține câmpuri completabile"
+dismiss = "Închide"
+apply = "Aplică modificările"
+download = "Descarcă PDF"
+
+[rightRail]
+closeSelected = "Închideți fișierele selectate"
+selectAll = "Selectați tot"
+deselectAll = "Deselectați tot"
+selectByNumber = "Selectați după numerele paginilor"
+deleteSelected = "Ștergeți paginile selectate"
+closePdf = "Închide PDF"
+exportAll = "Exportați PDF"
+downloadSelected = "Descărcați fișierele selectate"
+annotations = "Anotări"
+exportSelected = "Exportați paginile selectate"
+formFill = "Completează formularul"
+saveChanges = "Salvați modificările"
+toggleAttachments = "Afișează/ascunde atașamentele"
+toggleTheme = "Comutați tema"
+language = "Limbă"
+toggleAnnotations = "Comutați vizibilitatea adnotărilor"
+search = "Căutați în PDF"
+panMode = "Mod panoramare"
+applyRedactionsFirst = "Aplicați mai întâi redactările"
+rotateLeft = "Rotiți la stânga"
+rotateRight = "Rotiți la dreapta"
+toggleSidebar = "Comutați bara laterală"
+toggleBookmarks = "Comută semnele de carte"
+print = "Imprimați PDF"
+ruler = "Riglă / Măsurare"
+draw = "Desenați"
+redact = "Redactează"
+exitRedaction = "Ieși din modul Redactare"
+save = "Salvați"
+downloadAll = "Descărcați tot"
+saveAll = "Salvează tot"
+
+[textAlign]
+left = "Stânga"
+center = "Centru"
+right = "Dreapta"
+
 [pageExtracter]
 header = "Extrage Pagini"
 placeholder = "(ex. 1,2,8 sau 4,7,12-16 sau 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Aplicare permanentă, nu poate fi anulată, iar datele dedesubt vor fi șterse"
 boxRedaction = "Redactare prin desenarea casetei"
 colourPicker = "Selector de culoare"
+colorLabel = "Culoare redactare"
+active = "Modul de redactare activ"
+activate = "Activează instrumentul de redactare"
 controlsTitle = "Controale de redactare manuală"
 convertPDFToImageLabel = "Convertește PDF în PDF-imagine (utilizat pentru a elimina textul din spatele casetei)"
 export = "Exportă"
@@ -5285,36 +5395,6 @@ title = "Contrast ridicat"
 [replaceColor.tooltip.invertAll]
 text = "Inversează complet toate culorile din PDF, creând un efect de tip negativ. Util pentru crearea unor versiuni în modul întunecat sau pentru reducerea oboselii oculare în lumină slabă."
 title = "Inversează toate culorile"
-
-[rightRail]
-annotations = "Anotări"
-applyRedactionsFirst = "Aplicați mai întâi redactările"
-closePdf = "Închide PDF"
-closeSelected = "Închideți fișierele selectate"
-deleteSelected = "Ștergeți paginile selectate"
-deselectAll = "Deselectați tot"
-downloadAll = "Descărcați tot"
-downloadSelected = "Descărcați fișierele selectate"
-draw = "Desenați"
-exitRedaction = "Ieși din modul Redactare"
-exportAll = "Exportați PDF"
-exportSelected = "Exportați paginile selectate"
-language = "Limbă"
-panMode = "Mod panoramare"
-print = "Imprimați PDF"
-redact = "Redactează"
-rotateLeft = "Rotiți la stânga"
-rotateRight = "Rotiți la dreapta"
-save = "Salvați"
-saveAll = "Salvează tot"
-saveChanges = "Salvați modificările"
-search = "Căutați în PDF"
-selectAll = "Selectați tot"
-selectByNumber = "Selectați după numerele paginilor"
-toggleAnnotations = "Comutați vizibilitatea adnotărilor"
-toggleBookmarks = "Comută semnele de carte"
-toggleSidebar = "Comutați bara laterală"
-toggleTheme = "Comutați tema"
 
 [rotate]
 rotateLeft = "Rotiți în sens antiorar"
@@ -6153,11 +6233,6 @@ title = "Documentație API"
 [tableExtraxt]
 tags = "CSV,Extragere Tabel,extrage,convertește"
 
-[textAlign]
-center = "Centru"
-left = "Stânga"
-right = "Dreapta"
-
 [theme]
 toggle = "Comutați tema"
 
@@ -6432,19 +6507,6 @@ invalid = "Certificatul nu este în stocul de încredere - sursa nu poate fi ver
 fileManager = "Manager de fișiere"
 pageEditor = "Editor de pagini"
 viewer = "Vizualizator"
-
-[viewer]
-cannotPreviewFile = "Nu se poate previzualiza fișierul"
-dualPageView = "Vizualizare cu două pagini"
-firstPage = "Prima pagină"
-lastPage = "Ultima pagină"
-nextPage = "Pagina următoare"
-onlyPdfSupported = "Vizualizatorul acceptă doar fișiere PDF. Acest fișier pare a fi într-un format diferit."
-previousPage = "Pagina anterioară"
-singlePageView = "Vizualizare cu o singură pagină"
-unknownFile = "Fișier necunoscut"
-zoomIn = "Măriți"
-zoomOut = "Micșorați"
 
 [viewPdf]
 header = "Vizualizează PDF"

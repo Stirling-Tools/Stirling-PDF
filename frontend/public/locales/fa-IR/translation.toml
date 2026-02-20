@@ -17,6 +17,12 @@ confirmClose = "تأیید بستن"
 confirmCloseCancel = "انصراف"
 confirmCloseConfirm = "بستن فایل"
 confirmCloseMessage = "مطمئنید می‌خواهید این فایل را ببندید؟"
+confirmCloseDiscard = "لغو تغییرات و بستن"
+confirmCloseSave = "ذخیره و بستن"
+confirmCloseUnsaved = "این فایل دارای تغییرات ذخیره‌نشده است."
+confirmCloseUnsavedList = "شما {{count}} فایل{{plural}} با تغییرات ذخیره‌نشده دارید.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "ذخیره ناموفق"
+confirmCloseSaveFailed = "با خطا ذخیره شد. {{count}} فایل{{plural}} ذخیره نشد."
 confirmPasswordErrorMessage = "رمز عبور جدید و تأیید رمز عبور جدید باید یکسان باشند."
 custom = "سفارشی..."
 customPosition = "موقعیت سفارشی"
@@ -39,6 +45,8 @@ edit = "ویرایش"
 editYourNewFiles = "فایل(های) جدید خود را ویرایش کنید"
 exportAndContinue = "خروجی بگیرید و ادامه دهید"
 false = "غلط"
+fileSavedToDisk = "فایل روی دیسک ذخیره شد"
+fileNotSavedToDisk = "روی دیسک ذخیره نشد"
 fileSelected = "انتخاب‌شده: {{filename}}"
 filesSelected = "فایل‌ها انتخاب شدند"
 font = "فونت"
@@ -829,8 +837,9 @@ label = "نام کاربری"
 [admin.settings.endpoints]
 description = "کنترل کنید کدام نقاط پایانی API و گروه‌های نقاط پایانی در دسترس باشند."
 management = "مدیریت نقاط پایانی"
-note = "توجه: غیرفعال کردن نقاط پایانی، دسترسی API را محدود می‌کند اما اجزای UI را حذف نمی‌کند. برای اعمال تغییرات راه‌اندازی مجدد لازم است."
 title = "نقاط پایانی API"
+userDefaults = "پیش‌فرض‌های ترجیحات کاربر"
+userDefaultsDescription = "مقادیر پیش‌فرض برای ترجیحات کاربر را تنظیم کنید. کاربران می‌توانند آن‌ها را در تنظیمات شخصی خود تغییر دهند."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "گروه‌های نقاط پایانی را برای غیرفعال‌سازی انتخاب کنید"
@@ -839,6 +848,14 @@ label = "گروه‌های نقاط پایانی غیرفعال"
 [admin.settings.endpoints.toRemove]
 description = "نقاط پایانی منفرد را برای غیرفعال‌سازی انتخاب کنید"
 label = "نقاط پایانی غیرفعال"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "ابزارهای غیرفعال را به‌جای نمایش به‌شکل خاکستری، حذف کنید"
+label = "پنهان‌کردن ابزارهای غیردردسترس به‌صورت پیش‌فرض"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "گزینه‌های تبدیل غیرفعال را به‌جای نمایش به‌شکل خاکستری، حذف کنید"
+label = "پنهان‌کردن تبدیل‌های غیردردسترس به‌صورت پیش‌فرض"
 
 [admin.settings.enterpriseRequired]
 message = "برای دسترسی به {{featureName}} به یک مجوز Enterprise نیاز است. شما در حال مشاهده داده‌های نمایشی برای مرجع هستید."
@@ -1219,9 +1236,21 @@ label = "فعال‌سازی پاکسازی کلید"
 description = "چرخش خودکار کلیدهای امضای JWT به‌صورت دوره‌ای"
 label = "فعال‌سازی چرخش کلید"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "تعداد روزهای نگهداری کلیدهای JWT قدیمی برای تأیید"
-label = "روزهای نگهداری کلید"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "طول عمر توکن دسترسی به دقیقه برای کلاینت‌های وب (پیش‌فرض: 1440 = 24 ساعت)"
+label = "انقضای توکن وب (دقیقه)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "طول عمر توکن دسترسی به دقیقه برای کلاینت‌های دسکتاپ. برنامه‌های دسکتاپ از طریق User-Agent به‌طور خودکار شناسایی می‌شوند و برای تجربهٔ کاربری بهتر نشست‌های طولانی‌تری دریافت می‌کنند (پیش‌فرض: 43200 = 30 روز)"
+label = "انقضای توکن دسکتاپ (دقیقه)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "میزان تحمل انحراف زمانی کلاینت/سرور هنگام اعتبارسنجی توکن (پیش‌فرض: 60 ثانیه)"
+label = "تحمل اختلاف ساعت (ثانیه)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "اجازهٔ نوسازی توکن تا این تعداد دقیقه پس از انقضا (پیش‌فرض: 15 دقیقه، حداکثر 3 تلاش)"
+label = "دورهٔ مهلت نوسازی (دقیقه)"
 
 [admin.settings.security.jwt.persistence]
 description = "ذخیره پایدار کلیدهای JWT برای مقاومت در برابر راه‌اندازی مجدد سرور"
@@ -1422,13 +1451,16 @@ applyChanges = "اعمال تغییرات"
 backgroundColor = "رنگ پس‌زمینه"
 borderOff = "حاشیه: خاموش"
 borderOn = "حاشیه: روشن"
+changeColor = "تغییر رنگ"
 chooseColor = "انتخاب رنگ"
 circle = "دایره"
 clearBackground = "حذف پس‌زمینه"
 color = "رنگ"
 contents = "متن"
+delete = "حذف"
 desc = "از هایلایت، قلم، متن و یادداشت‌ها استفاده کنید. تغییرات زنده می‌مانند—نیازی به فلت‌کردن نیست."
 drawing = "رسم"
+duplicate = "تکثیر"
 editCircle = "ویرایش دایره"
 editInk = "ویرایش قلم"
 editLine = "ویرایش خط"
@@ -1458,6 +1490,7 @@ notesStamps = "یادداشت‌ها و مهرها"
 opacity = "شفافیت"
 pen = "قلم"
 polygon = "چندضلعی"
+properties = "ویژگی‌ها"
 rectangle = "مستطیل"
 redo = "انجام مجدد"
 saveChanges = "ذخیره تغییرات"
@@ -1483,6 +1516,7 @@ title = "حاشیه‌نویسی"
 underline = "زیرخط"
 undo = "واگرد"
 unsupportedType = "این نوع حاشیه‌نویسی به‌طور کامل برای ویرایش پشتیبانی نمی‌شود."
+width = "عرض"
 
 [app]
 description = "جایگزین رایگان Adobe Acrobat (10M+ دانلود)"
@@ -3312,6 +3346,10 @@ desc = "ساخت گردش‌کارهای چندمرحله‌ای با زنجیر
 tags = "گردش‌کار,توالی,اتوماسیون"
 title = "اتوماسیون"
 
+[home.formFill]
+desc = "پر کردن فیلدهای فرم PDF به‌صورت تعاملی با ویرایشگر بصری"
+title = "پر کردن فرم"
+
 [home.autoRename]
 desc = "به‌طور خودکار نام فایل PDF را بر اساس سربرگ شناسایی‌شده تغییر می‌دهد"
 tags = "تشخیص خودکار,بر پایه سربرگ,سازمان‌دهی,نام‌گذاری مجدد"
@@ -4209,6 +4247,75 @@ title = "ویرایشگر صفحه"
 zoomIn = "بزرگ‌نمایی"
 zoomOut = "کوچک‌نمایی"
 
+[viewer]
+cannotPreviewFile = "امکان پیش‌نمایش فایل نیست"
+dualPageView = "نمای دوصفحه‌ای"
+firstPage = "صفحه نخست"
+lastPage = "صفحه آخر"
+nextPage = "صفحه بعد"
+onlyPdfSupported = "نمایشگر فقط فایل‌های PDF را پشتیبانی می‌کند. به نظر می‌رسد این فایل قالب متفاوتی دارد."
+previousPage = "صفحه قبل"
+singlePageView = "نمای تک‌صفحه‌ای"
+unknownFile = "فایل ناشناخته"
+zoomIn = "بزرگ‌نمایی"
+zoomOut = "کوچک‌نمایی"
+
+[viewer.attachments]
+title = "پیوست‌ها"
+searchPlaceholder = "جستجوی پیوست‌ها"
+noSupport = "پشتیبانی از پیوست در این نمایشگر در دسترس نیست."
+noDocument = "برای مشاهدهٔ پیوست‌های آن، یک PDF باز کنید."
+loading = "در حال بارگذاری پیوست‌ها..."
+empty = "در این سند هیچ پیوستی وجود ندارد"
+noMatch = "هیچ پیوستی با جستجوی شما مطابقت ندارد"
+
+[viewer.formBar]
+title = "فیلدهای فرم"
+unsavedBadge = "ذخیره‌نشده"
+unsavedDesc = "تغییرات ذخیره‌نشده دارید"
+hasFieldsDesc = "این PDF شامل فیلدهای قابل‌پرکردن است"
+dismiss = "بستن"
+apply = "اعمال تغییرات"
+download = "دانلود PDF"
+
+[rightRail]
+closeSelected = "بستن فایل‌های انتخاب‌شده"
+selectAll = "انتخاب همه"
+deselectAll = "لغو انتخاب همه"
+selectByNumber = "انتخاب بر اساس شماره صفحات"
+deleteSelected = "حذف صفحات انتخاب‌شده"
+closePdf = "بستن PDF"
+exportAll = "برون‌بری PDF"
+downloadSelected = "دانلود فایل‌های انتخاب‌شده"
+annotations = "حاشیه‌نویسی‌ها"
+exportSelected = "برون‌بری صفحات انتخاب‌شده"
+formFill = "پر کردن فرم"
+saveChanges = "ذخیره تغییرات"
+toggleAttachments = "نمایش/پنهان‌کردن پیوست‌ها"
+toggleTheme = "تغییر تم"
+language = "زبان"
+toggleAnnotations = "تغییر وضعیت نمایش حاشیه‌نویسی‌ها"
+search = "جستجوی PDF"
+panMode = "حالت پیمایش"
+applyRedactionsFirst = "ابتدا سانسورها را اعمال کنید"
+rotateLeft = "چرخش به چپ"
+rotateRight = "چرخش به راست"
+toggleSidebar = "تغییر وضعیت نوار کناری"
+toggleBookmarks = "نمایش/پنهان‌کردن نشانک‌ها"
+print = "چاپ PDF"
+ruler = "خط‌کش / اندازه‌گیری"
+draw = "رسم"
+redact = "سانسور"
+exitRedaction = "خروج از حالت سانسور"
+save = "ذخیره"
+downloadAll = "دانلود همه"
+saveAll = "ذخیره همه"
+
+[textAlign]
+left = "چپ"
+center = "وسط"
+right = "راست"
+
 [pageExtracter]
 header = "استخراج صفحات"
 placeholder = "(مثال: 1,2,8 یا 4,7,12-16 یا 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ اعمال دائمی، قابل بازگشت نیست و داده‌های زیرین حذف خواهند شد"
 boxRedaction = "پنهان‌سازی با ترسیم کادر"
 colourPicker = "انتخابگر رنگ"
+colorLabel = "رنگ پوشاندن"
+active = "حالت پوشاندن فعال است"
+activate = "فعال‌سازی ابزار پوشاندن"
 controlsTitle = "کنترل‌های سانسور دستی"
 convertPDFToImageLabel = "تبدیل PDF به PDF-Image (برای حذف متن پشت کادر استفاده می‌شود)"
 export = "صادر کردن"
@@ -5285,36 +5395,6 @@ title = "کنتراست بالا"
 [replaceColor.tooltip.invertAll]
 text = "تمام رنگ‌های PDF را کاملاً وارونه می‌کند و اثری شبیه نگاتیو ایجاد می‌کند. برای ساخت نسخه‌های حالت تاریک اسناد یا کاهش فشار چشم در نور کم مفید است."
 title = "وارونه‌سازی همه رنگ‌ها"
-
-[rightRail]
-annotations = "حاشیه‌نویسی‌ها"
-applyRedactionsFirst = "ابتدا سانسورها را اعمال کنید"
-closePdf = "بستن PDF"
-closeSelected = "بستن فایل‌های انتخاب‌شده"
-deleteSelected = "حذف صفحات انتخاب‌شده"
-deselectAll = "لغو انتخاب همه"
-downloadAll = "دانلود همه"
-downloadSelected = "دانلود فایل‌های انتخاب‌شده"
-draw = "رسم"
-exitRedaction = "خروج از حالت سانسور"
-exportAll = "برون‌بری PDF"
-exportSelected = "برون‌بری صفحات انتخاب‌شده"
-language = "زبان"
-panMode = "حالت پیمایش"
-print = "چاپ PDF"
-redact = "سانسور"
-rotateLeft = "چرخش به چپ"
-rotateRight = "چرخش به راست"
-save = "ذخیره"
-saveAll = "ذخیره همه"
-saveChanges = "ذخیره تغییرات"
-search = "جستجوی PDF"
-selectAll = "انتخاب همه"
-selectByNumber = "انتخاب بر اساس شماره صفحات"
-toggleAnnotations = "تغییر وضعیت نمایش حاشیه‌نویسی‌ها"
-toggleBookmarks = "نمایش/پنهان‌کردن نشانک‌ها"
-toggleSidebar = "تغییر وضعیت نوار کناری"
-toggleTheme = "تغییر تم"
 
 [rotate]
 rotateLeft = "چرخش پادساعت‌گرد"
@@ -6153,11 +6233,6 @@ title = "مستندات API"
 [tableExtraxt]
 tags = "CSV، استخراج جدول، استخراج، تبدیل"
 
-[textAlign]
-center = "وسط"
-left = "چپ"
-right = "راست"
-
 [theme]
 toggle = "تغییر تم"
 
@@ -6432,19 +6507,6 @@ invalid = "گواهی در مخزن اعتماد نیست - منبع قابل ت
 fileManager = "مدیر فایل"
 pageEditor = "ویرایشگر صفحه"
 viewer = "نمایشگر"
-
-[viewer]
-cannotPreviewFile = "امکان پیش‌نمایش فایل نیست"
-dualPageView = "نمای دوصفحه‌ای"
-firstPage = "صفحه نخست"
-lastPage = "صفحه آخر"
-nextPage = "صفحه بعد"
-onlyPdfSupported = "نمایشگر فقط فایل‌های PDF را پشتیبانی می‌کند. به نظر می‌رسد این فایل قالب متفاوتی دارد."
-previousPage = "صفحه قبل"
-singlePageView = "نمای تک‌صفحه‌ای"
-unknownFile = "فایل ناشناخته"
-zoomIn = "بزرگ‌نمایی"
-zoomOut = "کوچک‌نمایی"
 
 [viewPdf]
 header = "مشاهده PDF"

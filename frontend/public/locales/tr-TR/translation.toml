@@ -17,6 +17,12 @@ confirmClose = "Kapatmayı Onayla"
 confirmCloseCancel = "İptal"
 confirmCloseConfirm = "Dosyayı Kapat"
 confirmCloseMessage = "Bu dosyayı kapatmak istediğinizden emin misiniz?"
+confirmCloseDiscard = "Değişiklikleri at ve kapat"
+confirmCloseSave = "Kaydet ve kapat"
+confirmCloseUnsaved = "Bu dosyada kaydedilmemiş değişiklikler var."
+confirmCloseUnsavedList = "Kaydedilmemiş değişiklikleri olan {{count}} dosya{{plural}} var.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Kaydetme Başarısız"
+confirmCloseSaveFailed = "Hatalarla kaydedildi. {{count}} dosya{{plural}} kaydedilemedi."
 confirmPasswordErrorMessage = "Yeni Şifre ve Yeni Şifreyi Onayla eşleşmelidir."
 custom = "Özel"
 customPosition = "Özel Konum"
@@ -39,6 +45,8 @@ edit = "Düzenle"
 editYourNewFiles = "Yeni dosyalarınızı düzenleyin"
 exportAndContinue = "Dışa aktar ve Devam et"
 false = "Yanlış"
+fileSavedToDisk = "Dosya diske kaydedildi"
+fileNotSavedToDisk = "Diske kaydedilmedi"
 fileSelected = "Seçildi: {{filename}}"
 filesSelected = "dosya seçildi"
 font = "Yazı tipi"
@@ -829,8 +837,9 @@ label = "Kullanıcı Adı"
 [admin.settings.endpoints]
 description = "Hangi API uç noktaları ve uç nokta gruplarının kullanılabilir olduğunu kontrol edin."
 management = "Uç Nokta Yönetimi"
-note = "Not: Uç noktaları devre dışı bırakmak API erişimini kısıtlar ancak kullanıcı arayüzü bileşenlerini kaldırmaz. Değişikliklerin etkili olması için yeniden başlatma gerekir."
 title = "API Uç Noktaları"
+userDefaults = "Kullanıcı Tercihi Varsayılanları"
+userDefaultsDescription = "Kullanıcı tercihleri için varsayılan değerleri ayarlayın. Kullanıcılar bunları kişisel ayarlarında geçersiz kılabilir."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Devre dışı bırakılacak uç nokta gruplarını seçin"
@@ -839,6 +848,14 @@ label = "Devre Dışı Uç Nokta Grupları"
 [admin.settings.endpoints.toRemove]
 description = "Devre dışı bırakılacak bireysel uç noktaları seçin"
 label = "Devre Dışı Uç Noktalar"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Devre dışı araçları gri göstermek yerine kaldırın"
+label = "Kullanılamayan araçları varsayılan olarak gizle"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Devre dışı dönüştürme seçeneklerini gri göstermek yerine kaldırın"
+label = "Kullanılamayan dönüştürmeleri varsayılan olarak gizle"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} erişimi için Kurumsal lisans gereklidir. Referans için demo verilerini görüntülüyorsunuz."
@@ -1219,9 +1236,21 @@ label = "Anahtar Temizlemeyi Etkinleştir"
 description = "JWT imzalama anahtarlarını periyodik olarak otomatik döndür"
 label = "Anahtar Döndürmeyi Etkinleştir"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Doğrulama için eski JWT anahtarlarının saklanacağı gün sayısı"
-label = "Anahtar Saklama Günleri"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Web istemcileri için erişim jetonu ömrü (dakika cinsinden) (varsayılan: 1440 = 24 saat)"
+label = "Web Jetonu Sona Erme (dakika)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Masaüstü istemcileri için erişim jetonu ömrü (dakika cinsinden). Masaüstü uygulamaları User-Agent üzerinden otomatik olarak algılanır ve daha iyi UX için daha uzun oturumlar alır (varsayılan: 43200 = 30 gün)"
+label = "Masaüstü Jetonu Sona Erme (dakika)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Jeton doğrulaması sırasında istemci/sunucu zaman sapmasına tolerans (varsayılan: 60 saniye)"
+label = "Zaman Sapması Toleransı (saniye)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Jetonun süresi dolduktan sonra bu kadar dakika içinde yenilemeye izin ver (varsayılan: 15 dakika, en fazla 3 deneme)"
+label = "Yenileme Toleransı (dakika)"
 
 [admin.settings.security.jwt.persistence]
 description = "Sunucu yeniden başlatmalarında korunması için JWT anahtarlarını kalıcı olarak sakla"
@@ -1422,13 +1451,16 @@ applyChanges = "Değişiklikleri Uygula"
 backgroundColor = "Arka plan rengi"
 borderOff = "Kenarlık: Kapalı"
 borderOn = "Kenarlık: Açık"
+changeColor = "Rengi Değiştir"
 chooseColor = "Renk seç"
 circle = "Daire"
 clearBackground = "Arka planı kaldır"
 color = "Renk"
 contents = "Metin"
+delete = "Sil"
 desc = "Vurgu, kalem, metin ve notları kullanın. Değişiklikler canlı kalır—düzleştirme gerekmez."
 drawing = "Çizim"
+duplicate = "Çoğalt"
 editCircle = "Daireyi Düzenle"
 editInk = "Kalemi Düzenle"
 editLine = "Çizgiyi Düzenle"
@@ -1458,6 +1490,7 @@ notesStamps = "Notlar ve Damgalar"
 opacity = "Opaklık"
 pen = "Kalem"
 polygon = "Çokgen"
+properties = "Özellikler"
 rectangle = "Dikdörtgen"
 redo = "Yinele"
 saveChanges = "Değişiklikleri Kaydet"
@@ -1483,6 +1516,7 @@ title = "Açıklama Ekle"
 underline = "Altını çiz"
 undo = "Geri al"
 unsupportedType = "Bu açıklama türü düzenleme için tam olarak desteklenmiyor."
+width = "Genişlik"
 
 [app]
 description = "Ücretsiz Adobe Acrobat alternatifi (10M+ indirme)"
@@ -3312,6 +3346,10 @@ desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları olu�
 tags = "iş_akışı,sıralı,otomasyon"
 title = "Otomatikleştir"
 
+[home.formFill]
+desc = "PDF form alanlarını görsel bir düzenleyiciyle etkileşimli olarak doldurun"
+title = "Formu Doldur"
+
 [home.autoRename]
 desc = "Algılanan başlığına göre bir PDF dosyasını otomatik olarak yeniden adlandırır"
 tags = "otomatik_algılama,başlık_tabanlı,düzenle,yeniden_adlandır"
@@ -4209,6 +4247,75 @@ title = "Sayfa Düzenleyici"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
 
+[viewer]
+cannotPreviewFile = "Dosya önizlenemiyor"
+dualPageView = "Çift Sayfa Görünümü"
+firstPage = "İlk Sayfa"
+lastPage = "Son Sayfa"
+nextPage = "Sonraki Sayfa"
+onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
+previousPage = "Önceki Sayfa"
+singlePageView = "Tek Sayfa Görünümü"
+unknownFile = "Bilinmeyen dosya"
+zoomIn = "Yakınlaştır"
+zoomOut = "Uzaklaştır"
+
+[viewer.attachments]
+title = "Ekler"
+searchPlaceholder = "Eklerde ara"
+noSupport = "Bu görüntüleyici için ek desteği mevcut değil."
+noDocument = "Eklerini görmek için bir PDF açın."
+loading = "Ekler yükleniyor..."
+empty = "Bu belgede ek yok"
+noMatch = "Aramanızla eşleşen ek yok"
+
+[viewer.formBar]
+title = "Form Alanları"
+unsavedBadge = "Kaydedilmemiş"
+unsavedDesc = "Kaydedilmemiş değişiklikleriniz var"
+hasFieldsDesc = "Bu PDF doldurulabilir alanlar içeriyor"
+dismiss = "Kapat"
+apply = "Değişiklikleri Uygula"
+download = "PDF'yi İndir"
+
+[rightRail]
+closeSelected = "Seçilen Dosyaları Kapat"
+selectAll = "Tümünü Seç"
+deselectAll = "Seçimi Kaldır"
+selectByNumber = "Sayfa Numaralarına Göre Seç"
+deleteSelected = "Seçilen Sayfaları Sil"
+closePdf = "PDF'yi Kapat"
+exportAll = "PDF'yi Dışa Aktar"
+downloadSelected = "Seçilen Dosyaları İndir"
+annotations = "Açıklamalar"
+exportSelected = "Seçilen Sayfaları Dışa Aktar"
+formFill = "Formu Doldur"
+saveChanges = "Değişiklikleri Kaydet"
+toggleAttachments = "Ekleri Göster/Gizle"
+toggleTheme = "Temayı Değiştir"
+language = "Dil"
+toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
+search = "PDF Ara"
+panMode = "Kaydırma Modu"
+applyRedactionsFirst = "Önce karartmaları uygula"
+rotateLeft = "Sola Döndür"
+rotateRight = "Sağa Döndür"
+toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
+toggleBookmarks = "Yer imlerini aç/kapat"
+print = "PDF'yi Yazdır"
+ruler = "Cetvel / Ölçüm"
+draw = "Çiz"
+redact = "Karart"
+exitRedaction = "Karartma Modundan Çık"
+save = "Kaydet"
+downloadAll = "Tümünü İndir"
+saveAll = "Tümünü Kaydet"
+
+[textAlign]
+left = "Sol"
+center = "Orta"
+right = "Sağ"
+
 [pageExtracter]
 header = "Sayfaları Çıkar"
 placeholder = "(örneğin 1,2,8 veya 4,7,12-16 ya da 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Kalıcı uygulama, geri alınamaz ve altındaki veriler silinir"
 boxRedaction = "Kutu çizerek sansürleme"
 colourPicker = "Renk Seçici"
+colorLabel = "Karartma Rengi"
+active = "Karartma Modu Etkin"
+activate = "Karartma Aracını Etkinleştir"
 controlsTitle = "Manuel Karartma Kontrolleri"
 convertPDFToImageLabel = "PDF'yi PDF-Image'a dönüştür (Kutunun arkasındaki metni kaldırmak için kullanılır)"
 export = "Dışa Aktar"
@@ -5285,36 +5395,6 @@ title = "Yüksek Kontrast"
 [replaceColor.tooltip.invertAll]
 text = "PDF'deki tüm renkleri tamamen ters çevirerek negatif benzeri bir etki oluşturur. Düşük ışık koşullarında göz yorgunluğunu azaltmak veya belgelerin koyu mod sürümlerini oluşturmak için kullanışlıdır."
 title = "Tüm Renkleri Ters Çevir"
-
-[rightRail]
-annotations = "Açıklamalar"
-applyRedactionsFirst = "Önce karartmaları uygula"
-closePdf = "PDF'yi Kapat"
-closeSelected = "Seçilen Dosyaları Kapat"
-deleteSelected = "Seçilen Sayfaları Sil"
-deselectAll = "Seçimi Kaldır"
-downloadAll = "Tümünü İndir"
-downloadSelected = "Seçilen Dosyaları İndir"
-draw = "Çiz"
-exitRedaction = "Karartma Modundan Çık"
-exportAll = "PDF'yi Dışa Aktar"
-exportSelected = "Seçilen Sayfaları Dışa Aktar"
-language = "Dil"
-panMode = "Kaydırma Modu"
-print = "PDF'yi Yazdır"
-redact = "Karart"
-rotateLeft = "Sola Döndür"
-rotateRight = "Sağa Döndür"
-save = "Kaydet"
-saveAll = "Tümünü Kaydet"
-saveChanges = "Değişiklikleri Kaydet"
-search = "PDF Ara"
-selectAll = "Tümünü Seç"
-selectByNumber = "Sayfa Numaralarına Göre Seç"
-toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
-toggleBookmarks = "Yer imlerini aç/kapat"
-toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
-toggleTheme = "Temayı Değiştir"
 
 [rotate]
 rotateLeft = "Saat yönünün tersine döndür"
@@ -6153,11 +6233,6 @@ title = "API Dokümantasyonu"
 [tableExtraxt]
 tags = "CSV, Tablo Çıkarma, ayıklama, dönüştürme"
 
-[textAlign]
-center = "Orta"
-left = "Sol"
-right = "Sağ"
-
 [theme]
 toggle = "Temayı Değiştir"
 
@@ -6432,19 +6507,6 @@ invalid = "Sertifika güvenilir mağazada değil - kaynak doğrulanamıyor"
 fileManager = "Dosya Yöneticisi"
 pageEditor = "Sayfa Düzenleyici"
 viewer = "Görüntüleyici"
-
-[viewer]
-cannotPreviewFile = "Dosya önizlenemiyor"
-dualPageView = "Çift Sayfa Görünümü"
-firstPage = "İlk Sayfa"
-lastPage = "Son Sayfa"
-nextPage = "Sonraki Sayfa"
-onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
-previousPage = "Önceki Sayfa"
-singlePageView = "Tek Sayfa Görünümü"
-unknownFile = "Bilinmeyen dosya"
-zoomIn = "Yakınlaştır"
-zoomOut = "Uzaklaştır"
 
 [viewPdf]
 header = "PDF Görüntüle"

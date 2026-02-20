@@ -17,6 +17,12 @@ confirmClose = "Potvrdiť zatvorenie"
 confirmCloseCancel = "Zrušiť"
 confirmCloseConfirm = "Zatvoriť súbor"
 confirmCloseMessage = "Naozaj chcete zatvoriť tento súbor?"
+confirmCloseDiscard = "Zahodiť zmeny a zavrieť"
+confirmCloseSave = "Uložiť a zavrieť"
+confirmCloseUnsaved = "Tento súbor má neuložené zmeny."
+confirmCloseUnsavedList = "Máte {{count}} súbor{{plural}} s neuloženými zmenami.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Uloženie zlyhalo"
+confirmCloseSaveFailed = "Uložené s chybami. {{count}} súbor{{plural}} sa nepodarilo uložiť."
 confirmPasswordErrorMessage = "Nové heslo a potvrdenie nového hesla sa musia zhodovať."
 custom = "Vlastné..."
 customPosition = "Vlastná pozícia"
@@ -39,6 +45,8 @@ edit = "Upraviť"
 editYourNewFiles = "Upraviť nové súbory"
 exportAndContinue = "Exportovať a pokračovať"
 false = "Nie"
+fileSavedToDisk = "Súbor uložený na disk"
+fileNotSavedToDisk = "Neuložené na disk"
 fileSelected = "Vybrané: {{filename}}"
 filesSelected = "vybrané súbory"
 font = "Písmo"
@@ -829,8 +837,9 @@ label = "Používateľské meno"
 [admin.settings.endpoints]
 description = "Ovládajte, ktoré API endpointy a skupiny endpointov sú dostupné."
 management = "Správa endpointov"
-note = "Poznámka: Zakázanie endpointov obmedzí prístup k API, ale neodstráni komponenty používateľského rozhrania. Na uplatnenie zmien je potrebný reštart."
 title = "API endpointy"
+userDefaults = "Predvolené hodnoty používateľských preferencií"
+userDefaultsDescription = "Nastavte predvolené hodnoty používateľských preferencií. Používatelia ich môžu prepísať vo svojich osobných nastaveniach."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Vyberte skupiny endpointov na zakázanie"
@@ -839,6 +848,14 @@ label = "Zakázané skupiny endpointov"
 [admin.settings.endpoints.toRemove]
 description = "Vyberte jednotlivé endpointy na zakázanie"
 label = "Zakázané endpointy"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Odstrániť zakázané nástroje namiesto ich zobrazenia ako zosivených"
+label = "Predvolene skryť nedostupné nástroje"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Odstrániť zakázané možnosti konverzie namiesto ich zobrazenia ako zosivených"
+label = "Predvolene skryť nedostupné konverzie"
 
 [admin.settings.enterpriseRequired]
 message = "Na prístup k {{featureName}} sa vyžaduje podniková licencia. Prezeráte si ukážkové údaje."
@@ -1219,9 +1236,21 @@ label = "Povoliť čistenie kľúčov"
 description = "Automaticky pravidelne rotovať podpisové kľúče JWT"
 label = "Povoliť rotáciu kľúčov"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Počet dní uchovávania starých JWT kľúčov na overovanie"
-label = "Dni uchovania kľúčov"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Životnosť prístupového tokenu v minútach pre webových klientov (predvolené: 1440 = 24 hodín)"
+label = "Platnosť webového tokenu (minúty)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Životnosť prístupového tokenu v minútach pre desktopových klientov. Desktopové aplikácie sa automaticky rozpoznajú cez User-Agent a dostanú dlhšie relácie pre lepšie používateľské prostredie (predvolené: 43200 = 30 dní)"
+label = "Platnosť desktopového tokenu (minúty)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerancia posunu času medzi klientom a serverom počas overovania tokenu (predvolené: 60 sekúnd)"
+label = "Tolerancia časového posunu (sekundy)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Povoliť obnovenie tokenu v tomto počte minút po vypršaní platnosti (predvolené: 15 minút, max. 3 pokusy)"
+label = "Odkladná lehota na obnovenie (minúty)"
 
 [admin.settings.security.jwt.persistence]
 description = "Ukladať JWT kľúče perzistentne, aby prežili reštarty servera"
@@ -1422,13 +1451,16 @@ applyChanges = "Použiť zmeny"
 backgroundColor = "Farba pozadia"
 borderOff = "Okraj: Vypnuté"
 borderOn = "Okraj: Zapnuté"
+changeColor = "Zmeniť farbu"
 chooseColor = "Vyberte farbu"
 circle = "Kruh"
 clearBackground = "Odstrániť pozadie"
 color = "Farba"
 contents = "Text"
+delete = "Odstrániť"
 desc = "Použite zvýrazňovanie, pero, text a poznámky. Zmeny zostávajú aktívne — zploštenie nie je potrebné."
 drawing = "Kreslenie"
+duplicate = "Duplikovať"
 editCircle = "Upraviť kruh"
 editInk = "Upraviť pero"
 editLine = "Upraviť čiaru"
@@ -1458,6 +1490,7 @@ notesStamps = "Poznámky a pečiatky"
 opacity = "Nepriehľadnosť"
 pen = "Pero"
 polygon = "Mnohouholník"
+properties = "Vlastnosti"
 rectangle = "Obdĺžnik"
 redo = "Znova"
 saveChanges = "Uložiť zmeny"
@@ -1483,6 +1516,7 @@ title = "Anotovať"
 underline = "Podčiarknutie"
 undo = "Späť"
 unsupportedType = "Tento typ anotácie nie je plne podporovaný na úpravu."
+width = "Šírka"
 
 [app]
 description = "Bezplatná alternatíva k Adobe Acrobat (10M+ stiahnutí)"
@@ -3312,6 +3346,10 @@ desc = "Stavať viacstupňové pracovné postupy spájaním akcií PDF. Ideálne
 tags = "workflow,sekvencia,automatizácia"
 title = "Automatizovať"
 
+[home.formFill]
+desc = "Interaktívne vyplňujte polia formulára PDF pomocou vizuálneho editora"
+title = "Vyplniť formulár"
+
 [home.autoRename]
 desc = "Automaticky premenuje PDF súbor podľa zistenej hlavičky"
 tags = "automaticky zistiť,na základe hlavičky,organizovať,premenovať"
@@ -4209,6 +4247,75 @@ title = "Editor strán"
 zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
 
+[viewer]
+cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
+dualPageView = "Dvojstranové zobrazenie"
+firstPage = "Prvá strana"
+lastPage = "Posledná strana"
+nextPage = "Nasledujúca strana"
+onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
+previousPage = "Predchádzajúca strana"
+singlePageView = "Zobrazenie jednej strany"
+unknownFile = "Neznámy súbor"
+zoomIn = "Priblížiť"
+zoomOut = "Oddialiť"
+
+[viewer.attachments]
+title = "Prílohy"
+searchPlaceholder = "Hľadať prílohy"
+noSupport = "Podpora príloh nie je pre tento prehliadač dostupná."
+noDocument = "Otvorte PDF, aby ste videli jeho prílohy."
+loading = "Načítavajú sa prílohy..."
+empty = "Tento dokument neobsahuje žiadne prílohy"
+noMatch = "Žiadne prílohy nezodpovedajú vášmu vyhľadávaniu"
+
+[viewer.formBar]
+title = "Polia formulára"
+unsavedBadge = "Neuložené"
+unsavedDesc = "Máte neuložené zmeny"
+hasFieldsDesc = "Toto PDF obsahuje vyplniteľné polia"
+dismiss = "Zavrieť"
+apply = "Použiť zmeny"
+download = "Stiahnuť PDF"
+
+[rightRail]
+closeSelected = "Zavrieť vybrané súbory"
+selectAll = "Vybrať všetko"
+deselectAll = "Zrušiť výber"
+selectByNumber = "Vybrať podľa čísel strán"
+deleteSelected = "Odstrániť vybrané strany"
+closePdf = "Zavrieť PDF"
+exportAll = "Exportovať PDF"
+downloadSelected = "Stiahnuť vybrané súbory"
+annotations = "Anotácie"
+exportSelected = "Exportovať vybrané strany"
+formFill = "Vyplniť formulár"
+saveChanges = "Uložiť zmeny"
+toggleAttachments = "Zobraziť/skryť prílohy"
+toggleTheme = "Prepnúť tému"
+language = "Jazyk"
+toggleAnnotations = "Prepnúť zobrazenie anotácií"
+search = "Hľadať v PDF"
+panMode = "Režim posunu"
+applyRedactionsFirst = "Najprv použite začiernenia"
+rotateLeft = "Otočiť doľava"
+rotateRight = "Otočiť doprava"
+toggleSidebar = "Prepnúť bočný panel"
+toggleBookmarks = "Prepnúť záložky"
+print = "Vytlačiť PDF"
+ruler = "Pravítko / meranie"
+draw = "Kresliť"
+redact = "Začierniť"
+exitRedaction = "Ukončiť režim začiernenia"
+save = "Uložiť"
+downloadAll = "Stiahnuť všetko"
+saveAll = "Uložiť všetko"
+
+[textAlign]
+left = "Vľavo"
+center = "Na stred"
+right = "Vpravo"
+
 [pageExtracter]
 header = "Extrahovať stránky"
 placeholder = "(napr. 1,2,8 alebo 4,7,12-16 alebo 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Trvalé použitie, nedá sa vrátiť späť a údaje pod tým budú odstránené"
 boxRedaction = "Redigovanie ťahaním rámčeka"
 colourPicker = "Výber farby"
+colorLabel = "Farba začiernenia"
+active = "Režim začiernenia je aktívny"
+activate = "Aktivovať nástroj na začiernenie"
 controlsTitle = "Manuálne ovládanie začiernenia"
 convertPDFToImageLabel = "Konvertovať PDF na PDF-Image (Používa sa na odstránenie textu za rámčekom)"
 export = "Exportovať"
@@ -5285,36 +5395,6 @@ title = "Vysoký kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Úplne invertuje všetky farby v PDF a vytvorí efekt podobný negatívu. Užitočné na vytváranie verzií dokumentov v tmavom režime alebo na zníženie namáhania očí pri slabom osvetlení."
 title = "Invertovať všetky farby"
-
-[rightRail]
-annotations = "Anotácie"
-applyRedactionsFirst = "Najprv použite začiernenia"
-closePdf = "Zavrieť PDF"
-closeSelected = "Zavrieť vybrané súbory"
-deleteSelected = "Odstrániť vybrané strany"
-deselectAll = "Zrušiť výber"
-downloadAll = "Stiahnuť všetko"
-downloadSelected = "Stiahnuť vybrané súbory"
-draw = "Kresliť"
-exitRedaction = "Ukončiť režim začiernenia"
-exportAll = "Exportovať PDF"
-exportSelected = "Exportovať vybrané strany"
-language = "Jazyk"
-panMode = "Režim posunu"
-print = "Vytlačiť PDF"
-redact = "Začierniť"
-rotateLeft = "Otočiť doľava"
-rotateRight = "Otočiť doprava"
-save = "Uložiť"
-saveAll = "Uložiť všetko"
-saveChanges = "Uložiť zmeny"
-search = "Hľadať v PDF"
-selectAll = "Vybrať všetko"
-selectByNumber = "Vybrať podľa čísel strán"
-toggleAnnotations = "Prepnúť zobrazenie anotácií"
-toggleBookmarks = "Prepnúť záložky"
-toggleSidebar = "Prepnúť bočný panel"
-toggleTheme = "Prepnúť tému"
 
 [rotate]
 rotateLeft = "Otočiť proti smeru hodinových ručičiek"
@@ -6153,11 +6233,6 @@ title = "Dokumentácia API"
 [tableExtraxt]
 tags = "CSV, extrakcia tabuliek, extrahovať, konvertovať"
 
-[textAlign]
-center = "Na stred"
-left = "Vľavo"
-right = "Vpravo"
-
 [theme]
 toggle = "Prepnúť tému"
 
@@ -6432,19 +6507,6 @@ invalid = "Certifikát nie je v dôveryhodnom úložisku – zdroj nie je možn�
 fileManager = "Správca súborov"
 pageEditor = "Editor strán"
 viewer = "Prehliadač"
-
-[viewer]
-cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
-dualPageView = "Dvojstranové zobrazenie"
-firstPage = "Prvá strana"
-lastPage = "Posledná strana"
-nextPage = "Nasledujúca strana"
-onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
-previousPage = "Predchádzajúca strana"
-singlePageView = "Zobrazenie jednej strany"
-unknownFile = "Neznámy súbor"
-zoomIn = "Priblížiť"
-zoomOut = "Oddialiť"
 
 [viewPdf]
 header = "Zobraziť PDF"
