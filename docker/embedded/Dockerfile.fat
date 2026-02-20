@@ -158,7 +158,11 @@ RUN set -eux; \
            /opt/calibre/resources/localization/website-languages.txt; \
     find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
     \
+    # Strip debug symbols from calibre extension modules.
+    # Exclude Qt6 libs: libQt6WebEngineCore and friends embed Chromium V8 JIT code
+    # and internal resource blobs that strip corrupts, causing segfaults at render time.
     find /opt/calibre/lib -name '*.so*' \
+      ! -name 'libQt6*' \
       -exec strip --strip-unneeded {} + 2>/dev/null || true; \
     \
     find /opt/calibre -type d -name __pycache__ \
