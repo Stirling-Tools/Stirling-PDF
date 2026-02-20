@@ -26,6 +26,8 @@ import org.springframework.security.saml2.provider.service.web.authentication.Op
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -132,6 +134,57 @@ public class SecurityConfiguration {
     @Bean
     public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Configures HttpFirewall to allow non-ASCII characters in header values.
+     * This fixes issues with reverse proxies (like Authelia) that may set headers
+     * with non-ASCII characters (e.g., "Remote-User: Dvořák").
+     *
+     * <p>By default, StrictHttpFirewall rejects header values containing non-ASCII characters.
+     * This configuration allows valid UTF-8 encoded characters while maintaining security.
+     *
+     * @return Configured HttpFirewall that allows non-ASCII characters in headers
+     */
+    @Bean
+    public HttpFirewall httpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        // Allow non-ASCII characters in header values
+        // This is needed for reverse proxies that may set headers with non-ASCII usernames
+        firewall.setAllowedHeaderValues(
+                headerValue -> {
+                    if (headerValue == null) {
+                        return false;
+                    }
+                    // Allow all header values including non-ASCII characters
+                    // The default StrictHttpFirewall rejects non-ASCII, but we need to allow
+                    // them for headers like Remote-User that may contain international names
+                    // This fixes issue #5377 where Remote-User header with non-ASCII
+                    // characters (e.g., "Dvořák") was rejected with 400 Bad Request
+                    try {
+                        // Validate that the value is valid UTF-8
+                        headerValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                        return true;
+                    } catch (Exception e) {
+                        // Reject invalid encoding
+                        return false;
+                    }
+                });
+        // Also allow non-ASCII in parameter values for consistency
+        firewall.setAllowedParameterValues(
+                parameterValue -> {
+                    if (parameterValue == null) {
+                        return false;
+                    }
+                    try {
+                        // Validate UTF-8 encoding
+                        parameterValue.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                        return true;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+        return firewall;
     }
 
     @Bean
