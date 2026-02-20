@@ -108,6 +108,7 @@ capture_file_list() {
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
         -not -path '*/tmp/stirling-pdf/lu*' \
         -not -path '*/tmp/stirling-pdf/tmp*' \
+        -not -path '*/tmp/stirling-pdf/stirling-pdf-*.pdf' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
 
     # Check if the output file has content
@@ -131,6 +132,7 @@ capture_file_list() {
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
+            -not -path '*/tmp/stirling-pdf/stirling-pdf-*.pdf' \
             2>/dev/null | sort" > "$output_file"
 
         if [ ! -s "$output_file" ]; then
