@@ -246,10 +246,12 @@ public class OCRController {
             command.add("--clean-final");
         }
         if (ocrType != null && !ocrType.isEmpty()) {
-            if ("skip-text".equals(ocrType)) {
-                command.add("--skip-text");
-            } else if ("force-ocr".equals(ocrType)) {
+            if ("force-ocr".equals(ocrType)) {
                 command.add("--force-ocr");
+            } else {
+                // Default for 'Normal' and 'skip-text': use --skip-text
+                // ocrmypdf 17+ requires explicit flag when PDF already contains text
+                command.add("--skip-text");
             }
         }
         command.add("--invalidate-digital-signatures");

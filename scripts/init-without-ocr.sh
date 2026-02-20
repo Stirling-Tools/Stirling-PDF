@@ -529,7 +529,7 @@ fi
 # Remove UseCompressedClassPointers (deprecated in Java 25+ with Lilliput)
 JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedClassPointers//g')
 # Remove UseCompressedOops (let JVM use defaults; explicitly disabling wastes memory)
-JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:-UseCompressedOops//g')
+JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedOops//g')
 
 # ---------- AppCDS Management ----------
 # Strip any existing CDS references from base opts (we manage CDS dynamically below)
