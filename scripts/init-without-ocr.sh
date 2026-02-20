@@ -332,7 +332,8 @@ detect_container_memory_mb() {
   if [ -z "$mem_bytes" ] && [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
     mem_bytes=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null)
     # Values near max uint64 mean "unlimited"
-    if [ "${mem_bytes:-0}" -gt 9000000000000000000 ] 2>/dev/null; then
+    # Use string-length heuristic (>=19 digits) to avoid shell integer overflow on Alpine/busybox
+    if [ "${#mem_bytes}" -ge 19 ]; then
       mem_bytes=""
     fi
   fi
@@ -423,17 +424,51 @@ generate_appcds_archive() {
   java -Xmx1g -XX:+UseCompactObjectHeaders \
        -XX:DumpLoadedClassList=/tmp/classes.lst \
        -Dspring.context.exit=onRefresh \
-       "$@" 2>/dev/null || true
+       "$@" 2>/tmp/appcds-training.log || true
 
   if [ ! -f /tmp/classes.lst ]; then
     log "AppCDS training run produced no class list; skipping CDS."
+    if [ -f /tmp/appcds-training.log ]; then
+      log "AppCDS training log (last 5 lines):"
+      tail -5 /tmp/appcds-training.log | log
+    fi
+    rm -f /tmp/appcds-training.log
     return 1
   fi
+  rm -f /tmp/appcds-training.log
 
   # Filter out BouncyCastle to prevent signature conflicts and JFR events that can't be archived
   # Also filter out optional dependencies that cause Preload Warnings (log4j2, reactive, cache providers, freemarker, bytebuddy, etc.)
-  EXCLUDED_CLASSES="org/bouncycastle|org/spongycastle|jdk/internal/event|org/springframework/boot/logging/log4j2|org/springframework/security/web/server|io/micrometer/core/instrument/binder/logging|org/springframework/boot/cache/autoconfigure|org/springframework/cache/jcache|org/springframework/cache/interceptor|org/springframework/transaction/interceptor|org/hibernate/type/format/jakartajson|org/hibernate/type/format/jackson|net/bytebuddy/utility|io/vavr|org/xmlbeam|org/springframework/data/repository/util/QueryExecutionConverters|org/springframework/security/config/annotation/authentication/configurers/ldap|org/springframework/data/web/config/SpringDataWebConfiguration|org/springframework/security/config/annotation/web/configurers/oauth2|org/springframework/security/config/annotation/web/configurers/ChannelSecurityConfigurer|org/springframework/security/config/annotation/web/configurers/WebAuthnConfigurer|org/springframework/core/ReactiveAdapterRegistry|org/springframework/transaction/reactive|org/springframework/data/web/XmlBeamHttpMessageConverter|org/springframework/web/servlet/view/freemarker"
-  grep -Ev "(${EXCLUDED_CLASSES})" /tmp/classes.lst > /tmp/filtered-classes.lst || true
+  # Using a file-based exclusion list for maintainability
+  cat > /tmp/appcds-exclude.patterns <<'APPCDS_EXCLUDE'
+org/bouncycastle
+org/spongycastle
+jdk/internal/event
+org/springframework/boot/logging/log4j2
+org/springframework/security/web/server
+io/micrometer/core/instrument/binder/logging
+org/springframework/boot/cache/autoconfigure
+org/springframework/cache/jcache
+org/springframework/cache/interceptor
+org/springframework/transaction/interceptor
+org/hibernate/type/format/jakartajson
+org/hibernate/type/format/jackson
+net/bytebuddy/utility
+io/vavr
+org/xmlbeam
+org/springframework/data/repository/util/QueryExecutionConverters
+org/springframework/security/config/annotation/authentication/configurers/ldap
+org/springframework/data/web/config/SpringDataWebConfiguration
+org/springframework/security/config/annotation/web/configurers/oauth2
+org/springframework/security/config/annotation/web/configurers/ChannelSecurityConfigurer
+org/springframework/security/config/annotation/web/configurers/WebAuthnConfigurer
+org/springframework/core/ReactiveAdapterRegistry
+org/springframework/transaction/reactive
+org/springframework/data/web/XmlBeamHttpMessageConverter
+org/springframework/web/servlet/view/freemarker
+APPCDS_EXCLUDE
+  grep -vFf /tmp/appcds-exclude.patterns /tmp/classes.lst > /tmp/filtered-classes.lst || true
+  rm -f /tmp/appcds-exclude.patterns
 
   # Determine classpath for dump
   local cp_arg=""
@@ -455,13 +490,17 @@ generate_appcds_archive() {
        ${memory_flags} \
        -XX:SharedClassListFile=/tmp/filtered-classes.lst \
        -XX:SharedArchiveFile="$jsa_path" \
-       -cp "$cp_arg" 2>/dev/null; then
+       -cp "$cp_arg" 2>/tmp/appcds-dump.log; then
     log "AppCDS archive created successfully: $jsa_path"
-    rm -f /tmp/classes.lst /tmp/filtered-classes.lst
+    rm -f /tmp/classes.lst /tmp/filtered-classes.lst /tmp/appcds-dump.log
     return 0
   else
     log "AppCDS dump failed; running without CDS."
-    rm -f /tmp/classes.lst /tmp/filtered-classes.lst "$jsa_path"
+    if [ -f /tmp/appcds-dump.log ]; then
+      log "AppCDS dump log (last 5 lines):"
+      tail -5 /tmp/appcds-dump.log | log
+    fi
+    rm -f /tmp/classes.lst /tmp/filtered-classes.lst /tmp/appcds-dump.log "$jsa_path"
     return 1
   fi
 }
@@ -733,4 +772,7 @@ else
 fi
 
 JAVA_PID=$!
-wait "$JAVA_PID"
+wait "$JAVA_PID" || true
+exit_code=$?
+# Propagate Java's actual exit code so container orchestrators can detect crashes
+exit "${exit_code}"

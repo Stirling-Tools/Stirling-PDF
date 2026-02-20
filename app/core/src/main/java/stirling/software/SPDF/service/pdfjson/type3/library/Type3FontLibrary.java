@@ -204,10 +204,15 @@ public class Type3FontLibrary {
         }
         String base64;
         if (payload.base64 != null && !payload.base64.isBlank()) {
-            // Validate the base64 string without wasteful decode→re-encode roundtrip
+            // Validate the base64 string without wasteful full decode
+            // Only decode a small prefix to verify encoding is valid
             try {
-                byte[] decoded = Base64.getDecoder().decode(payload.base64);
-                if (decoded.length == 0) {
+                byte[] probe =
+                        Base64.getDecoder()
+                                .decode(
+                                        payload.base64.substring(
+                                                0, Math.min(4, payload.base64.length())));
+                if (probe.length == 0 && payload.base64.length() <= 4) {
                     return null;
                 }
             } catch (IllegalArgumentException ex) {

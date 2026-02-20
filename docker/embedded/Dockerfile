@@ -195,11 +195,15 @@ COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
 # Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
-RUN gradle dependencies --no-daemon || true
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches 
+    --mount=type=cache,target=/home/gradle/.gradle/wrapper 
+    gradle dependencies --no-daemon || true
 
 COPY . .
 
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches 
+    --mount=type=cache,target=/home/gradle/.gradle/wrapper 
+    DISABLE_ADDITIONAL_FEATURES=false 
     gradle clean build \
       -PbuildWithFrontend=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
@@ -388,6 +392,9 @@ RUN set -eux; \
       /usr/lib/python3/dist-packages/_cffi_backend*.so \
       /usr/lib/python3/dist-packages/_cffi_backend*.cpython*.so \
       2>/dev/null || true; \
+    # Verify cffi is still importable from the venv after system package removal
+    /opt/venv/bin/python -c "import cffi; print('cffi OK:', cffi.__version__)" \
+      || { echo 'ERROR: cffi broken after system package cleanup'; exit 1; }; \
     \
     # Strip debug symbols from ALL shared libraries
     find /usr/lib -name '*.so*' -type f \

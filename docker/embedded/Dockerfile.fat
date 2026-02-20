@@ -193,11 +193,15 @@ COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
 # Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
-RUN gradle dependencies --no-daemon || true
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches 
+    --mount=type=cache,target=/home/gradle/.gradle/wrapper 
+    gradle dependencies --no-daemon || true
 
 COPY . .
 
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches 
+    --mount=type=cache,target=/home/gradle/.gradle/wrapper 
+    DISABLE_ADDITIONAL_FEATURES=false 
     gradle clean build \
       -PbuildWithFrontend=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
