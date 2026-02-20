@@ -194,7 +194,7 @@ public class PdfOverlayController {
             // Load the overlay document to check its page count
             try (PDDocument overlayPdf = Loader.loadPDF(overlayFile)) {
                 int overlayPageCount = overlayPdf.getNumberOfPages();
-                for (int j = 0; j < repeatCount; j++) {
+                for (int j = 0; j < repeatCount && currentPage <= basePageCount; j++) {
                     for (int page = 0; page < overlayPageCount; page++) {
                         if (currentPage > basePageCount) break;
                         overlayGuide.put(currentPage++, overlayFile.getAbsolutePath());
