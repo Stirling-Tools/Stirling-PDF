@@ -7,7 +7,14 @@ _BASE_URL = "http://localhost:8080"
 # Tags that indicate a scenario requires JWT Bearer auth to be functional.
 # These scenarios are skipped when the server has JWT disabled (V2=false).
 # @login and @register scenarios work in both modes.
-_JWT_DEPENDENT_TAGS = frozenset({"me", "refresh", "logout", "role", "token", "mfa", "apikey"})
+# The "jwt" tag itself is included so that feature-level @jwt tagging is sufficient
+# to mark an entire feature as JWT-dependent.
+_JWT_DEPENDENT_TAGS = frozenset({
+    # jwt_auth.feature scenario tags
+    "me", "refresh", "logout", "role", "token", "mfa", "apikey",
+    # proprietary/enterprise feature tags (all scenarios in these features need JWT)
+    "jwt", "user_mgmt", "admin_settings", "audit", "signature", "team",
+})
 
 
 def _check_jwt_available():
@@ -71,6 +78,8 @@ def before_scenario(context, scenario):
     context.original_jwt_token = None
     # OR-status helper used by auth step definitions
     context._status_ok = False
+    # Stored value used by enterprise step definitions for dynamic URL composition
+    context.stored_value = None
 
 
 def after_scenario(context, scenario):
