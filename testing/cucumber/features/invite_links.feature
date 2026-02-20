@@ -4,12 +4,12 @@ Feature: Invite Link API
     Tests for the invite link REST API, which allows admins to generate
     time-limited registration invite links and manage them.
 
-    Endpoints:
-    - POST /api/v1/invite-link/generate   (admin only)
-    - GET  /api/v1/invite-link/list       (admin only)
-    - GET  /api/v1/invite-link/validate/{token}  (public)
-    - DELETE /api/v1/invite-link/revoke/{inviteId} (admin only)
-    - POST /api/v1/invite-link/cleanup    (admin only)
+    Endpoints (base: /api/v1/invite — from @InviteApi annotation):
+    - POST /api/v1/invite/generate   (admin only)
+    - GET  /api/v1/invite/list       (admin only)
+    - GET  /api/v1/invite/validate/{token}  (public)
+    - DELETE /api/v1/invite/revoke/{inviteId} (admin only)
+    - POST /api/v1/invite/cleanup    (admin only)
 
     Admin credentials: username=admin, password=stirling
 
@@ -20,13 +20,13 @@ Feature: Invite Link API
     @positive
     Scenario: Admin can generate an invite link
         Given I am logged in as admin
-        When I send a POST request to "/api/v1/invite-link/generate" with JWT authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
+        When I send a POST request to "/api/v1/invite/generate" with JWT authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
         Then the response status code should be one of "200, 201"
         And the response JSON field "token" should not be empty
 
     @negative
     Scenario: Unauthenticated request to generate invite link returns 401
-        When I send a POST request to "/api/v1/invite-link/generate" with no authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
+        When I send a POST request to "/api/v1/invite/generate" with no authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
         Then the response status code should be 401
 
     # =========================================================================
@@ -36,13 +36,13 @@ Feature: Invite Link API
     @positive
     Scenario: Admin can list all active invite links
         Given I am logged in as admin
-        When I send a GET request to "/api/v1/invite-link/list" with JWT authentication
+        When I send a GET request to "/api/v1/invite/list" with JWT authentication
         Then the response status code should be 200
         And the response JSON field "invites" should be a list
 
     @negative
     Scenario: Unauthenticated request to list invite links returns 401
-        When I send a GET request to "/api/v1/invite-link/list" with no authentication
+        When I send a GET request to "/api/v1/invite/list" with no authentication
         Then the response status code should be 401
 
     # =========================================================================
@@ -52,15 +52,15 @@ Feature: Invite Link API
     @positive
     Scenario: Admin generates a token then validates it (full lifecycle)
         Given I am logged in as admin
-        When I send a POST request to "/api/v1/invite-link/generate" with JWT authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
+        When I send a POST request to "/api/v1/invite/generate" with JWT authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
         Then the response status code should be one of "200, 201"
         And I store the response JSON field "token"
-        When I use the stored value to send a GET request to "/api/v1/invite-link/validate/{stored}" with no authentication
+        When I use the stored value to send a GET request to "/api/v1/invite/validate/{stored}" with no authentication
         Then the response status code should be 200
 
     @negative
     Scenario: Validating a non-existent invite token returns 404 or 400
-        When I send a GET request to "/api/v1/invite-link/validate/completely-invalid-token-xyz-999" with no authentication
+        When I send a GET request to "/api/v1/invite/validate/completely-invalid-token-xyz-999" with no authentication
         Then the response status code should be one of "400, 404"
 
     # =========================================================================
@@ -71,15 +71,15 @@ Feature: Invite Link API
     Scenario: Admin can revoke an invite link by its ID
         Given I am logged in as admin
         # Generate an invite to get a real ID to revoke
-        When I send a POST request to "/api/v1/invite-link/generate" with JWT authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
+        When I send a POST request to "/api/v1/invite/generate" with JWT authentication and params "role=ROLE_USER&expiryHours=24&sendEmail=false"
         Then the response status code should be one of "200, 201"
         And I store the response JSON field "id"
-        When I use the stored value to send a DELETE request to "/api/v1/invite-link/revoke/{stored}" with JWT authentication
+        When I use the stored value to send a DELETE request to "/api/v1/invite/revoke/{stored}" with JWT authentication
         Then the response status code should be one of "200, 204"
 
     @negative
     Scenario: Unauthenticated request to revoke invite link returns 401
-        When I send a DELETE request to "/api/v1/invite-link/revoke/some-id-xyz" with no authentication
+        When I send a DELETE request to "/api/v1/invite/revoke/some-id-xyz" with no authentication
         Then the response status code should be 401
 
     # =========================================================================
@@ -89,10 +89,10 @@ Feature: Invite Link API
     @positive
     Scenario: Admin can trigger cleanup of expired invite links
         Given I am logged in as admin
-        When I send a POST request to "/api/v1/invite-link/cleanup" with JWT authentication
+        When I send a POST request to "/api/v1/invite/cleanup" with JWT authentication
         Then the response status code should be 200
 
     @negative
     Scenario: Unauthenticated request to cleanup invite links returns 401
-        When I send a POST request to "/api/v1/invite-link/cleanup" with no authentication
+        When I send a POST request to "/api/v1/invite/cleanup" with no authentication
         Then the response status code should be 401
