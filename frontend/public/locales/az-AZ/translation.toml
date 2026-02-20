@@ -16,13 +16,13 @@ comingSoon = "Tezliklə"
 confirmClose = "Bağlamağı təsdiq et"
 confirmCloseCancel = "Ləğv et"
 confirmCloseConfirm = "Faylı bağla"
-confirmCloseMessage = "Bu faylı bağlamaq istədiyinizə əminsiniz?"
 confirmCloseDiscard = "Dəyişiklikləri at və bağla"
+confirmCloseMessage = "Bu faylı bağlamaq istədiyinizə əminsiniz?"
 confirmCloseSave = "Yadda saxla və bağla"
+confirmCloseSaveFailed = "Xətalarla yadda saxlanılıb. {{count}} fayl{{plural}} yadda saxlanıla bilmədi."
+confirmCloseSaveFailedTitle = "Yadda saxlanma uğursuz oldu"
 confirmCloseUnsaved = "Bu faylda yadda saxlanılmamış dəyişikliklər var."
 confirmCloseUnsavedList = "Sizdə yadda saxlanılmamış dəyişiklikləri olan {{count}} fayl{{plural}} var.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Yadda saxlanma uğursuz oldu"
-confirmCloseSaveFailed = "Xətalarla yadda saxlanılıb. {{count}} fayl{{plural}} yadda saxlanıla bilmədi."
 confirmPasswordErrorMessage = "Yeni Şifr və Yeni Şifri Doğrula uyğun olmalıdır."
 custom = "Xüsusi..."
 customPosition = "Xüsusi mövqe"
@@ -45,8 +45,8 @@ edit = "Redaktə et"
 editYourNewFiles = "Yeni fayl(lar)ınızı redaktə edin"
 exportAndContinue = "İxrac et və davam et"
 false = "Yanlış"
-fileSavedToDisk = "Fayl diskə yadda saxlanıldı"
 fileNotSavedToDisk = "Diskə yadda saxlanılmadı"
+fileSavedToDisk = "Fayl diskə yadda saxlanıldı"
 fileSelected = "Seçilən: {{filename}}"
 filesSelected = "seçilmiş fayllar"
 font = "Şrift"
@@ -841,6 +841,14 @@ title = "API Endpointlər"
 userDefaults = "İstifadəçi Seçimlərinin İlkin Dəyərləri"
 userDefaultsDescription = "İstifadəçi seçimləri üçün ilkin dəyərləri təyin edin. İstifadəçilər bunları şəxsi ayarlarında dəyişə bilər."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Deaktiv edilmiş çevirmə seçimlərini boz rəngdə göstərmək əvəzinə gizlədin"
+label = "Standart olaraq mövcud olmayan çevirmələri gizlət"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Deaktiv edilmiş alətləri boz rəngdə göstərmək əvəzinə gizlədin"
+label = "Standart olaraq mövcud olmayan alətləri gizlət"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Deaktiv ediləcək endpoint qruplarını seçin"
 label = "Deaktiv Edilmiş Endpoint Qrupları"
@@ -848,14 +856,6 @@ label = "Deaktiv Edilmiş Endpoint Qrupları"
 [admin.settings.endpoints.toRemove]
 description = "Deaktiv etmək üçün ayrı-ayrı endpointləri seçin"
 label = "Deaktiv Edilmiş Endpointlər"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Deaktiv edilmiş alətləri boz rəngdə göstərmək əvəzinə gizlədin"
-label = "Standart olaraq mövcud olmayan alətləri gizlət"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Deaktiv edilmiş çevirmə seçimlərini boz rəngdə göstərmək əvəzinə gizlədin"
-label = "Standart olaraq mövcud olmayan çevirmələri gizlət"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} funksiyasına daxil olmaq üçün Enterprise lisenziyası tələb olunur. Siz istinad üçün demo məlumatlarına baxırsınız."
@@ -1228,6 +1228,14 @@ label = "İlkin istifadəçi adı"
 [admin.settings.security.jwt]
 label = "JWT Konfiqurasiyası"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tokenin təsdiqlənməsi zamanı müştəri/server vaxt sürüşməsinə dözümlülük (standart: 60 saniyə)"
+label = "Vaxt sürüşməsinə dözümlülük (saniyə)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Masaüstü müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə. Masaüstü tətbiqlər User-Agent vasitəsilə avtomatik aşkar edilir və daha yaxşı UX üçün daha uzun sessiyalar alır (standart: 43200 = 30 gün)"
+label = "Masaüstü tokeninin bitmə vaxtı (dəqiqə)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Müddəti bitmiş JWT açarlarını avtomatik sil"
 label = "Açarların təmizlənməsini aktiv et"
@@ -1236,29 +1244,21 @@ label = "Açarların təmizlənməsini aktiv et"
 description = "JWT imzalama açarlarını mütəmadi olaraq avtomatik rotasiya et"
 label = "Açarların rotasiyasını aktiv et"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Veb müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə (standart: 1440 = 24 saat)"
-label = "Veb tokeninin bitmə vaxtı (dəqiqə)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Masaüstü müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə. Masaüstü tətbiqlər User-Agent vasitəsilə avtomatik aşkar edilir və daha yaxşı UX üçün daha uzun sessiyalar alır (standart: 43200 = 30 gün)"
-label = "Masaüstü tokeninin bitmə vaxtı (dəqiqə)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tokenin təsdiqlənməsi zamanı müştəri/server vaxt sürüşməsinə dözümlülük (standart: 60 saniyə)"
-label = "Vaxt sürüşməsinə dözümlülük (saniyə)"
+[admin.settings.security.jwt.persistence]
+description = "Server yenidən başladıqda itirilməməsi üçün JWT açarlarını davamlı saxla"
+label = "Açarların davamlı saxlanmasını aktiv et"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Bitdikdən sonra bu qədər dəqiqə ərzində tokenin yenilənməsinə icazə verin (standart: 15 dəqiqə, maksimum 3 cəhd)"
 label = "Yeniləmə üçün möhlət (dəqiqə)"
 
-[admin.settings.security.jwt.persistence]
-description = "Server yenidən başladıqda itirilməməsi üçün JWT açarlarını davamlı saxla"
-label = "Açarların davamlı saxlanmasını aktiv et"
-
 [admin.settings.security.jwt.secureCookie]
 description = "JWT kukiləri üçün HTTPS tələb et (istehsalat üçün tövsiyə olunur)"
 label = "Təhlükəsiz Cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Veb müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə (standart: 1440 = 24 saat)"
+label = "Veb tokeninin bitmə vaxtı (dəqiqə)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Hesabın bloklanmasından əvvəl maksimal uğursuz giriş cəhdlərinin sayı"
@@ -3346,10 +3346,6 @@ desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları q
 tags = "iş axını,ardıcıllıq,avtomatlaşdırma"
 title = "Avtomatlaşdır"
 
-[home.formFill]
-desc = "PDF forma sahələrini vizual redaktorla interaktiv doldurun"
-title = "Formu doldur"
-
 [home.autoRename]
 desc = "Aşkarlanmış başlığa əsasən PDF faylını avtomatik adlandırır"
 tags = "avto-aşkarlama,başlığa əsasən,təşkil et,yenidən adlandır"
@@ -3444,6 +3440,10 @@ title = "Səhifələri çıxar"
 desc = "Bütün interaktiv elementləri və anketləri PDF-dən sil"
 tags = "sadələşdir,sil,interaktiv"
 title = "Sadələşdir"
+
+[home.formFill]
+desc = "PDF forma sahələrini vizual redaktorla interaktiv doldurun"
+title = "Formu doldur"
 
 [home.getPdfInfo]
 desc = "PDF barədə mümkün olan bütün məlumatları əldə edir"
@@ -4247,75 +4247,6 @@ title = "Səhifə Redaktoru"
 zoomIn = "Böyüt"
 zoomOut = "Kiçilt"
 
-[viewer]
-cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
-dualPageView = "İki Səhifə Görünüşü"
-firstPage = "Birinci səhifə"
-lastPage = "Son səhifə"
-nextPage = "Növbəti səhifə"
-onlyPdfSupported = "Görüntüləyici yalnız PDF fayllarını dəstəkləyir. Bu fayl fərqli formatda görünür."
-previousPage = "Əvvəlki səhifə"
-singlePageView = "Tək Səhifə Görünüşü"
-unknownFile = "Naməlum fayl"
-zoomIn = "Böyüt"
-zoomOut = "Kiçilt"
-
-[viewer.attachments]
-title = "Qoşmalar"
-searchPlaceholder = "Qoşmalarda axtar"
-noSupport = "Bu görüntüləyici üçün qoşma dəstəyi mövcud deyil."
-noDocument = "Qoşmalarını görmək üçün PDF açın."
-loading = "Qoşmalar yüklənir..."
-empty = "Bu sənəddə qoşma yoxdur"
-noMatch = "Axtarışınıza uyğun qoşma tapılmadı"
-
-[viewer.formBar]
-title = "Forma sahələri"
-unsavedBadge = "Saxlanılmayıb"
-unsavedDesc = "Yadda saxlanılmamış dəyişiklikləriniz var"
-hasFieldsDesc = "Bu PDF-də doldurula bilən sahələr var"
-dismiss = "Bağla"
-apply = "Dəyişiklikləri tətbiq et"
-download = "PDF-i endir"
-
-[rightRail]
-closeSelected = "Seçilmiş faylları bağla"
-selectAll = "Hamısını Seç"
-deselectAll = "Hamısını Seçməni Ləğv Et"
-selectByNumber = "Səhifə nömrələrinə görə seç"
-deleteSelected = "Seçilmiş səhifələri sil"
-closePdf = "PDF-i bağla"
-exportAll = "PDF-i ixrac et"
-downloadSelected = "Seçilmiş faylları yüklə"
-annotations = "Annotasiyalar"
-exportSelected = "Seçilmiş səhifələri ixrac et"
-formFill = "Formu doldur"
-saveChanges = "Dəyişiklikləri yadda saxla"
-toggleAttachments = "Qoşmaları göstər/gizlət"
-toggleTheme = "Mövzunu dəyiş"
-language = "Dil"
-toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
-search = "PDF-də axtar"
-panMode = "Sürüşdürmə rejimi"
-applyRedactionsFirst = "Əvvəlcə məxfiləşdirmələri tətbiq edin"
-rotateLeft = "Sola döndər"
-rotateRight = "Sağa döndər"
-toggleSidebar = "Yan paneli aç/bağla"
-toggleBookmarks = "Əlfəcinləri aç/bağla"
-print = "PDF-i çap et"
-ruler = "Xətkeş / Ölçmə"
-draw = "Rəsm çək"
-redact = "Məxfiləşdir"
-exitRedaction = "Məxfiləşdirmə rejimindən çıx"
-save = "Yadda saxla"
-downloadAll = "Hamısını yüklə"
-saveAll = "Hamısını saxla"
-
-[textAlign]
-left = "Sol"
-center = "Mərkəz"
-right = "Sağ"
-
 [pageExtracter]
 header = "Səhifələri çıxar"
 placeholder = "(məsələn, 1,2,8 və ya 4,7,12-16 və ya 2n-1)"
@@ -4992,15 +4923,15 @@ title = "Məxfiləşdiriləcək sözlər"
 failed = "PDF-də məxfiləşdirmə aparılarkən xəta baş verdi."
 
 [redact.manual]
+activate = "Qaraltma alətini aktiv et"
+active = "Qaraltma rejimi aktivdir"
 apply = "Tətbiq et"
 applyChanges = "Dəyişiklikləri tətbiq et"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Daimi tətbiqdir, geri qaytarıla bilməz və altındakı məlumat silinəcək"
 boxRedaction = "Qutu çəkərək məxfiləşdirmə"
-colourPicker = "Rəng seçici"
 colorLabel = "Qaraltma rəngi"
-active = "Qaraltma rejimi aktivdir"
-activate = "Qaraltma alətini aktiv et"
+colourPicker = "Rəng seçici"
 controlsTitle = "Əl ilə məxfiləşdirmə idarələri"
 convertPDFToImageLabel = "PDF-i PDF-Image-ə çevir (Qutunun arxasındakı mətni silmək üçün istifadə olunur)"
 export = "İxrac Et"
@@ -5395,6 +5326,39 @@ title = "Yüksək kontrast"
 [replaceColor.tooltip.invertAll]
 text = "PDF-dəki bütün rəngləri tam tərsinə çevirərək mənfi effekti kimi görünüş yaradır. Sənədlərin qaranlıq rejim versiyalarını yaratmaq və ya az işıqda göz yorğunluğunu azaltmaq üçün faydalıdır."
 title = "Bütün rəngləri tərsinə çevir"
+
+[rightRail]
+annotations = "Annotasiyalar"
+applyRedactionsFirst = "Əvvəlcə məxfiləşdirmələri tətbiq edin"
+closePdf = "PDF-i bağla"
+closeSelected = "Seçilmiş faylları bağla"
+deleteSelected = "Seçilmiş səhifələri sil"
+deselectAll = "Hamısını Seçməni Ləğv Et"
+downloadAll = "Hamısını yüklə"
+downloadSelected = "Seçilmiş faylları yüklə"
+draw = "Rəsm çək"
+exitRedaction = "Məxfiləşdirmə rejimindən çıx"
+exportAll = "PDF-i ixrac et"
+exportSelected = "Seçilmiş səhifələri ixrac et"
+formFill = "Formu doldur"
+language = "Dil"
+panMode = "Sürüşdürmə rejimi"
+print = "PDF-i çap et"
+redact = "Məxfiləşdir"
+rotateLeft = "Sola döndər"
+rotateRight = "Sağa döndər"
+ruler = "Xətkeş / Ölçmə"
+save = "Yadda saxla"
+saveAll = "Hamısını saxla"
+saveChanges = "Dəyişiklikləri yadda saxla"
+search = "PDF-də axtar"
+selectAll = "Hamısını Seç"
+selectByNumber = "Səhifə nömrələrinə görə seç"
+toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
+toggleAttachments = "Qoşmaları göstər/gizlət"
+toggleBookmarks = "Əlfəcinləri aç/bağla"
+toggleSidebar = "Yan paneli aç/bağla"
+toggleTheme = "Mövzunu dəyiş"
 
 [rotate]
 rotateLeft = "Saat əksinə döndür"
@@ -6233,6 +6197,11 @@ title = "API sənədləşməsi"
 [tableExtraxt]
 tags = "CSV,Cədvəl xaricetmə,xaric et,çevir"
 
+[textAlign]
+center = "Mərkəz"
+left = "Sol"
+right = "Sağ"
+
 [theme]
 toggle = "Mövzunu dəyiş"
 
@@ -6507,6 +6476,37 @@ invalid = "Sertifikat etibar anbarında deyil - mənbə təsdiqlənə bilmir"
 fileManager = "Fayl Meneceri"
 pageEditor = "Səhifə Redaktoru"
 viewer = "Görüntüləyici"
+
+[viewer]
+cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
+dualPageView = "İki Səhifə Görünüşü"
+firstPage = "Birinci səhifə"
+lastPage = "Son səhifə"
+nextPage = "Növbəti səhifə"
+onlyPdfSupported = "Görüntüləyici yalnız PDF fayllarını dəstəkləyir. Bu fayl fərqli formatda görünür."
+previousPage = "Əvvəlki səhifə"
+singlePageView = "Tək Səhifə Görünüşü"
+unknownFile = "Naməlum fayl"
+zoomIn = "Böyüt"
+zoomOut = "Kiçilt"
+
+[viewer.attachments]
+empty = "Bu sənəddə qoşma yoxdur"
+loading = "Qoşmalar yüklənir..."
+noDocument = "Qoşmalarını görmək üçün PDF açın."
+noMatch = "Axtarışınıza uyğun qoşma tapılmadı"
+noSupport = "Bu görüntüləyici üçün qoşma dəstəyi mövcud deyil."
+searchPlaceholder = "Qoşmalarda axtar"
+title = "Qoşmalar"
+
+[viewer.formBar]
+apply = "Dəyişiklikləri tətbiq et"
+dismiss = "Bağla"
+download = "PDF-i endir"
+hasFieldsDesc = "Bu PDF-də doldurula bilən sahələr var"
+title = "Forma sahələri"
+unsavedBadge = "Saxlanılmayıb"
+unsavedDesc = "Yadda saxlanılmamış dəyişiklikləriniz var"
 
 [viewPdf]
 header = "PDF-ə baxın"

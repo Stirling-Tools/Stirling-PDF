@@ -16,13 +16,13 @@ comingSoon = "Kommer snart"
 confirmClose = "Bekräfta stängning"
 confirmCloseCancel = "Avbryt"
 confirmCloseConfirm = "Stäng fil"
-confirmCloseMessage = "Är du säker på att du vill stänga den här filen?"
 confirmCloseDiscard = "Kasta ändringar och stäng"
+confirmCloseMessage = "Är du säker på att du vill stänga den här filen?"
 confirmCloseSave = "Spara och stäng"
+confirmCloseSaveFailed = "Sparat med fel. {{count}} fil{{plural}} kunde inte sparas."
+confirmCloseSaveFailedTitle = "Sparandet misslyckades"
 confirmCloseUnsaved = "Den här filen har osparade ändringar."
 confirmCloseUnsavedList = "Du har {{count}} fil{{plural}} med osparade ändringar.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Sparandet misslyckades"
-confirmCloseSaveFailed = "Sparat med fel. {{count}} fil{{plural}} kunde inte sparas."
 confirmPasswordErrorMessage = "Nytt lösenord och bekräfta nytt lösenord måste matcha."
 custom = "Anpassad..."
 customPosition = "Anpassad position"
@@ -45,8 +45,8 @@ edit = "Redigera"
 editYourNewFiles = "Redigera dina nya filer"
 exportAndContinue = "Exportera och fortsätt"
 false = "Falskt"
-fileSavedToDisk = "Fil sparad till disk"
 fileNotSavedToDisk = "Inte sparad till disk"
+fileSavedToDisk = "Fil sparad till disk"
 fileSelected = "Vald: {{filename}}"
 filesSelected = "filer valda"
 font = "Teckensnitt"
@@ -841,6 +841,14 @@ title = "API-slutpunkter"
 userDefaults = "Standardvärden för användarinställningar"
 userDefaultsDescription = "Ange standardvärden för användarinställningar. Användare kan åsidosätta dessa i sina personliga inställningar."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Ta bort inaktiverade konverteringsalternativ i stället för att visa dem nedtonade"
+label = "Dölj otillgängliga konverteringar som standard"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Ta bort inaktiverade verktyg i stället för att visa dem nedtonade"
+label = "Dölj otillgängliga verktyg som standard"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Välj slutpunktsgrupper att inaktivera"
 label = "Inaktiverade slutpunktsgrupper"
@@ -848,14 +856,6 @@ label = "Inaktiverade slutpunktsgrupper"
 [admin.settings.endpoints.toRemove]
 description = "Välj enskilda slutpunkter att inaktivera"
 label = "Inaktiverade slutpunkter"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Ta bort inaktiverade verktyg i stället för att visa dem nedtonade"
-label = "Dölj otillgängliga verktyg som standard"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Ta bort inaktiverade konverteringsalternativ i stället för att visa dem nedtonade"
-label = "Dölj otillgängliga konverteringar som standard"
 
 [admin.settings.enterpriseRequired]
 message = "En företagslicens krävs för att få åtkomst till {{featureName}}. Du ser demodata som referens."
@@ -1228,6 +1228,14 @@ label = "Initialt användarnamn"
 [admin.settings.security.jwt]
 label = "JWT-konfiguration"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerans för klient-/serverklockans avvikelse under tokenvalidering (standard: 60 sekunder)"
+label = "Tolerans för klockavvikelse (sekunder)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Giltighetstid för åtkomsttoken i minuter för skrivbordsklienter. Skrivbordsappar identifieras automatiskt via User-Agent och får längre sessioner för bättre UX (standard: 43200 = 30 dagar)"
+label = "Giltighetstid för skrivbordstoken (minuter)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Ta automatiskt bort utgångna JWT-nycklar"
 label = "Aktivera rensning av nycklar"
@@ -1236,29 +1244,21 @@ label = "Aktivera rensning av nycklar"
 description = "Rotera automatiskt JWT-signeringsnycklar periodiskt"
 label = "Aktivera nyckelrotation"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Giltighetstid för åtkomsttoken i minuter för webbklienter (standard: 1440 = 24 timmar)"
-label = "Giltighetstid för webbtoken (minuter)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Giltighetstid för åtkomsttoken i minuter för skrivbordsklienter. Skrivbordsappar identifieras automatiskt via User-Agent och får längre sessioner för bättre UX (standard: 43200 = 30 dagar)"
-label = "Giltighetstid för skrivbordstoken (minuter)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerans för klient-/serverklockans avvikelse under tokenvalidering (standard: 60 sekunder)"
-label = "Tolerans för klockavvikelse (sekunder)"
+[admin.settings.security.jwt.persistence]
+description = "Lagra JWT-nycklar beständigt för att överleva serveromstarter"
+label = "Aktivera nyckelpersistens"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Tillåt tokenuppdatering inom så här många minuter efter utgång (standard: 15 minuter, max 3 försök)"
 label = "Uppdateringsfrist (minuter)"
 
-[admin.settings.security.jwt.persistence]
-description = "Lagra JWT-nycklar beständigt för att överleva serveromstarter"
-label = "Aktivera nyckelpersistens"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Kräv HTTPS för JWT-cookies (rekommenderas för produktion)"
 label = "Säker cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Giltighetstid för åtkomsttoken i minuter för webbklienter (standard: 1440 = 24 timmar)"
+label = "Giltighetstid för webbtoken (minuter)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximalt antal misslyckade inloggningsförsök innan kontot låses"
@@ -3346,10 +3346,6 @@ desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. P
 tags = "arbetsflöde,sekvens,automation"
 title = "Automatisera"
 
-[home.formFill]
-desc = "Fyll i PDF-formulärfält interaktivt med en visuell redigerare"
-title = "Fyll i formulär"
-
 [home.autoRename]
 desc = "Byter automatiskt namn på en PDF baserat på detekterad rubrik"
 tags = "autodetektera,huvudbaserad,organisera,etikettera om"
@@ -3444,6 +3440,10 @@ title = "Extrahera sidor"
 desc = "Ta bort alla interaktiva element och formulär från en PDF"
 tags = "förenkla,ta bort,interaktiv"
 title = "Platta till"
+
+[home.formFill]
+desc = "Fyll i PDF-formulärfält interaktivt med en visuell redigerare"
+title = "Fyll i formulär"
 
 [home.getPdfInfo]
 desc = "Hämtar all möjlig information om PDF:er"
@@ -4247,75 +4247,6 @@ title = "Sidredigerare"
 zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
 
-[viewer]
-cannotPreviewFile = "Kan inte förhandsgranska filen"
-dualPageView = "Dubbelsidig vy"
-firstPage = "Första sidan"
-lastPage = "Sista sidan"
-nextPage = "Nästa sida"
-onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
-previousPage = "Föregående sida"
-singlePageView = "Ensidig vy"
-unknownFile = "Okänd fil"
-zoomIn = "Zooma in"
-zoomOut = "Zooma ut"
-
-[viewer.attachments]
-title = "Bilagor"
-searchPlaceholder = "Sök bilagor"
-noSupport = "Stöd för bilagor är inte tillgängligt i den här visaren."
-noDocument = "Öppna en PDF för att visa dess bilagor."
-loading = "Läser in bilagor..."
-empty = "Inga bilagor i det här dokumentet"
-noMatch = "Inga bilagor matchar din sökning"
-
-[viewer.formBar]
-title = "Formulärfält"
-unsavedBadge = "Ej sparat"
-unsavedDesc = "Du har osparade ändringar"
-hasFieldsDesc = "Denna PDF innehåller ifyllbara fält"
-dismiss = "Avfärda"
-apply = "Verkställ ändringar"
-download = "Ladda ned PDF"
-
-[rightRail]
-closeSelected = "Stäng markerade filer"
-selectAll = "Välj allt"
-deselectAll = "Avmarkera alla"
-selectByNumber = "Välj efter sidnummer"
-deleteSelected = "Ta bort markerade sidor"
-closePdf = "Stäng PDF"
-exportAll = "Exportera PDF"
-downloadSelected = "Ladda ner markerade filer"
-annotations = "Annoteringar"
-exportSelected = "Exportera markerade sidor"
-formFill = "Fyll i formulär"
-saveChanges = "Spara ändringar"
-toggleAttachments = "Visa/dölj bilagor"
-toggleTheme = "Växla tema"
-language = "Språk"
-toggleAnnotations = "Växla synlighet för anteckningar"
-search = "Sök i PDF"
-panMode = "Panoreringsläge"
-applyRedactionsFirst = "Tillämpa maskningar först"
-rotateLeft = "Rotera åt vänster"
-rotateRight = "Rotera åt höger"
-toggleSidebar = "Växla sidofält"
-toggleBookmarks = "Visa/dölj bokmärken"
-print = "Skriv ut PDF"
-ruler = "Linjal / Mätning"
-draw = "Rita"
-redact = "Maskera"
-exitRedaction = "Avsluta maskeringsläge"
-save = "Spara"
-downloadAll = "Ladda ner alla"
-saveAll = "Spara alla"
-
-[textAlign]
-left = "Vänster"
-center = "Centrerat"
-right = "Höger"
-
 [pageExtracter]
 header = "Extrahera sidor"
 placeholder = "(t.ex. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -4992,15 +4923,15 @@ title = "Ord att maskera"
 failed = "Ett fel inträffade vid maskning av PDF:en."
 
 [redact.manual]
+activate = "Aktivera maskningsverktyg"
+active = "Maskningsläge aktivt"
 apply = "Tillämpa"
 applyChanges = "Verkställ ändringar"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent åtgärd, kan inte ångras och underliggande data raderas"
 boxRedaction = "Rita ruta för maskning"
-colourPicker = "Färgväljare"
 colorLabel = "Maskningsfärg"
-active = "Maskningsläge aktivt"
-activate = "Aktivera maskningsverktyg"
+colourPicker = "Färgväljare"
 controlsTitle = "Manuella maskeringskontroller"
 convertPDFToImageLabel = "Konvertera PDF till PDF-bild (Används för att ta bort text bakom rutan)"
 export = "Exportera"
@@ -5395,6 +5326,39 @@ title = "Hög kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Invertera alla färger i PDF:en helt och hållet, vilket skapar en negativliknande effekt. Användbart för att skapa mörkt läge-versioner av dokument eller minska ansträngning för ögonen i svagt ljus."
 title = "Invertera alla färger"
+
+[rightRail]
+annotations = "Annoteringar"
+applyRedactionsFirst = "Tillämpa maskningar först"
+closePdf = "Stäng PDF"
+closeSelected = "Stäng markerade filer"
+deleteSelected = "Ta bort markerade sidor"
+deselectAll = "Avmarkera alla"
+downloadAll = "Ladda ner alla"
+downloadSelected = "Ladda ner markerade filer"
+draw = "Rita"
+exitRedaction = "Avsluta maskeringsläge"
+exportAll = "Exportera PDF"
+exportSelected = "Exportera markerade sidor"
+formFill = "Fyll i formulär"
+language = "Språk"
+panMode = "Panoreringsläge"
+print = "Skriv ut PDF"
+redact = "Maskera"
+rotateLeft = "Rotera åt vänster"
+rotateRight = "Rotera åt höger"
+ruler = "Linjal / Mätning"
+save = "Spara"
+saveAll = "Spara alla"
+saveChanges = "Spara ändringar"
+search = "Sök i PDF"
+selectAll = "Välj allt"
+selectByNumber = "Välj efter sidnummer"
+toggleAnnotations = "Växla synlighet för anteckningar"
+toggleAttachments = "Visa/dölj bilagor"
+toggleBookmarks = "Visa/dölj bokmärken"
+toggleSidebar = "Växla sidofält"
+toggleTheme = "Växla tema"
 
 [rotate]
 rotateLeft = "Rotera moturs"
@@ -6233,6 +6197,11 @@ title = "API-dokumentation"
 [tableExtraxt]
 tags = "CSV,Tabellextraktion,extrahera,konvertera"
 
+[textAlign]
+center = "Centrerat"
+left = "Vänster"
+right = "Höger"
+
 [theme]
 toggle = "Växla tema"
 
@@ -6507,6 +6476,37 @@ invalid = "Certifikat finns inte i betrodd certifikatsbutik – källan kan inte
 fileManager = "Filhanterare"
 pageEditor = "Sidredigerare"
 viewer = "Visare"
+
+[viewer]
+cannotPreviewFile = "Kan inte förhandsgranska filen"
+dualPageView = "Dubbelsidig vy"
+firstPage = "Första sidan"
+lastPage = "Sista sidan"
+nextPage = "Nästa sida"
+onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
+previousPage = "Föregående sida"
+singlePageView = "Ensidig vy"
+unknownFile = "Okänd fil"
+zoomIn = "Zooma in"
+zoomOut = "Zooma ut"
+
+[viewer.attachments]
+empty = "Inga bilagor i det här dokumentet"
+loading = "Läser in bilagor..."
+noDocument = "Öppna en PDF för att visa dess bilagor."
+noMatch = "Inga bilagor matchar din sökning"
+noSupport = "Stöd för bilagor är inte tillgängligt i den här visaren."
+searchPlaceholder = "Sök bilagor"
+title = "Bilagor"
+
+[viewer.formBar]
+apply = "Verkställ ändringar"
+dismiss = "Avfärda"
+download = "Ladda ned PDF"
+hasFieldsDesc = "Denna PDF innehåller ifyllbara fält"
+title = "Formulärfält"
+unsavedBadge = "Ej sparat"
+unsavedDesc = "Du har osparade ändringar"
 
 [viewPdf]
 header = "Visa PDF"

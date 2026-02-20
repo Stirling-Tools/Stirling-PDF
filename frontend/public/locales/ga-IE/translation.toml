@@ -16,13 +16,13 @@ comingSoon = "Ag teacht go luath"
 confirmClose = "Deimhnigh Dúnadh"
 confirmCloseCancel = "Cealaigh"
 confirmCloseConfirm = "Dún an Comhad"
-confirmCloseMessage = "An bhfuil tú cinnte gur mian leat an comhad seo a dhúnadh?"
 confirmCloseDiscard = "Cuir na hathruithe ar ceal agus dún"
+confirmCloseMessage = "An bhfuil tú cinnte gur mian leat an comhad seo a dhúnadh?"
 confirmCloseSave = "Sábháil agus dún"
+confirmCloseSaveFailed = "Sábháilte le hearráidí. Níorbh fhéidir {{count}} comhad{{plural}} a shábháil."
+confirmCloseSaveFailedTitle = "Theip ar an tsábháil"
 confirmCloseUnsaved = "Tá athruithe gan sábháil sa chomhad seo."
 confirmCloseUnsavedList = "Tá athruithe gan sábháil ar {{count}} comhad{{plural}} agat.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Theip ar an tsábháil"
-confirmCloseSaveFailed = "Sábháilte le hearráidí. Níorbh fhéidir {{count}} comhad{{plural}} a shábháil."
 confirmPasswordErrorMessage = "Ní mór Pasfhocal Nua agus Deimhnigh Pasfhocal Nua a bheith ag teacht leis."
 custom = "Saincheaptha..."
 customPosition = "Suíomh Saincheaptha"
@@ -45,8 +45,8 @@ edit = "Cuir in eagar"
 editYourNewFiles = "Cuir do chomhad(aí) nua in eagar"
 exportAndContinue = "Easpórtáil & Lean ar aghaidh"
 false = "Bréagach"
-fileSavedToDisk = "Comhad sábháilte ar an diosca"
 fileNotSavedToDisk = "Gan sábháil ar an diosca"
+fileSavedToDisk = "Comhad sábháilte ar an diosca"
 fileSelected = "Roghnaithe: {{filename}}"
 filesSelected = "comhaid roghnaithe"
 font = "Cló"
@@ -841,6 +841,14 @@ title = "Críochphointí API"
 userDefaults = "Réamhshocruithe na Roghanna Úsáideora"
 userDefaultsDescription = "Socraigh luachanna réamhshocraithe do roghanna úsáideora. Is féidir le húsáideoirí iad seo a shárú ina socruithe pearsanta."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Bain roghanna tiontaithe díchumasaithe in ionad iad a thaispeáint liathaithe"
+label = "Folaigh tiontuithe nach bhfuil ar fáil de réir réamhshocraithe"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Bain uirlisí díchumasaithe in ionad iad a thaispeáint liathaithe"
+label = "Folaigh uirlisí nach bhfuil ar fáil de réir réamhshocraithe"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Roghnaigh grúpaí críochphointe le díchumasú"
 label = "Grúpaí Deireadhphointe Díchumasaithe"
@@ -848,14 +856,6 @@ label = "Grúpaí Deireadhphointe Díchumasaithe"
 [admin.settings.endpoints.toRemove]
 description = "Roghnaigh críochphointí aonair le díchumasú"
 label = "Críochphointí Díchumasaithe"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Bain uirlisí díchumasaithe in ionad iad a thaispeáint liathaithe"
-label = "Folaigh uirlisí nach bhfuil ar fáil de réir réamhshocraithe"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Bain roghanna tiontaithe díchumasaithe in ionad iad a thaispeáint liathaithe"
-label = "Folaigh tiontuithe nach bhfuil ar fáil de réir réamhshocraithe"
 
 [admin.settings.enterpriseRequired]
 message = "Tá ceadúnas Fiontraíochta de dhíth chun rochtain a fháil ar {{featureName}}. Tá tú ag féachaint ar shonraí taispeána mar thagairt."
@@ -1228,6 +1228,14 @@ label = "Ainm Úsáideora Tosaigh"
 [admin.settings.security.jwt]
 label = "Cumraíocht JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Lamháltas do dhiall ama cliant/freastalaí le linn bailíochtaithe tocain (réamhshocrú: 60 soicind)"
+label = "Lamháltas diall ama an chloig (soicind)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Fad saoil tocan rochtana i nóiméid do chliaint deisce. Aithnítear aipeanna deisce go huathoibríoch trí User-Agent agus faigheann siad seisiúin níos faide chun UX níos fearr a sholáthar (réamhshocrú: 43200 = 30 lá)"
+label = "Dul in Éag Tocan Deisce (nóiméid)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Bain eochracha JWT a d’imíodh as feidhm go huathoibríoch"
 label = "Cumasaigh Glanadh Eochracha"
@@ -1236,29 +1244,21 @@ label = "Cumasaigh Glanadh Eochracha"
 description = "Rothlaigh eochracha sínithe JWT go huathoibríoch go tréimhsiúil"
 label = "Cumasaigh Rothlú Eochracha"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Fad saoil tocan rochtana i nóiméid do chliaint ghréasáin (réamhshocrú: 1440 = 24 uair an chloig)"
-label = "Dul in Éag Tocan Gréasáin (nóiméid)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Fad saoil tocan rochtana i nóiméid do chliaint deisce. Aithnítear aipeanna deisce go huathoibríoch trí User-Agent agus faigheann siad seisiúin níos faide chun UX níos fearr a sholáthar (réamhshocrú: 43200 = 30 lá)"
-label = "Dul in Éag Tocan Deisce (nóiméid)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Lamháltas do dhiall ama cliant/freastalaí le linn bailíochtaithe tocain (réamhshocrú: 60 soicind)"
-label = "Lamháltas diall ama an chloig (soicind)"
+[admin.settings.security.jwt.persistence]
+description = "Stóráil eochracha JWT go seasmhach chun maireachtáil thar atosaithe freastalaí"
+label = "Cumasaigh Seasmhacht Eochracha"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Ceadaigh athnuachan tocain laistigh de an oiread seo nóiméad tar éis dul in éag (réamhshocrú: 15 nóiméad, uasmhéid 3 iarracht)"
 label = "Tréimhse Ghrásta Athnuachana (nóiméid)"
 
-[admin.settings.security.jwt.persistence]
-description = "Stóráil eochracha JWT go seasmhach chun maireachtáil thar atosaithe freastalaí"
-label = "Cumasaigh Seasmhacht Eochracha"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Éiligh HTTPS do fhianáin JWT (molta don léiriúchán)"
 label = "Fianán Slán"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Fad saoil tocan rochtana i nóiméid do chliaint ghréasáin (réamhshocrú: 1440 = 24 uair an chloig)"
+label = "Dul in Éag Tocan Gréasáin (nóiméid)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Uasmhéid iarrachtaí logála isteach teipthe sula gcuirtear an cuntas faoi ghlas"
@@ -3346,10 +3346,6 @@ desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a nascadh le chéil
 tags = "sreabhadh oibre,ord,uathoibriú"
 title = "Uathoibrigh"
 
-[home.formFill]
-desc = "Líon réimsí foirme PDF go hidirghníomhach le heagarthóir amhairc"
-title = "Líon Foirm"
-
 [home.autoRename]
 desc = "Athainmníonn comhad PDF go huathoibríoch bunaithe ar a cheannteideal braite"
 tags = "uathbhraite,bunaithe ar cheannteideal,eagraigh,athlipéadaigh"
@@ -3444,6 +3440,10 @@ title = "Leathanaigh Sliocht"
 desc = "Bain gach eilimint agus foirm idirghníomhach as PDF"
 tags = "simpligh,bain,idirghníomhach"
 title = "Comhcheangail"
+
+[home.formFill]
+desc = "Líon réimsí foirme PDF go hidirghníomhach le heagarthóir amhairc"
+title = "Líon Foirm"
 
 [home.getPdfInfo]
 desc = "Grab aon fhaisnéis agus is féidir ar PDFs"
@@ -4247,75 +4247,6 @@ title = "Eagarthóir Leathanach"
 zoomIn = "Súmáil Isteach"
 zoomOut = "Súmáil Amach"
 
-[viewer]
-cannotPreviewFile = "Ní féidir an comhad a réamhamharc."
-dualPageView = "Amharc Dhá Leathanach"
-firstPage = "An Chéad Leathanach"
-lastPage = "An Leathanach Deireanach"
-nextPage = "Leathanach Ar Aghaidh"
-onlyPdfSupported = "Ní thacaíonn an t-amharcán ach le comhaid PDF. Is cosúil gur formáid eile é an comhad seo."
-previousPage = "Leathanach Roimhe Seo"
-singlePageView = "Amharc Leathanach Aonair"
-unknownFile = "Comhad anaithnid"
-zoomIn = "Súmáil Isteach"
-zoomOut = "Súmáil Amach"
-
-[viewer.attachments]
-title = "Iatáin"
-searchPlaceholder = "Cuardaigh iatáin"
-noSupport = "Níl tacaíocht iatáin ar fáil don amharcóir seo."
-noDocument = "Oscail PDF chun a iatáin a fheiceáil."
-loading = "Iatáin á luchtú..."
-empty = "Níl iatáin sa cháipéis seo"
-noMatch = "Ní mheaitseálann aon iatán do chuardach"
-
-[viewer.formBar]
-title = "Réimsí Foirme"
-unsavedBadge = "Gan Sábháil"
-unsavedDesc = "Tá athruithe gan sábháil agat"
-hasFieldsDesc = "Tá réimsí inlíonta sa PDF seo"
-dismiss = "Neamhaird"
-apply = "Cuir Athruithe i bhFeidhm"
-download = "Íosluchtaigh PDF"
-
-[rightRail]
-closeSelected = "Dún na Comhaid Roghnaithe"
-selectAll = "Roghnaigh Uile"
-deselectAll = "Díroghnaigh Uile"
-selectByNumber = "Roghnaigh de réir Uimhreacha Leathanaigh"
-deleteSelected = "Scrios na Leathanaigh Roghnaithe"
-closePdf = "Dún an PDF"
-exportAll = "Easpórtáil an PDF"
-downloadSelected = "Íoslódáil Comhaid Roghnaithe"
-annotations = "Anótálacha"
-exportSelected = "Easpórtáil Leathanaigh Roghnaithe"
-formFill = "Líon Foirm"
-saveChanges = "Sábháil Athruithe"
-toggleAttachments = "Scoránaigh Iatáin"
-toggleTheme = "Téama a Athsholáthar"
-language = "Teanga"
-toggleAnnotations = "Infheictheacht Anótálacha a Athrú"
-search = "Cuardaigh PDF"
-panMode = "Mód Pan"
-applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
-rotateLeft = "Rothlaigh ar Chlé"
-rotateRight = "Rothlaigh ar Dheis"
-toggleSidebar = "Barra Taobh a Athraigh"
-toggleBookmarks = "Leabharmharcanna a Athsholáthar"
-print = "Priontáil PDF"
-ruler = "Rialóir / Tomhas"
-draw = "Tarraing"
-redact = "Leasaigh"
-exitRedaction = "Scoir Mód Eagarthóireachta"
-save = "Sábháil"
-downloadAll = "Íoslódáil Gach Rud"
-saveAll = "Sábháil Uile"
-
-[textAlign]
-left = "Ar chlé"
-center = "Lár"
-right = "Ar dheis"
-
 [pageExtracter]
 header = "Leathanaigh Sliocht"
 placeholder = "(m.sh. 1,2,8 nó 4,7,12-16 nó 2n-1)"
@@ -4992,15 +4923,15 @@ title = "Focail le Ceilt"
 failed = "Tharla earráid agus an PDF á cheilt."
 
 [redact.manual]
+activate = "Gníomhachtaigh an Uirlis Cheilte"
+active = "Mód Ceilte Gníomhach"
 apply = "Cuir isteach"
 applyChanges = "Cuir Athruithe i bhFeidhm"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Feidhmchlár buan, ní féidir é a chealú agus scriosfar na sonraí faoi."
 boxRedaction = "Ceilt trí bhosca a tharraingt"
-colourPicker = "Roghnóir Datha"
 colorLabel = "Dath Ceilte"
-active = "Mód Ceilte Gníomhach"
-activate = "Gníomhachtaigh an Uirlis Cheilte"
+colourPicker = "Roghnóir Datha"
 controlsTitle = "Rialuithe Eagarthóireachta Láimhe"
 convertPDFToImageLabel = "Tiontaigh PDF go PDF-Íomhá (Úsáidtear é chun téacs taobh thiar den bhosca a bhaint)"
 export = "Easpórtáil"
@@ -5395,6 +5326,39 @@ title = "Ardchodarsnacht"
 [replaceColor.tooltip.invertAll]
 text = "Inbhéartaigh gach dath sa PDF go hiomlán, ag cruthú éifeacht cosúil le diúltach. Úsáideach chun leaganacha mód dorcha a chruthú de dhoiciméid nó chun strus súl a laghdú i solas íseal."
 title = "Inbhéartaigh Gach Dath"
+
+[rightRail]
+annotations = "Anótálacha"
+applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
+closePdf = "Dún an PDF"
+closeSelected = "Dún na Comhaid Roghnaithe"
+deleteSelected = "Scrios na Leathanaigh Roghnaithe"
+deselectAll = "Díroghnaigh Uile"
+downloadAll = "Íoslódáil Gach Rud"
+downloadSelected = "Íoslódáil Comhaid Roghnaithe"
+draw = "Tarraing"
+exitRedaction = "Scoir Mód Eagarthóireachta"
+exportAll = "Easpórtáil an PDF"
+exportSelected = "Easpórtáil Leathanaigh Roghnaithe"
+formFill = "Líon Foirm"
+language = "Teanga"
+panMode = "Mód Pan"
+print = "Priontáil PDF"
+redact = "Leasaigh"
+rotateLeft = "Rothlaigh ar Chlé"
+rotateRight = "Rothlaigh ar Dheis"
+ruler = "Rialóir / Tomhas"
+save = "Sábháil"
+saveAll = "Sábháil Uile"
+saveChanges = "Sábháil Athruithe"
+search = "Cuardaigh PDF"
+selectAll = "Roghnaigh Uile"
+selectByNumber = "Roghnaigh de réir Uimhreacha Leathanaigh"
+toggleAnnotations = "Infheictheacht Anótálacha a Athrú"
+toggleAttachments = "Scoránaigh Iatáin"
+toggleBookmarks = "Leabharmharcanna a Athsholáthar"
+toggleSidebar = "Barra Taobh a Athraigh"
+toggleTheme = "Téama a Athsholáthar"
 
 [rotate]
 rotateLeft = "Rothlaigh tuathalach"
@@ -6233,6 +6197,11 @@ title = "Doiciméadú API"
 [tableExtraxt]
 tags = "CSV, Eastóscadh Tábla, sliocht, tiontú"
 
+[textAlign]
+center = "Lár"
+left = "Ar chlé"
+right = "Ar dheis"
+
 [theme]
 toggle = "Athraigh an Téama"
 
@@ -6507,6 +6476,37 @@ invalid = "Níl an teastas sa stór muiníne - ní féidir an fhoinse a fhíorú
 fileManager = "Bainisteoir Comhad"
 pageEditor = "Eagarthóir Leathanach"
 viewer = "Amharcóir"
+
+[viewer]
+cannotPreviewFile = "Ní féidir an comhad a réamhamharc."
+dualPageView = "Amharc Dhá Leathanach"
+firstPage = "An Chéad Leathanach"
+lastPage = "An Leathanach Deireanach"
+nextPage = "Leathanach Ar Aghaidh"
+onlyPdfSupported = "Ní thacaíonn an t-amharcán ach le comhaid PDF. Is cosúil gur formáid eile é an comhad seo."
+previousPage = "Leathanach Roimhe Seo"
+singlePageView = "Amharc Leathanach Aonair"
+unknownFile = "Comhad anaithnid"
+zoomIn = "Súmáil Isteach"
+zoomOut = "Súmáil Amach"
+
+[viewer.attachments]
+empty = "Níl iatáin sa cháipéis seo"
+loading = "Iatáin á luchtú..."
+noDocument = "Oscail PDF chun a iatáin a fheiceáil."
+noMatch = "Ní mheaitseálann aon iatán do chuardach"
+noSupport = "Níl tacaíocht iatáin ar fáil don amharcóir seo."
+searchPlaceholder = "Cuardaigh iatáin"
+title = "Iatáin"
+
+[viewer.formBar]
+apply = "Cuir Athruithe i bhFeidhm"
+dismiss = "Neamhaird"
+download = "Íosluchtaigh PDF"
+hasFieldsDesc = "Tá réimsí inlíonta sa PDF seo"
+title = "Réimsí Foirme"
+unsavedBadge = "Gan Sábháil"
+unsavedDesc = "Tá athruithe gan sábháil agat"
 
 [viewPdf]
 header = "Féach PDF"

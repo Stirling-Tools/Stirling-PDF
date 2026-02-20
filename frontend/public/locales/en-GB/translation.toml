@@ -16,13 +16,13 @@ comingSoon = "Coming soon"
 confirmClose = "Confirm Close"
 confirmCloseCancel = "Cancel"
 confirmCloseConfirm = "Close File"
-confirmCloseMessage = "Are you sure you want to close this file?"
 confirmCloseDiscard = "Discard changes and close"
+confirmCloseMessage = "Are you sure you want to close this file?"
 confirmCloseSave = "Save and close"
+confirmCloseSaveFailed = "Saved with errors. {{count}} file{{plural}} could not be saved."
+confirmCloseSaveFailedTitle = "Save Failed"
 confirmCloseUnsaved = "This file has unsaved changes."
 confirmCloseUnsavedList = "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Save Failed"
-confirmCloseSaveFailed = "Saved with errors. {{count}} file{{plural}} could not be saved."
 confirmPasswordErrorMessage = "New Password and Confirm New Password must match."
 custom = "Custom..."
 customPosition = "Custom Position"
@@ -45,8 +45,8 @@ edit = "Edit"
 editYourNewFiles = "Edit your new file(s)"
 exportAndContinue = "Export & Continue"
 false = "False"
-fileSavedToDisk = "File saved to disk"
 fileNotSavedToDisk = "Not saved to disk"
+fileSavedToDisk = "File saved to disk"
 fileSelected = "Selected: {{filename}}"
 filesSelected = "{{count}} files selected"
 font = "Font"
@@ -841,6 +841,14 @@ title = "API Endpoints"
 userDefaults = "User Preference Defaults"
 userDefaultsDescription = "Set default values for user preferences. Users can override these in their personal settings."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Remove disabled conversion options instead of showing them greyed out"
+label = "Hide unavailable conversions by default"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Remove disabled tools instead of showing them greyed out"
+label = "Hide unavailable tools by default"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Select endpoint groups to disable"
 label = "Disabled Endpoint Groups"
@@ -848,14 +856,6 @@ label = "Disabled Endpoint Groups"
 [admin.settings.endpoints.toRemove]
 description = "Select individual endpoints to disable"
 label = "Disabled Endpoints"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Remove disabled tools instead of showing them greyed out"
-label = "Hide unavailable tools by default"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Remove disabled conversion options instead of showing them greyed out"
-label = "Hide unavailable conversions by default"
 
 [admin.settings.enterpriseRequired]
 message = "An Enterprise license is required to access {{featureName}}. You are viewing demo data for reference."
@@ -1228,6 +1228,14 @@ label = "Initial Username"
 [admin.settings.security.jwt]
 label = "JWT Configuration"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerance for client/server time drift during token validation (default: 60 seconds)"
+label = "Clock Skew Tolerance (seconds)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)"
+label = "Desktop Token Expiry (minutes)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automatically remove expired JWT keys"
 label = "Enable Key Cleanup"
@@ -1236,29 +1244,21 @@ label = "Enable Key Cleanup"
 description = "Automatically rotate JWT signing keys periodically"
 label = "Enable Key Rotation"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)"
-label = "Web Token Expiry (minutes)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)"
-label = "Desktop Token Expiry (minutes)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerance for client/server time drift during token validation (default: 60 seconds)"
-label = "Clock Skew Tolerance (seconds)"
+[admin.settings.security.jwt.persistence]
+description = "Store JWT keys persistently to survive server restarts"
+label = "Enable Key Persistence"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Allow token refresh within this many minutes after expiry (default: 15 minutes, max 3 attempts)"
 label = "Refresh Grace Period (minutes)"
 
-[admin.settings.security.jwt.persistence]
-description = "Store JWT keys persistently to survive server restarts"
-label = "Enable Key Persistence"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Require HTTPS for JWT cookies (recommended for production)"
 label = "Secure Cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)"
+label = "Web Token Expiry (minutes)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximum number of failed login attempts before account lockout"
@@ -3334,10 +3334,6 @@ desc = "Build multi-step workflows by chaining together PDF actions. Ideal for r
 tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automate"
 
-[home.formFill]
-desc = "Fill PDF form fields interactively with a visual editor"
-title = "Fill Form"
-
 [home.autoRename]
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
@@ -3432,6 +3428,10 @@ title = "Extract Pages"
 desc = "Remove all interactive elements and forms from a PDF"
 tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Flatten"
+
+[home.formFill]
+desc = "Fill PDF form fields interactively with a visual editor"
+title = "Fill Form"
 
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
@@ -4235,57 +4235,6 @@ title = "Page Editor"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
-[viewer]
-cannotPreviewFile = "Cannot Preview File"
-dualPageView = "Dual Page View"
-firstPage = "First Page"
-lastPage = "Last Page"
-nextPage = "Next Page"
-onlyPdfSupported = "The viewer only supports PDF files. This file appears to be a different format."
-previousPage = "Previous Page"
-singlePageView = "Single Page View"
-unknownFile = "Unknown file"
-zoomIn = "Zoom In"
-zoomOut = "Zoom Out"
-
-[rightRail]
-closeSelected = "Close Selected Files"
-selectAll = "Select All"
-deselectAll = "Deselect All"
-selectByNumber = "Select by Page Numbers"
-deleteSelected = "Delete Selected Pages"
-closePdf = "Close PDF"
-exportAll = "Export PDF"
-downloadSelected = "Download Selected Files"
-annotations = "Annotations"
-exportSelected = "Export Selected Pages"
-formFill = "Fill Form"
-saveChanges = "Save Changes"
-toggleAttachments = "Toggle Attachments"
-toggleTheme = "Toggle Theme"
-language = "Language"
-toggleAnnotations = "Toggle Annotations Visibility"
-search = "Search PDF"
-panMode = "Pan Mode"
-applyRedactionsFirst = "Apply redactions first"
-rotateLeft = "Rotate Left"
-rotateRight = "Rotate Right"
-toggleSidebar = "Toggle Sidebar"
-toggleBookmarks = "Toggle Bookmarks"
-print = "Print PDF"
-ruler = "Ruler / Measure"
-draw = "Draw"
-redact = "Redact"
-exitRedaction = "Exit Redaction Mode"
-save = "Save"
-downloadAll = "Download All"
-saveAll = "Save All"
-
-[textAlign]
-left = "Left"
-center = "Center"
-right = "Right"
-
 [pageExtracter]
 header = "Extract Pages"
 placeholder = "(e.g. 1,2,8 or 4,7,12-16 or 2n-1)"
@@ -4962,15 +4911,15 @@ title = "Words to Redact"
 failed = "An error occurred while redacting the PDF."
 
 [redact.manual]
+activate = "Activate Redaction Tool"
+active = "Redaction Mode Active"
 apply = "Apply"
 applyChanges = "Apply Changes"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 boxRedaction = "Box draw redaction"
-colourPicker = "Colour Picker"
 colorLabel = "Redaction Colour"
-active = "Redaction Mode Active"
-activate = "Activate Redaction Tool"
+colourPicker = "Colour Picker"
 controlsTitle = "Manual Redaction Controls"
 convertPDFToImageLabel = "Convert PDF to PDF-Image (Used to remove text behind the box)"
 export = "Export"
@@ -5365,6 +5314,39 @@ title = "High Contrast"
 [replaceColor.tooltip.invertAll]
 text = "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
 title = "Invert All Colours"
+
+[rightRail]
+annotations = "Annotations"
+applyRedactionsFirst = "Apply redactions first"
+closePdf = "Close PDF"
+closeSelected = "Close Selected Files"
+deleteSelected = "Delete Selected Pages"
+deselectAll = "Deselect All"
+downloadAll = "Download All"
+downloadSelected = "Download Selected Files"
+draw = "Draw"
+exitRedaction = "Exit Redaction Mode"
+exportAll = "Export PDF"
+exportSelected = "Export Selected Pages"
+formFill = "Fill Form"
+language = "Language"
+panMode = "Pan Mode"
+print = "Print PDF"
+redact = "Redact"
+rotateLeft = "Rotate Left"
+rotateRight = "Rotate Right"
+ruler = "Ruler / Measure"
+save = "Save"
+saveAll = "Save All"
+saveChanges = "Save Changes"
+search = "Search PDF"
+selectAll = "Select All"
+selectByNumber = "Select by Page Numbers"
+toggleAnnotations = "Toggle Annotations Visibility"
+toggleAttachments = "Toggle Attachments"
+toggleBookmarks = "Toggle Bookmarks"
+toggleSidebar = "Toggle Sidebar"
+toggleTheme = "Toggle Theme"
 
 [rotate]
 rotateLeft = "Rotate Anticlockwise"
@@ -6203,6 +6185,11 @@ title = "API Documentation"
 [tableExtraxt]
 tags = "CSV,Table Extraction,extract,convert"
 
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [theme]
 toggle = "Toggle Theme"
 
@@ -6478,23 +6465,36 @@ fileManager = "File Manager"
 pageEditor = "Page Editor"
 viewer = "Viewer"
 
+[viewer]
+cannotPreviewFile = "Cannot Preview File"
+dualPageView = "Dual Page View"
+firstPage = "First Page"
+lastPage = "Last Page"
+nextPage = "Next Page"
+onlyPdfSupported = "The viewer only supports PDF files. This file appears to be a different format."
+previousPage = "Previous Page"
+singlePageView = "Single Page View"
+unknownFile = "Unknown file"
+zoomIn = "Zoom In"
+zoomOut = "Zoom Out"
+
 [viewer.attachments]
-title = "Attachments"
-searchPlaceholder = "Search attachments"
-noSupport = "Attachment support is unavailable for this viewer."
-noDocument = "Open a PDF to view its attachments."
-loading = "Loading attachments..."
 empty = "No attachments in this document"
+loading = "Loading attachments..."
+noDocument = "Open a PDF to view its attachments."
 noMatch = "No attachments match your search"
+noSupport = "Attachment support is unavailable for this viewer."
+searchPlaceholder = "Search attachments"
+title = "Attachments"
 
 [viewer.formBar]
+apply = "Apply Changes"
+dismiss = "Dismiss"
+download = "Download PDF"
+hasFieldsDesc = "This PDF contains fillable fields"
 title = "Form Fields"
 unsavedBadge = "Unsaved"
 unsavedDesc = "You have unsaved changes"
-hasFieldsDesc = "This PDF contains fillable fields"
-dismiss = "Dismiss"
-apply = "Apply Changes"
-download = "Download PDF"
 
 [viewPdf]
 header = "View PDF"

@@ -16,13 +16,13 @@ comingSoon = "Demnächst verfügbar"
 confirmClose = "Schließen bestätigen"
 confirmCloseCancel = "Abbrechen"
 confirmCloseConfirm = "Datei schließen"
-confirmCloseMessage = "Sind Sie sicher, dass Sie diese Datei schließen möchten?"
 confirmCloseDiscard = "Discard changes and close"
+confirmCloseMessage = "Sind Sie sicher, dass Sie diese Datei schließen möchten?"
 confirmCloseSave = "Save and close"
+confirmCloseSaveFailed = "Saved with errors. {{count}} file{{plural}} could not be saved."
+confirmCloseSaveFailedTitle = "Save Failed"
 confirmCloseUnsaved = "This file has unsaved changes."
 confirmCloseUnsavedList = "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Save Failed"
-confirmCloseSaveFailed = "Saved with errors. {{count}} file{{plural}} could not be saved."
 confirmPasswordErrorMessage = "„Neues Passwort“ und „Neues Passwort bestätigen“ müssen übereinstimmen."
 custom = "Benutzerdefiniert..."
 customPosition = "Benutzerdefinierte Position"
@@ -45,8 +45,8 @@ edit = "Bearbeiten"
 editYourNewFiles = "Ihre neuen Dateien bearbeiten"
 exportAndContinue = "Exportieren & Fortfahren"
 false = "Falsch"
-fileSavedToDisk = "File saved to disk"
 fileNotSavedToDisk = "Not saved to disk"
+fileSavedToDisk = "File saved to disk"
 fileSelected = "Ausgewählt: {{filename}}"
 filesSelected = "Dateien ausgewählt"
 font = "Schriftart"
@@ -841,6 +841,14 @@ title = "API-Endpunkte"
 userDefaults = "User Preference Defaults"
 userDefaultsDescription = "Set default values for user preferences. Users can override these in their personal settings."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Remove disabled conversion options instead of showing them greyed out"
+label = "Hide unavailable conversions by default"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Remove disabled tools instead of showing them greyed out"
+label = "Hide unavailable tools by default"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Zu deaktivierende Endpunktgruppen auswählen"
 label = "Deaktivierte Endpunktgruppen"
@@ -848,14 +856,6 @@ label = "Deaktivierte Endpunktgruppen"
 [admin.settings.endpoints.toRemove]
 description = "Einzelne zu deaktivierende Endpunkte auswählen"
 label = "Deaktivierte Endpunkte"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Remove disabled tools instead of showing them greyed out"
-label = "Hide unavailable tools by default"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Remove disabled conversion options instead of showing them greyed out"
-label = "Hide unavailable conversions by default"
 
 [admin.settings.enterpriseRequired]
 message = "Für den Zugriff auf {{featureName}} ist eine Enterprise-Lizenz erforderlich. Sie sehen zu Referenzzwecken Demodaten."
@@ -1228,6 +1228,14 @@ label = "Initialer Benutzername"
 [admin.settings.security.jwt]
 label = "JWT-Konfiguration"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerance for client/server time drift during token validation (default: 60 seconds)"
+label = "Clock Skew Tolerance (seconds)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)"
+label = "Desktop Token Expiry (minutes)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Abgelaufene JWT-Schlüssel automatisch entfernen"
 label = "Schlüsselbereinigung aktivieren"
@@ -1236,29 +1244,21 @@ label = "Schlüsselbereinigung aktivieren"
 description = "JWT-Signaturschlüssel automatisch regelmäßig rotieren"
 label = "Schlüsselrotation aktivieren"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)"
-label = "Web Token Expiry (minutes)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)"
-label = "Desktop Token Expiry (minutes)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerance for client/server time drift during token validation (default: 60 seconds)"
-label = "Clock Skew Tolerance (seconds)"
+[admin.settings.security.jwt.persistence]
+description = "JWT-Schlüssel persistent speichern, damit Serverneustarts überstanden werden"
+label = "Schlüsselpersistenz aktivieren"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Allow token refresh within this many minutes after expiry (default: 15 minutes, max 3 attempts)"
 label = "Refresh Grace Period (minutes)"
 
-[admin.settings.security.jwt.persistence]
-description = "JWT-Schlüssel persistent speichern, damit Serverneustarts überstanden werden"
-label = "Schlüsselpersistenz aktivieren"
-
 [admin.settings.security.jwt.secureCookie]
 description = "HTTPS für JWT-Cookies erforderlich (für Produktion empfohlen)"
 label = "Sicheres Cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)"
+label = "Web Token Expiry (minutes)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximale Anzahl fehlgeschlagener Anmeldeversuche vor Kontosperre"
@@ -3346,10 +3346,6 @@ desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen.
 tags = "arbeitsablauf,sequenz,automatisierung"
 title = "Automatisieren"
 
-[home.formFill]
-desc = "Fill PDF form fields interactively with a visual editor"
-title = "Fill Form"
-
 [home.autoRename]
 desc = "Benennt eine PDF-Datei automatisch basierend auf der erkannten Überschrift um"
 tags = "auto-erkennung,kopfzeilen-basiert,organisieren,umbenennen"
@@ -3444,6 +3440,10 @@ title = "Seiten extrahieren"
 desc = "Alle interaktiven Elemente und Formulare aus einem PDF entfernen"
 tags = "vereinfachen,entfernen,interaktiv"
 title = "Abflachen"
+
+[home.formFill]
+desc = "Fill PDF form fields interactively with a visual editor"
+title = "Fill Form"
 
 [home.getPdfInfo]
 desc = "Erfasst alle möglichen Informationen in einer PDF"
@@ -4247,75 +4247,6 @@ title = "Seiten-Editor"
 zoomIn = "Vergrößern"
 zoomOut = "Verkleinern"
 
-[viewer]
-cannotPreviewFile = "Datei kann nicht in der Vorschau angezeigt werden"
-dualPageView = "Doppelseitenansicht"
-firstPage = "Erste Seite"
-lastPage = "Letzte Seite"
-nextPage = "Nächste Seite"
-onlyPdfSupported = "Der Viewer unterstützt nur PDF-Dateien. Diese Datei scheint ein anderes Format zu haben."
-previousPage = "Vorherige Seite"
-singlePageView = "Einzelseitenansicht"
-unknownFile = "Unbekannte Datei"
-zoomIn = "Vergrößern"
-zoomOut = "Verkleinern"
-
-[viewer.attachments]
-title = "Attachments"
-searchPlaceholder = "Search attachments"
-noSupport = "Attachment support is unavailable for this viewer."
-noDocument = "Open a PDF to view its attachments."
-loading = "Loading attachments..."
-empty = "No attachments in this document"
-noMatch = "No attachments match your search"
-
-[viewer.formBar]
-title = "Form Fields"
-unsavedBadge = "Unsaved"
-unsavedDesc = "You have unsaved changes"
-hasFieldsDesc = "This PDF contains fillable fields"
-dismiss = "Dismiss"
-apply = "Apply Changes"
-download = "Download PDF"
-
-[rightRail]
-closeSelected = "Ausgewählte Dateien schließen"
-selectAll = "Alle auswählen"
-deselectAll = "Auswahl aufheben"
-selectByNumber = "Nach Seitenzahlen auswählen"
-deleteSelected = "Ausgewählte Seiten löschen"
-closePdf = "PDF schließen"
-exportAll = "PDF exportieren"
-downloadSelected = "Ausgewählte Dateien herunterladen"
-annotations = "Annotations"
-exportSelected = "Ausgewählte Seiten exportieren"
-formFill = "Fill Form"
-saveChanges = "Änderungen speichern"
-toggleAttachments = "Toggle Attachments"
-toggleTheme = "Design wechseln"
-language = "Sprache"
-toggleAnnotations = "Anmerkungen ein-/ausblenden"
-search = "PDF durchsuchen"
-panMode = "Verschiebemodus"
-applyRedactionsFirst = "Apply redactions first"
-rotateLeft = "Nach links drehen"
-rotateRight = "Nach rechts drehen"
-toggleSidebar = "Seitenleiste umschalten"
-toggleBookmarks = "Lesezeichen ein-/ausblenden"
-print = "PDF drucken"
-ruler = "Lineal / Messen"
-draw = "Draw"
-redact = "Redact"
-exitRedaction = "Exit Redaction Mode"
-save = "Save"
-downloadAll = "Alle herunterladen"
-saveAll = "Alle speichern"
-
-[textAlign]
-left = "Links"
-center = "Zentriert"
-right = "Rechts"
-
 [pageExtracter]
 header = "Seiten extrahieren"
 placeholder = "(z.B. 1,2,8 oder 4,7,12-16 oder 2n-1)"
@@ -4992,15 +4923,15 @@ title = "Zu schwärzende Wörter"
 failed = "Ein Fehler ist beim Schwärzen der PDF aufgetreten."
 
 [redact.manual]
+activate = "Activate Redaction Tool"
+active = "Redaction Mode Active"
 apply = "Apply"
 applyChanges = "Änderungen anwenden"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanente Anwendung, kann nicht rückgängig gemacht werden und die darunterliegenden Daten werden gelöscht"
 boxRedaction = "Kasten-Zeichen-Schwärzung"
-colourPicker = "Farbwähler"
 colorLabel = "Redaction Colour"
-active = "Redaction Mode Active"
-activate = "Activate Redaction Tool"
+colourPicker = "Farbwähler"
 controlsTitle = "Manual Redaction Controls"
 convertPDFToImageLabel = "PDF zu PDF-Bild konvertieren (Verwendet, um Text hinter dem Kasten zu entfernen)"
 export = "Herunterladen"
@@ -5395,6 +5326,39 @@ title = "Hoher Kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Alle Farben im PDF vollständig invertieren und einen negativähnlichen Effekt erzeugen. Nützlich, um Dark-Mode-Versionen von Dokumenten zu erstellen oder die Augenbelastung bei schwachem Licht zu reduzieren."
 title = "Alle Farben invertieren"
+
+[rightRail]
+annotations = "Annotations"
+applyRedactionsFirst = "Apply redactions first"
+closePdf = "PDF schließen"
+closeSelected = "Ausgewählte Dateien schließen"
+deleteSelected = "Ausgewählte Seiten löschen"
+deselectAll = "Auswahl aufheben"
+downloadAll = "Alle herunterladen"
+downloadSelected = "Ausgewählte Dateien herunterladen"
+draw = "Draw"
+exitRedaction = "Exit Redaction Mode"
+exportAll = "PDF exportieren"
+exportSelected = "Ausgewählte Seiten exportieren"
+formFill = "Fill Form"
+language = "Sprache"
+panMode = "Verschiebemodus"
+print = "PDF drucken"
+redact = "Redact"
+rotateLeft = "Nach links drehen"
+rotateRight = "Nach rechts drehen"
+ruler = "Lineal / Messen"
+save = "Save"
+saveAll = "Alle speichern"
+saveChanges = "Änderungen speichern"
+search = "PDF durchsuchen"
+selectAll = "Alle auswählen"
+selectByNumber = "Nach Seitenzahlen auswählen"
+toggleAnnotations = "Anmerkungen ein-/ausblenden"
+toggleAttachments = "Toggle Attachments"
+toggleBookmarks = "Lesezeichen ein-/ausblenden"
+toggleSidebar = "Seitenleiste umschalten"
+toggleTheme = "Design wechseln"
 
 [rotate]
 rotateLeft = "Gegen den Uhrzeigersinn drehen"
@@ -6233,6 +6197,11 @@ title = "API-Dokumentation"
 [tableExtraxt]
 tags = "CSV,tabelle,extrahieren"
 
+[textAlign]
+center = "Zentriert"
+left = "Links"
+right = "Rechts"
+
 [theme]
 toggle = "Design umschalten"
 
@@ -6507,6 +6476,37 @@ invalid = "Zertifikat nicht im Truststore - Quelle kann nicht verifiziert werden
 fileManager = "Dateiverwaltung"
 pageEditor = "Seiteneditor"
 viewer = "Betrachter"
+
+[viewer]
+cannotPreviewFile = "Datei kann nicht in der Vorschau angezeigt werden"
+dualPageView = "Doppelseitenansicht"
+firstPage = "Erste Seite"
+lastPage = "Letzte Seite"
+nextPage = "Nächste Seite"
+onlyPdfSupported = "Der Viewer unterstützt nur PDF-Dateien. Diese Datei scheint ein anderes Format zu haben."
+previousPage = "Vorherige Seite"
+singlePageView = "Einzelseitenansicht"
+unknownFile = "Unbekannte Datei"
+zoomIn = "Vergrößern"
+zoomOut = "Verkleinern"
+
+[viewer.attachments]
+empty = "No attachments in this document"
+loading = "Loading attachments..."
+noDocument = "Open a PDF to view its attachments."
+noMatch = "No attachments match your search"
+noSupport = "Attachment support is unavailable for this viewer."
+searchPlaceholder = "Search attachments"
+title = "Attachments"
+
+[viewer.formBar]
+apply = "Apply Changes"
+dismiss = "Dismiss"
+download = "Download PDF"
+hasFieldsDesc = "This PDF contains fillable fields"
+title = "Form Fields"
+unsavedBadge = "Unsaved"
+unsavedDesc = "You have unsaved changes"
 
 [viewPdf]
 header = "PDF anzeigen"
