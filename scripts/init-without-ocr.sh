@@ -46,6 +46,8 @@ print_versions() {
 
 cleanup() {
   log "Shutdown signal received. Cleaning up..."
+  # Kill background AOT generation if still running
+  [ -n "${AOT_GEN_PID:-}" ] && kill -TERM "$AOT_GEN_PID" 2>/dev/null || true
   # Kill background processes (unoservers, watchdog, Xvfb)
   pkill -P $$ || true
   # Kill Java if it was backgrounded (though it handles its own shutdown)
@@ -402,105 +404,66 @@ compute_dynamic_memory() {
   log "Dynamic memory: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
 }
 
-# ---------- First-Boot AppCDS Generation ----------
-# Generates an AppCDS archive at runtime, ensuring the archive matches the
-# exact JVM version, architecture, and flag state of the current container.
-# This is more robust than build-time generation which can produce mismatched
-# archives when building multi-arch images or when runtime flags differ.
-generate_appcds_archive() {
-  local jsa_path=$1
-  local memory_flags=$2
-  shift 2
-  # Remaining args are the classpath/main-class arguments for the training run
+# ---------- Project Leyden AOT Cache (JEP 483 + 514 + 515) ----------
+# Replaces legacy AppCDS with JDK 25's AOT cache. Uses the three-step workflow:
+#   1. RECORD  — runs Spring context init, captures class loading + method profiles
+#   2. CREATE  — builds the AOT cache file (does NOT start the app)
+#   3. RUNTIME — java -XX:AOTCache=... starts with pre-linked classes + compiled methods
+# Constraints:
+# - Cache must be generated on the same JDK build + OS + arch as production (satisfied
+#   because we generate inside the same container image at runtime)
+# - ZGC not supported until JDK 26 (G1GC and Shenandoah are fully supported)
+# - Signed JARs (BouncyCastle) are silently skipped, no warnings, no functionality loss
+generate_aot_cache() {
+  local aot_path="$1"
+  shift
+  # Remaining args ($@) are the classpath/main-class arguments for the training run
 
-  local jsa_dir
-  jsa_dir=$(dirname "$jsa_path")
-  mkdir -p "$jsa_dir" 2>/dev/null || true
+  local aot_dir
+  aot_dir=$(dirname "$aot_path")
+  mkdir -p "$aot_dir" 2>/dev/null || true
 
-  log "Generating AppCDS archive on first boot (this may take 30-60s)..."
+  local aot_conf="/tmp/stirling.aotconf"
 
-  # Training run - collect loaded class list
-  # Use -Xmx1g to limit memory for class listing (enough for Spring Boot init)
-  java -Xmx1g -XX:+UseCompactObjectHeaders \
-       -XX:DumpLoadedClassList=/tmp/classes.lst \
+  log "AOT: Phase 1/2 — Recording class loading + method profiles..."
+
+  # RECORD — starts Spring context, observes class loading + collects method profiles (JEP 515).
+  # -Dspring.context.exit=onRefresh stops after Spring context loads (good training coverage).
+  # Uses -Xmx512m: enough for Spring context init without starving the running application.
+  # Non-zero exit is expected — onRefresh triggers controlled shutdown.
+  java -Xmx512m -XX:+UseCompactObjectHeaders \
+       -XX:AOTMode=record \
+       -XX:AOTConfiguration="$aot_conf" \
        -Dspring.context.exit=onRefresh \
-       "$@" 2>/tmp/appcds-training.log || true
+       "$@" 2>/tmp/aot-record.log || true
 
-  if [ ! -f /tmp/classes.lst ]; then
-    log "AppCDS training run produced no class list; skipping CDS."
-    if [ -f /tmp/appcds-training.log ]; then
-      log "AppCDS training log (last 5 lines):"
-      tail -5 /tmp/appcds-training.log | log
-    fi
-    rm -f /tmp/appcds-training.log
-    return 1
-  fi
-  rm -f /tmp/appcds-training.log
-
-  # Filter out BouncyCastle to prevent signature conflicts and JFR events that can't be archived
-  # Also filter out optional dependencies that cause Preload Warnings (log4j2, reactive, cache providers, freemarker, bytebuddy, etc.)
-  # Using a file-based exclusion list for maintainability
-  cat > /tmp/appcds-exclude.patterns <<'APPCDS_EXCLUDE'
-org/bouncycastle
-org/spongycastle
-jdk/internal/event
-org/springframework/boot/logging/log4j2
-org/springframework/security/web/server
-io/micrometer/core/instrument/binder/logging
-org/springframework/boot/cache/autoconfigure
-org/springframework/cache/jcache
-org/springframework/cache/interceptor
-org/springframework/transaction/interceptor
-org/hibernate/type/format/jakartajson
-org/hibernate/type/format/jackson
-net/bytebuddy/utility
-io/vavr
-org/xmlbeam
-org/springframework/data/repository/util/QueryExecutionConverters
-org/springframework/security/config/annotation/authentication/configurers/ldap
-org/springframework/data/web/config/SpringDataWebConfiguration
-org/springframework/security/config/annotation/web/configurers/oauth2
-org/springframework/security/config/annotation/web/configurers/ChannelSecurityConfigurer
-org/springframework/security/config/annotation/web/configurers/WebAuthnConfigurer
-org/springframework/core/ReactiveAdapterRegistry
-org/springframework/transaction/reactive
-org/springframework/data/web/XmlBeamHttpMessageConverter
-org/springframework/web/servlet/view/freemarker
-APPCDS_EXCLUDE
-  grep -vFf /tmp/appcds-exclude.patterns /tmp/classes.lst > /tmp/filtered-classes.lst || true
-  rm -f /tmp/appcds-exclude.patterns
-
-  # Determine classpath for dump
-  local cp_arg=""
-  if [ -f /app/app.jar ] && [ -d /app/lib ]; then
-    cp_arg="/app/app.jar:/app/lib/*"
-  elif [ -f /app.jar ]; then
-    cp_arg="/app.jar"
-  else
-    log "Cannot determine classpath for CDS dump; skipping."
-    rm -f /tmp/classes.lst /tmp/filtered-classes.lst
+  if [ ! -f "$aot_conf" ]; then
+    log "AOT: Training produced no configuration file."
+    tail -5 /tmp/aot-record.log 2>/dev/null | while IFS= read -r line; do log "  $line"; done
+    rm -f /tmp/aot-record.log
     return 1
   fi
 
-  # Dump the shared archive using the SAME memory flags as runtime.
-  # This ensures UseCompressedOops state matches (critical for large heaps >32GB).
-  # shellcheck disable=SC2086
-  if java -Xshare:dump \
-       -XX:+UseCompactObjectHeaders \
-       ${memory_flags} \
-       -XX:SharedClassListFile=/tmp/filtered-classes.lst \
-       -XX:SharedArchiveFile="$jsa_path" \
-       -cp "$cp_arg" 2>/tmp/appcds-dump.log; then
-    log "AppCDS archive created successfully: $jsa_path"
-    rm -f /tmp/classes.lst /tmp/filtered-classes.lst /tmp/appcds-dump.log
+  log "AOT: Phase 2/2 — Creating AOT cache from recorded profile..."
+
+  # CREATE, does NOT start the application. Processes the recorded configuration
+  # to build the AOT cache with pre-linked classes and optimized native code.
+  # Uses less memory than the training run.
+  if java -Xmx256m -XX:+UseCompactObjectHeaders \
+       -XX:AOTMode=create \
+       -XX:AOTConfiguration="$aot_conf" \
+       -XX:AOTCache="$aot_path" \
+       "$@" 2>/tmp/aot-create.log; then
+
+    local cache_size
+    cache_size=$(du -h "$aot_path" 2>/dev/null | cut -f1)
+    log "AOT: Cache created successfully: $aot_path ($cache_size)"
+    rm -f "$aot_conf" /tmp/aot-record.log /tmp/aot-create.log
     return 0
   else
-    log "AppCDS dump failed; running without CDS."
-    if [ -f /tmp/appcds-dump.log ]; then
-      log "AppCDS dump log (last 5 lines):"
-      tail -5 /tmp/appcds-dump.log | log
-    fi
-    rm -f /tmp/classes.lst /tmp/filtered-classes.lst /tmp/appcds-dump.log "$jsa_path"
+    log "AOT: Cache creation failed."
+    tail -5 /tmp/aot-create.log 2>/dev/null | while IFS= read -r line; do log "  $line"; done
+    rm -f "$aot_conf" "$aot_path" /tmp/aot-record.log /tmp/aot-create.log
     return 1
   fi
 }
@@ -536,14 +499,17 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
       ;;
   esac
 
-  # Strip any hardcoded memory/CDS flags from the profile (managed dynamically)
+  # Strip any hardcoded memory/CDS/AOT flags from the profile (managed dynamically)
   JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
     's/-XX:InitialRAMPercentage=[^ ]*//g;
      s/-XX:MinRAMPercentage=[^ ]*//g;
      s/-XX:MaxRAMPercentage=[^ ]*//g;
      s/-XX:MaxMetaspaceSize=[^ ]*//g;
      s/-XX:SharedArchiveFile=[^ ]*//g;
-     s/-Xshare:(auto|on|off)//g')
+     s/-Xshare:(auto|on|off)//g;
+     s/-XX:AOTCache=[^ ]*//g;
+     s/-XX:AOTMode=[^ ]*//g;
+     s/-XX:AOTConfiguration=[^ ]*//g')
 
   # Append computed dynamic memory flags
   JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${MEMORY_FLAGS}"
@@ -578,36 +544,36 @@ JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedClassPo
 # Remove UseCompressedOops (let JVM use defaults; explicitly disabling wastes memory)
 JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedOops//g')
 
-# ---------- AppCDS Management ----------
-# Strip any existing CDS references from base opts (we manage CDS dynamically below)
-JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:SharedArchiveFile=[^ ]*//g; s/-Xshare:(auto|on|off)//g')
+# ---------- AOT Cache Management (Project Leyden) ----------
+# Strip any legacy CDS/AOT references from base opts (we manage AOT dynamically below)
+JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
+  's/-XX:SharedArchiveFile=[^ ]*//g;
+   s/-Xshare:(auto|on|off)//g;
+   s/-XX:AOTCache=[^ ]*//g')
 
-CDS_ARCHIVE="/app/stirling.jsa"
+AOT_CACHE="/app/stirling.aot"
+AOT_GENERATE_BACKGROUND=false
 
-if [ -f "$CDS_ARCHIVE" ]; then
-  # Archive exists (either build-time or from a previous first-boot)
-  log "AppCDS archive found: $CDS_ARCHIVE"
-  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:SharedArchiveFile=${CDS_ARCHIVE} -Xshare:auto"
-elif [ "${STIRLING_CDS_DISABLE:-false}" = "true" ]; then
-  log "AppCDS disabled via STIRLING_CDS_DISABLE=true"
+# Support both new (STIRLING_AOT_DISABLE) and legacy (STIRLING_CDS_DISABLE) env vars
+AOT_DISABLED="${STIRLING_AOT_DISABLE:-${STIRLING_CDS_DISABLE:-false}}"
+
+if [ -f "$AOT_CACHE" ]; then
+  # Cache exists from a previous boot — use it.
+  # If the file is corrupt or from a different JDK build, the JVM issues a warning
+  # and continues without the cache (graceful degradation, no crash).
+  log "AOT cache found: $AOT_CACHE"
+  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:AOTCache=${AOT_CACHE}"
+
+  # Clean up legacy .jsa if still present
+  rm -f /app/stirling.jsa 2>/dev/null || true
+elif [ "$AOT_DISABLED" = "true" ]; then
+  log "AOT cache disabled via STIRLING_AOT_DISABLE=true"
 else
-  # First-boot CDS generation
-  CDS_GENERATED=false
-  if [ -f /app/app.jar ] && [ -d /app/lib ]; then
-    if generate_appcds_archive "$CDS_ARCHIVE" "$MEMORY_FLAGS" -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication; then
-      CDS_GENERATED=true
-    fi
-  elif [ -f /app.jar ]; then
-    if generate_appcds_archive "$CDS_ARCHIVE" "$MEMORY_FLAGS" -jar /app.jar; then
-      CDS_GENERATED=true
-    fi
-  fi
-
-  if [ "$CDS_GENERATED" = true ] && [ -f "$CDS_ARCHIVE" ]; then
-    JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:SharedArchiveFile=${CDS_ARCHIVE} -Xshare:auto"
-  else
-    log "Running without AppCDS (set STIRLING_CDS_DISABLE=true to skip generation attempts)"
-  fi
+  # No cache exists — schedule background generation after app starts.
+  # The app starts immediately (no training delay). The AOT cache will be
+  # ready for the NEXT boot, giving 15-25% faster startup from then on.
+  log "No AOT cache found. Will generate in background after app starts."
+  AOT_GENERATE_BACKGROUND=true
 fi
 
 # Collapse duplicate whitespace
@@ -754,7 +720,7 @@ if [ -f "/app.jar" ]; then
   JAVA_CMD+=("-jar" "/app.jar")
 elif [ -f "/app/app.jar" ]; then
   # Spring Boot 4 layered JAR structure (exploded via extract --layers).
-  # Use -cp (not -jar) so the classpath matches the AppCDS archive exactly.
+  # Use -cp (not -jar) so the classpath matches the AOT cache exactly.
   JAVA_CMD+=("-cp" "/app/app.jar:/app/lib/*" "stirling.software.SPDF.SPDFApplication")
 else
   # Legacy fallback for Spring Boot 3 layered layout
@@ -772,6 +738,41 @@ else
 fi
 
 JAVA_PID=$!
+
+# ---------- Background AOT Cache Generation ----------
+# On first boot (no existing cache), generate the AOT cache in the background
+# so the app starts immediately. The cache is picked up on the next boot.
+# Only runs on containers with >768MB memory to avoid starving the main process.
+AOT_GEN_PID=""
+if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
+  if [ "$CONTAINER_MEM_MB" -gt 768 ] || [ "$CONTAINER_MEM_MB" -eq 0 ]; then
+    (
+      # Wait for the app to finish starting before competing for resources.
+      # This avoids CPU/memory contention during Spring Boot initialization.
+      sleep 45
+
+      # Verify the main app is still running before investing in cache generation
+      if ! kill -0 "$JAVA_PID" 2>/dev/null; then
+        log "AOT: Main process exited; skipping cache generation."
+        exit 0
+      fi
+
+      log "AOT: Starting background cache generation for next boot..."
+      if [ -f /app/app.jar ] && [ -d /app/lib ]; then
+        generate_aot_cache "$AOT_CACHE" -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication
+      elif [ -f /app.jar ]; then
+        generate_aot_cache "$AOT_CACHE" -jar /app.jar
+      else
+        log "AOT: Cannot determine JAR layout; skipping cache generation."
+      fi
+    ) &
+    AOT_GEN_PID=$!
+    log "AOT: Background cache generation scheduled (PID $AOT_GEN_PID)"
+  else
+    log "AOT: Container memory (${CONTAINER_MEM_MB}MB) too low for background generation (need >768MB). Cache will not be created."
+  fi
+fi
+
 wait "$JAVA_PID" || true
 exit_code=$?
 # Propagate Java's actual exit code so container orchestrators can detect crashes

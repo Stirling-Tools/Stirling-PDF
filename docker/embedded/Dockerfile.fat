@@ -159,10 +159,14 @@ RUN set -eux; \
     find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
     \
     # Strip debug symbols from calibre extension modules.
-    # Exclude Qt6 libs: libQt6WebEngineCore and friends embed Chromium V8 JIT code
-    # and internal resource blobs that strip corrupts, causing segfaults at render time.
+    # Exclude Qt6 libs and all qt6/ subdirectory files: libQt6WebEngineCore and friends
+    # embed Chromium V8 JIT code and internal resource blobs that strip corrupts, causing
+    # segfaults at render time. Qt6 plugins (e.g. libqoffscreen.so, libqpdf.so) live under
+    # qt6/plugins/ and do NOT match the libQt6* name pattern, so they must also be excluded
+    # via the path filter to prevent the WebEngine renderer from crashing.
     find /opt/calibre/lib -name '*.so*' \
       ! -name 'libQt6*' \
+      ! -path '*/qt6/*' \
       -exec strip --strip-unneeded {} + 2>/dev/null || true; \
     \
     find /opt/calibre -type d -name __pycache__ \
@@ -513,9 +517,9 @@ RUN set -eux; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
     chmod 1777 /tmp/stirling-pdf; \
     fc-cache -f; \
-    # NOTE: AppCDS archive is generated at first boot by init-without-ocr.sh.
-    # This ensures the archive matches the exact JVM version, architecture,
-    # and flag state of the runtime container (no build-time/runtime mismatches).
+    # NOTE: Project Leyden AOT cache is generated in the background on first boot
+    # by init-without-ocr.sh. The cache is picked up on subsequent boots for
+    # 15-25% faster startup. See: JEP 483 + 514 + 515 (JDK 25).
     \
     # Clean Calibre pycache that may have been generated during stage-1 verify
     find /opt/calibre -type d -name __pycache__ \

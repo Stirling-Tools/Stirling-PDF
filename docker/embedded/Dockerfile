@@ -511,9 +511,9 @@ RUN set -eux; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
-    # NOTE: AppCDS archive is generated at first boot by init-without-ocr.sh.
-    # This ensures the archive matches the exact JVM version, architecture,
-    # and flag state of the runtime container (no build-time/runtime mismatches).
+    # NOTE: Project Leyden AOT cache is generated in the background on first boot
+    # by init-without-ocr.sh. The cache is picked up on subsequent boots for
+    # 15-25% faster startup. See: JEP 483 + 514 + 515 (JDK 25).
 
 # Environment variables.
 ARG VERSION_TAG

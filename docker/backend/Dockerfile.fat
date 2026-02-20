@@ -134,9 +134,9 @@ RUN ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
 # Copy application files from build stage
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
 
-# NOTE: AppCDS archive is generated at first boot by init-without-ocr.sh.
-# This ensures the archive matches the exact JVM version, architecture,
-# and flag state of the runtime container (no build-time/runtime mismatches).
+# NOTE: Project Leyden AOT cache is generated in the background on first boot
+# by init-without-ocr.sh. The cache is picked up on subsequent boots for
+# 15-25% faster startup. See: JEP 483 + 514 + 515 (JDK 25).
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY scripts/ /scripts/
 COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
