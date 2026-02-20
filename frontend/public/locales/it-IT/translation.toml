@@ -17,6 +17,12 @@ confirmClose = "Conferma chiusura"
 confirmCloseCancel = "Annulla"
 confirmCloseConfirm = "Chiudi file"
 confirmCloseMessage = "Sei sicuro di voler chiudere questo file?"
+confirmCloseDiscard = "Scarta le modifiche e chiudi"
+confirmCloseSave = "Salva e chiudi"
+confirmCloseUnsaved = "Questo file contiene modifiche non salvate."
+confirmCloseUnsavedList = "Hai {{count}} file{{plural}} con modifiche non salvate.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Salvataggio non riuscito"
+confirmCloseSaveFailed = "Salvato con errori. Non è stato possibile salvare {{count}} file{{plural}}."
 confirmPasswordErrorMessage = "La nuova password e la conferma della nuova password devono corrispondere."
 custom = "Personalizzato"
 customPosition = "Posizione personalizzata"
@@ -39,6 +45,8 @@ edit = "Modifica"
 editYourNewFiles = "Modifica il/i nuovo/i file"
 exportAndContinue = "Esporta e continua"
 false = "Falso"
+fileSavedToDisk = "File salvato su disco"
+fileNotSavedToDisk = "Non salvato su disco"
 fileSelected = "Selezionato: {{filename}}"
 filesSelected = "file selezionati"
 font = "Carattere"
@@ -829,8 +837,9 @@ label = "Nome utente"
 [admin.settings.endpoints]
 description = "Controlla quali endpoint API e gruppi di endpoint sono disponibili."
 management = "Gestione endpoint"
-note = "Nota: La disabilitazione degli endpoint limita l'accesso API ma non rimuove i componenti UI. Riavvio richiesto perché le modifiche abbiano effetto."
 title = "Endpoint API"
+userDefaults = "Valori predefiniti delle preferenze utente"
+userDefaultsDescription = "Imposta i valori predefiniti per le preferenze utente. Gli utenti possono sovrascriverli nelle proprie impostazioni personali."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Seleziona gruppi di endpoint da disabilitare"
@@ -839,6 +848,14 @@ label = "Gruppi di endpoint disabilitati"
 [admin.settings.endpoints.toRemove]
 description = "Seleziona endpoint individuali da disabilitare"
 label = "Endpoint disabilitati"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Rimuovi gli strumenti disabilitati invece di mostrarli in grigio"
+label = "Nascondi per impostazione predefinita gli strumenti non disponibili"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Rimuovi le opzioni di conversione disabilitate invece di mostrarle in grigio"
+label = "Nascondi per impostazione predefinita le conversioni non disponibili"
 
 [admin.settings.enterpriseRequired]
 message = "È necessaria una licenza Enterprise per accedere a {{featureName}}. Stai visualizzando dati demo a scopo di riferimento."
@@ -1219,9 +1236,21 @@ label = "Abilita pulizia chiavi"
 description = "Ruota automaticamente periodicamente le chiavi di firma JWT"
 label = "Abilita rotazione chiavi"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Numero di giorni per conservare le vecchie chiavi JWT per la verifica"
-label = "Giorni di conservazione chiavi"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Durata del token di accesso in minuti per i client web (predefinito: 1440 = 24 ore)"
+label = "Scadenza token web (minuti)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Durata del token di accesso in minuti per i client desktop. Le app desktop vengono rilevate automaticamente tramite User-Agent e ricevono sessioni più lunghe per una migliore UX (predefinito: 43200 = 30 giorni)"
+label = "Scadenza token desktop (minuti)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolleranza per la deriva temporale client/server durante la convalida del token (predefinito: 60 secondi)"
+label = "Tolleranza deriva temporale (secondi)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Consenti l'aggiornamento del token entro questo numero di minuti dopo la scadenza (predefinito: 15 minuti, max 3 tentativi)"
+label = "Periodo di tolleranza per l'aggiornamento (minuti)"
 
 [admin.settings.security.jwt.persistence]
 description = "Archivia le chiavi JWT in modo persistente per sopravvivere ai riavvii del server"
@@ -1422,13 +1451,16 @@ applyChanges = "Applica modifiche"
 backgroundColor = "Colore di sfondo"
 borderOff = "Bordo: disattivato"
 borderOn = "Bordo: attivo"
+changeColor = "Cambia colore"
 chooseColor = "Scegli colore"
 circle = "Cerchio"
 clearBackground = "Rimuovi sfondo"
 color = "Colore"
 contents = "Testo"
+delete = "Elimina"
 desc = "Usa evidenziatore, penna, testo e note. Le modifiche restano attive—nessun appiattimento richiesto."
 drawing = "Disegno"
+duplicate = "Duplica"
 editCircle = "Modifica cerchio"
 editInk = "Modifica penna"
 editLine = "Modifica linea"
@@ -1458,6 +1490,7 @@ notesStamps = "Note e timbri"
 opacity = "Opacità"
 pen = "Penna"
 polygon = "Poligono"
+properties = "Proprietà"
 rectangle = "Rettangolo"
 redo = "Ripristina"
 saveChanges = "Salva modifiche"
@@ -1483,6 +1516,7 @@ title = "Annota"
 underline = "Sottolinea"
 undo = "Annulla"
 unsupportedType = "Questo tipo di annotazione non è completamente supportato per la modifica."
+width = "Spessore"
 
 [app]
 description = "L’alternativa gratuita ad Adobe Acrobat (10M+ download)"
@@ -3312,6 +3346,10 @@ desc = "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività r
 tags = "flusso di lavoro,sequenza,automazione"
 title = "Automatizza"
 
+[home.formFill]
+desc = "Compila interattivamente i campi dei moduli PDF con un editor visuale"
+title = "Compila modulo"
+
 [home.autoRename]
 desc = "Rinomina automaticamente un file PDF in base all’intestazione rilevata"
 tags = "auto-rilevamento,basato su intestazione,organizza,rinomina"
@@ -4209,6 +4247,75 @@ title = "Editor pagine"
 zoomIn = "Ingrandisci"
 zoomOut = "Riduci"
 
+[viewer]
+cannotPreviewFile = "Impossibile visualizzare l'anteprima del file"
+dualPageView = "Vista doppia pagina"
+firstPage = "Prima pagina"
+lastPage = "Ultima pagina"
+nextPage = "Pagina successiva"
+onlyPdfSupported = "Il visualizzatore supporta solo file PDF. Questo file sembra essere in un formato diverso."
+previousPage = "Pagina precedente"
+singlePageView = "Vista pagina singola"
+unknownFile = "File sconosciuto"
+zoomIn = "Ingrandisci"
+zoomOut = "Riduci"
+
+[viewer.attachments]
+title = "Allegati"
+searchPlaceholder = "Cerca allegati"
+noSupport = "Il supporto per gli allegati non è disponibile in questo visualizzatore."
+noDocument = "Apri un PDF per visualizzarne gli allegati."
+loading = "Caricamento degli allegati..."
+empty = "Nessun allegato in questo documento"
+noMatch = "Nessun allegato corrisponde alla tua ricerca"
+
+[viewer.formBar]
+title = "Campi modulo"
+unsavedBadge = "Non salvato"
+unsavedDesc = "Hai modifiche non salvate"
+hasFieldsDesc = "Questo PDF contiene campi compilabili"
+dismiss = "Nascondi"
+apply = "Applica le modifiche"
+download = "Scarica PDF"
+
+[rightRail]
+closeSelected = "Chiudi file selezionati"
+selectAll = "Seleziona tutto"
+deselectAll = "Deseleziona tutto"
+selectByNumber = "Seleziona per numeri di pagina"
+deleteSelected = "Elimina pagine selezionate"
+closePdf = "Chiudi PDF"
+exportAll = "Esporta PDF"
+downloadSelected = "Scarica file selezionati"
+annotations = "Annotazioni"
+exportSelected = "Esporta pagine selezionate"
+formFill = "Compila modulo"
+saveChanges = "Salva modifiche"
+toggleAttachments = "Mostra/Nascondi allegati"
+toggleTheme = "Cambia tema"
+language = "Lingua"
+toggleAnnotations = "Attiva/disattiva visibilità annotazioni"
+search = "Cerca nel PDF"
+panMode = "Modalità mano"
+applyRedactionsFirst = "Applica prima gli oscuramenti"
+rotateLeft = "Ruota a sinistra"
+rotateRight = "Ruota a destra"
+toggleSidebar = "Mostra/Nascondi barra laterale"
+toggleBookmarks = "Mostra/Nascondi segnalibri"
+print = "Stampa PDF"
+ruler = "Righello / Misura"
+draw = "Disegna"
+redact = "Oscura"
+exitRedaction = "Esci dalla modalità di oscuramento"
+save = "Salva"
+downloadAll = "Scarica tutto"
+saveAll = "Salva tutto"
+
+[textAlign]
+left = "Sinistra"
+center = "Centro"
+right = "Destra"
+
 [pageExtracter]
 header = "Estrai pagine"
 placeholder = "(es. 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -4887,9 +4994,13 @@ failed = "Si è verificato un errore durante la redazione del PDF."
 [redact.manual]
 apply = "Applica"
 applyChanges = "Applica modifiche"
+applyRedactions = "Applica redazioni"
 applyWarning = "⚠️ Applicazione permanente, non può essere annullata e i dati sottostanti verranno eliminati"
 boxRedaction = "Redazione con riquadro"
 colourPicker = "Selettore colore"
+colorLabel = "Colore dell'oscuramento"
+active = "Modalità di oscuramento attiva"
+activate = "Attiva strumento di oscuramento"
 controlsTitle = "Controlli di oscuramento manuale"
 convertPDFToImageLabel = "Converti PDF in PDF‑immagine (usato per rimuovere testo dietro il riquadro)"
 export = "Esporta"
@@ -4914,7 +5025,6 @@ upload = "Carica"
 zoom = "Zoom"
 zoomIn = "Ingrandisci"
 zoomOut = "Riduci"
-applyRedactions = "Applica redazioni"
 
 [redact.manual.pageRedactionNumbers]
 placeholder = "(es. 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -5285,36 +5395,6 @@ title = "Alto contrasto"
 [replaceColor.tooltip.invertAll]
 text = "Inverti completamente tutti i colori nel PDF, creando un effetto simile a un negativo. Utile per creare versioni in modalità scura dei documenti o ridurre l'affaticamento visivo in condizioni di scarsa illuminazione."
 title = "Inverti tutti i colori"
-
-[rightRail]
-annotations = "Annotazioni"
-applyRedactionsFirst = "Applica prima gli oscuramenti"
-closePdf = "Chiudi PDF"
-closeSelected = "Chiudi file selezionati"
-deleteSelected = "Elimina pagine selezionate"
-deselectAll = "Deseleziona tutto"
-downloadAll = "Scarica tutto"
-downloadSelected = "Scarica file selezionati"
-draw = "Disegna"
-exitRedaction = "Esci dalla modalità di oscuramento"
-exportAll = "Esporta PDF"
-exportSelected = "Esporta pagine selezionate"
-language = "Lingua"
-panMode = "Modalità mano"
-print = "Stampa PDF"
-redact = "Oscura"
-rotateLeft = "Ruota a sinistra"
-rotateRight = "Ruota a destra"
-save = "Salva"
-saveAll = "Salva tutto"
-saveChanges = "Salva modifiche"
-search = "Cerca nel PDF"
-selectAll = "Seleziona tutto"
-selectByNumber = "Seleziona per numeri di pagina"
-toggleAnnotations = "Attiva/disattiva visibilità annotazioni"
-toggleBookmarks = "Mostra/Nascondi segnalibri"
-toggleSidebar = "Mostra/Nascondi barra laterale"
-toggleTheme = "Cambia tema"
 
 [rotate]
 rotateLeft = "Ruota in senso antiorario"
@@ -6153,11 +6233,6 @@ title = "Documentazione API"
 [tableExtraxt]
 tags = "CSV,Estrazione tabella,estrai,converti"
 
-[textAlign]
-center = "Centro"
-left = "Sinistra"
-right = "Destra"
-
 [theme]
 toggle = "Cambia tema"
 
@@ -6432,19 +6507,6 @@ invalid = "Certificato non presente nell'archivio attendibile: la fonte non può
 fileManager = "Gestore file"
 pageEditor = "Editor pagine"
 viewer = "Visualizzatore"
-
-[viewer]
-cannotPreviewFile = "Impossibile visualizzare l'anteprima del file"
-dualPageView = "Vista doppia pagina"
-firstPage = "Prima pagina"
-lastPage = "Ultima pagina"
-nextPage = "Pagina successiva"
-onlyPdfSupported = "Il visualizzatore supporta solo file PDF. Questo file sembra essere in un formato diverso."
-previousPage = "Pagina precedente"
-singlePageView = "Vista pagina singola"
-unknownFile = "File sconosciuto"
-zoomIn = "Ingrandisci"
-zoomOut = "Riduci"
 
 [viewPdf]
 header = "Visualizza PDF"
