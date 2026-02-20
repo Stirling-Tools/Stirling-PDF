@@ -32,15 +32,6 @@ export function CreditModalBootstrap() {
       setExhaustedOpen(true);
     };
 
-    const handleLow = () => {
-      // Don't show modal for managed team members
-      if (isManagedTeamMember) {
-        return;
-      }
-      // Low credits = show insufficient credits modal as a low-balance warning (no specific tool)
-      setInsufficientOpen(true);
-    };
-
     const handleInsufficient = (e: Event) => {
       // Don't show modal for managed team members
       if (isManagedTeamMember) {
@@ -55,12 +46,10 @@ export function CreditModalBootstrap() {
     };
 
     window.addEventListener(CREDIT_EVENTS.EXHAUSTED, handleExhausted);
-    window.addEventListener(CREDIT_EVENTS.LOW, handleLow);
     window.addEventListener(CREDIT_EVENTS.INSUFFICIENT, handleInsufficient);
 
     return () => {
       window.removeEventListener(CREDIT_EVENTS.EXHAUSTED, handleExhausted);
-      window.removeEventListener(CREDIT_EVENTS.LOW, handleLow);
       window.removeEventListener(CREDIT_EVENTS.INSUFFICIENT, handleInsufficient);
     };
   }, [isManagedTeamMember, creditBalance]);

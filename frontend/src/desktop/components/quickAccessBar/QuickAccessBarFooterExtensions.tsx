@@ -55,7 +55,7 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
 
   const handleClick = () => {
     // Dispatch low credits event to open upgrade modal
-    window.dispatchEvent(new CustomEvent(CREDIT_EVENTS.LOW, {
+    window.dispatchEvent(new CustomEvent(CREDIT_EVENTS.EXHAUSTED, {
       detail: { source: 'quickAccessBar' }
     }));
   };

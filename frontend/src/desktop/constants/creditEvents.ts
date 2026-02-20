@@ -5,7 +5,6 @@
 
 export const CREDIT_EVENTS = {
   EXHAUSTED: 'credits:exhausted',
-  LOW: 'credits:low',
   INSUFFICIENT: 'credits:insufficient',
   REFRESH_NEEDED: 'credits:refresh-needed',
 } as const;
