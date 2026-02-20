@@ -18,6 +18,7 @@ import {
   SearchActions,
   ExportActions,
   BookmarkActions,
+  AttachmentActions,
   PrintActions,
 } from '@app/contexts/viewer/viewerActions';
 import {
@@ -38,6 +39,7 @@ import {
   ExportState,
   ThumbnailAPIWrapper,
   BookmarkState,
+  AttachmentState,
   DocumentPermissionsState,
   PdfPermissionFlag,
 } from '@app/contexts/viewer/viewerBridges';
@@ -81,6 +83,8 @@ interface ViewerContextType {
   toggleThumbnailSidebar: () => void;
   isBookmarkSidebarVisible: boolean;
   toggleBookmarkSidebar: () => void;
+  isAttachmentSidebarVisible: boolean;
+  toggleAttachmentSidebar: () => void;
 
   // Search interface visibility
   isSearchInterfaceVisible: boolean;
@@ -114,6 +118,8 @@ interface ViewerContextType {
   getExportState: () => ExportState;
   getBookmarkState: () => BookmarkState;
   hasBookmarkSupport: () => boolean;
+  getAttachmentState: () => AttachmentState;
+  hasAttachmentSupport: () => boolean;
   getDocumentPermissions: () => DocumentPermissionsState;
   hasPermission: (flag: PdfPermissionFlag) => boolean;
 
@@ -139,12 +145,13 @@ interface ViewerContextType {
   searchActions: SearchActions;
   exportActions: ExportActions;
   bookmarkActions: BookmarkActions;
+  attachmentActions: AttachmentActions;
   printActions: PrintActions;
 
-  // Bridge registration - internal use by bridges  
+  // Bridge registration - internal use by bridges
   registerBridge: <K extends BridgeKey>(
     type: K,
-    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
   ) => void;
 
   // Save changes function - registered by EmbedPdfViewer
@@ -162,6 +169,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
   const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
+  const [isAttachmentSidebarVisible, setIsAttachmentSidebarVisible] = useState(false);
   const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
@@ -175,11 +183,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // Apply changes function - registered by EmbedPdfViewer
   const applyChangesRef = useRef<(() => Promise<void>) | null>(null);
-  
+
   const setApplyChanges = useCallback((fn: (() => Promise<void>) | null) => {
     applyChangesRef.current = fn;
   }, []);
-  
+
   const applyChanges = useCallback(async () => {
     if (applyChangesRef.current) {
       await applyChangesRef.current();
@@ -234,7 +242,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const registerBridge = useCallback(
     <K extends BridgeKey>(
       type: K,
-      ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+      ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
     ) => {
       setBridgeRef(bridgeRefs.current, type, ref);
     },
@@ -247,6 +255,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const toggleBookmarkSidebar = () => {
     setIsBookmarkSidebarVisible(prev => !prev);
+  };
+
+  const toggleAttachmentSidebar = () => {
+    setIsAttachmentSidebarVisible(prev => !prev);
   };
 
   const searchInterfaceActions = {
@@ -312,6 +324,18 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const hasBookmarkSupport = () => Boolean(bridgeRefs.current.bookmark);
 
+  const getAttachmentState = (): AttachmentState => {
+    return (
+      bridgeRefs.current.attachment?.state || {
+        attachments: null,
+        isLoading: false,
+        error: null,
+      }
+    );
+  };
+
+  const hasAttachmentSupport = () => Boolean(bridgeRefs.current.attachment);
+
   const getDocumentPermissions = (): DocumentPermissionsState => {
     return bridgeRefs.current.permissions?.state || {
       isEncrypted: false,
@@ -351,6 +375,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    attachmentActions,
     printActions,
   } = createViewerActions({
     registry: bridgeRefs,
@@ -365,6 +390,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
     toggleBookmarkSidebar,
+    isAttachmentSidebarVisible,
+    toggleAttachmentSidebar,
 
     // Search interface
     isSearchInterfaceVisible,
@@ -392,6 +419,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     getExportState,
     getBookmarkState,
     hasBookmarkSupport,
+    getAttachmentState,
+    hasAttachmentSupport,
     getDocumentPermissions,
     hasPermission,
 
@@ -415,6 +444,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     searchActions,
     exportActions,
     bookmarkActions,
+    attachmentActions,
     printActions,
 
     // Bridge registration

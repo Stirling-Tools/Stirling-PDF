@@ -14,9 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.controller.web.UploadLimitService;
 
 /**
- * Configuration for Spring multipart file upload settings.
- * Synchronizes multipart limits with fileUploadLimit from settings.yml or environment variables
- * (SYSTEMFILEUPLOADLIMIT or SYSTEM_MAXFILESIZE).
+ * Configuration for Spring multipart file upload settings. Synchronizes multipart limits with
+ * fileUploadLimit from settings.yml or environment variables (SYSTEMFILEUPLOADLIMIT or
+ * SYSTEM_MAXFILESIZE).
  */
 @Configuration
 @Slf4j
@@ -25,9 +25,9 @@ public class MultipartConfiguration {
     @Autowired private UploadLimitService uploadLimitService;
 
     /**
-     * Creates MultipartConfigElement that respects fileUploadLimit from settings.yml
-     * or environment variables (SYSTEMFILEUPLOADLIMIT or SYSTEM_MAXFILESIZE).
-     * Depends on ApplicationProperties being initialized so @PostConstruct has run.
+     * Creates MultipartConfigElement that respects fileUploadLimit from settings.yml or environment
+     * variables (SYSTEMFILEUPLOADLIMIT or SYSTEM_MAXFILESIZE). Depends on ApplicationProperties
+     * being initialized so @PostConstruct has run.
      */
     @Bean
     @DependsOn("applicationProperties")
@@ -35,7 +35,8 @@ public class MultipartConfiguration {
         MultipartConfigFactory factory = new MultipartConfigFactory();
 
         // First check if SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE is explicitly set
-        String springMaxFileSize = java.lang.System.getenv("SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE");
+        String springMaxFileSize =
+                java.lang.System.getenv("SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE");
         long uploadLimitBytes = 0;
 
         if (springMaxFileSize != null && !springMaxFileSize.trim().isEmpty()) {
@@ -45,7 +46,10 @@ public class MultipartConfiguration {
                 uploadLimitBytes = dataSize.toBytes();
                 log.info("Using SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}", springMaxFileSize);
             } catch (Exception e) {
-                log.warn("Failed to parse SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}", springMaxFileSize, e);
+                log.warn(
+                        "Failed to parse SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}",
+                        springMaxFileSize,
+                        e);
             }
         }
 
@@ -73,4 +77,3 @@ public class MultipartConfiguration {
         return factory.createMultipartConfig();
     }
 }
-

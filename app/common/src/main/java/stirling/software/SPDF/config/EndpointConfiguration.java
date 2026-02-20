@@ -391,13 +391,24 @@ public class EndpointConfiguration {
         addEndpointToGroup("Advance", "extract-image-scans");
         addEndpointToGroup("Advance", "repair");
         addEndpointToGroup("Advance", "auto-rename");
-        addEndpointToGroup("Advance", "handleData");
         addEndpointToGroup("Advance", "scanner-effect");
-        addEndpointToGroup("Advance", "show-javascript");
         addEndpointToGroup("Advance", "overlay-pdf");
         // Backend-only endpoints
         addEndpointToGroup("Advance", "adjust-contrast");
-        addEndpointToGroup("Advance", "pipeline");
+
+        // Adding endpoints to "Automation" group
+        addEndpointToGroup("Automation", "handleData");
+        addEndpointToGroup("Automation", "automate"); // Alias for handleData (user-friendly name)
+        addEndpointToGroup("Automation", "pipeline");
+
+        // Adding endpoints to "DeveloperTools" group
+        addEndpointToGroup("DeveloperTools", "show-javascript");
+
+        // Adding endpoints to "DeveloperDocs" group (fake endpoints for link-only tools)
+        addEndpointToGroup("DeveloperDocs", "dev-api-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-folder-scanning-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-sso-guide-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-airgapped-docs");
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
@@ -593,6 +604,12 @@ public class EndpointConfiguration {
 
     public Set<String> getEndpointsForGroup(String group) {
         return endpointGroups.getOrDefault(group, new HashSet<>());
+    }
+
+    public Set<String> getAllEndpoints() {
+        return endpointGroups.values().stream()
+                .flatMap(Set::stream)
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     private boolean isToolGroup(String group) {

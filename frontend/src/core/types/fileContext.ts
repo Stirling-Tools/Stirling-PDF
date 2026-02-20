@@ -45,9 +45,11 @@ export interface StirlingFileStub extends BaseFileMetadata {
   quickKey?: string;             // Fast deduplication key: name|size|lastModified
   thumbnailUrl?: string;         // Generated thumbnail blob URL for visual display
   blobUrl?: string;             // File access blob URL for downloads/processing
+  localFilePath?: string;        // Original local filesystem path (desktop app only)
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string;   // Page ID after which this file should be inserted
   isPinned?: boolean;           // Protected from tool consumption (replace/remove)
+  isDirty?: boolean;            // Has unsaved changes (only for files with localFilePath)
   // Note: File object stored in provider ref, not in state
 }
 

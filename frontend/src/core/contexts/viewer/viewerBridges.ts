@@ -1,5 +1,5 @@
 import { SpreadMode } from '@embedpdf/plugin-spread/react';
-import { PdfBookmarkObject } from '@embedpdf/models';
+import { PdfBookmarkObject, PdfAttachmentObject } from '@embedpdf/models';
 
 export enum PdfPermissionFlag {
   Print = 0x0004,
@@ -102,6 +102,13 @@ export interface BookmarkAPIWrapper {
   setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
 }
 
+export interface AttachmentAPIWrapper {
+  getAttachments: () => Promise<PdfAttachmentObject[]>;
+  downloadAttachment: (attachment: PdfAttachmentObject) => void;
+  clearAttachments: () => void;
+  setLocalAttachments: (attachments: PdfAttachmentObject[] | null, error?: string | null) => void;
+}
+
 export interface ScrollState {
   currentPage: number;
   totalPages: number;
@@ -152,6 +159,12 @@ export interface BookmarkState {
   error: string | null;
 }
 
+export interface AttachmentState {
+  attachments: PdfAttachmentObject[] | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
 export interface BridgeRef<TState = unknown, TApi = unknown> {
   state: TState;
   api: TApi;
@@ -168,6 +181,7 @@ export interface BridgeStateMap {
   thumbnail: unknown;
   export: ExportState;
   bookmark: BookmarkState;
+  attachment: AttachmentState;
   print: unknown;
   permissions: DocumentPermissionsState;
 }
@@ -183,6 +197,7 @@ export interface BridgeApiMap {
   thumbnail: ThumbnailAPIWrapper;
   export: ExportAPIWrapper;
   bookmark: BookmarkAPIWrapper;
+  attachment: AttachmentAPIWrapper;
   print: PrintAPIWrapper;
   permissions: DocumentPermissionsAPIWrapper;
 }
@@ -204,6 +219,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
   thumbnail: null,
   export: null,
   bookmark: null,
+  attachment: null,
   print: null,
   permissions: null,
 });
@@ -211,7 +227,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
 export function registerBridge<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
   type: K,
-  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
 ): void {
   registry[type] = ref as ViewerBridgeRegistry[K];
 }

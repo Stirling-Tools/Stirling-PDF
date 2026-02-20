@@ -11,15 +11,20 @@ import {
   useFitWidthResize,
 } from '@app/utils/viewerZoom';
 import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
+/**
+ * Connects the PDF zoom plugin to the shared ViewerContext.
+ */
 export function ZoomAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
-  
-  // Don't render the inner component until we have a valid document ID
-  if (!activeDocumentId) {
+  const documentReady = useDocumentReady();
+
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
     return null;
   }
-  
+
   return <ZoomAPIBridgeInner documentId={activeDocumentId} />;
 }
 
@@ -60,7 +65,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
   // Extract primitive values from zoomState for dependency arrays
   const zoomLevel = zoomState?.zoomLevel;
   const currentZoomLevel = zoomState?.currentZoomLevel;
-  
+
   // Extract metadata aspect ratio as a primitive to avoid object reference issues
   const metadataAspectRatio = getFirstPageAspectRatioFromStub(firstFileStub);
 
@@ -200,14 +205,14 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
 
   // Subscribe to zoom changes - use ref to avoid re-subscribing when zoom reference changes
   const zoomSubscriptionRef = useRef<(() => void) | null>(null);
-  
+
   useEffect(() => {
     // Cleanup previous subscription if any
     if (zoomSubscriptionRef.current) {
       zoomSubscriptionRef.current();
       zoomSubscriptionRef.current = null;
     }
-    
+
     if (!zoom) {
       return;
     }

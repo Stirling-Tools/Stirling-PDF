@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Stirling-PDF",
-    "version": "2.4.5",
+    "version": "2.5.1",
     "identifier": "stirling.pdf.dev",
     "build": {
         "frontendDist": "../dist",
@@ -23,6 +23,7 @@
     },
     "bundle": {
         "active": true,
+        "publisher": "Stirling PDF Inc.",
         "targets": [
             "deb",
             "rpm",
@@ -76,7 +77,8 @@
             "minimumSystemVersion": "10.15",
             "signingIdentity": null,
             "entitlements": null,
-            "providerShortName": null
+            "providerShortName": null,
+            "infoPlist": "Info.plist"
         }
     },
     "plugins": {

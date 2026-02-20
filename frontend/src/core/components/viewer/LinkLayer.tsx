@@ -1,316 +1,361 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useState, useMemo, useRef } from 'react';
 import { useDocumentState } from '@embedpdf/core/react';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
+import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
+import { usePdfLibLinks } from '@app/hooks/usePdfLibLinks';
+import type { PdfLibLink } from '@app/utils/pdfLinkUtils';
 
-enum PDFActionType {
-  GoTo = 0,
-  GoToR = 1,
-  GoToE = 2,
-  URI = 3,
-  Launch = 4,
-  Named = 5,
-  JavaScript = 6,
+// ---------------------------------------------------------------------------
+// Inline SVG icons (thin-stroke, modern)
+// ---------------------------------------------------------------------------
+
+const TrashIcon: React.FC<{ size?: number }> = ({ size = 13 }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 4h8M5.5 4v-1a0.5 0 0 1 0.5-0.5h2a0.5 0 0 1 0.5 0.5v1M4.5 4l0.4 7a0.8 0 0 0 0.8 0.7h2.6a0.8 0 0 0 0.8-0.7l0.4-7"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M8.5 3.5l-3.5 3.5m3.5-3.5v2.5m0-2.5h-2.5M3.5 3.5h-0.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-0.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 2.5h3l2 2v4.5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-6.5a1 1 0 0 1 1-1z"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6 2.5v2h2"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function truncateUrl(url: string, maxLen = 32): string {
+  try {
+    const u = new URL(url);
+    const display = u.hostname + (u.pathname !== '/' ? u.pathname : '');
+    return display.length > maxLen ? display.slice(0, maxLen) + '\u2026' : display;
+  } catch {
+    return url.length > maxLen ? url.slice(0, maxLen) + '\u2026' : url;
+  }
 }
 
-interface PDFRect {
-  origin: { x: number; y: number };
-  size: { width: number; height: number };
+function getLinkLabel(link: PdfLibLink): string {
+  if (link.type === 'internal' && link.targetPage !== undefined) {
+    return `Page ${link.targetPage + 1}`;
+  }
+  if (link.type === 'external' && link.uri) {
+    return truncateUrl(link.uri);
+  }
+  return 'Open Link';
 }
 
-interface PDFDestination {
-  pageIndex: number;
-  view: [number, number];
+
+interface LinkToolbarProps {
+  link: PdfLibLink;
+  scale: number;
+  flipped: boolean;
+  onNavigate: (link: PdfLibLink) => void;
+  onDelete: (link: PdfLibLink) => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 }
 
-interface PDFAction {
-  type: string | number;
-  destination?: PDFDestination;
-  uri?: string;
-}
+const TOOLBAR_HEIGHT = 32;
+const TOOLBAR_GAP = 8;
 
-interface LinkAnnotation {
-  id: string;
-  type: number;
-  rect: PDFRect;
-  target?: {
-    type: string;
-    action?: PDFAction;
-    destination?: PDFDestination;
-    uri?: string;
-  };
-}
+const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
+  ({ link, scale, flipped, onNavigate, onDelete, onMouseEnter, onMouseLeave }) => {
+    const centerX = (link.rect.x + link.rect.width / 2) * scale;
+    const topY = flipped
+      ? (link.rect.y + link.rect.height) * scale + TOOLBAR_GAP
+      : link.rect.y * scale - TOOLBAR_HEIGHT - TOOLBAR_GAP;
 
-function isGoToAction(action: PDFAction): boolean {
-  return action.type === 'GoTo' || action.type === PDFActionType.GoTo;
-}
+    const isInternal = link.type === 'internal' && link.targetPage !== undefined;
+    const label = getLinkLabel(link);
 
-function isURIAction(action: PDFAction): boolean {
-  return action.type === 'URI' || action.type === PDFActionType.URI;
-}
+    return (
+      <div
+        className={`pdf-link-toolbar${flipped ? ' pdf-link-toolbar--below' : ''}`}
+        style={{ left: `${centerX}px`, top: `${topY}px` }}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {/* Delete */}
+        <button
+          type="button"
+          className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(link);
+          }}
+          aria-label="Delete link"
+          title="Delete link"
+        >
+          <TrashIcon />
+        </button>
 
-// Utility functions for link type detection - prefixed to indicate future use
-function _isInternalLink(link: LinkAnnotation): boolean {
-  return Boolean(link.target?.type === 'destination' ||
-         (link.target?.type === 'action' && link.target.action && isGoToAction(link.target.action)));
-}
+        <span className="pdf-link-toolbar-sep" />
 
-function _isExternalLink(link: LinkAnnotation): boolean {
-  return Boolean(link.target?.type === 'uri' ||
-         (link.target?.type === 'action' && link.target.action && isURIAction(link.target.action)));
-}
+        {/* Navigate / Open */}
+        <button
+          type="button"
+          className="pdf-link-toolbar-btn pdf-link-toolbar-btn--go"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate(link);
+          }}
+          aria-label={isInternal ? `Go to page ${(link.targetPage ?? 0) + 1}` : 'Open link'}
+          title={isInternal ? `Go to page ${(link.targetPage ?? 0) + 1}` : link.uri ?? 'Open link'}
+        >
+          {isInternal ? <PageIcon /> : <ExternalLinkIcon />}
+          <span className="pdf-link-toolbar-label">{label}</span>
+        </button>
+      </div>
+    );
+  },
+);
+
+LinkToolbar.displayName = 'LinkToolbar';
 
 interface LinkLayerProps {
   documentId: string;
   pageIndex: number;
-  pageWidth: number;
-  pageHeight: number;
+  _pageWidth: number;
+  _pageHeight: number;
+  /** Blob/object URL of the current PDF (needed by pdf-lib). */
+  pdfUrl: string | null;
 }
 
 export const LinkLayer: React.FC<LinkLayerProps> = ({
   documentId,
   pageIndex,
-  pageWidth,
-  pageHeight,
+  _pageWidth,
+  _pageHeight,
+  pdfUrl,
 }) => {
-  const { provides: annotation } = useAnnotationCapability();
   const { provides: scroll } = useScroll(documentId);
+  const { provides: annotation } = useAnnotationCapability();
   const documentState = useDocumentState(documentId);
-  const [links, setLinks] = useState<LinkAnnotation[]>([]);
-  const [isNavigating, setIsNavigating] = useState(false);
 
-  // Get original PDF page dimensions from document state
-  const pdfPage = documentState?.document?.pages?.[pageIndex];
-  const pdfPageWidth = pdfPage?.size?.width ?? 0;
-  const pdfPageHeight = pdfPage?.size?.height ?? 0;
+  // State
+  const [hoveredLinkId, setHoveredLinkId] = useState<string | null>(null);
+  const [deletedLinkIds, setDeletedLinkIds] = useState<Set<string>>(new Set());
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Process links with proper coordinate transformation
-  const processedLinks = useMemo(() => {
-    if (!pageWidth || !pageHeight || !pdfPageWidth || !pdfPageHeight) return [];
-    
-    // Use the document scale like EmbedPDF's AnnotationLayer does
-    const scale = documentState?.scale ?? 1;
-    
+  // pdf-lib extraction
+  const { links } = usePdfLibLinks(pdfUrl, pageIndex);
 
-    
-    return links.map(link => {
-      const { origin, size } = link.rect;
-      
-      // Use document scale like EmbedPDF does
-      const scaledLeft = origin.x * scale;
-      const scaledTop = origin.y * scale;
-      const scaledWidth = size.width * scale;
-      const scaledHeight = size.height * scale;
-      
-      return {
-        ...link,
-        scaledRect: {
-          left: scaledLeft,
-          top: scaledTop,
-          width: scaledWidth,
-          height: scaledHeight,
-        },
-      };
-    });
-  }, [links, pageWidth, pageHeight, pdfPageWidth, pdfPageHeight, documentState?.scale]);
+  // EmbedPDF scale factor
+  const scale = documentState?.scale ?? 1;
 
-  useEffect(() => {
-    const fetchLinks = async () => {
+  // Filter visible, non-deleted links
+  const visibleLinks = useMemo(
+    () =>
+      links.filter(
+        (l) => l.rect.width > 0 && l.rect.height > 0 && !deletedLinkIds.has(l.id),
+      ),
+    [links, deletedLinkIds],
+  );
+
+
+  const clearLeaveTimer = useCallback(() => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+  }, []);
+
+  const startLeaveTimer = useCallback(() => {
+    clearLeaveTimer();
+    leaveTimerRef.current = setTimeout(() => {
+      setHoveredLinkId(null);
+    }, 120);
+  }, [clearLeaveTimer]);
+
+  const handleLinkMouseEnter = useCallback(
+    (linkId: string) => {
+      clearLeaveTimer();
+      setHoveredLinkId(linkId);
+    },
+    [clearLeaveTimer],
+  );
+
+  const handleLinkMouseLeave = useCallback(() => {
+    startLeaveTimer();
+  }, [startLeaveTimer]);
+
+  const handleToolbarMouseEnter = useCallback(() => {
+    clearLeaveTimer();
+  }, [clearLeaveTimer]);
+
+  const handleToolbarMouseLeave = useCallback(() => {
+    startLeaveTimer();
+  }, [startLeaveTimer]);
+
+  const handleNavigate = useCallback(
+    (link: PdfLibLink) => {
+      if (link.type === 'internal' && link.targetPage !== undefined && scroll) {
+        scroll.scrollToPage({
+          pageNumber: link.targetPage + 1,
+          behavior: 'smooth',
+        });
+      } else if (link.uri) {
+        try {
+          const url = new URL(link.uri, window.location.href);
+          if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
+            window.open(link.uri, '_blank', 'noopener,noreferrer');
+          } else {
+            console.warn('[LinkLayer] Blocked unsafe URL protocol:', url.protocol);
+          }
+        } catch {
+          window.open(link.uri, '_blank', 'noopener,noreferrer');
+        }
+      }
+      setHoveredLinkId(null);
+    },
+    [scroll],
+  );
+
+  const handleDelete = useCallback(
+    async (link: PdfLibLink) => {
+      setDeletedLinkIds((prev) => new Set(prev).add(link.id));
+      setHoveredLinkId(null);
+
       if (!annotation) return;
 
       try {
-        const pageAnnotationsResult = annotation.getPageAnnotations({
-          pageIndex,
-        });
+        const result = annotation.getPageAnnotations({ pageIndex });
 
-        const resolveAnnotations = async (result: unknown): Promise<any[]> => {
-          if (result && typeof (result as any).toPromise === 'function') {
-            return (result as any).toPromise();
-          }
-          if (result && typeof (result as any).then === 'function') {
-            return result as Promise<any[]>;
-          }
-          if (Array.isArray(result)) {
-            return result;
-          }
-          return [];
-        };
-
-        const pageAnnotations = await resolveAnnotations(pageAnnotationsResult);
-
-        const linkAnnotations = pageAnnotations.filter(
-          (ann: any) => ann.type === 2 || ann.type === PdfAnnotationSubtype.LINK
-        ) as LinkAnnotation[];
-
-        if (linkAnnotations.length > 0) {
-          setLinks(linkAnnotations);
+        let pageAnnotations: any[] = [];
+        if (result && typeof (result as any).toPromise === 'function') {
+          pageAnnotations = await (result as any).toPromise();
+        } else if (result && typeof (result as any).then === 'function') {
+          pageAnnotations = await (result as unknown as Promise<any[]>);
+        } else if (Array.isArray(result)) {
+          pageAnnotations = result;
         }
-      } catch (error) {
-        console.error('[LinkLayer] Failed to fetch links from annotation API:', {
-          error,
-          pageIndex,
+
+        const match = pageAnnotations.find((ann: any) => {
+          if (
+            ann.type !== 2 &&
+            ann.type !== PdfAnnotationSubtype.LINK
+          )
+            return false;
+          if (!ann.rect) return false;
+
+          // EmbedPDF rects: { origin: { x, y }, size: { width, height } }
+          const r = ann.rect;
+          const tol = 2; // tolerance in PDF points
+          return (
+            Math.abs((r.origin?.x ?? r.x ?? 0) - link.rect.x) <= tol &&
+            Math.abs((r.origin?.y ?? r.y ?? 0) - link.rect.y) <= tol &&
+            Math.abs((r.size?.width ?? r.width ?? 0) - link.rect.width) <= tol &&
+            Math.abs((r.size?.height ?? r.height ?? 0) - link.rect.height) <= tol
+          );
         });
-      }
-    };
 
-    fetchLinks();
-  }, [annotation, pageIndex]);
-
-  const handleLinkClick = useCallback(async (link: LinkAnnotation) => {
-    if (isNavigating) return;
-
-    try {
-      setIsNavigating(true);
-
-      // Try to extract destination from various possible locations in the link object
-      const linkData = link as any;
-      
-      // Check for destination in various locations
-      let targetPage: number | undefined;
-      let uri: string | undefined;
-      
-      // Try target.destination first
-      if (link.target?.destination?.pageIndex !== undefined) {
-        targetPage = link.target.destination.pageIndex;
-      }
-      // Try target.action.destination
-      else if (link.target?.action?.destination?.pageIndex !== undefined) {
-        targetPage = link.target.action.destination.pageIndex;
-      }
-      // Try direct dest property (PDF.js style)
-      else if (linkData.dest?.pageIndex !== undefined) {
-        targetPage = linkData.dest.pageIndex;
-      }
-      // Try destination at root level
-      else if (linkData.destination?.pageIndex !== undefined) {
-        targetPage = linkData.destination.pageIndex;
-      }
-      // Try action at root level
-      else if (linkData.action?.destination?.pageIndex !== undefined) {
-        targetPage = linkData.action.destination.pageIndex;
-      }
-      
-      // Check for URI in various locations
-      if (link.target?.uri) {
-        uri = link.target.uri;
-      } else if (link.target?.action?.uri) {
-        uri = link.target.action.uri;
-      } else if (linkData.uri) {
-        uri = linkData.uri;
-      } else if (linkData.url) {
-        uri = linkData.url;
-      } else if (linkData.action?.uri) {
-        uri = linkData.action.uri;
-      }
-
-      if (targetPage !== undefined && scroll) {
-        scroll.scrollToPage({
-          pageNumber: targetPage + 1,
-          behavior: 'smooth',
-        });
-      } else if (uri) {
-        try {
-          const url = new URL(uri, window.location.href);
-          if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
-            window.open(uri, '_blank', 'noopener,noreferrer');
-          } else {
-            console.warn('[LinkLayer] Blocked potentially unsafe URL protocol:', url.protocol);
+        if (match?.id) {
+          // Use EmbedPDF's native deletion (integrates with history / export)
+          if (typeof (annotation as any).deleteAnnotation === 'function') {
+            (annotation as any).deleteAnnotation(pageIndex, match.id);
+          } else if (typeof (annotation as any).purgeAnnotation === 'function') {
+            (annotation as any).purgeAnnotation(pageIndex, match.id);
           }
-        } catch {
-          window.open(uri, '_blank', 'noopener,noreferrer');
         }
-      } else {
-        console.warn('[LinkLayer] Could not extract destination or URI from link:', link);
+      } catch (e) {
+        console.warn('[LinkLayer] Could not delete annotation via EmbedPDF:', e);
       }
-    } catch (error) {
-      console.error('[LinkLayer] Navigation failed:', error);
-    } finally {
-      setIsNavigating(false);
-    }
-  }, [isNavigating, scroll]);
+    },
+    [annotation, pageIndex],
+  );
+
+  if (visibleLinks.length === 0) return null;
 
   return (
-    <div 
-      className="absolute inset-0" 
-      style={{ 
-        pointerEvents: 'none',
-        zIndex: 10, // Above selection layer but below UI controls
-      }}
+    <div
+      className="absolute inset-0"
+      style={{ pointerEvents: 'none', zIndex: 10 }}
     >
-      {processedLinks.map((link) => {
-        const { id } = link;
-        const { left, top, width, height } = link.scaledRect;
+      {visibleLinks.map((link) => {
+        const isHovered = hoveredLinkId === link.id;
+        const left = link.rect.x * scale;
+        const top = link.rect.y * scale;
+        const width = link.rect.width * scale;
+        const height = link.rect.height * scale;
+
+        // Flip toolbar below if link is near the top of the page
+        const flipped = link.rect.y * scale < TOOLBAR_HEIGHT + TOOLBAR_GAP + 4;
 
         return (
-          <a
-            key={id}
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleLinkClick(link);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            className={`absolute block cursor-pointer ${isNavigating ? 'cursor-not-allowed' : ''}`}
-            style={{
-              left: `${left}px`,
-              top: `${top}px`,
-              width: `${width}px`,
-              height: `${height}px`,
-              minWidth: '8px',
-              minHeight: '8px',
-              pointerEvents: 'auto',
-              backgroundColor: 'transparent',
-              zIndex: 11,
-              border: '2px solid transparent',
-              borderRadius: '2px',
-              transition: 'background-color 0.15s ease-in-out, border-color 0.15s ease-in-out',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
-              e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = 'transparent';
-            }}
-            title={getLinkTitle(link)}
-            aria-label={getLinkAriaLabel(link)}
-          >
-            {/* Invisible clickable area */}
-          </a>
+          <React.Fragment key={link.id}>
+            {/* Hit-area overlay */}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleNavigate(link);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseEnter={() => handleLinkMouseEnter(link.id)}
+              onMouseLeave={handleLinkMouseLeave}
+              className={`pdf-link-overlay${isHovered ? ' pdf-link-overlay--active' : ''}`}
+              style={{
+                left: `${left}px`,
+                top: `${top}px`,
+                width: `${width}px`,
+                height: `${height}px`,
+                minWidth: '6px',
+                minHeight: '6px',
+              }}
+              role="link"
+              tabIndex={0}
+              aria-label={getLinkLabel(link)}
+            />
+
+            {/* Floating toolbar */}
+            {isHovered && (
+              <LinkToolbar
+                link={link}
+                scale={scale}
+                flipped={flipped}
+                onNavigate={handleNavigate}
+                onDelete={handleDelete}
+                onMouseEnter={handleToolbarMouseEnter}
+                onMouseLeave={handleToolbarMouseLeave}
+              />
+            )}
+          </React.Fragment>
         );
       })}
     </div>
   );
-};
-
-const getLinkTitle = (link: LinkAnnotation): string => {
-  if (link.target?.type === 'destination') {
-    return `Go to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
-    return `Go to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
-    return `Open link: ${link.target.action.uri}`;
-  }
-  if (link.target?.uri) {
-    return `Open link: ${link.target.uri}`;
-  }
-  return 'Link';
-};
-
-const getLinkAriaLabel = (link: LinkAnnotation): string => {
-  if (link.target?.type === 'destination') {
-    return `Navigate to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
-    return `Navigate to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
-    return 'Open external link';
-  }
-  return 'Open external link';
 };

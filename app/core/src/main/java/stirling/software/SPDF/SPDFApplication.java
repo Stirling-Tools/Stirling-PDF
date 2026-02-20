@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -38,6 +39,10 @@ import stirling.software.common.model.ApplicationProperties;
         })
 public class SPDFApplication {
 
+    private static final Pattern PORT_SUFFIX_PATTERN = Pattern.compile(".+:\\d+$");
+    private static final Pattern URL_SCHEME_PATTERN =
+            Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+    private static final Pattern TRAILING_SLASH_PATTERN = Pattern.compile("/+$");
     private static String serverPortStatic;
     private static String baseUrlStatic;
     private static String contextPathStatic;
@@ -244,8 +249,8 @@ public class SPDFApplication {
         String trimmedBase =
                 (backendUrl == null || backendUrl.isBlank())
                         ? "http://localhost"
-                        : backendUrl.trim().replaceAll("/+$", "");
-        boolean hasScheme = trimmedBase.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+                        : TRAILING_SLASH_PATTERN.matcher(backendUrl.trim()).replaceAll("");
+        boolean hasScheme = URL_SCHEME_PATTERN.matcher(trimmedBase).matches();
         String baseForParsing = hasScheme ? trimmedBase : "http://" + trimmedBase;
         Integer parsedPort = parsePort(port);
 
@@ -298,7 +303,7 @@ public class SPDFApplication {
         if (port == null) {
             return trimmedBase;
         }
-        if (trimmedBase.matches(".+:\\d+$")) {
+        if (PORT_SUFFIX_PATTERN.matcher(trimmedBase).matches()) {
             return trimmedBase;
         }
         return trimmedBase + ":" + port;
