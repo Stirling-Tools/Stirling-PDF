@@ -18,8 +18,8 @@ import { PDFDocument, PDFForm, PDFField, PDFTextField, PDFCheckBox,
   PDFDropdown, PDFRadioGroup, PDFOptionList, PDFButton, PDFSignature,
   PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage,
   PDFString, PDFHexString } from '@cantoo/pdf-lib';
-import type { FormField, FormFieldType, WidgetCoordinates } from '@proprietary/tools/formFill/types';
-import type { IFormDataProvider } from '@proprietary/tools/formFill/providers/types';
+import type { FormField, FormFieldType, WidgetCoordinates } from '@app/tools/formFill/types';
+import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
 
 /**
  * Read a File/Blob as ArrayBuffer.

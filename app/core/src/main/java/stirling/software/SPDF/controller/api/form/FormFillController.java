@@ -1,4 +1,4 @@
-package stirling.software.proprietary.controller.api.form;
+package stirling.software.SPDF.controller.api.form;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,8 +30,8 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.FormFieldWithCoordinates;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.proprietary.util.FormUtils;
 
 @RestController
 @RequestMapping("/api/v1/form")

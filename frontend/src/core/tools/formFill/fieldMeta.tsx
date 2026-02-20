@@ -3,7 +3,7 @@
  * Used by FormFill, FormFieldSidebar, and any future form tools.
  */
 import React from 'react';
-import type { FormFieldType } from '@proprietary/tools/formFill/types';
+import type { FormFieldType } from '@app/tools/formFill/types';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import ArrowDropDownCircleIcon from '@mui/icons-material/ArrowDropDownCircle';
