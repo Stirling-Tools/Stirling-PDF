@@ -46,6 +46,7 @@ dependencies {
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation ('org.telegram:telegrambots:6.9.7.1') {
         // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
         // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
