@@ -4,6 +4,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -32,6 +35,7 @@ public class AddWatermarkRequest extends PDFFile {
     private String alphabet;
 
     @Schema(description = "The font size of the watermark text", defaultValue = "30")
+    @DecimalMin(value = "1.0", message = "Font size must be at least 1.0")
     private float fontSize;
 
     @Schema(description = "The rotation of the watermark in degrees", defaultValue = "0")
@@ -41,9 +45,11 @@ public class AddWatermarkRequest extends PDFFile {
     private float opacity;
 
     @Schema(description = "The width spacer between watermark elements", defaultValue = "50")
+    @Min(value = 0, message = "Width spacer must be non-negative")
     private int widthSpacer;
 
     @Schema(description = "The height spacer between watermark elements", defaultValue = "50")
+    @Min(value = 0, message = "Height spacer must be non-negative")
     private int heightSpacer;
 
     @Schema(description = "The color for watermark", defaultValue = "#d3d3d3")

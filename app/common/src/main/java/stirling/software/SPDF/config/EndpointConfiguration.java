@@ -606,6 +606,12 @@ public class EndpointConfiguration {
         return endpointGroups.getOrDefault(group, new HashSet<>());
     }
 
+    public Set<String> getAllEndpoints() {
+        return endpointGroups.values().stream()
+                .flatMap(Set::stream)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
     private boolean isToolGroup(String group) {
         return "qpdf".equals(group)
                 || "OCRmyPDF".equals(group)
