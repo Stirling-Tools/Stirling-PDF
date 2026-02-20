@@ -63,7 +63,7 @@ Feature: Convert API Validation (additional endpoints)
         And the pdf contains 3 pages with random text
         And the request data includes
             | parameter       | value |
-            | outputFormat    | epub  |
+            | outputFormat    | EPUB  |
             | detectChapters  | false |
         When I send the API request to the endpoint "/api/v1/convert/pdf/epub"
         Then the response status code should be 200
@@ -76,7 +76,7 @@ Feature: Convert API Validation (additional endpoints)
         And the pdf contains 3 pages with random text
         And the request data includes
             | parameter       | value |
-            | outputFormat    | azw3  |
+            | outputFormat    | AZW3  |
             | detectChapters  | false |
         When I send the API request to the endpoint "/api/v1/convert/pdf/epub"
         Then the response status code should be 200
@@ -89,7 +89,7 @@ Feature: Convert API Validation (additional endpoints)
         And the pdf contains 5 pages with random text
         And the request data includes
             | parameter       | value |
-            | outputFormat    | epub  |
+            | outputFormat    | EPUB  |
             | detectChapters  | true  |
         When I send the API request to the endpoint "/api/v1/convert/pdf/epub"
         Then the response status code should be 200
