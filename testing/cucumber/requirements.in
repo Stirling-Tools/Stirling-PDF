@@ -1,4 +1,5 @@
 behave
+behave-html-formatter
 requests
 pypdf
 reportlab

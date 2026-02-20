@@ -14,6 +14,11 @@ def before_scenario(context, scenario):
     context.multi_files = []
     context.json_parts = {}
     context.request_data = None
+    # JWT auth state
+    context.jwt_token = None
+    context.original_jwt_token = None
+    # OR-status helper used by auth step definitions
+    context._status_ok = False
 
 
 def after_scenario(context, scenario):
@@ -52,3 +57,7 @@ def after_scenario(context, scenario):
     context.multi_files = []
     context.json_parts = {}
     context.request_data = None
+    # JWT auth state
+    context.jwt_token = None
+    context.original_jwt_token = None
+    context._status_ok = False

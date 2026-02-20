@@ -539,8 +539,9 @@ main() {
 
         capture_file_list "$CONTAINER_NAME" "$BEFORE_FILE"
 
+        CUCUMBER_REPORT="$PROJECT_ROOT/testing/cucumber/report.html"
         cd "testing/cucumber"
-        if python -m behave; then
+        if python -m behave -f behave_html_formatter:HTMLFormatter -o "$CUCUMBER_REPORT" -f pretty; then
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 
