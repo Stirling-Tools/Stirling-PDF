@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.awt.Color;
@@ -8,16 +9,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Optional;
 
-import org.apache.pdfbox.contentstream.operator.Operator;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSFloat;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -26,6 +27,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,8 +47,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
+import stirling.software.SPDF.model.api.security.PdfiumRedactionRegion;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
+import stirling.software.SPDF.service.redaction.PdfiumRedactionService;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -58,6 +63,7 @@ class RedactControllerTest {
     private static final Logger log = LoggerFactory.getLogger(RedactControllerTest.class);
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private PdfiumRedactionService pdfiumRedactionService;
 
     @InjectMocks private RedactController redactController;
 
@@ -69,45 +75,65 @@ class RedactControllerTest {
     private PDDocument realDocument;
     private PDPage realPage;
 
-    private static byte[] createSimplePdfContent() throws IOException {
-        try (PDDocument doc = new PDDocument()) {
-            PDPage page = new PDPage(PDRectangle.A4);
-            doc.addPage(page);
-            try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
-                contentStream.beginText();
-                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                contentStream.newLineAtOffset(100, 700);
-                contentStream.showText("This is a simple PDF.");
-                contentStream.endText();
+    // Helpers
+    private void testAutoRedaction(
+            String searchText,
+            boolean useRegex,
+            boolean wholeWordSearch,
+            String redactColor,
+            float padding,
+            boolean convertToImage,
+            boolean expectSuccess) {
+        RedactPdfRequest request = createRedactPdfRequest();
+        request.setListOfText(searchText);
+        request.setUseRegex(useRegex);
+        request.setWholeWordSearch(wholeWordSearch);
+        request.setRedactColor(redactColor);
+        request.setCustomPadding(padding);
+        request.setConvertPDFToImage(convertToImage);
+
+        try {
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            if (expectSuccess && response != null) {
+                assertNotNull(response);
+                assertEquals(200, response.getStatusCode().value());
+                assertNotNull(response.getBody());
+                assertTrue(response.getBody().length > 0);
+                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
+                // With try-with-resources, close() is called multiple times:
+                // - Once for initial document
+                // - Once per search term (for finding matches)
+                // - Once per search term (for verification after PDFium)
+                // - Once for final document
+                // Just verify it was called at least once
+                verify(mockDocument, atLeastOnce()).close();
             }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            doc.save(baos);
-            return baos.toByteArray();
+        } catch (Exception e) {
+            if (expectSuccess) {
+                log.info("Redaction test completed with graceful handling: {}", e.getMessage());
+            } else {
+                assertNotNull(e.getMessage());
+            }
         }
     }
 
-    private static List<RedactionArea> createValidRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
+    private void testManualRedaction(List<RedactionArea> redactionAreas, boolean convertToImage) {
+        ManualRedactPdfRequest request = createManualRedactPdfRequest();
+        request.setRedactions(redactionAreas);
+        request.setConvertPDFToImage(convertToImage);
 
-        RedactionArea area1 = new RedactionArea();
-        area1.setPage(1);
-        area1.setX(100.0);
-        area1.setY(100.0);
-        area1.setWidth(200.0);
-        area1.setHeight(50.0);
-        area1.setColor("000000");
-        areas.add(area1);
+        try {
+            ResponseEntity<byte[]> response = redactController.redactPDF(request);
 
-        RedactionArea area2 = new RedactionArea();
-        area2.setPage(1);
-        area2.setX(300.0);
-        area2.setY(200.0);
-        area2.setWidth(150.0);
-        area2.setHeight(30.0);
-        area2.setColor("FF0000");
-        areas.add(area2);
-
-        return areas;
+            if (response != null) {
+                assertNotNull(response);
+                assertEquals(200, response.getStatusCode().value());
+                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
+            }
+        } catch (Exception e) {
+            log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());
+        }
     }
 
     @BeforeEach
@@ -127,7 +153,11 @@ class RedactControllerTest {
                 mock(org.apache.pdfbox.pdmodel.PDDocumentCatalog.class);
 
         // Setup document structure properly
+        when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDocument);
         when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDocument);
+        when(pdfiumRedactionService.isAvailable()).thenReturn(false);
+        when(pdfiumRedactionService.redact(any(byte[].class), anyString(), anyList()))
+                .thenReturn(Optional.empty());
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getPages()).thenReturn(mockPages);
         when(mockDocument.getNumberOfPages()).thenReturn(1);
@@ -173,18 +203,24 @@ class RedactControllerTest {
         setupRealDocument();
     }
 
-    private static List<RedactionArea> createInvalidRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
+    private void setupRealDocument() {
+        realDocument = new PDDocument();
+        realPage = new PDPage(PDRectangle.A4);
+        realDocument.addPage(realPage);
 
-        RedactionArea invalidArea = new RedactionArea();
-        invalidArea.setPage(null); // Invalid - null page
-        invalidArea.setX(100.0);
-        invalidArea.setY(100.0);
-        invalidArea.setWidth(200.0);
-        invalidArea.setHeight(50.0);
-        areas.add(invalidArea);
+        // Set up basic page resources
+        PDResources resources = new PDResources();
+        resources.put(
+                COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        realPage.setResources(resources);
+    }
 
-        return areas;
+    private String[] invokeParseListOfText(String value, boolean useRegex) throws Exception {
+        Method method =
+                RedactController.class.getDeclaredMethod(
+                        "parseListOfText", String.class, boolean.class);
+        method.setAccessible(true);
+        return (String[]) method.invoke(redactController, value, useRegex);
     }
 
     @AfterEach
@@ -195,31 +231,84 @@ class RedactControllerTest {
         }
     }
 
+    private ManualRedactPdfRequest createManualRedactPdfRequest() {
+        ManualRedactPdfRequest request = new ManualRedactPdfRequest();
+        request.setFileInput(mockPdfFile);
+        return request;
+    }
+
+    private void configureRealPdfLoading() throws IOException {
+        when(pdfDocumentFactory.load(any(byte[].class)))
+                .thenAnswer(
+                        invocation -> loadRealDocument(invocation.getArgument(0, byte[].class)));
+    }
+
+    private MockMultipartFile createPdfMultipartFile(String filename, String text)
+            throws IOException {
+        return new MockMultipartFile(
+                "fileInput", filename, MediaType.APPLICATION_PDF_VALUE, createPdfWithText(text));
+    }
+
+    private PDDocument loadRealDocument(byte[] bytes) {
+        try {
+            return Loader.loadPDF(bytes);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to load test PDF", e);
+        }
+    }
+
+    private byte[] createSimplePdfContent() throws IOException {
+        return createPdfWithText("This is a simple PDF.");
+    }
+
+    private byte[] createPdfWithText(String text) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                contentStream.beginText();
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                contentStream.newLineAtOffset(100, 700);
+                contentStream.showText(text);
+                contentStream.endText();
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    private RedactPdfRequest createRedactPdfRequest() {
+        RedactPdfRequest request = new RedactPdfRequest();
+        request.setFileInput(mockPdfFile);
+        return request;
+    }
+
     @Nested
     @DisplayName("Automatic Text Redaction")
     class AutomaticRedactionTests {
 
         @Test
         @DisplayName("Should redact basic text successfully")
-        void redactBasicText() throws Exception {
+        void redactBasicText() {
             testAutoRedaction("confidential\nsecret", false, false, "#000000", 2.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle simple text redaction")
-        void handleSimpleTextRedaction() throws Exception {
+        void handleSimpleTextRedaction() {
             testAutoRedaction("sensitive", false, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle empty text list gracefully")
-        void handleEmptyTextList() throws Exception {
+        void handleEmptyTextList() {
             testAutoRedaction("", false, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should redact multiple search terms")
-        void redactMultipleSearchTerms() throws Exception {
+        void redactMultipleSearchTerms() {
             testAutoRedaction(
                     "confidential\nsecret\nprivate\nclassified",
                     false,
@@ -232,7 +321,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle very large number of search terms")
-        void handleLargeNumberOfSearchTerms() throws Exception {
+        void handleLargeNumberOfSearchTerms() {
             StringBuilder terms = new StringBuilder();
             for (int i = 0; i < 100; i++) {
                 terms.append("term").append(i).append("\n");
@@ -304,7 +393,8 @@ class RedactControllerTest {
             assertEquals(200, response.getStatusCode().value());
 
             verify(mockDocument).save(any(ByteArrayOutputStream.class));
-            verify(mockDocument).close();
+            // With try-with-resources, close() is called multiple times
+            verify(mockDocument, atLeastOnce()).close();
         }
     }
 
@@ -314,13 +404,13 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should redact using regex patterns")
-        void redactUsingRegexPatterns() throws Exception {
+        void redactUsingRegexPatterns() {
             testAutoRedaction("\\d{3}-\\d{2}-\\d{4}", true, false, "#FF0000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle email pattern redaction")
-        void handleEmailPatternRedaction() throws Exception {
+        void handleEmailPatternRedaction() {
             testAutoRedaction(
                     "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
                     true, false, "#0000FF", 1.5f, false, true);
@@ -328,7 +418,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle phone number patterns")
-        void handlePhoneNumberPatterns() throws Exception {
+        void handlePhoneNumberPatterns() {
             testAutoRedaction(
                     "\\(\\d{3}\\)\\s*\\d{3}-\\d{4}", true, false, "#FF0000", 1.0f, false, true);
         }
@@ -343,13 +433,13 @@ class RedactControllerTest {
                     "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b" // IP address pattern
                 })
         @DisplayName("Should handle various regex patterns")
-        void handleVariousRegexPatterns(String regexPattern) throws Exception {
+        void handleVariousRegexPatterns(String regexPattern) {
             testAutoRedaction(regexPattern, true, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle invalid regex gracefully")
-        void handleInvalidRegex() throws Exception {
+        void handleInvalidRegex() {
             testAutoRedaction("[invalid regex(", true, false, "#000000", 1.0f, false, false);
         }
     }
@@ -360,13 +450,13 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should redact whole words only")
-        void redactWholeWordsOnly() throws Exception {
+        void redactWholeWordsOnly() {
             testAutoRedaction("test", false, true, "#0000FF", 0.5f, false, true);
         }
 
         @Test
         @DisplayName("Should handle word boundaries correctly")
-        void handleWordBoundariesCorrectly() throws Exception {
+        void handleWordBoundariesCorrectly() {
             testAutoRedaction("confidential", false, true, "#FF0000", 1.0f, false, true);
         }
     }
@@ -377,79 +467,79 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle red hex color")
-        void handleRedHexColor() throws Exception {
+        void handleRedHexColor() {
             testAutoRedaction("test", false, false, "#FF0000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle green hex color")
-        void handleGreenHexColor() throws Exception {
+        void handleGreenHexColor() {
             testAutoRedaction("test", false, false, "#00FF00", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle blue hex color")
-        void handleBlueHexColor() throws Exception {
+        void handleBlueHexColor() {
             testAutoRedaction("test", false, false, "#0000FF", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should default to black for invalid colors")
-        void defaultToBlackForInvalidColors() throws Exception {
+        void defaultToBlackForInvalidColors() {
             testAutoRedaction("test", false, false, "invalid-color", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle yellow hex color")
-        void handleYellowHexColor() throws Exception {
+        void handleYellowHexColor() {
             testAutoRedaction("test", false, false, "#FFFF00", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle magenta hex color")
-        void handleMagentaHexColor() throws Exception {
+        void handleMagentaHexColor() {
             testAutoRedaction("test", false, false, "#FF00FF", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle cyan hex color")
-        void handleCyanHexColor() throws Exception {
+        void handleCyanHexColor() {
             testAutoRedaction("test", false, false, "#00FFFF", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle black hex color")
-        void handleBlackHexColor() throws Exception {
+        void handleBlackHexColor() {
             testAutoRedaction("test", false, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle white hex color")
-        void handleWhiteHexColor() throws Exception {
+        void handleWhiteHexColor() {
             testAutoRedaction("test", false, false, "#FFFFFF", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle zero padding")
-        void handleZeroPadding() throws Exception {
+        void handleZeroPadding() {
             testAutoRedaction("test", false, false, "#000000", 0.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle normal padding")
-        void handleNormalPadding() throws Exception {
+        void handleNormalPadding() {
             testAutoRedaction("test", false, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle large padding")
-        void handleLargePadding() throws Exception {
+        void handleLargePadding() {
             testAutoRedaction("test", false, false, "#000000", 2.5f, false, true);
         }
 
         @Test
         @DisplayName("Should handle extra large padding")
-        void handleExtraLargePadding() throws Exception {
+        void handleExtraLargePadding() {
             testAutoRedaction("test", false, false, "#000000", 5.0f, false, true);
         }
     }
@@ -460,47 +550,47 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should redact using manual areas")
-        void redactUsingManualAreas() throws Exception {
+        void redactUsingManualAreas() {
             List<RedactionArea> redactionAreas = createValidRedactionAreas();
             testManualRedaction(redactionAreas, false);
         }
 
         @Test
         @DisplayName("Should handle null redaction areas")
-        void handleNullRedactionAreas() throws Exception {
+        void handleNullRedactionAreas() {
             testManualRedaction(null, false);
         }
 
         @Test
         @DisplayName("Should handle empty redaction areas")
-        void handleEmptyRedactionAreas() throws Exception {
+        void handleEmptyRedactionAreas() {
             testManualRedaction(new ArrayList<>(), false);
         }
 
         @Test
         @DisplayName("Should handle invalid redaction area coordinates")
-        void handleInvalidRedactionAreaCoordinates() throws Exception {
+        void handleInvalidRedactionAreaCoordinates() {
             List<RedactionArea> invalidAreas = createInvalidRedactionAreas();
             testManualRedaction(invalidAreas, false);
         }
 
         @Test
         @DisplayName("Should handle multiple redaction areas")
-        void handleMultipleRedactionAreas() throws Exception {
+        void handleMultipleRedactionAreas() {
             List<RedactionArea> multipleAreas = createMultipleRedactionAreas();
             testManualRedaction(multipleAreas, false);
         }
 
         @Test
         @DisplayName("Should handle overlapping redaction areas")
-        void handleOverlappingRedactionAreas() throws Exception {
+        void handleOverlappingRedactionAreas() {
             List<RedactionArea> overlappingAreas = createOverlappingRedactionAreas();
             testManualRedaction(overlappingAreas, false);
         }
 
         @Test
         @DisplayName("Should handle redaction areas with different colors")
-        void handleRedactionAreasWithDifferentColors() throws Exception {
+        void handleRedactionAreasWithDifferentColors() {
             List<RedactionArea> areas = new ArrayList<>();
 
             String[] colors = {"FF0000", "00FF00", "0000FF", "FFFF00", "FF00FF", "00FFFF"};
@@ -575,274 +665,21 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle PDF to image conversion disabled")
-        void handlePdfToImageConversionDisabled() throws Exception {
+        void handlePdfToImageConversionDisabled() {
             testAutoRedaction("sensitive", false, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle PDF to image conversion enabled")
-        void handlePdfToImageConversionEnabled() throws Exception {
+        void handlePdfToImageConversionEnabled() {
             testAutoRedaction("sensitive", false, false, "#000000", 1.0f, true, true);
         }
 
         @Test
         @DisplayName("Should handle manual redaction with image conversion")
-        void handleManualRedactionWithImageConversion() throws Exception {
+        void handleManualRedactionWithImageConversion() {
             List<RedactionArea> areas = createValidRedactionAreas();
             testManualRedaction(areas, true);
-        }
-    }
-
-    private static List<RedactionArea> createMultipleRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        for (int i = 0; i < 5; i++) {
-            RedactionArea area = new RedactionArea();
-            area.setPage(1);
-            area.setX(50.0 + (i * 60));
-            area.setY(50.0 + (i * 40));
-            area.setWidth(50.0);
-            area.setHeight(30.0);
-            area.setColor(String.format("%06X", i * 0x333333));
-            areas.add(area);
-        }
-
-        return areas;
-    }
-
-    private static List<RedactionArea> createOverlappingRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        RedactionArea area1 = new RedactionArea();
-        area1.setPage(1);
-        area1.setX(100.0);
-        area1.setY(100.0);
-        area1.setWidth(200.0);
-        area1.setHeight(100.0);
-        area1.setColor("FF0000");
-        areas.add(area1);
-
-        RedactionArea area2 = new RedactionArea();
-        area2.setPage(1);
-        area2.setX(150.0); // Overlaps with area1
-        area2.setY(150.0); // Overlaps with area1
-        area2.setWidth(200.0);
-        area2.setHeight(100.0);
-        area2.setColor("00FF00");
-        areas.add(area2);
-
-        return areas;
-    }
-
-    // Helper for token creation
-    private static List<Object> createSampleTokenList() {
-        return List.of(
-                Operator.getOperator("BT"),
-                COSName.getPDFName("F1"),
-                new COSFloat(12),
-                Operator.getOperator("Tf"),
-                new COSString("Sample text"),
-                Operator.getOperator("Tj"),
-                Operator.getOperator("ET"));
-    }
-
-    private RedactPdfRequest createRedactPdfRequest() {
-        RedactPdfRequest request = new RedactPdfRequest();
-        request.setFileInput(mockPdfFile);
-        return request;
-    }
-
-    private ManualRedactPdfRequest createManualRedactPdfRequest() {
-        ManualRedactPdfRequest request = new ManualRedactPdfRequest();
-        request.setFileInput(mockPdfFile);
-        return request;
-    }
-
-    private static String extractTextFromTokens(List<Object> tokens) {
-        StringBuilder text = new StringBuilder();
-        for (Object token : tokens) {
-            if (token instanceof COSString cosString) {
-                text.append(cosString.getString());
-            } else if (token instanceof COSArray array) {
-                for (int i = 0; i < array.size(); i++) {
-                    if (array.getObject(i) instanceof COSString cosString) {
-                        text.append(cosString.getString());
-                    }
-                }
-            }
-        }
-        return text.toString();
-    }
-
-    private static byte[] readAllBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int nRead;
-        byte[] data = new byte[1024];
-        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-            buffer.write(data, 0, nRead);
-        }
-        return buffer.toByteArray();
-    }
-
-    // Helpers
-    private void testAutoRedaction(
-            String searchText,
-            boolean useRegex,
-            boolean wholeWordSearch,
-            String redactColor,
-            float padding,
-            boolean convertToImage,
-            boolean expectSuccess) {
-        RedactPdfRequest request = createRedactPdfRequest();
-        request.setListOfText(searchText);
-        request.setUseRegex(useRegex);
-        request.setWholeWordSearch(wholeWordSearch);
-        request.setRedactColor(redactColor);
-        request.setCustomPadding(padding);
-        request.setConvertPDFToImage(convertToImage);
-
-        try {
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
-
-            if (expectSuccess && response != null) {
-                assertNotNull(response);
-                assertEquals(200, response.getStatusCode().value());
-                assertNotNull(response.getBody());
-                assertTrue(response.getBody().length > 0);
-                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
-                verify(mockDocument, times(1)).close();
-            }
-        } catch (Exception e) {
-            if (expectSuccess) {
-                log.info("Redaction test completed with graceful handling: {}", e.getMessage());
-            } else {
-                assertNotNull(e.getMessage());
-            }
-        }
-    }
-
-    private void testManualRedaction(List<RedactionArea> redactionAreas, boolean convertToImage) {
-        ManualRedactPdfRequest request = createManualRedactPdfRequest();
-        request.setRedactions(redactionAreas);
-        request.setConvertPDFToImage(convertToImage);
-
-        try {
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
-
-            if (response != null) {
-                assertNotNull(response);
-                assertEquals(200, response.getStatusCode().value());
-                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
-            }
-        } catch (Exception e) {
-            log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());
-        }
-    }
-
-    private void setupRealDocument() {
-        realDocument = new PDDocument();
-        realPage = new PDPage(PDRectangle.A4);
-        realDocument.addPage(realPage);
-
-        // Set up basic page resources
-        PDResources resources = new PDResources();
-        resources.put(
-                COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-        realPage.setResources(resources);
-    }
-
-    // Helper methods for real PDF content creation
-    private void createRealPageWithSimpleText(String text) throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText(text);
-            contentStream.endText();
-        }
-    }
-
-    private void createRealPageWithTJArrayText() throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-
-            contentStream.showText("This is ");
-            contentStream.newLineAtOffset(-10, 0); // Simulate positioning
-            contentStream.showText("secret");
-            contentStream.newLineAtOffset(10, 0); // Reset positioning
-            contentStream.showText(" information");
-            contentStream.endText();
-        }
-    }
-
-    private void createRealPageWithMixedContent() throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.setLineWidth(2);
-            contentStream.moveTo(100, 100);
-            contentStream.lineTo(200, 200);
-            contentStream.stroke();
-
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("Please redact this content");
-            contentStream.endText();
-        }
-    }
-
-    private void createRealPageWithSpecificOperator(String operatorName) throws IOException {
-        createRealPageWithSimpleText("sensitive data");
-    }
-
-    private void createRealPageWithPositionedText() throws IOException {
-        realPage = new PDPage(PDRectangle.A4);
-        while (realDocument.getNumberOfPages() > 0) {
-            realDocument.removePage(0);
-        }
-        realDocument.addPage(realPage);
-        realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("Normal text ");
-            contentStream.newLineAtOffset(100, 0);
-            contentStream.showText("confidential");
-            contentStream.newLineAtOffset(100, 0);
-            contentStream.showText(" more text");
-            contentStream.endText();
         }
     }
 
@@ -893,27 +730,27 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle extremely long search text")
-        void handleExtremelyLongSearchText() throws Exception {
+        void handleExtremelyLongSearchText() {
             String longText = "a".repeat(10000);
             testAutoRedaction(longText, false, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle special characters in search text")
-        void handleSpecialCharactersInSearchText() throws Exception {
+        void handleSpecialCharactersInSearchText() {
             testAutoRedaction("特殊字符测试 ñáéíóú àèìòù", false, false, "#000000", 1.0f, false, true);
         }
 
         @ParameterizedTest
         @ValueSource(strings = {"", " ", "\t", "\n", "\r\n", "   \t\n   "})
         @DisplayName("Should handle whitespace-only search terms")
-        void handleWhitespaceOnlySearchTerms(String whitespacePattern) throws Exception {
+        void handleWhitespaceOnlySearchTerms(String whitespacePattern) {
             testAutoRedaction(whitespacePattern, false, false, "#000000", 1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle null redact color gracefully")
-        void handleNullRedactColor() {
+        void handleNullRedactColor() throws IOException {
             RedactPdfRequest request = createRedactPdfRequest();
             request.setListOfText("test");
             request.setRedactColor(null);
@@ -926,13 +763,13 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle negative padding gracefully")
-        void handleNegativePadding() throws Exception {
+        void handleNegativePadding() {
             testAutoRedaction("test", false, false, "#000000", -1.0f, false, true);
         }
 
         @Test
         @DisplayName("Should handle extremely large padding")
-        void handleExtremelyLargePadding() throws Exception {
+        void handleExtremelyLargePadding() {
             testAutoRedaction("test", false, false, "#000000", 100.0f, false, true);
         }
 
@@ -961,20 +798,108 @@ class RedactControllerTest {
         }
     }
 
-    private List<Object> getOriginalTokens() throws Exception {
-        // Create a new page to avoid side effects from other tests
-        PDPage pageForTokenExtraction = new PDPage(PDRectangle.A4);
-        pageForTokenExtraction.setResources(realPage.getResources());
-        try (PDPageContentStream contentStream =
-                new PDPageContentStream(realDocument, pageForTokenExtraction)) {
-            contentStream.beginText();
-            contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-            contentStream.newLineAtOffset(50, 750);
-            contentStream.showText("Original content");
-            contentStream.endText();
+    @Nested
+    @DisplayName("PDFium Availability Flows")
+    class PdfiumAvailabilityTests {
+
+        @Test
+        @DisplayName(
+                "Should route through PDFium when service is available and always use black boxes")
+        void shouldUsePdfiumWhenAvailable() throws Exception {
+            configureRealPdfLoading();
+            MockMultipartFile realFile =
+                    createPdfMultipartFile("pdfium-available.pdf", "secret information");
+
+            when(pdfiumRedactionService.isAvailable()).thenReturn(true);
+            when(pdfiumRedactionService.redact(any(byte[].class), anyString(), anyList(), eq(true)))
+                    .thenReturn(Optional.of(createPdfWithText("sanitized content")));
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(realFile);
+            request.setListOfText("secret");
+
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            assertNotNull(response);
+            // Verify that PDFium is always called with drawBlackBoxes=true (hardcoded)
+            verify(pdfiumRedactionService, atLeastOnce())
+                    .redact(any(byte[].class), anyString(), anyList(), eq(true));
+            verify(pdfiumRedactionService, never())
+                    .redact(any(byte[].class), anyString(), anyList(), eq(false));
         }
-        return redactController.createTokensWithoutTargetText(
-                realDocument, pageForTokenExtraction, Collections.emptySet(), false, false);
+
+        @Test
+        @DisplayName("Should fall back to PDFBox overlays when PDFium is unavailable")
+        void shouldFallbackWhenPdfiumUnavailable() throws Exception {
+            when(pdfiumRedactionService.isAvailable()).thenReturn(false);
+
+            RedactPdfRequest request = createRedactPdfRequest();
+            request.setListOfText("secret");
+
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            assertNotNull(response);
+            verify(pdfiumRedactionService, never())
+                    .redact(any(byte[].class), anyString(), anyList(), anyBoolean());
+            verify(mockDocument, atLeastOnce()).save(any(ByteArrayOutputStream.class));
+        }
+
+        @Test
+        @DisplayName("Should always use PDFium with black boxes enabled")
+        void shouldAlwaysUseBlackBoxes() throws Exception {
+            configureRealPdfLoading();
+            MockMultipartFile realFile = createPdfMultipartFile("pdfium-redact.pdf", "secret data");
+
+            when(pdfiumRedactionService.isAvailable()).thenReturn(true);
+            when(pdfiumRedactionService.redact(any(byte[].class), anyString(), anyList(), eq(true)))
+                    .thenReturn(Optional.of(createPdfWithText("sanitized")));
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(realFile);
+            request.setListOfText("secret");
+
+            redactController.redactPdf(request);
+
+            // Verify PDFium is always called with drawBlackBoxes=true
+            verify(pdfiumRedactionService, atLeastOnce())
+                    .redact(any(byte[].class), anyString(), anyList(), eq(true));
+            // Verify it's never called with drawBlackBoxes=false
+            verify(pdfiumRedactionService, never())
+                    .redact(any(byte[].class), anyString(), anyList(), eq(false));
+        }
+    }
+
+    @Nested
+    @DisplayName("Real PDF Integration")
+    class RealPdfIntegrationTests {
+
+        @Test
+        @DisplayName("Should process a real PDF when PDFium is unavailable")
+        void shouldProcessRealPdfWithoutPdfium() throws Exception {
+            byte[] pdfBytes = createPdfWithText("Confidential data lives here.");
+            MockMultipartFile realFile =
+                    new MockMultipartFile(
+                            "fileInput", "real.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(realFile);
+            request.setListOfText("Confidential");
+
+            when(pdfiumRedactionService.isAvailable()).thenReturn(false);
+            configureRealPdfLoading();
+
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response.getBody());
+
+            try (PDDocument processed = Loader.loadPDF(response.getBody())) {
+                assertEquals(1, processed.getNumberOfPages());
+                String extracted = new PDFTextStripper().getText(processed);
+                assertTrue(extracted.contains("Confidential"));
+            }
+        }
     }
 
     @Nested
@@ -1041,390 +966,161 @@ class RedactControllerTest {
         }
     }
 
-    private String extractTextFromModifiedPage(PDPage page) throws IOException {
-        if (page.getContents() != null) {
-            try (InputStream inputStream = page.getContents()) {
-                return new String(readAllBytes(inputStream));
-            }
+    private List<RedactionArea> createValidRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
+
+        RedactionArea area1 = new RedactionArea();
+        area1.setPage(1);
+        area1.setX(100.0);
+        area1.setY(100.0);
+        area1.setWidth(200.0);
+        area1.setHeight(50.0);
+        area1.setColor("000000");
+        areas.add(area1);
+
+        RedactionArea area2 = new RedactionArea();
+        area2.setPage(1);
+        area2.setX(300.0);
+        area2.setY(200.0);
+        area2.setWidth(150.0);
+        area2.setHeight(30.0);
+        area2.setColor("FF0000");
+        areas.add(area2);
+
+        return areas;
+    }
+
+    private List<RedactionArea> createInvalidRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
+
+        RedactionArea invalidArea = new RedactionArea();
+        invalidArea.setPage(null); // Invalid - null page
+        invalidArea.setX(100.0);
+        invalidArea.setY(100.0);
+        invalidArea.setWidth(200.0);
+        invalidArea.setHeight(50.0);
+        areas.add(invalidArea);
+
+        return areas;
+    }
+
+    private List<RedactionArea> createMultipleRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            RedactionArea area = new RedactionArea();
+            area.setPage(1);
+            area.setX(50.0 + (i * 60));
+            area.setY(50.0 + (i * 40));
+            area.setWidth(50.0);
+            area.setHeight(30.0);
+            area.setColor(String.format("%06X", i * 0x333333));
+            areas.add(area);
         }
-        return "";
+
+        return areas;
+    }
+
+    private List<RedactionArea> createOverlappingRedactionAreas() {
+        List<RedactionArea> areas = new ArrayList<>();
+
+        RedactionArea area1 = new RedactionArea();
+        area1.setPage(1);
+        area1.setX(100.0);
+        area1.setY(100.0);
+        area1.setWidth(200.0);
+        area1.setHeight(100.0);
+        area1.setColor("FF0000");
+        areas.add(area1);
+
+        RedactionArea area2 = new RedactionArea();
+        area2.setPage(1);
+        area2.setX(150.0); // Overlaps with area1
+        area2.setY(150.0); // Overlaps with area1
+        area2.setWidth(200.0);
+        area2.setHeight(100.0);
+        area2.setColor("00FF00");
+        areas.add(area2);
+
+        return areas;
+    }
+
+    // Helper methods for real PDF content creation
+
+    @Nested
+    @DisplayName("List Of Text Parsing")
+    class ListOfTextParsingTests {
+
+        @Test
+        @DisplayName("Should split on newlines and trim entries")
+        void shouldSplitOnNewlinesAndTrimEntries() throws Exception {
+            String[] result = invokeParseListOfText(" First \nSecond\n\n third ", false);
+            assertArrayEquals(new String[] {"First", "Second", "third"}, result);
+        }
+
+        @Test
+        @DisplayName("Should fallback to commas when no newlines present in plain mode")
+        void shouldFallbackToCommasWhenPlainMode() throws Exception {
+            String[] result = invokeParseListOfText("alpha, beta ,gamma", false);
+            assertArrayEquals(new String[] {"alpha", "beta", "gamma"}, result);
+        }
+
+        @Test
+        @DisplayName("Should not split on commas when regex mode is enabled")
+        void shouldRespectRegexModeWhenCommasPresent() throws Exception {
+            String[] result = invokeParseListOfText("a,b,c", true);
+            assertArrayEquals(new String[] {"a,b,c"}, result);
+        }
+
+        @Test
+        @DisplayName("Should handle null or blank input")
+        void shouldHandleNullOrBlankInput() throws Exception {
+            assertArrayEquals(new String[0], invokeParseListOfText(null, false));
+            assertArrayEquals(new String[0], invokeParseListOfText("   \n  ", false));
+        }
     }
 
     @Nested
-    @DisplayName("Content Stream Unit Tests")
-    class ContentStreamUnitTests {
+    @DisplayName("PDFium Coordinate Conversion")
+    class PdfiumCoordinateConversionTests {
 
         @Test
-        @DisplayName("createTokensWithoutTargetText should remove simple text tokens")
-        void shouldRemoveSimpleTextTokens() throws Exception {
-            createRealPageWithSimpleText("This document contains confidential information.");
+        @DisplayName("Should convert PDFBox coordinates to PDFium device space")
+        void shouldConvertPdfboxCoordinatesToPdfiumDeviceSpace() throws Exception {
+            Map<Integer, List<PDFText>> matches = new HashMap<>();
+            PDFText block = new PDFText(0, 25f, 55f, 125f, 95f, "Lorem", 12.0f);
+            matches.put(0, Collections.singletonList(block));
 
-            Set<String> targetWords = Set.of("confidential");
+            Method method =
+                    RedactController.class.getDeclaredMethod(
+                            "buildPdfiumRegions", PDDocument.class, Map.class, float.class);
+            method.setAccessible(true);
 
-            List<Object> tokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            @SuppressWarnings("unchecked")
+            List<PdfiumRedactionRegion> regions =
+                    (List<PdfiumRedactionRegion>)
+                            method.invoke(redactController, realDocument, matches, 0f);
 
-            assertNotNull(tokens);
-            assertFalse(tokens.isEmpty());
+            assertEquals(1, regions.size());
+            PdfiumRedactionRegion region = regions.get(0);
 
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("confidential"),
-                    "Target text should be replaced with placeholder");
-            assertTrue(reconstructedText.contains("document"), "Non-target text should remain");
-        }
+            // Test basic coordinates with dynamic padding applied in controller
+            assertEquals(block.getPageIndex(), region.getPageIndex());
 
-        @Test
-        @DisplayName("createTokensWithoutTargetText should handle TJ operator arrays")
-        void shouldHandleTJOperatorArrays() throws Exception {
-            createRealPageWithTJArrayText();
+            float expectedHorizontalPadding = Math.max(block.getFontSize() * 0.12f, 0.5f);
+            float expectedVerticalPadding =
+                    Math.max(block.getY2() - block.getY1(), Math.max(block.getFontSize(), 0.5f))
+                            * 0.3f;
 
-            Set<String> targetWords = Set.of("secret");
-
-            List<Object> tokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            assertNotNull(tokens);
-
-            boolean foundModifiedTJArray = false;
-            for (Object token : tokens) {
-                if (token instanceof COSArray array) {
-                    for (int i = 0; i < array.size(); i++) {
-                        if (array.getObject(i) instanceof COSString cosString) {
-                            String text = cosString.getString();
-                            if (text.contains("secret")) {
-                                fail(
-                                        "Target text 'secret' should have been redacted from TJ"
-                                                + " array");
-                            }
-                            foundModifiedTJArray = true;
-                        }
-                    }
-                }
-            }
-            assertTrue(foundModifiedTJArray, "Should find at least one TJ array");
-        }
-
-        @Test
-        @DisplayName("createTokensWithoutTargetText should preserve non-text tokens")
-        void shouldPreserveNonTextTokens() throws Exception {
-            createRealPageWithMixedContent();
-
-            Set<String> targetWords = Set.of("redact");
-
-            List<Object> originalTokens = getOriginalTokens();
-            List<Object> filteredTokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            long originalNonTextCount =
-                    originalTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && !redactController.isTextShowingOperator(
-                                                            op.getName()))
-                            .count();
-
-            long filteredNonTextCount =
-                    filteredTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && !redactController.isTextShowingOperator(
-                                                            op.getName()))
-                            .count();
-
-            assertTrue(filteredNonTextCount > 0, "Non-text operators should be preserved");
-
-            assertTrue(
-                    filteredNonTextCount >= originalNonTextCount / 2,
-                    "A reasonable number of non-text operators should be preserved");
-        }
-
-        @Test
-        @DisplayName("createTokensWithoutTargetText should handle regex patterns")
-        void shouldHandleRegexPatterns() throws Exception {
-            createRealPageWithSimpleText("Phone: 123-456-7890 and SSN: 111-22-3333");
-
-            Set<String> targetWords = Set.of("\\d{3}-\\d{2}-\\d{4}"); // SSN pattern
-
-            List<Object> tokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, true, false);
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(reconstructedText.contains("111-22-3333"), "SSN should be redacted");
-            assertTrue(reconstructedText.contains("123-456-7890"), "Phone should remain");
-        }
-
-        @Test
-        @DisplayName("createTokensWithoutTargetText should handle whole word search")
-        void shouldHandleWholeWordSearch() throws Exception {
-            createRealPageWithSimpleText("This test testing tested document");
-
-            Set<String> targetWords = Set.of("test");
-
-            List<Object> tokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, true);
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertTrue(reconstructedText.contains("testing"), "Partial matches should remain");
-            assertTrue(reconstructedText.contains("tested"), "Partial matches should remain");
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"Tj", "TJ", "'", "\""})
-        @DisplayName("createTokensWithoutTargetText should handle all text operators")
-        void shouldHandleAllTextOperators(String operatorName) throws Exception {
-            createRealPageWithSpecificOperator(operatorName);
-
-            Set<String> targetWords = Set.of("sensitive");
-
-            List<Object> tokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("sensitive"),
-                    "Text should be redacted regardless of operator type");
-        }
-
-        @Test
-        @DisplayName("writeFilteredContentStream should write tokens to new stream")
-        void shouldWriteTokensToNewContentStream() throws Exception {
-            List<Object> tokens = createSampleTokenList();
-
-            redactController.writeFilteredContentStream(realDocument, realPage, tokens);
-
-            assertNotNull(realPage.getContents(), "Page should have content stream");
-
-            // Verify the content can be read back
-            try (InputStream inputStream = realPage.getContents()) {
-                byte[] content = readAllBytes(inputStream);
-                assertTrue(content.length > 0, "Content stream should not be empty");
-            }
-        }
-
-        @Test
-        @DisplayName("writeFilteredContentStream should handle empty token list")
-        void shouldHandleEmptyTokenList() throws Exception {
-            List<Object> emptyTokens = Collections.emptyList();
-
-            assertDoesNotThrow(
-                    () ->
-                            redactController.writeFilteredContentStream(
-                                    realDocument, realPage, emptyTokens));
-
-            assertNotNull(realPage.getContents(), "Page should still have content stream");
-        }
-
-        @Test
-        @DisplayName("writeFilteredContentStream should replace existing content")
-        void shouldReplaceExistingContentStream() throws Exception {
-            createRealPageWithSimpleText("Original content");
-            String originalContent = extractTextFromModifiedPage(realPage);
-
-            List<Object> newTokens = createSampleTokenList();
-            redactController.writeFilteredContentStream(realDocument, realPage, newTokens);
-
-            String newContent = extractTextFromModifiedPage(realPage);
-            assertNotEquals(originalContent, newContent, "Content stream should be replaced");
-        }
-
-        @Test
-        @DisplayName("Placeholder creation should maintain text width")
-        void shouldCreateWidthMatchingPlaceholder() {
-            String originalText = "confidential";
-            String placeholder =
-                    redactController.createPlaceholderWithFont(
-                            originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
+            assertEquals(block.getX1() - expectedHorizontalPadding, region.getX(), 0.001);
+            assertEquals(block.getY1() - expectedVerticalPadding, region.getY(), 0.001);
             assertEquals(
-                    originalText.length(),
-                    placeholder.length(),
-                    "Placeholder should maintain character count for width preservation");
-        }
+                    (block.getX2() - block.getX1()) + (expectedHorizontalPadding * 2),
+                    region.getWidth(),
+                    0.001);
 
-        @Test
-        @DisplayName("Placeholder should handle special characters")
-        void shouldHandleSpecialCharactersInPlaceholder() {
-            String originalText = "café naïve";
-            String placeholder =
-                    redactController.createPlaceholderWithFont(
-                            originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-            assertEquals(originalText.length(), placeholder.length());
-            assertFalse(
-                    placeholder.contains("café"), "Placeholder should not contain original text");
-        }
-
-        @Test
-        @DisplayName("Integration test: createTokens and writeStream")
-        void shouldIntegrateTokenCreationAndWriting() throws Exception {
-            createRealPageWithSimpleText("This document contains secret information.");
-
-            Set<String> targetWords = Set.of("secret");
-
-            List<Object> filteredTokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            redactController.writeFilteredContentStream(realDocument, realPage, filteredTokens);
-            assertNotNull(realPage.getContents());
-
-            String finalText = extractTextFromModifiedPage(realPage);
-            assertFalse(finalText.contains("secret"), "Target text should be completely removed");
-            assertTrue(finalText.contains("document"), "Other text should remain");
-        }
-
-        @Test
-        @DisplayName("Should preserve text positioning operators")
-        void shouldPreserveTextPositioning() throws Exception {
-            createRealPageWithPositionedText();
-
-            Set<String> targetWords = Set.of("confidential");
-
-            List<Object> filteredTokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            long filteredPositioning =
-                    filteredTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && ("Td".equals(op.getName())
-                                                            || "TD".equals(op.getName())
-                                                            || "Tm".equals(op.getName())))
-                            .count();
-
-            assertTrue(filteredPositioning > 0, "Positioning operators should be preserved");
-        }
-
-        @Test
-        @DisplayName("Should handle complex content streams with multiple operators")
-        void shouldHandleComplexContentStreams() throws Exception {
-            realPage = new PDPage(PDRectangle.A4);
-            while (realDocument.getNumberOfPages() > 0) {
-                realDocument.removePage(0);
-            }
-            realDocument.addPage(realPage);
-            realPage.setResources(new PDResources());
-            realPage.getResources()
-                    .put(
-                            COSName.getPDFName("F1"),
-                            new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(realDocument, realPage)) {
-                contentStream.setLineWidth(2);
-                contentStream.moveTo(100, 100);
-                contentStream.lineTo(200, 200);
-                contentStream.stroke();
-
-                contentStream.beginText();
-                contentStream.setFont(
-                        realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
-                contentStream.newLineAtOffset(50, 750);
-                contentStream.showText("This is a complex document with ");
-                contentStream.setTextRise(5);
-                contentStream.showText("confidential");
-                contentStream.setTextRise(0);
-                contentStream.showText(" information.");
-                contentStream.endText();
-
-                contentStream.addRect(300, 300, 100, 100);
-                contentStream.fill();
-            }
-
-            Set<String> targetWords = Set.of("confidential");
-
-            List<Object> tokens =
-                    redactController.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
-
-            assertNotNull(tokens);
-            assertFalse(tokens.isEmpty());
-
-            String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("confidential"), "Target text should be redacted");
-
-            boolean hasGraphicsOperators =
-                    tokens.stream()
-                            .anyMatch(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && ("re".equals(op.getName())
-                                                            || "f".equals(op.getName())
-                                                            || "m".equals(op.getName())
-                                                            || "l".equals(op.getName())
-                                                            || "S".equals(op.getName())));
-
-            assertTrue(hasGraphicsOperators, "Graphics operators should be preserved");
-        }
-
-        @Test
-        @DisplayName("Should handle documents with multiple text blocks")
-        void shouldHandleDocumentsWithMultipleTextBlocks() throws Exception {
-            // Create a document with multiple text blocks
-            realPage = new PDPage(PDRectangle.A4);
-            while (realDocument.getNumberOfPages() > 0) {
-                realDocument.removePage(0);
-            }
-            realDocument.addPage(realPage);
-
-            // Create resources
-            PDResources resources = new PDResources();
-            resources.put(
-                    COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
-            realPage.setResources(resources);
-
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(realDocument, realPage)) {
-                contentStream.beginText();
-                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                contentStream.newLineAtOffset(50, 750);
-                contentStream.showText("This is the first text block");
-                contentStream.endText();
-
-                contentStream.setLineWidth(2);
-                contentStream.moveTo(100, 700);
-                contentStream.lineTo(200, 700);
-                contentStream.stroke();
-
-                contentStream.beginText();
-                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                contentStream.newLineAtOffset(50, 650);
-                contentStream.showText("This block contains confidential information");
-                contentStream.endText();
-
-                contentStream.addRect(100, 600, 100, 50);
-                contentStream.fill();
-
-                contentStream.beginText();
-                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                contentStream.newLineAtOffset(50, 550);
-                contentStream.showText("This is the third text block");
-                contentStream.endText();
-            }
-
-            RedactPdfRequest request = createRedactPdfRequest();
-            request.setListOfText("confidential");
-            request.setUseRegex(false);
-            request.setWholeWordSearch(false);
-
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
-
-            assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            float expectedHeight = (block.getY2() - block.getY1()) + (expectedVerticalPadding * 2);
+            assertEquals(expectedHeight, region.getHeight(), 0.001);
         }
     }
 }
