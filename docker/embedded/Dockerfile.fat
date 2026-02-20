@@ -30,9 +30,7 @@ RUN set -eux; \
     # Libs required by WebEngine PDF output are preserved.
     rm -f  /opt/calibre/lib/libQt6Designer* \
            /opt/calibre/lib/libQt6Multimedia* \
-           /opt/calibre/lib/libQt6WaylandClient.so.* \
            /opt/calibre/lib/libQt6SpatialAudio.so.* \
-           /opt/calibre/lib/libQt6XcbQpa.so.* \
            /opt/calibre/lib/libQt6NetworkAuth.so.* \
            /opt/calibre/lib/libQt6Concurrent.so.* \
            /opt/calibre/lib/libQt6OpenGLWidgets.so.* \
@@ -72,8 +70,6 @@ RUN set -eux; \
            /opt/calibre/lib/libreadline.so.* \
            /opt/calibre/lib/libusb-1.0.so.*; \
     rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
-           /opt/calibre/lib/qt6/plugins/wayland* \
-           /opt/calibre/lib/qt6/plugins/xcbglintegrations \
            /opt/calibre/lib/qt6/plugins/multimedia \
            /opt/calibre/lib/qt6/plugins/designer \
            /opt/calibre/lib/qt6/plugins/qmltooling; \
