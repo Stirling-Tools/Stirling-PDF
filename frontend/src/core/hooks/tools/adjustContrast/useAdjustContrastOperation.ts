@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation, CustomProcessorResult } from '@app/hooks/tools/shared/useToolOperation';
 import { AdjustContrastParameters, defaultParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
-import { PDFDocument as PDFLibDocument } from 'pdf-lib';
+import { PDFDocument as PDFLibDocument } from '@cantoo/pdf-lib';
 import { applyAdjustmentsToCanvas } from '@app/components/tools/adjustContrast/utils';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { createFileFromApiResponse } from '@app/utils/fileResponseUtils';

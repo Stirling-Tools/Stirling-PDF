@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { Alert, Button, Group, Loader, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import type { GetPdfInfoOperationHook } from '@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation';
+import { downloadFile } from '@app/services/downloadService';
 
 interface GetPdfInfoResultsProps {
   operation: GetPdfInfoOperationHook;
@@ -21,14 +22,7 @@ const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoRes
   const selectedDownloadLabel = useMemo(() => t('getPdfInfo.downloadJson', 'Download JSON'), [t]);
 
   const handleDownload = useCallback((file: File) => {
-    const blobUrl = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = file.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(blobUrl);
+    void downloadFile({ data: file, filename: file.name });
   }, []);
 
   if (isLoading && operation.results.length === 0) {
@@ -75,5 +69,4 @@ const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoRes
 };
 
 export default GetPdfInfoResults;
-
 

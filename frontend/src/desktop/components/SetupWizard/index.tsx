@@ -100,6 +100,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   const handleServerSelection = (config: ServerConfig) => {
+    console.log('[SetupWizard] Server selected:', config);
+    console.log('[SetupWizard] OAuth providers:', config.enabledOAuthProviders);
+    console.log('[SetupWizard] Login method:', config.loginMethod);
     setServerConfig(config);
     setError(null);
     setSelfHostedMfaCode('');
@@ -210,12 +213,16 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         const params = new URLSearchParams(hash);
         const accessToken = params.get('access_token');
         const type = params.get('type') || parsed.searchParams.get('type');
-        const accessTokenFromHash = params.get('access_token');
-        const accessTokenFromQuery = parsed.searchParams.get('access_token');
-        const serverFromQuery = parsed.searchParams.get('server');
-
-        // Handle self-hosted SSO deep link
+        // Self-hosted SSO deep links are normally handled by authService.loginWithSelfHostedOAuth.
+        // Fallback here only if no in-flight auth listener exists (e.g. renderer reload mid-flow).
         if (type === 'sso' || type === 'sso-selfhosted') {
+          if (authService.isSelfHostedDeepLinkFlowActive()) {
+            return;
+          }
+
+          const accessTokenFromHash = params.get('access_token');
+          const accessTokenFromQuery = parsed.searchParams.get('access_token');
+          const serverFromQuery = parsed.searchParams.get('server');
           const token = accessTokenFromHash || accessTokenFromQuery;
           const serverUrl = serverFromQuery || serverConfig?.url || STIRLING_SAAS_URL;
           if (!token || !serverUrl) {
@@ -283,7 +290,44 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       const currentConfig = await connectionModeService.getCurrentConfig();
       if (currentConfig.lock_connection_mode && currentConfig.server_config?.url) {
         setLockConnectionMode(true);
-        setServerConfig(currentConfig.server_config);
+
+        // Re-fetch OAuth providers for the saved server URL
+        const savedUrl = currentConfig.server_config.url.replace(/\/+$/, ''); // Remove trailing slashes
+        let updatedConfig = { ...currentConfig.server_config };
+
+        try {
+          console.log('[SetupWizard] Re-fetching OAuth providers for saved server:', savedUrl);
+          const response = await fetch(`${savedUrl}/api/v1/proprietary/ui-data/login`);
+
+          if (response.ok) {
+            const data = await response.json();
+            const enabledProviders: any[] = [];
+            const providerEntries = Object.entries(data.providerList || {});
+
+            providerEntries.forEach(([path, label]) => {
+              const id = path.split('/').pop();
+              if (id) {
+                enabledProviders.push({
+                  id,
+                  path,
+                  label: typeof label === 'string' ? label : undefined,
+                });
+              }
+            });
+
+            updatedConfig = {
+              ...updatedConfig,
+              enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+              loginMethod: data.loginMethod || 'all',
+            };
+
+            console.log('[SetupWizard] Updated config with OAuth providers:', updatedConfig);
+          }
+        } catch (err) {
+          console.error('[SetupWizard] Failed to re-fetch OAuth providers:', err);
+        }
+
+        setServerConfig(updatedConfig);
         setActiveStep(SetupStep.SelfHostedLogin);
       }
     };

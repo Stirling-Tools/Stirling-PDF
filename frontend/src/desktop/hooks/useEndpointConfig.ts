@@ -190,10 +190,8 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     try {
       setError(null);
 
-      const endpointsParam = endpoints.join(',');
-
       const response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
-        `/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpointsParam)}`,
+        `/api/v1/config/endpoints-availability`,
         {
           suppressErrorToast: true,
         }

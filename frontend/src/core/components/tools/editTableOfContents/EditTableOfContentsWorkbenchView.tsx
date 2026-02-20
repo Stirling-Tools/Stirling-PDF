@@ -15,6 +15,7 @@ import ErrorNotification from '@app/components/tools/shared/ErrorNotification';
 import ResultsPreview from '@app/components/tools/shared/ResultsPreview';
 import BookmarkEditor from '@app/components/tools/editTableOfContents/BookmarkEditor';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { downloadFromUrl } from '@app/services/downloadService';
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -42,6 +43,16 @@ interface EditTableOfContentsWorkbenchViewProps {
 const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbenchViewProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
+  const files = data?.files ?? [];
+  const thumbnails = data?.thumbnails ?? [];
+  const previewFiles = useMemo(
+    () =>
+      files.map((file, index) => ({
+        file,
+        thumbnail: thumbnails[index],
+      })),
+    [files, thumbnails]
+  );
 
   if (!data) {
     return (
@@ -62,8 +73,6 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
     bookmarks,
     selectedFileName,
     disabled,
-    files,
-    thumbnails,
     downloadUrl,
     downloadFilename,
     errorMessage,
@@ -76,15 +85,6 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
     onUndo,
     onFileClick,
   } = data;
-
-  const previewFiles = useMemo(
-    () =>
-      files?.map((file, index) => ({
-        file,
-        thumbnail: thumbnails[index],
-      })) ?? [],
-    [files, thumbnails]
-  );
 
   const showResults = Boolean(
     previewFiles.length > 0 || downloadUrl || errorMessage
@@ -177,10 +177,8 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
               <Group justify="flex-end" gap="sm">
                 {downloadUrl && (
                   <Button
-                    component="a"
-                    href={downloadUrl}
-                    download={downloadFilename ?? undefined}
                     leftSection={<LocalIcon icon='download-rounded' />}
+                    onClick={() => downloadFromUrl(downloadUrl, downloadFilename ?? "download")}
                   >
                     {terminology.download}
                   </Button>
