@@ -6834,7 +6834,8 @@ public class PdfJsonConversionService {
 
     /** Schedules automatic cleanup of cached documents after 30 minutes. */
     private void scheduleDocumentCleanup(String jobId) {
-        new Thread(
+        Thread.ofVirtual()
+                .start(
                         () -> {
                             try {
                                 Thread.sleep(TimeUnit.MINUTES.toMillis(30));
@@ -6843,7 +6844,6 @@ public class PdfJsonConversionService {
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
-                        })
-                .start();
+                        });
     }
 }

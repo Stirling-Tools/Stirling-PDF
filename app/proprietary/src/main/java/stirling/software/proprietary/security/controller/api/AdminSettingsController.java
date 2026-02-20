@@ -543,7 +543,8 @@ public class AdminSettingsController {
             pendingChanges.clear();
 
             // Give the HTTP response time to complete, then exit
-            new Thread(
+            Thread.ofVirtual()
+                    .start(
                             () -> {
                                 try {
                                     Thread.sleep(1000);
@@ -554,8 +555,7 @@ public class AdminSettingsController {
                                     log.error("Restart interrupted: {}", e.getMessage(), e);
                                     Thread.currentThread().interrupt();
                                 }
-                            })
-                    .start();
+                            });
 
             return ResponseEntity.ok(
                     Map.of(

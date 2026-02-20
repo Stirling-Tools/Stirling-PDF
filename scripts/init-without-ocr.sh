@@ -437,13 +437,15 @@ generate_aot_cache() {
   # Uses in-memory H2 database to avoid file-lock conflicts with the running application.
   # Note: DatabaseConfig reads System.getProperty("stirling.datasource.url") to override
   # the default file-based H2 URL. We use MODE=PostgreSQL to match the production config.
+  # Redirect both stdout and stderr to suppress duplicate startup logs (banner + Spring init).
   java -Xmx512m -XX:+UseCompactObjectHeaders \
        -Xlog:aot=error \
        -XX:AOTMode=record \
        -XX:AOTConfiguration="$aot_conf" \
+       -Dspring.main.banner-mode=off \
        -Dspring.context.exit=onRefresh \
        -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
-       "$@" 2>/tmp/aot-record.log || true
+       "$@" >/tmp/aot-record.log 2>&1 || true
 
   if [ ! -f "$aot_conf" ]; then
     log "AOT: Training produced no configuration file."
@@ -458,12 +460,13 @@ generate_aot_cache() {
   # to build the AOT cache with pre-linked classes and optimized native code.
   # Uses less memory than the training run.
   # -Xlog:aot=error: same as record phase — suppress harmless skip/preload warnings.
+  # Redirect both stdout and stderr to avoid polluting container logs.
   if java -Xmx256m -XX:+UseCompactObjectHeaders \
        -Xlog:aot=error \
        -XX:AOTMode=create \
        -XX:AOTConfiguration="$aot_conf" \
        -XX:AOTCache="$aot_path" \
-       "$@" 2>/tmp/aot-create.log; then
+       "$@" >/tmp/aot-create.log 2>&1; then
 
     local cache_size
     cache_size=$(du -h "$aot_path" 2>/dev/null | cut -f1)
