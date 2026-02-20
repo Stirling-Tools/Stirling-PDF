@@ -55,7 +55,14 @@ public class LicenseKeyChecker {
 
     @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
     public void checkLicensePeriodically() {
-        evaluateLicense();
+        try {
+            evaluateLicense();
+        } catch (RuntimeException e) {
+            log.error(
+                    "Periodic license check failed after all retries: {}. Keeping existing license"
+                            + " status.",
+                    e.getMessage());
+        }
         synchronizeLicenseSettings();
     }
 
