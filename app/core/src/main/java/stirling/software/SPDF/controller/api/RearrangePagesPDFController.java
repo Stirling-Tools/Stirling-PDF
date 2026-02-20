@@ -191,6 +191,14 @@ public class RearrangePagesPDFController {
         if (duplicateCount < 1) {
             duplicateCount = 2; // Default to 2 if invalid input
         }
+        int maxDuplicateCount = Math.max(100, totalPages * 3);
+        if (duplicateCount > maxDuplicateCount) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "duplicateCount",
+                    "must not exceed " + maxDuplicateCount);
+        }
 
         // For each page in the document
         for (int pageNum = 0; pageNum < totalPages; pageNum++) {
