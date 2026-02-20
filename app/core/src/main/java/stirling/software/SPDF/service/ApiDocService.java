@@ -36,12 +36,15 @@ public class ApiDocService {
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
+    private final ObjectMapper objectMapper;
     Map<String, List<String>> outputToFileTypes = new HashMap<>();
     JsonNode apiDocsJsonRootNode;
 
     public ApiDocService(
+            ObjectMapper objectMapper,
             ServletContext servletContext,
             @Autowired(required = false) UserServiceInterface userService) {
+        this.objectMapper = objectMapper;
         this.servletContext = servletContext;
         this.userService = userService;
     }
@@ -116,8 +119,7 @@ public class ApiDocService {
             ResponseEntity<String> response =
                     restTemplate.exchange(getApiDocsUrl(), HttpMethod.GET, entity, String.class);
             apiDocsJson = response.getBody();
-            ObjectMapper mapper = new ObjectMapper();
-            apiDocsJsonRootNode = mapper.readTree(apiDocsJson);
+            apiDocsJsonRootNode = objectMapper.readTree(apiDocsJson);
             JsonNode paths = apiDocsJsonRootNode.path("paths");
             paths.propertyStream()
                     .forEach(

@@ -19,6 +19,7 @@ import stirling.software.common.service.UserServiceInterface;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class ApiDocServiceTest {
@@ -27,11 +28,11 @@ class ApiDocServiceTest {
     @Mock UserServiceInterface userService;
 
     ApiDocService apiDocService;
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JsonMapper.builder().build();
 
     @BeforeEach
     void setUp() {
-        apiDocService = new ApiDocService(servletContext, userService);
+        apiDocService = new ApiDocService(mapper, servletContext, userService);
     }
 
     private void setApiDocumentation(Map<String, ApiEndpoint> docs) throws Exception {

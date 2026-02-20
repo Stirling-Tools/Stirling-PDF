@@ -39,6 +39,7 @@ public class UIDataTessdataController {
 
     private static final Pattern INVALID_LANG_CHARS_PATTERN = Pattern.compile("[^A-Za-z0-9_+\\-]");
     private final RuntimePathConfig runtimePathConfig;
+    private final ObjectMapper objectMapper;
     private static volatile List<String> cachedRemoteTessdata = null;
     private static volatile long cachedRemoteTessdataExpiry = 0L;
     private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -223,9 +224,9 @@ public class UIDataTessdataController {
             }
 
             try (InputStream is = connection.getInputStream()) {
-                ObjectMapper mapper = new ObjectMapper();
                 List<Map<String, Object>> items =
-                        mapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
+                        objectMapper.readValue(
+                                is, new TypeReference<List<Map<String, Object>>>() {});
                 List<String> languages =
                         items.stream()
                                 .map(item -> (String) item.get("name"))

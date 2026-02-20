@@ -47,6 +47,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @DisplayName("GetInfoOnPDF Controller Tests")
 @ExtendWith(MockitoExtension.class)
@@ -64,7 +65,7 @@ class GetInfoOnPDFTest {
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
+        objectMapper = JsonMapper.builder().build();
     }
 
     /** Helper method to load a PDF file from test resources */

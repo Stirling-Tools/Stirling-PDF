@@ -36,13 +36,14 @@ import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerMfaTest {
 
     private static final String USERNAME = "user@example.com";
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private MockMvc mockMvc;
     private Authentication authentication;

@@ -44,18 +44,21 @@ public class UIDataController {
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
     private final RuntimePathConfig runtimePathConfig;
+    private final ObjectMapper objectMapper;
 
     public UIDataController(
             ApplicationProperties applicationProperties,
             SharedSignatureService signatureService,
             @Autowired(required = false) UserServiceInterface userService,
             ResourceLoader resourceLoader,
-            RuntimePathConfig runtimePathConfig) {
+            RuntimePathConfig runtimePathConfig,
+            ObjectMapper objectMapper) {
         this.applicationProperties = applicationProperties;
         this.signatureService = signatureService;
         this.userService = userService;
         this.resourceLoader = resourceLoader;
         this.runtimePathConfig = runtimePathConfig;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/footer-info")
@@ -93,9 +96,8 @@ public class UIDataController {
 
         try (InputStream is = resource.getInputStream()) {
             String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Dependency>> licenseData =
-                    mapper.readValue(json, new TypeReference<>() {});
+                    objectMapper.readValue(json, new TypeReference<>() {});
             data.setDependencies(licenseData.get("dependencies"));
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);
@@ -127,8 +129,8 @@ public class UIDataController {
 
                 for (String config : pipelineConfigs) {
                     Map<String, Object> jsonContent =
-                            new ObjectMapper()
-                                    .readValue(config, new TypeReference<Map<String, Object>>() {});
+                            objectMapper.readValue(
+                                    config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.length() < 1) {
                         String filename =

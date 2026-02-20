@@ -33,9 +33,9 @@ public class SharedSignatureService {
     private final String ALL_USERS_FOLDER = "ALL_USERS";
     private final ObjectMapper objectMapper;
 
-    public SharedSignatureService() {
+    public SharedSignatureService(ObjectMapper objectMapper) {
         SIGNATURE_BASE_PATH = InstallationPathConfig.getSignaturesPath();
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     public boolean hasAccessToFile(String username, String fileName) throws IOException {

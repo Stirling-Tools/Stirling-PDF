@@ -202,20 +202,29 @@ public class Type3FontLibrary {
         if (payload == null) {
             return null;
         }
-        byte[] data = null;
+        String base64;
         if (payload.base64 != null && !payload.base64.isBlank()) {
+            // Validate the base64 string without wasteful decode→re-encode roundtrip
             try {
-                data = Base64.getDecoder().decode(payload.base64);
+                byte[] decoded = Base64.getDecoder().decode(payload.base64);
+                if (decoded.length == 0) {
+                    return null;
+                }
             } catch (IllegalArgumentException ex) {
                 log.warn("[TYPE3] Invalid base64 payload in Type3 library: {}", ex.getMessage());
+                return null;
             }
+            // Keep the original base64 string directly — avoids 3x memory pressure
+            base64 = payload.base64;
         } else if (payload.resource != null && !payload.resource.isBlank()) {
-            data = loadResourceBytes(payload.resource);
-        }
-        if (data == null || data.length == 0) {
+            byte[] data = loadResourceBytes(payload.resource);
+            if (data == null || data.length == 0) {
+                return null;
+            }
+            base64 = Base64.getEncoder().encodeToString(data);
+        } else {
             return null;
         }
-        String base64 = Base64.getEncoder().encodeToString(data);
         return new Type3FontLibraryPayload(base64, normalizeFormat(payload.format));
     }
 

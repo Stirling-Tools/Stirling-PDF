@@ -406,7 +406,8 @@ compute_dynamic_memory() {
 # archives when building multi-arch images or when runtime flags differ.
 generate_appcds_archive() {
   local jsa_path=$1
-  shift
+  local memory_flags=$2
+  shift 2
   # Remaining args are the classpath/main-class arguments for the training run
 
   local jsa_dir
@@ -416,8 +417,8 @@ generate_appcds_archive() {
   log "Generating AppCDS archive on first boot (this may take 30-60s)..."
 
   # Training run - collect loaded class list
-  # Use -Xmx256m to limit memory usage (training doesn't need full heap)
-  java -Xmx256m -XX:+UseCompactObjectHeaders \
+  # Use -Xmx1g to limit memory for class listing (enough for Spring Boot init)
+  java -Xmx1g -XX:+UseCompactObjectHeaders \
        -XX:DumpLoadedClassList=/tmp/classes.lst \
        -Dspring.context.exit=onRefresh \
        "$@" 2>/dev/null || true
@@ -442,9 +443,12 @@ generate_appcds_archive() {
     return 1
   fi
 
-  # Dump the shared archive
+  # Dump the shared archive using the SAME memory flags as runtime.
+  # This ensures UseCompressedOops state matches (critical for large heaps >32GB).
+  # shellcheck disable=SC2086
   if java -Xshare:dump \
        -XX:+UseCompactObjectHeaders \
+       ${memory_flags} \
        -XX:SharedClassListFile=/tmp/filtered-classes.lst \
        -XX:SharedArchiveFile="$jsa_path" \
        -cp "$cp_arg" 2>/dev/null; then
@@ -547,11 +551,11 @@ else
   # First-boot CDS generation
   CDS_GENERATED=false
   if [ -f /app/app.jar ] && [ -d /app/lib ]; then
-    if generate_appcds_archive "$CDS_ARCHIVE" -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication; then
+    if generate_appcds_archive "$CDS_ARCHIVE" "$MEMORY_FLAGS" -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication; then
       CDS_GENERATED=true
     fi
   elif [ -f /app.jar ]; then
-    if generate_appcds_archive "$CDS_ARCHIVE" -jar /app.jar; then
+    if generate_appcds_archive "$CDS_ARCHIVE" "$MEMORY_FLAGS" -jar /app.jar; then
       CDS_GENERATED=true
     fi
   fi

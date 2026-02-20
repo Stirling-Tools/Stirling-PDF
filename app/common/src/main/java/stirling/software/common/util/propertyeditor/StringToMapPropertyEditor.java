@@ -6,10 +6,11 @@ import java.util.Map;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 public class StringToMapPropertyEditor extends PropertyEditorSupport {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Override
     public void setAsText(String text) throws IllegalArgumentException {

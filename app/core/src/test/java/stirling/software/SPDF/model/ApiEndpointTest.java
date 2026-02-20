@@ -9,12 +9,13 @@ import org.junit.jupiter.api.Test;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 class ApiEndpointTest {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = JsonMapper.builder().build();
 
     private JsonNode postNodeWithParams(String description, String... names) {
         ObjectNode post = mapper.createObjectNode();

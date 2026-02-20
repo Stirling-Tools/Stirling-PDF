@@ -45,7 +45,7 @@ public class KeygenLicenseVerifier {
 
     private static final String JWT_PREFIX = "key/";
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final ApplicationProperties applicationProperties;
 
     // Shared HTTP client for connection pooling
