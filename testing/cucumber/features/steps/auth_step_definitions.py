@@ -416,10 +416,14 @@ def step_json_user_field_not_empty(context, field):
 
 @then('the response JSON user field "{field}" should equal "{expected}"')
 def step_json_user_field_equals(context, field, expected):
-    """Assert response.user.<field> equals the expected string value."""
+    """Assert response.user.<field> equals the expected string value.
+
+    JSON booleans are compared as lowercase strings ("true"/"false").
+    """
     data = context.response.json()
     assert "user" in data, f"No 'user' in response: {list(data.keys())}"
-    actual = str(data["user"].get(field, ""))
+    value = data["user"].get(field, "")
+    actual = str(value).lower() if isinstance(value, bool) else str(value)
     assert actual == expected, (
         f"Expected user field '{field}' == '{expected}' but got '{actual}'"
     )
@@ -427,9 +431,14 @@ def step_json_user_field_equals(context, field, expected):
 
 @then('the response JSON field "{field}" should equal "{expected}"')
 def step_json_top_field_equals(context, field, expected):
-    """Assert a top-level JSON field equals the expected string value."""
+    """Assert a top-level JSON field equals the expected string value.
+
+    JSON booleans (true/false) are compared as lowercase strings to match
+    JSON serialisation ("true"/"false"), not Python's "True"/"False".
+    """
     data = context.response.json()
-    actual = str(data.get(field, ""))
+    value = data.get(field, "")
+    actual = str(value).lower() if isinstance(value, bool) else str(value)
     assert actual == expected, (
         f"Expected JSON field '{field}' == '{expected}' but got '{actual}'. "
         f"Full response: {data}"
