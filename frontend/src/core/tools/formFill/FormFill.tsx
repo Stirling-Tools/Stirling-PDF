@@ -21,16 +21,16 @@ import {
   Tooltip,
   ActionIcon,
 } from '@mantine/core';
-import { useFormFill, useAllFormValues } from '@proprietary/tools/formFill/FormFillContext';
+import { useFormFill, useAllFormValues } from '@app/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useFileState } from '@app/contexts/FileContext';
 import { Skeleton } from '@mantine/core';
 import { isStirlingFile } from '@app/types/fileContext';
 import type { BaseToolProps } from '@app/types/tool';
-import type { FormField } from '@proprietary/tools/formFill/types';
-import { FieldInput } from '@proprietary/tools/formFill/FieldInput';
-import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@proprietary/tools/formFill/fieldMeta';
+import type { FormField } from '@app/tools/formFill/types';
+import { FieldInput } from '@app/tools/formFill/FieldInput';
+import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
 import SaveIcon from '@mui/icons-material/Save';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -40,7 +40,7 @@ import FileCopyIcon from '@mui/icons-material/FileCopy';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import styles from '@proprietary/tools/formFill/FormFill.module.css';
+import styles from '@app/tools/formFill/FormFill.module.css';
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools
