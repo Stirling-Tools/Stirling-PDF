@@ -74,6 +74,11 @@ const CompareDocumentPane = ({
     }
   }, [zoom]);
 
+  const renderedPageNumbers = useMemo(
+    () => new Set(pages.map((p) => p.pageNumber)),
+    [pages]
+  );
+
   return (
     <div className="compare-pane">
       <div className="compare-header">
@@ -88,7 +93,7 @@ const CompareDocumentPane = ({
                 placeholder={dropdownPlaceholder ?? null}
                 className={pane === 'comparison' ? 'compare-changes-select--comparison' : undefined}
                 onNavigate={onNavigateChange}
-                renderedPageNumbers={useMemo(() => new Set(pages.map(p => p.pageNumber)), [pages])}
+                renderedPageNumbers={renderedPageNumbers}
               />
             )}
           </Group>

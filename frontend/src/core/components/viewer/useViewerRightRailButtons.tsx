@@ -14,8 +14,12 @@ import { useNavigationState, useNavigationGuard } from '@app/contexts/Navigation
 import { BASE_PATH, withBasePath } from '@app/constants/app';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
+import StraightenIcon from '@mui/icons-material/Straighten';
 
-export function useViewerRightRailButtons() {
+export function useViewerRightRailButtons(
+  isRulerActive?: boolean,
+  setIsRulerActive?: (v: boolean) => void,
+) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
   const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
@@ -82,6 +86,8 @@ export function useViewerRightRailButtons() {
 
   const isFormFillActive = (selectedTool as string) === 'formFill';
 
+  const rulerLabel = t('rightRail.ruler', 'Ruler / Measure');
+
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
       {
@@ -135,6 +141,24 @@ export function useViewerRightRailButtons() {
         onClick: () => {
           viewer.panActions.togglePan();
           setIsPanning(prev => !prev);
+        },
+      },
+      {
+        id: 'viewer-ruler',
+        icon: <StraightenIcon sx={{ fontSize: '1.5rem' }} />,
+        tooltip: rulerLabel,
+        ariaLabel: rulerLabel,
+        section: 'top' as const,
+        order: 25,
+        active: Boolean(isRulerActive),
+        onClick: () => {
+          const next = !isRulerActive;
+          setIsRulerActive?.(next);
+          // Disable pan when activating ruler — they conflict
+          if (next && viewer.getPanState()?.isPanning) {
+            viewer.panActions.togglePan();
+            setIsPanning(false);
+          }
         },
       },
       {
@@ -317,6 +341,9 @@ export function useViewerRightRailButtons() {
     redactionActiveType,
     formFillLabel,
     isFormFillActive,
+    rulerLabel,
+    isRulerActive,
+    setIsRulerActive,
   ]);
 
   useRightRailButtons(viewerButtons);
