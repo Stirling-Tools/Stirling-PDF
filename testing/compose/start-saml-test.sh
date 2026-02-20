@@ -13,24 +13,48 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 AUTO_LOGIN=false
+DEFAULT_LANGUAGE="en-US"
 COMPOSE_UP_ARGS=(-d --build)
-for arg in "$@"; do
-    case "$arg" in
+while [[ $# -gt 0 ]]; do
+    case "$1" in
         --auto)
             AUTO_LOGIN=true
+            shift
             ;;
         --nobuild)
             COMPOSE_UP_ARGS=(-d)
+            shift
+            ;;
+        --language)
+            if [[ -z "${2:-}" ]]; then
+                echo -e "${RED}Missing value for --language${NC}"
+                exit 1
+            fi
+            DEFAULT_LANGUAGE="$2"
+            shift 2
+            ;;
+        --language=*)
+            DEFAULT_LANGUAGE="${1#*=}"
+            shift
+            ;;
+        -l)
+            if [[ -z "${2:-}" ]]; then
+                echo -e "${RED}Missing value for -l${NC}"
+                exit 1
+            fi
+            DEFAULT_LANGUAGE="$2"
+            shift 2
             ;;
         -h|--help)
-            echo "Usage: $0 [--auto] [--nobuild]"
+            echo "Usage: $0 [--auto] [--nobuild] [--language <locale>]"
             echo ""
             echo "  --auto     Enable SSO auto-login and force SAML-only login method"
             echo "  --nobuild  Skip building images (use existing images)"
+            echo "  --language Set system default locale (e.g. de-DE, sv-SE)"
             exit 0
             ;;
         *)
-            echo -e "${RED}Unknown option: $arg${NC}"
+            echo -e "${RED}Unknown option: $1${NC}"
             exit 1
             ;;
     esac
@@ -64,6 +88,10 @@ if [ "$AUTO_LOGIN" = true ]; then
     echo -e "${GREEN}✓ SSO auto-login enabled (SAML-only)${NC}"
     echo ""
 fi
+
+export SYSTEM_DEFAULTLOCALE="$DEFAULT_LANGUAGE"
+echo -e "${GREEN}✓ Default locale set to: ${SYSTEM_DEFAULTLOCALE}${NC}"
+echo ""
 
 echo -e "${YELLOW}▶ Starting Keycloak (SAML) containers...${NC}"
 docker-compose -f docker-compose-keycloak-saml.yml up "${COMPOSE_UP_ARGS[@]}" keycloak-saml-db keycloak-saml
