@@ -434,11 +434,13 @@ generate_aot_cache() {
   #   signed JARs (BouncyCastle), JFR events, CGLIB classes, etc. The JVM handles all of
   #   these internally they are informational, not errors.
   # Non-zero exit is expected — onRefresh triggers controlled shutdown.
+  # Uses in-memory H2 database to avoid file-lock conflicts with the running application.
   java -Xmx512m -XX:+UseCompactObjectHeaders \
        -Xlog:aot=error \
        -XX:AOTMode=record \
        -XX:AOTConfiguration="$aot_conf" \
        -Dspring.context.exit=onRefresh \
+       -Dspring.datasource.url=jdbc:h2:mem:aottraining \
        "$@" 2>/tmp/aot-record.log || true
 
   if [ ! -f "$aot_conf" ]; then
