@@ -1,4 +1,4 @@
-package stirling.software.proprietary.controller.api.form;
+package stirling.software.SPDF.controller.api.form;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.proprietary.util.FormUtils;
+import stirling.software.common.util.FormUtils;
 
 final class FormPayloadParser {
 

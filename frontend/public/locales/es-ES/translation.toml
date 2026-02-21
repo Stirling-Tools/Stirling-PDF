@@ -17,6 +17,12 @@ confirmClose = "Confirmar cierre"
 confirmCloseCancel = "Cancelar"
 confirmCloseConfirm = "Cerrar archivo"
 confirmCloseMessage = "¿Seguro que quieres cerrar este archivo?"
+confirmCloseDiscard = "Descartar cambios y cerrar"
+confirmCloseSave = "Guardar y cerrar"
+confirmCloseUnsaved = "Este archivo tiene cambios sin guardar."
+confirmCloseUnsavedList = "Tienes {{count}} archivo{{plural}} con cambios sin guardar.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Error al guardar"
+confirmCloseSaveFailed = "Guardado con errores. No fue posible guardar {{count}} archivo{{plural}}."
 confirmPasswordErrorMessage = "Deben coincidir Nueva Contraseña y Confirmar Nueva Contraseña."
 custom = "Personalizado..."
 customPosition = "Posición personalizada"
@@ -39,6 +45,8 @@ edit = "Editar"
 editYourNewFiles = "Editar sus nuevos archivos"
 exportAndContinue = "Exportar y continuar"
 false = "Falso"
+fileSavedToDisk = "Archivo guardado en el disco"
+fileNotSavedToDisk = "No guardado en el disco"
 fileSelected = "Archivo seleccionado: {{filename}}"
 filesSelected = "{{count}} archivos seleccionados"
 font = "Fuente"
@@ -829,8 +837,9 @@ label = "Nombre de usuario"
 [admin.settings.endpoints]
 description = "Controla qué endpoints y grupos de endpoints de la API están disponibles."
 management = "Gestión de endpoints"
-note = "Nota: Deshabilitar endpoints restringe el acceso a la API pero no elimina componentes de la interfaz. Se requiere reiniciar para que los cambios surtan efecto."
 title = "Endpoints de la API"
+userDefaults = "Valores predeterminados de las preferencias de usuario"
+userDefaultsDescription = "Establece valores predeterminados para las preferencias de usuario. Los usuarios pueden sobrescribirlos en su configuración personal."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Selecciona grupos de endpoints para deshabilitar"
@@ -839,6 +848,14 @@ label = "Grupos de endpoints deshabilitados"
 [admin.settings.endpoints.toRemove]
 description = "Selecciona endpoints individuales para deshabilitar"
 label = "Endpoints deshabilitados"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Quitar las herramientas deshabilitadas en lugar de mostrarlas atenuadas"
+label = "Ocultar por defecto las herramientas no disponibles"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Quitar las opciones de conversión deshabilitadas en lugar de mostrarlas atenuadas"
+label = "Ocultar por defecto las conversiones no disponibles"
 
 [admin.settings.enterpriseRequired]
 message = "Se requiere una licencia Enterprise para acceder a {{featureName}}. Estás viendo datos de demostración como referencia."
@@ -1219,9 +1236,21 @@ label = "Habilitar limpieza de claves"
 description = "Rotar automáticamente las claves de firma JWT periódicamente"
 label = "Habilitar rotación de claves"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Número de días para conservar claves JWT antiguas para verificación"
-label = "Días de retención de claves"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Duración del token de acceso en minutos para clientes web (predeterminado: 1440 = 24 horas)"
+label = "Caducidad del token web (minutos)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Duración del token de acceso en minutos para clientes de escritorio. Las aplicaciones de escritorio se detectan automáticamente mediante el User-Agent y reciben sesiones más largas para una mejor experiencia (predeterminado: 43200 = 30 días)"
+label = "Caducidad del token de escritorio (minutos)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerancia para la desviación de tiempo cliente/servidor durante la validación del token (predeterminado: 60 segundos)"
+label = "Tolerancia de desfase de reloj (segundos)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Permitir la actualización del token dentro de estos minutos tras su caducidad (predeterminado: 15 minutos, máximo 3 intentos)"
+label = "Período de gracia de actualización (minutos)"
 
 [admin.settings.security.jwt.persistence]
 description = "Almacenar las claves JWT de forma persistente para sobrevivir reinicios del servidor"
@@ -1422,13 +1451,16 @@ applyChanges = "Aplicar cambios"
 backgroundColor = "Color de fondo"
 borderOff = "Borde: Desactivado"
 borderOn = "Borde: Activado"
+changeColor = "Cambiar color"
 chooseColor = "Elegir color"
 circle = "Círculo"
 clearBackground = "Eliminar fondo"
 color = "Color"
 contents = "Texto"
+delete = "Eliminar"
 desc = "Usa resaltado, lápiz, texto y notas. Los cambios permanecen activos: no es necesario aplanar."
 drawing = "Dibujo"
+duplicate = "Duplicar"
 editCircle = "Editar círculo"
 editInk = "Editar lápiz"
 editLine = "Editar línea"
@@ -1458,6 +1490,7 @@ notesStamps = "Notas y sellos"
 opacity = "Opacidad"
 pen = "Lápiz"
 polygon = "Polígono"
+properties = "Propiedades"
 rectangle = "Rectángulo"
 redo = "Rehacer"
 saveChanges = "Guardar cambios"
@@ -1483,6 +1516,7 @@ title = "Anotar"
 underline = "Subrayado"
 undo = "Deshacer"
 unsupportedType = "Este tipo de anotación no es totalmente compatible con la edición."
+width = "Ancho"
 
 [app]
 description = "La alternativa gratuita a Adobe Acrobat (más de 10 millones de descargas)"
@@ -3312,6 +3346,10 @@ desc = "Crear flujos de trabajo de múltiples pasos encadenando acciones de PDF.
 tags = "flujo-de-trabajo,secuencia,automatización"
 title = "Automatizar"
 
+[home.formFill]
+desc = "Rellena los campos de formulario del PDF de forma interactiva con un editor visual"
+title = "Rellenar formulario"
+
 [home.autoRename]
 desc = "Renombra automáticamente un archivo PDF basándose en su encabezado detectado"
 tags = "auto-detectar,basado-en-encabezado,organizar,reetiquetar"
@@ -4209,6 +4247,75 @@ title = "Editor de Páginas"
 zoomIn = "Acercar"
 zoomOut = "Alejar"
 
+[viewer]
+cannotPreviewFile = "No se puede previsualizar el archivo"
+dualPageView = "Vista de Página Doble"
+firstPage = "Primera Página"
+lastPage = "Última Página"
+nextPage = "Página Siguiente"
+onlyPdfSupported = "El visor solo admite archivos PDF. Este archivo parece ser de un formato diferente."
+previousPage = "Página Anterior"
+singlePageView = "Vista de Página Única"
+unknownFile = "Archivo desconocido"
+zoomIn = "Acercar"
+zoomOut = "Alejar"
+
+[viewer.attachments]
+title = "Adjuntos"
+searchPlaceholder = "Buscar adjuntos"
+noSupport = "Este visor no admite adjuntos."
+noDocument = "Abre un PDF para ver sus adjuntos."
+loading = "Cargando adjuntos..."
+empty = "No hay adjuntos en este documento"
+noMatch = "Ningún adjunto coincide con tu búsqueda"
+
+[viewer.formBar]
+title = "Campos del formulario"
+unsavedBadge = "Sin guardar"
+unsavedDesc = "Tienes cambios sin guardar"
+hasFieldsDesc = "Este PDF contiene campos rellenables"
+dismiss = "Descartar"
+apply = "Aplicar cambios"
+download = "Descargar PDF"
+
+[rightRail]
+closeSelected = "Cerrar Archivos Seleccionados"
+selectAll = "Seleccionar Todo"
+deselectAll = "Deseleccionar Todo"
+selectByNumber = "Seleccionar por Números de Página"
+deleteSelected = "Eliminar Páginas Seleccionadas"
+closePdf = "Cerrar PDF"
+exportAll = "Exportar PDF"
+downloadSelected = "Descargar Archivos Seleccionados"
+annotations = "Anotaciones"
+exportSelected = "Exportar páginas seleccionadas"
+formFill = "Rellenar formulario"
+saveChanges = "Guardar cambios"
+toggleAttachments = "Mostrar/ocultar adjuntos"
+toggleTheme = "Alternar Tema"
+language = "Idioma"
+toggleAnnotations = "Mostrar/ocultar anotaciones"
+search = "Buscar en PDF"
+panMode = "Modo de Desplazamiento"
+applyRedactionsFirst = "Aplica primero las censuras"
+rotateLeft = "Rotar a la Izquierda"
+rotateRight = "Rotar a la Derecha"
+toggleSidebar = "Alternar Barra Lateral"
+toggleBookmarks = "Mostrar/ocultar marcadores"
+print = "Imprimir PDF"
+ruler = "Regla / Medir"
+draw = "Dibujar"
+redact = "Censurar"
+exitRedaction = "Salir del modo de censura"
+save = "Guardar"
+downloadAll = "Descargar Todo"
+saveAll = "Guardar todo"
+
+[textAlign]
+left = "Izquierda"
+center = "Centrado"
+right = "Derecha"
+
 [pageExtracter]
 header = "Extraer Páginas"
 placeholder = "(por ejemplo, 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Aplicación permanente, no se puede deshacer y los datos subyacentes se eliminarán"
 boxRedaction = "Censura de dibujo de caja"
 colourPicker = "Selector de Color"
+colorLabel = "Color de redacción"
+active = "Modo de redacción activo"
+activate = "Activar herramienta de redacción"
 controlsTitle = "Controles de censura manual"
 convertPDFToImageLabel = "Convertir PDF a PDF-Imagen (Usado para eliminar texto detrás de la caja)"
 export = "Exportar"
@@ -5285,36 +5395,6 @@ title = "Alto contraste"
 [replaceColor.tooltip.invertAll]
 text = "Invierte completamente todos los colores del PDF, creando un efecto similar a un negativo. Útil para crear versiones en modo oscuro de documentos o reducir la fatiga visual en condiciones de poca luz."
 title = "Invertir todos los colores"
-
-[rightRail]
-annotations = "Anotaciones"
-applyRedactionsFirst = "Aplica primero las censuras"
-closePdf = "Cerrar PDF"
-closeSelected = "Cerrar Archivos Seleccionados"
-deleteSelected = "Eliminar Páginas Seleccionadas"
-deselectAll = "Deseleccionar Todo"
-downloadAll = "Descargar Todo"
-downloadSelected = "Descargar Archivos Seleccionados"
-draw = "Dibujar"
-exitRedaction = "Salir del modo de censura"
-exportAll = "Exportar PDF"
-exportSelected = "Exportar páginas seleccionadas"
-language = "Idioma"
-panMode = "Modo de Desplazamiento"
-print = "Imprimir PDF"
-redact = "Censurar"
-rotateLeft = "Rotar a la Izquierda"
-rotateRight = "Rotar a la Derecha"
-save = "Guardar"
-saveAll = "Guardar todo"
-saveChanges = "Guardar cambios"
-search = "Buscar en PDF"
-selectAll = "Seleccionar Todo"
-selectByNumber = "Seleccionar por Números de Página"
-toggleAnnotations = "Mostrar/ocultar anotaciones"
-toggleBookmarks = "Mostrar/ocultar marcadores"
-toggleSidebar = "Alternar Barra Lateral"
-toggleTheme = "Alternar Tema"
 
 [rotate]
 rotateLeft = "Rotar en sentido antihorario"
@@ -6153,11 +6233,6 @@ title = "Documentación de API"
 [tableExtraxt]
 tags = "CSV,Extraer tabla,extraer,convertir"
 
-[textAlign]
-center = "Centrado"
-left = "Izquierda"
-right = "Derecha"
-
 [theme]
 toggle = "Alternar Tema"
 
@@ -6432,19 +6507,6 @@ invalid = "El certificado no se encuentra en los almacenes de confianza: no se p
 fileManager = "Gestor de Archivos"
 pageEditor = "Editor de Páginas"
 viewer = "Visor"
-
-[viewer]
-cannotPreviewFile = "No se puede previsualizar el archivo"
-dualPageView = "Vista de Página Doble"
-firstPage = "Primera Página"
-lastPage = "Última Página"
-nextPage = "Página Siguiente"
-onlyPdfSupported = "El visor solo admite archivos PDF. Este archivo parece ser de un formato diferente."
-previousPage = "Página Anterior"
-singlePageView = "Vista de Página Única"
-unknownFile = "Archivo desconocido"
-zoomIn = "Acercar"
-zoomOut = "Alejar"
 
 [viewPdf]
 header = "Ver PDF"
