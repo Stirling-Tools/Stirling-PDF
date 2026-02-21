@@ -3,6 +3,7 @@ import axios from 'axios';
 import { alert } from '@app/components/toast';
 import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from '@app/services/errorUtils';
 import { showSpecialErrorToast } from '@app/services/specialErrorToasts';
+import { handleSaaSError } from '@app/services/saasErrorInterceptor';
 
 const FRIENDLY_FALLBACK = 'There was an error processing your request.';
 const MAX_TOAST_BODY_CHARS = 400; // avoid massive, unreadable toasts
@@ -29,7 +30,7 @@ function titleForStatus(status?: number): string {
   return 'Request failed';
 }
 
-function extractAxiosErrorMessage(error: any): { title: string; body: string } {
+export function extractAxiosErrorMessage(error: any): { title: string; body: string } {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const _statusText = error.response?.statusText || '';
@@ -126,6 +127,9 @@ export async function handleHttpError(error: any): Promise<boolean> {
     console.debug('[httpErrorHandler] Suppressing 401 on auth page:', pathname);
     return true;
   }
+
+  if (handleSaaSError(error)) return true;
+
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);
 
