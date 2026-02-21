@@ -480,47 +480,73 @@ public class KeygenLicenseVerifier {
     }
 
     private boolean verifyStandardLicense(String licenseKey, LicenseContext context) {
-        try {
-            log.info("Checking standard license key");
-            String machineFingerprint = generateMachineFingerprint();
+        int maxRetries = 5;
+        Exception lastException = null;
 
-            // First, try to validate the license
-            JsonNode validationResponse = validateLicense(licenseKey, machineFingerprint, context);
-            if (validationResponse != null) {
-                boolean isValid = validationResponse.path("meta").path("valid").asBoolean();
-                String licenseId = validationResponse.path("data").path("id").asText();
-                if (!isValid) {
-                    String code = validationResponse.path("meta").path("code").asText();
-                    log.info(code);
-                    if ("NO_MACHINE".equals(code)
-                            || "NO_MACHINES".equals(code)
-                            || "FINGERPRINT_SCOPE_MISMATCH".equals(code)) {
-                        log.info(
-                                "License not activated for this machine. Attempting to"
-                                        + " activate...");
-                        boolean activated =
-                                activateMachine(licenseKey, licenseId, machineFingerprint, context);
-                        if (activated) {
-                            // Revalidate after activation
-                            validationResponse =
-                                    validateLicense(licenseKey, machineFingerprint, context);
-                            isValid =
-                                    validationResponse != null
-                                            && validationResponse
-                                                    .path("meta")
-                                                    .path("valid")
-                                                    .asBoolean();
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                log.info("Checking standard license key (attempt {}/{})", attempt, maxRetries);
+                String machineFingerprint = generateMachineFingerprint();
+
+                // First, try to validate the license
+                JsonNode validationResponse =
+                        validateLicense(licenseKey, machineFingerprint, context);
+                if (validationResponse != null) {
+                    boolean isValid = validationResponse.path("meta").path("valid").asBoolean();
+                    String licenseId = validationResponse.path("data").path("id").asText();
+                    if (!isValid) {
+                        String code = validationResponse.path("meta").path("code").asText();
+                        log.info(code);
+                        if ("NO_MACHINE".equals(code)
+                                || "NO_MACHINES".equals(code)
+                                || "FINGERPRINT_SCOPE_MISMATCH".equals(code)) {
+                            log.info(
+                                    "License not activated for this machine. Attempting to"
+                                            + " activate...");
+                            boolean activated =
+                                    activateMachine(
+                                            licenseKey, licenseId, machineFingerprint, context);
+                            if (activated) {
+                                // Revalidate after activation
+                                validationResponse =
+                                        validateLicense(licenseKey, machineFingerprint, context);
+                                isValid =
+                                        validationResponse != null
+                                                && validationResponse
+                                                        .path("meta")
+                                                        .path("valid")
+                                                        .asBoolean();
+                            }
                         }
                     }
+                    return isValid;
                 }
-                return isValid;
-            }
 
-            return false;
-        } catch (Exception e) {
-            log.error("Error verifying standard license: {}", e.getMessage());
-            return false;
+                return false;
+            } catch (Exception e) {
+                lastException = e;
+                log.error(
+                        "Error verifying standard license (attempt {}/{}): {}",
+                        attempt,
+                        maxRetries,
+                        e.getMessage());
+                if (attempt < maxRetries) {
+                    try {
+                        Thread.sleep(3000L * attempt);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
         }
+
+        throw new RuntimeException(
+                "License verification failed after "
+                        + maxRetries
+                        + " attempts: "
+                        + (lastException != null ? lastException.getMessage() : "unknown error"),
+                lastException);
     }
 
     private JsonNode validateLicense(

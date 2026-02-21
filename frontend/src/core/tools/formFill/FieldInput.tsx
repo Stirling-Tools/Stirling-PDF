@@ -15,8 +15,8 @@ import {
   MultiSelect,
   Stack,
 } from '@mantine/core';
-import { useFieldValue } from '@proprietary/tools/formFill/FormFillContext';
-import type { FormField } from '@proprietary/tools/formFill/types';
+import { useFieldValue } from '@app/tools/formFill/FormFillContext';
+import type { FormField } from '@app/tools/formFill/types';
 
 function FieldInputInner({
   field,
