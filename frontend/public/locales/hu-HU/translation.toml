@@ -17,6 +17,12 @@ confirmClose = "Bezárás megerősítése"
 confirmCloseCancel = "Mégse"
 confirmCloseConfirm = "Fájl bezárása"
 confirmCloseMessage = "Biztosan be akarja zárni ezt a fájlt?"
+confirmCloseDiscard = "Módosítások elvetése és bezárás"
+confirmCloseSave = "Mentés és bezárás"
+confirmCloseUnsaved = "Ez a fájl mentetlen módosításokat tartalmaz."
+confirmCloseUnsavedList = "Önnél {{count}} file{{plural}} van mentetlen módosításokkal.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Mentés sikertelen"
+confirmCloseSaveFailed = "Hibákkal mentve. {{count}} file{{plural}} mentése nem sikerült."
 confirmPasswordErrorMessage = "Az új jelszó és a jelszó megerősítése nem egyezik."
 custom = "Egyéni..."
 customPosition = "Egyéni pozíció"
@@ -39,6 +45,8 @@ edit = "Szerkesztés"
 editYourNewFiles = "Új fájl(ok) szerkesztése"
 exportAndContinue = "Exportálás és folytatás"
 false = "Nem"
+fileSavedToDisk = "Fájl mentve a lemezre"
+fileNotSavedToDisk = "Nincs lemezre mentve"
 fileSelected = "Kiválasztva: {{filename}}"
 filesSelected = "fájl kiválasztva"
 font = "Betűtípus"
@@ -829,8 +837,9 @@ label = "Felhasználónév"
 [admin.settings.endpoints]
 description = "Annak szabályozása, mely API végpontok és végpontcsoportok érhetők el."
 management = "Végpontkezelés"
-note = "Megjegyzés: A végpontok letiltása korlátozza az API-hozzáférést, de nem távolítja el a felhasználói felület elemeit. A módosítások életbe lépéséhez újraindítás szükséges."
 title = "API végpontok"
+userDefaults = "Felhasználói preferenciák alapértelmezései"
+userDefaultsDescription = "Alapértelmezett értékek beállítása a felhasználói preferenciákhoz. A felhasználók ezeket felülírhatják a saját beállításaikban."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Letiltandó végpontcsoportok kiválasztása"
@@ -839,6 +848,14 @@ label = "Letiltott végpontcsoportok"
 [admin.settings.endpoints.toRemove]
 description = "Letiltandó egyes végpontok kiválasztása"
 label = "Letiltott végpontok"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "A letiltott eszközök eltávolítása ahelyett, hogy szürkítve jelenjenek meg"
+label = "Nem elérhető eszközök elrejtése alapértelmezetten"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "A letiltott konverziós lehetőségek eltávolítása ahelyett, hogy szürkítve jelenjenek meg"
+label = "Nem elérhető konverziók elrejtése alapértelmezetten"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} eléréséhez vállalati licenc szükséges. Jelenleg referenciaként demóadatokat lát."
@@ -1219,9 +1236,21 @@ label = "Kulcsok tisztításának engedélyezése"
 description = "JWT aláíró kulcsok időszakos automatikus forgatása"
 label = "Kulcsforgatás engedélyezése"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "A régi JWT-kulcsok megőrzésének napokban megadott időtartama ellenőrzéshez"
-label = "Kulcsmegőrzés (nap)"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Hozzáférési token élettartama percekben webes kliensek számára (alapértelmezés: 1440 = 24 óra)"
+label = "Webes token lejárata (perc)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Hozzáférési token élettartama percekben asztali kliensek számára. Az asztali alkalmazások User-Agent alapján automatikusan felismerhetők, és a jobb felhasználói élmény érdekében hosszabb munkamenetet kapnak (alapértelmezés: 43200 = 30 nap)"
+label = "Asztali token lejárata (perc)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tűrés a kliens/szerver időeltérésére a token érvényesítésekor (alapértelmezés: 60 másodperc)"
+label = "Óraeltérés tűrése (másodperc)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Lehetővé teszi a token frissítését a lejárat után ennyi percig (alapértelmezés: 15 perc, max. 3 kísérlet)"
+label = "Frissítési türelmi idő (perc)"
 
 [admin.settings.security.jwt.persistence]
 description = "JWT kulcsok tartós tárolása a szerver újraindításai között"
@@ -1422,13 +1451,16 @@ applyChanges = "Változtatások alkalmazása"
 backgroundColor = "Háttérszín"
 borderOff = "Szegély: ki"
 borderOn = "Szegély: be"
+changeColor = "Szín módosítása"
 chooseColor = "Szín kiválasztása"
 circle = "Kör"
 clearBackground = "Háttér eltávolítása"
 color = "Szín"
 contents = "Szöveg"
+delete = "Törlés"
 desc = "Használjon kiemelést, tollat, szöveget és jegyzeteket. A változások élők maradnak — nincs szükség lapításra."
 drawing = "Rajz"
+duplicate = "Duplikálás"
 editCircle = "Kör szerkesztése"
 editInk = "Toll szerkesztése"
 editLine = "Vonal szerkesztése"
@@ -1458,6 +1490,7 @@ notesStamps = "Jegyzetek és bélyegek"
 opacity = "Átlátszóság"
 pen = "Toll"
 polygon = "Sokszög"
+properties = "Tulajdonságok"
 rectangle = "Téglalap"
 redo = "Újra"
 saveChanges = "Változtatások mentése"
@@ -1483,6 +1516,7 @@ title = "Jegyzetelés"
 underline = "Aláhúzás"
 undo = "Visszavonás"
 unsupportedType = "Ennek a jegyzettípusnak a szerkesztése nem teljes körűen támogatott."
+width = "Szélesség"
 
 [app]
 description = "Az ingyenes Adobe Acrobat alternatíva (10M+ letöltés)"
@@ -3312,6 +3346,10 @@ desc = "Többlépéses munkafolyamatok összeállítása PDF műveletek összef�
 tags = "munkafolyamat,sorozat,automatizálás"
 title = "Automatizálás"
 
+[home.formFill]
+desc = "PDF-űrlapmezők interaktív kitöltése vizuális szerkesztővel"
+title = "Űrlap kitöltése"
+
 [home.autoRename]
 desc = "Automatikusan átnevezi a PDF fájlt az észlelt fejléc alapján"
 tags = "automatikus,fejlécalapú,rendez,átcímkéz"
@@ -4209,6 +4247,75 @@ title = "Oldalszerkesztő"
 zoomIn = "Nagyítás"
 zoomOut = "Kicsinyítés"
 
+[viewer]
+cannotPreviewFile = "A fájl előnézete nem lehetséges"
+dualPageView = "Kétoldalas nézet"
+firstPage = "Első oldal"
+lastPage = "Utolsó oldal"
+nextPage = "Következő oldal"
+onlyPdfSupported = "A megjelenítő csak PDF fájlokat támogat. Úgy tűnik, ez a fájl más formátumú."
+previousPage = "Előző oldal"
+singlePageView = "Egyoldalas nézet"
+unknownFile = "Ismeretlen fájl"
+zoomIn = "Nagyítás"
+zoomOut = "Kicsinyítés"
+
+[viewer.attachments]
+title = "Mellékletek"
+searchPlaceholder = "Mellékletek keresése"
+noSupport = "Ez a megjelenítő nem támogatja a mellékleteket."
+noDocument = "Nyisson meg egy PDF-et a mellékletek megtekintéséhez."
+loading = "Mellékletek betöltése..."
+empty = "Nincsenek mellékletek ebben a dokumentumban"
+noMatch = "Nincs a keresésnek megfelelő melléklet"
+
+[viewer.formBar]
+title = "Űrlapmezők"
+unsavedBadge = "Mentetlen"
+unsavedDesc = "Mentetlen módosításai vannak"
+hasFieldsDesc = "Ez a PDF kitölthető mezőket tartalmaz"
+dismiss = "Bezárás"
+apply = "Módosítások alkalmazása"
+download = "PDF letöltése"
+
+[rightRail]
+closeSelected = "Kijelölt fájlok bezárása"
+selectAll = "Összes kijelölése"
+deselectAll = "Kijelölés megszüntetése"
+selectByNumber = "Kijelölés oldalszámok alapján"
+deleteSelected = "Kijelölt oldalak törlése"
+closePdf = "PDF bezárása"
+exportAll = "PDF exportálása"
+downloadSelected = "Kijelölt fájlok letöltése"
+annotations = "Jegyzetek"
+exportSelected = "Kijelölt oldalak exportálása"
+formFill = "Űrlap kitöltése"
+saveChanges = "Változtatások mentése"
+toggleAttachments = "Mellékletek megjelenítése/elrejtése"
+toggleTheme = "Téma váltása"
+language = "Nyelv"
+toggleAnnotations = "Jegyzetek láthatóságának váltása"
+search = "PDF keresése"
+panMode = "Pásztázó mód"
+applyRedactionsFirst = "Előbb alkalmazza a kitakarásokat"
+rotateLeft = "Forgatás balra"
+rotateRight = "Forgatás jobbra"
+toggleSidebar = "Oldalsáv ki/be"
+toggleBookmarks = "Könyvjelzők megjelenítése/elrejtése"
+print = "PDF nyomtatása"
+ruler = "Vonalzó / mérés"
+draw = "Rajzolás"
+redact = "Kitakarás"
+exitRedaction = "Kilépés a kitakarás módból"
+save = "Mentés"
+downloadAll = "Összes letöltése"
+saveAll = "Összes mentése"
+
+[textAlign]
+left = "Balra"
+center = "Középre"
+right = "Jobbra"
+
 [pageExtracter]
 header = "Oldalak kinyerése"
 placeholder = "(pl. 1,2,8 vagy 4,7,12-16 vagy 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Végleges alkalmazás, nem vonható vissza, és az alatta lévő adatok törlődnek"
 boxRedaction = "Dobozos kitakarás rajzolása"
 colourPicker = "Színválasztó"
+colorLabel = "Kitakarás színe"
+active = "Kitakarási mód aktív"
+activate = "Kitakaró eszköz aktiválása"
 controlsTitle = "Kézi kitakarás vezérlők"
 convertPDFToImageLabel = "PDF konvertálása PDF-Image formátumra (a doboz mögötti szöveg eltávolításához)"
 export = "Exportálás"
@@ -5285,36 +5395,6 @@ title = "Magas kontraszt"
 [replaceColor.tooltip.invertAll]
 text = "A PDF összes színének teljes invertálása, negatívhoz hasonló hatással. Hasznos dokumentumok sötét módú változatához vagy a szemfáradás csökkentéséhez gyenge fényviszonyok között."
 title = "Minden szín invertálása"
-
-[rightRail]
-annotations = "Jegyzetek"
-applyRedactionsFirst = "Előbb alkalmazza a kitakarásokat"
-closePdf = "PDF bezárása"
-closeSelected = "Kijelölt fájlok bezárása"
-deleteSelected = "Kijelölt oldalak törlése"
-deselectAll = "Kijelölés megszüntetése"
-downloadAll = "Összes letöltése"
-downloadSelected = "Kijelölt fájlok letöltése"
-draw = "Rajzolás"
-exitRedaction = "Kilépés a kitakarás módból"
-exportAll = "PDF exportálása"
-exportSelected = "Kijelölt oldalak exportálása"
-language = "Nyelv"
-panMode = "Pásztázó mód"
-print = "PDF nyomtatása"
-redact = "Kitakarás"
-rotateLeft = "Forgatás balra"
-rotateRight = "Forgatás jobbra"
-save = "Mentés"
-saveAll = "Összes mentése"
-saveChanges = "Változtatások mentése"
-search = "PDF keresése"
-selectAll = "Összes kijelölése"
-selectByNumber = "Kijelölés oldalszámok alapján"
-toggleAnnotations = "Jegyzetek láthatóságának váltása"
-toggleBookmarks = "Könyvjelzők megjelenítése/elrejtése"
-toggleSidebar = "Oldalsáv ki/be"
-toggleTheme = "Téma váltása"
 
 [rotate]
 rotateLeft = "Forgatás az óramutató járásával ellentétesen"
@@ -6153,11 +6233,6 @@ title = "API-dokumentáció"
 [tableExtraxt]
 tags = "CSV,Táblázat kinyerése,kinyerés,konvertálás"
 
-[textAlign]
-center = "Középre"
-left = "Balra"
-right = "Jobbra"
-
 [theme]
 toggle = "Téma váltása"
 
@@ -6432,19 +6507,6 @@ invalid = "A tanúsítvány nincs a megbízható tárolóban - a forrás nem ell
 fileManager = "Fájlkezelő"
 pageEditor = "Oldalszerkesztő"
 viewer = "Megjelenítő"
-
-[viewer]
-cannotPreviewFile = "A fájl előnézete nem lehetséges"
-dualPageView = "Kétoldalas nézet"
-firstPage = "Első oldal"
-lastPage = "Utolsó oldal"
-nextPage = "Következő oldal"
-onlyPdfSupported = "A megjelenítő csak PDF fájlokat támogat. Úgy tűnik, ez a fájl más formátumú."
-previousPage = "Előző oldal"
-singlePageView = "Egyoldalas nézet"
-unknownFile = "Ismeretlen fájl"
-zoomIn = "Nagyítás"
-zoomOut = "Kicsinyítés"
 
 [viewPdf]
 header = "PDF megtekintése"

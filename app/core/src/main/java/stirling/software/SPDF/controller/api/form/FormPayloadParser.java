@@ -1,4 +1,4 @@
-package stirling.software.proprietary.controller.api.form;
+package stirling.software.SPDF.controller.api.form;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.proprietary.util.FormUtils;
+import stirling.software.common.util.FormUtils;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
