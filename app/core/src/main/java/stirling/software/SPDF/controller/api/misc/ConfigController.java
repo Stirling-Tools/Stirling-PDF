@@ -9,17 +9,23 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
+import stirling.software.SPDF.service.plugin.PluginService;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.plugins.PluginDescriptorResponse;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 
@@ -35,6 +41,7 @@ public class ConfigController {
     private final UserServiceInterface userService;
     private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
+    private final PluginService pluginService;
 
     public ConfigController(
             ApplicationProperties applicationProperties,
@@ -46,7 +53,8 @@ public class ConfigController {
                     UserServiceInterface userService,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     stirling.software.common.service.LicenseServiceInterface licenseService,
-            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
+            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig,
+            PluginService pluginService) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
@@ -54,6 +62,7 @@ public class ConfigController {
         this.userService = userService;
         this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
+        this.pluginService = pluginService;
     }
 
     /**
@@ -288,6 +297,10 @@ public class ConfigController {
                 // Version/machine info not available
             }
 
+            // config directory path
+            configData.put("basePath", InstallationPathConfig.getPath());
+            configData.put("pluginsPath", InstallationPathConfig.getPluginsPath());
+
             return ResponseEntity.ok(configData);
 
         } catch (Exception e) {
@@ -295,6 +308,23 @@ public class ConfigController {
             configData.put("error", "Unable to retrieve full configuration");
             return ResponseEntity.ok(configData);
         }
+    }
+
+    @GetMapping("/plugins")
+    public ResponseEntity<List<PluginDescriptorResponse>> getPlugins(HttpServletRequest request) {
+        String baseUrl =
+                ServletUriComponentsBuilder.fromRequestUri(request)
+                        .replacePath(null)
+                        .replaceQuery(null)
+                        .build()
+                        .toUriString();
+
+        List<PluginDescriptorResponse> mapped =
+                pluginService.getPlugins().stream()
+                        .map(descriptor -> PluginDescriptorResponse.from(descriptor, baseUrl))
+                        .toList();
+
+        return ResponseEntity.ok(mapped);
     }
 
     @GetMapping("/endpoint-enabled")

@@ -1,5 +1,5 @@
-import React, { useMemo, useRef } from "react";
-import { Box, Stack } from "@mantine/core";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Box, Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
@@ -12,6 +12,11 @@ import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
+import { usePluginRegistry } from "@app/contexts/PluginRegistryContext";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { useNavigate } from "react-router-dom";
+import FitText from "@app/components/shared/FitText";
+import { LocalIcon } from '@app/components/shared/LocalIcon';
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -26,7 +31,10 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
   const scrollableRef = useRef<HTMLDivElement>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  const { favoriteTools, toolRegistry } = useToolWorkflow();
+  const {
+    favoriteTools,
+    toolRegistry,
+  } = useToolWorkflow();
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
@@ -46,6 +54,19 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     () => visibleSections.find(s => s.key === 'all'),
     [visibleSections]
   );
+
+  const { plugins } = usePluginRegistry();
+  const navigate = useNavigate();
+  const pluginItems = useMemo(
+    () => plugins.filter((plugin) => plugin.hasFrontend && plugin.frontendUrl),
+    [plugins],
+  );
+
+  useEffect(() => {
+    pluginItems.forEach((plugin) => {
+      console.debug(`[ToolPicker] Rendering icon for plugin ${plugin.id}:`, plugin.icon);
+    });
+  }, [pluginItems]);
 
   // Build flat list by subcategory for search mode
   const emptyFilteredTools: ToolPickerProps['filteredTools'] = [];
@@ -129,6 +150,68 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
                     onSelect={onSelect}
                     hasStars
                   />
+                ))}
+              </div>
+            </Box>
+          )}
+          {pluginItems.length > 0 && (
+            <Box w="100%">
+              <div style={headerTextStyle}>{t("plugins.shortTitle", "Plugins")}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                {pluginItems.map((plugin) => (
+                  <div key={`plugin-${plugin.id}`} className="tool-button-container">
+                    <Tooltip content={plugin.description} position="right" arrow={true} delay={500}>
+                      <Button
+                        component="a"
+                        key={`plugin-${plugin.id}`}
+                        variant="subtle"
+                        size="sm"
+                        radius="md"
+                        fullWidth
+                        className="tool-button"
+                        justify="flex-start"
+                        onClick={() => {
+                          console.debug(`[ToolPicker] Navigating to plugin ${plugin.id}`);
+                          navigate(`/plugins/${plugin.id}`, { state: { plugin } });
+                        }}
+                        data-tour={`plugin-button-${plugin.id}`}
+                        styles={{
+                          root: {
+                            borderRadius: 0,
+                            color: "var(--tools-text-and-icon-color)",
+                            overflow: 'visible'
+                          },
+                          label: { overflow: 'visible' }
+                        }}
+                      >
+                      <>
+                      <div
+                        className="tool-button-icon"
+                        style={{
+                          transform: "scale(0.8)",
+                          transformOrigin: "center",
+                          opacity: 1,
+                          color: "var(--tools-text-and-icon-color)",
+                          marginRight: "0.5rem"
+                        }}
+                      >
+                      <LocalIcon icon={typeof plugin.icon === 'string' ? plugin.icon : 'extension'} width="24" height="24" />
+                      </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                            <FitText
+                              text={plugin.name}
+                              lines={1}
+                              minimumFontScale={0.8}
+                              as="span"
+                              style={{ display: 'inline-block', maxWidth: '100%', opacity:  1 }}
+                            />
+                          </div>
+                        </div>
+                      </>
+                      </Button>
+                    </Tooltip>
+                  </div>
                 ))}
               </div>
             </Box>

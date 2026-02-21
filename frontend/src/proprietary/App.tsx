@@ -11,6 +11,7 @@ import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import InviteAccept from "@app/routes/InviteAccept";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
+import PluginPage from "@app/pages/PluginPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
 // Import global styles
@@ -60,6 +61,8 @@ export default function App() {
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/invite/:token" element={<InviteAccept />} />
 
+                  {/* Plugin route must win before the catch-all Landing */}
+                  <Route path="/plugins/:id" element={<PluginPage />} />
                   {/* Main app routes - Landing handles auth logic */}
                   <Route path="/*" element={<Landing />} />
                 </Routes>

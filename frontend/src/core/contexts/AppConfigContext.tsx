@@ -60,6 +60,8 @@ export interface AppConfig {
   isNewUser?: boolean;
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
+  pluginsPath?: string;
+  basePath?: string;
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
