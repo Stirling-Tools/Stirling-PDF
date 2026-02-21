@@ -17,6 +17,12 @@ confirmClose = "閉じる確認"
 confirmCloseCancel = "キャンセル"
 confirmCloseConfirm = "ファイルを閉じる"
 confirmCloseMessage = "このファイルを閉じてもよろしいですか？"
+confirmCloseDiscard = "変更を破棄して閉じる"
+confirmCloseSave = "保存して閉じる"
+confirmCloseUnsaved = "このファイルには未保存の変更があります。"
+confirmCloseUnsavedList = "未保存の変更がある {{count}} file{{plural}} があります。\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "保存に失敗しました"
+confirmCloseSaveFailed = "エラーがあります。{{count}} file{{plural}} を保存できませんでした。"
 confirmPasswordErrorMessage = "新しいパスワードと新しいパスワードの確認は一致する必要があります。"
 custom = "カスタム..."
 customPosition = "カスタム位置"
@@ -39,6 +45,8 @@ edit = "編集"
 editYourNewFiles = "新しいファイルを編集"
 exportAndContinue = "エクスポートして続行"
 false = "偽"
+fileSavedToDisk = "ファイルをディスクに保存しました"
+fileNotSavedToDisk = "ディスクに保存されていません"
 fileSelected = "選択中：{{filename}}"
 filesSelected = "選択されたファイル"
 font = "フォント"
@@ -829,8 +837,9 @@ label = "ユーザー名"
 [admin.settings.endpoints]
 description = "利用可能な API エンドポイントおよびエンドポイントグループを制御します。"
 management = "エンドポイント管理"
-note = "注意: エンドポイントを無効化しても API アクセスが制限されるだけで、UI コンポーネントは削除されません。変更を反映するには再起動が必要です。"
 title = "API エンドポイント"
+userDefaults = "ユーザー設定の既定値"
+userDefaultsDescription = "ユーザー設定の既定値を設定します。ユーザーは個人設定で上書きできます。"
 
 [admin.settings.endpoints.groupsToRemove]
 description = "無効化するエンドポイントグループを選択"
@@ -839,6 +848,14 @@ label = "無効化するエンドポイントグループ"
 [admin.settings.endpoints.toRemove]
 description = "無効化する個別エンドポイントを選択"
 label = "無効化するエンドポイント"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "無効なツールをグレー表示ではなく一覧から非表示にする"
+label = "利用できないツールをデフォルトで非表示にする"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "無効な変換オプションをグレー表示ではなく一覧から非表示にする"
+label = "利用できない変換をデフォルトで非表示にする"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} にアクセスするには Enterprise ライセンスが必要です。現在は参照用のデモデータを表示しています。"
@@ -1219,9 +1236,21 @@ label = "キークリーンアップを有効化"
 description = "JWT 署名キーを定期的に自動ローテーション"
 label = "キーローテーションを有効化"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "検証用に古い JWT キーを保持する日数"
-label = "キー保持日数"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Web クライアント用のアクセストークン有効期間（分）（既定: 1440 = 24 時間）"
+label = "Web トークン有効期限（分）"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "デスクトップ クライアント用のアクセストークン有効期間（分）。デスクトップ アプリは User-Agent により自動判別され、UX 向上のためより長いセッションが付与されます（既定: 43200 = 30 日）"
+label = "デスクトップ トークン有効期限（分）"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "トークン検証時のクライアント/サーバー間の時刻ずれ許容値（既定: 60 秒）"
+label = "時刻ずれ許容値（秒）"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "有効期限切れ後、この分数以内のトークン更新を許可します（既定: 15 分、最大 3 回試行）"
+label = "更新猶予期間（分）"
 
 [admin.settings.security.jwt.persistence]
 description = "サーバー再起動後も維持するよう JWT キーを永続保存"
@@ -1422,13 +1451,16 @@ applyChanges = "変更を適用"
 backgroundColor = "背景色"
 borderOff = "枠線: オフ"
 borderOn = "枠線: オン"
+changeColor = "色を変更"
 chooseColor = "色を選択"
 circle = "円"
 clearBackground = "背景を削除"
 color = "色"
 contents = "テキスト"
+delete = "削除"
 desc = "ハイライト、ペン、テキスト、ノートを使用できます。変更はそのまま保持され、フラット化は不要です。"
 drawing = "描画"
+duplicate = "複製"
 editCircle = "円を編集"
 editInk = "ペンを編集"
 editLine = "直線を編集"
@@ -1458,6 +1490,7 @@ notesStamps = "ノートとスタンプ"
 opacity = "不透明度"
 pen = "ペン"
 polygon = "多角形"
+properties = "プロパティ"
 rectangle = "長方形"
 redo = "やり直し"
 saveChanges = "変更を保存"
@@ -1483,6 +1516,7 @@ title = "注釈"
 underline = "下線"
 undo = "元に戻す"
 unsupportedType = "この注釈タイプは編集に完全対応していません。"
+width = "幅"
 
 [app]
 description = "無料の Adobe Acrobat 代替（1,000万+ ダウンロード）"
@@ -3312,6 +3346,10 @@ desc = "PDF アクションを連結して複数ステップのワークフロ�
 tags = "ワークフロー,シーケンス,自動化"
 title = "自動化"
 
+[home.formFill]
+desc = "ビジュアルエディターで PDF のフォームフィールドを対話的に入力"
+title = "フォーム入力"
+
 [home.autoRename]
 desc = "検出されたヘッダーに基づいて PDF ファイル名を自動変更"
 tags = "自動検出,ヘッダー基準,整理,ラベル変更"
@@ -4209,6 +4247,75 @@ title = "ページエディタ"
 zoomIn = "拡大"
 zoomOut = "縮小"
 
+[viewer]
+cannotPreviewFile = "ファイルをプレビューできません"
+dualPageView = "見開き表示"
+firstPage = "最初のページ"
+lastPage = "最後のページ"
+nextPage = "次のページ"
+onlyPdfSupported = "このビューアは PDF ファイルのみをサポートしています。このファイルは別の形式のようです。"
+previousPage = "前のページ"
+singlePageView = "単一ページ表示"
+unknownFile = "不明なファイル"
+zoomIn = "拡大"
+zoomOut = "縮小"
+
+[viewer.attachments]
+title = "添付ファイル"
+searchPlaceholder = "添付ファイルを検索"
+noSupport = "このビューアでは添付ファイルはサポートされていません。"
+noDocument = "添付ファイルを表示するには PDF を開いてください。"
+loading = "添付ファイルを読み込み中..."
+empty = "このドキュメントには添付ファイルがありません"
+noMatch = "検索条件に一致する添付ファイルはありません"
+
+[viewer.formBar]
+title = "フォームフィールド"
+unsavedBadge = "未保存"
+unsavedDesc = "未保存の変更があります"
+hasFieldsDesc = "この PDF には入力可能なフィールドがあります"
+dismiss = "閉じる"
+apply = "変更を適用"
+download = "PDF をダウンロード"
+
+[rightRail]
+closeSelected = "選択したファイルを閉じる"
+selectAll = "すべて選択"
+deselectAll = "選択を解除"
+selectByNumber = "ページ番号で選択"
+deleteSelected = "選択したページを削除"
+closePdf = "PDF を閉じる"
+exportAll = "PDF を書き出し"
+downloadSelected = "選択したファイルをダウンロード"
+annotations = "注釈"
+exportSelected = "選択したページを書き出し"
+formFill = "フォーム入力"
+saveChanges = "変更を保存"
+toggleAttachments = "添付ファイルの表示切替"
+toggleTheme = "テーマを切り替え"
+language = "言語"
+toggleAnnotations = "注釈の表示を切り替え"
+search = "PDF を検索"
+panMode = "パンモード"
+applyRedactionsFirst = "先に墨消しを適用"
+rotateLeft = "左に回転"
+rotateRight = "右に回転"
+toggleSidebar = "サイドバーを切り替え"
+toggleBookmarks = "ブックマークを切り替え"
+print = "PDFを印刷"
+ruler = "定規 / 測定"
+draw = "描画"
+redact = "墨消し"
+exitRedaction = "墨消しモードを終了"
+save = "保存"
+downloadAll = "すべてをダウンロード"
+saveAll = "すべて保存"
+
+[textAlign]
+left = "左揃え"
+center = "中央揃え"
+right = "右揃え"
+
 [pageExtracter]
 header = "ページの抽出"
 placeholder = "(例:1,2,8、4,7,12-16、2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ 永久適用で元に戻せず、下のデータは削除されます"
 boxRedaction = "ボックス描画による墨消し"
 colourPicker = "カラーピッカー"
+colorLabel = "墨消しの色"
+active = "墨消しモードが有効"
+activate = "墨消しツールを有効化"
 controlsTitle = "手動墨消しコントロール"
 convertPDFToImageLabel = "PDF を PDF-Image に変換（ボックス背後のテキスト除去用）"
 export = "エクスポート"
@@ -5285,36 +5395,6 @@ title = "高コントラスト"
 [replaceColor.tooltip.invertAll]
 text = "PDF 内のすべての色を完全に反転し、ネガのような効果を作ります。ダークモード版の作成や暗所での眼精疲労の軽減に有用です。"
 title = "全色反転"
-
-[rightRail]
-annotations = "注釈"
-applyRedactionsFirst = "先に墨消しを適用"
-closePdf = "PDF を閉じる"
-closeSelected = "選択したファイルを閉じる"
-deleteSelected = "選択したページを削除"
-deselectAll = "選択を解除"
-downloadAll = "すべてをダウンロード"
-downloadSelected = "選択したファイルをダウンロード"
-draw = "描画"
-exitRedaction = "墨消しモードを終了"
-exportAll = "PDF を書き出し"
-exportSelected = "選択したページを書き出し"
-language = "言語"
-panMode = "パンモード"
-print = "PDFを印刷"
-redact = "墨消し"
-rotateLeft = "左に回転"
-rotateRight = "右に回転"
-save = "保存"
-saveAll = "すべて保存"
-saveChanges = "変更を保存"
-search = "PDF を検索"
-selectAll = "すべて選択"
-selectByNumber = "ページ番号で選択"
-toggleAnnotations = "注釈の表示を切り替え"
-toggleBookmarks = "ブックマークを切り替え"
-toggleSidebar = "サイドバーを切り替え"
-toggleTheme = "テーマを切り替え"
 
 [rotate]
 rotateLeft = "反時計回りに回転"
@@ -6153,11 +6233,6 @@ title = "API ドキュメント"
 [tableExtraxt]
 tags = "CSV,表抽出,抽出,変換"
 
-[textAlign]
-center = "中央揃え"
-left = "左揃え"
-right = "右揃え"
-
 [theme]
 toggle = "テーマを切り替え"
 
@@ -6432,19 +6507,6 @@ invalid = "証明書が信頼ストアにありません - ソースを検証で
 fileManager = "ファイルマネージャー"
 pageEditor = "ページエディタ"
 viewer = "ビューア"
-
-[viewer]
-cannotPreviewFile = "ファイルをプレビューできません"
-dualPageView = "見開き表示"
-firstPage = "最初のページ"
-lastPage = "最後のページ"
-nextPage = "次のページ"
-onlyPdfSupported = "このビューアは PDF ファイルのみをサポートしています。このファイルは別の形式のようです。"
-previousPage = "前のページ"
-singlePageView = "単一ページ表示"
-unknownFile = "不明なファイル"
-zoomIn = "拡大"
-zoomOut = "縮小"
 
 [viewPdf]
 header = "PDFを表示"

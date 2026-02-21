@@ -1,4 +1,4 @@
-package stirling.software.proprietary.util;
+package stirling.software.common.util;
 
 import java.io.IOException;
 import java.util.Arrays;
