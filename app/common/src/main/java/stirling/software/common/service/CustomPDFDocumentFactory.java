@@ -158,13 +158,23 @@ public class CustomPDFDocumentFactory {
 
         // Since we don't know the size upfront, buffer to a temp file
         Path tempFile = createTempFile("pdf-stream-");
-
-        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile));
-        if (!readOnly) {
-            postProcessDocument(doc);
+        boolean success = false;
+        try {
+            Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile));
+            if (!readOnly) {
+                postProcessDocument(doc);
+            }
+            success = true;
+            return doc;
+        } finally {
+            // On success: small files are deleted inside loadAdaptively; large files are deleted
+            // by DeletingRandomAccessFile when the returned PDDocument is closed.
+            // On failure: clean up the temp file ourselves since no one else will.
+            if (!success) {
+                Files.deleteIfExists(tempFile);
+            }
         }
-        return doc;
     }
 
     /** Load with password from InputStream */
@@ -181,14 +191,21 @@ public class CustomPDFDocumentFactory {
 
         // Since we don't know the size upfront, buffer to a temp file
         Path tempFile = createTempFile("pdf-stream-");
-
-        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        PDDocument doc =
-                loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
-        if (!readOnly) {
-            postProcessDocument(doc);
+        boolean success = false;
+        try {
+            Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            PDDocument doc =
+                    loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
+            if (!readOnly) {
+                postProcessDocument(doc);
+            }
+            success = true;
+            return doc;
+        } finally {
+            if (!success) {
+                Files.deleteIfExists(tempFile);
+            }
         }
-        return doc;
     }
 
     /** Load from a file path string */
@@ -358,9 +375,24 @@ public class CustomPDFDocumentFactory {
         if (size >= SMALL_FILE_THRESHOLD) {
             log.debug("Writing large byte array to temp file for password-protected PDF");
             Path tempFile = createTempFile("pdf-bytes-");
-
-            Files.write(tempFile, bytes);
-            return Loader.loadPDF(tempFile.toFile(), password, null, null, cache);
+            boolean success = false;
+            try {
+                Files.write(tempFile, bytes);
+                // Use DeletingRandomAccessFile so the temp file is removed when the document closes
+                PDDocument doc =
+                        Loader.loadPDF(
+                                new DeletingRandomAccessFile(tempFile.toFile()),
+                                password,
+                                null,
+                                null,
+                                cache);
+                success = true;
+                return doc;
+            } finally {
+                if (!success) {
+                    Files.deleteIfExists(tempFile);
+                }
+            }
         }
         return Loader.loadPDF(bytes, password, null, null, cache);
     }
@@ -426,9 +458,12 @@ public class CustomPDFDocumentFactory {
             }
         } else {
             Path tempFile = createTempFile("pdf-save-");
-
-            document.save(tempFile.toFile());
-            return Files.readAllBytes(tempFile);
+            try {
+                document.save(tempFile.toFile());
+                return Files.readAllBytes(tempFile);
+            } finally {
+                Files.deleteIfExists(tempFile);
+            }
         }
     }
 
