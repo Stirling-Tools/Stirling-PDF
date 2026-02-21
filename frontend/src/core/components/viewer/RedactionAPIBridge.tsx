@@ -43,11 +43,21 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   // Cache search results from the last searchText call.
   const cachedSearchResults = useRef<SearchResult[]>([]);
 
-  // Mark bridge as ready on mount, not ready on unmount
+  // Keep a ref to searchProvides so the unmount cleanup always has the latest value.
+  const searchProvidesRef = useRef(searchProvides);
+  useEffect(() => {
+    searchProvidesRef.current = searchProvides;
+  }, [searchProvides]);
+
+  // Mark bridge as ready on mount, clear search highlights and cache on unmount.
   useEffect(() => {
     setBridgeReady(true);
     return () => {
       setBridgeReady(false);
+      // Clear any lingering search highlights when the bridge tears down
+      // (e.g. user navigates away from the Redact tool).
+      searchProvidesRef.current?.stopSearch?.();
+      cachedSearchResults.current = [];
     };
   }, [setBridgeReady]);
 
@@ -100,6 +110,11 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
 
     // Set flags on the search scope
     searchProvides.setFlags(flags);
+
+    // End any previous search session before starting a new one.
+    // Without this, calling startSearch() a second time leaves the plugin in a
+    // stale state and searchAllPages() returns 0 results.
+    searchProvides.stopSearch?.();
 
     // Start a fresh search session, then search all pages
     searchProvides.startSearch();

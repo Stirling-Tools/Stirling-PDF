@@ -63,6 +63,20 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
     setError(null);
 
     try {
+      // If the user hasn't searched yet (or options changed), run the search
+      // automatically so they don't need to hit Search before Redact All Matches.
+      let currentResults = searchResults;
+      if (!currentResults) {
+        const found = await searchText(query, { caseSensitive, wholeWord });
+        setSearchResults(found);
+        currentResults = found;
+      }
+
+      if (currentResults.totalCount === 0) {
+        setError(t('redact.searchAndRedact.noMatchesRedacted', 'No matches found to redact'));
+        return;
+      }
+
       const result = await redactText(query, { caseSensitive, wholeWord });
       if (result) {
         // Redaction annotations created successfully — clear search results
@@ -76,7 +90,7 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
     } finally {
       setIsRedacting(false);
     }
-  }, [query, caseSensitive, wholeWord, redactText, t]);
+  }, [query, caseSensitive, wholeWord, searchText, redactText, searchResults, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
