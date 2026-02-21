@@ -377,9 +377,44 @@ const EmbedPdfViewerContent = ({
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isViewerHovered) return;
-
       const mod = event.ctrlKey || event.metaKey;
+
+      // Ctrl+P (print) and Ctrl+R (rotate) must be intercepted unconditionally
+      // whenever the viewer is mounted, even before the user has hovered over it.
+      // Without this, the browser falls through to its native "print HTML page"
+      // or "reload page" behaviour.
+      if (mod) {
+        const target = event.target as Element;
+        const isInTextInput =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          (target as HTMLElement).isContentEditable;
+
+        if (!isInTextInput) {
+          switch (event.key) {
+            case 'p':
+            case 'P':
+              event.preventDefault();
+              printActions.print();
+              return;
+            case 'r':
+            case 'R':
+              // Ctrl+R: Rotate forward; Ctrl+Shift+R: Rotate backward
+              event.preventDefault();
+              if (event.shiftKey) {
+                rotationActions.rotateBackward();
+              } else {
+                rotationActions.rotateForward();
+              }
+              return;
+          }
+        }
+      }
+
+      // All remaining shortcuts require the viewer to be hovered so they
+      // don't conflict with the rest of the UI when the viewer is mounted
+      // but not the active focus target.
+      if (!isViewerHovered) return;
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
@@ -413,11 +448,6 @@ const EmbedPdfViewerContent = ({
               searchInterfaceActions.open();
             }
             return;
-          case 'p':
-          case 'P':
-            event.preventDefault();
-            printActions.print();
-            return;
           case 's':
           case 'S':
             // Ctrl+S: Save/apply changes
@@ -443,17 +473,6 @@ const EmbedPdfViewerContent = ({
             // Ctrl+Y: Redo
             event.preventDefault();
             historyApiRef.current?.redo?.();
-            return;
-          case 'r':
-          case 'R':
-            // Ctrl+R: Rotate forward; Ctrl+Shift+R: Rotate backward
-            // Prevent browser refresh
-            event.preventDefault();
-            if (event.shiftKey) {
-              rotationActions.rotateBackward();
-            } else {
-              rotationActions.rotateForward();
-            }
             return;
         }
         return;
