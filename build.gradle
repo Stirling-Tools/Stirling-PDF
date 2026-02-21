@@ -18,7 +18,7 @@ import groovy.xml.XmlSlurper
 import org.gradle.api.tasks.testing.Test
 
 ext {
-    springBootVersion = "3.5.9"
+    springBootVersion = "4.0.3"
     pdfboxVersion = "3.0.6"
     imageioVersion = "3.13.0"
     lombokVersion = "1.18.42"
