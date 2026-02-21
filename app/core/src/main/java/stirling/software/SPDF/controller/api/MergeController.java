@@ -399,7 +399,12 @@ public class MergeController {
         String mergedFileName =
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
-        byte[] pdfBytes = Files.readAllBytes(outputTempFile.getPath());
+        byte[] pdfBytes;
+        try {
+            pdfBytes = Files.readAllBytes(outputTempFile.getPath());
+        } finally {
+            outputTempFile.close();
+        }
         return WebResponseUtils.bytesToWebResponse(pdfBytes, mergedFileName);
     }
 }

@@ -253,6 +253,8 @@ jobs:
     #     )
 
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
 
     steps:
       - name: Harden Runner
@@ -292,6 +294,7 @@ jobs:
       - name: Pip requirements
         run: |
           pip install --require-hashes -r ./testing/cucumber/requirements.txt
+          pip install behave-html-formatter
 
       - name: Run Docker Compose Tests
         run: |
@@ -303,6 +306,24 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Upload Cucumber Report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: cucumber-report
+          path: testing/cucumber/report.html
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Cucumber Test Report
+        if: always()
+        uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
+        with:
+          name: Cucumber Tests
+          path: testing/cucumber/junit/*.xml
+          reporter: java-junit
+          fail-on-error: false
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'

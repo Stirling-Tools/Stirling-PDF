@@ -1,3 +1,4 @@
+import json as json_module
 import os
 import requests
 from behave import given, when, then
@@ -289,6 +290,273 @@ def save_generated_pdf(context, filename):
     print(f"Saved generated PDF content to {filename}")
 
 
+# ---------------------------------------------------------------------------
+# Multi-file accumulation steps (same parameter key sent multiple times)
+# ---------------------------------------------------------------------------
+
+
+@given('I also generate a PDF file as "{param}"')
+def step_also_generate_pdf(context, param):
+    """Add an additional generated PDF under the given parameter name (supports duplicate keys)."""
+    count = sum(1 for k, _ in getattr(context, "multi_files", []) if k == param)
+    file_name = f"genericNonCustomisableName_extra_{param}_{count}.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=72, height=72)
+    with open(file_name, "wb") as f:
+        writer.write(f)
+    if not hasattr(context, "multi_files"):
+        context.multi_files = []
+    context.multi_files.append((param, open(file_name, "rb")))
+
+
+@given('I also use an example file at "{filePath}" as parameter "{param}"')
+def step_also_use_example_file(context, filePath, param):
+    """Add an additional file from exampleFiles under the given parameter name."""
+    if not hasattr(context, "multi_files"):
+        context.multi_files = []
+    try:
+        context.multi_files.append((param, open(filePath, "rb")))
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The example file '{filePath}' does not exist.")
+
+
+# ---------------------------------------------------------------------------
+# Non-PDF file generation steps
+# ---------------------------------------------------------------------------
+
+
+@given('I generate a PNG image file as "{param}"')
+def step_generate_png(context, param):
+    """Generate a simple coloured PNG and register it under the given parameter name."""
+    file_name = f"genericNonCustomisableName_{param}.png"
+    img = Image.new("RGB", (200, 200), color=(73, 109, 137))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([50, 50, 150, 150], fill=(255, 165, 0))
+    draw.ellipse([75, 75, 125, 125], fill=(255, 255, 255))
+    img.save(file_name, format="PNG")
+    if not hasattr(context, "files"):
+        context.files = {}
+    context.files[param] = open(file_name, "rb")
+    context.param_name = param
+    context.file_name = file_name
+
+
+@given('I also generate a PNG image file as "{param}"')
+def step_also_generate_png(context, param):
+    """Add an additional PNG image under the given parameter name (supports duplicate keys)."""
+    count = sum(1 for k, _ in getattr(context, "multi_files", []) if k == param)
+    file_name = f"genericNonCustomisableName_extra_{param}_{count}.png"
+    img = Image.new("RGB", (200, 200), color=(count * 60 + 40, 100, 180))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([30, 30, 170, 170], fill=(200 - count * 30, 150, 50))
+    img.save(file_name, format="PNG")
+    if not hasattr(context, "multi_files"):
+        context.multi_files = []
+    context.multi_files.append((param, open(file_name, "rb")))
+
+
+@given('I generate an SVG file as "{param}"')
+def step_generate_svg(context, param):
+    """Generate a minimal SVG file and register it under the given parameter name."""
+    file_name = f"genericNonCustomisableName_{param}.svg"
+    svg_content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">\n'
+        '  <rect width="200" height="200" fill="#4a90e2"/>\n'
+        '  <circle cx="100" cy="100" r="60" fill="#f5a623"/>\n'
+        '  <text x="100" y="107" font-size="16" text-anchor="middle" fill="white">Test SVG</text>\n'
+        "</svg>\n"
+    )
+    with open(file_name, "w", encoding="utf-8") as f:
+        f.write(svg_content)
+    if not hasattr(context, "files"):
+        context.files = {}
+    context.files[param] = open(file_name, "rb")
+    context.param_name = param
+    context.file_name = file_name
+
+
+@given('I also generate an SVG file as "{param}"')
+def step_also_generate_svg(context, param):
+    """Add an additional SVG under the given parameter name (supports duplicate keys)."""
+    count = sum(1 for k, _ in getattr(context, "multi_files", []) if k == param)
+    file_name = f"genericNonCustomisableName_extra_{param}_{count}.svg"
+    svg_content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">\n'
+        f'  <rect width="150" height="150" fill="hsl({count * 60}, 70%, 50%)"/>\n'
+        '  <polygon points="75,20 140,130 10,130" fill="white" opacity="0.6"/>\n'
+        "</svg>\n"
+    )
+    with open(file_name, "w", encoding="utf-8") as f:
+        f.write(svg_content)
+    if not hasattr(context, "multi_files"):
+        context.multi_files = []
+    context.multi_files.append((param, open(file_name, "rb")))
+
+
+@given('I generate an EML email file as "{param}"')
+def step_generate_eml(context, param):
+    """Generate a minimal RFC-2822 EML file and register it under the given parameter name."""
+    file_name = f"genericNonCustomisableName_{param}.eml"
+    eml_content = (
+        "MIME-Version: 1.0\r\n"
+        "Date: Thu, 19 Feb 2026 10:00:00 +0000\r\n"
+        "Message-ID: <test123@example.com>\r\n"
+        "From: sender@example.com\r\n"
+        "To: recipient@example.com\r\n"
+        "Subject: Test Email for PDF Conversion\r\n"
+        "Content-Type: text/plain; charset=UTF-8\r\n"
+        "\r\n"
+        "This is a test email body.\r\n"
+        "It contains multiple lines of text.\r\n"
+        "Used for EML to PDF conversion testing.\r\n"
+    )
+    with open(file_name, "w", encoding="utf-8") as f:
+        f.write(eml_content)
+    if not hasattr(context, "files"):
+        context.files = {}
+    context.files[param] = open(file_name, "rb")
+    context.param_name = param
+    context.file_name = file_name
+
+
+@given('I generate a CBZ comic archive file as "{param}"')
+def step_generate_cbz(context, param):
+    """Generate a CBZ file (ZIP of PNG images) and register it under the given parameter name."""
+    file_name = f"genericNonCustomisableName_{param}.cbz"
+    with zipfile.ZipFile(file_name, "w") as cbz:
+        for i in range(3):
+            img = Image.new("RGB", (200, 300), color=(i * 60 + 40, 120, 200 - i * 50))
+            draw = ImageDraw.Draw(img)
+            draw.rectangle([20, 20, 180, 280], outline=(0, 0, 0), width=3)
+            draw.rectangle([40, 40, 160, 100], fill=(200, 200, 255))
+            img_bytes = io.BytesIO()
+            img.save(img_bytes, format="PNG")
+            cbz.writestr(f"page_{i + 1:03d}.png", img_bytes.getvalue())
+    if not hasattr(context, "files"):
+        context.files = {}
+    context.files[param] = open(file_name, "rb")
+    context.param_name = param
+    context.file_name = file_name
+
+
+# ---------------------------------------------------------------------------
+# PDF modification steps
+# ---------------------------------------------------------------------------
+
+
+@given("the pdf has form fields")
+def step_pdf_has_form_fields(context):
+    """Create a PDF with a basic AcroForm text field on each page."""
+    reader = PdfReader(context.file_name)
+    page_count = len(reader.pages)
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    w, h = letter
+    for i in range(page_count):
+        c.acroForm.textfield(
+            name=f"field_{i + 1}",
+            tooltip=f"Field {i + 1}",
+            x=72,
+            y=h - 72,
+            width=200,
+            height=20,
+            forceBorder=True,
+        )
+        c.showPage()
+    c.save()
+    with open(context.file_name, "wb") as f:
+        f.write(buffer.getvalue())
+    context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, "rb")
+
+
+@given('the pdf has an attachment named "{attachment_name}"')
+def step_pdf_has_attachment(context, attachment_name):
+    """Embed a small text attachment into the current PDF."""
+    reader = PdfReader(context.file_name)
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+    attachment_bytes = (
+        f"Attachment: {attachment_name}\nThis is test attachment content.".encode("utf-8")
+    )
+    writer.add_attachment(attachment_name, attachment_bytes)
+    with open(context.file_name, "wb") as f:
+        writer.write(f)
+    context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, "rb")
+
+
+@given("the pdf has bookmarks")
+def step_pdf_has_bookmarks(context):
+    """Add one top-level outline/bookmark entry per page to the current PDF."""
+    reader = PdfReader(context.file_name)
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+    for i in range(len(reader.pages)):
+        writer.add_outline_item(f"Chapter {i + 1}", i)
+    with open(context.file_name, "wb") as f:
+        writer.write(f)
+    context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, "rb")
+
+
+@given("the pdf has a Stirling-PDF QR code split marker on page {page_num:d}")
+def step_pdf_has_qr_split_marker(context, page_num):
+    """Replace page page_num (1-indexed) with a page containing a Stirling-PDF QR code."""
+    try:
+        import qrcode as _qrcode
+    except ImportError:
+        raise ImportError(
+            "qrcode package is required for this step. "
+            "Install with: pip install 'qrcode[pil]'"
+        )
+    reader = PdfReader(context.file_name)
+    qr = _qrcode.QRCode(box_size=4, border=2)
+    qr.add_data("https://github.com/Stirling-Tools/Stirling-PDF")
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    qr_bytes = io.BytesIO()
+    qr_img.save(qr_bytes, format="PNG")
+    qr_bytes.seek(0)
+    writer = PdfWriter()
+    for i, page in enumerate(reader.pages):
+        if i + 1 == page_num:
+            packet = io.BytesIO()
+            can = canvas.Canvas(packet, pagesize=letter)
+            w, h = letter
+            can.drawImage(
+                ImageReader(qr_bytes), (w - 100) / 2, (h - 100) / 2, width=100, height=100
+            )
+            can.showPage()
+            can.save()
+            packet.seek(0)
+            qr_pdf = PdfReader(packet)
+            writer.add_page(qr_pdf.pages[0])
+        else:
+            writer.add_page(page)
+    with open(context.file_name, "wb") as f:
+        writer.write(f)
+    context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, "rb")
+
+
+# ---------------------------------------------------------------------------
+# JSON multipart part steps  (@RequestPart endpoints like /form/fill)
+# ---------------------------------------------------------------------------
+
+
+@given('the request includes a JSON part "{part_name}" with content "{json_content}"')
+def step_request_json_part(context, part_name, json_content):
+    """Register a JSON multipart part (sent with Content-Type: application/json)."""
+    if not hasattr(context, "json_parts"):
+        context.json_parts = {}
+    context.json_parts[part_name] = json_content
+
+
 ########
 # WHEN #
 ########
@@ -336,6 +604,17 @@ def step_send_api_request(context, endpoint):
         mime_type = mime_type or "application/octet-stream"
         print(f"form_data {file.name} with {mime_type}")
         form_data.append((key, (file.name, file, mime_type)))
+
+    # Multi-file entries (duplicate keys for MultipartFile[] endpoints, e.g. merge-pdfs)
+    for key, file in getattr(context, "multi_files", []):
+        mime_type, _ = mimetypes.guess_type(file.name)
+        mime_type = mime_type or "application/octet-stream"
+        print(f"form_data (multi) {file.name} with {mime_type}")
+        form_data.append((key, (file.name, file, mime_type)))
+
+    # JSON multipart parts for @RequestPart endpoints (e.g. /form/fill)
+    for part_name, json_content in getattr(context, "json_parts", {}).items():
+        form_data.append((part_name, (None, json_content, "application/json")))
 
     # Set timeout to 300 seconds (5 minutes) to prevent infinite hangs
     print(f"Sending POST request to {endpoint} with timeout=300s")
