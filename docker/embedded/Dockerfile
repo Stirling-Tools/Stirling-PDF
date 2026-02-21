@@ -329,11 +329,9 @@ RUN set -eux; \
            /usr/share/lintian/* /usr/share/linda/* \
            /usr/share/icons/* /usr/share/themes/* \
            /usr/share/javascript/* \
-           /usr/share/unicode/* \
            /usr/share/gtk-3.0/* \
            /usr/share/fontforge/pixmaps \
            /usr/share/liblangtag/* \
-           /usr/share/poppler/cMap \
            /usr/share/tcltk/* \
            /usr/share/python-wheels/*; \
     \
@@ -434,9 +432,6 @@ RUN set -eux; \
            /usr/share/ImageMagick-*/doc \
            /usr/share/ImageMagick-*/www; \
     \
-    # NEW: Ghostscript CID resources (redundant with Noto CJK)
-    rm -rf /usr/share/ghostscript/*/Resource/CIDFSubst \
-           /usr/share/ghostscript/*/Resource/CIDFont; \
     \
     # NEW: Tesseract training configs (not needed for OCR, but keep configs/ for hocr/txt output)
     rm -rf /usr/share/tesseract-ocr/*/tessdata/tessconfigs; \
