@@ -85,6 +85,9 @@ security:
       mode: none # Revocation checking mode: 'none' (disabled), 'ocsp' (OCSP only), 'crl' (CRL only), 'ocsp+crl' (OCSP with CRL fallback)
       hardFail: false # Fail validation if revocation status cannot be determined (true=strict, false=soft-fail)
   xFrameOptions: DENY # X-Frame-Options header value. Options: 'DENY' (default, prevents all framing), 'SAMEORIGIN' (allows framing from same domain), 'DISABLED' (no X-Frame-Options header sent). Note: automatically set to DISABLED when login is disabled
+  mfaRequired:
+    enforceForAdmins: false # Set to 'true' to enforce MFA for admin users only - excludes normal users; saml2 and oauth2 users are not affected
+    enforceForUsers: false # Set to 'true' to enforce MFA for users only - excludes admin users; saml2 and oauth2 users are not affected
 
 premium:
   key: 00000000-0000-0000-0000-000000000000

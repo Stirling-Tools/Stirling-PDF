@@ -612,6 +612,72 @@ public class AuthController {
     }
 
     /**
+     * Admin endpoint to require MFA for a user
+     *
+     * @param username Username of the user to require MFA for
+     * @return Response indicating success or failure
+     */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/mfa/require/admin/{username}")
+    public ResponseEntity<?> requireMfaByAdmin(@PathVariable String username) {
+        try {
+            User user =
+                    userService
+                            .findByUsernameIgnoreCaseWithSettings(username)
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+            if (authTypeResponse != null) {
+                return authTypeResponse;
+            }
+
+            mfaService.setMfaRequired(user, true);
+            return ResponseEntity.ok(Map.of("required", true));
+        } catch (UsernameNotFoundException e) {
+            log.warn("User not found for MFA enable: {}", username);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found"));
+        } catch (Exception e) {
+            log.error("Failed to enable MFA for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to enable MFA"));
+        }
+    }
+
+    /**
+     * Admin endpoint to set MFA as optional for a user
+     *
+     * @param username Username of the user to set MFA as optional for
+     * @return Response indicating success or failure
+     */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/mfa/optional/admin/{username}")
+    public ResponseEntity<?> optionalMfaByAdmin(@PathVariable String username) {
+        try {
+            User user =
+                    userService
+                            .findByUsernameIgnoreCaseWithSettings(username)
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+            if (authTypeResponse != null) {
+                return authTypeResponse;
+            }
+
+            mfaService.setMfaRequired(user, false);
+            return ResponseEntity.ok(Map.of("required", false));
+        } catch (UsernameNotFoundException e) {
+            log.warn("User not found for MFA enable: {}", username);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found"));
+        } catch (Exception e) {
+            log.error("Failed to enable MFA for user: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to enable MFA"));
+        }
+    }
+
+    /**
      * Helper method to build user response object
      *
      * @param user User entity
