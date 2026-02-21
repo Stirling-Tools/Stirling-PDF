@@ -16,13 +16,13 @@ comingSoon = "Σύντομα διαθέσιμο"
 confirmClose = "Επιβεβαίωση κλεισίματος"
 confirmCloseCancel = "Άκυρο"
 confirmCloseConfirm = "Κλείσιμο αρχείου"
-confirmCloseMessage = "Είστε βέβαιοι ότι θέλετε να κλείσετε αυτό το αρχείο;"
 confirmCloseDiscard = "Απόρριψη αλλαγών και κλείσιμο"
+confirmCloseMessage = "Είστε βέβαιοι ότι θέλετε να κλείσετε αυτό το αρχείο;"
 confirmCloseSave = "Αποθήκευση και κλείσιμο"
+confirmCloseSaveFailed = "Αποθηκεύτηκε με σφάλματα. {{count}} αρχείο{{plural}} δεν μπόρεσε να αποθηκευτεί."
+confirmCloseSaveFailedTitle = "Αποτυχία αποθήκευσης"
 confirmCloseUnsaved = "Αυτό το αρχείο έχει μη αποθηκευμένες αλλαγές."
 confirmCloseUnsavedList = "Έχετε {{count}} αρχείο{{plural}} με μη αποθηκευμένες αλλαγές.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Αποτυχία αποθήκευσης"
-confirmCloseSaveFailed = "Αποθηκεύτηκε με σφάλματα. {{count}} αρχείο{{plural}} δεν μπόρεσε να αποθηκευτεί."
 confirmPasswordErrorMessage = "Ο νέος κωδικός και η επιβεβαίωση νέου κωδικού πρέπει να ταιριάζουν."
 custom = "Προσαρμογή..."
 customPosition = "Προσαρμοσμένη θέση"
@@ -45,8 +45,8 @@ edit = "Επεξεργασία"
 editYourNewFiles = "Επεξεργαστείτε τα νέα αρχεία σας"
 exportAndContinue = "Εξαγωγή & Συνέχεια"
 false = "Ψευδές"
-fileSavedToDisk = "Το αρχείο αποθηκεύτηκε στον δίσκο"
 fileNotSavedToDisk = "Δεν αποθηκεύτηκε στον δίσκο"
+fileSavedToDisk = "Το αρχείο αποθηκεύτηκε στον δίσκο"
 fileSelected = "Επιλέχθηκε: {{filename}}"
 filesSelected = "αρχεία επιλεγμένα"
 font = "Γραμματοσειρά"
@@ -841,6 +841,14 @@ title = "Τελικά σημεία API"
 userDefaults = "Προεπιλεγμένες προτιμήσεις χρήστη"
 userDefaultsDescription = "Ορίστε προεπιλεγμένες τιμές για τις προτιμήσεις χρήστη. Οι χρήστες μπορούν να τις παρακάμψουν στις προσωπικές ρυθμίσεις τους."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Αφαίρεση απενεργοποιημένων επιλογών μετατροπής αντί να εμφανίζονται με γκρι χρώμα"
+label = "Απόκρυψη μη διαθέσιμων μετατροπών από προεπιλογή"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Αφαίρεση απενεργοποιημένων εργαλείων αντί να εμφανίζονται με γκρι χρώμα"
+label = "Απόκρυψη μη διαθέσιμων εργαλείων από προεπιλογή"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Επιλέξτε ομάδες endpoints προς απενεργοποίηση"
 label = "Απενεργοποιημένες ομάδες endpoints"
@@ -848,14 +856,6 @@ label = "Απενεργοποιημένες ομάδες endpoints"
 [admin.settings.endpoints.toRemove]
 description = "Επιλέξτε μεμονωμένα endpoints προς απενεργοποίηση"
 label = "Απενεργοποιημένα endpoints"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Αφαίρεση απενεργοποιημένων εργαλείων αντί να εμφανίζονται με γκρι χρώμα"
-label = "Απόκρυψη μη διαθέσιμων εργαλείων από προεπιλογή"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Αφαίρεση απενεργοποιημένων επιλογών μετατροπής αντί να εμφανίζονται με γκρι χρώμα"
-label = "Απόκρυψη μη διαθέσιμων μετατροπών από προεπιλογή"
 
 [admin.settings.enterpriseRequired]
 message = "Απαιτείται άδεια Enterprise για πρόσβαση στο {{featureName}}. Βλέπετε δεδομένα επίδειξης για αναφορά."
@@ -1228,6 +1228,14 @@ label = "Αρχικό όνομα χρήστη"
 [admin.settings.security.jwt]
 label = "Ρύθμιση JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Ανοχή για απόκλιση ώρας πελάτη/διακομιστή κατά την επικύρωση token (προεπιλογή: 60 δευτερόλεπτα)"
+label = "Ανοχή απόκλισης ρολογιού (δευτερόλεπτα)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Διάρκεια ζωής access token σε λεπτά για πελάτες desktop. Οι εφαρμογές Desktop ανιχνεύονται αυτόματα μέσω User-Agent και λαμβάνουν μεγαλύτερες συνεδρίες για καλύτερο UX (προεπιλογή: 43200 = 30 ημέρες)"
+label = "Λήξη Desktop Token (λεπτά)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Αυτόματη αφαίρεση ληγμένων κλειδιών JWT"
 label = "Ενεργοποίηση καθαρισμού κλειδιών"
@@ -1236,29 +1244,21 @@ label = "Ενεργοποίηση καθαρισμού κλειδιών"
 description = "Αυτόματη περιοδική εναλλαγή κλειδιών υπογραφής JWT"
 label = "Ενεργοποίηση εναλλαγής κλειδιών"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Διάρκεια ζωής access token σε λεπτά για πελάτες ιστού (προεπιλογή: 1440 = 24 ώρες)"
-label = "Λήξη Web Token (λεπτά)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Διάρκεια ζωής access token σε λεπτά για πελάτες desktop. Οι εφαρμογές Desktop ανιχνεύονται αυτόματα μέσω User-Agent και λαμβάνουν μεγαλύτερες συνεδρίες για καλύτερο UX (προεπιλογή: 43200 = 30 ημέρες)"
-label = "Λήξη Desktop Token (λεπτά)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Ανοχή για απόκλιση ώρας πελάτη/διακομιστή κατά την επικύρωση token (προεπιλογή: 60 δευτερόλεπτα)"
-label = "Ανοχή απόκλισης ρολογιού (δευτερόλεπτα)"
+[admin.settings.security.jwt.persistence]
+description = "Αποθήκευση κλειδιών JWT μόνιμα ώστε να επιβιώνουν επανεκκινήσεις διακομιστή"
+label = "Ενεργοποίηση μόνιμης αποθήκευσης κλειδιών"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Να επιτρέπεται ανανέωση token εντός τόσων λεπτών μετά τη λήξη (προεπιλογή: 15 λεπτά, μέγ. 3 προσπάθειες)"
 label = "Περίοδος χάριτος ανανέωσης (λεπτά)"
 
-[admin.settings.security.jwt.persistence]
-description = "Αποθήκευση κλειδιών JWT μόνιμα ώστε να επιβιώνουν επανεκκινήσεις διακομιστή"
-label = "Ενεργοποίηση μόνιμης αποθήκευσης κλειδιών"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Απαιτεί HTTPS για τα cookies JWT (συνιστάται για παραγωγή)"
 label = "Ασφαλές cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Διάρκεια ζωής access token σε λεπτά για πελάτες ιστού (προεπιλογή: 1440 = 24 ώρες)"
+label = "Λήξη Web Token (λεπτά)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Μέγιστος αριθμός αποτυχημένων προσπαθειών σύνδεσης πριν από το κλείδωμα λογαριασμού"
@@ -3346,10 +3346,6 @@ desc = "Δημιουργήστε ροές πολλών βημάτων συνδέ
 tags = "ροή εργασιών,ακολουθία,αυτοματοποίηση"
 title = "Αυτοματοποίηση"
 
-[home.formFill]
-desc = "Συμπληρώστε πεδία φόρμας PDF διαδραστικά με έναν οπτικό επεξεργαστή"
-title = "Συμπλήρωση φόρμας"
-
 [home.autoRename]
 desc = "Μετονομάζει αυτόματα ένα αρχείο PDF βάσει της ανιχνευμένης κεφαλίδας του"
 tags = "αυτόματος εντοπισμός,βασισμένο σε κεφαλίδα,οργάνωση,επαναονομασία"
@@ -3444,6 +3440,10 @@ title = "Εξαγωγή σελίδων"
 desc = "Αφαίρεση όλων των διαδραστικών στοιχείων και φορμών από ένα PDF"
 tags = "απλοποίηση,αφαίρεση,διαδραστικό"
 title = "Ισοπέδωση"
+
+[home.formFill]
+desc = "Συμπληρώστε πεδία φόρμας PDF διαδραστικά με έναν οπτικό επεξεργαστή"
+title = "Συμπλήρωση φόρμας"
 
 [home.getPdfInfo]
 desc = "Λήψη όλων των δυνατών πληροφοριών για τα PDF"
@@ -4247,75 +4247,6 @@ title = "Επεξεργαστής σελίδων"
 zoomIn = "Μεγέθυνση"
 zoomOut = "Σμίκρυνση"
 
-[viewer]
-cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπηση του αρχείου"
-dualPageView = "Προβολή διπλής σελίδας"
-firstPage = "Πρώτη σελίδα"
-lastPage = "Τελευταία σελίδα"
-nextPage = "Επόμενη σελίδα"
-onlyPdfSupported = "Ο προβολέας υποστηρίζει μόνο αρχεία PDF. Αυτό το αρχείο φαίνεται να είναι διαφορετικής μορφής."
-previousPage = "Προηγούμενη σελίδα"
-singlePageView = "Προβολή μίας σελίδας"
-unknownFile = "Άγνωστο αρχείο"
-zoomIn = "Μεγέθυνση"
-zoomOut = "Σμίκρυνση"
-
-[viewer.attachments]
-title = "Συνημμένα"
-searchPlaceholder = "Αναζήτηση συνημμένων"
-noSupport = "Η υποστήριξη συνημμένων δεν είναι διαθέσιμη σε αυτόν τον προβολέα."
-noDocument = "Ανοίξτε ένα PDF για να δείτε τα συνημμένα του."
-loading = "Φόρτωση συνημμένων..."
-empty = "Δεν υπάρχουν συνημμένα σε αυτό το έγγραφο"
-noMatch = "Κανένα συνημμένο δεν ταιριάζει με την αναζήτησή σας"
-
-[viewer.formBar]
-title = "Πεδία φόρμας"
-unsavedBadge = "Μη αποθηκευμένο"
-unsavedDesc = "Έχετε μη αποθηκευμένες αλλαγές"
-hasFieldsDesc = "Αυτό το PDF περιέχει πεδία προς συμπλήρωση"
-dismiss = "Απόρριψη"
-apply = "Εφαρμογή αλλαγών"
-download = "Λήψη PDF"
-
-[rightRail]
-closeSelected = "Κλείσιμο επιλεγμένων αρχείων"
-selectAll = "Επιλογή όλων"
-deselectAll = "Αποεπιλογή όλων"
-selectByNumber = "Επιλογή με αριθμούς σελίδων"
-deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
-closePdf = "Κλείσιμο PDF"
-exportAll = "Εξαγωγή PDF"
-downloadSelected = "Λήψη επιλεγμένων αρχείων"
-annotations = "Σχολιασμοί"
-exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
-formFill = "Συμπλήρωση φόρμας"
-saveChanges = "Αποθήκευση αλλαγών"
-toggleAttachments = "Εναλλαγή συνημμένων"
-toggleTheme = "Εναλλαγή θέματος"
-language = "Γλώσσα"
-toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
-search = "Αναζήτηση PDF"
-panMode = "Λειτουργία μετακίνησης"
-applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
-rotateLeft = "Περιστροφή αριστερά"
-rotateRight = "Περιστροφή δεξιά"
-toggleSidebar = "Εναλλαγή πλευρικής γραμμής"
-toggleBookmarks = "Εναλλαγή σελιδοδεικτών"
-print = "Εκτύπωση PDF"
-ruler = "Χάρακας / Μέτρηση"
-draw = "Σχεδίαση"
-redact = "Απόκρυψη"
-exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
-save = "Αποθήκευση"
-downloadAll = "Λήψη όλων"
-saveAll = "Αποθήκευση όλων"
-
-[textAlign]
-left = "Αριστερά"
-center = "Κέντρο"
-right = "Δεξιά"
-
 [pageExtracter]
 header = "Εξαγωγή σελίδων"
 placeholder = "(π.χ. 1,2,8 ή 4,7,12-16 ή 2n-1)"
@@ -4992,15 +4923,15 @@ title = "Λέξεις προς απόκρυψη"
 failed = "Παρουσιάστηκε σφάλμα κατά την απόκρυψη στο PDF."
 
 [redact.manual]
+activate = "Ενεργοποίηση εργαλείου απόκρυψης"
+active = "Λειτουργία απόκρυψης ενεργή"
 apply = "Εφαρμογή"
 applyChanges = "Εφαρμογή αλλαγών"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Μόνιμη εφαρμογή, δεν μπορεί να αναιρεθεί και τα υποκείμενα δεδομένα θα διαγραφούν"
 boxRedaction = "Απόκρυψη με σχεδίαση πλαισίου"
-colourPicker = "Επιλογέας χρώματος"
 colorLabel = "Χρώμα απόκρυψης"
-active = "Λειτουργία απόκρυψης ενεργή"
-activate = "Ενεργοποίηση εργαλείου απόκρυψης"
+colourPicker = "Επιλογέας χρώματος"
 controlsTitle = "Χειροκίνητα χειριστήρια απόκρυψης"
 convertPDFToImageLabel = "Μετατροπή PDF σε PDF-Image (Χρησιμοποιείται για την αφαίρεση κειμένου πίσω από το πλαίσιο)"
 export = "Εξαγωγή"
@@ -5395,6 +5326,39 @@ title = "Υψηλή αντίθεση"
 [replaceColor.tooltip.invertAll]
 text = "Αντιστρέψτε πλήρως όλα τα χρώματα στο PDF, δημιουργώντας ένα αποτέλεσμα παρόμοιο με αρνητικό. Χρήσιμο για δημιουργία εκδόσεων σκοτεινού θέματος ή μείωση κόπωσης ματιών σε χαμηλό φωτισμό."
 title = "Αντιστροφή όλων των χρωμάτων"
+
+[rightRail]
+annotations = "Σχολιασμοί"
+applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
+closePdf = "Κλείσιμο PDF"
+closeSelected = "Κλείσιμο επιλεγμένων αρχείων"
+deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
+deselectAll = "Αποεπιλογή όλων"
+downloadAll = "Λήψη όλων"
+downloadSelected = "Λήψη επιλεγμένων αρχείων"
+draw = "Σχεδίαση"
+exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
+exportAll = "Εξαγωγή PDF"
+exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
+formFill = "Συμπλήρωση φόρμας"
+language = "Γλώσσα"
+panMode = "Λειτουργία μετακίνησης"
+print = "Εκτύπωση PDF"
+redact = "Απόκρυψη"
+rotateLeft = "Περιστροφή αριστερά"
+rotateRight = "Περιστροφή δεξιά"
+ruler = "Χάρακας / Μέτρηση"
+save = "Αποθήκευση"
+saveAll = "Αποθήκευση όλων"
+saveChanges = "Αποθήκευση αλλαγών"
+search = "Αναζήτηση PDF"
+selectAll = "Επιλογή όλων"
+selectByNumber = "Επιλογή με αριθμούς σελίδων"
+toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
+toggleAttachments = "Εναλλαγή συνημμένων"
+toggleBookmarks = "Εναλλαγή σελιδοδεικτών"
+toggleSidebar = "Εναλλαγή πλευρικής γραμμής"
+toggleTheme = "Εναλλαγή θέματος"
 
 [rotate]
 rotateLeft = "Περιστροφή αριστερόστροφα"
@@ -6233,6 +6197,11 @@ title = "Τεκμηρίωση API"
 [tableExtraxt]
 tags = "CSV,εξαγωγή πίνακα,εξαγωγή,μετατροπή"
 
+[textAlign]
+center = "Κέντρο"
+left = "Αριστερά"
+right = "Δεξιά"
+
 [theme]
 toggle = "Εναλλαγή θέματος"
 
@@ -6507,6 +6476,37 @@ invalid = "Το πιστοποιητικό δεν βρίσκεται στο απ
 fileManager = "Διαχειριστής αρχείων"
 pageEditor = "Επεξεργαστής σελίδων"
 viewer = "Προβολέας"
+
+[viewer]
+cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπηση του αρχείου"
+dualPageView = "Προβολή διπλής σελίδας"
+firstPage = "Πρώτη σελίδα"
+lastPage = "Τελευταία σελίδα"
+nextPage = "Επόμενη σελίδα"
+onlyPdfSupported = "Ο προβολέας υποστηρίζει μόνο αρχεία PDF. Αυτό το αρχείο φαίνεται να είναι διαφορετικής μορφής."
+previousPage = "Προηγούμενη σελίδα"
+singlePageView = "Προβολή μίας σελίδας"
+unknownFile = "Άγνωστο αρχείο"
+zoomIn = "Μεγέθυνση"
+zoomOut = "Σμίκρυνση"
+
+[viewer.attachments]
+empty = "Δεν υπάρχουν συνημμένα σε αυτό το έγγραφο"
+loading = "Φόρτωση συνημμένων..."
+noDocument = "Ανοίξτε ένα PDF για να δείτε τα συνημμένα του."
+noMatch = "Κανένα συνημμένο δεν ταιριάζει με την αναζήτησή σας"
+noSupport = "Η υποστήριξη συνημμένων δεν είναι διαθέσιμη σε αυτόν τον προβολέα."
+searchPlaceholder = "Αναζήτηση συνημμένων"
+title = "Συνημμένα"
+
+[viewer.formBar]
+apply = "Εφαρμογή αλλαγών"
+dismiss = "Απόρριψη"
+download = "Λήψη PDF"
+hasFieldsDesc = "Αυτό το PDF περιέχει πεδία προς συμπλήρωση"
+title = "Πεδία φόρμας"
+unsavedBadge = "Μη αποθηκευμένο"
+unsavedDesc = "Έχετε μη αποθηκευμένες αλλαγές"
 
 [viewPdf]
 header = "Προβολή PDF"

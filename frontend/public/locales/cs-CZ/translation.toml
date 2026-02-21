@@ -16,13 +16,13 @@ comingSoon = "Již brzy"
 confirmClose = "Potvrdit zavření"
 confirmCloseCancel = "Zrušit"
 confirmCloseConfirm = "Zavřít soubor"
-confirmCloseMessage = "Opravdu chcete tento soubor zavřít?"
 confirmCloseDiscard = "Zahodit změny a zavřít"
+confirmCloseMessage = "Opravdu chcete tento soubor zavřít?"
 confirmCloseSave = "Uložit a zavřít"
+confirmCloseSaveFailed = "Uloženo s chybami. {{count}} soubor{{plural}} se nepodařilo uložit."
+confirmCloseSaveFailedTitle = "Uložení se nezdařilo"
 confirmCloseUnsaved = "Tento soubor má neuložené změny."
 confirmCloseUnsavedList = "Máte {{count}} soubor{{plural}} s neuloženými změnami.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Uložení se nezdařilo"
-confirmCloseSaveFailed = "Uloženo s chybami. {{count}} soubor{{plural}} se nepodařilo uložit."
 confirmPasswordErrorMessage = "Nové heslo a potvrzení nového hesla se musí shodovat."
 custom = "Vlastní..."
 customPosition = "Vlastní umístění"
@@ -45,8 +45,8 @@ edit = "Upravit"
 editYourNewFiles = "Upravit nové soubory"
 exportAndContinue = "Exportovat a pokračovat"
 false = "Ne"
-fileSavedToDisk = "Soubor uložen na disk"
 fileNotSavedToDisk = "Neuloženo na disk"
+fileSavedToDisk = "Soubor uložen na disk"
 fileSelected = "Vybráno: {{filename}}"
 filesSelected = "vybraných souborů"
 font = "Písmo"
@@ -841,6 +841,14 @@ title = "API koncové body"
 userDefaults = "Výchozí předvolby uživatelů"
 userDefaultsDescription = "Nastavte výchozí hodnoty uživatelských předvoleb. Uživatelé je mohou přepsat ve svém osobním nastavení."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Odebrat zakázané možnosti konverze místo jejich zobrazení šedě"
+label = "Ve výchozím nastavení skrýt nedostupné konverze"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Odebrat zakázané nástroje místo jejich zobrazení šedě"
+label = "Ve výchozím nastavení skrýt nedostupné nástroje"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Vyberte skupiny koncových bodů k zakázání"
 label = "Zakázané skupiny koncových bodů"
@@ -848,14 +856,6 @@ label = "Zakázané skupiny koncových bodů"
 [admin.settings.endpoints.toRemove]
 description = "Vyberte jednotlivé koncové body k zakázání"
 label = "Zakázané koncové body"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Odebrat zakázané nástroje místo jejich zobrazení šedě"
-label = "Ve výchozím nastavení skrýt nedostupné nástroje"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Odebrat zakázané možnosti konverze místo jejich zobrazení šedě"
-label = "Ve výchozím nastavení skrýt nedostupné konverze"
 
 [admin.settings.enterpriseRequired]
 message = "Pro přístup k {{featureName}} je vyžadována licence Enterprise. Zobrazená data jsou pouze ukázková."
@@ -1228,6 +1228,14 @@ label = "Počáteční uživatelské jméno"
 [admin.settings.security.jwt]
 label = "Konfigurace JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerance odchylky času klient/server během ověření tokenu (výchozí: 60 sekund)"
+label = "Tolerance odchylky času (sekundy)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Doba platnosti přístupového tokenu v minutách pro desktopové klienty. Desktopové aplikace jsou automaticky detekovány podle User-Agent a získají delší relace pro lepší UX (výchozí: 43200 = 30 dní)"
+label = "Vypršení platnosti desktopového tokenu (minuty)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automaticky odstraňovat expirované klíče JWT"
 label = "Povolit čištění klíčů"
@@ -1236,29 +1244,21 @@ label = "Povolit čištění klíčů"
 description = "Automaticky periodicky rotovat podepisovací klíče JWT"
 label = "Povolit rotaci klíčů"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Doba platnosti přístupového tokenu v minutách pro webové klienty (výchozí: 1440 = 24 hodin)"
-label = "Vypršení platnosti webového tokenu (minuty)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Doba platnosti přístupového tokenu v minutách pro desktopové klienty. Desktopové aplikace jsou automaticky detekovány podle User-Agent a získají delší relace pro lepší UX (výchozí: 43200 = 30 dní)"
-label = "Vypršení platnosti desktopového tokenu (minuty)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerance odchylky času klient/server během ověření tokenu (výchozí: 60 sekund)"
-label = "Tolerance odchylky času (sekundy)"
+[admin.settings.security.jwt.persistence]
+description = "Ukládat klíče JWT trvale, aby přežily restarty serveru"
+label = "Povolit persistenci klíčů"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Povolit obnovení tokenu v tomto počtu minut po vypršení (výchozí: 15 minut, max. 3 pokusy)"
 label = "Lhůta pro obnovení (minuty)"
 
-[admin.settings.security.jwt.persistence]
-description = "Ukládat klíče JWT trvale, aby přežily restarty serveru"
-label = "Povolit persistenci klíčů"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Vyžadovat HTTPS pro cookies JWT (doporučeno pro produkci)"
 label = "Zabezpečená cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Doba platnosti přístupového tokenu v minutách pro webové klienty (výchozí: 1440 = 24 hodin)"
+label = "Vypršení platnosti webového tokenu (minuty)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximální počet neúspěšných pokusů o přihlášení před uzamčením účtu"
@@ -3346,10 +3346,6 @@ desc = "Vytvářejte vícekrokové workflow řetězením akcí PDF. Ideální pr
 tags = "pracovní postup,sekvence,automatizace"
 title = "Automatizace"
 
-[home.formFill]
-desc = "Interaktivně vyplňte pole formuláře PDF vizuálním editorem"
-title = "Vyplnit formulář"
-
 [home.autoRename]
 desc = "Automaticky přejmenuje soubor PDF podle detekovaného záhlaví"
 tags = "automatická detekce,na základě záhlaví,uspořádat,přejmenovat"
@@ -3444,6 +3440,10 @@ title = "Extrahovat stránky"
 desc = "Odstranit všechny interaktivní prvky a formuláře z PDF"
 tags = "zjednodušit,odstranit,interaktivní"
 title = "Zploštit"
+
+[home.formFill]
+desc = "Interaktivně vyplňte pole formuláře PDF vizuálním editorem"
+title = "Vyplnit formulář"
 
 [home.getPdfInfo]
 desc = "Získá všechny možné informace o PDF"
@@ -4247,75 +4247,6 @@ title = "Editor stránek"
 zoomIn = "Přiblížit"
 zoomOut = "Oddálit"
 
-[viewer]
-cannotPreviewFile = "Nelze zobrazit náhled souboru"
-dualPageView = "Zobrazení dvou stránek"
-firstPage = "První stránka"
-lastPage = "Poslední stránka"
-nextPage = "Další stránka"
-onlyPdfSupported = "Prohlížeč podporuje pouze soubory PDF. Tento soubor má zřejmě jiný formát."
-previousPage = "Předchozí stránka"
-singlePageView = "Zobrazení jedné stránky"
-unknownFile = "Neznámý soubor"
-zoomIn = "Přiblížit"
-zoomOut = "Oddálit"
-
-[viewer.attachments]
-title = "Přílohy"
-searchPlaceholder = "Hledat přílohy"
-noSupport = "Podpora příloh není v tomto prohlížeči k dispozici."
-noDocument = "Otevřete PDF a zobrazte jeho přílohy."
-loading = "Načítání příloh..."
-empty = "Tento dokument neobsahuje žádné přílohy"
-noMatch = "Žádné přílohy neodpovídají vašemu hledání"
-
-[viewer.formBar]
-title = "Formulářová pole"
-unsavedBadge = "Neuloženo"
-unsavedDesc = "Máte neuložené změny"
-hasFieldsDesc = "Toto PDF obsahuje vyplnitelná pole"
-dismiss = "Skrýt"
-apply = "Použít změny"
-download = "Stáhnout PDF"
-
-[rightRail]
-closeSelected = "Zavřít vybrané soubory"
-selectAll = "Vybrat vše"
-deselectAll = "Zrušit výběr všeho"
-selectByNumber = "Vybrat podle čísel stránek"
-deleteSelected = "Smazat vybrané stránky"
-closePdf = "Zavřít PDF"
-exportAll = "Exportovat PDF"
-downloadSelected = "Stáhnout vybrané soubory"
-annotations = "Annotations"
-exportSelected = "Exportovat vybrané stránky"
-formFill = "Vyplnit formulář"
-saveChanges = "Uložit změny"
-toggleAttachments = "Přepnout zobrazení příloh"
-toggleTheme = "Přepnout motiv"
-language = "Jazyk"
-toggleAnnotations = "Přepnout viditelnost anotací"
-search = "Hledat v PDF"
-panMode = "Režim posunu"
-applyRedactionsFirst = "Nejprve použijte začernění"
-rotateLeft = "Otočit doleva"
-rotateRight = "Otočit doprava"
-toggleSidebar = "Přepnout postranní panel"
-toggleBookmarks = "Přepnout záložky"
-print = "Tisk PDF"
-ruler = "Pravítko / Měření"
-draw = "Kreslit"
-redact = "Začernit"
-exitRedaction = "Opustit režim začernění"
-save = "Uložit"
-downloadAll = "Stáhnout vše"
-saveAll = "Uložit vše"
-
-[textAlign]
-left = "Left"
-center = "Center"
-right = "Right"
-
 [pageExtracter]
 header = "Extrahovat stránky"
 placeholder = "(např. 1,2,8 nebo 4,7,12-16 nebo 2n-1)"
@@ -4992,15 +4923,15 @@ title = "Slova k začernění"
 failed = "Při začerňování PDF došlo k chybě."
 
 [redact.manual]
+activate = "Aktivovat nástroj začernění"
+active = "Režim začernění aktivní"
 apply = "Použít"
 applyChanges = "Použít změny"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Trvalé použití, nelze vrátit zpět a data pod začerněním budou smazána"
 boxRedaction = "Začernění tažením rámečku"
-colourPicker = "Výběr barvy"
 colorLabel = "Barva začernění"
-active = "Režim začernění aktivní"
-activate = "Aktivovat nástroj začernění"
+colourPicker = "Výběr barvy"
 controlsTitle = "Ovládání ručního začernění"
 convertPDFToImageLabel = "Převést PDF na PDF-Image (použito k odstranění textu za rámečkem)"
 export = "Exportovat"
@@ -5395,6 +5326,39 @@ title = "Vysoký kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Úplně invertuje všechny barvy v PDF a vytvoří efekt podobný negativu. Vhodné pro tvorbu tmavých verzí dokumentů nebo snížení únavy očí při slabém osvětlení."
 title = "Invertovat všechny barvy"
+
+[rightRail]
+annotations = "Annotations"
+applyRedactionsFirst = "Nejprve použijte začernění"
+closePdf = "Zavřít PDF"
+closeSelected = "Zavřít vybrané soubory"
+deleteSelected = "Smazat vybrané stránky"
+deselectAll = "Zrušit výběr všeho"
+downloadAll = "Stáhnout vše"
+downloadSelected = "Stáhnout vybrané soubory"
+draw = "Kreslit"
+exitRedaction = "Opustit režim začernění"
+exportAll = "Exportovat PDF"
+exportSelected = "Exportovat vybrané stránky"
+formFill = "Vyplnit formulář"
+language = "Jazyk"
+panMode = "Režim posunu"
+print = "Tisk PDF"
+redact = "Začernit"
+rotateLeft = "Otočit doleva"
+rotateRight = "Otočit doprava"
+ruler = "Pravítko / Měření"
+save = "Uložit"
+saveAll = "Uložit vše"
+saveChanges = "Uložit změny"
+search = "Hledat v PDF"
+selectAll = "Vybrat vše"
+selectByNumber = "Vybrat podle čísel stránek"
+toggleAnnotations = "Přepnout viditelnost anotací"
+toggleAttachments = "Přepnout zobrazení příloh"
+toggleBookmarks = "Přepnout záložky"
+toggleSidebar = "Přepnout postranní panel"
+toggleTheme = "Přepnout motiv"
 
 [rotate]
 rotateLeft = "Otočit proti směru hodinových ručiček"
@@ -6233,6 +6197,11 @@ title = "API Dokumentace"
 [tableExtraxt]
 tags = "CSV,Extrakce tabulek,extrahovat,převést"
 
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [theme]
 toggle = "Přepnout motiv"
 
@@ -6507,6 +6476,37 @@ invalid = "Certifikát není v úložišti důvěryhodných certifikátů - zdro
 fileManager = "Správce souborů"
 pageEditor = "Editor stránek"
 viewer = "Prohlížeč"
+
+[viewer]
+cannotPreviewFile = "Nelze zobrazit náhled souboru"
+dualPageView = "Zobrazení dvou stránek"
+firstPage = "První stránka"
+lastPage = "Poslední stránka"
+nextPage = "Další stránka"
+onlyPdfSupported = "Prohlížeč podporuje pouze soubory PDF. Tento soubor má zřejmě jiný formát."
+previousPage = "Předchozí stránka"
+singlePageView = "Zobrazení jedné stránky"
+unknownFile = "Neznámý soubor"
+zoomIn = "Přiblížit"
+zoomOut = "Oddálit"
+
+[viewer.attachments]
+empty = "Tento dokument neobsahuje žádné přílohy"
+loading = "Načítání příloh..."
+noDocument = "Otevřete PDF a zobrazte jeho přílohy."
+noMatch = "Žádné přílohy neodpovídají vašemu hledání"
+noSupport = "Podpora příloh není v tomto prohlížeči k dispozici."
+searchPlaceholder = "Hledat přílohy"
+title = "Přílohy"
+
+[viewer.formBar]
+apply = "Použít změny"
+dismiss = "Skrýt"
+download = "Stáhnout PDF"
+hasFieldsDesc = "Toto PDF obsahuje vyplnitelná pole"
+title = "Formulářová pole"
+unsavedBadge = "Neuloženo"
+unsavedDesc = "Máte neuložené změny"
 
 [viewPdf]
 header = "Zobrazit PDF"

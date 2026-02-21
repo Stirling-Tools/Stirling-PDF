@@ -16,13 +16,13 @@ comingSoon = "Kmalu na voljo"
 confirmClose = "Potrdi zapiranje"
 confirmCloseCancel = "Prekliči"
 confirmCloseConfirm = "Zapri datoteko"
-confirmCloseMessage = "Ali ste prepričani, da želite zapreti to datoteko?"
 confirmCloseDiscard = "Zavrzi spremembe in zapri"
+confirmCloseMessage = "Ali ste prepričani, da želite zapreti to datoteko?"
 confirmCloseSave = "Shrani in zapri"
+confirmCloseSaveFailed = "Shranjeno z napakami. {{count}} file{{plural}} ni bilo mogoče shraniti."
+confirmCloseSaveFailedTitle = "Shranjevanje ni uspelo"
 confirmCloseUnsaved = "Ta datoteka ima neshranjene spremembe."
 confirmCloseUnsavedList = "Imate {{count}} file{{plural}} z neshranjenimi spremembami.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Shranjevanje ni uspelo"
-confirmCloseSaveFailed = "Shranjeno z napakami. {{count}} file{{plural}} ni bilo mogoče shraniti."
 confirmPasswordErrorMessage = "Novo geslo in Potrditev novega gesla se morata ujemati."
 custom = "Po meri..."
 customPosition = "Poljubni položaj"
@@ -45,8 +45,8 @@ edit = "Uredi"
 editYourNewFiles = "Uredite nove datoteke"
 exportAndContinue = "Izvozi in nadaljuj"
 false = "Napačno"
-fileSavedToDisk = "Datoteka shranjena na disk"
 fileNotSavedToDisk = "Ni shranjeno na disk"
+fileSavedToDisk = "Datoteka shranjena na disk"
 fileSelected = "Izbrano: {{filename}}"
 filesSelected = "izbrane datoteke"
 font = "Pisava"
@@ -841,6 +841,14 @@ title = "API končne točke"
 userDefaults = "Privzete vrednosti uporabniških nastavitev"
 userDefaultsDescription = "Nastavite privzete vrednosti za uporabniške nastavitve. Uporabniki jih lahko preglasijo v svojih osebnih nastavitvah."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Odstrani onemogočene možnosti pretvorbe namesto prikaza kot posivljene"
+label = "Privzeto skrij pretvorbe, ki niso na voljo"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Odstrani onemogočena orodja namesto prikaza kot posivljena"
+label = "Privzeto skrij orodja, ki niso na voljo"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Izberite skupine končnih točk za onemogočanje"
 label = "Onemogočene skupine končnih točk"
@@ -848,14 +856,6 @@ label = "Onemogočene skupine končnih točk"
 [admin.settings.endpoints.toRemove]
 description = "Izberite posamezne končne točke za onemogočanje"
 label = "Onemogočene končne točke"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Odstrani onemogočena orodja namesto prikaza kot posivljena"
-label = "Privzeto skrij orodja, ki niso na voljo"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Odstrani onemogočene možnosti pretvorbe namesto prikaza kot posivljene"
-label = "Privzeto skrij pretvorbe, ki niso na voljo"
 
 [admin.settings.enterpriseRequired]
 message = "Za dostop do {{featureName}} je potrebna licenca Enterprise. Ogledate si predstavitvene podatke za referenco."
@@ -1228,6 +1228,14 @@ label = "Začetno uporabniško ime"
 [admin.settings.security.jwt]
 label = "Konfiguracija JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Toleranca časovnega odmika med odjemalcem in strežnikom pri preverjanju žetona (privzeto: 60 sekund)"
+label = "Toleranca časovnega odmika (sekunde)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Življenjska doba žetona za dostop v minutah za namizne odjemalce. Namizne aplikacije se samodejno zaznajo prek User-Agent in prejmejo daljše seje za boljšo uporabniško izkušnjo (privzeto: 43200 = 30 dni)"
+label = "Potek žetona za namizje (minute)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Samodejno odstrani potekle ključe JWT"
 label = "Omogoči čiščenje ključev"
@@ -1236,29 +1244,21 @@ label = "Omogoči čiščenje ključev"
 description = "Samodejno periodično menjaj podpisne ključe JWT"
 label = "Omogoči rotacijo ključev"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Življenjska doba žetona za dostop v minutah za spletne odjemalce (privzeto: 1440 = 24 ur)"
-label = "Potek žetona za splet (minute)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Življenjska doba žetona za dostop v minutah za namizne odjemalce. Namizne aplikacije se samodejno zaznajo prek User-Agent in prejmejo daljše seje za boljšo uporabniško izkušnjo (privzeto: 43200 = 30 dni)"
-label = "Potek žetona za namizje (minute)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Toleranca časovnega odmika med odjemalcem in strežnikom pri preverjanju žetona (privzeto: 60 sekund)"
-label = "Toleranca časovnega odmika (sekunde)"
+[admin.settings.security.jwt.persistence]
+description = "Trajno shranjevanje ključev JWT za preživetje ponovnih zagonov strežnika"
+label = "Omogoči trajnost ključev"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Dovoli osvežitev žetona v toliko minutah po poteku (privzeto: 15 minut, največ 3 poskusi)"
 label = "Obdobje milosti za osvežitev (minute)"
 
-[admin.settings.security.jwt.persistence]
-description = "Trajno shranjevanje ključev JWT za preživetje ponovnih zagonov strežnika"
-label = "Omogoči trajnost ključev"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Zahtevaj HTTPS za piškotke JWT (priporočeno za produkcijo)"
 label = "Varni piškotek"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Življenjska doba žetona za dostop v minutah za spletne odjemalce (privzeto: 1440 = 24 ur)"
+label = "Potek žetona za splet (minute)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Največje število neuspelih poskusov prijave pred zaklepom računa"
@@ -3346,10 +3346,6 @@ desc = "Sestavite večkorakovne poteke z veriženjem dejanj PDF. Idealno za pona
 tags = "potek,sekvenca,avtomatizacija"
 title = "Avtomatiziraj"
 
-[home.formFill]
-desc = "Interaktivno izpolnite polja obrazca PDF z vizualnim urejevalnikom"
-title = "Izpolni obrazec"
-
 [home.autoRename]
 desc = "Samodejno preimenuje datoteko PDF na podlagi zaznane glave"
 tags = "samodejno zaznaj,na osnovi glave,organizira,preimenuj"
@@ -3444,6 +3440,10 @@ title = "Izvleči strani"
 desc = "Odstrani vse interaktivne elemente in obrazce iz PDF-ja"
 tags = "poenostavi,odstrani,interaktivno"
 title = "Zravnaj"
+
+[home.formFill]
+desc = "Interaktivno izpolnite polja obrazca PDF z vizualnim urejevalnikom"
+title = "Izpolni obrazec"
 
 [home.getPdfInfo]
 desc = "Zgrabi vse možne informacije o PDF-jih"
@@ -4247,75 +4247,6 @@ title = "Urejevalnik strani"
 zoomIn = "Povečaj"
 zoomOut = "Pomanjšaj"
 
-[viewer]
-cannotPreviewFile = "Predogled datoteke ni mogoč"
-dualPageView = "Dvo-stranski pogled"
-firstPage = "Prva stran"
-lastPage = "Zadnja stran"
-nextPage = "Naslednja stran"
-onlyPdfSupported = "Pregledovalnik podpira samo PDF datoteke. Ta datoteka je videti v drugačnem formatu."
-previousPage = "Prejšnja stran"
-singlePageView = "Enostranski pogled"
-unknownFile = "Neznana datoteka"
-zoomIn = "Povečaj"
-zoomOut = "Pomanjšaj"
-
-[viewer.attachments]
-title = "Priloge"
-searchPlaceholder = "Išči priloge"
-noSupport = "Podpora za priloge v tem pregledovalniku ni na voljo."
-noDocument = "Odprite PDF, da si ogledate njegove priloge."
-loading = "Nalaganje prilog..."
-empty = "Ta dokument ne vsebuje prilog"
-noMatch = "Nobena priloga ne ustreza vašemu iskanju"
-
-[viewer.formBar]
-title = "Polja obrazca"
-unsavedBadge = "Neshranjeno"
-unsavedDesc = "Imate neshranjene spremembe"
-hasFieldsDesc = "Ta PDF vsebuje izpolnljiva polja"
-dismiss = "Zapri"
-apply = "Uveljavi spremembe"
-download = "Prenesi PDF"
-
-[rightRail]
-closeSelected = "Zapri izbrane datoteke"
-selectAll = "Izberi vse"
-deselectAll = "Prekliči izbor vseh"
-selectByNumber = "Izberi po številkah strani"
-deleteSelected = "Izbriši izbrane strani"
-closePdf = "Zapri PDF"
-exportAll = "Izvozi PDF"
-downloadSelected = "Prenesi izbrane datoteke"
-annotations = "Opombe"
-exportSelected = "Izvozi izbrane strani"
-formFill = "Izpolni obrazec"
-saveChanges = "Shrani spremembe"
-toggleAttachments = "Preklopi priloge"
-toggleTheme = "Preklopi temo"
-language = "Jezik"
-toggleAnnotations = "Preklopi vidnost opomb"
-search = "Išči v PDF"
-panMode = "Način premikanja"
-applyRedactionsFirst = "Najprej uveljavi prekrivanja"
-rotateLeft = "Zavrti levo"
-rotateRight = "Zavrti desno"
-toggleSidebar = "Preklopi stransko vrstico"
-toggleBookmarks = "Preklopi zaznamke"
-print = "Natisni PDF"
-ruler = "Ravnilo / merjenje"
-draw = "Riši"
-redact = "Prekrij"
-exitRedaction = "Izhod iz načina prekrivanja"
-save = "Shrani"
-downloadAll = "Prenesi vse"
-saveAll = "Shrani vse"
-
-[textAlign]
-left = "Levo"
-center = "Na sredino"
-right = "Desno"
-
 [pageExtracter]
 header = "Izvleči strani"
 placeholder = "(npr. 1,2,8 ali 4,7,12-16 ali 2n-1)"
@@ -4992,15 +4923,15 @@ title = "Besede za redakcijo"
 failed = "Pri redakciji PDF-ja je prišlo do napake."
 
 [redact.manual]
+activate = "Aktiviraj orodje za začrnitev"
+active = "Način začrnitve je aktiven"
 apply = "Uveljavi"
 applyChanges = "Uveljavi spremembe"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Trajna uveljavitev, ni je mogoče razveljaviti in podatki spodaj bodo izbrisani"
 boxRedaction = "Redakcija z risanjem polja"
-colourPicker = "Izbirnik barv"
 colorLabel = "Barva začrnitve"
-active = "Način začrnitve je aktiven"
-activate = "Aktiviraj orodje za začrnitev"
+colourPicker = "Izbirnik barv"
 controlsTitle = "Ročni nadzor prekrivanja"
 convertPDFToImageLabel = "Pretvori PDF v PDF-Image (za odstranitev besedila za poljem)"
 export = "Izvozi"
@@ -5395,6 +5326,39 @@ title = "Visok kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Popolnoma preobrne vse barve v PDF-ju in ustvari učinek negativa. Uporabno za »temni način« dokumentov ali zmanjšanje utrujenosti oči v slabih svetlobnih pogojih."
 title = "Preobrni vse barve"
+
+[rightRail]
+annotations = "Opombe"
+applyRedactionsFirst = "Najprej uveljavi prekrivanja"
+closePdf = "Zapri PDF"
+closeSelected = "Zapri izbrane datoteke"
+deleteSelected = "Izbriši izbrane strani"
+deselectAll = "Prekliči izbor vseh"
+downloadAll = "Prenesi vse"
+downloadSelected = "Prenesi izbrane datoteke"
+draw = "Riši"
+exitRedaction = "Izhod iz načina prekrivanja"
+exportAll = "Izvozi PDF"
+exportSelected = "Izvozi izbrane strani"
+formFill = "Izpolni obrazec"
+language = "Jezik"
+panMode = "Način premikanja"
+print = "Natisni PDF"
+redact = "Prekrij"
+rotateLeft = "Zavrti levo"
+rotateRight = "Zavrti desno"
+ruler = "Ravnilo / merjenje"
+save = "Shrani"
+saveAll = "Shrani vse"
+saveChanges = "Shrani spremembe"
+search = "Išči v PDF"
+selectAll = "Izberi vse"
+selectByNumber = "Izberi po številkah strani"
+toggleAnnotations = "Preklopi vidnost opomb"
+toggleAttachments = "Preklopi priloge"
+toggleBookmarks = "Preklopi zaznamke"
+toggleSidebar = "Preklopi stransko vrstico"
+toggleTheme = "Preklopi temo"
 
 [rotate]
 rotateLeft = "Zavrti v nasprotni smeri urinega kazalca"
@@ -6233,6 +6197,11 @@ title = "Dokumentacija API"
 [tableExtraxt]
 tags = "CSV, ekstrakcija tabele, ekstrah, pretvorba"
 
+[textAlign]
+center = "Na sredino"
+left = "Levo"
+right = "Desno"
+
 [theme]
 toggle = "Preklopi temo"
 
@@ -6507,6 +6476,37 @@ invalid = "Certifikat ni v zaupanja vrednem skladišču - vira ni mogoče prever
 fileManager = "Upravitelj datotek"
 pageEditor = "Urejevalnik strani"
 viewer = "Pregledovalnik"
+
+[viewer]
+cannotPreviewFile = "Predogled datoteke ni mogoč"
+dualPageView = "Dvo-stranski pogled"
+firstPage = "Prva stran"
+lastPage = "Zadnja stran"
+nextPage = "Naslednja stran"
+onlyPdfSupported = "Pregledovalnik podpira samo PDF datoteke. Ta datoteka je videti v drugačnem formatu."
+previousPage = "Prejšnja stran"
+singlePageView = "Enostranski pogled"
+unknownFile = "Neznana datoteka"
+zoomIn = "Povečaj"
+zoomOut = "Pomanjšaj"
+
+[viewer.attachments]
+empty = "Ta dokument ne vsebuje prilog"
+loading = "Nalaganje prilog..."
+noDocument = "Odprite PDF, da si ogledate njegove priloge."
+noMatch = "Nobena priloga ne ustreza vašemu iskanju"
+noSupport = "Podpora za priloge v tem pregledovalniku ni na voljo."
+searchPlaceholder = "Išči priloge"
+title = "Priloge"
+
+[viewer.formBar]
+apply = "Uveljavi spremembe"
+dismiss = "Zapri"
+download = "Prenesi PDF"
+hasFieldsDesc = "Ta PDF vsebuje izpolnljiva polja"
+title = "Polja obrazca"
+unsavedBadge = "Neshranjeno"
+unsavedDesc = "Imate neshranjene spremembe"
 
 [viewPdf]
 header = "Ogled PDF-ja"
