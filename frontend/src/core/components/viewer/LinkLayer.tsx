@@ -1,10 +1,8 @@
 import React, { useCallback, useState, useMemo, useRef } from 'react';
 import { useDocumentState } from '@embedpdf/core/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
-import { usePdfLibLinks } from '@app/hooks/usePdfLibLinks';
-import type { PdfLibLink } from '@app/utils/pdfLinkUtils';
+import { useAnnotation } from '@embedpdf/plugin-annotation/react';
+import { PdfAnnotationSubtype, PdfActionType, type PdfLinkAnnoObject } from '@embedpdf/models';
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
@@ -67,23 +65,41 @@ function truncateUrl(url: string, maxLen = 32): string {
   }
 }
 
-function getLinkLabel(link: PdfLibLink): string {
-  if (link.type === 'internal' && link.targetPage !== undefined) {
-    return `Page ${link.targetPage + 1}`;
+function getLinkLabel(annotationLink: PdfLinkAnnoObject): string {
+  if (!annotationLink.target) return 'Open Link';
+
+  if (annotationLink.target.type === 'action') {
+    const action = annotationLink.target.action;
+    if (action.type === PdfActionType.URI) return truncateUrl(action.uri);
+    if (action.type === PdfActionType.Goto) return `Page ${action.destination.pageIndex + 1}`;
+    if (action.type === PdfActionType.RemoteGoto) return `Page ${action.destination.pageIndex + 1}`;
+  } else if (annotationLink.target.type === 'destination') {
+    return `Page ${annotationLink.target.destination.pageIndex + 1}`;
   }
-  if (link.type === 'external' && link.uri) {
-    return truncateUrl(link.uri);
-  }
+
   return 'Open Link';
 }
 
+function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
+  if (!annotationLink.target) return false;
+  if (annotationLink.target.type === 'destination') return true;
+  if (annotationLink.target.type === 'action') {
+    const { type } = annotationLink.target.action;
+    return type === PdfActionType.Goto || type === PdfActionType.RemoteGoto;
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// LinkToolbar
+// ---------------------------------------------------------------------------
 
 interface LinkToolbarProps {
-  link: PdfLibLink;
+  annotationLink: PdfLinkAnnoObject;
   scale: number;
   flipped: boolean;
-  onNavigate: (link: PdfLibLink) => void;
-  onDelete: (link: PdfLibLink) => void;
+  onNavigate: (annotationLink: PdfLinkAnnoObject) => void;
+  onDelete: (annotationLink: PdfLinkAnnoObject) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }
@@ -92,14 +108,14 @@ const TOOLBAR_HEIGHT = 32;
 const TOOLBAR_GAP = 8;
 
 const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
-  ({ link, scale, flipped, onNavigate, onDelete, onMouseEnter, onMouseLeave }) => {
-    const centerX = (link.rect.x + link.rect.width / 2) * scale;
+  ({ annotationLink, scale, flipped, onNavigate, onDelete, onMouseEnter, onMouseLeave }) => {
+    const centerX = (annotationLink.rect.origin.x + annotationLink.rect.size.width / 2) * scale;
     const topY = flipped
-      ? (link.rect.y + link.rect.height) * scale + TOOLBAR_GAP
-      : link.rect.y * scale - TOOLBAR_HEIGHT - TOOLBAR_GAP;
+      ? (annotationLink.rect.origin.y + annotationLink.rect.size.height) * scale + TOOLBAR_GAP
+      : annotationLink.rect.origin.y * scale - TOOLBAR_HEIGHT - TOOLBAR_GAP;
 
-    const isInternal = link.type === 'internal' && link.targetPage !== undefined;
-    const label = getLinkLabel(link);
+    const internal = isInternalLink(annotationLink);
+    const label = getLinkLabel(annotationLink);
 
     return (
       <div
@@ -114,7 +130,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
           className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(link);
+            onDelete(annotationLink);
           }}
           aria-label="Delete link"
           title="Delete link"
@@ -130,12 +146,12 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
           className="pdf-link-toolbar-btn pdf-link-toolbar-btn--go"
           onClick={(e) => {
             e.stopPropagation();
-            onNavigate(link);
+            onNavigate(annotationLink);
           }}
-          aria-label={isInternal ? `Go to page ${(link.targetPage ?? 0) + 1}` : 'Open link'}
-          title={isInternal ? `Go to page ${(link.targetPage ?? 0) + 1}` : link.uri ?? 'Open link'}
+          aria-label={internal ? `Go to page ${annotationLink.target?.type === 'destination' ? annotationLink.target.destination.pageIndex + 1 : ''}` : 'Open link'}
+          title={label}
         >
-          {isInternal ? <PageIcon /> : <ExternalLinkIcon />}
+          {internal ? <PageIcon /> : <ExternalLinkIcon />}
           <span className="pdf-link-toolbar-label">{label}</span>
         </button>
       </div>
@@ -145,46 +161,46 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
 
 LinkToolbar.displayName = 'LinkToolbar';
 
+// ---------------------------------------------------------------------------
+// LinkLayer
+// ---------------------------------------------------------------------------
+
 interface LinkLayerProps {
   documentId: string;
   pageIndex: number;
-  _pageWidth: number;
-  _pageHeight: number;
-  /** Blob/object URL of the current PDF (needed by pdf-lib). */
-  pdfUrl: string | null;
 }
 
-export const LinkLayer: React.FC<LinkLayerProps> = ({
-  documentId,
-  pageIndex,
-  _pageWidth,
-  _pageHeight,
-  pdfUrl,
-}) => {
+export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) => {
   const { provides: scroll } = useScroll(documentId);
-  const { provides: annotation } = useAnnotationCapability();
+  const { state, provides: scope } = useAnnotation(documentId);
   const documentState = useDocumentState(documentId);
 
-  // State
   const [hoveredLinkId, setHoveredLinkId] = useState<string | null>(null);
-  const [deletedLinkIds, setDeletedLinkIds] = useState<Set<string>>(new Set());
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // pdf-lib extraction
-  const { links } = usePdfLibLinks(pdfUrl, pageIndex);
+  // Extract link annotations for this page from EmbedPDF annotation state
+  const linkAnnotations = useMemo<PdfLinkAnnoObject[]>(() => {
+    if (!state) return [];
+    const uids = state.pages[pageIndex] ?? [];
+    const result: PdfLinkAnnoObject[] = [];
+    for (const uid of uids) {
+      const ta = state.byUid[uid];
+      if (
+        ta &&
+        ta.commitState !== 'deleted' &&
+        ta.object.type === PdfAnnotationSubtype.LINK
+      ) {
+        const annotationLink = ta.object as PdfLinkAnnoObject;
+        if (annotationLink.rect.size.width > 0 && annotationLink.rect.size.height > 0) {
+          result.push(annotationLink);
+        }
+      }
+    }
+    return result;
+  }, [state, pageIndex]);
 
-  // EmbedPDF scale factor
+  // EmbedPDF scale factor (annotation rects are in PDF points at scale 1)
   const scale = documentState?.scale ?? 1;
-
-  // Filter visible, non-deleted links
-  const visibleLinks = useMemo(
-    () =>
-      links.filter(
-        (l) => l.rect.width > 0 && l.rect.height > 0 && !deletedLinkIds.has(l.id),
-      ),
-    [links, deletedLinkIds],
-  );
-
 
   const clearLeaveTimer = useCallback(() => {
     if (leaveTimerRef.current) {
@@ -201,9 +217,9 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   }, [clearLeaveTimer]);
 
   const handleLinkMouseEnter = useCallback(
-    (linkId: string) => {
+    (id: string) => {
       clearLeaveTimer();
-      setHoveredLinkId(linkId);
+      setHoveredLinkId(id);
     },
     [clearLeaveTimer],
   );
@@ -221,111 +237,87 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   }, [startLeaveTimer]);
 
   const handleNavigate = useCallback(
-    (link: PdfLibLink) => {
-      if (link.type === 'internal' && link.targetPage !== undefined && scroll) {
+    (annotationLink: PdfLinkAnnoObject) => {
+      if (!annotationLink.target) {
+        setHoveredLinkId(null);
+        return;
+      }
+
+      if (annotationLink.target.type === 'destination' && scroll) {
         scroll.scrollToPage({
-          pageNumber: link.targetPage + 1,
+          pageNumber: annotationLink.target.destination.pageIndex + 1,
           behavior: 'smooth',
         });
-      } else if (link.uri) {
-        try {
-          const url = new URL(link.uri, window.location.href);
-          if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
-            window.open(link.uri, '_blank', 'noopener,noreferrer');
-          } else {
-            console.warn('[LinkLayer] Blocked unsafe URL protocol:', url.protocol);
+      } else if (annotationLink.target.type === 'action') {
+        const action = annotationLink.target.action;
+        if (action.type === PdfActionType.Goto && scroll) {
+          scroll.scrollToPage({
+            pageNumber: action.destination.pageIndex + 1,
+            behavior: 'smooth',
+          });
+        } else if (action.type === PdfActionType.RemoteGoto && scroll) {
+          scroll.scrollToPage({
+            pageNumber: action.destination.pageIndex + 1,
+            behavior: 'smooth',
+          });
+        } else if (action.type === PdfActionType.URI) {
+          const uri = action.uri;
+          try {
+            const url = new URL(uri, window.location.href);
+            if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
+              window.open(uri, '_blank', 'noopener,noreferrer');
+            } else {
+              console.warn('[LinkLayer] Blocked unsafe URL protocol:', url.protocol);
+            }
+          } catch {
+            window.open(uri, '_blank', 'noopener,noreferrer');
           }
-        } catch {
-          window.open(link.uri, '_blank', 'noopener,noreferrer');
         }
       }
+
       setHoveredLinkId(null);
     },
     [scroll],
   );
 
   const handleDelete = useCallback(
-    async (link: PdfLibLink) => {
-      setDeletedLinkIds((prev) => new Set(prev).add(link.id));
+    (annotationLink: PdfLinkAnnoObject) => {
       setHoveredLinkId(null);
-
-      if (!annotation) return;
-
-      try {
-        const result = annotation.getPageAnnotations({ pageIndex });
-
-        let pageAnnotations: any[] = [];
-        if (result && typeof (result as any).toPromise === 'function') {
-          pageAnnotations = await (result as any).toPromise();
-        } else if (result && typeof (result as any).then === 'function') {
-          pageAnnotations = await (result as unknown as Promise<any[]>);
-        } else if (Array.isArray(result)) {
-          pageAnnotations = result;
-        }
-
-        const match = pageAnnotations.find((ann: any) => {
-          if (
-            ann.type !== 2 &&
-            ann.type !== PdfAnnotationSubtype.LINK
-          )
-            return false;
-          if (!ann.rect) return false;
-
-          // EmbedPDF rects: { origin: { x, y }, size: { width, height } }
-          const r = ann.rect;
-          const tol = 2; // tolerance in PDF points
-          return (
-            Math.abs((r.origin?.x ?? r.x ?? 0) - link.rect.x) <= tol &&
-            Math.abs((r.origin?.y ?? r.y ?? 0) - link.rect.y) <= tol &&
-            Math.abs((r.size?.width ?? r.width ?? 0) - link.rect.width) <= tol &&
-            Math.abs((r.size?.height ?? r.height ?? 0) - link.rect.height) <= tol
-          );
-        });
-
-        if (match?.id) {
-          // Use EmbedPDF's native deletion (integrates with history / export)
-          if (typeof (annotation as any).deleteAnnotation === 'function') {
-            (annotation as any).deleteAnnotation(pageIndex, match.id);
-          } else if (typeof (annotation as any).purgeAnnotation === 'function') {
-            (annotation as any).purgeAnnotation(pageIndex, match.id);
-          }
-        }
-      } catch (e) {
-        console.warn('[LinkLayer] Could not delete annotation via EmbedPDF:', e);
-      }
+      if (!scope) return;
+      scope.deleteAnnotation(pageIndex, annotationLink.id);
     },
-    [annotation, pageIndex],
+    [scope, pageIndex],
   );
 
-  if (visibleLinks.length === 0) return null;
+  if (linkAnnotations.length === 0) return null;
 
   return (
     <div
       className="absolute inset-0"
       style={{ pointerEvents: 'none', zIndex: 10 }}
     >
-      {visibleLinks.map((link) => {
-        const isHovered = hoveredLinkId === link.id;
-        const left = link.rect.x * scale;
-        const top = link.rect.y * scale;
-        const width = link.rect.width * scale;
-        const height = link.rect.height * scale;
+      {linkAnnotations.map((annotationLink) => {
+        const isHovered = hoveredLinkId === annotationLink.id;
+        const left = annotationLink.rect.origin.x * scale;
+        const top = annotationLink.rect.origin.y * scale;
+        const width = annotationLink.rect.size.width * scale;
+        const height = annotationLink.rect.size.height * scale;
 
         // Flip toolbar below if link is near the top of the page
-        const flipped = link.rect.y * scale < TOOLBAR_HEIGHT + TOOLBAR_GAP + 4;
+        const flipped = annotationLink.rect.origin.y * scale < TOOLBAR_HEIGHT + TOOLBAR_GAP + 4;
 
         return (
-          <React.Fragment key={link.id}>
+          <React.Fragment key={annotationLink.id}>
             {/* Hit-area overlay */}
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleNavigate(link);
+                handleNavigate(annotationLink);
               }}
               onMouseDown={(e) => e.stopPropagation()}
-              onMouseEnter={() => handleLinkMouseEnter(link.id)}
+              onMouseEnter={() => handleLinkMouseEnter(annotationLink.id)}
               onMouseLeave={handleLinkMouseLeave}
               className={`pdf-link-overlay${isHovered ? ' pdf-link-overlay--active' : ''}`}
               style={{
@@ -338,13 +330,13 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               }}
               role="link"
               tabIndex={0}
-              aria-label={getLinkLabel(link)}
+              aria-label={getLinkLabel(annotationLink)}
             />
 
             {/* Floating toolbar */}
             {isHovered && (
               <LinkToolbar
-                link={link}
+                annotationLink={annotationLink}
                 scale={scale}
                 flipped={flipped}
                 onNavigate={handleNavigate}
