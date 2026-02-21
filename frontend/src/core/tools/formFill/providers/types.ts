@@ -10,7 +10,7 @@
  * The UI components (FormFieldOverlay, FormFill, FormFieldSidebar) consume
  * data through FormFillContext, which delegates to whichever provider is active.
  */
-import type { FormField } from '@proprietary/tools/formFill/types';
+import type { FormField } from '@app/tools/formFill/types';
 
 export interface IFormDataProvider {
   /** Unique identifier for the provider (for debugging/logging) */

@@ -33,6 +33,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
@@ -71,7 +73,7 @@ public class WatermarkController {
                     "This endpoint adds a watermark to a given PDF file. Users can specify the"
                             + " watermark type (text or image), rotation, opacity, width spacer, and"
                             + " height spacer. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> addWatermark(@ModelAttribute AddWatermarkRequest request)
+    public ResponseEntity<byte[]> addWatermark(@Valid @ModelAttribute AddWatermarkRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
@@ -237,8 +239,8 @@ public class WatermarkController {
 
         // Calculating the number of rows and columns.
 
-        int watermarkRows = (int) (pageHeight / newWatermarkHeight + 1);
-        int watermarkCols = (int) (pageWidth / newWatermarkWidth + 1);
+        int watermarkRows = Math.min((int) (pageHeight / newWatermarkHeight + 1), 10_000);
+        int watermarkCols = Math.min((int) (pageWidth / newWatermarkWidth + 1), 10_000);
 
         // Add the text watermark
         for (int i = 0; i <= watermarkRows; i++) {
@@ -290,9 +292,15 @@ public class WatermarkController {
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
         int watermarkRows =
-                (int) ((pageHeight + heightSpacer) / (desiredPhysicalHeight + heightSpacer));
+                Math.min(
+                        (int)
+                                ((pageHeight + heightSpacer)
+                                        / (desiredPhysicalHeight + heightSpacer)),
+                        10_000);
         int watermarkCols =
-                (int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer));
+                Math.min(
+                        (int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer)),
+                        10_000);
 
         for (int i = 0; i < watermarkRows; i++) {
             for (int j = 0; j < watermarkCols; j++) {

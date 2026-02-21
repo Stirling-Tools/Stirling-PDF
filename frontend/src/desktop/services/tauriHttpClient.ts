@@ -59,7 +59,9 @@ interface Interceptors {
 class TauriHttpClient {
   public defaults: TauriHttpRequestConfig = {
     baseURL: '',
-    headers: {},
+    headers: {
+      'User-Agent': 'StirlingPDF-Desktop/1.0 Tauri',
+    },
     timeout: 120000,
     responseType: 'json',
     withCredentials: false, // Desktop doesn't need credentials (backend has allowCredentials=false)

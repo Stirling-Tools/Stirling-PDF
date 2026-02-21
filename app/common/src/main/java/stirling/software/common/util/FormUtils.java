@@ -1,4 +1,4 @@
-package stirling.software.proprietary.util;
+package stirling.software.common.util;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -49,9 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.FormFieldWithCoordinates;
-import stirling.software.common.util.ApplicationContextProvider;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.RegexPatternUtils;
 
 @Slf4j
 @UtilityClass
