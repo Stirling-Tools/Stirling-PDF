@@ -34,7 +34,7 @@
     "@emotion/styled": "^11.14.1",
     "@iconify/react": "^6.0.2",
     "@mantine/core": "^8.3.1",
-    "@mantine/dates": "^8.3.1",
+    "@mantine/dates": "^8.3.15",
     "@mantine/dropzone": "^8.3.1",
     "@mantine/hooks": "^8.3.1",
     "@mui/icons-material": "^7.3.2",
