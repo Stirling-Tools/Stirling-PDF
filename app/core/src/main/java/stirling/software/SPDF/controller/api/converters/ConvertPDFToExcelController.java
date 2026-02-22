@@ -8,6 +8,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -51,41 +53,41 @@ public class ConvertPDFToExcelController {
                 GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
         try (PDDocument document = pdfDocumentFactory.load(request);
-                XSSFWorkbook workbook = new XSSFWorkbook()) {
+                XSSFWorkbook workbook = new XSSFWorkbook();
+                ObjectExtractor extractor = new ObjectExtractor(document)) {
 
             List<Integer> pages = request.getPageNumbersList(document, true);
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
             int sheetCount = 0;
 
             for (int pageNum : pages) {
-                try (ObjectExtractor extractor = new ObjectExtractor(document)) {
-                    Page page = extractor.extract(pageNum);
-                    List<Table> tables = sea.extract(page);
+                Page page = extractor.extract(pageNum);
+                List<Table> tables = sea.extract(page);
 
-                    for (int tableIdx = 0; tableIdx < tables.size(); tableIdx++) {
-                        Table table = tables.get(tableIdx);
-                        String sheetName =
-                                tables.size() == 1
-                                        ? String.format(Locale.ROOT, "Page %d", pageNum)
-                                        : String.format(
-                                                Locale.ROOT,
-                                                "Page %d Table %d",
-                                                pageNum,
-                                                tableIdx + 1);
+                for (int tableIdx = 0; tableIdx < tables.size(); tableIdx++) {
+                    Table table = tables.get(tableIdx);
+                    String sheetName =
+                            tables.size() == 1
+                                    ? String.format(Locale.ROOT, "Page %d", pageNum)
+                                    : String.format(
+                                            Locale.ROOT,
+                                            "Page %d Table %d",
+                                            pageNum,
+                                            tableIdx + 1);
 
-                        Sheet sheet = workbook.createSheet(sheetName);
-                        List<List<RectangularTextContainer>> rows = table.getRows();
+                    sheetName = getUniqueSheetName(workbook, sheetName);
+                    Sheet sheet = workbook.createSheet(sheetName);
+                    List<List<RectangularTextContainer>> rows = table.getRows();
 
-                        for (int rowIdx = 0; rowIdx < rows.size(); rowIdx++) {
-                            Row excelRow = sheet.createRow(rowIdx);
-                            List<RectangularTextContainer> cells = rows.get(rowIdx);
-                            for (int cellIdx = 0; cellIdx < cells.size(); cellIdx++) {
-                                Cell excelCell = excelRow.createCell(cellIdx);
-                                excelCell.setCellValue(cells.get(cellIdx).getText());
-                            }
+                    for (int rowIdx = 0; rowIdx < rows.size(); rowIdx++) {
+                        Row excelRow = sheet.createRow(rowIdx);
+                        List<RectangularTextContainer> cells = rows.get(rowIdx);
+                        for (int cellIdx = 0; cellIdx < cells.size(); cellIdx++) {
+                            Cell excelCell = excelRow.createCell(cellIdx);
+                            excelCell.setCellValue(cells.get(cellIdx).getText());
                         }
-                        sheetCount++;
                     }
+                    sheetCount++;
                 }
             }
 
@@ -105,5 +107,21 @@ public class ConvertPDFToExcelController {
 
             return ResponseEntity.ok().headers(headers).body(baos.toByteArray());
         }
+    }
+
+    private String getUniqueSheetName(Workbook workbook, String baseName) {
+        String safeName = WorkbookUtil.createSafeSheetName(baseName);
+        String uniqueName = safeName;
+        int count = 1;
+        while (workbook.getSheet(uniqueName) != null) {
+            String suffix = " (" + count + ")";
+            if (safeName.length() + suffix.length() > 31) {
+                uniqueName = safeName.substring(0, 31 - suffix.length()) + suffix;
+            } else {
+                uniqueName = safeName + suffix;
+            }
+            count++;
+        }
+        return uniqueName;
     }
 }
