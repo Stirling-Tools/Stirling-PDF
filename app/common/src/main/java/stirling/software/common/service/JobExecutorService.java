@@ -254,10 +254,11 @@ public class JobExecutorService {
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
             } catch (RuntimeException e) {
-                // Check if this is a wrapped typed exception that should be handled by
-                // GlobalExceptionHandler
+                // Check if this is a typed exception that should be handled by
+                // GlobalExceptionHandler (either directly or wrapped)
                 Throwable cause = e.getCause();
-                if (cause instanceof stirling.software.common.util.ExceptionUtils.BaseAppException
+                if (e instanceof IllegalArgumentException
+                        || cause instanceof stirling.software.common.util.ExceptionUtils.BaseAppException
                         || cause
                                 instanceof
                                 stirling.software.common.util.ExceptionUtils
