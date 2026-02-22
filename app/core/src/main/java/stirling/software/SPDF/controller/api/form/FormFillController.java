@@ -164,8 +164,9 @@ public class FormFillController {
 
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 StringWriter sw = new StringWriter()) {
+
+            FormUtils.repairMissingWidgetPageReferences(document);
 
             if (data != null && !data.isEmpty()) {
                 Map<String, String> values =
@@ -215,6 +216,8 @@ public class FormFillController {
                 Workbook workbook = new XSSFWorkbook();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
+            FormUtils.repairMissingWidgetPageReferences(document);
+
             if (data != null && !data.isEmpty()) {
                 Map<String, String> values =
                         objectMapper.readValue(
@@ -235,7 +238,7 @@ public class FormFillController {
             for (FormUtils.FormFieldInfo field : fields) {
                 Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(field.name());
-                row.createCell(1).setCellValue(field.value());
+                row.createCell(1).setCellValue(FormUtils.safeValue(field.value()));
             }
 
             // Auto-size columns
