@@ -40,6 +40,7 @@ print_versions() {
   command_exists pdfinfo && pdfinfo -v 2>&1 | head -n 1 | log
   command_exists fontforge && fontforge --version 2>&1 | head -n 1 | log
   command_exists unpaper && unpaper --version 2>&1 | head -n 1 | log
+  command_exists ebook-convert && ebook-convert --version 2>&1 | head -n 1 | log
   log "-----------------------"
   set -o pipefail
 }

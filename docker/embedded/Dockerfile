@@ -2,7 +2,7 @@
 
 FROM ubuntu:noble AS calibre-build
 
-ARG CALIBRE_VERSION=9.2.1
+ARG CALIBRE_VERSION=9.3.1
 
 RUN set -eux; \
     apt-get update; \
@@ -192,6 +192,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+ENV JAVA_TOOL_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+
 WORKDIR /app
 
 COPY build.gradle settings.gradle gradlew ./
@@ -244,7 +250,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Build PDF Tools (QPDF and ImageMagick 7).
 FROM ubuntu:noble AS pdf-tools-build
 ARG QPDF_VERSION=12.3.2
-ARG IM_VERSION=7.1.1-43
+ARG IM_VERSION=7.1.2-13
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
       libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
@@ -283,6 +289,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 ARG UNOSERVER_VERSION=3.6
 
 RUN set -eux; \
+    apt-get update; \
+    # Add LibreOffice Fresh PPA for latest version (26.2.x)
+    apt-get install -y --no-install-recommends software-properties-common; \
+    add-apt-repository -y ppa:libreoffice/ppa; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       # Core tools
