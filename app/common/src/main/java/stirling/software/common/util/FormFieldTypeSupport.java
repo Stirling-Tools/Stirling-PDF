@@ -60,8 +60,7 @@ public enum FormFieldTypeSupport {
                 throws IOException {
             PDTextField textField = (PDTextField) field;
             if (definition.fontSize() != null && definition.fontSize() > 0) {
-                textField.setDefaultAppearance(
-                        "/Helv " + definition.fontSize() + " Tf 0 g");
+                textField.setDefaultAppearance("/Helv " + definition.fontSize() + " Tf 0 g");
             }
             if (Boolean.TRUE.equals(definition.multiline())) {
                 textField.setMultiline(true);

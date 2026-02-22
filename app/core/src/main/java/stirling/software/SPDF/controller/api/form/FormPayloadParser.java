@@ -28,8 +28,8 @@ final class FormPayloadParser {
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
     private static final TypeReference<List<FormUtils.ModifyFormFieldDefinition>>
             MODIFY_FIELD_LIST_TYPE = new TypeReference<>() {};
-    private static final TypeReference<List<FormUtils.NewFormFieldDefinition>>
-            NEW_FIELD_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<List<FormUtils.NewFormFieldDefinition>> NEW_FIELD_LIST_TYPE =
+            new TypeReference<>() {};
     private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
 
     private FormPayloadParser() {}
