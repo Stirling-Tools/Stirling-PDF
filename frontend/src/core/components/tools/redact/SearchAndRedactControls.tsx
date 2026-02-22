@@ -43,7 +43,7 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
     return () => {
       try {
         clearSearch();
-      } catch (e) {
+      } catch (_) {
         // Ignore if bridge is already gone
       }
     };
@@ -94,7 +94,7 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
         setQuery('');
         try {
           clearSearch();
-        } catch (e) {
+        } catch (_) {
           // Ignore
         }
       } else {
