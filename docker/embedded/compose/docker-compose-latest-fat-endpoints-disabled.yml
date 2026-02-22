@@ -22,6 +22,8 @@ services:
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "false"
+      # STIRLING_JVM_PROFILE: "balanced"  # Options: balanced (G1GC, default), performance (Shenandoah)
+      # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active profile
       PUID: 1002
       PGID: 1002
       UMASK: "022"

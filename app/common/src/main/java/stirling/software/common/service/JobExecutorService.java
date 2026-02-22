@@ -35,7 +35,7 @@ public class JobExecutorService {
     private final HttpServletRequest request;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
-    private final ExecutorService executor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
+    private final ExecutorService executor = ExecutorFactory.newVirtualThreadExecutor();
     private final long effectiveTimeoutMs;
 
     @Autowired(required = false)
@@ -258,7 +258,9 @@ public class JobExecutorService {
                 // GlobalExceptionHandler (either directly or wrapped)
                 Throwable cause = e.getCause();
                 if (e instanceof IllegalArgumentException
-                        || cause instanceof stirling.software.common.util.ExceptionUtils.BaseAppException
+                        || cause
+                                instanceof
+                                stirling.software.common.util.ExceptionUtils.BaseAppException
                         || cause
                                 instanceof
                                 stirling.software.common.util.ExceptionUtils

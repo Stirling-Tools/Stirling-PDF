@@ -47,10 +47,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -66,6 +62,11 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+
 @SecurityApi
 @Slf4j
 @RequiredArgsConstructor
@@ -77,7 +78,7 @@ public class GetInfoOnPDF {
     private static final String PAGE_PREFIX = "Page ";
     private static final long MAX_FILE_SIZE = 100L * 1024 * 1024;
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final VeraPDFService veraPDFService;

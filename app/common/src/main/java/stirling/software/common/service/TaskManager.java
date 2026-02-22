@@ -42,7 +42,8 @@ public class TaskManager {
 
     private final FileStorage fileStorage;
     private final ScheduledExecutorService cleanupExecutor =
-            Executors.newSingleThreadScheduledExecutor();
+            Executors.newSingleThreadScheduledExecutor(
+                    Thread.ofVirtual().name("task-cleanup-", 0).factory());
 
     /** Initialize the task manager and start the cleanup scheduler */
     public TaskManager(FileStorage fileStorage) {

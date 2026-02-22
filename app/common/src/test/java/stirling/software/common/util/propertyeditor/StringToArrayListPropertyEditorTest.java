@@ -143,11 +143,21 @@ class StringToArrayListPropertyEditorTest {
     }
 
     @Test
-    void testSetAsText_InvalidStructure() {
-        // Arrange - this JSON doesn't match RedactionArea structure
+    void testSetAsText_UnknownProperties() {
+        // Arrange - this JSON contains properties not in RedactionArea
+        // With FAIL_ON_UNKNOWN_PROPERTIES disabled, this should ignore the unknown properties
         String json = "[{\"invalid\":\"structure\"}]";
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> editor.setAsText(json));
+        // Act
+        editor.setAsText(json);
+        Object value = editor.getValue();
+
+        // Assert
+        assertNotNull(value, "Value should not be null");
+        assertInstanceOf(List.class, value, "Value should be a List");
+
+        @SuppressWarnings("unchecked")
+        List<RedactionArea> list = (List<RedactionArea>) value;
+        assertEquals(1, list.size(), "List should have 1 entry (empty object)");
     }
 }

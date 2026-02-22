@@ -191,6 +191,31 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Checks whether the given IOException indicates that the client disconnected before the
+     * response could be written (broken pipe, connection reset, etc.). When this happens there is
+     * no point in serialising a {@link ProblemDetail} body because the socket is already closed —
+     * and attempting to do so may trigger a secondary {@code HttpMessageNotWritableException} if
+     * the response Content-Type was already committed as a non-JSON type (e.g. image/png).
+     */
+    private static boolean isClientDisconnectException(IOException ex) {
+        // Walk the causal chain — Jetty/Tomcat may wrap the low-level SocketException
+        Throwable current = ex;
+        while (current != null) {
+            String msg = current.getMessage();
+            if (msg != null) {
+                String lower = msg.toLowerCase(java.util.Locale.ROOT);
+                if (lower.contains("broken pipe")
+                        || lower.contains("connection reset")
+                        || lower.contains("an established connection was aborted")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    /**
      * Helper method to create a standardized ProblemDetail response for exceptions with error
      * codes.
      *
@@ -1106,6 +1131,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ProblemDetail> handleIOException(
             IOException ex, HttpServletRequest request) {
+
+        // Broken pipe / connection reset means the client disconnected.
+        // Attempting to write a ProblemDetail response will fail because the
+        // response Content-Type may already be committed (e.g. image/png) and
+        // the client is gone anyway. Log at WARN and return an empty body.
+        if (isClientDisconnectException(ex)) {
+            log.warn("Client disconnected at {}: {}", request.getRequestURI(), ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
         // Check if this is a PDF-specific error and wrap it appropriately
         IOException processedException =

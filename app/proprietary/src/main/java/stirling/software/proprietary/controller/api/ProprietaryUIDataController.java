@@ -15,9 +15,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Data;
@@ -53,6 +50,9 @@ import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @ProprietaryUiDataApi
@@ -414,7 +414,7 @@ public class ProprietaryUIDataController {
         String settingsJson;
         try {
             settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error converting settings map", e);
             return ResponseEntity.status(500).build();
         }

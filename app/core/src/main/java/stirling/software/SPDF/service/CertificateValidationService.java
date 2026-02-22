@@ -427,7 +427,8 @@ public class CertificateValidationService {
             try (InputStream certStream =
                     getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
                 if (certStream == null) {
-                    log.warn("Bundled Mozilla CA certificate file not found in resources");
+                    log.debug(
+                            "Bundled Mozilla CA certificate file not found in resources — using Java system trust store only");
                     return;
                 }
 
