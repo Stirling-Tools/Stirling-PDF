@@ -222,14 +222,15 @@ COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 
-# Build PDF Tools (QPDF and ImageMagick 7).
+# Build PDF Tools (QPDF, ImageMagick 7, and Ghostscript).
 FROM ubuntu:noble AS pdf-tools-build
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.1-43
+ARG GS_VERSION=10.06.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
       libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
-      libltdl-dev libtool && \
+      libltdl-dev libtool libfontconfig1-dev && \
     # Build QPDF
     curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz && \
     cd "qpdf-${QPDF_VERSION}" && \
@@ -247,6 +248,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /usr/local/etc/ImageMagick-7/policy.xml && \
     sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
     sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
+    cd .. && \
+    # Build Ghostscript 10.06.0
+    GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
+    curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz && \
+    cd "ghostscript-${GS_VERSION}" && \
+    ./configure \
+      --prefix=/usr/local \
+      --without-x \
+      --disable-cups \
+      --disable-gtk \
+      --with-system-libjpeg \
+      --with-system-zlib \
+      --with-system-libpng \
+      --with-system-libtiff \
+      --disable-shared && \
+    make -j"$(nproc)" && \
+    make install && \
+    cd .. && \
     ldconfig /usr/local/lib
 
 
@@ -267,7 +286,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils fontforge ghostscript \
+      ffmpeg poppler-utils fontforge \
       gosu unpaper \
       # Fonts: full CJK coverage retained
       fonts-dejavu \
@@ -427,8 +446,8 @@ RUN set -eux; \
     rm -rf /usr/share/bug /usr/share/lintian /usr/share/linda \
            /var/lib/dpkg/info/*.md5sums \
            /var/log/dpkg.log /var/log/apt/* \
-           /usr/share/ghostscript/*/doc \
-           /usr/share/ghostscript/*/examples \
+           /usr/local/share/ghostscript/*/doc \
+           /usr/local/share/ghostscript/*/examples \
            /usr/share/ImageMagick-*/doc \
            /usr/share/ImageMagick-*/www; \
     \
@@ -449,6 +468,8 @@ COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
 COPY --from=pdf-tools-build /usr/local/bin/magick /usr/bin/magick
 COPY --from=pdf-tools-build /usr/local/lib/libMagick* /usr/local/lib/
 COPY --from=pdf-tools-build /usr/local/etc/ImageMagick-7 /usr/local/etc/ImageMagick-7
+COPY --from=pdf-tools-build /usr/local/bin/gs /usr/local/bin/gs
+COPY --from=pdf-tools-build /usr/local/share/ghostscript /usr/local/share/ghostscript
 RUN ldconfig /usr/local/lib
 
 # ---------------------------------------------------------------------------

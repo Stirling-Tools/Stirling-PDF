@@ -1,6 +1,32 @@
 # Backend ultra-lite Dockerfile - Java Spring Boot with minimal dependencies and build stage
 # ========================================
-# STAGE 1: Build stage - Gradle
+# STAGE 1: Build Ghostscript 10.06.0 from source
+# ========================================
+FROM alpine:3.23.2 AS gs-build
+ARG GS_VERSION=10.06.0
+RUN apk add --no-cache \
+      build-base curl \
+      libjpeg-turbo-dev libpng-dev tiff-dev zlib-dev \
+      fontconfig-dev && \
+    GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
+    curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz && \
+    cd "ghostscript-${GS_VERSION}" && \
+    ./configure \
+      --prefix=/usr/local \
+      --without-x \
+      --disable-cups \
+      --disable-gtk \
+      --with-system-libjpeg \
+      --with-system-zlib \
+      --with-system-libpng \
+      --with-system-libtiff \
+      --disable-shared && \
+    make -j"$(nproc)" && \
+    make install && \
+    cd ..
+
+# ========================================
+# STAGE 2: Build stage - Gradle
 # ========================================
 FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
 
@@ -51,6 +77,8 @@ COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
 COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
+COPY --from=gs-build /usr/local/bin/gs /usr/local/bin/gs
+COPY --from=gs-build /usr/local/share/ghostscript /usr/local/share/ghostscript
 
 # Set up necessary directories and permissions
 RUN apk add --no-cache bash \
@@ -70,8 +98,11 @@ RUN apk add --no-cache bash \
         shadow \
         su-exec \
         openjdk21-jre \
-        ghostscript \
-        fontforge && \
+        fontforge \
+        libjpeg-turbo \
+        libpng \
+        tiff \
+        fontconfig && \
     # User permissions
     mkdir -p /configs /configs/heap_dumps /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf /pipeline/watchedFolders /pipeline/finishedFolders && \
     chmod +x /scripts/*.sh && \
