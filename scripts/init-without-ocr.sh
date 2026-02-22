@@ -439,7 +439,9 @@ generate_aot_cache() {
   # Note: DatabaseConfig reads System.getProperty("stirling.datasource.url") to override
   # the default file-based H2 URL. We use MODE=PostgreSQL to match the production config.
   # Redirect both stdout and stderr to suppress duplicate startup logs (banner + Spring init).
-  java -Xmx512m -XX:+UseCompactObjectHeaders \
+  # IMPORTANT: COMPRESSED_OOPS_FLAG must match the runtime setting to avoid AOT cache
+  # invalidation on restart ("saved state of UseCompressedOops ... is different" error).
+  java -Xmx512m -XX:+UseCompactObjectHeaders ${COMPRESSED_OOPS_FLAG} \
        -Xlog:aot=error \
        -XX:AOTMode=record \
        -XX:AOTConfiguration="$aot_conf" \
@@ -462,7 +464,8 @@ generate_aot_cache() {
   # Uses less memory than the training run.
   # -Xlog:aot=error: same as record phase — suppress harmless skip/preload warnings.
   # Redirect both stdout and stderr to avoid polluting container logs.
-  if java -Xmx256m -XX:+UseCompactObjectHeaders \
+  # IMPORTANT: COMPRESSED_OOPS_FLAG must match both RECORD and RUNTIME.
+  if java -Xmx256m -XX:+UseCompactObjectHeaders ${COMPRESSED_OOPS_FLAG} \
        -Xlog:aot=error \
        -XX:AOTMode=create \
        -XX:AOTConfiguration="$aot_conf" \
@@ -487,6 +490,27 @@ CONTAINER_MEM_MB=$(detect_container_memory_mb)
 JVM_PROFILE="${STIRLING_JVM_PROFILE:-balanced}"
 compute_dynamic_memory "$CONTAINER_MEM_MB" "$JVM_PROFILE"
 MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
+
+# ---------- Compressed Oops Detection ----------
+# AOT/CDS cache is sensitive to UseCompressedOops. The setting must be identical
+# between the training run (generate_aot_cache) and all subsequent runtime boots.
+# With small -Xmx during training the JVM defaults to +UseCompressedOops, but at
+# runtime a large MaxRAMPercentage (e.g. 50% of 64GB ≈ 32GB) may cause the JVM to
+# disable it, invalidating the cache. We compute the expected max heap and lock the
+# flag so every invocation agrees.
+if [ "$CONTAINER_MEM_MB" -gt 0 ] 2>/dev/null; then
+  MAX_HEAP_MB=$((CONTAINER_MEM_MB * DYNAMIC_MAX_RAM_PCT / 100))
+  # JVM disables compressed oops when max heap >= ~32 GB (exact threshold varies
+  # by alignment / JVM build). Use a conservative 31744 MB (~31 GB) cutoff.
+  if [ "$MAX_HEAP_MB" -ge 31744 ]; then
+    COMPRESSED_OOPS_FLAG="-XX:-UseCompressedOops"
+  else
+    COMPRESSED_OOPS_FLAG="-XX:+UseCompressedOops"
+  fi
+else
+  # Cannot detect memory — default matches small-heap behaviour
+  COMPRESSED_OOPS_FLAG="-XX:+UseCompressedOops"
+fi
 
 # ---------- JVM Profile Selection ----------
 # Resolve JAVA_BASE_OPTS from profile system or user override.
@@ -555,8 +579,10 @@ fi
 # ---------- Clean deprecated/invalid JVM flags ----------
 # Remove UseCompressedClassPointers (deprecated in Java 25+ with Lilliput)
 JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedClassPointers//g')
-# Remove UseCompressedOops (let JVM use defaults; explicitly disabling wastes memory)
+# Remove any existing UseCompressedOops (we manage it explicitly for AOT consistency)
 JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedOops//g')
+# Append the computed compressed oops flag (must match AOT training)
+JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${COMPRESSED_OOPS_FLAG}"
 
 # ---------- AOT Cache Management (Project Leyden) ----------
 # Strip any legacy CDS/AOT references from base opts (we manage AOT dynamically below)
