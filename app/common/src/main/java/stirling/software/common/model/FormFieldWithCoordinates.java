@@ -94,5 +94,8 @@ public class FormFieldWithCoordinates {
 
         @Schema(description = "Font size in PDF points")
         private Float fontSize;
+
+        @Schema(description = "CropBox height in PDF points (used for Y-flip)")
+        private Float cropBoxHeight;
     }
 }

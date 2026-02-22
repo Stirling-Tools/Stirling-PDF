@@ -30,7 +30,16 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 import { useDebouncedCallback } from '@mantine/hooks';
-import type { FormField, FormFillState, WidgetCoordinates } from '@app/tools/formFill/types';
+import type {
+  FormField,
+  FormFillState,
+  FormMode,
+  WidgetCoordinates,
+  NewFieldDefinition,
+  ModifyFieldDefinition,
+  FieldCreationState,
+  FieldEditState,
+} from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
 import { PdfLibFormProvider } from '@app/tools/formFill/providers/PdfLibFormProvider';
 import { PdfBoxFormProvider } from '@app/tools/formFill/providers/PdfBoxFormProvider';
@@ -203,6 +212,44 @@ export interface FormFillContextValue {
   setProviderMode: (mode: 'pdflib' | 'pdfbox') => void;
   /** The file ID that the current form fields belong to (null if no fields loaded) */
   forFileId: string | null;
+
+  // --- Mode management (Create / Modify) ---
+  /** Current active mode */
+  mode: FormMode;
+  /** Switch the active mode */
+  setMode: (mode: FormMode) => void;
+
+  // --- Create mode state ---
+  /** Creation state (pending fields, placing type, drag rect) */
+  creationState: FieldCreationState;
+  /** Set the field type being placed (null to cancel placement) */
+  setPlacingFieldType: (type: import('@app/tools/formFill/types').FormFieldType | null) => void;
+  /** Add a pending field to the creation queue */
+  addPendingField: (field: NewFieldDefinition) => void;
+  /** Remove a pending field by index */
+  removePendingField: (index: number) => void;
+  /** Update a pending field by index */
+  updatePendingField: (index: number, field: NewFieldDefinition) => void;
+  /** Set the drag rectangle during creation */
+  setCreationDragRect: (rect: FieldCreationState['dragRect']) => void;
+  /** Commit all pending fields to the backend and refresh */
+  commitNewFields: (file: File | Blob) => Promise<Blob>;
+
+  // --- Modify mode state ---
+  /** Edit state (selected field, interaction, pending rect) */
+  editState: FieldEditState;
+  /** Update the edit state */
+  setEditState: (state: Partial<FieldEditState>) => void;
+  /** Pending field modifications keyed by field name (coordinates + properties) */
+  modifiedFields: Map<string, Partial<ModifyFieldDefinition>>;
+  /** Record a coordinate change for a field */
+  updateFieldCoordinates: (fieldName: string, coords: { x: number; y: number; width: number; height: number }) => void;
+  /** Record a property change for a field (fontSize, readOnly, multiline, etc.) */
+  updateFieldProperties: (fieldName: string, props: Partial<ModifyFieldDefinition>) => void;
+  /** Commit all field modifications to the backend and refresh */
+  commitFieldModifications: (file: File | Blob) => Promise<Blob>;
+  /** Whether there are uncommitted changes in create or modify mode */
+  hasUncommittedChanges: boolean;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -302,6 +349,118 @@ export function FormFillProvider({
   // External values store — values live HERE, not in the reducer.
   // This prevents full context re-renders on every keystroke.
   const [valuesStore] = useState(() => new FormValuesStore());
+
+  // --- Mode / Create / Modify state ---
+  const [formMode, setFormMode] = useState<FormMode>('fill');
+  const [creationState, setCreationState] = useState<FieldCreationState>({
+    pendingFields: [],
+    placingFieldType: null,
+    dragRect: null,
+  });
+  const [editState, setEditStateRaw] = useState<FieldEditState>({
+    selectedFieldName: null,
+    interaction: 'idle',
+    pendingRect: null,
+  });
+  const [modifiedFields, setModifiedFields] = useState<Map<string, Partial<ModifyFieldDefinition>>>(
+    () => new Map()
+  );
+
+  const setMode = useCallback((mode: FormMode) => {
+    setFormMode(mode);
+    // Reset mode-specific state when switching
+    setCreationState({ pendingFields: [], placingFieldType: null, dragRect: null });
+    setEditStateRaw({ selectedFieldName: null, interaction: 'idle', pendingRect: null });
+    setModifiedFields(new Map());
+  }, []);
+
+  const setPlacingFieldType = useCallback((type: import('@app/tools/formFill/types').FormFieldType | null) => {
+    setCreationState(prev => ({ ...prev, placingFieldType: type, dragRect: null }));
+  }, []);
+
+  const addPendingField = useCallback((field: NewFieldDefinition) => {
+    setCreationState(prev => ({
+      ...prev,
+      pendingFields: [...prev.pendingFields, field],
+      placingFieldType: null,
+      dragRect: null,
+    }));
+  }, []);
+
+  const removePendingField = useCallback((index: number) => {
+    setCreationState(prev => ({
+      ...prev,
+      pendingFields: prev.pendingFields.filter((_, i) => i !== index),
+    }));
+  }, []);
+
+  const updatePendingField = useCallback((index: number, field: NewFieldDefinition) => {
+    setCreationState(prev => ({
+      ...prev,
+      pendingFields: prev.pendingFields.map((f, i) => i === index ? field : f),
+    }));
+  }, []);
+
+  const setCreationDragRect = useCallback((rect: FieldCreationState['dragRect']) => {
+    setCreationState(prev => ({ ...prev, dragRect: rect }));
+  }, []);
+
+  const commitNewFields = useCallback(async (file: File | Blob): Promise<Blob> => {
+    const provider = providerRef.current;
+    if (!provider.addFields) {
+      throw new Error('Current provider does not support adding fields');
+    }
+    const blob = await provider.addFields(file, creationState.pendingFields);
+    // Clear pending fields after successful commit
+    setCreationState(prev => ({ ...prev, pendingFields: [] }));
+    return blob;
+  }, [creationState.pendingFields]);
+
+  const setEditState = useCallback((partial: Partial<FieldEditState>) => {
+    setEditStateRaw(prev => ({ ...prev, ...partial }));
+  }, []);
+
+  const updateFieldCoordinates = useCallback((fieldName: string, coords: { x: number; y: number; width: number; height: number }) => {
+    setModifiedFields(prev => {
+      const next = new Map(prev);
+      const existing = next.get(fieldName) || {};
+      next.set(fieldName, { ...existing, x: coords.x, y: coords.y, width: coords.width, height: coords.height });
+      return next;
+    });
+  }, []);
+
+  const updateFieldProperties = useCallback((fieldName: string, props: Partial<ModifyFieldDefinition>) => {
+    setModifiedFields(prev => {
+      const next = new Map(prev);
+      const existing = next.get(fieldName) || {};
+      next.set(fieldName, { ...existing, ...props });
+      return next;
+    });
+  }, []);
+
+  const commitFieldModifications = useCallback(async (file: File | Blob): Promise<Blob> => {
+    const provider = providerRef.current;
+    if (!provider.modifyFields) {
+      throw new Error('Current provider does not support modifying fields');
+    }
+    const updates: ModifyFieldDefinition[] = [];
+    for (const [fieldName, partial] of modifiedFields) {
+      updates.push({
+        targetName: fieldName,
+        ...partial,
+      });
+    }
+    if (updates.length === 0) {
+      throw new Error('No field modifications to commit');
+    }
+    const blob = await provider.modifyFields(file, updates);
+    // Clear modifications after successful commit
+    setModifiedFields(new Map());
+    setEditStateRaw({ selectedFieldName: null, interaction: 'idle', pendingRect: null });
+    return blob;
+  }, [modifiedFields]);
+
+  const hasUncommittedChanges = creationState.pendingFields.length > 0 || modifiedFields.size > 0;
 
   const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
     // Increment version so any in-flight fetch for a previous file is discarded.
@@ -476,6 +635,25 @@ export function FormFillProvider({
       activeProviderName: providerRef.current.name,
       setProviderMode,
       forFileId,
+      // Mode management
+      mode: formMode,
+      setMode,
+      // Create mode
+      creationState,
+      setPlacingFieldType,
+      addPendingField,
+      removePendingField,
+      updatePendingField,
+      setCreationDragRect,
+      commitNewFields,
+      // Modify mode
+      editState,
+      setEditState,
+      modifiedFields,
+      updateFieldCoordinates,
+      updateFieldProperties,
+      commitFieldModifications,
+      hasUncommittedChanges,
     }),
     [
       state,
@@ -492,6 +670,22 @@ export function FormFillProvider({
       providerMode,
       setProviderMode,
       forFileId,
+      formMode,
+      setMode,
+      creationState,
+      setPlacingFieldType,
+      addPendingField,
+      removePendingField,
+      updatePendingField,
+      setCreationDragRect,
+      commitNewFields,
+      editState,
+      setEditState,
+      modifiedFields,
+      updateFieldCoordinates,
+      updateFieldProperties,
+      commitFieldModifications,
+      hasUncommittedChanges,
     ]
   );
 

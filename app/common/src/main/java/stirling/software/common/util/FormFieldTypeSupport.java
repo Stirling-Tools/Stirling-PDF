@@ -59,6 +59,13 @@ public enum FormFieldTypeSupport {
                 List<String> options)
                 throws IOException {
             PDTextField textField = (PDTextField) field;
+            if (definition.fontSize() != null && definition.fontSize() > 0) {
+                textField.setDefaultAppearance(
+                        "/Helv " + definition.fontSize() + " Tf 0 g");
+            }
+            if (Boolean.TRUE.equals(definition.multiline())) {
+                textField.setMultiline(true);
+            }
             String defaultValue = Optional.ofNullable(definition.defaultValue()).orElse("");
             if (!defaultValue.isBlank()) {
                 FormUtils.setTextValue(textField, defaultValue);

@@ -10,7 +10,7 @@
  * The UI components (FormFieldOverlay, FormFill, FormFieldSidebar) consume
  * data through FormFillContext, which delegates to whichever provider is active.
  */
-import type { FormField } from '@app/tools/formFill/types';
+import type { FormField, NewFieldDefinition, ModifyFieldDefinition } from '@app/tools/formFill/types';
 
 export interface IFormDataProvider {
   /** Unique identifier for the provider (for debugging/logging) */
@@ -33,5 +33,23 @@ export interface IFormDataProvider {
     file: File | Blob,
     values: Record<string, string>,
     flatten: boolean,
+  ): Promise<Blob>;
+
+  /**
+   * Add new form fields to a PDF.
+   * Optional — only supported by backend providers.
+   */
+  addFields?(
+    file: File | Blob,
+    fields: NewFieldDefinition[],
+  ): Promise<Blob>;
+
+  /**
+   * Modify existing form fields (properties and/or coordinates).
+   * Optional — only supported by backend providers.
+   */
+  modifyFields?(
+    file: File | Blob,
+    updates: ModifyFieldDefinition[],
   ): Promise<Blob>;
 }
