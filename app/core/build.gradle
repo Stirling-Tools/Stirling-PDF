@@ -66,6 +66,7 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
     implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
