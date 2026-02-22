@@ -6,7 +6,6 @@ FROM alpine:3.23.2 AS gs-build
 ARG GS_VERSION=10.06.0
 RUN apk add --no-cache \
       build-base curl \
-      libjpeg-turbo-dev libpng-dev tiff-dev zlib-dev \
       fontconfig-dev && \
     GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
     curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz && \
@@ -15,12 +14,7 @@ RUN apk add --no-cache \
       --prefix=/usr/local \
       --without-x \
       --disable-cups \
-      --disable-gtk \
-      --with-system-libjpeg \
-      --with-system-zlib \
-      --with-system-libpng \
-      --with-system-libtiff \
-      --disable-shared && \
+      --disable-gtk && \
     make -j"$(nproc)" && \
     make install && \
     cd ..
