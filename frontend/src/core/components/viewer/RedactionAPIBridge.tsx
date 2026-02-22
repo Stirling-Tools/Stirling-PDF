@@ -112,12 +112,17 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     searchProvides.setFlags(flags);
 
     // End any previous search session before starting a new one.
-    // Without this, calling startSearch() a second time leaves the plugin in a
-    // stale state and searchAllPages() returns 0 results.
+    // We call stopSearch only if we have a change or to be safe,
+    // but starting a new search should be clean.
     searchProvides.stopSearch?.();
 
-    // Start a fresh search session, then search all pages
+    // Start a fresh search session.
     searchProvides.startSearch();
+
+    // Search all pages.
+    // We add a tiny delay to ensure the search plugin has processed the stop/start cycle.
+    // This addresses the issue where calling search twice results in 0 findings.
+    await new Promise(resolve => setTimeout(resolve, 50));
     const searchResult = await searchProvides.searchAllPages(text).toPromise();
 
     const results = searchResult.results;
@@ -132,6 +137,16 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
       totalCount: results.length,
       foundOnPages,
     };
+  }, [searchProvides]);
+
+  /**
+   * Clears search highlights and cached results
+   */
+  const handleClearSearch = useCallback(() => {
+    if (searchProvides) {
+      searchProvides.stopSearch?.();
+    }
+    cachedSearchResults.current = [];
   }, [searchProvides]);
 
   /**
@@ -203,7 +218,8 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     getPendingCount: () => state?.pendingCount ?? 0,
     searchText: handleSearchText,
     redactText: handleRedactText,
-  }), [redactionProvides, state, handleSearchText, handleRedactText]);
+    clearSearch: handleClearSearch,
+  }), [redactionProvides, state, handleSearchText, handleRedactText, handleClearSearch]);
 
   return null;
 }

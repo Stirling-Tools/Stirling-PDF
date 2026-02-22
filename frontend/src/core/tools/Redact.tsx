@@ -21,7 +21,7 @@ const Redact = (props: BaseToolProps) => {
 
   // Navigation and redaction context
   const { actions: navActions } = useNavigationActions();
-  const { setRedactionConfig, setRedactionMode, redactionConfig, deactivateRedact } = useRedaction();
+  const { setRedactionConfig, setRedactionMode, redactionConfig, deactivateRedact, clearSearch } = useRedaction();
   const { workbench } = useNavigationState();
   const hasOpenedViewer = useRef(false);
   const isSwitching = useRef(false);
@@ -68,6 +68,9 @@ const Redact = (props: BaseToolProps) => {
       console.log('[Redact] Deactivating manual redaction tool');
       try { deactivateRedact(); } catch { /* ignore if bridge not ready */ }
     }
+
+    // Always clear search when switching modes to ensure highlights are removed
+    try { clearSearch(); } catch { /* ignore if bridge not ready */ }
 
     base.params.updateParameter('mode', mode);
     

@@ -16,7 +16,7 @@ interface SearchAndRedactControlsProps {
  */
 export default function SearchAndRedactControls({ disabled = false }: SearchAndRedactControlsProps) {
   const { t } = useTranslation();
-  const { searchText, redactText, setManualRedactColor } = useRedaction();
+  const { searchText, redactText, setManualRedactColor, clearSearch } = useRedaction();
   const { isBridgeReady, manualRedactColor } = useRedactionMode();
   const { applyChanges } = useViewer();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,12 +32,22 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
 
   const isApiReady = isBridgeReady;
 
-  // Focus input on mount
   useEffect(() => {
     if (isApiReady && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isApiReady]);
+
+  // Clear search results and highlights on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        clearSearch();
+      } catch (e) {
+        // Ignore if bridge is already gone
+      }
+    };
+  }, [clearSearch]);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -79,9 +89,14 @@ export default function SearchAndRedactControls({ disabled = false }: SearchAndR
 
       const result = await redactText(query, { caseSensitive, wholeWord });
       if (result) {
-        // Redaction annotations created successfully — clear search results
+        // Redaction annotations created successfully — clear search results and highlights
         setSearchResults(null);
         setQuery('');
+        try {
+          clearSearch();
+        } catch (e) {
+          // Ignore
+        }
       } else {
         setError(t('redact.searchAndRedact.noMatchesRedacted', 'No matches found to redact'));
       }

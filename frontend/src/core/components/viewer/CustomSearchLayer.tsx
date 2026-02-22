@@ -101,7 +101,7 @@ export function CustomSearchLayer({
                 left: `${rect.origin.x * scale - padding}px`,
                 width: `${rect.size.width * scale + (padding * 2)}px`,
                 height: `${rect.size.height * scale + (padding * 2)}px`,
-                backgroundColor: !isRedactionModeActive && originalIndex === searchResultState?.activeResultIndex
+                backgroundColor: (!isRedactionModeActive && originalIndex === searchResultState?.activeResultIndex)
                   ? activeHighlightColor
                   : highlightColor,
                 opacity: opacity,
@@ -110,7 +110,7 @@ export function CustomSearchLayer({
                 transformOrigin: 'center',
                 transition: 'opacity 0.2s ease-in-out, background-color 0.2s ease-in-out',
                 pointerEvents: 'none',
-                boxShadow: !isRedactionModeActive && originalIndex === searchResultState?.activeResultIndex
+                boxShadow: (!isRedactionModeActive && originalIndex === searchResultState?.activeResultIndex)
                   ? `0 0 0 1px ${SEARCH_CONSTANTS.HIGHLIGHT_COLORS.ACTIVE_BACKGROUND}80`
                   : 'none'
               }}

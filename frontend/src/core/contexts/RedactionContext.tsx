@@ -28,6 +28,7 @@ export interface RedactionAPI {
   // Search and Redact methods
   searchText: (text: string, options?: SearchRedactOptions) => Promise<SearchTextResult>;
   redactText: (text: string, options?: SearchRedactOptions) => Promise<boolean>;
+  clearSearch: () => void;
 }
 
 /**
@@ -78,6 +79,7 @@ interface RedactionActions {
   // Search and Redact
   searchText: (text: string, options?: SearchRedactOptions) => Promise<SearchTextResult>;
   redactText: (text: string, options?: SearchRedactOptions) => Promise<boolean>;
+  clearSearch: () => void;
 }
 
 /**
@@ -246,6 +248,12 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     return result;
   }, [setRedactionsApplied]);
 
+  const clearSearch = useCallback(() => {
+    if (redactionApiRef.current?.clearSearch) {
+      redactionApiRef.current.clearSearch();
+    }
+  }, []);
+
   const contextValue: RedactionContextValue = {
     ...state,
     redactionApiRef,
@@ -265,6 +273,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     activateMarquee,
     searchText,
     redactText,
+    clearSearch,
   };
 
   return (
