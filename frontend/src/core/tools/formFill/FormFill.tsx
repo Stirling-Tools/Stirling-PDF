@@ -20,6 +20,7 @@ import {
   Progress,
   Tooltip,
   ActionIcon,
+  SegmentedControl,
 } from '@mantine/core';
 import { useFormFill, useAllFormValues } from '@app/tools/formFill/FormFillContext';
 import { useNavigation } from '@app/contexts/NavigationContext';
@@ -29,8 +30,11 @@ import { Skeleton } from '@mantine/core';
 import { isStirlingFile } from '@app/types/fileContext';
 import type { BaseToolProps } from '@app/types/tool';
 import type { FormField } from '@app/tools/formFill/types';
+import type { FormMode } from '@app/tools/formFill/types';
 import { FieldInput } from '@app/tools/formFill/FieldInput';
 import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
+import { FormFieldCreatePanel } from '@app/tools/formFill/FormFieldCreatePanel';
+import { FormFieldModifyPanel } from '@app/tools/formFill/FormFieldModifyPanel';
 import SaveIcon from '@mui/icons-material/Save';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -46,8 +50,6 @@ import styles from '@app/tools/formFill/FormFill.module.css';
 // Mode tabs — extensible for future form tools
 // ---------------------------------------------------------------------------
 
-type FormMode = 'fill' | 'make' | 'batch' | 'modify';
-
 interface ModeTabDef {
   id: FormMode;
   label: string;
@@ -55,11 +57,11 @@ interface ModeTabDef {
   ready: boolean;
 }
 
-const _MODE_TABS: ModeTabDef[] = [
+const MODE_TABS: ModeTabDef[] = [
   { id: 'fill', label: 'Fill', icon: <EditNoteIcon className={styles.modeTabIcon} />, ready: true },
-  { id: 'make', label: 'Create', icon: <PostAddIcon className={styles.modeTabIcon} />, ready: false },
+  { id: 'make', label: 'Create', icon: <PostAddIcon className={styles.modeTabIcon} />, ready: true },
   { id: 'batch', label: 'Batch', icon: <FileCopyIcon className={styles.modeTabIcon} />, ready: false },
-  { id: 'modify', label: 'Modify', icon: <BuildCircleIcon className={styles.modeTabIcon} />, ready: false },
+  { id: 'modify', label: 'Modify', icon: <BuildCircleIcon className={styles.modeTabIcon} />, ready: true },
 ];
 
 // ---------------------------------------------------------------------------
@@ -94,6 +96,8 @@ const FormFill = (_props: BaseToolProps) => {
     setValue,
     setActiveField,
     validateForm,
+    mode,
+    setMode,
   } = useFormFill();
 
   const allValues = useAllFormValues();
@@ -101,11 +105,6 @@ const FormFill = (_props: BaseToolProps) => {
 
   const { scrollActions } = useViewer();
 
-  // Mode system is temporarily restricted to 'fill' only.
-  // Other modes (make, batch, modify) are defined above but not yet exposed in the UI.
-  // When ready, uncomment the SegmentedControl and mode state below.
-  // const [mode, setMode] = useState<FormMode>('fill');
-  const mode: FormMode = 'fill';
   const [flatten, setFlatten] = useState(false);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -297,16 +296,14 @@ const FormFill = (_props: BaseToolProps) => {
 
   if (!isActive) return null;
 
-  // const currentModeDef = MODE_TABS.find((t) => t.id === mode)!;
-
   return (
     <div className={styles.root}>
-      {/* ---- Mode selection (commented out until additional modes are implemented) ----
+      {/* ---- Mode selection ---- */}
       <div className={styles.modeTabs}>
         <SegmentedControl
           value={mode}
           onChange={(val) => setMode(val as FormMode)}
-          data={MODE_TABS.map((tab) => ({
+          data={MODE_TABS.filter((tab) => tab.ready).map((tab) => ({
             value: tab.id,
             label: (
               <div className={styles.segmentedLabel}>
@@ -326,10 +323,12 @@ const FormFill = (_props: BaseToolProps) => {
           }}
         />
       </div>
-      ---- */}
 
-      {/* ---- Coming-soon for non-ready tabs (hidden while mode tabs are disabled) ---- */}
-      {/* !currentModeDef.ready && <ComingSoonPlaceholder mode={currentModeDef} /> */}
+      {/* ---- Create mode ---- */}
+      {mode === 'make' && <FormFieldCreatePanel />}
+
+      {/* ---- Modify mode ---- */}
+      {mode === 'modify' && <FormFieldModifyPanel />}
 
       {/* ---- Fill Form content ---- */}
       {mode === 'fill' && (

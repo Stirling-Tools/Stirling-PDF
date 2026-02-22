@@ -8,11 +8,13 @@
  *
  * Used in the dedicated formFill tool mode.
  */
-import type { FormField } from '@app/tools/formFill/types';
+import type { FormField, NewFieldDefinition, ModifyFieldDefinition } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
 import {
   fetchFormFieldsWithCoordinates,
   fillFormFields,
+  addFormFields,
+  modifyFormFields,
 } from '@app/tools/formFill/formApi';
 
 export class PdfBoxFormProvider implements IFormDataProvider {
@@ -28,5 +30,19 @@ export class PdfBoxFormProvider implements IFormDataProvider {
     flatten: boolean,
   ): Promise<Blob> {
     return fillFormFields(file, values, flatten);
+  }
+
+  async addFields(
+    file: File | Blob,
+    fields: NewFieldDefinition[],
+  ): Promise<Blob> {
+    return addFormFields(file, fields);
+  }
+
+  async modifyFields(
+    file: File | Blob,
+    updates: ModifyFieldDefinition[],
+  ): Promise<Blob> {
+    return modifyFormFields(file, updates);
   }
 }
