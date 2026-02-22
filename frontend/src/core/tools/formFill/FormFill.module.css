@@ -80,12 +80,30 @@
 
 .actionBar {
   display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.primaryActions {
+  display: flex;
   gap: 0.5rem;
   align-items: center;
 }
 
-.actionBar > *:first-child {
+.primaryActions > *:first-child {
   flex: 1;
+}
+
+.secondaryActions {
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+}
+
+.secondaryActions > Button {
+  flex: 1;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 
 .fieldList {
