@@ -23,7 +23,8 @@ COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
-ENV JAVA_TOOL_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+# JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
+ENV JDK_JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \

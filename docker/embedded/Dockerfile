@@ -192,7 +192,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_TOOL_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+# JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
+ENV JDK_JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \

@@ -11,7 +11,8 @@ COPY app/core/build.gradle core/.
 COPY app/common/build.gradle common/.
 COPY app/proprietary/build.gradle proprietary/.
 
-ENV JAVA_TOOL_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+# JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
+ENV JDK_JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
   --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
@@ -50,7 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Build PDF Tools (QPDF and ImageMagick 7).
 FROM ubuntu:noble AS pdf-tools-build
 ARG QPDF_VERSION=12.3.2
-ARG IM_VERSION=7.1.1-43
+ARG IM_VERSION=7.1.2-13
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
       libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
