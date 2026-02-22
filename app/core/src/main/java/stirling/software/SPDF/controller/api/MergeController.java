@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -51,6 +52,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class MergeController {
 
+    private static final Pattern QUOTE_WRAP_PATTERN = Pattern.compile("^\"|\"$");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -173,7 +175,7 @@ public class MergeController {
                 String[] parts = inside.split(",");
                 String[] result = new String[parts.length];
                 for (int i = 0; i < parts.length; i++) {
-                    result[i] = parts[i].trim().replaceAll("^\"|\"$", "");
+                    result[i] = QUOTE_WRAP_PATTERN.matcher(parts[i].trim()).replaceAll("");
                 }
                 return result;
             }
@@ -397,7 +399,12 @@ public class MergeController {
         String mergedFileName =
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
-        byte[] pdfBytes = Files.readAllBytes(outputTempFile.getPath());
+        byte[] pdfBytes;
+        try {
+            pdfBytes = Files.readAllBytes(outputTempFile.getPath());
+        } finally {
+            outputTempFile.close();
+        }
         return WebResponseUtils.bytesToWebResponse(pdfBytes, mergedFileName);
     }
 }
