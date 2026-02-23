@@ -25,21 +25,26 @@ describe('getStartupNavigationAction', () => {
     expect(getStartupNavigationAction(0, 3, 'pdfTextEditor', 'viewer' as WorkbenchType)).toBeNull();
   });
 
-  it('does not navigate on non-startup transitions', () => {
-    expect(getStartupNavigationAction(1, 2, null, 'viewer' as WorkbenchType)).toBeNull();
+  it('does not navigate when file count decreases', () => {
     expect(getStartupNavigationAction(2, 1, null, 'viewer' as WorkbenchType)).toBeNull();
+    expect(getStartupNavigationAction(3, 1, null, 'fileEditor' as WorkbenchType)).toBeNull();
   });
 
-  it('does not navigate when user already has files (N→M transitions)', () => {
-    // User has 1 file, adds another -> no navigation (stay in current workbench)
-    expect(getStartupNavigationAction(1, 2, null, 'viewer' as WorkbenchType)).toBeNull();
+  it('navigates to last file when already in viewer and files are added', () => {
+    expect(getStartupNavigationAction(1, 2, null, 'viewer' as WorkbenchType)).toEqual({
+      workbench: 'viewer',
+      activeFileIndex: 1,
+    });
+    expect(getStartupNavigationAction(3, 5, null, 'viewer' as WorkbenchType)).toEqual({
+      workbench: 'viewer',
+      activeFileIndex: 4,
+    });
+  });
+
+  it('does not navigate when adding files in non-viewer workbenches', () => {
     expect(getStartupNavigationAction(1, 2, null, 'fileEditor' as WorkbenchType)).toBeNull();
-
-    // User has 3 files, adds more -> no navigation
     expect(getStartupNavigationAction(3, 4, null, 'fileEditor' as WorkbenchType)).toBeNull();
-
-    // User has 2 files, deletes 1 -> no navigation
-    expect(getStartupNavigationAction(2, 1, null, 'viewer' as WorkbenchType)).toBeNull();
+    expect(getStartupNavigationAction(1, 3, null, 'pageEditor' as WorkbenchType)).toBeNull();
   });
 
   it('handles all workbench types consistently for 0→N transitions', () => {
