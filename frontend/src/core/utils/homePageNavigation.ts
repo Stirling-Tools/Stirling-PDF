@@ -26,20 +26,16 @@ export function getStartupNavigationAction(
     return null;
   }
 
-  // Only handle transitions from empty (0 files) to some files
-  if (previousFileCount !== 0) {
-    console.log('[homePageNavigation] Not a 0→N transition, returning null');
-    return null;
+  const filesAdded = currentFileCount - previousFileCount;
+
+  // Exactly 1 file added → open viewer at the new file's index (regardless of prior count)
+  if (filesAdded === 1) {
+    console.log('[homePageNavigation] Single file added, returning viewer');
+    return { workbench: 'viewer', activeFileIndex: currentFileCount - 1 };
   }
 
-  // 0→1: Go to viewer to view the single file
-  if (currentFileCount === 1) {
-    console.log('[homePageNavigation] 0→1 transition, returning viewer');
-    return { workbench: 'viewer', activeFileIndex: 0 };
-  }
-
-  // 0→N (N>1): Go to fileEditor to manage multiple files
-  if (currentFileCount > 1) {
+  // 0→N (multiple files from empty): Go to fileEditor to manage multiple files
+  if (previousFileCount === 0 && currentFileCount > 1) {
     console.log('[homePageNavigation] 0→N transition, returning fileEditor');
     return { workbench: 'fileEditor' };
   }
