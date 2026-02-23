@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,7 +21,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +28,6 @@ import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.UrlUtils;
 
 @Slf4j
 @EnableScheduling
@@ -40,6 +39,10 @@ import stirling.software.common.util.UrlUtils;
         })
 public class SPDFApplication {
 
+    private static final Pattern PORT_SUFFIX_PATTERN = Pattern.compile(".+:\\d+$");
+    private static final Pattern URL_SCHEME_PATTERN =
+            Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+    private static final Pattern TRAILING_SLASH_PATTERN = Pattern.compile("/+$");
     private static String serverPortStatic;
     private static String baseUrlStatic;
     private static String contextPathStatic;
@@ -59,19 +62,6 @@ public class SPDFApplication {
         SpringApplication app = new SpringApplication(SPDFApplication.class);
 
         Properties props = new Properties();
-
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            System.setProperty("java.awt.headless", "false");
-            app.setHeadless(false);
-            props.put("java.awt.headless", "false");
-            props.put("spring.main.web-application-type", "servlet");
-
-            int desiredPort = 8080;
-            String port = UrlUtils.findAvailablePort(desiredPort);
-            props.put("server.port", port);
-            System.setProperty("server.port", port);
-            log.info("Desktop UI mode: Using port {}", port);
-        }
 
         app.setAdditionalProfiles(getActiveProfile(args));
 
@@ -153,13 +143,6 @@ public class SPDFApplication {
                     "Running in Tauri mode. Parent process PID: {}",
                     parentPid != null ? parentPid : "not set");
         }
-        // Desktop UI initialization removed - webBrowser dependency eliminated
-        // Keep backwards compatibility for STIRLING_PDF_DESKTOP_UI system property
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            log.info("Desktop UI mode enabled, but WebBrowser functionality has been removed");
-            // webBrowser.initWebUI(url); // Removed - desktop UI eliminated
-        }
-
         // Standard browser opening logic
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
@@ -190,14 +173,6 @@ public class SPDFApplication {
         } else {
             SPDFApplication.serverPortStatic = port;
         }
-    }
-
-    @PreDestroy
-    public void cleanup() {
-        // webBrowser cleanup removed - desktop UI eliminated
-        // if (webBrowser != null) {
-        //     webBrowser.cleanup();
-        // }
     }
 
     @EventListener
@@ -274,8 +249,8 @@ public class SPDFApplication {
         String trimmedBase =
                 (backendUrl == null || backendUrl.isBlank())
                         ? "http://localhost"
-                        : backendUrl.trim().replaceAll("/+$", "");
-        boolean hasScheme = trimmedBase.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+                        : TRAILING_SLASH_PATTERN.matcher(backendUrl.trim()).replaceAll("");
+        boolean hasScheme = URL_SCHEME_PATTERN.matcher(trimmedBase).matches();
         String baseForParsing = hasScheme ? trimmedBase : "http://" + trimmedBase;
         Integer parsedPort = parsePort(port);
 
@@ -328,7 +303,7 @@ public class SPDFApplication {
         if (port == null) {
             return trimmedBase;
         }
-        if (trimmedBase.matches(".+:\\d+$")) {
+        if (PORT_SUFFIX_PATTERN.matcher(trimmedBase).matches()) {
             return trimmedBase;
         }
         return trimmedBase + ":" + port;

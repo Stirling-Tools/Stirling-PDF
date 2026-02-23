@@ -186,6 +186,13 @@ public class AdminSettingsController {
                                                     + HtmlUtils.htmlEscape(key)));
                 }
 
+                // Validate pipeline path settings
+                String validationError = validatePipelinePathSetting(key, value);
+                if (validationError != null) {
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
+                }
+
                 log.info("Admin updating setting: {} = {}", key, value);
                 GeneralUtils.saveKeyToSettings(key, value);
 
@@ -642,6 +649,54 @@ public class AdminSettingsController {
         }
 
         return true;
+    }
+
+    private String validatePipelinePathSetting(String key, Object value) {
+        // Validate pipeline path settings
+        if (key.startsWith("system.customPaths.pipeline.watchedFoldersDirs")
+                && value instanceof java.util.List) {
+            @SuppressWarnings("unchecked")
+            java.util.List<String> paths = (java.util.List<String>) value;
+
+            // Check for empty or all-blank paths
+            if (paths.isEmpty()) {
+                return null; // Empty is OK, will use default
+            }
+
+            // Validate each path
+            java.util.Set<String> normalizedPaths = new java.util.HashSet<>();
+            for (String path : paths) {
+                if (path != null && !path.trim().isEmpty()) {
+                    try {
+                        java.nio.file.Path normalized =
+                                java.nio.file.Paths.get(path.trim()).toAbsolutePath().normalize();
+                        String normalizedStr = normalized.toString();
+
+                        // Check for duplicates
+                        if (normalizedPaths.contains(normalizedStr)) {
+                            return "Duplicate path detected: " + path;
+                        }
+                        normalizedPaths.add(normalizedStr);
+                    } catch (java.nio.file.InvalidPathException e) {
+                        return "Invalid path: " + path + " - " + e.getMessage();
+                    }
+                }
+            }
+
+            // Check for overlapping paths
+            java.util.List<String> pathList = new java.util.ArrayList<>(normalizedPaths);
+            for (int i = 0; i < pathList.size(); i++) {
+                java.nio.file.Path path1 = java.nio.file.Paths.get(pathList.get(i));
+                for (int j = i + 1; j < pathList.size(); j++) {
+                    java.nio.file.Path path2 = java.nio.file.Paths.get(pathList.get(j));
+                    if (path1.startsWith(path2) || path2.startsWith(path1)) {
+                        return "Overlapping paths detected: " + path1 + " and " + path2;
+                    }
+                }
+            }
+        }
+
+        return null; // Valid
     }
 
     private Object getSettingByKey(String key) {

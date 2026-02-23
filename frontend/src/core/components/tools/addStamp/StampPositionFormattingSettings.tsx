@@ -4,6 +4,7 @@ import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampPa
 import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
   parameters: AddStampParameters;
@@ -98,7 +99,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.fontSize}
-              onChange={(v) => onParameterChange('fontSize', typeof v === 'number' ? v : 1)}
+              onChange={(v) => onParameterChange('fontSize', typeof v === 'number' && v > 0 ? v : 1)}
               min={1}
               max={400}
               step={1}
@@ -113,6 +114,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
               max={400}
               step={1}
               className={styles.slider}
+              disabled={disabled}
             />
           </Group>
         </Stack>
@@ -176,6 +178,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
           onChange={(value) => onParameterChange('customColor', value)}
           format="hex"
           disabled={disabled}
+          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       )}
 
@@ -192,6 +195,7 @@ const StampPositionFormattingSettings = ({ parameters, onParameterChange, disabl
             { value: 'x-large', label: t('margin.xLarge', 'Extra Large') },
           ]}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       )}
     </Stack>

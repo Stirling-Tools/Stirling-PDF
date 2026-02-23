@@ -152,6 +152,7 @@ app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
+frontend/src-tauri/provisioner/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -216,7 +217,7 @@ id_ed25519.pub
 .mypy_cache
 .pytest_cache
 .ipynb_checkpoints
-
+.build-cache
 
 
 **/jcef-bundle/
@@ -246,4 +247,3 @@ docs/type3/signatures/
 
 # Type3 sample PDFs (development only)
 **/type3/samples/
-

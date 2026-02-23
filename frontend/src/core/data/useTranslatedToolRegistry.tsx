@@ -39,6 +39,7 @@ import AutoRename from "@app/tools/AutoRename";
 import SingleLargePage from "@app/tools/SingleLargePage";
 import PageLayout from "@app/tools/PageLayout";
 import UnlockPdfForms from "@app/tools/UnlockPdfForms";
+import FormFill from "@app/tools/formFill/FormFill";
 import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
 import RemoveImage from "@app/tools/RemoveImage";
 import CertSign from "@app/tools/CertSign";
@@ -180,6 +181,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
+        endpoints: ["multi-tool"],
         synonyms: getSynonyms(t, "multiTool"),
         supportsAutomate: false,
         automationSettings: null
@@ -218,6 +220,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.sign.desc", "Adds signature to PDF by drawing, text or image"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
+        endpoints: ["sign"],
         operationConfig: signOperationConfig,
         automationSettings: SignSettings, // TODO:: not all settings shown, suggested next tools shown
         synonyms: getSynonyms(t, "sign"),
@@ -230,6 +233,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t('home.addText.desc', 'Add custom text anywhere in your PDF'),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        endpoints: ["sign"],
         operationConfig: signOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, 'addText'),
@@ -242,6 +246,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t('home.addImage.desc', 'Add images anywhere in your PDF'),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
+        endpoints: ["add-image"],
         operationConfig: signOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, 'addImage'),
@@ -255,6 +260,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         workbench: 'viewer',
+        endpoints: ["view-pdf"],
         operationConfig: signOperationConfig,
         automationSettings: null,
         synonyms: getSynonyms(t, 'annotate'),
@@ -341,6 +347,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "unlockPDFForms"),
         automationSettings: null
       },
+      formFill: {
+        icon: <LocalIcon icon="text-fields-rounded" width="1.5rem" height="1.5rem" />,
+        name: t('home.formFill.title', 'Fill Form'),
+        component: FormFill,
+        description: t('home.formFill.desc', 'Fill PDF form fields interactively with a visual editor'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: 'viewer' as const,
+        endpoints: ['form-fill'],
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: ['form', 'fill', 'fillable', 'input', 'field', 'acroform'],
+      },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.changePermissions.title", "Change Permissions"),
@@ -393,6 +412,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
+        endpoints: ["view-pdf"],
         synonyms: getSynonyms(t, "read"),
         supportsAutomate: false,
         automationSettings: null
@@ -683,7 +703,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.AUTOMATION,
         maxFiles: -1,
         supportedFormats: CONVERT_SUPPORTED_FORMATS,
-        endpoints: ["handleData"],
+        endpoints: ["automate"],
         synonyms: getSynonyms(t, "automate"),
         automationSettings: null,
       },
@@ -710,6 +730,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.adjustContrast.desc", "Adjust colors and contrast of PDF documents"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["adjust-contrast"],
         operationConfig: adjustContrastOperationConfig,
         automationSettings: AdjustContrastSingleStepSettings,
         synonyms: getSynonyms(t, "adjustContrast"),
@@ -800,6 +822,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: devApiLink,
+        endpoints: ["dev-api-docs"],
         synonyms: getSynonyms(t, "devApi"),
         supportsAutomate: false,
         automationSettings: null
@@ -811,7 +834,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devFolderScanning.desc", "Link to automated folder scanning guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning/",
+        link: "https://docs.stirlingpdf.com/Configuration/Folder%20Scanning/",
+        endpoints: ["dev-folder-scanning-docs"],
         synonyms: getSynonyms(t, "devFolderScanning"),
         supportsAutomate: false,
         automationSettings: null
@@ -823,7 +847,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t("home.devSsoGuide.desc", "Link to SSO guide"),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
-        link: "https://docs.stirlingpdf.com/Advanced%20Configuration/Single%20Sign-On%20Configuration",
+        link: "https://docs.stirlingpdf.com/Configuration/Single%20Sign-On%20Configuration/",
+        endpoints: ["dev-sso-guide-docs"],
         synonyms: getSynonyms(t, "devSsoGuide"),
         supportsAutomate: false,
         automationSettings: null
@@ -836,6 +861,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
+        endpoints: ["dev-airgapped-docs"],
         synonyms: getSynonyms(t, "devAirgapped"),
         supportsAutomate: false,
         automationSettings: null
@@ -850,6 +876,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: 2,
+        endpoints: ["compare"],
         operationConfig: undefined,
         automationSettings: null,
         synonyms: getSynonyms(t, "compare"),

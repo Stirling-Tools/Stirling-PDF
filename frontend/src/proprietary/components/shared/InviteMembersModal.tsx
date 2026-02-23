@@ -56,7 +56,9 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
     password: '',
     role: 'ROLE_USER',
     teamId: undefined as number | undefined,
+    authType: 'WEB' as 'WEB' | 'OAUTH2' | 'SAML2',
     forceChange: false,
+    forceMFA: false,
   });
 
   // Form state for email invite
@@ -120,8 +122,14 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
   }));
 
   const handleInviteUser = async () => {
-    if (!inviteForm.username || !inviteForm.password) {
+    if (!inviteForm.username) {
       alert({ alertType: 'error', title: t('workspace.people.addMember.usernameRequired') });
+      return;
+    }
+
+    // Password is only required for WEB auth type
+    if (inviteForm.authType === 'WEB' && !inviteForm.password) {
+      alert({ alertType: 'error', title: t('workspace.people.addMember.passwordRequired', 'Password is required') });
       return;
     }
 
@@ -132,8 +140,9 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         password: inviteForm.password,
         role: inviteForm.role,
         teamId: inviteForm.teamId,
-        authType: 'password',
+        authType: inviteForm.authType,
         forceChange: inviteForm.forceChange,
+        forceMFA: inviteForm.forceMFA,
       });
       alert({ alertType: 'success', title: t('workspace.people.addMember.success') });
       onClose();
@@ -144,7 +153,9 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         password: '',
         role: 'ROLE_USER',
         teamId: undefined,
+        authType: 'WEB',
         forceChange: false,
+        forceMFA: false,
       });
     } catch (error: any) {
       console.error('Failed to invite user:', error);
@@ -243,7 +254,9 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       password: '',
       role: 'ROLE_USER',
       teamId: undefined,
+      authType: 'WEB',
       forceChange: false,
+      forceMFA: false,
     });
     setEmailInviteForm({
       emails: '',
@@ -274,7 +287,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       handleInviteUser();
     }
   };
-  
+
   return (
     <Modal
       opened={opened}
@@ -501,14 +514,47 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                 onChange={(e) => setInviteForm({ ...inviteForm, username: e.currentTarget.value })}
                 required
               />
-              <TextInput
-                label={t('workspace.people.addMember.password')}
-                type="password"
-                placeholder={t('workspace.people.addMember.passwordPlaceholder')}
-                value={inviteForm.password}
-                onChange={(e) => setInviteForm({ ...inviteForm, password: e.currentTarget.value })}
-                required
-              />
+
+              {/* Auth Type Selector - only show if SSO is enabled */}
+              {(config?.enableOAuth || config?.enableSaml) && (
+                <Select
+                  label={t('workspace.people.addMember.authType', 'Authentication Type')}
+                  data={[
+                    { value: 'WEB', label: t('workspace.people.authType.password', 'Password') },
+                    ...(config?.enableOAuth ? [{ value: 'OAUTH2', label: t('workspace.people.authType.oauth', 'OAuth2') }] : []),
+                    ...(config?.enableSaml ? [{ value: 'SAML2', label: t('workspace.people.authType.saml', 'SAML2') }] : []),
+                  ]}
+                  value={inviteForm.authType}
+                  onChange={(value) => setInviteForm({ ...inviteForm, authType: (value as 'WEB' | 'OAUTH2' | 'SAML2') || 'WEB' })}
+                  comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                  description={inviteForm.authType !== 'WEB' ? t('workspace.people.authType.ssoDescription', 'User will authenticate via SSO provider') : undefined}
+                />
+              )}
+
+              {/* Password field - only required for WEB auth type */}
+              {inviteForm.authType === 'WEB' && (
+                <>
+                  <TextInput
+                    label={t('workspace.people.addMember.password')}
+                    type="password"
+                    placeholder={t('workspace.people.addMember.passwordPlaceholder')}
+                    value={inviteForm.password}
+                    onChange={(e) => setInviteForm({ ...inviteForm, password: e.currentTarget.value })}
+                    required
+                  />
+                  <Checkbox
+                    label={t('workspace.people.addMember.forcePasswordChange', 'Force password change on first login')}
+                    checked={inviteForm.forceChange}
+                    onChange={(e) => setInviteForm({ ...inviteForm, forceChange: e.currentTarget.checked })}
+                  />
+                  <Checkbox
+                    label={t('workspace.people.addMember.forceMFA', 'Force MFA setup on next login')}
+                    checked={inviteForm.forceMFA}
+                    onChange={(e) => setInviteForm({ ...inviteForm, forceMFA: e.currentTarget.checked })}
+                  />
+                </>
+              )}
+
               <Select
                 label={t('workspace.people.addMember.role')}
                 data={roleOptions}
@@ -524,11 +570,6 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                 onChange={(value) => setInviteForm({ ...inviteForm, teamId: value ? parseInt(value) : undefined })}
                 clearable
                 comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-              />
-              <Checkbox
-                label={t('workspace.people.addMember.forcePasswordChange', 'Force password change on first login')}
-                checked={inviteForm.forceChange}
-                onChange={(e) => setInviteForm({ ...inviteForm, forceChange: e.currentTarget.checked })}
               />
             </>
           )}

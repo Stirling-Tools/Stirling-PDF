@@ -54,8 +54,10 @@ function FileContextInner({
 }: FileContextProviderProps) {
   const [state, dispatch] = useReducer(fileContextReducer, initialFileContextState);
 
-  // IndexedDB context for persistence
-  const indexedDB = enablePersistence ? useIndexedDB() : null;
+  // Always call the hook unconditionally to satisfy React's rules of hooks.
+  // IndexedDB context is only used when enablePersistence is true.
+  const indexedDBValue = useIndexedDB();
+  const indexedDB = enablePersistence ? indexedDBValue : null;
 
   // File ref map - stores File objects outside React state
   const filesRef = useRef<Map<FileId, File>>(new Map());

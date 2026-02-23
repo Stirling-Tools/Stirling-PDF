@@ -5,8 +5,8 @@ import { usePdfiumEngine } from '@embedpdf/engines/react';
 
 // Import the essential plugins
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
-import { Scroller, ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll/react';
-import { LoaderPluginPackage } from '@embedpdf/plugin-loader/react';
+import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react';
+import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
 import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
@@ -17,12 +17,11 @@ import { SpreadPluginPackage, SpreadMode } from '@embedpdf/plugin-spread/react';
 import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
-import { Rotation } from '@embedpdf/models';
+import { Rotation, PdfAnnotationSubtype } from '@embedpdf/models';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
 
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
@@ -35,6 +34,9 @@ import { SpreadAPIBridge } from '@app/components/viewer/SpreadAPIBridge';
 import { SearchAPIBridge } from '@app/components/viewer/SearchAPIBridge';
 import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
 import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
+import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
+
+const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
 
 export interface SignaturePreview {
   id: string;
@@ -171,23 +173,20 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
     const viewportGap = rootFontSize * 3.5;
 
     return [
-      createPluginRegistration(LoaderPluginPackage, {
-        loadingOptions: {
-          type: 'url',
-          pdfFile: {
-            id: 'stirling-pdf-signing-viewer',
-            url: pdfUrl,
-          },
-        },
+      createPluginRegistration(DocumentManagerPluginPackage, {
+        initialDocuments: [{
+          url: pdfUrl,
+          name: DOCUMENT_NAME,
+        }],
       }),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap,
       }),
-      createPluginRegistration(ScrollPluginPackage, {
-        strategy: ScrollStrategy.Vertical,
-        initialPage: 0,
+      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(RenderPluginPackage, {
+        withForms: true,
+        withAnnotations: true,
       }),
-      createPluginRegistration(RenderPluginPackage),
 
       // Register interaction manager (required for annotations)
       createPluginRegistration(InteractionManagerPluginPackage),
@@ -347,300 +346,280 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
         <SearchAPIBridge />
         <ThumbnailAPIBridge />
         <RotateAPIBridge />
-        <GlobalPointerProvider>
-          <Viewport
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              height: '100%',
-              width: '100%',
-              maxHeight: '100%',
-              maxWidth: '100%',
-              overflow: 'auto',
-              position: 'relative',
-              flex: 1,
-              minHeight: 0,
-              minWidth: 0,
-              contain: 'strict',
-            }}
-          >
-            <Scroller
-              renderPage={({ width, height, pageIndex, scale, rotation }: {
-                width: number;
-                height: number;
-                pageIndex: number;
-                scale: number;
-                rotation?: number;
-              }) => (
-                <Rotate pageSize={{ width, height }}>
-                  <PagePointerProvider {...{
-                    pageWidth: width,
-                    pageHeight: height,
-                    pageIndex,
-                    scale,
-                    rotation: rotation || 0
-                  }}>
-                    <div
-                      style={{
-                        width,
-                        height,
-                        position: 'relative',
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        MozUserSelect: 'none',
-                        msUserSelect: 'none',
-                        cursor: placementMode ? 'crosshair' : 'default'
-                      }}
-                      draggable={false}
-                      onDragStart={(e) => e.preventDefault()}
-                      onDrop={(e) => e.preventDefault()}
-                      onDragOver={(e) => e.preventDefault()}
-                      onClick={(e) => {
-                        // Don't add new signature if we just finished dragging
-                        if (isDraggingRef.current) {
-                          return;
-                        }
-
-                        if (placementMode && onPlaceSignature) {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = (e.clientX - rect.left) / scale;
-                          const y = (e.clientY - rect.top) / scale;
-                          // Default signature size: 150x75 pts
-                          const sigWidth = 150;
-                          const sigHeight = 75;
-
-                          // Add new preview with signature image data
-                          const newPreview = {
-                            id: `sig-preview-${Date.now()}-${Math.random()}`,
-                            pageIndex,
-                            x,
-                            y,
-                            width: sigWidth,
-                            height: sigHeight,
-                            signatureData: signatureData || '',
-                            signatureType: signatureType || 'image',
-                          };
-                          setSignaturePreviews(prev => [...prev, newPreview]);
-
-                          // Notify parent with the preview ID
-                          onPlaceSignature(newPreview.id, pageIndex, x, y, sigWidth, sigHeight);
-                        }
-                      }}
-                    >
-                      {/* High-resolution tile layer */}
-                      <TilingLayer pageIndex={pageIndex} scale={scale} />
-
-                      {/* Search highlight layer */}
-                      <CustomSearchLayer pageIndex={pageIndex} scale={scale} />
-
-                      {/* Selection layer for text interaction */}
-                      <SelectionLayer pageIndex={pageIndex} scale={scale} />
-
-                      {/* Annotation layer for signatures */}
-                      <AnnotationLayer
-                        pageIndex={pageIndex}
-                        scale={scale}
-                        pageWidth={width}
-                        pageHeight={height}
-                        rotation={rotation || 0}
-                        selectionOutlineColor="#007ACC"
-                      />
-
-                      {/* Signature preview overlays (support multiple) */}
-                      {signaturePreviews
-                       .filter(preview => preview.pageIndex === pageIndex)
-                       .map((preview) => preview.signatureData && (
+        <DocumentReadyWrapper
+          fallback={
+            <Center style={{ height: '100%', width: '100%' }}>
+              <ToolLoadingFallback />
+            </Center>
+          }
+        >
+          {(documentId) => (
+            <GlobalPointerProvider documentId={documentId}>
+              <Viewport
+                documentId={documentId}
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  height: '100%',
+                  width: '100%',
+                  maxHeight: '100%',
+                  maxWidth: '100%',
+                  overflow: 'auto',
+                  position: 'relative',
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  contain: 'strict',
+                }}
+              >
+                <Scroller
+                  documentId={documentId}
+                  renderPage={({ width, height, pageIndex, scale }: {
+                    width: number;
+                    height: number;
+                    pageIndex: number;
+                    scale: number;
+                  }) => (
+                    <Rotate key={`${documentId}-${pageIndex}`} documentId={documentId} pageIndex={pageIndex}>
+                      <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
                         <div
-                          key={preview.id}
                           style={{
-                            position: 'absolute',
-                            left: preview.x * scale,
-                            top: preview.y * scale,
-                            width: preview.width * scale,
-                            height: preview.height * scale,
-                            border: readOnly ? '1px dashed rgba(0, 122, 204, 0.4)' : '2px solid #007ACC',
-                            boxShadow: readOnly ? 'none' : '0 0 10px rgba(0, 122, 204, 0.5)',
-                            cursor: readOnly ? 'default' : 'move',
-                            zIndex: 1000,
-                            backgroundColor: readOnly ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
-                            pointerEvents: readOnly ? 'none' : 'auto',
+                            width,
+                            height,
+                            position: 'relative',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none',
+                            MozUserSelect: 'none',
+                            msUserSelect: 'none',
+                            cursor: placementMode ? 'crosshair' : 'default',
+                          }}
+                          draggable={false}
+                          onDragStart={(e) => e.preventDefault()}
+                          onDrop={(e) => e.preventDefault()}
+                          onDragOver={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            if (isDraggingRef.current) return;
+
+                            if (placementMode && onPlaceSignature) {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = (e.clientX - rect.left) / scale;
+                              const y = (e.clientY - rect.top) / scale;
+                              const sigWidth = 150;
+                              const sigHeight = 75;
+
+                              const newPreview = {
+                                id: `sig-preview-${Date.now()}-${Math.random()}`,
+                                pageIndex,
+                                x,
+                                y,
+                                width: sigWidth,
+                                height: sigHeight,
+                                signatureData: signatureData || '',
+                                signatureType: signatureType || 'image',
+                              };
+                              setSignaturePreviews(prev => [...prev, newPreview]);
+                              onPlaceSignature(newPreview.id, pageIndex, x, y, sigWidth, sigHeight);
+                            }
                           }}
                         >
-                          {/* Delete button - only show when not read-only */}
-                          {!readOnly && (
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: -12,
-                                right: -12,
-                                width: 24,
-                                height: 24,
-                                borderRadius: '50%',
-                                backgroundColor: '#DC3545',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                border: '2px solid white',
-                                zIndex: 1002,
-                                pointerEvents: 'auto',
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSignaturePreviews(prev => prev.filter(p => p.id !== preview.id));
-                              }}
-                              title="Delete signature"
-                            >
-                              ×
-                            </div>
-                          )}
+                          <TilingLayer documentId={documentId} pageIndex={pageIndex} />
 
-                          <div
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            pointerEvents: readOnly ? 'none' : 'auto',
-                          }}
-                          onMouseDown={readOnly ? undefined : (e) => {
-                            e.stopPropagation();
-                            const startX = e.clientX;
-                            const startY = e.clientY;
-                            const startLeft = preview.x;
-                            const startTop = preview.y;
+                          <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
-                            const handleMouseMove = (moveEvent: MouseEvent) => {
-                              // Mark that we're dragging
-                              isDraggingRef.current = true;
+                          <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
 
-                              const deltaX = (moveEvent.clientX - startX) / scale;
-                              const deltaY = (moveEvent.clientY - startY) / scale;
-
-                              setSignaturePreviews(prev => prev.map(p =>
-                                p.id === preview.id
-                                  ? { ...p, x: startLeft + deltaX, y: startTop + deltaY }
-                                  : p
-                              ));
-                            };
-
-                            const handleMouseUp = () => {
-                              document.removeEventListener('mousemove', handleMouseMove);
-                              document.removeEventListener('mouseup', handleMouseUp);
-
-                              // Reset drag flag after a short delay to prevent click from firing
-                              setTimeout(() => {
-                                isDraggingRef.current = false;
-                              }, 10);
-                            };
-
-                            document.addEventListener('mousemove', handleMouseMove);
-                            document.addEventListener('mouseup', handleMouseUp);
-                          }}
-                        >
-                          <img
-                            src={preview.signatureData}
-                            alt="Signature preview"
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'contain',
-                              pointerEvents: 'none',
-                            }}
+                          {/* Annotation layer for signatures */}
+                          <AnnotationLayer
+                            documentId={documentId}
+                            pageIndex={pageIndex}
+                            selectionOutlineColor="#007ACC"
                           />
 
-                          {/* Resize handles */}
-                          {[
-                            { position: 'nw', cursor: 'nw-resize', top: -4, left: -4 },
-                            { position: 'ne', cursor: 'ne-resize', top: -4, right: -4 },
-                            { position: 'sw', cursor: 'sw-resize', bottom: -4, left: -4 },
-                            { position: 'se', cursor: 'se-resize', bottom: -4, right: -4 },
-                          ].map((handle) => (
-                            <div
-                              key={handle.position}
-                              style={{
-                                position: 'absolute',
-                                width: 8,
-                                height: 8,
-                                backgroundColor: '#007ACC',
-                                border: '1px solid white',
-                                cursor: handle.cursor,
-                                zIndex: 1001,
-                                ...(handle.top !== undefined && { top: handle.top }),
-                                ...(handle.bottom !== undefined && { bottom: handle.bottom }),
-                                ...(handle.left !== undefined && { left: handle.left }),
-                                ...(handle.right !== undefined && { right: handle.right }),
-                              }}
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                const startX = e.clientX;
-                                const startY = e.clientY;
-                                const startWidth = preview.width;
-                                const startHeight = preview.height;
-                                const startLeft = preview.x;
-                                const startTop = preview.y;
+                          {/* Signature preview overlays (support multiple) */}
+                          {signaturePreviews
+                            .filter(preview => preview.pageIndex === pageIndex)
+                            .map((preview) => preview.signatureData && (
+                              <div
+                                key={preview.id}
+                                style={{
+                                  position: 'absolute',
+                                  left: preview.x * scale,
+                                  top: preview.y * scale,
+                                  width: preview.width * scale,
+                                  height: preview.height * scale,
+                                  border: readOnly ? '1px dashed rgba(0, 122, 204, 0.4)' : '2px solid #007ACC',
+                                  boxShadow: readOnly ? 'none' : '0 0 10px rgba(0, 122, 204, 0.5)',
+                                  cursor: readOnly ? 'default' : 'move',
+                                  zIndex: 1000,
+                                  backgroundColor: readOnly ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
+                                  pointerEvents: readOnly ? 'none' : 'auto',
+                                }}
+                              >
+                                {/* Delete button - only show when not read-only */}
+                                {!readOnly && (
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: -12,
+                                      right: -12,
+                                      width: 24,
+                                      height: 24,
+                                      borderRadius: '50%',
+                                      backgroundColor: '#DC3545',
+                                      color: 'white',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      cursor: 'pointer',
+                                      fontSize: '16px',
+                                      fontWeight: 'bold',
+                                      border: '2px solid white',
+                                      zIndex: 1002,
+                                      pointerEvents: 'auto',
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSignaturePreviews(prev => prev.filter(p => p.id !== preview.id));
+                                    }}
+                                    title="Delete signature"
+                                  >
+                                    ×
+                                  </div>
+                                )}
 
-                                const handleMouseMove = (moveEvent: MouseEvent) => {
-                                  // Mark that we're dragging
-                                  isDraggingRef.current = true;
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    pointerEvents: readOnly ? 'none' : 'auto',
+                                  }}
+                                  onMouseDown={readOnly ? undefined : (e) => {
+                                    e.stopPropagation();
+                                    const startX = e.clientX;
+                                    const startY = e.clientY;
+                                    const startLeft = preview.x;
+                                    const startTop = preview.y;
 
-                                  const deltaX = (moveEvent.clientX - startX) / scale;
-                                  const deltaY = (moveEvent.clientY - startY) / scale;
+                                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                                      isDraggingRef.current = true;
+                                      const deltaX = (moveEvent.clientX - startX) / scale;
+                                      const deltaY = (moveEvent.clientY - startY) / scale;
+                                      setSignaturePreviews(prev => prev.map(p =>
+                                        p.id === preview.id
+                                          ? { ...p, x: startLeft + deltaX, y: startTop + deltaY }
+                                          : p
+                                      ));
+                                    };
 
-                                  let newWidth = startWidth;
-                                  let newHeight = startHeight;
-                                  let newX = startLeft;
-                                  let newY = startTop;
+                                    const handleMouseUp = () => {
+                                      document.removeEventListener('mousemove', handleMouseMove);
+                                      document.removeEventListener('mouseup', handleMouseUp);
+                                      setTimeout(() => { isDraggingRef.current = false; }, 10);
+                                    };
 
-                                  // Calculate new dimensions based on handle position
-                                  if (handle.position.includes('e')) {
-                                    newWidth = Math.max(50, startWidth + deltaX);
-                                  }
-                                  if (handle.position.includes('w')) {
-                                    newWidth = Math.max(50, startWidth - deltaX);
-                                    newX = startLeft + (startWidth - newWidth);
-                                  }
-                                  if (handle.position.includes('s')) {
-                                    newHeight = Math.max(25, startHeight + deltaY);
-                                  }
-                                  if (handle.position.includes('n')) {
-                                    newHeight = Math.max(25, startHeight - deltaY);
-                                    newY = startTop + (startHeight - newHeight);
-                                  }
+                                    document.addEventListener('mousemove', handleMouseMove);
+                                    document.addEventListener('mouseup', handleMouseUp);
+                                  }}
+                                >
+                                  <img
+                                    src={preview.signatureData}
+                                    alt="Signature preview"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'contain',
+                                      pointerEvents: 'none',
+                                    }}
+                                  />
 
-                                  setSignaturePreviews(prev => prev.map(p =>
-                                    p.id === preview.id
-                                      ? { ...p, x: newX, y: newY, width: newWidth, height: newHeight }
-                                      : p
-                                  ));
-                                };
+                                  {/* Resize handles */}
+                                  {[
+                                    { position: 'nw', cursor: 'nw-resize', top: -4, left: -4 },
+                                    { position: 'ne', cursor: 'ne-resize', top: -4, right: -4 },
+                                    { position: 'sw', cursor: 'sw-resize', bottom: -4, left: -4 },
+                                    { position: 'se', cursor: 'se-resize', bottom: -4, right: -4 },
+                                  ].map((handle) => (
+                                    <div
+                                      key={handle.position}
+                                      style={{
+                                        position: 'absolute',
+                                        width: 8,
+                                        height: 8,
+                                        backgroundColor: '#007ACC',
+                                        border: '1px solid white',
+                                        cursor: handle.cursor,
+                                        zIndex: 1001,
+                                        ...(handle.top !== undefined && { top: handle.top }),
+                                        ...(handle.bottom !== undefined && { bottom: handle.bottom }),
+                                        ...(handle.left !== undefined && { left: handle.left }),
+                                        ...(handle.right !== undefined && { right: handle.right }),
+                                      }}
+                                      onMouseDown={(e) => {
+                                        e.stopPropagation();
+                                        const startX = e.clientX;
+                                        const startY = e.clientY;
+                                        const startWidth = preview.width;
+                                        const startHeight = preview.height;
+                                        const startLeft = preview.x;
+                                        const startTop = preview.y;
 
-                                const handleMouseUp = () => {
-                                  document.removeEventListener('mousemove', handleMouseMove);
-                                  document.removeEventListener('mouseup', handleMouseUp);
+                                        const handleMouseMove = (moveEvent: MouseEvent) => {
+                                          isDraggingRef.current = true;
+                                          const deltaX = (moveEvent.clientX - startX) / scale;
+                                          const deltaY = (moveEvent.clientY - startY) / scale;
 
-                                  // Reset drag flag after a short delay to prevent click from firing
-                                  setTimeout(() => {
-                                    isDraggingRef.current = false;
-                                  }, 10);
-                                };
+                                          let newWidth = startWidth;
+                                          let newHeight = startHeight;
+                                          let newX = startLeft;
+                                          let newY = startTop;
 
-                                document.addEventListener('mousemove', handleMouseMove);
-                                document.addEventListener('mouseup', handleMouseUp);
-                              }}
-                            />
-                          ))}
-                          </div>
+                                          if (handle.position.includes('e')) {
+                                            newWidth = Math.max(50, startWidth + deltaX);
+                                          }
+                                          if (handle.position.includes('w')) {
+                                            newWidth = Math.max(50, startWidth - deltaX);
+                                            newX = startLeft + (startWidth - newWidth);
+                                          }
+                                          if (handle.position.includes('s')) {
+                                            newHeight = Math.max(25, startHeight + deltaY);
+                                          }
+                                          if (handle.position.includes('n')) {
+                                            newHeight = Math.max(25, startHeight - deltaY);
+                                            newY = startTop + (startHeight - newHeight);
+                                          }
+
+                                          setSignaturePreviews(prev => prev.map(p =>
+                                            p.id === preview.id
+                                              ? { ...p, x: newX, y: newY, width: newWidth, height: newHeight }
+                                              : p
+                                          ));
+                                        };
+
+                                        const handleMouseUp = () => {
+                                          document.removeEventListener('mousemove', handleMouseMove);
+                                          document.removeEventListener('mouseup', handleMouseUp);
+                                          setTimeout(() => { isDraggingRef.current = false; }, 10);
+                                        };
+
+                                        document.addEventListener('mousemove', handleMouseMove);
+                                        document.addEventListener('mouseup', handleMouseUp);
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
                         </div>
-                      ))}
-                    </div>
-                  </PagePointerProvider>
-                </Rotate>
-              )}
-            />
-          </Viewport>
-        </GlobalPointerProvider>
+                      </PagePointerProvider>
+                    </Rotate>
+                  )}
+                />
+              </Viewport>
+            </GlobalPointerProvider>
+          )}
+        </DocumentReadyWrapper>
       </EmbedPDF>
     </div>
   );
 });
+
+LocalEmbedPDFWithAnnotations.displayName = 'LocalEmbedPDFWithAnnotations';

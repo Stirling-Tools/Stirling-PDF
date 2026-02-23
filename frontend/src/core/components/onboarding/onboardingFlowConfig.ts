@@ -6,6 +6,7 @@ import ServerLicenseSlide from '@app/components/onboarding/slides/ServerLicenseS
 import FirstLoginSlide from '@app/components/onboarding/slides/FirstLoginSlide';
 import TourOverviewSlide from '@app/components/onboarding/slides/TourOverviewSlide';
 import AnalyticsChoiceSlide from '@app/components/onboarding/slides/AnalyticsChoiceSlide';
+import MFASetupSlide from '@app/components/onboarding/slides/MFASetupSlide';
 import { SlideConfig, LicenseNotice } from '@app/types/types';
 
 export type SlideId =
@@ -16,7 +17,8 @@ export type SlideId =
   | 'admin-overview'
   | 'server-license'
   | 'tour-overview'
-  | 'analytics-choice';
+  | 'analytics-choice'
+  | 'mfa-setup';
 
 export type HeroType = 'rocket' | 'dual-icon' | 'shield' | 'diamond' | 'logo' | 'lock' | 'analytics';
 
@@ -61,6 +63,7 @@ export interface SlideFactoryParams {
   usingDefaultCredentials?: boolean;
   analyticsError?: string | null;
   analyticsLoading?: boolean;
+  onMfaSetupComplete?: () => void;
 }
 
 export interface HeroDefinition {
@@ -280,6 +283,12 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
         action: 'enable-analytics',
       },
     ],
+  },
+  'mfa-setup': {
+    id: 'mfa-setup',
+    createSlide: ({ onMfaSetupComplete = () => {} }: SlideFactoryParams) => MFASetupSlide({ onMfaSetupComplete }),
+    hero: { type: 'lock' },
+    buttons: [], // Form has its own submit button
   },
 };
 

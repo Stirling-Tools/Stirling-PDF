@@ -3,11 +3,12 @@ import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
-import { useFileState } from '@app/contexts/FileContext';
+import { useFileState, useFileActions } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { FileId } from '@app/types/file';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -26,6 +27,7 @@ export default function Workbench() {
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
+  const { actions: fileActions } = useFileActions();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
@@ -61,12 +63,16 @@ export default function Workbench() {
   const handleFileSelect = useCallback((index: number) => {
     // Don't do anything if selecting the same file
     if (index === activeFileIndex) return;
-    
+
     // requestNavigation handles the unsaved changes check internally
     requestNavigation(() => {
       setActiveFileIndex(index);
     });
   }, [activeFileIndex, requestNavigation, setActiveFileIndex]);
+
+  const handleFileRemove = useCallback(async (fileId: FileId) => {
+    await fileActions.removeFiles([fileId], false); // false = don't delete from IndexedDB, just remove from context
+  }, [fileActions]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -137,14 +143,15 @@ export default function Workbench() {
         );
 
       case "pageEditor":
-        
+
         return (
-          <>
+          <div style={{ position: 'relative', flex: '1 1 0', height: 0 }}>
             <PageEditor
               onFunctionsReady={setPageEditorFunctions}
             />
             {pageEditorFunctions && (
-              <PageEditorControls
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
+                <PageEditorControls
                 onClosePdf={pageEditorFunctions.closePdf}
                 onUndo={pageEditorFunctions.handleUndo}
                 onRedo={pageEditorFunctions.handleRedo}
@@ -164,8 +171,9 @@ export default function Workbench() {
                 splitPositions={pageEditorFunctions.splitPositions}
                 totalPages={pageEditorFunctions.totalPages}
               />
+              </div>
             )}
-          </>
+          </div>
         );
 
       default:
@@ -195,6 +203,7 @@ export default function Workbench() {
           })}
           currentFileIndex={activeFileIndex}
           onFileSelect={handleFileSelect}
+          onFileRemove={handleFileRemove}
         />
       )}
 
@@ -203,9 +212,10 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
+        className={`flex-1 min-h-0 z-10 ${currentView === 'pageEditor' ? 'relative flex flex-col' : `relative ${styles.workbenchScrollable}`}`}
         style={{
           transition: 'opacity 0.15s ease-in-out',
+          ...(currentView === 'pageEditor' && { height: 0 }),
         }}
       >
         {renderMainContent()}

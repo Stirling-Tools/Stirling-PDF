@@ -1,18 +1,40 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig(({ mode }) => {
+
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the
+  // `VITE_` prefix.
+  const env = loadEnv(mode, process.cwd(), '')
+
   // When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
   const isProprietary = process.env.DISABLE_ADDITIONAL_FEATURES !== 'true';
   const isDesktopMode =
     mode === 'desktop' ||
-    process.env.STIRLING_DESKTOP === 'true' ||
-    process.env.VITE_DESKTOP === 'true';
+    env.STIRLING_DESKTOP === 'true' ||
+    env.VITE_DESKTOP === 'true';
 
-  const baseProject = isProprietary ? './tsconfig.proprietary.json' : './tsconfig.core.json';
-  const desktopProject = isProprietary ? './tsconfig.desktop.json' : baseProject;
+  // Validate required environment variables for desktop builds
+  if (isDesktopMode) {
+    const requiredEnvVars = [
+      'VITE_SAAS_SERVER_URL',
+      'VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
+    ];
+
+    const missingVars = requiredEnvVars.filter(varName => !env[varName]);
+
+    if (missingVars.length > 0) {
+      throw new Error(
+        `Desktop build failed: Missing required environment variables:\n${missingVars.map(v => `  - ${v}`).join('\n')}\n\nPlease set these variables before building the desktop app.`
+      );
+    }
+  }
+
+  const baseProject = isProprietary ? './tsconfig.proprietary.vite.json' : './tsconfig.core.vite.json';
+  const desktopProject = isProprietary ? './tsconfig.desktop.vite.json' : baseProject;
   const tsconfigProject = isDesktopMode ? desktopProject : baseProject;
 
   return {
@@ -92,6 +114,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    base: process.env.RUN_SUBPATH ? `/${process.env.RUN_SUBPATH}` : './',
+    base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : './',
   };
 });

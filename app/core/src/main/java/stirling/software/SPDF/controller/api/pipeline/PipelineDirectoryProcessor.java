@@ -1,11 +1,9 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,14 +15,15 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -45,13 +44,20 @@ import stirling.software.common.util.FileMonitor;
 @Slf4j
 public class PipelineDirectoryProcessor {
 
+    private static final int MAX_DIRECTORY_DEPTH = 50; // Prevent excessive recursion
+    private static final Pattern WATCHED_FOLDERS_PATTERN = Pattern.compile("\\\\?watchedFolders");
+
     private final ObjectMapper objectMapper;
     private final ApiDocService apiDocService;
     private final PipelineProcessor processor;
     private final FileMonitor fileMonitor;
     private final PostHogService postHogService;
-    private final String watchedFoldersDir;
+    private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
+
+    // Track processed directories in current scan to prevent duplicates
+    private final ThreadLocal<java.util.Set<Path>> processedDirsInScan =
+            ThreadLocal.withInitial(java.util.HashSet::new);
 
     public PipelineDirectoryProcessor(
             ObjectMapper objectMapper,
@@ -65,13 +71,26 @@ public class PipelineDirectoryProcessor {
         this.processor = processor;
         this.fileMonitor = fileMonitor;
         this.postHogService = postHogService;
-        this.watchedFoldersDir = runtimePathConfig.getPipelineWatchedFoldersPath();
+        this.watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
 
     @Scheduled(fixedRate = 60000)
     public void scanFolders() {
-        Path watchedFolderPath = Paths.get(watchedFoldersDir).toAbsolutePath();
+        // Clear the processed directories set for this scan cycle
+        processedDirsInScan.get().clear();
+
+        try {
+            for (String watchedFoldersDir : watchedFoldersDirs) {
+                scanWatchedFolder(Paths.get(watchedFoldersDir).toAbsolutePath());
+            }
+        } finally {
+            // Clean up ThreadLocal to prevent memory leaks
+            processedDirsInScan.remove();
+        }
+    }
+
+    private void scanWatchedFolder(Path watchedFolderPath) {
         if (!Files.exists(watchedFolderPath)) {
             try {
                 Files.createDirectories(watchedFolderPath);
@@ -82,16 +101,34 @@ public class PipelineDirectoryProcessor {
             }
         }
 
+        // Validate the path is a directory and readable
+        if (!Files.isDirectory(watchedFolderPath)) {
+            log.error("Path is not a directory: {}", watchedFolderPath);
+            return;
+        }
+        if (!Files.isReadable(watchedFolderPath)) {
+            log.error("Directory is not readable: {}", watchedFolderPath);
+            return;
+        }
+
         try {
+            // Use FOLLOW_LINKS to follow symlinks, with max depth to prevent infinite loops
             Files.walkFileTree(
                     watchedFolderPath,
+                    EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                    MAX_DIRECTORY_DEPTH,
                     new SimpleFileVisitor<>() {
                         @Override
                         public FileVisitResult preVisitDirectory(
                                 Path dir, BasicFileAttributes attrs) {
                             try {
+                                String dirName =
+                                        dir.getFileName() != null
+                                                ? dir.getFileName().toString()
+                                                : "";
                                 // Skip root directory and "processing" subdirectories
-                                if (!dir.equals(watchedFolderPath) && !dir.endsWith("processing")) {
+                                if (!dir.equals(watchedFolderPath)
+                                        && !"processing".equals(dirName)) {
                                     handleDirectory(dir);
                                 }
                             } catch (Exception e) {
@@ -102,8 +139,11 @@ public class PipelineDirectoryProcessor {
 
                         @Override
                         public FileVisitResult visitFileFailed(Path path, IOException exc) {
-                            // Handle broken symlinks or inaccessible directories
-                            log.error("Error accessing path: {}", path, exc);
+                            // Handle broken symlinks, permission issues, or inaccessible
+                            // directories
+                            if (exc != null) {
+                                log.debug("Cannot access path '{}': {}", path, exc.getMessage());
+                            }
                             return FileVisitResult.CONTINUE;
                         }
                     });
@@ -113,6 +153,17 @@ public class PipelineDirectoryProcessor {
     }
 
     public void handleDirectory(Path dir) throws IOException {
+        // Normalize path to absolute to prevent duplicate processing from different path
+        // representations
+        Path normalizedDir = dir.toAbsolutePath().normalize();
+
+        // Check if we've already processed this directory in this scan cycle
+        java.util.Set<Path> processedDirs = processedDirsInScan.get();
+        if (!processedDirs.add(normalizedDir)) {
+            log.debug("Directory already processed in this scan cycle: {}", normalizedDir);
+            return;
+        }
+
         log.info("Handling directory: {}", dir);
         Path processingDir = createProcessingDirectory(dir);
         Optional<Path> jsonFileOptional = findJsonFile(dir);
@@ -164,7 +215,8 @@ public class PipelineDirectoryProcessor {
             postHogService.captureEvent("pipeline_directory_event", properties);
 
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
-            runPipelineAgainstFiles(filesToProcess, config, dir, processingDir);
+            try (PipelineResult result =
+                    runPipelineAgainstFiles(filesToProcess, config, dir, processingDir)) {}
         }
     }
 
@@ -303,14 +355,14 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    private void runPipelineAgainstFiles(
+    private PipelineResult runPipelineAgainstFiles(
             List<File> filesToProcess, PipelineConfig config, Path dir, Path processingDir)
             throws IOException {
         try {
             List<Resource> inputFiles =
                     processor.generateInputFiles(filesToProcess.toArray(new File[0]));
             if (inputFiles == null || inputFiles.isEmpty()) {
-                return;
+                return new PipelineResult();
             }
             PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
 
@@ -321,9 +373,11 @@ public class PipelineDirectoryProcessor {
                 moveAndRenameFiles(result.getOutputFiles(), config, dir);
                 deleteOriginalFiles(filesToProcess, processingDir);
             }
+            return result;
         } catch (Exception e) {
             log.error("Error during processing", e);
             moveFilesBack(filesToProcess, processingDir);
+            return new PipelineResult();
         }
     }
 
@@ -350,8 +404,9 @@ public class PipelineDirectoryProcessor {
                 log.info("Created directory: {}", outputPath);
             }
             Path outputFile = outputPath.resolve(outputFileName);
-            try (OutputStream os = new FileOutputStream(outputFile.toFile())) {
-                os.write(((ByteArrayResource) resource).getByteArray());
+            try (OutputStream os = new FileOutputStream(outputFile.toFile());
+                    InputStream is = resource.getInputStream()) {
+                is.transferTo(os);
             }
             log.info("File moved and renamed to {}", outputFile);
         }
@@ -380,10 +435,12 @@ public class PipelineDirectoryProcessor {
 
     private Path determineOutputPath(PipelineConfig config, Path dir) {
         String outputDir =
-                config.getOutputDir()
-                        .replace("{outputFolder}", finishedFoldersDir)
-                        .replace("{folderName}", dir.toString())
-                        .replaceAll("\\\\?watchedFolders", "");
+                WATCHED_FOLDERS_PATTERN
+                        .matcher(
+                                config.getOutputDir()
+                                        .replace("{outputFolder}", finishedFoldersDir)
+                                        .replace("{folderName}", dir.toString()))
+                        .replaceAll("");
         return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
     }
 

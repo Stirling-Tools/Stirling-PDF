@@ -88,7 +88,6 @@ public class User implements UserDetails, Serializable {
 
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
-    @Lob
     @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     @JsonIgnore

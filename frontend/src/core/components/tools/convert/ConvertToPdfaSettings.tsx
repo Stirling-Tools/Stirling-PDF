@@ -1,8 +1,9 @@
-import { Stack, Text, Select, Alert } from '@mantine/core';
+import { Stack, Text, Select, Alert, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { ConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { usePdfSignatureDetection } from '@app/hooks/usePdfSignatureDetection';
 import { StirlingFile } from '@app/types/fileContext';
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ConvertToPdfaSettingsProps {
   parameters: ConvertParameters;
@@ -22,8 +23,8 @@ const ConvertToPdfaSettings = ({
 
   const pdfaFormatOptions = [
     { value: 'pdfa-1', label: 'PDF/A-1b' },
-    { value: 'pdfa', label: 'PDF/A-2b' },
-    { value: 'pdfa-3', label: 'PDF/A-3b' }
+    { value: 'pdfa-2b', label: 'PDF/A-2b' },
+    { value: 'pdfa-3b', label: 'PDF/A-3b' }
   ];
 
   return (
@@ -44,16 +45,28 @@ const ConvertToPdfaSettings = ({
           value={parameters.pdfaOptions.outputFormat}
           onChange={(value) => onParameterChange('pdfaOptions', {
             ...parameters.pdfaOptions,
-            outputFormat: value || 'pdfa-1'
+            outputFormat: value || 'pdfa-2b'
           })}
           data={pdfaFormatOptions}
           disabled={disabled || isChecking}
           data-testid="pdfa-output-format-select"
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
         <Text size="xs" c="dimmed">
           {t("convert.pdfaNote", "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files.")}
         </Text>
       </Stack>
+
+      <Checkbox
+        label={t("convert.strictMode", "Strict Mode")}
+        description={t("convert.strictModeDesc", "Error if conversion is not perfect (uses VeraPDF verification)")}
+        checked={parameters.pdfaOptions.strict}
+        onChange={(event) => onParameterChange('pdfaOptions', {
+          ...parameters.pdfaOptions,
+          strict: event.currentTarget.checked
+        })}
+        disabled={disabled || isChecking}
+      />
     </Stack>
   );
 };

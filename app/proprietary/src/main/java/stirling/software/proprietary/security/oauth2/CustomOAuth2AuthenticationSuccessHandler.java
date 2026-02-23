@@ -1,9 +1,9 @@
 package stirling.software.proprietary.security.oauth2;
 
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
-import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
+import java.net.URI;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.DesktopClientUtils;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,6 +49,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final JwtServiceInterface jwtService;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -114,10 +116,10 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
                 return;
             }
+            boolean isSsoUser = userService.isSsoAuthenticationTypeByUsername(username);
             if (userExists
                     && userService.hasPassword(username)
-                    && (!userService.isAuthenticationTypeByUsername(username, SSO)
-                            || !userService.isAuthenticationTypeByUsername(username, OAUTH2))
+                    && !isSsoUser
                     && oauth2Properties.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
@@ -150,9 +152,27 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
                 // Generate JWT if v2 is enabled
                 if (jwtService.isJwtEnabled()) {
-                    String jwt =
-                            jwtService.generateToken(
-                                    authentication, Map.of("authType", AuthenticationType.OAUTH2));
+                    Map<String, Object> claims = Map.of("authType", AuthenticationType.OAUTH2);
+
+                    // Detect desktop client and issue longer-lived tokens
+                    boolean isDesktopClient = DesktopClientUtils.isDesktopClient(request);
+                    String jwt;
+                    if (isDesktopClient) {
+                        // Desktop: Use configured desktop token expiry (default 30 days)
+                        int desktopExpiryMinutes =
+                                DesktopClientUtils.getDesktopTokenExpiryMinutes(
+                                        applicationProperties);
+                        jwt = jwtService.generateToken(username, claims, desktopExpiryMinutes);
+                        log.info(
+                                "Issued DESKTOP OAuth2 token for user '{}': expiry={}min ({}d)",
+                                username,
+                                desktopExpiryMinutes,
+                                desktopExpiryMinutes / 1440);
+                    } else {
+                        // Web: Use default expiry
+                        jwt = jwtService.generateToken(authentication, claims);
+                        log.debug("Issued WEB OAuth2 token for user '{}'", username);
+                    }
 
                     // Build context-aware redirect URL based on the original request
                     String redirectUrl =
@@ -259,19 +279,23 @@ public class CustomOAuth2AuthenticationSuccessHandler
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
-                java.net.URL refererUrl = new java.net.URL(referer);
-                String refererHost = refererUrl.getHost().toLowerCase();
+                URI refererUri = URI.create(referer);
+                String host = refererUri.getHost();
+                if (host == null) {
+                    return Optional.empty();
+                }
+
+                String refererHost = host.toLowerCase();
 
                 if (!isOAuthProviderDomain(refererHost)) {
-                    String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
-                    if (refererUrl.getPort() != -1
-                            && refererUrl.getPort() != 80
-                            && refererUrl.getPort() != 443) {
-                        origin += ":" + refererUrl.getPort();
+                    String origin = refererUri.getScheme() + "://" + host;
+                    int port = refererUri.getPort();
+                    if (port != -1 && port != 80 && port != 443) {
+                        origin += ":" + port;
                     }
                     return Optional.of(origin);
                 }
-            } catch (java.net.MalformedURLException e) {
+            } catch (IllegalArgumentException e) {
                 // ignore and fall back
             }
         }

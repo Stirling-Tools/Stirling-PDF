@@ -33,17 +33,13 @@ export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParam
     return config.validateFn ? config.validateFn(parameters) : true;
   }, [parameters, config.validateFn]);
 
-  const endpointName = config.endpointName;
-  let getEndpointName: () => string;
-  if (typeof endpointName === "string") {
-    getEndpointName = useCallback(() => {
+  const getEndpointName = useCallback(() => {
+    const { endpointName } = config;
+    if (typeof endpointName === "string") {
       return endpointName;
-    }, []);
-  } else {
-    getEndpointName = useCallback(() => {
-      return endpointName(parameters);
-    }, [parameters]);
-  }
+    }
+    return endpointName(parameters);
+  }, [config.endpointName, parameters]);
 
   return {
     parameters,

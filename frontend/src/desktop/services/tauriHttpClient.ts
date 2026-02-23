@@ -26,6 +26,7 @@ export interface TauriHttpRequestConfig {
   // Custom properties for desktop
   operationName?: string;
   skipBackendReadyCheck?: boolean;
+  skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
   cancelToken?: any;
@@ -58,7 +59,9 @@ interface Interceptors {
 class TauriHttpClient {
   public defaults: TauriHttpRequestConfig = {
     baseURL: '',
-    headers: {},
+    headers: {
+      'User-Agent': 'StirlingPDF-Desktop/1.0 Tauri',
+    },
     timeout: 120000,
     responseType: 'json',
     withCredentials: false, // Desktop doesn't need credentials (backend has allowCredentials=false)
@@ -192,12 +195,26 @@ class TauriHttpClient {
       const credentials: RequestCredentials = finalConfig.withCredentials ? 'include' : 'omit';
 
       // Make the request using Tauri's native HTTP client (standard Fetch API)
-      const response = await fetch(url, {
+      // Enable certificate bypass for HTTPS to handle missing intermediate certs and self-signed certs
+      const fetchOptions: any = {
         method,
         headers,
         body,
         credentials,
-      });
+      };
+
+      // Always enable dangerous settings for HTTPS to allow connections to servers with:
+      // - Missing intermediate certificates
+      // - Self-signed certificates
+      // - Certificate hostname mismatches
+      if (url.startsWith('https://')) {
+        fetchOptions.danger = {
+          acceptInvalidCerts: true,
+          acceptInvalidHostnames: true,
+        };
+      }
+
+      const response = await fetch(url, fetchOptions);
 
       // Parse response based on responseType
       let data: T;

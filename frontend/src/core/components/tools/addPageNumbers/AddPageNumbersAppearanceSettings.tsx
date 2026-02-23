@@ -6,6 +6,7 @@ import { Stack, Select, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface AddPageNumbersAppearanceSettingsProps {
   parameters: AddPageNumbersParameters;
@@ -34,6 +35,7 @@ const AddPageNumbersAppearanceSettings = ({
             { value: 'x-large', label: t('sizes.x-large', 'Extra Large') },
           ]}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       </Tooltip>
 
@@ -43,6 +45,16 @@ const AddPageNumbersAppearanceSettings = ({
           value={parameters.fontSize}
           onChange={(v) => onParameterChange('fontSize', typeof v === 'number' ? v : 12)}
           min={1}
+          disabled={disabled}
+        />
+      </Tooltip>
+
+      <Tooltip content={t('addPageNumbers.zeroPadTooltip', 'Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.')}>
+        <NumberInput
+          label={t('addPageNumbers.zeroPad', 'Zero-pad Width (Bates Stamping)')}
+          value={parameters.zeroPad}
+          onChange={(v) => onParameterChange('zeroPad', typeof v === 'number' ? v : 0)}
+          min={0}
           disabled={disabled}
         />
       </Tooltip>
@@ -58,6 +70,7 @@ const AddPageNumbersAppearanceSettings = ({
             { value: 'Courier', label: 'Courier New' },
           ]}
           disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
       </Tooltip>
 

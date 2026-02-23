@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DesktopAuthLayout } from '@app/components/SetupWizard/DesktopAuthLayout';
 import { SaaSLoginScreen } from '@app/components/SetupWizard/SaaSLoginScreen';
@@ -6,11 +6,10 @@ import { SaaSSignupScreen } from '@app/components/SetupWizard/SaaSSignupScreen';
 import { ServerSelectionScreen } from '@app/components/SetupWizard/ServerSelectionScreen';
 import { SelfHostedLoginScreen } from '@app/components/SetupWizard/SelfHostedLoginScreen';
 import { ServerConfig, connectionModeService } from '@app/services/connectionModeService';
-import { authService, UserInfo } from '@app/services/authService';
+import { AuthServiceError, authService, UserInfo } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
-import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
-import { useEffect } from 'react';
 import '@app/routes/authShared/auth.css';
 
 enum SetupStep {
@@ -30,6 +29,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>({ url: STIRLING_SAAS_URL });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selfHostedMfaCode, setSelfHostedMfaCode] = useState('');
+  const [selfHostedMfaRequired, setSelfHostedMfaRequired] = useState(false);
+  const [lockConnectionMode, setLockConnectionMode] = useState(false);
 
   const handleSaaSLogin = async (username: string, password: string) => {
     if (!serverConfig) {
@@ -80,6 +82,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   const handleSelfHostedClick = () => {
+    if (lockConnectionMode) {
+      return;
+    }
     setError(null);
     setActiveStep(SetupStep.ServerSelection);
   };
@@ -95,8 +100,13 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   const handleServerSelection = (config: ServerConfig) => {
+    console.log('[SetupWizard] Server selected:', config);
+    console.log('[SetupWizard] OAuth providers:', config.enabledOAuthProviders);
+    console.log('[SetupWizard] Login method:', config.loginMethod);
     setServerConfig(config);
     setError(null);
+    setSelfHostedMfaCode('');
+    setSelfHostedMfaRequired(false);
     setActiveStep(SetupStep.SelfHostedLogin);
   };
 
@@ -116,8 +126,13 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       setError(null);
 
       console.log('[SetupWizard] Step 1: Authenticating with server...');
-      await authService.login(serverConfig.url, username, password);
+      const trimmedMfa = selfHostedMfaCode.trim();
+      const mfaCode = trimmedMfa ? trimmedMfa : undefined;
+      await authService.login(serverConfig.url, username, password, mfaCode);
       console.log('[SetupWizard] ✅ Authentication successful');
+
+      setSelfHostedMfaRequired(false);
+      setSelfHostedMfaCode('');
 
       console.log('[SetupWizard] Step 2: Switching to self-hosted mode...');
       await connectionModeService.switchToSelfHosted(serverConfig);
@@ -131,7 +146,20 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       onComplete();
     } catch (err) {
       console.error('[SetupWizard] ❌ Self-hosted login failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Self-hosted login failed';
+      let errorMessage = 'Self-hosted login failed';
+      if (err instanceof AuthServiceError) {
+        if (err.code === 'mfa_required' || err.code === 'invalid_mfa_code') {
+          setSelfHostedMfaRequired(true);
+        }
+        errorMessage = err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      if (errorMessage.toLowerCase().includes('mfa_required') || errorMessage.toLowerCase().includes('invalid_mfa_code')) {
+        setSelfHostedMfaRequired(true);
+      }
       console.error('[SetupWizard] Error message:', errorMessage);
       setError(errorMessage);
       setLoading(false);
@@ -185,12 +213,16 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         const params = new URLSearchParams(hash);
         const accessToken = params.get('access_token');
         const type = params.get('type') || parsed.searchParams.get('type');
-        const accessTokenFromHash = params.get('access_token');
-        const accessTokenFromQuery = parsed.searchParams.get('access_token');
-        const serverFromQuery = parsed.searchParams.get('server');
-
-        // Handle self-hosted SSO deep link
+        // Self-hosted SSO deep links are normally handled by authService.loginWithSelfHostedOAuth.
+        // Fallback here only if no in-flight auth listener exists (e.g. renderer reload mid-flow).
         if (type === 'sso' || type === 'sso-selfhosted') {
+          if (authService.isSelfHostedDeepLinkFlowActive()) {
+            return;
+          }
+
+          const accessTokenFromHash = params.get('access_token');
+          const accessTokenFromQuery = parsed.searchParams.get('access_token');
+          const serverFromQuery = parsed.searchParams.get('server');
           const token = accessTokenFromHash || accessTokenFromQuery;
           const serverUrl = serverFromQuery || serverConfig?.url || STIRLING_SAAS_URL;
           if (!token || !serverUrl) {
@@ -237,8 +269,13 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   }, [onComplete, serverConfig?.url]);
 
   const handleBack = () => {
+    if (lockConnectionMode) {
+      return;
+    }
     setError(null);
     if (activeStep === SetupStep.SelfHostedLogin) {
+      setSelfHostedMfaCode('');
+      setSelfHostedMfaRequired(false);
       setActiveStep(SetupStep.ServerSelection);
     } else if (activeStep === SetupStep.ServerSelection) {
       setActiveStep(SetupStep.SaaSLogin);
@@ -248,10 +285,60 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }
   };
 
+  useEffect(() => {
+    const loadConfig = async () => {
+      const currentConfig = await connectionModeService.getCurrentConfig();
+      if (currentConfig.lock_connection_mode && currentConfig.server_config?.url) {
+        setLockConnectionMode(true);
+
+        // Re-fetch OAuth providers for the saved server URL
+        const savedUrl = currentConfig.server_config.url.replace(/\/+$/, ''); // Remove trailing slashes
+        let updatedConfig = { ...currentConfig.server_config };
+
+        try {
+          console.log('[SetupWizard] Re-fetching OAuth providers for saved server:', savedUrl);
+          const response = await fetch(`${savedUrl}/api/v1/proprietary/ui-data/login`);
+
+          if (response.ok) {
+            const data = await response.json();
+            const enabledProviders: any[] = [];
+            const providerEntries = Object.entries(data.providerList || {});
+
+            providerEntries.forEach(([path, label]) => {
+              const id = path.split('/').pop();
+              if (id) {
+                enabledProviders.push({
+                  id,
+                  path,
+                  label: typeof label === 'string' ? label : undefined,
+                });
+              }
+            });
+
+            updatedConfig = {
+              ...updatedConfig,
+              enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+              loginMethod: data.loginMethod || 'all',
+            };
+
+            console.log('[SetupWizard] Updated config with OAuth providers:', updatedConfig);
+          }
+        } catch (err) {
+          console.error('[SetupWizard] Failed to re-fetch OAuth providers:', err);
+        }
+
+        setServerConfig(updatedConfig);
+        setActiveStep(SetupStep.SelfHostedLogin);
+      }
+    };
+
+    void loadConfig();
+  }, []);
+
   return (
     <DesktopAuthLayout>
       {/* Step Content */}
-      {activeStep === SetupStep.SaaSLogin && (
+      {!lockConnectionMode && activeStep === SetupStep.SaaSLogin && (
         <SaaSLoginScreen
           serverUrl={serverConfig?.url || STIRLING_SAAS_URL}
           onLogin={handleSaaSLogin}
@@ -263,7 +350,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         />
       )}
 
-      {activeStep === SetupStep.SaaSSignup && (
+      {!lockConnectionMode && activeStep === SetupStep.SaaSSignup && (
         <SaaSSignupScreen
           loading={loading}
           error={error}
@@ -272,7 +359,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         />
       )}
 
-      {activeStep === SetupStep.ServerSelection && (
+      {!lockConnectionMode && activeStep === SetupStep.ServerSelection && (
         <ServerSelectionScreen
           onSelect={handleServerSelection}
           loading={loading}
@@ -284,15 +371,19 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         <SelfHostedLoginScreen
           serverUrl={serverConfig?.url || ''}
           enabledOAuthProviders={serverConfig?.enabledOAuthProviders}
+          loginMethod={serverConfig?.loginMethod}
           onLogin={handleSelfHostedLogin}
           onOAuthSuccess={handleSelfHostedOAuthSuccess}
+          mfaCode={selfHostedMfaCode}
+          setMfaCode={setSelfHostedMfaCode}
+          requiresMfa={selfHostedMfaRequired}
           loading={loading}
           error={error}
         />
       )}
 
       {/* Back Button */}
-      {activeStep > SetupStep.SaaSLogin && !loading && (
+      {!lockConnectionMode && activeStep > SetupStep.SaaSLogin && !loading && (
         <div className="navigation-link-container" style={{ marginTop: '1.5rem' }}>
           <button
             type="button"

@@ -1,242 +1,351 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
+import React, { useCallback, useState, useMemo, useRef } from 'react';
+import { useDocumentState } from '@embedpdf/core/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
+import { useAnnotation } from '@embedpdf/plugin-annotation/react';
+import { PdfAnnotationSubtype, PdfActionType, type PdfLinkAnnoObject } from '@embedpdf/models';
 
-enum PDFActionType {
-  GoTo = 0,
-  GoToR = 1,
-  GoToE = 2,
-  URI = 3,
-  // Add other types as needed
+// ---------------------------------------------------------------------------
+// Inline SVG icons (thin-stroke, modern)
+// ---------------------------------------------------------------------------
+
+const TrashIcon: React.FC<{ size?: number }> = ({ size = 13 }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 4h8M5.5 4v-1a0.5 0 0 1 0.5-0.5h2a0.5 0 0 1 0.5 0.5v1M4.5 4l0.4 7a0.8 0 0 0 0.8 0.7h2.6a0.8 0 0 0 0.8-0.7l0.4-7"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M8.5 3.5l-3.5 3.5m3.5-3.5v2.5m0-2.5h-2.5M3.5 3.5h-0.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-0.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 2.5h3l2 2v4.5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-6.5a1 1 0 0 1 1-1z"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6 2.5v2h2"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function truncateUrl(url: string, maxLen = 32): string {
+  try {
+    const u = new URL(url);
+    const display = u.hostname + (u.pathname !== '/' ? u.pathname : '');
+    return display.length > maxLen ? display.slice(0, maxLen) + '\u2026' : display;
+  } catch {
+    return url.length > maxLen ? url.slice(0, maxLen) + '\u2026' : url;
+  }
 }
 
-interface PDFRect {
-  origin: { x: number; y: number };
-  size: { width: number; height: number };
+function getLinkLabel(annotationLink: PdfLinkAnnoObject): string {
+  if (!annotationLink.target) return 'Open Link';
+
+  if (annotationLink.target.type === 'action') {
+    const action = annotationLink.target.action;
+    if (action.type === PdfActionType.URI) return truncateUrl(action.uri);
+    if (action.type === PdfActionType.Goto) return `Page ${action.destination.pageIndex + 1}`;
+    if (action.type === PdfActionType.RemoteGoto) return `Page ${action.destination.pageIndex + 1}`;
+  } else if (annotationLink.target.type === 'destination') {
+    return `Page ${annotationLink.target.destination.pageIndex + 1}`;
+  }
+
+  return 'Open Link';
 }
 
-interface PDFDestination {
-  pageIndex: number;
-  view: [number, number];
+function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
+  if (!annotationLink.target) return false;
+  if (annotationLink.target.type === 'destination') return true;
+  if (annotationLink.target.type === 'action') {
+    const { type } = annotationLink.target.action;
+    return type === PdfActionType.Goto || type === PdfActionType.RemoteGoto;
+  }
+  return false;
 }
 
-interface PDFAction {
-  type: string | number;
-  destination?: PDFDestination;
-  uri?: string;
+// ---------------------------------------------------------------------------
+// LinkToolbar
+// ---------------------------------------------------------------------------
+
+interface LinkToolbarProps {
+  annotationLink: PdfLinkAnnoObject;
+  scale: number;
+  flipped: boolean;
+  onNavigate: (annotationLink: PdfLinkAnnoObject) => void;
+  onDelete: (annotationLink: PdfLinkAnnoObject) => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 }
 
-interface LinkAnnotation {
-  id: string;
-  type: number;
-  rect: PDFRect;
-  target?: {
-    type: string;
-    action?: PDFAction;
-    destination?: PDFDestination;
-    uri?: string;
-  };
-}
+const TOOLBAR_HEIGHT = 32;
+const TOOLBAR_GAP = 8;
 
-function isGoToAction(action: PDFAction): boolean {
-  return action.type === 'GoTo' || action.type === PDFActionType.GoTo;
-}
+const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
+  ({ annotationLink, scale, flipped, onNavigate, onDelete, onMouseEnter, onMouseLeave }) => {
+    const centerX = (annotationLink.rect.origin.x + annotationLink.rect.size.width / 2) * scale;
+    const topY = flipped
+      ? (annotationLink.rect.origin.y + annotationLink.rect.size.height) * scale + TOOLBAR_GAP
+      : annotationLink.rect.origin.y * scale - TOOLBAR_HEIGHT - TOOLBAR_GAP;
 
-function isURIAction(action: PDFAction): boolean {
-  return action.type === 'URI' || action.type === PDFActionType.URI;
-}
+    const internal = isInternalLink(annotationLink);
+    const label = getLinkLabel(annotationLink);
 
-function isInternalLink(link: LinkAnnotation): boolean {
-  return Boolean(link.target?.type === 'destination' ||
-         (link.target?.type === 'action' && link.target.action && isGoToAction(link.target.action)));
-}
+    return (
+      <div
+        className={`pdf-link-toolbar${flipped ? ' pdf-link-toolbar--below' : ''}`}
+        style={{ left: `${centerX}px`, top: `${topY}px` }}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {/* Delete */}
+        <button
+          type="button"
+          className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(annotationLink);
+          }}
+          aria-label="Delete link"
+          title="Delete link"
+        >
+          <TrashIcon />
+        </button>
 
-function isExternalLink(link: LinkAnnotation): boolean {
-  return Boolean(link.target?.type === 'uri' ||
-         (link.target?.type === 'action' && link.target.action && isURIAction(link.target.action)));
-}
+        <span className="pdf-link-toolbar-sep" />
+
+        {/* Navigate / Open */}
+        <button
+          type="button"
+          className="pdf-link-toolbar-btn pdf-link-toolbar-btn--go"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate(annotationLink);
+          }}
+          aria-label={internal ? `Go to page ${annotationLink.target?.type === 'destination' ? annotationLink.target.destination.pageIndex + 1 : ''}` : 'Open link'}
+          title={label}
+        >
+          {internal ? <PageIcon /> : <ExternalLinkIcon />}
+          <span className="pdf-link-toolbar-label">{label}</span>
+        </button>
+      </div>
+    );
+  },
+);
+
+LinkToolbar.displayName = 'LinkToolbar';
+
+// ---------------------------------------------------------------------------
+// LinkLayer
+// ---------------------------------------------------------------------------
 
 interface LinkLayerProps {
+  documentId: string;
   pageIndex: number;
-  scale: number;
-  document?: any;
-  pdfFile?: File | Blob;
-  onLinkClick?: (target: any) => void;
 }
 
-const getLinkTitle = (link: LinkAnnotation): string => {
-  if (link.target?.type === 'destination') {
-    return `Go to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
-    return `Go to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
-    return `Open link: ${link.target.action.uri}`;
-  }
-  if (link.target?.uri) {
-    return `Open link: ${link.target.uri}`;
-  }
-  return 'Link';
-};
+export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) => {
+  const { provides: scroll } = useScroll(documentId);
+  const { state, provides: scope } = useAnnotation(documentId);
+  const documentState = useDocumentState(documentId);
 
-const getLinkAriaLabel = (link: LinkAnnotation): string => {
-  if (link.target?.type === 'destination') {
-    return `Navigate to page ${(link.target.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && link.target.action?.type === 'GoTo') {
-    return `Navigate to page ${(link.target.action.destination?.pageIndex ?? 0) + 1}`;
-  }
-  if (link.target?.type === 'action' && (link.target.action?.type === 'URI' || link.target.action?.type === 3)) {
-    return 'Open external link';
-  }
-  return 'Open external link';
-};
+  const [hoveredLinkId, setHoveredLinkId] = useState<string | null>(null);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-export const LinkLayer: React.FC<LinkLayerProps> = ({
-  pageIndex,
-  scale,
-  document: pdfDocument,
-  onLinkClick
-}) => {
-  const { provides: annotation } = useAnnotationCapability();
-  const { provides: scroll } = useScroll();
-  const [links, setLinks] = useState<LinkAnnotation[]>([]);
-  const [isNavigating, setIsNavigating] = useState(false);
-
-  const processedLinks = useMemo(() => {
-    return links.map(link => ({
-      ...link,
-      scaledRect: {
-        left: link.rect.origin.x * scale,
-        top: link.rect.origin.y * scale,
-        width: link.rect.size.width * scale,
-        height: link.rect.size.height * scale,
-      }
-    }));
-  }, [links, scale]);
-
-  useEffect(() => {
-    const fetchLinks = async () => {
-      if (!annotation) return;
-
-      try {
-        // Use the annotation API's built-in filtering if available
-        const pageAnnotations = await annotation
-          .getPageAnnotations({
-            pageIndex,
-            // Try to filter for link annotations (type 2) if the API supports it
-            ...(annotation.getPageAnnotations.length > 1 ? { types: [2] } : {})
-          })
-          .toPromise();
-
-        // Filter for link annotations (type 2 is LINK in PDF spec) as fallback
-        const linkAnnotations = pageAnnotations.filter(
-          (ann: any) => ann.type === 2
-        ) as LinkAnnotation[];
-
-        if (linkAnnotations.length > 0) {
-          setLinks(linkAnnotations);
-          return;
+  // Extract link annotations for this page from EmbedPDF annotation state
+  const linkAnnotations = useMemo<PdfLinkAnnoObject[]>(() => {
+    if (!state) return [];
+    const uids = state.pages[pageIndex] ?? [];
+    const result: PdfLinkAnnoObject[] = [];
+    for (const uid of uids) {
+      const ta = state.byUid[uid];
+      if (
+        ta &&
+        ta.commitState !== 'deleted' &&
+        ta.object.type === PdfAnnotationSubtype.LINK
+      ) {
+        const annotationLink = ta.object as PdfLinkAnnoObject;
+        if (annotationLink.rect.size.width > 0 && annotationLink.rect.size.height > 0) {
+          result.push(annotationLink);
         }
-      } catch (error) {
-        console.error('[LinkLayer] Failed to fetch links from annotation API:', error);
       }
+    }
+    return result;
+  }, [state, pageIndex]);
 
-      if (pdfDocument) {
-        try {
-          // Try different methods to get link annotations
-          let pdfLinks: any[] = [];
+  // EmbedPDF scale factor (annotation rects are in PDF points at scale 1)
+  const scale = documentState?.scale ?? 1;
 
-          if (pdfDocument.getPageAnnotations && typeof pdfDocument.getPageAnnotations === 'function') {
-            pdfLinks = await pdfDocument.getPageAnnotations(pageIndex);
-          } else if (pdfDocument.getAnnotations && typeof pdfDocument.getAnnotations === 'function') {
-            const allAnnotations = await pdfDocument.getAnnotations();
-            pdfLinks = allAnnotations.filter((ann: any) => ann.pageIndex === pageIndex && ann.type === 2);
-          } else if (pdfDocument.pages && pdfDocument.pages[pageIndex]) {
-            const page = pdfDocument.pages[pageIndex];
-            if (page.getAnnotations && typeof page.getAnnotations === 'function') {
-              pdfLinks = await page.getAnnotations();
-            }
-          }
+  const clearLeaveTimer = useCallback(() => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+  }, []);
 
-          const convertedLinks = pdfLinks.map((ann: any) => ({
-            id: ann.id || `pdf-link-${pageIndex}-${Math.random()}`,
-            type: ann.type || 2,
-            rect: ann.rect || ann,
-            target: ann.target || ann.action
-          })) as LinkAnnotation[];
+  const startLeaveTimer = useCallback(() => {
+    clearLeaveTimer();
+    leaveTimerRef.current = setTimeout(() => {
+      setHoveredLinkId(null);
+    }, 120);
+  }, [clearLeaveTimer]);
 
-          setLinks(convertedLinks);
-        } catch (error) {
-          console.warn('[LinkLayer] Failed to get annotations from PDF document:', error);
-        }
-      } else {
-        console.warn('[LinkLayer] No annotation API or PDF document available');
-      }
-    };
+  const handleLinkMouseEnter = useCallback(
+    (id: string) => {
+      clearLeaveTimer();
+      setHoveredLinkId(id);
+    },
+    [clearLeaveTimer],
+  );
 
-    fetchLinks();
-  }, [annotation, pageIndex, pdfDocument]);
+  const handleLinkMouseLeave = useCallback(() => {
+    startLeaveTimer();
+  }, [startLeaveTimer]);
 
-  const handleLinkClick = useCallback(async (link: LinkAnnotation) => {
-    if (isNavigating) return; // Prevent multiple simultaneous navigations
+  const handleToolbarMouseEnter = useCallback(() => {
+    clearLeaveTimer();
+  }, [clearLeaveTimer]);
 
-    try {
-      setIsNavigating(true);
+  const handleToolbarMouseLeave = useCallback(() => {
+    startLeaveTimer();
+  }, [startLeaveTimer]);
 
-      if (onLinkClick) {
-        onLinkClick(link.target);
+  const handleNavigate = useCallback(
+    (annotationLink: PdfLinkAnnoObject) => {
+      if (!annotationLink.target) {
+        setHoveredLinkId(null);
         return;
       }
 
-      if (isInternalLink(link)) {
-        const targetPage = link.target?.destination?.pageIndex ??
-                          link.target?.action?.destination?.pageIndex;
-        if (targetPage !== undefined && scroll) {
-          await scroll.scrollToPage({
-            pageNumber: targetPage + 1, // PDF pages are 1-indexed
+      if (annotationLink.target.type === 'destination' && scroll) {
+        scroll.scrollToPage({
+          pageNumber: annotationLink.target.destination.pageIndex + 1,
+          behavior: 'smooth',
+        });
+      } else if (annotationLink.target.type === 'action') {
+        const action = annotationLink.target.action;
+        if (action.type === PdfActionType.Goto && scroll) {
+          scroll.scrollToPage({
+            pageNumber: action.destination.pageIndex + 1,
             behavior: 'smooth',
           });
+        } else if (action.type === PdfActionType.RemoteGoto && scroll) {
+          scroll.scrollToPage({
+            pageNumber: action.destination.pageIndex + 1,
+            behavior: 'smooth',
+          });
+        } else if (action.type === PdfActionType.URI) {
+          const uri = action.uri;
+          try {
+            const url = new URL(uri, window.location.href);
+            if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
+              window.open(uri, '_blank', 'noopener,noreferrer');
+            } else {
+              console.warn('[LinkLayer] Blocked unsafe URL protocol:', url.protocol);
+            }
+          } catch {
+            window.open(uri, '_blank', 'noopener,noreferrer');
+          }
         }
-      } else if (isExternalLink(link)) {
-        const uri = link.target?.uri ?? link.target?.action?.uri;
-        if (uri) {
-          window.open(uri, '_blank', 'noopener,noreferrer');
-        }
-      } else {
-        throw new Error(`Unsupported link type: ${link.target?.type}`);
       }
-    } catch (error) {
-      console.error('[LinkLayer] Navigation failed:', error);
-    } finally {
-      setIsNavigating(false);
-    }
-  }, [isNavigating, onLinkClick, scroll]);
+
+      setHoveredLinkId(null);
+    },
+    [scroll],
+  );
+
+  const handleDelete = useCallback(
+    (annotationLink: PdfLinkAnnoObject) => {
+      setHoveredLinkId(null);
+      if (!scope) return;
+      scope.deleteAnnotation(pageIndex, annotationLink.id);
+    },
+    [scope, pageIndex],
+  );
+
+  if (linkAnnotations.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      {processedLinks.map((link) => {
-        const { id } = link;
-        const { left, top, width, height } = link.scaledRect;
+    <div
+      className="absolute inset-0"
+      style={{ pointerEvents: 'none', zIndex: 10 }}
+    >
+      {linkAnnotations.map((annotationLink) => {
+        const isHovered = hoveredLinkId === annotationLink.id;
+        const left = annotationLink.rect.origin.x * scale;
+        const top = annotationLink.rect.origin.y * scale;
+        const width = annotationLink.rect.size.width * scale;
+        const height = annotationLink.rect.size.height * scale;
+
+        // Flip toolbar below if link is near the top of the page
+        const flipped = annotationLink.rect.origin.y * scale < TOOLBAR_HEIGHT + TOOLBAR_GAP + 4;
 
         return (
-          <button
-            key={id}
-            onClick={() => handleLinkClick(link)}
-            disabled={isNavigating}
-            className={`absolute opacity-0 hover:opacity-20 bg-blue-500 transition-opacity cursor-pointer pointer-events-auto border border-blue-400 hover:border-blue-600 ${isNavigating ? 'cursor-not-allowed opacity-50' : ''}`}
-            style={{
-              left: `${left}px`,
-              top: `${top}px`,
-              width: `${width}px`,
-              height: `${height}px`,
-              minWidth: '8px',
-              minHeight: '8px',
-            }}
-            title={getLinkTitle(link)}
-            aria-label={getLinkAriaLabel(link)}
-          />
+          <React.Fragment key={annotationLink.id}>
+            {/* Hit-area overlay */}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleNavigate(annotationLink);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseEnter={() => handleLinkMouseEnter(annotationLink.id)}
+              onMouseLeave={handleLinkMouseLeave}
+              className={`pdf-link-overlay${isHovered ? ' pdf-link-overlay--active' : ''}`}
+              style={{
+                left: `${left}px`,
+                top: `${top}px`,
+                width: `${width}px`,
+                height: `${height}px`,
+                minWidth: '6px',
+                minHeight: '6px',
+              }}
+              role="link"
+              tabIndex={0}
+              aria-label={getLinkLabel(annotationLink)}
+            />
+
+            {/* Floating toolbar */}
+            {isHovered && (
+              <LinkToolbar
+                annotationLink={annotationLink}
+                scale={scale}
+                flipped={flipped}
+                onNavigate={handleNavigate}
+                onDelete={handleDelete}
+                onMouseEnter={handleToolbarMouseEnter}
+                onMouseLeave={handleToolbarMouseLeave}
+              />
+            )}
+          </React.Fragment>
         );
       })}
     </div>

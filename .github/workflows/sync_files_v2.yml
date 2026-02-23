@@ -7,6 +7,9 @@ on:
       - main
     paths:
       - "build.gradle"
+      - "app/common/build.gradle"
+      - "app/core/build.gradle"
+      - "app/proprietary/build.gradle"
       - "README.md"
       - "frontend/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
@@ -36,7 +39,9 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Setup GitHub App Bot
         id: setup-bot
@@ -52,11 +57,15 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install Python dependencies
-        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
+        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
 
       - name: Sync translation TOML files
         run: |
           python .github/scripts/check_language_toml.py --reference-file "frontend/public/locales/en-GB/translation.toml" --branch main
+
+      - name: pre-commit run
+        run: |
+          pre-commit run toml-sort-fix --all-files
 
       - name: Commit translation files
         run: |
@@ -74,7 +83,7 @@ jobs:
 
       - name: Create Pull Request
         if: always()
-        uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
         with:
           token: ${{ steps.setup-bot.outputs.token }}
           commit-message: Update files

@@ -80,6 +80,7 @@ const FileActions: React.FC = () => {
     }
   };
 
+
   // Only show actions if there are files
   if (recentFiles.length === 0) {
     return null;

@@ -1,0 +1,148 @@
+services:
+  keycloak-saml:
+    container_name: stirling-keycloak-saml
+    image: quay.io/keycloak/keycloak:24.0
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-saml-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 9080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+      KC_HTTP_RELATIVE_PATH: "/"
+    ports:
+      - "9080:8080"
+    volumes:
+      - ./keycloak-realm-saml.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      keycloak-saml-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /realms/stirling-saml/protocol/saml/descriptor HTTP/1.1\\nHost: localhost\\nConnection: close\\n\\n' >&3 && timeout 2 cat <&3 | grep -q 'EntityDescriptor'"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    networks:
+      - stirling-saml-test
+
+  keycloak-saml-db:
+    container_name: stirling-keycloak-saml-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - stirling-saml-test
+
+  stirling-pdf-saml:
+    container_name: stirling-pdf-saml-test
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    build:
+      context: ../..
+      dockerfile: docker/embedded/Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../../stirling/keycloak-saml-test/data:/usr/share/tessdata:rw
+      - ../../../stirling/keycloak-saml-test/config:/configs:rw
+      - ../../../stirling/keycloak-saml-test/logs:/logs:rw
+      - ./keycloak-saml-cert.pem:/app/keycloak-saml-cert.pem:ro
+      - ./saml-private-key.key:/app/saml-private-key.key:ro
+      - ./saml-public-cert.crt:/app/saml-public-cert.crt:ro
+    environment:
+      # Basic settings
+      DOCKER_ENABLE_SECURITY: "true"
+      SECURITY_ENABLELOGIN: "true"
+      SECURITY_LOGINMETHOD: "${SECURITY_LOGINMETHOD:-all}"
+      SYSTEM_DEFAULTLOCALE: "${SYSTEM_DEFAULTLOCALE:-en-US}"
+      SYSTEM_BACKENDURL: "http://localhost:8080"
+
+      # Enterprise License (required for SAML)
+      PREMIUM_KEY: "${PREMIUM_KEY:-00000000-0000-0000-0000-000000000000}"
+      PREMIUM_ENABLED: "true"
+      PREMIUM_PROFEATURES_SSOAUTOLOGIN: "${PREMIUM_PROFEATURES_SSOAUTOLOGIN:-false}"
+
+      # Debug Logging
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY_SAML2: DEBUG
+      LOGGING_LEVEL_ORG_OPENSAML: DEBUG
+      LOGGING_LEVEL_STIRLING_SOFTWARE_PROPRIETARY_SECURITY: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+      UI_APPNAME: Stirling-PDF SAML Test
+      UI_HOMEDESCRIPTION: Keycloak SAML Test Instance
+      UI_APPNAMENAVBAR: Stirling-PDF SAML
+      SYSTEM_MAXFILESIZE: "100"
+
+      # SAML Configuration (Keycloak)
+      SECURITY_SAML2_ENABLED: "true"
+      SECURITY_SAML2_AUTOCREATEUSER: "true"
+      SECURITY_SAML2_BLOCKREGISTRATION: "false"
+      SECURITY_SAML2_PROVIDER: "keycloak"
+      SECURITY_SAML2_REGISTRATIONID: "keycloak"
+      # IdP Issuer must match what's in the SAML metadata
+      SECURITY_SAML2_IDP_ISSUER: "http://localhost:9080/realms/stirling-saml"
+      # Entity ID must match what's configured in Keycloak
+      SECURITY_SAML2_IDP_ENTITYID: "http://localhost:9080/realms/stirling-saml"
+      # Metadata URL for Keycloak realm (use service name for internal)
+      SECURITY_SAML2_IDP_METADATAURI: "http://keycloak-saml:8080/realms/stirling-saml/protocol/saml/descriptor"
+      # SSO/SLO URLs (required - metadata URI doesn't auto-populate these)
+      SECURITY_SAML2_IDPSINGLELOGINURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+      SECURITY_SAML2_IDPSINGLELOGOUTURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+      # Certificate file paths
+      SECURITY_SAML2_IDP_CERT: "/app/keycloak-saml-cert.pem"
+      SECURITY_SAML2_PRIVATEKEY: "/app/saml-private-key.key"
+      SECURITY_SAML2_SP_CERT: "/app/saml-public-cert.crt"
+      # SP Entity ID (this application)
+      SECURITY_SAML2_SP_ENTITYID: "http://localhost:8080"
+      # Assertion Consumer Service (ACS) URL
+      SECURITY_SAML2_SP_ACS: "http://localhost:8080/login/saml2/sso/keycloak"
+      # Single Logout Service URL
+      SECURITY_SAML2_SP_SLS: "http://localhost:8080/logout/saml2/slo"
+
+      # Disable OAuth (SAML only)
+      SECURITY_OAUTH2_ENABLED: "false"
+
+      # LibreOffice settings
+      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "true"
+      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "1"
+
+      # Permissions
+      PUID: 1002
+      PGID: 1002
+      UMASK: "022"
+
+      # Features
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "false"
+      SHOW_SURVEY: "false"
+
+    depends_on:
+      keycloak-saml:
+        condition: service_healthy
+    networks:
+      - stirling-saml-test
+    restart: on-failure:5
+
+networks:
+  stirling-saml-test:
+    driver: bridge

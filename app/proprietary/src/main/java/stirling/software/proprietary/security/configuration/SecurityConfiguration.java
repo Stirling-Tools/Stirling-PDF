@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -185,10 +186,38 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain samlFilterChain(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        http.securityMatcher("/saml2/**", "/login/saml2/**");
+
+        SessionCreationPolicy sessionPolicy =
+                (securityProperties.isSaml2Active() && runningProOrHigher)
+                        ? SessionCreationPolicy.IF_REQUIRED
+                        : SessionCreationPolicy.STATELESS;
+
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             @Lazy IPRateLimitingFilter rateLimitingFilter,
             @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        SessionCreationPolicy sessionPolicy = SessionCreationPolicy.STATELESS;
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    private SecurityFilterChain configureSecurity(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
+            SessionCreationPolicy sessionPolicy)
             throws Exception {
         // Enable CORS only if we have configured origins
         CorsConfigurationSource corsSource = corsConfigurationSource();
@@ -201,6 +230,30 @@ public class SecurityConfiguration {
 
         http.csrf(CsrfConfigurer::disable);
 
+        // Configure X-Frame-Options based on settings.yml configuration
+        // When login is disabled, automatically disable X-Frame-Options to allow embedding
+        if (!loginEnabledValue) {
+            http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+        } else {
+            String xFrameOption = securityProperties.getXFrameOptions();
+            if (xFrameOption != null) {
+                http.headers(
+                        headers -> {
+                            if ("DISABLED".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(frameOptions -> frameOptions.disable());
+                            } else if ("SAMEORIGIN".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(frameOptions -> frameOptions.sameOrigin());
+                            } else {
+                                // Default to DENY
+                                headers.frameOptions(frameOptions -> frameOptions.deny());
+                            }
+                        });
+            } else {
+                // If not configured, use default DENY
+                http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.deny()));
+            }
+        }
+
         if (loginEnabledValue) {
 
             http.addFilterBefore(
@@ -209,9 +262,7 @@ public class SecurityConfiguration {
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(
-                    sessionManagement ->
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS));
+                    sessionManagement -> sessionManagement.sessionCreationPolicy(sessionPolicy));
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
 
@@ -310,7 +361,8 @@ public class SecurityConfiguration {
                                                     securityProperties.getOauth2(),
                                                     userService,
                                                     jwtService,
-                                                    licenseSettingsService))
+                                                    licenseSettingsService,
+                                                    applicationProperties))
                                     .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
                                     // Add existing Authorities from the database
                                     .userInfoEndpoint(

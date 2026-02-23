@@ -11,6 +11,7 @@ import { FILE_EVENTS } from '@app/services/errorUtils';
 import { getFilenameWithoutExtension } from '@app/utils/fileUtils';
 import { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
+import { createNewStirlingFileStub } from '@app/types/fileContext';
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
@@ -71,6 +72,13 @@ interface BaseToolOperationConfig<TParams> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * For custom tools: if true, success implies all input files were successfully processed.
+   * Use this for tools like Automate or Merge where Many-to-One relationships exist
+   * and exact input-output mapping is difficult.
+   */
+  consumesAllInputs?: boolean;
 }
 
 export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
@@ -133,6 +141,8 @@ export interface ToolOperationHook<TParams = void> {
   isGeneratingThumbnails: boolean;
   downloadUrl: string | null;
   downloadFilename: string;
+  downloadLocalPath?: string | null;
+  outputFileIds?: string[] | null;
   isLoading: boolean;
   status: string;
   errorMessage: string | null;
@@ -368,7 +378,10 @@ export const useToolOperation = <TParams>(
         actions.setGeneratingThumbnails(false);
 
         actions.setThumbnails(thumbnails);
-        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
+        const downloadLocalPath =
+          validFiles.length === 1 && processedFiles.length === 1
+            ? selectors.getStirlingFileStub(validFiles[0].fileId)?.localFilePath ?? null
+            : null;
 
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
@@ -383,6 +396,9 @@ export const useToolOperation = <TParams>(
             inputStirlingFileStubs.push(record);
           } else {
             console.warn(`No file stub found for file: ${file.name}`);
+            const fallbackStub = createNewStirlingFileStub(file, fileId);
+            inputFileIds.push(fileId);
+            inputStirlingFileStubs.push(fallbackStub);
           }
         }
 
@@ -429,6 +445,18 @@ export const useToolOperation = <TParams>(
         // Outputs and stubs are already ordered by success sequence
         console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
         const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+
+        if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
+          const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
+          if (inputStub?.localFilePath) {
+            fileActions.updateStirlingFileStub(outputFileIds[0], {
+              localFilePath: inputStub.localFilePath
+            });
+          }
+        }
+
+        // Pass output file IDs to download info for marking clean after save
+        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath, outputFileIds);
 
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
@@ -525,7 +553,6 @@ export const useToolOperation = <TParams>(
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
 
-
       // Clear results and operation tracking
       resetResults();
       lastOperationRef.current = null;
@@ -558,6 +585,8 @@ export const useToolOperation = <TParams>(
     isGeneratingThumbnails: state.isGeneratingThumbnails,
     downloadUrl: state.downloadUrl,
     downloadFilename: state.downloadFilename,
+    downloadLocalPath: state.downloadLocalPath,
+    outputFileIds: state.outputFileIds,
     isLoading: state.isLoading,
     status: state.status,
     errorMessage: state.errorMessage,

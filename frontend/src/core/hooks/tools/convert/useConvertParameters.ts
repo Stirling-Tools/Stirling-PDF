@@ -35,6 +35,10 @@ export interface ConvertParameters extends BaseParameters {
   };
   pdfaOptions: {
     outputFormat: string;
+    strict?: boolean;
+  };
+  pdfxOptions: {
+    outputFormat: string;
   };
   cbrOptions: {
     optimizeForEbook: boolean;
@@ -90,7 +94,11 @@ export const defaultParameters: ConvertParameters = {
     includeAllRecipients: false,
   },
   pdfaOptions: {
-    outputFormat: 'pdfa-1',
+    outputFormat: 'pdfa-2b',
+    strict: false,
+  },
+  pdfxOptions: {
+    outputFormat: 'pdfx',
   },
   cbrOptions: {
     optimizeForEbook: false,

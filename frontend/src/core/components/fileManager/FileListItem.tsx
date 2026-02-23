@@ -439,6 +439,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               >
                 {t('fileManager.delete', 'Delete')}
               </Menu.Item>
+
             </Menu.Dropdown>
           </Menu>
         </Group>

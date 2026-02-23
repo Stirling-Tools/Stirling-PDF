@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
@@ -265,14 +266,17 @@ public class DatabaseService implements DatabaseServiceInterface {
             String checksum = bytesToHex(digest.digest(content));
             log.info("Checksum for {}: {}", backupPath.getFileName(), checksum);
 
-            try (Connection conn = DriverManager.getConnection("jdbc:h2:mem:backupVerify");
+            String verifyDbUrl = "jdbc:h2:mem:backupVerify_" + UUID.randomUUID();
+            // Use a fresh in-memory database per verification to avoid leftover objects between
+            // runs.
+            try (Connection conn = DriverManager.getConnection(verifyDbUrl);
                     PreparedStatement stmt = conn.prepareStatement("RUNSCRIPT FROM ?")) {
                 stmt.setString(1, backupPath.toString());
                 stmt.execute();
             }
             return true;
         } catch (IOException | NoSuchAlgorithmException | SQLException e) {
-            log.error("Backup verification failed for {}: {}", backupPath, e.getMessage(), e);
+            log.error("Backup verification failed for {}: {}", backupPath, e.getMessage());
         }
         return false;
     }

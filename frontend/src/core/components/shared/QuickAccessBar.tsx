@@ -1,6 +1,6 @@
 import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from 'react-dom';
-import { Stack, Divider, Menu, Indicator, Badge, Loader, Center, Text } from "@mantine/core";
+import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -54,6 +54,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     toolRegistry,
     readerMode,
     resetTool,
+    toolAvailability
   } = useToolWorkflow();
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { state, selectors } = useFileState();
@@ -482,14 +483,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     );
   };
 
-  const mainButtons: ButtonConfig[] = [
+  const mainButtons: ButtonConfig[] = useMemo(() => [
     {
       id: 'read',
       name: t("quickAccess.reader", "Reader"),
       icon: <LocalIcon icon="menu-book-rounded" width="1.25rem" height="1.25rem" />,
-      size: 'md',
+      size: 'md' as const,
       isRound: false,
-      type: 'navigation',
+      type: 'navigation' as const,
       onClick: () => {
         setActiveButton('read');
         handleReaderToggle();
@@ -499,9 +500,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
       icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
-      size: 'md',
+      size: 'md' as const,
       isRound: false,
-      type: 'navigation',
+      type: 'navigation' as const,
       onClick: () => {
         setActiveButton('automate');
         // If already on automate tool, reset it directly
@@ -512,7 +513,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }
       }
     },
-  ];
+  ].filter(button => {
+    // Filter out buttons for disabled tools
+    // 'read' is always available (viewer mode)
+    if (button.id === 'read') return true;
+    // Check if tool is actually available (not just present in registry)
+    const availability = toolAvailability[button.id as keyof typeof toolAvailability];
+    return availability?.available !== false;
+  }), [t, setActiveButton, handleReaderToggle, selectedToolKey, resetTool, handleToolSelect, toolAvailability]);
 
   const middleButtons: ButtonConfig[] = [
     {

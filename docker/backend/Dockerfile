@@ -25,7 +25,6 @@ COPY . .
 
 # Build the application (server-only JAR - no UI, includes security features controlled at runtime)
 RUN DISABLE_ADDITIONAL_FEATURES=false \
-    STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # ========================================

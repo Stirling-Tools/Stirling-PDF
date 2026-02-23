@@ -17,7 +17,48 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo ✅ Java and jlink detected
+echo ▶ Checking Java version...
+set "JAVA_VERSION_STRING="
+for /f "tokens=3" %%g in ('java -version 2^>^&1 ^| findstr /i "version"') do (
+    set "JAVA_VERSION_STRING=%%g"
+)
+if not defined JAVA_VERSION_STRING (
+    echo ❌ Unable to capture Java version string from "java -version"
+    exit /b 1
+)
+set "JAVA_VERSION_STRING=%JAVA_VERSION_STRING:"=%"
+set "JAVA_MAJOR_VERSION="
+set "JAVA_MINOR_VERSION=0"
+set "JAVA_EFFECTIVE_MAJOR="
+for /f "tokens=1,2 delims=." %%a in ("%JAVA_VERSION_STRING%") do (
+    set "JAVA_MAJOR_VERSION=%%a"
+    set "JAVA_MINOR_VERSION=%%b"
+    if "%%a"=="1" (
+        set "JAVA_EFFECTIVE_MAJOR=%%b"
+    ) else (
+        set "JAVA_EFFECTIVE_MAJOR=%%a"
+    )
+)
+if not defined JAVA_MAJOR_VERSION (
+    echo ❌ Unable to determine Java major version from "%JAVA_VERSION_STRING%"
+    exit /b 1
+)
+if not defined JAVA_EFFECTIVE_MAJOR (
+    echo ❌ Unable to determine an effective Java major version from "%JAVA_VERSION_STRING%"
+    exit /b 1
+)
+for /f "tokens=1 delims=.-" %%c in ("%JAVA_EFFECTIVE_MAJOR%") do set "JAVA_EFFECTIVE_MAJOR=%%c"
+set /a "JAVA_EFFECTIVE_MAJOR_NUM=%JAVA_EFFECTIVE_MAJOR%" >nul 2>&1
+if errorlevel 1 (
+    echo ❌ Java major version "%JAVA_EFFECTIVE_MAJOR%" could not be parsed as an integer. Detected string: "%JAVA_VERSION_STRING%"
+    exit /b 1
+)
+set "JAVA_EFFECTIVE_MAJOR=%JAVA_EFFECTIVE_MAJOR_NUM%"
+if %JAVA_EFFECTIVE_MAJOR% LSS 17 (
+    echo ❌ Java 17 or higher is required. Found Java %JAVA_EFFECTIVE_MAJOR%
+    exit /b 1
+)
+echo ✅ Java %JAVA_EFFECTIVE_MAJOR% and jlink detected
 
 echo ▶ Building Stirling-PDF JAR...
 
@@ -96,7 +137,6 @@ echo REM Launch with bundled JRE >> "frontend\src-tauri\runtime\launch-stirling.
 echo "%%JRE_DIR%%\bin\java.exe" ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     -Xmx2g ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     -DBROWSER_OPEN=true ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
-echo     -DSTIRLING_PDF_DESKTOP_UI=false ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     -jar "%%STIRLING_JAR%%" ^^ >> "frontend\src-tauri\runtime\launch-stirling.bat"
 echo     %%* >> "frontend\src-tauri\runtime\launch-stirling.bat"
 
