@@ -373,12 +373,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
               >
                 <Scroller
                   documentId={documentId}
-                  renderPage={({ width, height, pageIndex, scale }: {
-                    width: number;
-                    height: number;
-                    pageIndex: number;
-                    scale: number;
-                  }) => (
+                  renderPage={({ width, height, pageIndex }) => (
                     <Rotate key={`${documentId}-${pageIndex}`} documentId={documentId} pageIndex={pageIndex}>
                       <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
                         <div
@@ -401,10 +396,12 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
 
                             if (placementMode && onPlaceSignature) {
                               const rect = e.currentTarget.getBoundingClientRect();
-                              const x = (e.clientX - rect.left) / scale;
-                              const y = (e.clientY - rect.top) / scale;
-                              const sigWidth = 150;
-                              const sigHeight = 75;
+                              // Store as fractions (0–1) of the rendered page so overlays
+                              // remain correct at any zoom level (scale not in new API)
+                              const x = (e.clientX - rect.left) / width;
+                              const y = (e.clientY - rect.top) / height;
+                              const sigWidth = 150 / width;
+                              const sigHeight = 75 / height;
 
                               const newPreview = {
                                 id: `sig-preview-${Date.now()}-${Math.random()}`,
@@ -417,7 +414,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                 signatureType: signatureType || 'image',
                               };
                               setSignaturePreviews(prev => [...prev, newPreview]);
-                              onPlaceSignature(newPreview.id, pageIndex, x, y, sigWidth, sigHeight);
+                              onPlaceSignature(newPreview.id, pageIndex, x * width, y * height, sigWidth * width, sigHeight * height);
                             }
                           }}
                         >
@@ -442,10 +439,10 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                 key={preview.id}
                                 style={{
                                   position: 'absolute',
-                                  left: preview.x * scale,
-                                  top: preview.y * scale,
-                                  width: preview.width * scale,
-                                  height: preview.height * scale,
+                                  left: preview.x * width,
+                                  top: preview.y * height,
+                                  width: preview.width * width,
+                                  height: preview.height * height,
                                   border: readOnly ? '1px dashed rgba(0, 122, 204, 0.4)' : '2px solid #007ACC',
                                   boxShadow: readOnly ? 'none' : '0 0 10px rgba(0, 122, 204, 0.5)',
                                   cursor: readOnly ? 'default' : 'move',
@@ -501,8 +498,8 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
 
                                     const handleMouseMove = (moveEvent: MouseEvent) => {
                                       isDraggingRef.current = true;
-                                      const deltaX = (moveEvent.clientX - startX) / scale;
-                                      const deltaY = (moveEvent.clientY - startY) / scale;
+                                      const deltaX = (moveEvent.clientX - startX) / width;
+                                      const deltaY = (moveEvent.clientY - startY) / height;
                                       setSignaturePreviews(prev => prev.map(p =>
                                         p.id === preview.id
                                           ? { ...p, x: startLeft + deltaX, y: startTop + deltaY }
@@ -564,26 +561,30 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
 
                                         const handleMouseMove = (moveEvent: MouseEvent) => {
                                           isDraggingRef.current = true;
-                                          const deltaX = (moveEvent.clientX - startX) / scale;
-                                          const deltaY = (moveEvent.clientY - startY) / scale;
+                                          const deltaX = (moveEvent.clientX - startX) / width;
+                                          const deltaY = (moveEvent.clientY - startY) / height;
 
                                           let newWidth = startWidth;
                                           let newHeight = startHeight;
                                           let newX = startLeft;
                                           let newY = startTop;
 
+                                          // Min sizes as fractions: 50px / pageWidth, 25px / pageHeight
+                                          const minW = 50 / width;
+                                          const minH = 25 / height;
+
                                           if (handle.position.includes('e')) {
-                                            newWidth = Math.max(50, startWidth + deltaX);
+                                            newWidth = Math.max(minW, startWidth + deltaX);
                                           }
                                           if (handle.position.includes('w')) {
-                                            newWidth = Math.max(50, startWidth - deltaX);
+                                            newWidth = Math.max(minW, startWidth - deltaX);
                                             newX = startLeft + (startWidth - newWidth);
                                           }
                                           if (handle.position.includes('s')) {
-                                            newHeight = Math.max(25, startHeight + deltaY);
+                                            newHeight = Math.max(minH, startHeight + deltaY);
                                           }
                                           if (handle.position.includes('n')) {
-                                            newHeight = Math.max(25, startHeight - deltaY);
+                                            newHeight = Math.max(minH, startHeight - deltaY);
                                             newY = startTop + (startHeight - newHeight);
                                           }
 
