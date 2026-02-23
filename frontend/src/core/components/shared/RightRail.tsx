@@ -4,6 +4,7 @@ import '@app/components/shared/rightRail/RightRail.css';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useRightRail } from '@app/contexts/RightRailContext';
 import { useFileState, useFileSelection, useFileActions } from '@app/contexts/FileContext';
+import { isStirlingFile } from '@app/types/fileContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
@@ -13,7 +14,6 @@ import LanguageSelector from '@app/components/shared/LanguageSelector';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { ViewerContext } from '@app/contexts/ViewerContext';
-import { useSignature } from '@app/contexts/SignatureContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -61,12 +61,9 @@ export default function RightRail() {
   const { selectors } = useFileState();
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
-  const { signaturesApplied } = useSignature();
-
   const activeFiles = selectors.getFiles();
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
-  const exportState = viewerContext?.getExportState?.();
 
   const totalItems = useMemo(() => {
     if (currentView === 'pageEditor') return pageEditorTotalPages;
@@ -139,11 +136,26 @@ export default function RightRail() {
 
   const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
-      if (!signaturesApplied) {
-        alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
-        return;
+      const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+      if (!buffer) return;
+      const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+      if (!fileToExport) return;
+      const stub = isStirlingFile(fileToExport) ? selectors.getStirlingFileStub(fileToExport.fileId) : undefined;
+      try {
+        const result = await downloadFile({
+          data: new Blob([buffer], { type: 'application/pdf' }),
+          filename: fileToExport.name,
+          localPath: stub?.localFilePath,
+        });
+        if (!result.cancelled && stub && result.savedPath) {
+          fileActions.updateStirlingFileStub(stub.id, {
+            localFilePath: stub.localFilePath ?? result.savedPath,
+            isDirty: false,
+          });
+        }
+      } catch (error) {
+        console.error('[RightRail] Failed to export viewer file:', error);
       }
-      viewerContext?.exportActions?.download?.();
       return;
     }
 
@@ -153,30 +165,25 @@ export default function RightRail() {
     }
 
     const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-    const stubsToExport = selectedFiles.length > 0
-      ? selectors.getSelectedStirlingFileStubs()
-      : selectors.getStirlingFileStubs();
 
     if (filesToExport.length > 0) {
-      for (let i = 0; i < filesToExport.length; i++) {
-        const file = filesToExport[i];
-        const stub = stubsToExport[i];
-        console.log('[RightRail] Exporting file:', { fileName: file.name, stubId: stub?.id, localFilePath: stub?.localFilePath, isDirty: stub?.isDirty });
-        const result = await downloadFile({
-          data: file,
-          filename: file.name,
-          localPath: stub?.localFilePath
-        });
-        console.log('[RightRail] Export complete, checking dirty state:', { localFilePath: stub?.localFilePath, isDirty: stub?.isDirty, savedPath: result.savedPath });
-        // Mark file as clean after successful save to disk
-        if (stub && result.savedPath) {
-          console.log('[RightRail] Marking file as clean:', stub.id);
-          fileActions.updateStirlingFileStub(stub.id, {
-            localFilePath: stub.localFilePath ?? result.savedPath,
-            isDirty: false
+      for (const file of filesToExport) {
+        const stub = isStirlingFile(file) ? selectors.getStirlingFileStub(file.fileId) : undefined;
+        try {
+          const result = await downloadFile({
+            data: file,
+            filename: file.name,
+            localPath: stub?.localFilePath
           });
-        } else {
-          console.log('[RightRail] Skipping clean mark:', { savedPath: result.savedPath, isDirty: stub?.isDirty });
+          if (result.cancelled) continue;
+          if (stub && result.savedPath) {
+            fileActions.updateStirlingFileStub(stub.id, {
+              localFilePath: stub.localFilePath ?? result.savedPath,
+              isDirty: false
+            });
+          }
+        } catch (error) {
+          console.error('[RightRail] Failed to export file:', file.name, error);
         }
       }
     }
@@ -186,7 +193,6 @@ export default function RightRail() {
     activeFiles,
     pageEditorFunctions,
     viewerContext,
-    signaturesApplied,
     selectors,
     fileActions,
   ]);
@@ -261,7 +267,7 @@ export default function RightRail() {
               onClick={handleExportAll}
               disabled={
                 disableForFullscreen ||
-                (currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled)
+                (currentView !== 'viewer' && (totalItems === 0 || allButtonsDisabled))
               }
             >
               <LocalIcon icon={icons.downloadIconName} width="1.5rem" height="1.5rem" />
