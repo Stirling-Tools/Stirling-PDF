@@ -6,7 +6,7 @@
 export function getCookieConsentOverrides(): Record<string, unknown> {
   return {
     cookie: {
-      secure: window.location.protocol === 'https:'
+      useLocalStorage: true,
     }
   };
 }
