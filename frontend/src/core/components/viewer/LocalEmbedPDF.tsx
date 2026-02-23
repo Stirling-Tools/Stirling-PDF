@@ -59,8 +59,6 @@ import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentCon
 import { absoluteWithBasePath } from '@app/constants/app';
 import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
 
-const DOCUMENT_NAME = 'stirling-pdf-viewer';
-
 interface LocalEmbedPDFProps {
   file?: File | Blob;
   url?: string | null;
@@ -118,7 +116,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       createPluginRegistration(DocumentManagerPluginPackage, {
         initialDocuments: [{
           url: pdfUrl,
-          name: DOCUMENT_NAME,
+          name: exportFileName,
         }],
       }),
       createPluginRegistration(ViewportPluginPackage, {
