@@ -765,13 +765,10 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                             />
                           )}
 
-                          {/* LinkLayer – uses pdf-lib for link extraction, rendered last for click priority */}
+                          {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
                           <LinkLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
-                            _pageWidth={width}
-                            _pageHeight={height}
-                            pdfUrl={pdfUrl}
                           />
                         </div>
                       </PagePointerProvider>
