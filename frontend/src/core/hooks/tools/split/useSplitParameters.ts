@@ -15,6 +15,10 @@ export interface SplitParameters extends BaseParameters {
   duplexMode: boolean;
   splitMode?: string;
   customPages?: string;
+  pageSize?: string;
+  xFactor?: string;
+  yFactor?: string;
+  rightToLeft?: boolean;
 }
 
 export type SplitParametersHook = BaseParametersHook<SplitParameters>;
@@ -32,6 +36,10 @@ export const defaultParameters: SplitParameters = {
   duplexMode: false,
   splitMode: 'SPLIT_ALL',
   customPages: '',
+  pageSize: 'A4',
+  xFactor: '2',
+  yFactor: '2',
+  rightToLeft: false,
 };
 
 export const useSplitParameters = (): SplitParametersHook => {
@@ -61,6 +69,8 @@ export const useSplitParameters = (): SplitParametersHook => {
           return params.bookmarkLevel !== "";
         case SPLIT_METHODS.BY_PAGE_DIVIDER:
           return true; // No required parameters
+        case SPLIT_METHODS.BY_POSTER:
+          return params.pageSize !== "" && params.xFactor !== "" && params.yFactor !== "";
         default:
           return false;
       }

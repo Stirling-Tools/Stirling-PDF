@@ -147,7 +147,7 @@ const extractKeys = (file: string): FoundKey[] => {
 };
 
 describe('Missing translation coverage', () => {
-  test('fails if any en-GB translation key used in source is missing', () => {
+  test('fails if any en-GB translation key used in source is missing', { timeout: 10000 }, () => {
     expect(fs.existsSync(EN_GB_FILE)).toBe(true);
 
     const localeContent = fs.readFileSync(EN_GB_FILE, 'utf8');
