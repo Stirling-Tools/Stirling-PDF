@@ -92,7 +92,6 @@ export interface ThumbnailAPIWrapper {
 }
 
 export interface ExportAPIWrapper {
-  download: () => void;
   saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
 }
 

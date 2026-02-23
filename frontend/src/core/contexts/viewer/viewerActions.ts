@@ -56,7 +56,6 @@ export interface SearchActions {
 }
 
 export interface ExportActions {
-  download: () => void;
   saveAsCopy: () => Promise<ArrayBuffer | null>;
 }
 
@@ -336,12 +335,6 @@ export function createViewerActions({
   };
 
   const exportActions: ExportActions = {
-    download: () => {
-      const api = registry.current.export?.api;
-      if (api?.download) {
-        api.download();
-      }
-    },
     saveAsCopy: async () => {
       const api = registry.current.export?.api;
       if (api?.saveAsCopy) {
