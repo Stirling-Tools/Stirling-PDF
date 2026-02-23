@@ -19,7 +19,7 @@ export interface ZoomActions {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: number) => void;
+  requestZoom: (level: any, center?: any) => void;
 }
 
 export interface PanActions {
@@ -199,10 +199,10 @@ export function createViewerActions({
         api.toggleMarqueeZoom();
       }
     },
-    requestZoom: (level: number) => {
+    requestZoom: (level: any, center?: any) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
-        api.requestZoom(level);
+        api.requestZoom(level, center);
       }
     },
   };
