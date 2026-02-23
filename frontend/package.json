@@ -132,7 +132,7 @@
     "@eslint/js": "^9.36.0",
     "@iconify-json/material-symbols": "^1.2.53",
     "@iconify/utils": "^3.1.0",
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.58.2",
     "@tauri-apps/cli": "^2.9.6",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
