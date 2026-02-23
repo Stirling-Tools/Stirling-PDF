@@ -26,7 +26,7 @@ import { useNavigation } from '@app/contexts/NavigationContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useFileState } from '@app/contexts/FileContext';
 import { Skeleton } from '@mantine/core';
-import { isStirlingFile } from '@app/types/fileContext';
+import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import type { BaseToolProps } from '@app/types/tool';
 import type { FormField } from '@app/tools/formFill/types';
 import { FieldInput } from '@app/tools/formFill/FieldInput';
@@ -40,6 +40,7 @@ import FileCopyIcon from '@mui/icons-material/FileCopy';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { extractFormFieldsCsv, extractFormFieldsXlsx } from '@app/tools/formFill/formApi';
 import styles from '@app/tools/formFill/FormFill.module.css';
 
 // ---------------------------------------------------------------------------
@@ -149,6 +150,44 @@ const FormFill = (_props: BaseToolProps) => {
     return activeFiles[0];
   }, [activeFiles, selectedFileIds]);
 
+  const handleExtractCsv = useCallback(async () => {
+    if (!currentFile) return;
+    setExtracting(true);
+    try {
+      const blob = await extractFormFieldsCsv(currentFile, allValues);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `form-data-${new Date().getTime()}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 250);
+    } catch (err) {
+      console.error('[FormFill] CSV extraction failed:', err);
+      setSaveError('Failed to extract CSV');
+    } finally {
+      setExtracting(false);
+    }
+  }, [currentFile, allValues]);
+
+  const handleExtractXlsx = useCallback(async () => {
+    if (!currentFile) return;
+    setExtracting(true);
+    try {
+      const blob = await extractFormFieldsXlsx(currentFile, allValues);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `form-data-${new Date().getTime()}.xlsx`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 250);
+    } catch (err) {
+      console.error('[FormFill] XLSX extraction failed:', err);
+      setSaveError('Failed to extract XLSX');
+    } finally {
+      setExtracting(false);
+    }
+  }, [currentFile, allValues]);
+
   const isActive = selectedTool === 'formFill';
 
   useEffect(() => {
@@ -228,10 +267,8 @@ const FormFill = (_props: BaseToolProps) => {
   }, [formState.isDirty]);
 
   const handleRefresh = useCallback(() => {
-    if (currentFile && isStirlingFile(currentFile)) {
-      fetchFields(currentFile, currentFile.fileId);
-    } else if (currentFile) {
-      fetchFields(currentFile);
+    if (currentFile) {
+      fetchFields(currentFile, getFormFillFileId(currentFile) ?? undefined);
     }
   }, [currentFile, fetchFields]);
 
@@ -406,38 +443,63 @@ const FormFill = (_props: BaseToolProps) => {
 
                 {/* Action buttons */}
                 <div className={styles.actionBar}>
-                  <Button
-                    leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                    size="xs"
-                    onClick={handleSave}
-                    loading={saving}
-                    disabled={!formState.isDirty && !flattenChanged}
-                    flex={1}
-                  >
-                    Save
-                  </Button>
-
-                  <Button
-                    variant="light"
-                    color="blue"
-                    leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
-                    loading={extracting}
-                    onClick={handleExtractJson}
-                    size="xs"
-                  >
-                    Extract JSON
-                  </Button>
-
-                  <Tooltip label="Re-scan fields" withArrow position="bottom">
-                    <ActionIcon
-                      variant="light"
-                      size="md"
-                      onClick={handleRefresh}
-                      aria-label="Re-scan form fields"
+                  <div className={styles.primaryActions}>
+                    <Button
+                      leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
+                      size="xs"
+                      onClick={handleSave}
+                      loading={saving}
+                      disabled={!formState.isDirty && !flattenChanged}
                     >
-                      <RefreshIcon sx={{ fontSize: 16 }} />
-                    </ActionIcon>
-                  </Tooltip>
+                      Save
+                    </Button>
+
+                    <Tooltip label="Re-scan fields" withArrow position="bottom">
+                      <ActionIcon
+                        variant="light"
+                        size="md"
+                        onClick={handleRefresh}
+                        aria-label="Re-scan form fields"
+                      >
+                        <RefreshIcon sx={{ fontSize: 16 }} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </div>
+
+                  <div className={styles.secondaryActions}>
+                    <Button
+                      variant="light"
+                      color="blue"
+                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
+                      loading={extracting}
+                      onClick={handleExtractJson}
+                      size="xs"
+                    >
+                      JSON
+                    </Button>
+
+                    <Button
+                      variant="light"
+                      color="blue"
+                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
+                      loading={extracting}
+                      onClick={handleExtractCsv}
+                      size="xs"
+                    >
+                      CSV
+                    </Button>
+
+                    <Button
+                      variant="light"
+                      color="blue"
+                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
+                      loading={extracting}
+                      onClick={handleExtractXlsx}
+                      size="xs"
+                    >
+                      XLSX
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Error message */}

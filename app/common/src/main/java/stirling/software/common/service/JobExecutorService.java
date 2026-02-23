@@ -258,7 +258,9 @@ public class JobExecutorService {
                 // GlobalExceptionHandler (either directly or wrapped)
                 Throwable cause = e.getCause();
                 if (e instanceof IllegalArgumentException
-                        || cause instanceof stirling.software.common.util.ExceptionUtils.BaseAppException
+                        || cause
+                                instanceof
+                                stirling.software.common.util.ExceptionUtils.BaseAppException
                         || cause
                                 instanceof
                                 stirling.software.common.util.ExceptionUtils

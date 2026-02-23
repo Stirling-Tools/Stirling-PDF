@@ -16,7 +16,7 @@ import { useRedaction } from '@app/contexts/RedactionContext';
 import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
-import { isStirlingFile } from '@app/types/fileContext';
+import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type ViewportScale } from '@app/components/viewer/RulerOverlay';
@@ -788,19 +788,7 @@ const EmbedPdfViewerContent = ({
 
   // Generate a unique identifier for the current file to detect file changes
   const currentFileId = React.useMemo(() => {
-    if (!currentFile) return null;
-
-    if (isStirlingFile(currentFile)) {
-      return `stirling-${currentFile.fileId}`;
-    }
-
-    // File is also a Blob, but has more specific properties
-    if (currentFile instanceof File) {
-      return `file-${currentFile.name}-${currentFile.size}-${currentFile.lastModified}`;
-    }
-
-    // Fallback for any other object (shouldn't happen in practice)
-    return `unknown-${(currentFile as any).size || 0}`;
+    return getFormFillFileId(currentFile);
   }, [currentFile]);
 
   useEffect(() => {
