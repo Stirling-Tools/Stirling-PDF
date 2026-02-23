@@ -4649,6 +4649,13 @@ prompt = "Choose page to extract table"
 submit = "Extract"
 title = "PDF to CSV"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+title = "PDF to Excel (XLSX)"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+
 [PDFToHTML]
 credit = "This service uses pdftohtml for file conversion."
 header = "PDF to HTML"
