@@ -13,6 +13,8 @@ export interface WidgetCoordinates {
   exportValue?: string;
   /** Font size in PDF points */
   fontSize?: number;
+  /** CropBox height in PDF points (used for Y-flip) */
+  cropBoxHeight?: number;
 }
 
 export interface FormField {
@@ -40,6 +42,69 @@ export type FormFieldType =
   | 'radio'
   | 'button'
   | 'signature';
+
+/** Mirrors backend NewFormFieldDefinition — used when creating fields */
+export interface NewFieldDefinition {
+  name: string;
+  label?: string;
+  type: FormFieldType;
+  pageIndex: number;
+  x: number;       // PDF lower-left origin
+  y: number;       // PDF lower-left origin
+  width: number;
+  height: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+}
+
+/** Mirrors backend ModifyFormFieldDefinition — used when editing existing fields */
+export interface ModifyFieldDefinition {
+  targetName: string;
+  name?: string;
+  label?: string;
+  type?: string;
+  pageIndex?: number;
+  x?: number;       // PDF lower-left origin
+  y?: number;       // PDF lower-left origin
+  width?: number;
+  height?: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+}
+
+export type FormMode = 'fill' | 'make' | 'batch' | 'modify';
+
+/** Tracks the state of field creation (Create mode) */
+export interface FieldCreationState {
+  /** Queue of fields pending backend commit */
+  pendingFields: NewFieldDefinition[];
+  /** The field type currently selected for placement (null = no placement active) */
+  placingFieldType: FormFieldType | null;
+  /** Rectangle being drawn (CSS coords, only non-null during drag) */
+  dragRect: { x: number; y: number; width: number; height: number; pageIndex: number } | null;
+}
+
+/** Tracks the state of field editing (Modify mode) */
+export interface FieldEditState {
+  /** Name of the currently selected field */
+  selectedFieldName: string | null;
+  /** Interaction in progress */
+  interaction: 'idle' | 'moving' | 'resizing';
+  /** The pending rectangle during drag (CSS coords) — null when idle */
+  pendingRect: { x: number; y: number; width: number; height: number } | null;
+}
 
 export interface FormFillState {
   /** Fields fetched from backend with coordinates */

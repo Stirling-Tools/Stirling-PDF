@@ -455,6 +455,7 @@ public class FormUtils {
                 .height(finalH)
                 .exportValue(exportValue)
                 .fontSize(extractFontSize(field))
+                .cropBoxHeight(cropHeight)
                 .build();
     }
 
@@ -1551,7 +1552,8 @@ public class FormUtils {
 
             if (!typeChanging) {
                 try {
-                    modifyFieldPropertiesInPlace(originalField, modification, desiredName);
+                    modifyFieldPropertiesInPlace(
+                            document, originalField, modification, desiredName);
                     log.debug("Successfully modified field '{}' in-place", lookupName);
                     continue; // Skip the remove-and-recreate process
                 } catch (Exception e) {
@@ -1578,7 +1580,10 @@ public class FormUtils {
                             modification.multiSelect(),
                             modification.options(),
                             modification.defaultValue(),
-                            modification.tooltip());
+                            modification.tooltip(),
+                            modification.fontSize(),
+                            modification.readOnly(),
+                            modification.multiline());
 
             List<String> sanitizedOptions = sanitizeOptions(modification.options());
 
@@ -1618,7 +1623,10 @@ public class FormUtils {
     }
 
     private void modifyFieldPropertiesInPlace(
-            PDField field, ModifyFormFieldDefinition modification, String newName)
+            PDDocument document,
+            PDField field,
+            ModifyFormFieldDefinition modification,
+            String newName)
             throws IOException {
         if (newName != null && !newName.equals(field.getPartialName())) {
             field.setPartialName(newName);
@@ -1665,6 +1673,90 @@ public class FormUtils {
                     widget.getCOSObject().setString(COSName.TU, modification.tooltip());
                 } else {
                     widget.getCOSObject().removeItem(COSName.TU);
+                }
+            }
+        }
+
+        // Update readOnly flag
+        if (modification.readOnly() != null) {
+            field.setReadOnly(modification.readOnly());
+        }
+
+        // Update multiline flag (text fields only)
+        if (modification.multiline() != null && field instanceof PDTextField tf) {
+            tf.setMultiline(modification.multiline());
+        }
+
+        // Update font size (variable text fields only)
+        boolean fontSizeChanged = false;
+        if (modification.fontSize() != null
+                && modification.fontSize() > 0
+                && field instanceof PDVariableText vt) {
+            String da = vt.getDefaultAppearance();
+            if (da != null && !da.isBlank()) {
+                // Replace the size number before "Tf" in the DA string
+                String[] tokens = da.split("\\s+");
+                for (int i = 0; i < tokens.length; i++) {
+                    if ("Tf".equals(tokens[i]) && i > 0) {
+                        tokens[i - 1] = String.valueOf(modification.fontSize());
+                        break;
+                    }
+                }
+                vt.setDefaultAppearance(String.join(" ", tokens));
+            } else {
+                vt.setDefaultAppearance("/Helv " + modification.fontSize() + " Tf 0 g");
+            }
+            fontSizeChanged = true;
+
+            // Also clear appearance for font size changes so new font renders correctly
+            List<PDAnnotationWidget> widgets = field.getWidgets();
+            if (widgets != null && !widgets.isEmpty()) {
+                widgets.get(0).getCOSObject().removeItem(COSName.AP);
+            }
+        }
+
+        // Update widget coordinates if any coordinate field is non-null.
+        // The frontend sends CropBox-relative coordinates (matching what createWidgetCoordinates
+        // extracted). We must add back the CropBox offset to get absolute PDF coordinates.
+        if (modification.x() != null
+                || modification.y() != null
+                || modification.width() != null
+                || modification.height() != null) {
+            List<PDAnnotationWidget> widgets = field.getWidgets();
+            if (widgets != null && !widgets.isEmpty()) {
+                PDAnnotationWidget widget = widgets.get(0);
+                PDRectangle rect = widget.getRectangle();
+                if (rect != null) {
+                    // Resolve CropBox to reverse the extraction's coordinate transform
+                    PDPage page = resolveWidgetPage(document, widget, null);
+                    float offX = 0;
+                    float offY = 0;
+                    if (page != null) {
+                        PDRectangle cropBox = page.getCropBox();
+                        offX = cropBox.getLowerLeftX();
+                        offY = cropBox.getLowerLeftY();
+                    }
+                    float newX =
+                            modification.x() != null
+                                    ? modification.x() + offX
+                                    : rect.getLowerLeftX();
+                    float newY =
+                            modification.y() != null
+                                    ? modification.y() + offY
+                                    : rect.getLowerLeftY();
+                    float newW =
+                            modification.width() != null ? modification.width() : rect.getWidth();
+                    float newH =
+                            modification.height() != null
+                                    ? modification.height()
+                                    : rect.getHeight();
+                    widget.setRectangle(new PDRectangle(newX, newY, newW, newH));
+
+                    // Remove stale appearance stream so ensureAppearances() generates
+                    // a fresh one matching the new rectangle. Without this, PDF viewers
+                    // stretch the old appearance (designed for the old BBox) to fit
+                    // the new widget rectangle, causing fields to look distorted.
+                    widget.getCOSObject().removeItem(COSName.AP);
                 }
             }
         }
@@ -1793,6 +1885,81 @@ public class FormUtils {
             }
         }
         return -1;
+    }
+
+    /**
+     * Add new form fields to a document based on the supplied definitions. If the document does not
+     * already contain an AcroForm, one is created automatically.
+     */
+    public void addNewFields(PDDocument document, List<NewFormFieldDefinition> definitions)
+            throws IOException {
+        if (document == null || definitions == null || definitions.isEmpty()) return;
+
+        PDAcroForm acroForm = getAcroFormSafely(document);
+        if (acroForm == null) {
+            // Create a new AcroForm for PDFs that don't have one yet
+            acroForm = new PDAcroForm(document);
+            document.getDocumentCatalog().setAcroForm(acroForm);
+        }
+
+        Set<String> existingNames = collectExistingFieldNames(acroForm);
+        int pageCount = document.getNumberOfPages();
+
+        for (NewFormFieldDefinition definition : definitions) {
+            if (definition == null) continue;
+
+            String resolvedType =
+                    Optional.ofNullable(definition.type())
+                            .map(FormUtils::normalizeFieldType)
+                            .orElse(FIELD_TYPE_TEXT);
+
+            FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(resolvedType);
+            if (handler == null || handler.doesNotsupportsDefinitionCreation()) {
+                log.warn(
+                        "Unsupported or non-creatable field type '{}'; defaulting to text",
+                        resolvedType);
+                handler = FormFieldTypeSupport.TEXT;
+            }
+
+            int pageIdx = definition.pageIndex() != null ? definition.pageIndex() : 0;
+            if (pageIdx < 0 || pageIdx >= pageCount) {
+                log.warn(
+                        "Page index {} out of range (0-{}); clamping to last page",
+                        pageIdx,
+                        pageCount - 1);
+                pageIdx = Math.max(0, pageCount - 1);
+            }
+            PDPage page = document.getPage(pageIdx);
+
+            float x = definition.x() != null ? definition.x() : 0f;
+            float y = definition.y() != null ? definition.y() : 0f;
+            float w = definition.width() != null ? definition.width() : 150f;
+            float h = definition.height() != null ? definition.height() : 20f;
+            PDRectangle rectangle = new PDRectangle(x, y, w, h);
+
+            String baseName =
+                    Optional.ofNullable(definition.name())
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .orElse("field");
+            String uniqueName = generateUniqueFieldName(baseName, existingNames);
+            existingNames.add(uniqueName);
+
+            List<String> options = sanitizeOptions(definition.options());
+
+            try {
+                createNewField(handler, acroForm, page, rectangle, uniqueName, definition, options);
+            } catch (Exception e) {
+                log.warn(
+                        "Failed to create field '{}' of type '{}': {}",
+                        uniqueName,
+                        resolvedType,
+                        e.getMessage(),
+                        e);
+            }
+        }
+
+        ensureAppearances(acroForm);
     }
 
     public void deleteFormFields(PDDocument document, List<String> fieldNames) {
@@ -2200,6 +2367,9 @@ public class FormUtils {
             }
         }
         field.setRequired(Boolean.TRUE.equals(definition.required()));
+        if (Boolean.TRUE.equals(definition.readOnly())) {
+            field.setReadOnly(true);
+        }
 
         PDAnnotationWidget widget =
                 existingWidget != null ? existingWidget : new PDAnnotationWidget();
@@ -2215,6 +2385,8 @@ public class FormUtils {
         }
         widget.setRectangle(validRectangle);
         widget.setPage(page);
+        // Explicitly set /P entry in COS dictionary for proper page reference persistence
+        widget.getCOSObject().setItem(COSName.P, page.getCOSObject());
 
         if (existingWidget == null) {
             widget.setPrinted(true);
@@ -2235,8 +2407,10 @@ public class FormUtils {
 
         List<PDAnnotation> annotations = page.getAnnotations();
         if (annotations == null) {
-            page.getAnnotations().add(widget);
-        } else if (!annotations.contains(widget)) {
+            annotations = new ArrayList<>();
+            page.setAnnotations(annotations);
+        }
+        if (!annotations.contains(widget)) {
             annotations.add(widget);
         }
         acroForm.getFields().add(field);
@@ -2285,7 +2459,10 @@ public class FormUtils {
             Boolean multiSelect,
             List<String> options,
             String defaultValue,
-            String tooltip) {}
+            String tooltip,
+            Float fontSize,
+            Boolean readOnly,
+            Boolean multiline) {}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ModifyFormFieldDefinition(
@@ -2293,11 +2470,19 @@ public class FormUtils {
             String name,
             String label,
             String type,
+            Integer pageIndex,
+            Float x,
+            Float y,
+            Float width,
+            Float height,
             Boolean required,
             Boolean multiSelect,
             List<String> options,
             String defaultValue,
-            String tooltip) {}
+            String tooltip,
+            Float fontSize,
+            Boolean readOnly,
+            Boolean multiline) {}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record FormFieldInfo(

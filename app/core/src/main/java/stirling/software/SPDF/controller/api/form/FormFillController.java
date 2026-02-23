@@ -139,6 +139,44 @@ public class FormFillController {
         }
     }
 
+    @PostMapping(value = "/add-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Add new form fields",
+            description =
+                    "Creates new form fields in the provided PDF and returns the updated file")
+    public ResponseEntity<byte[]> addFields(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file,
+            @Parameter(
+                            description = "JSON array of new field definitions",
+                            example =
+                                    "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
+                                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]")
+                    @RequestPart(value = "fields", required = false)
+                    byte[] fieldsPayload)
+            throws IOException {
+
+        String rawFields = decodePart(fieldsPayload);
+        List<FormUtils.NewFormFieldDefinition> definitions =
+                FormPayloadParser.parseNewFieldDefinitions(objectMapper, rawFields);
+        if (definitions.isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dataRequired",
+                    "{0} must contain at least one definition",
+                    "fields payload");
+        }
+
+        return processSingleFile(
+                file, "updated", document -> FormUtils.addNewFields(document, definitions));
+    }
+
     @PostMapping(value = "/modify-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Modify existing form fields",

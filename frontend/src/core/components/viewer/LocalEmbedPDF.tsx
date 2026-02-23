@@ -58,6 +58,8 @@ import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrappe
 import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentContext';
 import { absoluteWithBasePath } from '@app/constants/app';
 import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
+import { FormFieldCreationOverlay } from '@app/tools/formFill/FormFieldCreationOverlay';
+import { FormFieldEditOverlay } from '@app/tools/formFill/FormFieldEditOverlay';
 
 const DOCUMENT_NAME = 'stirling-pdf-viewer';
 
@@ -744,6 +746,26 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                               pageWidth={width}
                               pageHeight={height}
                               fileId={fileId}
+                            />
+                          )}
+
+                          {/* FormFieldCreationOverlay for creating new fields */}
+                          {enableFormFill && (
+                            <FormFieldCreationOverlay
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              pageWidth={width}
+                              pageHeight={height}
+                            />
+                          )}
+
+                          {/* FormFieldEditOverlay for moving/resizing existing fields */}
+                          {enableFormFill && (
+                            <FormFieldEditOverlay
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              pageWidth={width}
+                              pageHeight={height}
                             />
                           )}
 
