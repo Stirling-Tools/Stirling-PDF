@@ -293,7 +293,9 @@ public class WatermarkController {
         float pageHeight = page.getMediaBox().getHeight();
         int watermarkRows =
                 Math.min(
-                        (int) ((pageHeight + heightSpacer) / (desiredPhysicalHeight + heightSpacer)),
+                        (int)
+                                ((pageHeight + heightSpacer)
+                                        / (desiredPhysicalHeight + heightSpacer)),
                         10_000);
         int watermarkCols =
                 Math.min(

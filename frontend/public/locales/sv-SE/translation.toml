@@ -17,6 +17,12 @@ confirmClose = "Bekräfta stängning"
 confirmCloseCancel = "Avbryt"
 confirmCloseConfirm = "Stäng fil"
 confirmCloseMessage = "Är du säker på att du vill stänga den här filen?"
+confirmCloseDiscard = "Kasta ändringar och stäng"
+confirmCloseSave = "Spara och stäng"
+confirmCloseUnsaved = "Den här filen har osparade ändringar."
+confirmCloseUnsavedList = "Du har {{count}} fil{{plural}} med osparade ändringar.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Sparandet misslyckades"
+confirmCloseSaveFailed = "Sparat med fel. {{count}} fil{{plural}} kunde inte sparas."
 confirmPasswordErrorMessage = "Nytt lösenord och bekräfta nytt lösenord måste matcha."
 custom = "Anpassad..."
 customPosition = "Anpassad position"
@@ -39,6 +45,8 @@ edit = "Redigera"
 editYourNewFiles = "Redigera dina nya filer"
 exportAndContinue = "Exportera och fortsätt"
 false = "Falskt"
+fileSavedToDisk = "Fil sparad till disk"
+fileNotSavedToDisk = "Inte sparad till disk"
 fileSelected = "Vald: {{filename}}"
 filesSelected = "filer valda"
 font = "Teckensnitt"
@@ -829,8 +837,9 @@ label = "Användarnamn"
 [admin.settings.endpoints]
 description = "Styr vilka API-slutpunkter och slutpunktsgrupper som är tillgängliga."
 management = "Hantering av slutpunkter"
-note = "Observera: Att inaktivera slutpunkter begränsar API-åtkomst men tar inte bort UI-komponenter. Omstart krävs för att ändringar ska börja gälla."
 title = "API-slutpunkter"
+userDefaults = "Standardvärden för användarinställningar"
+userDefaultsDescription = "Ange standardvärden för användarinställningar. Användare kan åsidosätta dessa i sina personliga inställningar."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Välj slutpunktsgrupper att inaktivera"
@@ -839,6 +848,14 @@ label = "Inaktiverade slutpunktsgrupper"
 [admin.settings.endpoints.toRemove]
 description = "Välj enskilda slutpunkter att inaktivera"
 label = "Inaktiverade slutpunkter"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Ta bort inaktiverade verktyg i stället för att visa dem nedtonade"
+label = "Dölj otillgängliga verktyg som standard"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Ta bort inaktiverade konverteringsalternativ i stället för att visa dem nedtonade"
+label = "Dölj otillgängliga konverteringar som standard"
 
 [admin.settings.enterpriseRequired]
 message = "En företagslicens krävs för att få åtkomst till {{featureName}}. Du ser demodata som referens."
@@ -1219,9 +1236,21 @@ label = "Aktivera rensning av nycklar"
 description = "Rotera automatiskt JWT-signeringsnycklar periodiskt"
 label = "Aktivera nyckelrotation"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Antal dagar att behålla gamla JWT-nycklar för verifiering"
-label = "Behållningstid för nycklar (dagar)"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Giltighetstid för åtkomsttoken i minuter för webbklienter (standard: 1440 = 24 timmar)"
+label = "Giltighetstid för webbtoken (minuter)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Giltighetstid för åtkomsttoken i minuter för skrivbordsklienter. Skrivbordsappar identifieras automatiskt via User-Agent och får längre sessioner för bättre UX (standard: 43200 = 30 dagar)"
+label = "Giltighetstid för skrivbordstoken (minuter)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerans för klient-/serverklockans avvikelse under tokenvalidering (standard: 60 sekunder)"
+label = "Tolerans för klockavvikelse (sekunder)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Tillåt tokenuppdatering inom så här många minuter efter utgång (standard: 15 minuter, max 3 försök)"
+label = "Uppdateringsfrist (minuter)"
 
 [admin.settings.security.jwt.persistence]
 description = "Lagra JWT-nycklar beständigt för att överleva serveromstarter"
@@ -1422,13 +1451,16 @@ applyChanges = "Verkställ ändringar"
 backgroundColor = "Bakgrundsfärg"
 borderOff = "Ram: Av"
 borderOn = "Ram: På"
+changeColor = "Ändra färg"
 chooseColor = "Välj färg"
 circle = "Cirkel"
 clearBackground = "Ta bort bakgrund"
 color = "Färg"
 contents = "Text"
+delete = "Ta bort"
 desc = "Använd överstrykning, penna, text och anteckningar. Ändringar förblir live — ingen utplattning krävs."
 drawing = "Ritning"
+duplicate = "Duplicera"
 editCircle = "Redigera cirkel"
 editInk = "Redigera penna"
 editLine = "Redigera linje"
@@ -1458,6 +1490,7 @@ notesStamps = "Anteckningar och stämplar"
 opacity = "Opacitet"
 pen = "Penna"
 polygon = "Polygon"
+properties = "Egenskaper"
 rectangle = "Rektangel"
 redo = "Gör om"
 saveChanges = "Spara ändringar"
@@ -1483,6 +1516,7 @@ title = "Annotera"
 underline = "Understrykning"
 undo = "Ångra"
 unsupportedType = "Denna annoteringstyp stöds inte fullt ut för redigering."
+width = "Bredd"
 
 [app]
 description = "Det kostnadsfria alternativet till Adobe Acrobat (10M+ nedladdningar)"
@@ -3312,6 +3346,10 @@ desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. P
 tags = "arbetsflöde,sekvens,automation"
 title = "Automatisera"
 
+[home.formFill]
+desc = "Fyll i PDF-formulärfält interaktivt med en visuell redigerare"
+title = "Fyll i formulär"
+
 [home.autoRename]
 desc = "Byter automatiskt namn på en PDF baserat på detekterad rubrik"
 tags = "autodetektera,huvudbaserad,organisera,etikettera om"
@@ -4209,6 +4247,75 @@ title = "Sidredigerare"
 zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
 
+[viewer]
+cannotPreviewFile = "Kan inte förhandsgranska filen"
+dualPageView = "Dubbelsidig vy"
+firstPage = "Första sidan"
+lastPage = "Sista sidan"
+nextPage = "Nästa sida"
+onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
+previousPage = "Föregående sida"
+singlePageView = "Ensidig vy"
+unknownFile = "Okänd fil"
+zoomIn = "Zooma in"
+zoomOut = "Zooma ut"
+
+[viewer.attachments]
+title = "Bilagor"
+searchPlaceholder = "Sök bilagor"
+noSupport = "Stöd för bilagor är inte tillgängligt i den här visaren."
+noDocument = "Öppna en PDF för att visa dess bilagor."
+loading = "Läser in bilagor..."
+empty = "Inga bilagor i det här dokumentet"
+noMatch = "Inga bilagor matchar din sökning"
+
+[viewer.formBar]
+title = "Formulärfält"
+unsavedBadge = "Ej sparat"
+unsavedDesc = "Du har osparade ändringar"
+hasFieldsDesc = "Denna PDF innehåller ifyllbara fält"
+dismiss = "Avfärda"
+apply = "Verkställ ändringar"
+download = "Ladda ned PDF"
+
+[rightRail]
+closeSelected = "Stäng markerade filer"
+selectAll = "Välj allt"
+deselectAll = "Avmarkera alla"
+selectByNumber = "Välj efter sidnummer"
+deleteSelected = "Ta bort markerade sidor"
+closePdf = "Stäng PDF"
+exportAll = "Exportera PDF"
+downloadSelected = "Ladda ner markerade filer"
+annotations = "Annoteringar"
+exportSelected = "Exportera markerade sidor"
+formFill = "Fyll i formulär"
+saveChanges = "Spara ändringar"
+toggleAttachments = "Visa/dölj bilagor"
+toggleTheme = "Växla tema"
+language = "Språk"
+toggleAnnotations = "Växla synlighet för anteckningar"
+search = "Sök i PDF"
+panMode = "Panoreringsläge"
+applyRedactionsFirst = "Tillämpa maskningar först"
+rotateLeft = "Rotera åt vänster"
+rotateRight = "Rotera åt höger"
+toggleSidebar = "Växla sidofält"
+toggleBookmarks = "Visa/dölj bokmärken"
+print = "Skriv ut PDF"
+ruler = "Linjal / Mätning"
+draw = "Rita"
+redact = "Maskera"
+exitRedaction = "Avsluta maskeringsläge"
+save = "Spara"
+downloadAll = "Ladda ner alla"
+saveAll = "Spara alla"
+
+[textAlign]
+left = "Vänster"
+center = "Centrerat"
+right = "Höger"
+
 [pageExtracter]
 header = "Extrahera sidor"
 placeholder = "(t.ex. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent åtgärd, kan inte ångras och underliggande data raderas"
 boxRedaction = "Rita ruta för maskning"
 colourPicker = "Färgväljare"
+colorLabel = "Maskningsfärg"
+active = "Maskningsläge aktivt"
+activate = "Aktivera maskningsverktyg"
 controlsTitle = "Manuella maskeringskontroller"
 convertPDFToImageLabel = "Konvertera PDF till PDF-bild (Används för att ta bort text bakom rutan)"
 export = "Exportera"
@@ -5285,36 +5395,6 @@ title = "Hög kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Invertera alla färger i PDF:en helt och hållet, vilket skapar en negativliknande effekt. Användbart för att skapa mörkt läge-versioner av dokument eller minska ansträngning för ögonen i svagt ljus."
 title = "Invertera alla färger"
-
-[rightRail]
-annotations = "Annoteringar"
-applyRedactionsFirst = "Tillämpa maskningar först"
-closePdf = "Stäng PDF"
-closeSelected = "Stäng markerade filer"
-deleteSelected = "Ta bort markerade sidor"
-deselectAll = "Avmarkera alla"
-downloadAll = "Ladda ner alla"
-downloadSelected = "Ladda ner markerade filer"
-draw = "Rita"
-exitRedaction = "Avsluta maskeringsläge"
-exportAll = "Exportera PDF"
-exportSelected = "Exportera markerade sidor"
-language = "Språk"
-panMode = "Panoreringsläge"
-print = "Skriv ut PDF"
-redact = "Maskera"
-rotateLeft = "Rotera åt vänster"
-rotateRight = "Rotera åt höger"
-save = "Spara"
-saveAll = "Spara alla"
-saveChanges = "Spara ändringar"
-search = "Sök i PDF"
-selectAll = "Välj allt"
-selectByNumber = "Välj efter sidnummer"
-toggleAnnotations = "Växla synlighet för anteckningar"
-toggleBookmarks = "Visa/dölj bokmärken"
-toggleSidebar = "Växla sidofält"
-toggleTheme = "Växla tema"
 
 [rotate]
 rotateLeft = "Rotera moturs"
@@ -6153,11 +6233,6 @@ title = "API-dokumentation"
 [tableExtraxt]
 tags = "CSV,Tabellextraktion,extrahera,konvertera"
 
-[textAlign]
-center = "Centrerat"
-left = "Vänster"
-right = "Höger"
-
 [theme]
 toggle = "Växla tema"
 
@@ -6432,19 +6507,6 @@ invalid = "Certifikat finns inte i betrodd certifikatsbutik – källan kan inte
 fileManager = "Filhanterare"
 pageEditor = "Sidredigerare"
 viewer = "Visare"
-
-[viewer]
-cannotPreviewFile = "Kan inte förhandsgranska filen"
-dualPageView = "Dubbelsidig vy"
-firstPage = "Första sidan"
-lastPage = "Sista sidan"
-nextPage = "Nästa sida"
-onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
-previousPage = "Föregående sida"
-singlePageView = "Ensidig vy"
-unknownFile = "Okänd fil"
-zoomIn = "Zooma in"
-zoomOut = "Zooma ut"
 
 [viewPdf]
 header = "Visa PDF"

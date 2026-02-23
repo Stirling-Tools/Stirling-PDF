@@ -17,6 +17,12 @@ confirmClose = "Potwierdź zamknięcie"
 confirmCloseCancel = "Anuluj"
 confirmCloseConfirm = "Zamknij plik"
 confirmCloseMessage = "Na pewno chcesz zamknąć ten plik?"
+confirmCloseDiscard = "Odrzuć zmiany i zamknij"
+confirmCloseSave = "Zapisz i zamknij"
+confirmCloseUnsaved = "Ten plik ma niezapisane zmiany."
+confirmCloseUnsavedList = "Masz {{count}} plik{{plural}} z niezapisanymi zmianami.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Błąd zapisu"
+confirmCloseSaveFailed = "Zapisano z błędami. Nie udało się zapisać {{count}} plik{{plural}}."
 confirmPasswordErrorMessage = "Wpisz poprawnie hasło w OBA pola."
 custom = "Własny..."
 customPosition = "Pozycja niestandardowa"
@@ -39,6 +45,8 @@ edit = "Edytuj"
 editYourNewFiles = "Edytuj nowo utworzone pliki"
 exportAndContinue = "Eksportuj i kontynuuj"
 false = "Nie"
+fileSavedToDisk = "Plik zapisano na dysku"
+fileNotSavedToDisk = "Nie zapisano na dysku"
 fileSelected = "Wybrano: {{filename}}"
 filesSelected = "wybrane pliki"
 font = "Czcionka"
@@ -829,8 +837,9 @@ label = "Nazwa użytkownika"
 [admin.settings.endpoints]
 description = "Kontroluj, które endpointy API i grupy endpointów są dostępne."
 management = "Zarządzanie endpointami"
-note = "Uwaga: Wyłączenie endpointów ogranicza dostęp API, ale nie usuwa elementów interfejsu. Wymagane ponowne uruchomienie, aby zmiany odniosły skutek."
 title = "Endpointy API"
+userDefaults = "Domyślne wartości preferencji użytkownika"
+userDefaultsDescription = "Ustaw domyślne wartości preferencji użytkownika. Użytkownicy mogą je zastąpić w ustawieniach osobistych."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Wybierz grupy endpointów do wyłączenia"
@@ -839,6 +848,14 @@ label = "Wyłączone grupy endpointów"
 [admin.settings.endpoints.toRemove]
 description = "Wybierz poszczególne endpointy do wyłączenia"
 label = "Wyłączone endpointy"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Usuń wyłączone narzędzia zamiast wyświetlać je wyszarzone"
+label = "Domyślnie ukrywaj niedostępne narzędzia"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Usuń wyłączone opcje konwersji zamiast wyświetlać je wyszarzone"
+label = "Domyślnie ukrywaj niedostępne konwersje"
 
 [admin.settings.enterpriseRequired]
 message = "Do uzyskania dostępu do {{featureName}} wymagana jest licencja Enterprise. Obecnie wyświetlasz dane demonstracyjne w celach poglądowych."
@@ -1219,9 +1236,21 @@ label = "Włącz czyszczenie kluczy"
 description = "Automatycznie okresowo rotuj klucze podpisujące JWT"
 label = "Włącz rotację kluczy"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Liczba dni przechowywania starych kluczy JWT do weryfikacji"
-label = "Dni przechowywania kluczy"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Czas życia tokenu dostępu w minutach dla klientów web (domyślnie: 1440 = 24 godziny)"
+label = "Wygaśnięcie tokenu WWW (minuty)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Czas życia tokenu dostępu w minutach dla klientów desktop. Aplikacje desktopowe są automatycznie wykrywane na podstawie User-Agent i otrzymują dłuższe sesje dla lepszego UX (domyślnie: 43200 = 30 dni)"
+label = "Wygaśnięcie tokenu desktop (minuty)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerancja dryfu czasu klient/serwer podczas weryfikacji tokenu (domyślnie: 60 sekund)"
+label = "Tolerancja odchylenia zegara (sekundy)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Zezwól na odświeżenie tokenu w ciągu tylu minut po wygaśnięciu (domyślnie: 15 minut, maks. 3 próby)"
+label = "Okres karencji odświeżania (minuty)"
 
 [admin.settings.security.jwt.persistence]
 description = "Trwale przechowuj klucze JWT, aby przetrwały ponowne uruchomienia serwera"
@@ -1422,13 +1451,16 @@ applyChanges = "Zastosuj zmiany"
 backgroundColor = "Kolor tła"
 borderOff = "Obramowanie: wyłączone"
 borderOn = "Obramowanie: włączone"
+changeColor = "Zmień kolor"
 chooseColor = "Wybierz kolor"
 circle = "Okrąg"
 clearBackground = "Usuń tło"
 color = "Kolor"
 contents = "Tekst"
+delete = "Usuń"
 desc = "Używaj podświetlania, pióra, tekstu i notatek. Zmiany są na żywo — bez potrzeby spłaszczania."
 drawing = "Rysowanie"
+duplicate = "Duplikuj"
 editCircle = "Edytuj okrąg"
 editInk = "Edytuj pióro"
 editLine = "Edytuj linię"
@@ -1458,6 +1490,7 @@ notesStamps = "Notatki i stemple"
 opacity = "Przezroczystość"
 pen = "Pióro"
 polygon = "Wielokąt"
+properties = "Właściwości"
 rectangle = "Prostokąt"
 redo = "Ponów"
 saveChanges = "Zapisz zmiany"
@@ -1483,6 +1516,7 @@ title = "Adnotuj"
 underline = "Podkreślenie"
 undo = "Cofnij"
 unsupportedType = "Ten typ adnotacji nie jest w pełni obsługiwany do edycji."
+width = "Szerokość"
 
 [app]
 description = "Darmowa alternatywa dla Adobe Acrobat (10 mln+ pobrań)"
@@ -3312,6 +3346,10 @@ desc = "Buduj wieloetapowe przepływy, łącząc akcje PDF. Idealne do powtarzaj
 tags = "przepływ,sekwencja,automatyzacja"
 title = "Automatyzuj"
 
+[home.formFill]
+desc = "Interaktywne wypełnianie pól formularza PDF w edytorze wizualnym"
+title = "Wypełnij formularz"
+
 [home.autoRename]
 desc = "Automatycznie zmienia nazwę pliku PDF na podstawie wykrytego nagłówka"
 tags = "automatyczne wykrywanie,nagłówek,organizuj,przemianuj"
@@ -4209,6 +4247,75 @@ title = "Edytor stron"
 zoomIn = "Powiększ"
 zoomOut = "Pomniejsz"
 
+[viewer]
+cannotPreviewFile = "Nie można wyświetlić podglądu pliku"
+dualPageView = "Widok dwóch stron"
+firstPage = "Pierwsza strona"
+lastPage = "Ostatnia strona"
+nextPage = "Następna strona"
+onlyPdfSupported = "Przeglądarka obsługuje tylko pliki PDF. Ten plik wydaje się mieć inny format."
+previousPage = "Poprzednia strona"
+singlePageView = "Widok pojedynczej strony"
+unknownFile = "Nieznany plik"
+zoomIn = "Powiększ"
+zoomOut = "Pomniejsz"
+
+[viewer.attachments]
+title = "Załączniki"
+searchPlaceholder = "Szukaj w załącznikach"
+noSupport = "Obsługa załączników jest niedostępna w tym podglądzie."
+noDocument = "Otwórz plik PDF, aby wyświetlić jego załączniki."
+loading = "Wczytywanie załączników..."
+empty = "Brak załączników w tym dokumencie"
+noMatch = "Brak załączników pasujących do wyszukiwania"
+
+[viewer.formBar]
+title = "Pola formularza"
+unsavedBadge = "Niezapisane"
+unsavedDesc = "Masz niezapisane zmiany"
+hasFieldsDesc = "Ten PDF zawiera pola do wypełnienia"
+dismiss = "Zamknij"
+apply = "Zastosuj zmiany"
+download = "Pobierz PDF"
+
+[rightRail]
+closeSelected = "Zamknij wybrane pliki"
+selectAll = "Zaznacz wszystko"
+deselectAll = "Odznacz wszystko"
+selectByNumber = "Wybierz wg numerów stron"
+deleteSelected = "Usuń wybrane strony"
+closePdf = "Zamknij PDF"
+exportAll = "Eksportuj PDF"
+downloadSelected = "Pobierz wybrane pliki"
+annotations = "Adnotacje"
+exportSelected = "Eksportuj wybrane strony"
+formFill = "Wypełnij formularz"
+saveChanges = "Zapisz zmiany"
+toggleAttachments = "Pokaż/ukryj załączniki"
+toggleTheme = "Przełącz motyw"
+language = "Język"
+toggleAnnotations = "Przełącz widoczność adnotacji"
+search = "Szukaj w PDF"
+panMode = "Tryb przesuwania"
+applyRedactionsFirst = "Najpierw zastosuj zaczernienia"
+rotateLeft = "Obróć w lewo"
+rotateRight = "Obróć w prawo"
+toggleSidebar = "Przełącz panel boczny"
+toggleBookmarks = "Przełącz zakładki"
+print = "Drukuj PDF"
+ruler = "Linijka / Pomiar"
+draw = "Rysuj"
+redact = "Zaczernij"
+exitRedaction = "Wyjdź z trybu zaczerniania"
+save = "Zapisz"
+downloadAll = "Pobierz wszystko"
+saveAll = "Zapisz wszystko"
+
+[textAlign]
+left = "Do lewej"
+center = "Do środka"
+right = "Do prawej"
+
 [pageExtracter]
 header = "Wyciągnij stronę"
 placeholder = "(przykład 1,2,8 lub 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Zastosowanie jest trwałe, nie można cofnąć, a dane pod spodem zostaną usunięte"
 boxRedaction = "Rysowanie pola redakcji"
 colourPicker = "Próbnik kolorów"
+colorLabel = "Kolor zaciemnienia"
+active = "Tryb zaciemniania aktywny"
+activate = "Aktywuj narzędzie zaciemniania"
 controlsTitle = "Ręczne narzędzia zaczerniania"
 convertPDFToImageLabel = "Konwertuj PDF do PDF-Image (używane do usunięcia tekstu pod polem)"
 export = "Eksportuj"
@@ -5285,36 +5395,6 @@ title = "Wysoki kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Całkowicie odwróć wszystkie kolory w PDF, tworząc efekt podobny do negatywu. Przydatne do tworzenia wersji dokumentów w trybie ciemnym lub zmniejszania zmęczenia oczu w słabym oświetleniu."
 title = "Odwróć wszystkie kolory"
-
-[rightRail]
-annotations = "Adnotacje"
-applyRedactionsFirst = "Najpierw zastosuj zaczernienia"
-closePdf = "Zamknij PDF"
-closeSelected = "Zamknij wybrane pliki"
-deleteSelected = "Usuń wybrane strony"
-deselectAll = "Odznacz wszystko"
-downloadAll = "Pobierz wszystko"
-downloadSelected = "Pobierz wybrane pliki"
-draw = "Rysuj"
-exitRedaction = "Wyjdź z trybu zaczerniania"
-exportAll = "Eksportuj PDF"
-exportSelected = "Eksportuj wybrane strony"
-language = "Język"
-panMode = "Tryb przesuwania"
-print = "Drukuj PDF"
-redact = "Zaczernij"
-rotateLeft = "Obróć w lewo"
-rotateRight = "Obróć w prawo"
-save = "Zapisz"
-saveAll = "Zapisz wszystko"
-saveChanges = "Zapisz zmiany"
-search = "Szukaj w PDF"
-selectAll = "Zaznacz wszystko"
-selectByNumber = "Wybierz wg numerów stron"
-toggleAnnotations = "Przełącz widoczność adnotacji"
-toggleBookmarks = "Przełącz zakładki"
-toggleSidebar = "Przełącz panel boczny"
-toggleTheme = "Przełącz motyw"
 
 [rotate]
 rotateLeft = "Obróć przeciwnie do ruchu wskazówek zegara"
@@ -6153,11 +6233,6 @@ title = "Dokumentacja API"
 [tableExtraxt]
 tags = "CSV, ekstrakcja tabeli, ekstrakcja, konwersja, wydobywanie"
 
-[textAlign]
-center = "Do środka"
-left = "Do lewej"
-right = "Do prawej"
-
 [theme]
 toggle = "Przełącz motyw"
 
@@ -6432,19 +6507,6 @@ invalid = "Certyfikat nie znajduje się w magazynie zaufania – źródło nie m
 fileManager = "Menedżer plików"
 pageEditor = "Edytor stron"
 viewer = "Przeglądarka"
-
-[viewer]
-cannotPreviewFile = "Nie można wyświetlić podglądu pliku"
-dualPageView = "Widok dwóch stron"
-firstPage = "Pierwsza strona"
-lastPage = "Ostatnia strona"
-nextPage = "Następna strona"
-onlyPdfSupported = "Przeglądarka obsługuje tylko pliki PDF. Ten plik wydaje się mieć inny format."
-previousPage = "Poprzednia strona"
-singlePageView = "Widok pojedynczej strony"
-unknownFile = "Nieznany plik"
-zoomIn = "Powiększ"
-zoomOut = "Pomniejsz"
 
 [viewPdf]
 header = "Podejrzyj PDF"
