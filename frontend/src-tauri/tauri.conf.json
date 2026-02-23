@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Stirling-PDF",
-    "version": "2.5.2",
+    "version": "2.5.3",
     "identifier": "stirling.pdf.dev",
     "build": {
         "frontendDist": "../dist",
