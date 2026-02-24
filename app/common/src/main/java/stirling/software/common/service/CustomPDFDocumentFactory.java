@@ -1,6 +1,5 @@
 package stirling.software.common.service;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -118,8 +117,8 @@ public class CustomPDFDocumentFactory {
      * are slurped into a byte array. Larger files are loaded directly using a non-destructive
      * {@link RandomAccessReadBufferedFile} so the caller's original is never modified or deleted.
      *
-     * <p>Note: for files larger than {@link #SMALL_FILE_THRESHOLD}, the returned document holds
-     * an open file handle to the original file until {@link PDDocument#close()} is called.
+     * <p>Note: for files larger than {@link #SMALL_FILE_THRESHOLD}, the returned document holds an
+     * open file handle to the original file until {@link PDDocument#close()} is called.
      */
     public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) throw ExceptionUtils.createNullArgumentException("File");
@@ -137,7 +136,11 @@ public class CustomPDFDocumentFactory {
         try {
             doc = Loader.loadPDF(raf, "", null, null, cache);
         } catch (IOException e) {
-            try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
+            try {
+                raf.close();
+            } catch (IOException ce) {
+                e.addSuppressed(ce);
+            }
             ExceptionUtils.logException("PDF loading from file", e);
             throw ExceptionUtils.handlePdfException(e);
         }
@@ -251,8 +254,8 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Overload accepting a pre-captured {@link MemorySnapshot} so that internal callers can reuse
-     * a single snapshot for both cache selection and resource-cache decisions. Overridable so that
+     * Overload accepting a pre-captured {@link MemorySnapshot} so that internal callers can reuse a
+     * single snapshot for both cache selection and resource-cache decisions. Overridable so that
      * test spies ({@code SpyPDFDocumentFactory}) can intercept.
      */
     protected StreamCacheCreateFunction getStreamCacheFunction(
@@ -279,10 +282,10 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Serialises a {@link PDDocument} to a byte array. The document is written to a temp file
-     * first so that the PDDocument's internal object graph can be GC'd before {@link
-     * Files#readAllBytes} allocates the returned byte array, preventing double-peak memory for
-     * large documents. The OS buffer cache absorbs the I/O overhead for small documents.
+     * Serialises a {@link PDDocument} to a byte array. The document is written to a temp file first
+     * so that the PDDocument's internal object graph can be GC'd before {@link Files#readAllBytes}
+     * allocates the returned byte array, preventing double-peak memory for large documents. The OS
+     * buffer cache absorbs the I/O overhead for small documents.
      */
     public byte[] saveToBytes(PDDocument document) throws IOException {
         Path temp = createTempFilePath("pdf-save-");
@@ -290,8 +293,11 @@ public class CustomPDFDocumentFactory {
             document.save(temp.toFile());
             return Files.readAllBytes(temp);
         } finally {
-            try { Files.deleteIfExists(temp); }
-            catch (IOException e) { log.warn("Failed to delete temp file: {}", temp, e); }
+            try {
+                Files.deleteIfExists(temp);
+            } catch (IOException e) {
+                log.warn("Failed to delete temp file: {}", temp, e);
+            }
         }
     }
 
@@ -343,8 +349,8 @@ public class CustomPDFDocumentFactory {
      * virtual threads yield their carrier threads during blocking reads, so the JVM can serve other
      * requests while each document is being parsed from disk.
      *
-     * <p>Concurrency is bounded by {@link #MAX_CONCURRENT_OPS} to prevent unbounded memory
-     * pressure when many files are submitted simultaneously.
+     * <p>Concurrency is bounded by {@link #MAX_CONCURRENT_OPS} to prevent unbounded memory pressure
+     * when many files are submitted simultaneously.
      *
      * <p>If any single load fails, all pending tasks are cancelled, any already-open documents are
      * closed, and the first {@link IOException} is rethrown. The caller retains ownership of all
@@ -355,14 +361,18 @@ public class CustomPDFDocumentFactory {
      */
     public List<PDDocument> loadAll(List<File> files) throws IOException, InterruptedException {
         List<Callable<PDDocument>> tasks =
-                files.stream().<Callable<PDDocument>>map(f -> () -> {
-                    CONCURRENT_GATE.acquire();
-                    try {
-                        return load(f);
-                    } finally {
-                        CONCURRENT_GATE.release();
-                    }
-                }).toList();
+                files.stream()
+                        .<Callable<PDDocument>>map(
+                                f ->
+                                        () -> {
+                                            CONCURRENT_GATE.acquire();
+                                            try {
+                                                return load(f);
+                                            } finally {
+                                                CONCURRENT_GATE.release();
+                                            }
+                                        })
+                        .toList();
         return runConcurrently(tasks, CustomPDFDocumentFactory::closeQuietly);
     }
 
@@ -378,36 +388,44 @@ public class CustomPDFDocumentFactory {
     public List<PDDocument> loadAllMultipart(List<MultipartFile> files)
             throws IOException, InterruptedException {
         List<Callable<PDDocument>> tasks =
-                files.stream().<Callable<PDDocument>>map(f -> () -> {
-                    CONCURRENT_GATE.acquire();
-                    try {
-                        return load(f);
-                    } finally {
-                        CONCURRENT_GATE.release();
-                    }
-                }).toList();
+                files.stream()
+                        .<Callable<PDDocument>>map(
+                                f ->
+                                        () -> {
+                                            CONCURRENT_GATE.acquire();
+                                            try {
+                                                return load(f);
+                                            } finally {
+                                                CONCURRENT_GATE.release();
+                                            }
+                                        })
+                        .toList();
         return runConcurrently(tasks, CustomPDFDocumentFactory::closeQuietly);
     }
 
     /**
      * Serialises all documents to byte arrays concurrently, one virtual thread per document.
      * Concurrency is bounded by {@link #MAX_CONCURRENT_OPS}. Each document is written to a temp
-     * file (preventing double-peak-memory, see {@link #saveToBytes}); the concurrent writes
-     * proceed in parallel. The returned list preserves insertion order.
+     * file (preventing double-peak-memory, see {@link #saveToBytes}); the concurrent writes proceed
+     * in parallel. The returned list preserves insertion order.
      *
      * @throws InterruptedException if the calling thread is interrupted while waiting
      */
     public List<byte[]> saveAllToBytes(List<PDDocument> documents)
             throws IOException, InterruptedException {
         List<Callable<byte[]>> tasks =
-                documents.stream().<Callable<byte[]>>map(doc -> () -> {
-                    CONCURRENT_GATE.acquire();
-                    try {
-                        return saveToBytes(doc);
-                    } finally {
-                        CONCURRENT_GATE.release();
-                    }
-                }).toList();
+                documents.stream()
+                        .<Callable<byte[]>>map(
+                                doc ->
+                                        () -> {
+                                            CONCURRENT_GATE.acquire();
+                                            try {
+                                                return saveToBytes(doc);
+                                            } finally {
+                                                CONCURRENT_GATE.release();
+                                            }
+                                        })
+                        .toList();
         return runConcurrently(tasks, null);
     }
 
@@ -582,7 +600,11 @@ public class CustomPDFDocumentFactory {
             // Empty string password: PDFBox convention for unencrypted documents.
             return Loader.loadPDF(raf, "", null, null, cache);
         } catch (IOException e) {
-            try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
+            try {
+                raf.close();
+            } catch (IOException ce) {
+                e.addSuppressed(ce);
+            }
             ExceptionUtils.logException("PDF loading from file", e);
             throw ExceptionUtils.handlePdfException(e);
         }
@@ -598,7 +620,11 @@ public class CustomPDFDocumentFactory {
         try {
             return Loader.loadPDF(raf, password, null, null, cache);
         } catch (IOException e) {
-            try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
+            try {
+                raf.close();
+            } catch (IOException ce) {
+                e.addSuppressed(ce);
+            }
             ExceptionUtils.logException("PDF loading from file with password", e);
             throw ExceptionUtils.handlePdfException(e);
         }
@@ -651,7 +677,11 @@ public class CustomPDFDocumentFactory {
                     success = true;
                     return doc;
                 } catch (IOException e) {
-                    try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
+                    try {
+                        raf.close();
+                    } catch (IOException ce) {
+                        e.addSuppressed(ce);
+                    }
                     throw e;
                 }
             } finally {

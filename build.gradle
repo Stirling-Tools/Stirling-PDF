@@ -185,6 +185,9 @@ subprojects {
         exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
+        // google-java-format 1.34+ requires Guava 33.x (ImmutableSortedMapFauxverideShim);
+        // force it here so Spotless's FeatureClassLoader resolves the correct version.
+        resolutionStrategy.force 'com.google.guava:guava:33.4.8-jre'
     }
 
     dependencyManagement {
