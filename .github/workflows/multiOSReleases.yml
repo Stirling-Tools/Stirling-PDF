@@ -21,8 +21,6 @@ on:
           - windows
           - macos
           - linux
-  push:
-    branches: [main, V2-master]
   release:
     types: [created]
 
