@@ -314,9 +314,14 @@ public class CustomPDFDocumentFactory {
     public PDDocument createNewDocumentBasedOnOldDocument(PDDocument oldDocument)
             throws IOException {
         PDDocument document = createNewDocument();
-        pdfMetadataService.setMetadataToPdf(
-                document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
-        return document;
+        try {
+            pdfMetadataService.setMetadataToPdf(
+                    document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
+            return document;
+        } catch (RuntimeException ex) {
+            document.close();
+            throw ex;
+        }
     }
 
     public byte[] loadToBytes(File file) throws IOException {
@@ -644,7 +649,7 @@ public class CustomPDFDocumentFactory {
                     success = true;
                     return doc;
                 } catch (IOException e) {
-                    raf.close();
+                    try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
                     throw e;
                 }
             } finally {
