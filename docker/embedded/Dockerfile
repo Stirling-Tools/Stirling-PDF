@@ -339,7 +339,7 @@ RUN set -eux; \
     ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
     ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver; \
     \
-    # ── Verify and fix LibreOffice ──
+    # Verify and fix LibreOffice
     libreoffice --version; \
     soffice --version 2>/dev/null || true; \
     # Rebuild UNO bridge type database
@@ -486,9 +486,9 @@ COPY --from=gs-build /usr/local/bin/gs /usr/local/bin/gs
 COPY --from=gs-build /usr/local/share/ghostscript /usr/local/share/ghostscript
 RUN ldconfig /usr/local/lib
 
-# ---------------------------------------------------------------------------
+# ---
 # Non-root user
-# ---------------------------------------------------------------------------
+# ---
 ARG PUID=1000
 ARG PGID=1000
 

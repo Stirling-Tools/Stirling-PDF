@@ -159,11 +159,7 @@ RUN set -eux; \
     find /opt/calibre/resources/localization -mindepth 1 -maxdepth 1 ! -name 'iso639.calibre_msgpack' -exec rm -rf {} +; \
     \
     # Strip debug symbols from calibre extension modules.
-    # Exclude Qt6 libs and all qt6/ subdirectory files: libQt6WebEngineCore and friends
-    # embed Chromium V8 JIT code and internal resource blobs that strip corrupts, causing
-    # segfaults at render time. Qt6 plugins (e.g. libqoffscreen.so, libqpdf.so) live under
-    # qt6/plugins/ and do NOT match the libQt6* name pattern, so they must also be excluded
-    # via the path filter to prevent the WebEngine renderer from crashing.
+    # Exclude Qt6 libs and all qt6/ subdirectory files to prevent Chromium renderer crashes.
     find /opt/calibre/lib -name '*.so*' \
       ! -name 'libQt6*' \
       ! -path '*/qt6/*' \
@@ -348,7 +344,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       libreoffice-base-nogui libreoffice-java-common \
     ; \
     \
-    # ── Fix LibreOffice UNO bridge and filter availability ──
+    # Fix LibreOffice UNO bridge and filter availability
     libreoffice --version; \
     soffice --version 2>/dev/null || true; \
     # Rebuild UNO bridge type database
@@ -373,7 +369,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/share/tcltk/* \
            /usr/share/python-wheels/*; \
     \
-    # CHANGED: system locale data (LANG=C.UTF-8 doesn't use them — ~10-20 MB)
+    # Clean up system locale data (LANG=C.UTF-8 doesn't use them)
     find /usr/share/locale -mindepth 1 -maxdepth 1 -type d \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /usr/share/i18n/locales /usr/share/i18n/charmaps; \

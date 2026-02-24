@@ -113,7 +113,7 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Loads a PDF from a caller-owned {@link File}. Small files (≤ {@link #SMALL_FILE_THRESHOLD})
+     * Loads a PDF from a caller-owned {@link File}. Small files (<= {@link #SMALL_FILE_THRESHOLD})
      * are slurped into a byte array. Larger files are loaded directly using a non-destructive
      * {@link RandomAccessReadBufferedFile} so the caller's original is never modified or deleted.
      *
@@ -222,7 +222,7 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Loads a {@link MultipartFile}. Small uploads (≤ {@link #SMALL_FILE_THRESHOLD}) are read
+     * Loads a {@link MultipartFile}. Small uploads (<= {@link #SMALL_FILE_THRESHOLD}) are read
      * directly into a byte array, bypassing the InputStream → temp-file round-trip and saving one
      * disk write + read cycle on the hot path.
      */
@@ -431,7 +431,7 @@ public class CustomPDFDocumentFactory {
 
     /**
      * Runs {@code tasks} concurrently on virtual threads (one per task), collecting results in
-     * insertion order. The executor is scoped to this call — no shared mutable state between
+     * insertion order. The executor is scoped to this call - no shared mutable state between
      * invocations. On any failure: pending tasks are cancelled, {@code onFailureCleanup} is applied
      * to every result collected before the failure, and the first exception is rethrown.
      *
@@ -467,12 +467,7 @@ public class CustomPDFDocumentFactory {
         }
     }
 
-    /**
-     * Cleans up results from concurrent execution on failure. Iterates all completed futures and
-     * applies the cleanup function to their results. This is the single source of truth — the
-     * formerly separate {@code collectedResults} iteration has been removed to prevent
-     * double-closing already-collected results.
-     */
+    /** Cleans up results from concurrent execution on failure. */
     private static <T> void cleanupFutureResults(
             List<Future<T>> futures, Consumer<T> onFailureCleanup) {
         if (onFailureCleanup == null) return;

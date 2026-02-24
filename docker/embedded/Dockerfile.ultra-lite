@@ -96,7 +96,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 # Install minimal dependencies
-# CHANGED: --chown on COPY above removes need to chown /app.jar and /restart-helper.jar here
+# --chown on COPY above removes need to chown JARs here
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \

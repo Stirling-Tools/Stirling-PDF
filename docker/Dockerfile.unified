@@ -95,8 +95,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     VITE_API_BASE_URL=http://localhost:8080
 
 # Install all dependencies
-# CHANGED: removed 'pip install --upgrade pip setuptools' (wasteful before --no-cache-dir installs)
-# CHANGED: /app.jar chown moved to COPY --chown above (avoids overlayfs copy of the JAR)
+# Removed wasteful pip upgrade; chown moved to COPY above
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
@@ -139,7 +138,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
-    # CHANGED: clean up pip + setuptools from venv (~5-10 MB)
+    # Clean up pip + setuptools from venv
     find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
            /opt/venv/lib/python*/site-packages/setuptools && \

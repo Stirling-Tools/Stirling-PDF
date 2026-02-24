@@ -91,7 +91,7 @@ ENV DISABLE_ADDITIONAL_FEATURES=false \
     ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 # Install minimal dependencies
-# CHANGED: /app.jar chown moved to COPY --chown above (avoids overlayfs copy of the JAR)
+# /app.jar chown moved to COPY above
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
