@@ -100,7 +100,6 @@ public class FileToPdf {
                 while (entry != null) {
                     Path filePath =
                             tempUnzippedDir.getPath().resolve(sanitizeZipFilename(entry.getName()));
-                    // Verify the resolved path is within the target directory (defense in depth)
                     Path normalizedTargetDir = tempUnzippedDir.getPath().toAbsolutePath().normalize();
                     Path normalizedFilePath = filePath.toAbsolutePath().normalize();
                     if (!normalizedFilePath.startsWith(normalizedTargetDir)) {
