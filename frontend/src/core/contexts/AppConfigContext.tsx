@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import apiClient from '@app/services/apiClient';
 import { getSimulatedAppConfig } from '@app/testing/serverExperienceSimulations';
+import type { AppConfig, AppConfigBootstrapMode } from '@app/types/appConfig';
 
 /**
  * Sleep utility for delays
@@ -14,55 +15,7 @@ export interface AppConfigRetryOptions {
   initialDelay?: number;
 }
 
-export interface AppConfig {
-  baseUrl?: string;
-  contextPath?: string;
-  serverPort?: number;
-  frontendUrl?: string;
-  appNameNavbar?: string;
-  languages?: string[];
-  defaultLocale?: string;
-  logoStyle?: 'modern' | 'classic';
-  enableLogin?: boolean;
-  showSettingsWhenNoLogin?: boolean;
-  enableEmailInvites?: boolean;
-  enableOAuth?: boolean;
-  enableSaml?: boolean;
-  isAdmin?: boolean;
-  enableAlphaFunctionality?: boolean;
-  enableAnalytics?: boolean | null;
-  enablePosthog?: boolean | null;
-  enableScarf?: boolean | null;
-  enableDesktopInstallSlide?: boolean;
-  premiumEnabled?: boolean;
-  premiumKey?: string;
-  termsAndConditions?: string;
-  privacyPolicy?: string;
-  cookiePolicy?: string;
-  impressum?: string;
-  accessibilityStatement?: string;
-  runningProOrHigher?: boolean;
-  runningEE?: boolean;
-  license?: string;
-  SSOAutoLogin?: boolean;
-  serverCertificateEnabled?: boolean;
-  enableMobileScanner?: boolean;
-  mobileScannerConvertToPdf?: boolean;
-  mobileScannerImageResolution?: string;
-  mobileScannerPageFormat?: string;
-  mobileScannerStretchToFit?: boolean;
-  appVersion?: string;
-  machineType?: string;
-  activeSecurity?: boolean;
-  dependenciesReady?: boolean;
-  error?: string;
-  isNewServer?: boolean;
-  isNewUser?: boolean;
-  defaultHideUnavailableTools?: boolean;
-  defaultHideUnavailableConversions?: boolean;
-}
-
-export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
+export type { AppConfig, AppConfigBootstrapMode };
 
 interface AppConfigContextValue {
   config: AppConfig | null;

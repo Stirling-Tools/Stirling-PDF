@@ -1,5 +1,5 @@
 import apiClient from '@app/services/apiClient';
-import type { SavedSignature } from '@app/hooks/tools/sign/useSavedSignatures';
+import type { SavedSignature } from '@app/types/signature';
 
 export type StorageType = 'backend' | 'localStorage';
 

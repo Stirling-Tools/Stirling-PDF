@@ -1,4 +1,4 @@
-import { PlanFeature } from '@app/services/licenseService';
+import type { PlanFeature } from '@app/types/license';
 
 /**
  * Shared plan feature definitions for Stirling PDF Self-Hosted

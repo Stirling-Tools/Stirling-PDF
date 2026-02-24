@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
 import { connectionModeService } from '@app/services/connectionModeService';
+import { getAuthTokenFromAnySource } from '@app/services/authTokenStore';
 
 export type BackendStatus = 'stopped' | 'starting' | 'healthy' | 'unhealthy';
 
@@ -122,8 +123,7 @@ export class TauriBackendService {
    */
   private async getAuthToken(): Promise<string | null> {
     try {
-      const { authService } = await import('./authService');
-      return await authService.getAuthToken();
+      return await getAuthTokenFromAnySource();
     } catch (error) {
       console.debug('[TauriBackendService] Failed to get auth token:', error);
       return null;
