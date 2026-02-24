@@ -11,7 +11,7 @@ public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
     private Object credentials;
 
     public ApiKeyAuthenticationToken(String apiKey) {
-        super(null);
+        super((Collection<? extends GrantedAuthority>) null);
         this.principal = null;
         this.credentials = apiKey;
         setAuthenticated(false);

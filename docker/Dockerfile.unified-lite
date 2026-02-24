@@ -24,6 +24,13 @@ COPY gradle gradle/
 COPY app/core/build.gradle core/.
 COPY app/common/build.gradle common/.
 COPY app/proprietary/build.gradle proprietary/.
+
+ENV JAVA_TOOL_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+
 RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
 
 WORKDIR /app
@@ -53,7 +60,11 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, unified, ultra-lite,
 # Copy backend files
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
-COPY --from=backend-build /app/app/core/build/libs/*.jar app.jar
+
+# Copy built JAR
+# Use numeric UID:GID (1000:1000) since the named user doesn't exist yet at COPY time
+COPY --from=backend-build --chown=1000:1000 \
+     /app/app/core/build/libs/*.jar app.jar
 
 # Copy frontend files
 COPY --from=frontend-build /app/dist /usr/share/nginx/html
@@ -80,6 +91,7 @@ ENV DISABLE_ADDITIONAL_FEATURES=false \
     ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 # Install minimal dependencies
+# /app.jar chown moved to COPY above
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
@@ -100,8 +112,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     chmod +x /entrypoint.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /configs /customFiles /pipeline /tmp/stirling-pdf /var/lib/nginx /var/log/nginx /usr/share/nginx && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /pipeline /configs /customFiles /pipeline /tmp/stirling-pdf /var/lib/nginx /var/log/nginx /usr/share/nginx
 
 EXPOSE 8080/tcp
 

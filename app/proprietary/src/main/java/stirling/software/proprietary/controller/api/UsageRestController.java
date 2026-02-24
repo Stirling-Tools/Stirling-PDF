@@ -8,9 +8,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +16,9 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** REST API controller for usage analytics data used by React frontend. */
 @Slf4j
@@ -135,7 +135,7 @@ public class UsageRestController {
                 return normalizeEndpoint(requestUri.toString());
             }
 
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.debug("Failed to parse audit data JSON: {}", dataJson, e);
         }
 

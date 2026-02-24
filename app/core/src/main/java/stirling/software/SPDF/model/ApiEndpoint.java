@@ -3,9 +3,9 @@ package stirling.software.SPDF.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import lombok.Getter;
+
+import tools.jackson.databind.JsonNode;
 
 public class ApiEndpoint {
     private final String name;
@@ -18,10 +18,10 @@ public class ApiEndpoint {
         postNode.path("parameters")
                 .forEach(
                         paramNode -> {
-                            String paramName = paramNode.path("name").asText();
+                            String paramName = paramNode.path("name").asText("");
                             parameters.put(paramName, paramNode);
                         });
-        this.description = postNode.path("description").asText();
+        this.description = postNode.path("description").asText("");
     }
 
     public boolean areParametersValid(Map<String, Object> providedParams) {

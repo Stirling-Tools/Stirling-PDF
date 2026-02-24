@@ -97,7 +97,7 @@ public class SvgToPdf {
     private GraphicsNode buildGvtWithTimeout(BridgeContext ctx, SVGDocument svgDoc)
             throws IOException {
         GVTBuilder builder = new GVTBuilder();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
         Callable<GraphicsNode> buildTask = () -> builder.build(ctx, svgDoc);
         Future<GraphicsNode> future = executor.submit(buildTask);

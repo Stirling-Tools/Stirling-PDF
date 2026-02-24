@@ -27,12 +27,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.SPDF.controller.api.EditTableOfContentsController.BookmarkItem;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class EditTableOfContentsControllerTest {

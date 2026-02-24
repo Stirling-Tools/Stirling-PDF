@@ -82,9 +82,8 @@ public class ExtractImagesController {
         Set<byte[]> processedImages = new HashSet<>();
 
         if (useMultithreading) {
-            // Executor service to handle multithreading
-            ExecutorService executor =
-                    Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            // Virtual thread executor — lightweight threads ideal for I/O-bound image extraction
+            ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
             Set<Future<Void>> futures = new HashSet<>();
 
             // Safely iterate over each page, handling corrupt PDFs where page count might be wrong

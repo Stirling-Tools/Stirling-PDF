@@ -58,7 +58,7 @@ Feature: API Validation
             | deskew            | true  |
             | clean             | true  |
             | cleanFinal        | true  |
-            | ocrType           | Force |
+            | ocrType           | force-ocr |
             | ocrRenderType     | hocr  |
             | removeImagesAfter | false |
         When I send the API request to the endpoint "/api/v1/misc/ocr-pdf"

@@ -246,10 +246,12 @@ public class OCRController {
             command.add("--clean-final");
         }
         if (ocrType != null && !ocrType.isEmpty()) {
-            if ("skip-text".equals(ocrType)) {
-                command.add("--skip-text");
-            } else if ("force-ocr".equals(ocrType)) {
+            if ("force-ocr".equals(ocrType)) {
                 command.add("--force-ocr");
+            } else {
+                // Default for 'Normal' and 'skip-text': use --skip-text
+                // ocrmypdf 17+ requires explicit flag when PDF already contains text
+                command.add("--skip-text");
             }
         }
         command.add("--invalidate-digital-signatures");
@@ -378,11 +380,12 @@ public class OCRController {
                         List<String> command = new ArrayList<>();
                         command.add("tesseract");
                         command.add(imagePath.toString());
-                        command.add(
+                        String outputBase =
                                 new File(
                                                 tempOutputDir,
                                                 String.format(Locale.ROOT, "page_%d", pageNum))
-                                        .toString());
+                                        .toString();
+                        command.add(outputBase);
                         command.add("-l");
                         command.add(String.join("+", selectedLanguages));
                         command.add("pdf"); // Always output PDF
@@ -398,6 +401,18 @@ public class OCRController {
                                     null,
                                     "Tesseract",
                                     result.getRc());
+                        }
+
+                        // Verify the OCR'd PDF was created
+                        if (!pageOutputPath.exists()) {
+                            log.warn(
+                                    "Tesseract did not create expected output file: {}. Page may be blank or unreadable.",
+                                    pageOutputPath.getAbsolutePath());
+                            // Save original page without OCR as fallback
+                            try (PDDocument pageDoc = new PDDocument()) {
+                                pageDoc.addPage(page);
+                                pageDoc.save(pageOutputPath);
+                            }
                         }
 
                         // Add OCR'd PDF to merger

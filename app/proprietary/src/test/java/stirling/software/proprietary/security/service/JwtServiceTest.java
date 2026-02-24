@@ -36,6 +36,9 @@ import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 @ExtendWith(MockitoExtension.class)
 class JwtServiceTest {
 
@@ -66,7 +69,8 @@ class JwtServiceTest {
         testVerificationKey = new JwtVerificationKey("test-key-id", encodedPublicKey);
 
         ApplicationProperties applicationProperties = new ApplicationProperties();
-        jwtService = new JwtService(true, keystoreService, applicationProperties);
+        ObjectMapper objectMapper = JsonMapper.builder().build();
+        jwtService = new JwtService(objectMapper, true, keystoreService, applicationProperties);
     }
 
     @Test

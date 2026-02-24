@@ -1,9 +1,9 @@
 services:
-  backend:
+  stirling-pdf:
     build:
       context: ../..
-      dockerfile: docker/backend/Dockerfile
-    container_name: stirling-pdf-backend
+      dockerfile: docker/embedded/Dockerfile
+    container_name: stirling-pdf
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
@@ -11,9 +11,7 @@ services:
       timeout: 10s
       retries: 16
     ports:
-      - "8080:8080"  # TODO: Remove in production - for debugging only
-    expose:
-      - "8080"
+      - "8080:8080"
     volumes:
       - ../../stirling/latest/data:/usr/share/tessdata:rw
       - ../../stirling/latest/config:/configs:rw
@@ -29,24 +27,6 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
-    networks:
-      - stirling-network
-
-  frontend:
-    build:
-      context: ../..
-      dockerfile: docker/frontend/Dockerfile
-    container_name: stirling-pdf-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:80"
-    environment:
-      BACKEND_URL: http://backend:8080
-      #VITE_GOOGLE_DRIVE_CLIENT_ID: <INSERT_YOUR_CLIENT_ID_HERE>
-      #VITE_GOOGLE_DRIVE_API_KEY: <INSERT_YOUR_API_KEY_HERE>
-      #VITE_GOOGLE_DRIVE_APP_ID: <INSERT_YOUR_APP_ID_HERE>
-    depends_on:
-      - backend
     networks:
       - stirling-network
 

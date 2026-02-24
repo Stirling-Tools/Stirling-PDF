@@ -54,8 +54,8 @@ public class TauriProcessMonitor {
         scheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         r -> {
-                            Thread t = new Thread(r, "tauri-process-monitor");
-                            t.setDaemon(true);
+                            Thread t =
+                                    Thread.ofVirtual().name("tauri-process-monitor").unstarted(r);
                             return t;
                         });
 
