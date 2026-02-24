@@ -81,8 +81,6 @@ def step_pdf_contains_blank_pages(context, page_count):
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
     for i in range(page_count):
-        # Add minimal text to ensure PDF is valid and can be processed by tools
-        c.drawString(100, height - 100, f"Blank page {i + 1}")
         c.showPage()
     c.save()
 

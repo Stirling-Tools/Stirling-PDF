@@ -88,7 +88,8 @@ tcp_port_check() {
     return $result
   fi
 
-  return 1
+  # No TCP check method available; caller uses ==2 to fall back to PID-only logic
+  return 2
 }
 
 check_unoserver_port_ready() {
@@ -813,7 +814,7 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
   fi
 fi
 
-wait "$JAVA_PID" || true
+wait "$JAVA_PID"
 exit_code=$?
 # Propagate Java's actual exit code so container orchestrators can detect crashes
 exit "${exit_code}"

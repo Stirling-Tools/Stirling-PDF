@@ -479,6 +479,8 @@ COPY --from=calibre-build /opt/calibre /opt/calibre
 COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
 COPY --from=pdf-tools-build /usr/local/bin/magick /usr/bin/magick
 COPY --from=pdf-tools-build /usr/local/lib/libMagick* /usr/local/lib/
+# Copy loadable coder/filter modules (required when built with --with-modules)
+COPY --from=pdf-tools-build /usr/local/lib/ImageMagick-7* /usr/local/lib/
 COPY --from=pdf-tools-build /usr/local/etc/ImageMagick-7 /usr/local/etc/ImageMagick-7
 COPY --from=gs-build /usr/local/bin/gs /usr/local/bin/gs
 COPY --from=gs-build /usr/local/share/ghostscript /usr/local/share/ghostscript

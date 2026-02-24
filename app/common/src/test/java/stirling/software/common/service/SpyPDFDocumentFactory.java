@@ -12,7 +12,7 @@ class SpyPDFDocumentFactory extends CustomPDFDocumentFactory {
     public StrategyType lastStrategyUsed;
 
     public SpyPDFDocumentFactory(PdfMetadataService service) {
-        super(service);
+        super(service); // TempFileManager falls back to Files.createTempFile in tests
     }
 
     @Override
@@ -26,6 +26,6 @@ class SpyPDFDocumentFactory extends CustomPDFDocumentFactory {
             type = StrategyType.TEMP_FILE;
         }
         this.lastStrategyUsed = type;
-        return super.getStreamCacheFunction(contentSize); // delegate to real behavior
+        return super.getStreamCacheFunction(contentSize);
     }
 }

@@ -68,7 +68,10 @@ public class CustomAuditEventRepository implements AuditEventRepository {
                             .build();
             repo.save(ent);
         } catch (Exception e) {
-            e.printStackTrace(); // fail-open
+            log.error(
+                    "Failed to persist audit event (fail-open); principal={}",
+                    ev.getPrincipal(),
+                    e);
         }
     }
 }
