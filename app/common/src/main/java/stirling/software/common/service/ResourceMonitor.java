@@ -43,7 +43,9 @@ public class ResourceMonitor {
     @Value("${stirling.resource.monitor.interval-ms:60000}")
     private long monitorIntervalMs = 60000; // 60 seconds
 
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler =
+            Executors.newSingleThreadScheduledExecutor(
+                    Thread.ofVirtual().name("resource-monitor-", 0).factory());
     private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     private final OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
 

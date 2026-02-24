@@ -1,15 +1,12 @@
 package stirling.software.proprietary.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-/** Configuration to enable scheduling for the audit system. */
+/** Configuration for audit system transaction management. */
 @Configuration
 @EnableTransactionManagement
-@EnableScheduling
 public class AuditJpaConfig {
-    // This configuration enables scheduling for audit cleanup tasks
-    // JPA repositories are now managed by DatabaseConfig to avoid conflicts
-    // No additional beans or methods needed
+    // Scheduling is enabled on SPDFApplication — no duplicate @EnableScheduling needed.
+    // JPA repositories are now managed by DatabaseConfig to avoid conflicts.
 }
