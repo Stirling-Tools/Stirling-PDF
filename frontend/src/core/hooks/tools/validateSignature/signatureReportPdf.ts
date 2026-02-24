@@ -71,7 +71,7 @@ export const createReportPdf = async (
     cursorY -= 16;
 
     if (entry.error) {
-      cursorY = drawCenteredMessage({
+      drawCenteredMessage({
         page,
         font,
         fontBold,
@@ -86,7 +86,7 @@ export const createReportPdf = async (
     }
 
     if (entry.signatures.length === 0) {
-      cursorY = drawCenteredMessage({
+      drawCenteredMessage({
         page,
         font,
         fontBold,
