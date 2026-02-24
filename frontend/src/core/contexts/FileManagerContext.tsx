@@ -6,10 +6,7 @@ import { downloadFiles } from '@app/utils/downloadUtils';
 import { FileId } from '@app/types/file';
 import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
-
-// Module-level storage for file path mappings (quickKey -> localFilePath)
-// Used to pass file paths from Tauri file dialog to FileContext
-export const pendingFilePathMappings = new Map<string, string>();
+export { pendingFilePathMappings } from '@app/services/pendingFilePathMappings';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {

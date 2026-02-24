@@ -1,5 +1,5 @@
-import type { AppConfig } from '@app/contexts/AppConfigContext';
-import type { LicenseInfo } from '@app/services/licenseService';
+import type { AppConfig } from '@app/types/appConfig';
+import type { LicenseInfo } from '@app/types/license';
 
 interface WauResponse {
   trackingSince: string;
@@ -208,4 +208,3 @@ export function getSimulatedLicenseInfo(): LicenseInfo | null {
 }
 
 export const DEV_TESTING_ENABLED = DEV_TESTING_MODE;
-
