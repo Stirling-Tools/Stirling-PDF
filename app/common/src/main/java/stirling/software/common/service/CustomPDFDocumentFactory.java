@@ -1,5 +1,6 @@
 package stirling.software.common.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,22 +103,29 @@ public class CustomPDFDocumentFactory {
         return load(file, false);
     }
 
+    /**
+     * Loads a PDF from a caller-owned {@link File}. The file is copied to a temp file first so
+     * that the caller's original is never deleted by the internal destructive loading pipeline.
+     */
     public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) throw ExceptionUtils.createNullArgumentException("File");
         long size = file.length();
-        log.debug("Loading PDF from file: {} MB", String.valueOf(size >> 20));
-        return maybePostProcess(loadAdaptively(file, size, null), readOnly);
+        log.debug("Loading PDF from file: {} MB", size >> 20);
+        Path temp = createTempFilePath("pdf-copy-");
+        Files.copy(file.toPath(), temp, StandardCopyOption.REPLACE_EXISTING);
+        return maybePostProcess(loadAdaptively(temp.toFile(), Files.size(temp), null), readOnly);
     }
 
     public PDDocument load(Path path) throws IOException {
         return load(path, false);
     }
 
+    /**
+     * Loads a PDF from a caller-owned {@link Path}. Delegates to {@link #load(File, boolean)}.
+     */
     public PDDocument load(Path path, boolean readOnly) throws IOException {
         if (path == null) throw ExceptionUtils.createNullArgumentException("Path");
-        long size = Files.size(path);
-        log.debug("Loading PDF from path: {} MB", String.valueOf(size >> 20));
-        return maybePostProcess(loadAdaptively(path.toFile(), size, null), readOnly);
+        return load(path.toFile(), readOnly);
     }
 
     public PDDocument load(byte[] input) throws IOException {
@@ -127,7 +135,7 @@ public class CustomPDFDocumentFactory {
     public PDDocument load(byte[] input, boolean readOnly) throws IOException {
         if (input == null) throw ExceptionUtils.createNullArgumentException("Input bytes");
         long size = input.length;
-        log.debug("Loading PDF from byte[]: {} MB", String.valueOf(size >> 20));
+        log.debug("Loading PDF from byte[]: {} MB", size >> 20);
         return maybePostProcess(loadAdaptively(input, size, null), readOnly);
     }
 
@@ -221,20 +229,14 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Serialises a {@link PDDocument} to a byte array via an intermediate temp file. Always using a
-     * temp file prevents the scenario where both the in-memory document representation and a full
-     * serialised copy reside on the heap simultaneously, which would double peak memory usage for
-     * large documents. The page-count heuristic used previously was an unreliable proxy for
-     * document size (a single page can contain embedded 4K video).
+     * Serialises a {@link PDDocument} to a byte array. Uses an in-memory
+     * {@link ByteArrayOutputStream} — the previous temp-file round-trip added two unnecessary
+     * syscalls on every save, even for tiny documents.
      */
     public byte[] saveToBytes(PDDocument document) throws IOException {
-        Path tempFile = createTempFilePath("pdf-save-");
-        try {
-            document.save(tempFile.toFile());
-            return Files.readAllBytes(tempFile);
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        document.save(baos);
+        return baos.toByteArray();
     }
 
     public byte[] createNewBytesBasedOnOldDocument(byte[] oldDocument) throws IOException {
@@ -347,16 +349,36 @@ public class CustomPDFDocumentFactory {
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
                 futures.forEach(f -> f.cancel(true));
-                if (onFailureCleanup != null) results.forEach(onFailureCleanup);
+                cleanupFutureResults(futures, results, onFailureCleanup);
                 throw ie;
             } catch (ExecutionException e) {
                 futures.forEach(f -> f.cancel(true));
-                if (onFailureCleanup != null) results.forEach(onFailureCleanup);
+                cleanupFutureResults(futures, results, onFailureCleanup);
                 Throwable cause = e.getCause();
                 if (cause instanceof IOException ioe) throw ioe;
                 throw new IOException("Concurrent PDF operation failed", cause);
             }
         }
+    }
+
+    /**
+     * Cleans up results from concurrent execution on failure. Retrieves results from
+     * already-completed futures (which {@code cancel(true)} cannot reach) and applies the
+     * cleanup function to every collected result.
+     */
+    private static <T> void cleanupFutureResults(
+            List<Future<T>> futures, List<T> collectedResults, Consumer<T> onFailureCleanup) {
+        if (onFailureCleanup == null) return;
+        for (Future<T> f : futures) {
+            if (f.isDone() && !f.isCancelled()) {
+                try {
+                    onFailureCleanup.accept(f.get());
+                } catch (Exception ignored) {
+                    // best-effort cleanup
+                }
+            }
+        }
+        collectedResults.forEach(onFailureCleanup);
     }
 
     private static void closeQuietly(PDDocument doc) {
@@ -378,8 +400,8 @@ public class CustomPDFDocumentFactory {
     private PDDocument loadAdaptively(Object source, long contentSize, String password)
             throws IOException {
         Object sourceObj = source;
-        MemorySnapshot mem = MemorySnapshot.capture();
-        StreamCacheCreateFunction cacheFunction = selectCacheFunction(contentSize, mem);
+        // Use the overridable method so that test spies (SpyPDFDocumentFactory) can intercept.
+        StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
 
         // Slurp small on-disk files into heap immediately so the temp file can be removed and its
         // file descriptor released before PDFBox opens its own internal scratch space.
@@ -411,6 +433,7 @@ public class CustomPDFDocumentFactory {
                                             + sourceObj.getClass().getSimpleName());
                 };
 
+        MemorySnapshot mem = MemorySnapshot.capture();
         if (contentSize > LARGE_FILE_THRESHOLD || mem.isLow()) {
             document.setResourceCache(null);
         }
@@ -425,8 +448,14 @@ public class CustomPDFDocumentFactory {
         try {
             Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
             PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile), password);
-            success = true;
-            return maybePostProcess(doc, readOnly);
+            try {
+                PDDocument result = maybePostProcess(doc, readOnly);
+                success = true;
+                return result;
+            } catch (IOException | RuntimeException ex) {
+                doc.close();
+                throw ex;
+            }
         } finally {
             // On success: small files are deleted inside loadAdaptively; large files are owned by
             // DeletingRandomAccessFile and deleted when the PDDocument closes.
@@ -446,27 +475,29 @@ public class CustomPDFDocumentFactory {
         if (mem.isLow()) {
             log.debug(
                     "Heap pressure ({}% free, {} MB free), forcing file-backed cache",
-                    String.valueOf((int) mem.freePct()), String.valueOf(mem.freeBytes() >> 20));
+                    (int) mem.freePct(), mem.freeBytes() >> 20);
             return scratchCache(MemoryUsageSetting.setupTempFileOnly());
         }
         if (contentSize < SMALL_FILE_THRESHOLD) {
-            log.debug("Memory-only cache for {} KB document", String.valueOf(contentSize >> 10));
+            log.debug("Memory-only cache for {} KB document", contentSize >> 10);
             return IOUtils.createMemoryOnlyStreamCache();
         }
         if (contentSize < LARGE_FILE_THRESHOLD) {
-            log.debug("Mixed cache for {} MB document", String.valueOf(contentSize >> 20));
+            log.debug("Mixed cache for {} MB document", contentSize >> 20);
             return scratchCache(MemoryUsageSetting.setupMixed(MIXED_MODE_MEMORY_LIMIT));
         }
-        log.debug("File-backed cache for {} MB document", String.valueOf(contentSize >> 20));
+        log.debug("File-backed cache for {} MB document", contentSize >> 20);
         return scratchCache(MemoryUsageSetting.setupTempFileOnly());
     }
 
     private static PDDocument loadFromFile(File file, StreamCacheCreateFunction cache)
             throws IOException {
+        DeletingRandomAccessFile raf = new DeletingRandomAccessFile(file);
         try {
             // Empty string password: PDFBox convention for unencrypted documents.
-            return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+            return Loader.loadPDF(raf, "", null, null, cache);
         } catch (IOException e) {
+            raf.close(); // triggers file deletion
             ExceptionUtils.logException("PDF loading from file", e);
             throw ExceptionUtils.handlePdfException(e);
         }
@@ -480,12 +511,17 @@ public class CustomPDFDocumentFactory {
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
             throws IOException {
         if (size >= SMALL_FILE_THRESHOLD) {
-            log.debug(
-                    "Spilling {} MB byte[] to temp file before loading",
-                    String.valueOf(size >> 20));
+            log.debug("Spilling {} MB byte[] to temp file before loading", size >> 20);
             Path tmp = createTempFilePath("pdf-bytes-");
-            Files.write(tmp, bytes);
-            return loadFromFile(tmp.toFile(), cache);
+            boolean ok = false;
+            try {
+                Files.write(tmp, bytes);
+                PDDocument doc = loadFromFile(tmp.toFile(), cache);
+                ok = true;
+                return doc;
+            } finally {
+                if (!ok) Files.deleteIfExists(tmp);
+            }
         }
         try {
             return Loader.loadPDF(bytes, "", null, null, cache);
