@@ -50,10 +50,10 @@ jobs:
         run: ./gradlew :stirling-pdf:test --tests "stirling.software.SPDF.exception.GlobalExceptionHandlerTest" --no-daemon
 
       - name: Run core JUnit tests (FileMonitor)
-        run: ./gradlew :stirling-pdf:test --tests "stirling.software.common.util.FileMonitorTest" --no-daemon
+        run: ./gradlew :common:test --tests "stirling.software.common.util.FileMonitorTest" --no-daemon
 
       - name: Run core JUnit tests (StringToArrayListPropertyEditor)
-        run: ./gradlew :stirling-pdf:test --tests "stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditorTest" --no-daemon
+        run: ./gradlew :common:test --tests "stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditorTest" --no-daemon
 
       - name: Run proprietary JUnit tests (SecretMasker)
         run: ./gradlew :proprietary:test --tests "stirling.software.proprietary.util.SecretMaskerTest" --no-daemon
