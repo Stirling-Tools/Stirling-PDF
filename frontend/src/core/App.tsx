@@ -7,6 +7,7 @@ import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvide
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
+import PluginPage from "@app/pages/PluginPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
 // Import global styles
@@ -43,6 +44,15 @@ export default function App() {
         />
 
         {/* All other routes need AppProviders for backend integration */}
+        <Route
+          path="/plugins/:id"
+          element={
+            <AppProviders>
+              <PluginPage />
+            </AppProviders>
+          }
+        />
+
         <Route
           path="*"
           element={

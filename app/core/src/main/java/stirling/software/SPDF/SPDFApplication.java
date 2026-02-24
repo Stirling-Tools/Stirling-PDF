@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
@@ -28,6 +29,7 @@ import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.plugins.PluginLoader;
 
 @Slf4j
 @EnableScheduling
@@ -59,11 +61,11 @@ public class SPDFApplication {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        SpringApplication app = new SpringApplication(SPDFApplication.class);
+        SpringApplicationBuilder builder = new SpringApplicationBuilder(SPDFApplication.class);
 
         Properties props = new Properties();
 
-        app.setAdditionalProfiles(getActiveProfile(args));
+        builder.profiles(getActiveProfile(args));
 
         ConfigInitializer initializer = new ConfigInitializer();
         try {
@@ -111,8 +113,13 @@ public class SPDFApplication {
         if (!props.isEmpty()) {
             finalProps.putAll(props);
         }
+        ClassLoader pluginClassLoader =
+                PluginLoader.buildPluginClassLoader(SPDFApplication.class.getClassLoader());
+        if (pluginClassLoader != SPDFApplication.class.getClassLoader()) {
+            Thread.currentThread().setContextClassLoader(pluginClassLoader);
+        }
+        SpringApplication app = builder.build();
         app.setDefaultProperties(finalProps);
-
         app.run(args);
 
         // Ensure directories are created

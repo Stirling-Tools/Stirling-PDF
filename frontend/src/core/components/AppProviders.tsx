@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from "react";
 import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
+import { PluginRegistryProvider } from "@app/contexts/PluginRegistryContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { FilesModalProvider } from "@app/contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
@@ -108,7 +109,8 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                   <AppInitializer />
                   <BrandingAssetManager />
-                  <ToolRegistryProvider>
+                  <PluginRegistryProvider>
+                    <ToolRegistryProvider>
                       <NavigationProvider>
                         <FilesModalProvider>
                           <ToolWorkflowProvider>
@@ -139,6 +141,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                         </FilesModalProvider>
                       </NavigationProvider>
                     </ToolRegistryProvider>
+                  </PluginRegistryProvider>
                   </FileContextProvider>
               </AppConfigProvider>
           </BannerProvider>
