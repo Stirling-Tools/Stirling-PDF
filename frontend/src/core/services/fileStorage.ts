@@ -53,9 +53,18 @@ class FileStorageService {
       type: stirlingFile.type,
       size: stirlingFile.size,
       lastModified: stirlingFile.lastModified,
+      createdAt: stub.createdAt,
       data: arrayBuffer,
       thumbnail: stub.thumbnailUrl,
       isLeaf: stub.isLeaf ?? true,
+      remoteStorageId: stub.remoteStorageId,
+      remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
+      remoteOwnerUsername: stub.remoteOwnerUsername,
+      remoteOwnedByCurrentUser: stub.remoteOwnedByCurrentUser,
+      remoteAccessRole: stub.remoteAccessRole,
+      remoteSharedViaLink: stub.remoteSharedViaLink,
+      remoteHasShareLinks: stub.remoteHasShareLinks,
+      remoteShareToken: stub.remoteShareToken,
 
       // History data from stub
       versionNumber: stub.versionNumber ?? 1,
@@ -160,11 +169,19 @@ class FileStorageService {
           quickKey: record.quickKey,
           thumbnailUrl: record.thumbnail,
           isLeaf: record.isLeaf,
+          remoteStorageId: record.remoteStorageId,
+          remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+          remoteOwnerUsername: record.remoteOwnerUsername,
+          remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+          remoteAccessRole: record.remoteAccessRole,
+          remoteSharedViaLink: record.remoteSharedViaLink,
+          remoteHasShareLinks: record.remoteHasShareLinks,
+          remoteShareToken: record.remoteShareToken,
           versionNumber: record.versionNumber,
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
           toolHistory: record.toolHistory,
-          createdAt: Date.now() // Current session
+          createdAt: record.createdAt || Date.now()
         };
 
         resolve(stub);
@@ -200,11 +217,19 @@ class FileStorageService {
               quickKey: record.quickKey,
               thumbnailUrl: record.thumbnail,
               isLeaf: record.isLeaf,
+              remoteStorageId: record.remoteStorageId,
+              remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+              remoteOwnerUsername: record.remoteOwnerUsername,
+              remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+              remoteAccessRole: record.remoteAccessRole,
+              remoteSharedViaLink: record.remoteSharedViaLink,
+              remoteHasShareLinks: record.remoteHasShareLinks,
+              remoteShareToken: record.remoteShareToken,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
-              createdAt: Date.now()
+              createdAt: record.createdAt || Date.now()
             });
           }
           cursor.continue();
@@ -213,6 +238,16 @@ class FileStorageService {
         }
       };
     });
+  }
+
+  /**
+   * Get all history stubs for a given original file ID.
+   */
+  async getHistoryChainStubs(originalFileId: FileId): Promise<StirlingFileStub[]> {
+    const stubs = await this.getAllStirlingFileStubs();
+    return stubs
+      .filter((stub) => (stub.originalFileId || stub.id) === originalFileId)
+      .sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
   }
 
   /**
@@ -243,11 +278,19 @@ class FileStorageService {
               quickKey: record.quickKey,
               thumbnailUrl: record.thumbnail,
               isLeaf: record.isLeaf,
+              remoteStorageId: record.remoteStorageId,
+              remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+              remoteOwnerUsername: record.remoteOwnerUsername,
+              remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+              remoteAccessRole: record.remoteAccessRole,
+              remoteSharedViaLink: record.remoteSharedViaLink,
+              remoteHasShareLinks: record.remoteHasShareLinks,
+              remoteShareToken: record.remoteShareToken,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
-              createdAt: Date.now()
+              createdAt: record.createdAt || Date.now()
             });
           }
           cursor.continue();
@@ -470,6 +513,38 @@ class FileStorageService {
       return true;
     } catch (error) {
       console.error('Failed to mark file as leaf:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Update metadata fields for a stored file record.
+   */
+  async updateFileMetadata(fileId: FileId, updates: Partial<StoredStirlingFileRecord>): Promise<boolean> {
+    try {
+      const db = await this.getDatabase();
+      const transaction = db.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
+        const request = store.get(fileId);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result as StoredStirlingFileRecord | undefined);
+      });
+
+      if (!record) {
+        return false;
+      }
+
+      const updatedRecord = { ...record, ...updates };
+      await new Promise<void>((resolve, reject) => {
+        const request = store.put(updatedRecord);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to update file metadata:', error);
       return false;
     }
   }

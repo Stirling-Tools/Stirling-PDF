@@ -93,20 +93,16 @@ export default function Workbench() {
   };
 
   const renderMainContent = () => {
-    // Check for custom workbench views first
+    // Check if we're showing a custom workbench first
+    // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
     if (!isBaseWorkbench(currentView)) {
       const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
       if (customView) {
-        // PDF text editor handles its own empty state (shows dropzone when no document)
-        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor';
-        if (handlesOwnEmptyState || activeFiles.length > 0) {
-          const CustomComponent = customView.component;
-          return <CustomComponent data={customView.data} />;
-        }
+        const CustomComponent = customView.component;
+        return <CustomComponent data={customView.data} />;
       }
     }
 
-    // For base workbenches (or custom views that don't handle empty state), show landing page when no files
     if (activeFiles.length === 0) {
       return (
         <LandingPage

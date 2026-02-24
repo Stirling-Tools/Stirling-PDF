@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useImperativeHandle, forwardRef, useRef } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
@@ -38,18 +38,110 @@ import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrappe
 
 const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
 
+export interface SignaturePreview {
+  id: string;
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  signatureData: string; // Base64 PNG image
+  signatureType: 'canvas' | 'image' | 'text';
+}
+
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
   url?: string | null;
   onAnnotationChange?: (annotations: any[]) => void;
+  placementMode?: boolean;
+  signatureData?: string;
+  signatureType?: 'canvas' | 'image' | 'text';
+  onPlaceSignature?: (id: string, pageIndex: number, x: number, y: number, width: number, height: number) => void;
+  onPreviewCountChange?: (count: number) => void;
+  initialSignatures?: SignaturePreview[]; // Initial signatures to display (read-only preview)
+  readOnly?: boolean; // If true, signature previews cannot be moved or deleted
 }
 
-export function LocalEmbedPDFWithAnnotations({
+export interface AnnotationAPI {
+  setActiveTool: (toolId: string | null) => void;
+  setToolDefaults: (toolId: string, defaults: any) => void;
+  getActiveTool: () => any;
+  getPageAnnotations: (pageIndex: number) => Promise<any[]>;
+  getAllAnnotations: () => Promise<any[]>;
+  getSignaturePreviews: () => SignaturePreview[];
+  clearPreviews: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
+}
+
+export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, LocalEmbedPDFWithAnnotationsProps>(({
   file,
   url,
-  onAnnotationChange
-}: LocalEmbedPDFWithAnnotationsProps) {
+  onAnnotationChange,
+  placementMode = false,
+  signatureData,
+  signatureType,
+  onPlaceSignature,
+  onPreviewCountChange,
+  initialSignatures = [],
+  readOnly = false
+}, ref) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const annotationApiRef = useRef<any>(null);
+  const zoomApiRef = useRef<any>(null);
+
+  // State for signature preview overlays (support multiple)
+  const [signaturePreviews, setSignaturePreviews] = useState<SignaturePreview[]>(initialSignatures);
+
+  // Track if a drag operation just occurred to prevent click from firing
+  const isDraggingRef = useRef(false);
+
+  // Expose annotation API to parent
+  useImperativeHandle(ref, () => ({
+    setActiveTool: (toolId: string | null) => {
+      annotationApiRef.current?.setActiveTool(toolId);
+    },
+    setToolDefaults: (toolId: string, defaults: any) => {
+      annotationApiRef.current?.setToolDefaults(toolId, defaults);
+    },
+    getActiveTool: () => {
+      return annotationApiRef.current?.getActiveTool();
+    },
+    getPageAnnotations: async (pageIndex: number) => {
+      if (!annotationApiRef.current?.getPageAnnotations) return [];
+      const task = annotationApiRef.current.getPageAnnotations({ pageIndex });
+      if (task?.toPromise) {
+        return await task.toPromise();
+      }
+      return [];
+    },
+    getAllAnnotations: async () => {
+      // Get all annotations across all pages
+      // Note: In practice, we'll use getPageAnnotations for the specific page
+      // where the user placed their signature, so this method is optional
+      if (!annotationApiRef.current?.getPageAnnotations) return [];
+
+      // Would need document page count to iterate through all pages
+      // For signing workflow, we track annotations via onAnnotationChange callback instead
+      return [];
+    },
+    getSignaturePreviews: () => {
+      return signaturePreviews;
+    },
+    clearPreviews: () => {
+      setSignaturePreviews([]);
+    },
+    zoomIn: () => {
+      zoomApiRef.current?.zoomIn();
+    },
+    zoomOut: () => {
+      zoomApiRef.current?.zoomOut();
+    },
+    resetZoom: () => {
+      zoomApiRef.current?.resetZoom();
+    },
+  }), [signaturePreviews]);
 
   // Convert File to URL if needed
   useEffect(() => {
@@ -61,6 +153,16 @@ export function LocalEmbedPDFWithAnnotations({
       setPdfUrl(url);
     }
   }, [file, url]);
+
+  // Notify parent when signature previews change
+  useEffect(() => {
+    if (onAnnotationChange) {
+      onAnnotationChange(signaturePreviews);
+    }
+    if (onPreviewCountChange) {
+      onPreviewCountChange(signaturePreviews.length);
+    }
+  }, [signaturePreviews, onAnnotationChange, onPreviewCountChange]);
 
   // Create plugins configuration with annotation support
   const plugins = useMemo(() => {
@@ -187,23 +289,34 @@ export function LocalEmbedPDFWithAnnotations({
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={async (registry: any) => {
-          // v2.0: Use registry.getPlugin() to access plugin APIs
+        onInitialized={async (registry) => {
+          // Store zoom API reference
+          const zoomPlugin = registry.getPlugin('zoom');
+          if (zoomPlugin && zoomPlugin.provides) {
+            zoomApiRef.current = zoomPlugin.provides();
+          }
+
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
           const annotationApi = annotationPlugin.provides();
           if (!annotationApi) return;
 
-          // Add custom signature stamp tool
+          // Store reference for parent component access
+          annotationApiRef.current = annotationApi;
+
+          // Add custom signature image tool
+          // Using FreeText with appearance for better image support
           annotationApi.addTool({
             id: 'signatureStamp',
             name: 'Digital Signature',
-            interaction: { exclusive: false, cursor: 'copy' },
+            interaction: { exclusive: false, cursor: 'crosshair' },
             matchScore: () => 0,
             defaults: {
               type: PdfAnnotationSubtype.STAMP,
-              // Will be set dynamically when user creates signature
+              // Image data will be set dynamically via setToolDefaults
+              width: 150,
+              height: 75,
             },
           });
 
@@ -221,16 +334,8 @@ export function LocalEmbedPDFWithAnnotations({
             },
           });
 
-          // Listen for annotation events to notify parent
-          if (onAnnotationChange) {
-            annotationApi.onAnnotationEvent((event: any) => {
-              if (event.committed) {
-                // Get all annotations and notify parent
-                // This is a simplified approach - in reality you'd need to get all annotations
-                onAnnotationChange([event.annotation]);
-              }
-            });
-          }
+          // Annotation events are now tracked via signaturePreviews state
+          // and notified to parent via useEffect
         }}
       >
         <ZoomAPIBridge />
@@ -279,12 +384,39 @@ export function LocalEmbedPDFWithAnnotations({
                             userSelect: 'none',
                             WebkitUserSelect: 'none',
                             MozUserSelect: 'none',
-                            msUserSelect: 'none'
+                            msUserSelect: 'none',
+                            cursor: placementMode ? 'crosshair' : 'default',
                           }}
                           draggable={false}
                           onDragStart={(e) => e.preventDefault()}
                           onDrop={(e) => e.preventDefault()}
                           onDragOver={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            if (isDraggingRef.current) return;
+
+                            if (placementMode && onPlaceSignature) {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              // Store as fractions (0–1) of the rendered page so overlays
+                              // remain correct at any zoom level (scale not in new API)
+                              const x = (e.clientX - rect.left) / width;
+                              const y = (e.clientY - rect.top) / height;
+                              const sigWidth = 150 / width;
+                              const sigHeight = 75 / height;
+
+                              const newPreview = {
+                                id: `sig-preview-${Date.now()}-${Math.random()}`,
+                                pageIndex,
+                                x,
+                                y,
+                                width: sigWidth,
+                                height: sigHeight,
+                                signatureData: signatureData || '',
+                                signatureType: signatureType || 'image',
+                              };
+                              setSignaturePreviews(prev => [...prev, newPreview]);
+                              onPlaceSignature(newPreview.id, pageIndex, x * width, y * height, sigWidth * width, sigHeight * height);
+                            }
+                          }}
                         >
                           <TilingLayer documentId={documentId} pageIndex={pageIndex} />
 
@@ -292,11 +424,191 @@ export function LocalEmbedPDFWithAnnotations({
 
                           <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
 
+                          {/* Annotation layer for signatures */}
                           <AnnotationLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
                             selectionOutlineColor="#007ACC"
                           />
+
+                          {/* Signature preview overlays (support multiple) */}
+                          {signaturePreviews
+                            .filter(preview => preview.pageIndex === pageIndex)
+                            .map((preview) => preview.signatureData && (
+                              <div
+                                key={preview.id}
+                                style={{
+                                  position: 'absolute',
+                                  left: preview.x * width,
+                                  top: preview.y * height,
+                                  width: preview.width * width,
+                                  height: preview.height * height,
+                                  border: readOnly ? '1px dashed rgba(0, 122, 204, 0.4)' : '2px solid #007ACC',
+                                  boxShadow: readOnly ? 'none' : '0 0 10px rgba(0, 122, 204, 0.5)',
+                                  cursor: readOnly ? 'default' : 'move',
+                                  zIndex: 1000,
+                                  backgroundColor: readOnly ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
+                                  pointerEvents: readOnly ? 'none' : 'auto',
+                                }}
+                              >
+                                {/* Delete button - only show when not read-only */}
+                                {!readOnly && (
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: -12,
+                                      right: -12,
+                                      width: 24,
+                                      height: 24,
+                                      borderRadius: '50%',
+                                      backgroundColor: '#DC3545',
+                                      color: 'white',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      cursor: 'pointer',
+                                      fontSize: '16px',
+                                      fontWeight: 'bold',
+                                      border: '2px solid white',
+                                      zIndex: 1002,
+                                      pointerEvents: 'auto',
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSignaturePreviews(prev => prev.filter(p => p.id !== preview.id));
+                                    }}
+                                    title="Delete signature"
+                                  >
+                                    ×
+                                  </div>
+                                )}
+
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    pointerEvents: readOnly ? 'none' : 'auto',
+                                  }}
+                                  onMouseDown={readOnly ? undefined : (e) => {
+                                    e.stopPropagation();
+                                    const startX = e.clientX;
+                                    const startY = e.clientY;
+                                    const startLeft = preview.x;
+                                    const startTop = preview.y;
+
+                                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                                      isDraggingRef.current = true;
+                                      const deltaX = (moveEvent.clientX - startX) / width;
+                                      const deltaY = (moveEvent.clientY - startY) / height;
+                                      setSignaturePreviews(prev => prev.map(p =>
+                                        p.id === preview.id
+                                          ? { ...p, x: startLeft + deltaX, y: startTop + deltaY }
+                                          : p
+                                      ));
+                                    };
+
+                                    const handleMouseUp = () => {
+                                      document.removeEventListener('mousemove', handleMouseMove);
+                                      document.removeEventListener('mouseup', handleMouseUp);
+                                      setTimeout(() => { isDraggingRef.current = false; }, 10);
+                                    };
+
+                                    document.addEventListener('mousemove', handleMouseMove);
+                                    document.addEventListener('mouseup', handleMouseUp);
+                                  }}
+                                >
+                                  <img
+                                    src={preview.signatureData}
+                                    alt="Signature preview"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'contain',
+                                      pointerEvents: 'none',
+                                    }}
+                                  />
+
+                                  {/* Resize handles */}
+                                  {[
+                                    { position: 'nw', cursor: 'nw-resize', top: -4, left: -4 },
+                                    { position: 'ne', cursor: 'ne-resize', top: -4, right: -4 },
+                                    { position: 'sw', cursor: 'sw-resize', bottom: -4, left: -4 },
+                                    { position: 'se', cursor: 'se-resize', bottom: -4, right: -4 },
+                                  ].map((handle) => (
+                                    <div
+                                      key={handle.position}
+                                      style={{
+                                        position: 'absolute',
+                                        width: 8,
+                                        height: 8,
+                                        backgroundColor: '#007ACC',
+                                        border: '1px solid white',
+                                        cursor: handle.cursor,
+                                        zIndex: 1001,
+                                        ...(handle.top !== undefined && { top: handle.top }),
+                                        ...(handle.bottom !== undefined && { bottom: handle.bottom }),
+                                        ...(handle.left !== undefined && { left: handle.left }),
+                                        ...(handle.right !== undefined && { right: handle.right }),
+                                      }}
+                                      onMouseDown={(e) => {
+                                        e.stopPropagation();
+                                        const startX = e.clientX;
+                                        const startY = e.clientY;
+                                        const startWidth = preview.width;
+                                        const startHeight = preview.height;
+                                        const startLeft = preview.x;
+                                        const startTop = preview.y;
+
+                                        const handleMouseMove = (moveEvent: MouseEvent) => {
+                                          isDraggingRef.current = true;
+                                          const deltaX = (moveEvent.clientX - startX) / width;
+                                          const deltaY = (moveEvent.clientY - startY) / height;
+
+                                          let newWidth = startWidth;
+                                          let newHeight = startHeight;
+                                          let newX = startLeft;
+                                          let newY = startTop;
+
+                                          // Min sizes as fractions: 50px / pageWidth, 25px / pageHeight
+                                          const minW = 50 / width;
+                                          const minH = 25 / height;
+
+                                          if (handle.position.includes('e')) {
+                                            newWidth = Math.max(minW, startWidth + deltaX);
+                                          }
+                                          if (handle.position.includes('w')) {
+                                            newWidth = Math.max(minW, startWidth - deltaX);
+                                            newX = startLeft + (startWidth - newWidth);
+                                          }
+                                          if (handle.position.includes('s')) {
+                                            newHeight = Math.max(minH, startHeight + deltaY);
+                                          }
+                                          if (handle.position.includes('n')) {
+                                            newHeight = Math.max(minH, startHeight - deltaY);
+                                            newY = startTop + (startHeight - newHeight);
+                                          }
+
+                                          setSignaturePreviews(prev => prev.map(p =>
+                                            p.id === preview.id
+                                              ? { ...p, x: newX, y: newY, width: newWidth, height: newHeight }
+                                              : p
+                                          ));
+                                        };
+
+                                        const handleMouseUp = () => {
+                                          document.removeEventListener('mousemove', handleMouseMove);
+                                          document.removeEventListener('mouseup', handleMouseUp);
+                                          setTimeout(() => { isDraggingRef.current = false; }, 10);
+                                        };
+
+                                        document.addEventListener('mousemove', handleMouseMove);
+                                        document.addEventListener('mouseup', handleMouseUp);
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
                         </div>
                       </PagePointerProvider>
                     </Rotate>
@@ -309,4 +621,6 @@ export function LocalEmbedPDFWithAnnotations({
       </EmbedPDF>
     </div>
   );
-}
+});
+
+LocalEmbedPDFWithAnnotations.displayName = 'LocalEmbedPDFWithAnnotations';

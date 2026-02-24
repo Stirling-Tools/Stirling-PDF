@@ -188,9 +188,9 @@ ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
 # ==============================================================================
 RUN set -eux; \
     chmod +x /scripts/*; \
-    mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
+    mkdir -p /configs /configs/storage /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
     chown -R stirlingpdfuser:stirlingpdfgroup \
-    /home/stirlingpdfuser /configs /logs /customFiles /pipeline /tmp/stirling-pdf \
+    /home/stirlingpdfuser /configs /configs/storage /configs/heap_dumps /logs /customFiles /pipeline /tmp/stirling-pdf \
     /app.jar /restart-helper.jar /usr/share/fonts/truetype /scripts; \
     chmod -R 755 /tmp/stirling-pdf
 

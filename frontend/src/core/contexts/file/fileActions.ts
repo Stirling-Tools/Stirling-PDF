@@ -234,6 +234,7 @@ interface AddFileOptions {
   autoUnzipFileLimit?: number;
   skipAutoUnzip?: boolean; // When true: always unzip (except HTML). Used for file uploads. When false: respect autoUnzip/autoUnzipFileLimit preferences. Used for tool outputs.
   confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>; // Optional callback to confirm extraction of large ZIP files
+  allowDuplicates?: boolean;
 }
 
 /**
@@ -258,7 +259,7 @@ export async function addFiles(
   // Build quickKey lookup from existing files for deduplication
   const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
 
-  const { files = [] } = options;
+  const { files = [], allowDuplicates = false } = options;
 
   // ZIP pre-processing: Extract ZIP files with configurable behavior
   // - File uploads: skipAutoUnzip=true → always extract (except HTML)
@@ -317,7 +318,7 @@ export async function addFiles(
     const quickKey = createQuickKey(file);
 
     // Soft deduplication: Check if file already exists by metadata
-    if (existingQuickKeys.has(quickKey)) {
+    if (!allowDuplicates && existingQuickKeys.has(quickKey)) {
       continue;
     }
 
@@ -351,7 +352,9 @@ export async function addFiles(
       fileStub.insertAfterPageId = options.insertAfterPageId;
     }
 
-    existingQuickKeys.add(quickKey);
+    if (!allowDuplicates) {
+      existingQuickKeys.add(quickKey);
+    }
     stirlingFileStubs.push(fileStub);
 
     // Dispatch immediately so each file appears as soon as it is processed

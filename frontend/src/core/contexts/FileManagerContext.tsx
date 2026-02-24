@@ -1,10 +1,20 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { Button, Group, Modal, Stack, Text } from '@mantine/core';
 import { fileStorage } from '@app/services/fileStorage';
+import { useFileActions } from '@app/contexts/FileContext';
 import { zipFileService } from '@app/services/zipFileService';
 import { StirlingFileStub } from '@app/types/fileContext';
 import { downloadFiles } from '@app/utils/downloadUtils';
 import { FileId } from '@app/types/file';
 import { groupFilesByOriginal } from '@app/utils/fileHistoryUtils';
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
+import apiClient from '@app/services/apiClient';
+import { alert } from '@app/components/toast';
+import {
+  extractLatestFilesFromBundle,
+  parseContentDispositionFilename,
+} from '@app/services/shareBundleUtils';
+import { useTranslation } from 'react-i18next';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 // Module-level storage for file path mappings (quickKey -> localFilePath)
@@ -15,6 +25,7 @@ export const pendingFilePathMappings = new Map<string, string>();
 interface FileManagerContextValue {
   // State
   activeSource: 'recent' | 'local' | 'drive';
+  storageFilter: 'all' | 'local' | 'sharedWithMe' | 'sharedByMe';
   selectedFileIds: FileId[];
   searchTerm: string;
   selectedFiles: StirlingFileStub[];
@@ -29,6 +40,7 @@ interface FileManagerContextValue {
 
   // Handlers
   onSourceChange: (source: 'recent' | 'local' | 'drive') => void;
+  onStorageFilterChange: (filter: 'all' | 'local' | 'sharedWithMe' | 'sharedByMe') => void;
   onLocalFileClick: () => void;
   onFileSelect: (file: StirlingFileStub, index: number, shiftKey?: boolean) => void;
   onFileRemove: (index: number) => void;
@@ -44,8 +56,10 @@ interface FileManagerContextValue {
   onToggleExpansion: (fileId: FileId) => void;
   onAddToRecents: (file: StirlingFileStub) => void;
   onUnzipFile: (file: StirlingFileStub) => Promise<void>;
+  onMakeCopy: (file: StirlingFileStub) => Promise<void>;
   onNewFilesSelect: (files: File[]) => void;
   onGoogleDriveSelect: (files: File[]) => void;
+  refreshRecentFiles: () => Promise<void>;
 
   // External props
   recentFiles: StirlingFileStub[];
@@ -72,6 +86,8 @@ interface FileManagerProviderProps {
   activeFileIds: FileId[];
 }
 
+type RemoteDeleteChoice = 'local' | 'server' | 'both' | 'leave' | 'cancel';
+
 export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   children,
   recentFiles,
@@ -87,12 +103,19 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   activeFileIds,
 }) => {
   const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
+  const [storageFilter, setStorageFilter] = useState<
+    'all' | 'local' | 'sharedWithMe' | 'sharedByMe'
+  >('all');
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<FileId>>(new Set());
   const [loadedHistoryFiles, setLoadedHistoryFiles] = useState<Map<FileId, StirlingFileStub[]>>(new Map()); // Cache for loaded history
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [deletePromptFile, setDeletePromptFile] = useState<StirlingFileStub | null>(null);
+  const deletePromptResolveRef = useRef<((choice: RemoteDeleteChoice) => void) | null>(null);
+  const { t } = useTranslation();
+  const { actions } = useFileActions();
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
@@ -120,8 +143,23 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (!recentFiles || recentFiles.length === 0) return [];
 
     // Only return leaf files - history files will be handled by separate components
+    if (storageFilter === 'sharedWithMe') {
+      return recentFiles.filter(
+        (file) => file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink
+      );
+    }
+    if (storageFilter === 'sharedByMe') {
+      return recentFiles.filter(
+        (file) => file.remoteOwnedByCurrentUser !== false && file.remoteHasShareLinks
+      );
+    }
+    if (storageFilter === 'local') {
+      return recentFiles.filter(
+        (file) => !file.remoteStorageId && !file.remoteSharedViaLink
+      );
+    }
     return recentFiles;
-  }, [recentFiles]);
+  }, [recentFiles, storageFilter]);
 
   const selectedFiles = selectedFileIds.length === 0 ? [] :
     displayFiles.filter(file => selectedFilesSet.has(file.id));
@@ -139,6 +177,27 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setSearchTerm('');
       setLastClickedIndex(null);
     }
+  }, []);
+
+  const handleStorageFilterChange = useCallback((filter: 'all' | 'local' | 'sharedWithMe' | 'sharedByMe') => {
+    setStorageFilter(filter);
+    setSelectedFileIds([]);
+    setLastClickedIndex(null);
+  }, []);
+
+
+  const requestDeleteChoice = useCallback((file: StirlingFileStub): Promise<RemoteDeleteChoice> => {
+    return new Promise((resolve) => {
+      deletePromptResolveRef.current = resolve;
+      setDeletePromptFile(file);
+    });
+  }, []);
+
+  const resolveDeleteChoice = useCallback((choice: RemoteDeleteChoice) => {
+    const resolver = deletePromptResolveRef.current;
+    deletePromptResolveRef.current = null;
+    setDeletePromptFile(null);
+    resolver?.(choice);
   }, []);
 
   const handleLocalFileClick = useCallback(async () => {
@@ -285,6 +344,96 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   // Shared internal delete logic
   const performFileDelete = useCallback(async (fileToRemove: StirlingFileStub, fileIndex: number) => {
+    let deleteChoice: RemoteDeleteChoice = 'local';
+    if (fileToRemove.remoteStorageId) {
+      deleteChoice = await requestDeleteChoice(fileToRemove);
+      if (deleteChoice === 'cancel') {
+        return;
+      }
+    }
+
+    const canDeleteServer = fileToRemove.remoteOwnedByCurrentUser !== false;
+    const shouldDeleteServer =
+      canDeleteServer && (deleteChoice === 'server' || deleteChoice === 'both');
+    const shouldDeleteLocal = deleteChoice === 'local' || deleteChoice === 'both';
+    const isServerOnly =
+      Boolean(fileToRemove.remoteStorageId) && fileToRemove.id.startsWith('server-');
+    const canLeaveShare =
+      fileToRemove.remoteOwnedByCurrentUser === false &&
+      !fileToRemove.remoteSharedViaLink &&
+      Boolean(fileToRemove.remoteStorageId);
+
+    if (deleteChoice === 'leave' && canLeaveShare && fileToRemove.remoteStorageId) {
+      try {
+        await apiClient.delete(
+          `/api/v1/storage/files/${fileToRemove.remoteStorageId}/shares/self`,
+          { suppressErrorToast: true } as any
+        );
+        await refreshRecentFiles();
+        alert({
+          alertType: 'success',
+          title: t('fileManager.leaveShareSuccess', 'Removed from your shared list.'),
+          expandable: false,
+          durationMs: 2500,
+        });
+        return;
+      } catch (error) {
+        console.error('Failed to leave shared file:', error);
+        alert({
+          alertType: 'error',
+          title: t('fileManager.leaveShareFailed', 'Could not remove the shared file.'),
+          expandable: false,
+          durationMs: 3500,
+        });
+        return;
+      }
+    }
+
+    if (shouldDeleteServer && fileToRemove.remoteStorageId) {
+      try {
+        await apiClient.delete(
+          `/api/v1/storage/files/${fileToRemove.remoteStorageId}`,
+          { suppressErrorToast: true } as any
+        );
+      } catch (error) {
+        console.error('Failed to delete file from server:', error);
+        alert({
+          alertType: 'error',
+          title: t(
+            'fileManager.removeServerFailed',
+            'Could not remove the file from the server.'
+          ),
+          expandable: false,
+          durationMs: 3500,
+        });
+        return;
+      }
+
+      if (!shouldDeleteLocal) {
+        const originalFileId = (fileToRemove.originalFileId || fileToRemove.id) as FileId;
+        const chain = await fileStorage.getHistoryChainStubs(originalFileId);
+        for (const stub of chain) {
+          await fileStorage.updateFileMetadata(stub.id, {
+            remoteStorageId: undefined,
+            remoteStorageUpdatedAt: undefined,
+          });
+        }
+        await refreshRecentFiles();
+        alert({
+          alertType: 'success',
+          title: t('fileManager.removeServerSuccess', 'Removed from server.'),
+          expandable: false,
+          durationMs: 2500,
+        });
+        return;
+      }
+    }
+
+    if (shouldDeleteLocal && isServerOnly) {
+      await refreshRecentFiles();
+      return;
+    }
+
     const deletedFileId = fileToRemove.id;
 
     // Get all stored files to analyze lineages
@@ -335,7 +484,16 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
     // Refresh to ensure consistent state
     await refreshRecentFiles();
-  }, [getSafeFilesToDelete, setSelectedFileIds, setExpandedFileIds, setLoadedHistoryFiles, onFileRemove, refreshRecentFiles]);
+  }, [
+    getSafeFilesToDelete,
+    setSelectedFileIds,
+    setExpandedFileIds,
+    setLoadedHistoryFiles,
+    onFileRemove,
+    refreshRecentFiles,
+    requestDeleteChoice,
+    t,
+  ]);
 
   const handleFileRemove = useCallback(async (index: number) => {
     const fileToRemove = filteredFiles[index];
@@ -606,6 +764,60 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
   }, [refreshRecentFiles]);
 
+  const handleMakeCopy = useCallback(
+    async (file: StirlingFileStub) => {
+      if (!file.remoteStorageId) {
+        return;
+      }
+      try {
+        const response = await apiClient.get(
+          `/api/v1/storage/files/${file.remoteStorageId}/download`,
+          { responseType: 'blob', suppressErrorToast: true, skipAuthRedirect: true } as any
+        );
+        const contentType =
+          (response.headers &&
+            (response.headers['content-type'] || response.headers['Content-Type'])) ||
+          '';
+        const disposition =
+          (response.headers &&
+            (response.headers['content-disposition'] || response.headers['Content-Disposition'])) ||
+          '';
+        const filename = parseContentDispositionFilename(disposition) || file.name || 'shared-file';
+        const blob = response.data as Blob;
+        const contentTypeValue = contentType || blob.type;
+        const latestFiles = await extractLatestFilesFromBundle(
+          blob,
+          filename,
+          contentTypeValue
+        );
+        if (latestFiles.length > 0) {
+          await actions.addFilesWithOptions(latestFiles, {
+            selectFiles: true,
+            allowDuplicates: true,
+            autoUnzip: false,
+            skipAutoUnzip: false,
+          });
+          await refreshRecentFiles();
+          alert({
+            alertType: 'success',
+            title: t('fileManager.copyCreated', 'Copy saved to this device.'),
+            expandable: false,
+            durationMs: 2500,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to create a copy:', error);
+        alert({
+          alertType: 'error',
+          title: t('fileManager.copyFailed', 'Could not create a copy.'),
+          expandable: false,
+          durationMs: 3500,
+        });
+      }
+    },
+    [actions, refreshRecentFiles, t]
+  );
+
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
@@ -621,6 +833,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setActiveSource('recent');
+      setStorageFilter('all');
       setSelectedFileIds([]);
       setSearchTerm('');
       setLastClickedIndex(null);
@@ -630,6 +843,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const contextValue: FileManagerContextValue = useMemo(() => ({
     // State
     activeSource,
+    storageFilter,
     selectedFileIds,
     searchTerm,
     selectedFiles,
@@ -644,6 +858,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
     // Handlers
     onSourceChange: handleSourceChange,
+    onStorageFilterChange: handleStorageFilterChange,
     onLocalFileClick: handleLocalFileClick,
     onFileSelect: handleFileSelect,
     onFileRemove: handleFileRemove,
@@ -659,8 +874,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     onToggleExpansion: handleToggleExpansion,
     onAddToRecents: handleAddToRecents,
     onUnzipFile: handleUnzipFile,
+    onMakeCopy: handleMakeCopy,
     onNewFilesSelect,
     onGoogleDriveSelect: handleGoogleDriveSelect,
+    refreshRecentFiles,
 
     // External props
     recentFiles,
@@ -668,6 +885,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     modalHeight,
   }), [
     activeSource,
+    storageFilter,
     selectedFileIds,
     searchTerm,
     selectedFiles,
@@ -679,6 +897,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     isLoading,
     activeFileIds,
     handleSourceChange,
+    handleStorageFilterChange,
     handleLocalFileClick,
     handleFileSelect,
     handleFileRemove,
@@ -694,16 +913,92 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     handleToggleExpansion,
     handleAddToRecents,
     handleUnzipFile,
+    handleMakeCopy,
     onNewFilesSelect,
     handleGoogleDriveSelect,
     recentFiles,
     isFileSupported,
     modalHeight,
-  ]);
+   refreshRecentFiles,
+ ]);
+
+  const deletePromptIsServerOnly =
+    Boolean(deletePromptFile?.remoteStorageId) && deletePromptFile?.id?.startsWith('server-');
+  const deletePromptIsShared = deletePromptFile?.remoteOwnedByCurrentUser === false;
+  const deletePromptCanLeaveShare =
+    deletePromptIsShared &&
+    !deletePromptFile?.remoteSharedViaLink &&
+    Boolean(deletePromptFile?.remoteStorageId);
 
   return (
     <FileManagerContext.Provider value={contextValue}>
       {children}
+      <Modal
+        opened={Boolean(deletePromptFile)}
+        onClose={() => resolveDeleteChoice('cancel')}
+        centered
+        title={t('fileManager.removeFileTitle', 'Remove file')}
+        zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
+      >
+        <Stack gap="sm">
+          <Text size="sm">
+            {deletePromptIsServerOnly
+              ? deletePromptIsShared
+                ? deletePromptCanLeaveShare
+                  ? t(
+                      'fileManager.removeSharedServerOnlyPrompt',
+                      'This file is shared with you and stored only on the server. Remove it from your list?'
+                    )
+                  : t(
+                      'fileManager.removeSharedServerOnlyBlockedPrompt',
+                      'This file is shared with you and stored only on the server.'
+                    )
+                : t(
+                    'fileManager.removeServerOnlyPrompt',
+                    'This file is stored only on your server. Would you like to remove it from the server?'
+                  )
+              : deletePromptIsShared
+                ? t(
+                    'fileManager.removeSharedPrompt',
+                    'This file is shared with you. You can remove it from this device or your shared list.'
+                  )
+                : t(
+                    'fileManager.removeFilePrompt',
+                    'This file is saved on this device and on your server. Where would you like to remove it from?'
+                  )}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {deletePromptFile?.name}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => resolveDeleteChoice('cancel')}>
+              {t('cancel', 'Cancel')}
+            </Button>
+            {!deletePromptIsServerOnly && (
+              <Button variant="light" onClick={() => resolveDeleteChoice('local')}>
+                {t('fileManager.removeLocalOnly', 'This device only')}
+              </Button>
+            )}
+            {deletePromptCanLeaveShare && (
+              <Button variant="light" onClick={() => resolveDeleteChoice('leave')}>
+                {t('fileManager.leaveShare', 'Remove from my list')}
+              </Button>
+            )}
+            {deletePromptFile?.remoteOwnedByCurrentUser !== false && (
+              <>
+                <Button variant="light" onClick={() => resolveDeleteChoice('server')}>
+                  {t('fileManager.removeServerOnly', 'Server only')}
+                </Button>
+                {!deletePromptIsServerOnly && (
+                  <Button color="red" onClick={() => resolveDeleteChoice('both')}>
+                    {t('fileManager.removeBoth', 'Remove from both')}
+                  </Button>
+                )}
+              </>
+            )}
+          </Group>
+        </Stack>
+      </Modal>
     </FileManagerContext.Provider>
   );
 };
