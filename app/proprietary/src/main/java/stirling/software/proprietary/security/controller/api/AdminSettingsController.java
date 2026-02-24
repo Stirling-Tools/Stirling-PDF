@@ -27,9 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -48,6 +45,9 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @AdminApi
 @RequiredArgsConstructor
@@ -543,7 +543,8 @@ public class AdminSettingsController {
             pendingChanges.clear();
 
             // Give the HTTP response time to complete, then exit
-            new Thread(
+            Thread.ofVirtual()
+                    .start(
                             () -> {
                                 try {
                                     Thread.sleep(1000);
@@ -554,8 +555,7 @@ public class AdminSettingsController {
                                     log.error("Restart interrupted: {}", e.getMessage(), e);
                                     Thread.currentThread().interrupt();
                                 }
-                            })
-                    .start();
+                            });
 
             return ResponseEntity.ok(
                     Map.of(

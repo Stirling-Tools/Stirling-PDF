@@ -68,6 +68,17 @@ public class FileMonitor {
 
         if (this.rootDirs.isEmpty()) {
             log.error("No valid directories to monitor - FileMonitor will not function");
+        } else {
+            // Register directories eagerly so the first @Scheduled tick does not warn.
+            for (Path rootDir : this.rootDirs) {
+                if (Files.exists(rootDir)) {
+                    try {
+                        recursivelyRegisterEntry(rootDir);
+                    } catch (IOException e) {
+                        log.error("Failed to register monitoring for {}", rootDir, e);
+                    }
+                }
+            }
         }
     }
 

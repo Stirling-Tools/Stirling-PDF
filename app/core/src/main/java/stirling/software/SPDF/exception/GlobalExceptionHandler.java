@@ -29,6 +29,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
 import stirling.software.common.util.RegexPatternUtils;
@@ -188,6 +190,31 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", request.getRequestURI());
         return problemDetail;
+    }
+
+    /**
+     * Checks whether the given IOException indicates that the client disconnected before the
+     * response could be written (broken pipe, connection reset, etc.). When this happens there is
+     * no point in serialising a {@link ProblemDetail} body because the socket is already closed —
+     * and attempting to do so may trigger a secondary {@code HttpMessageNotWritableException} if
+     * the response Content-Type was already committed as a non-JSON type (e.g. image/png).
+     */
+    private static boolean isClientDisconnectException(IOException ex) {
+        // Walk the causal chain — Jetty/Tomcat may wrap the low-level SocketException
+        Throwable current = ex;
+        while (current != null) {
+            String msg = current.getMessage();
+            if (msg != null) {
+                String lower = msg.toLowerCase(java.util.Locale.ROOT);
+                if (lower.contains("broken pipe")
+                        || lower.contains("connection reset")
+                        || lower.contains("an established connection was aborted")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     /**
@@ -841,21 +868,18 @@ public class GlobalExceptionHandler {
         response.setContentType("application/problem+json");
         response.setCharacterEncoding("UTF-8");
 
-        String errorJson =
-                String.format(
-                        """
-                {
-                    "type": "about:blank",
-                    "title": "Not Acceptable",
-                    "status": 406,
-                    "detail": "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.",
-                    "instance": "%s",
-                    "timestamp": "%s",
-                    "hints": ["Error responses are always returned as application/json or application/problem+json", "Set Accept header to include application/json for proper error handling"]
-                }
-                """,
-                        request.getRequestURI(), Instant.now().toString());
+        // Use ObjectMapper to properly escape JSON values and prevent XSS
+        ObjectMapper mapper = new ObjectMapper();
+        java.util.Map<String, Object> errorMap = new java.util.LinkedHashMap<>();
+        errorMap.put("type", "about:blank");
+        errorMap.put("title", "Not Acceptable");
+        errorMap.put("status", 406);
+        errorMap.put("detail", "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.");
+        errorMap.put("instance", request.getRequestURI());
+        errorMap.put("timestamp", Instant.now().toString());
+        errorMap.put("hints", java.util.Arrays.asList("Error responses are always returned as application/json or application/problem+json", "Set Accept header to include application/json for proper error handling"));
 
+        String errorJson = mapper.writeValueAsString(errorMap);
         response.getWriter().write(errorJson);
         response.getWriter().flush();
     }
@@ -1106,6 +1130,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ProblemDetail> handleIOException(
             IOException ex, HttpServletRequest request) {
+
+        // Broken pipe / connection reset means the client disconnected.
+        // Attempting to write a ProblemDetail response will fail because the
+        // response Content-Type may already be committed (e.g. image/png) and
+        // the client is gone anyway. Log at WARN and return an empty body.
+        if (isClientDisconnectException(ex)) {
+            log.warn("Client disconnected at {}: {}", request.getRequestURI(), ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
         // Check if this is a PDF-specific error and wrap it appropriately
         IOException processedException =
