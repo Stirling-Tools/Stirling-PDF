@@ -23,6 +23,7 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,6 +44,7 @@ public class CustomPDFDocumentFactory {
     private final TempFileManager tempFileManager;
 
     /** Primary constructor used by Spring. Both collaborators are required in production. */
+    @Autowired
     public CustomPDFDocumentFactory(
             PdfMetadataService pdfMetadataService, TempFileManager tempFileManager) {
         this.pdfMetadataService = pdfMetadataService;
