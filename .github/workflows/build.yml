@@ -333,12 +333,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - docker-rev: docker/embedded/Dockerfile
-            artifact-suffix: Dockerfile
+          # - docker-rev: docker/embedded/Dockerfile
+          #   artifact-suffix: Dockerfile
           - docker-rev: docker/embedded/Dockerfile.ultra-lite
             artifact-suffix: Dockerfile.ultra-lite
-          - docker-rev: docker/embedded/Dockerfile.fat
-            artifact-suffix: Dockerfile.fat
+          # - docker-rev: docker/embedded/Dockerfile.fat
+          #   artifact-suffix: Dockerfile.fat
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
