@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVWriter;
 
 import io.github.pixee.security.Filenames;
@@ -38,6 +36,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.WebResponseUtils;
 
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @RestController
