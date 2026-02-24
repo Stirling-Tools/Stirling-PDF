@@ -166,7 +166,7 @@ public class ConvertWebsiteToPDF {
     private String fetchRemoteHtml(String url) throws IOException, InterruptedException {
         HttpClient client =
                 HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .followRedirects(HttpClient.Redirect.NEVER)
                         .connectTimeout(Duration.ofSeconds(10))
                         .build();
 
@@ -180,7 +180,7 @@ public class ConvertWebsiteToPDF {
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        if (response.statusCode() >= 400 || response.body() == null) {
+        if (response.statusCode() >= 300 || response.body() == null) {
             throw ExceptionUtils.createIOException(
                     "error.httpRequestFailed",
                     "Failed to retrieve remote HTML. Status: {0}",
