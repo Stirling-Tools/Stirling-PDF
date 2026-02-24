@@ -16,7 +16,8 @@ class SpyPDFDocumentFactory extends CustomPDFDocumentFactory {
     }
 
     @Override
-    public StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
+    protected StreamCacheCreateFunction getStreamCacheFunction(
+            long contentSize, MemorySnapshot mem) {
         StrategyType type;
         if (contentSize < 10 * 1024 * 1024) {
             type = StrategyType.MEMORY_ONLY;
@@ -26,6 +27,6 @@ class SpyPDFDocumentFactory extends CustomPDFDocumentFactory {
             type = StrategyType.TEMP_FILE;
         }
         this.lastStrategyUsed = type;
-        return super.getStreamCacheFunction(contentSize);
+        return super.getStreamCacheFunction(contentSize, mem);
     }
 }

@@ -1,6 +1,6 @@
 package stirling.software.common.service;
 
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,16 +14,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.examples.util.DeletingRandomAccessFile;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,7 +45,6 @@ public class CustomPDFDocumentFactory {
     private final TempFileManager tempFileManager;
 
     /** Primary constructor used by Spring. Both collaborators are required in production. */
-    @Autowired
     public CustomPDFDocumentFactory(
             PdfMetadataService pdfMetadataService, TempFileManager tempFileManager) {
         this.pdfMetadataService = pdfMetadataService;
@@ -79,6 +79,12 @@ public class CustomPDFDocumentFactory {
      */
     private static final long MIN_FREE_MEMORY_FLOOR = 256L * 1024 * 1024; // 256 MB
 
+    /** Maximum number of concurrent PDF operations in batch methods. */
+    private static final int MAX_CONCURRENT_OPS =
+            Math.max(4, Runtime.getRuntime().availableProcessors());
+
+    private static final Semaphore CONCURRENT_GATE = new Semaphore(MAX_CONCURRENT_OPS);
+
     /**
      * Immutable point-in-time snapshot of JVM heap metrics. Capturing all three {@code
      * Runtime.getRuntime()} values in one call prevents the race where {@code freeMemory()} and
@@ -106,16 +112,42 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Loads a PDF from a caller-owned {@link File}. The file is copied to a temp file first so that
-     * the caller's original is never deleted by the internal destructive loading pipeline.
+     * Loads a PDF from a caller-owned {@link File}. Small files (≤ {@link #SMALL_FILE_THRESHOLD})
+     * are slurped into a byte array. Larger files are loaded directly using a non-destructive
+     * {@link RandomAccessReadBufferedFile} so the caller's original is never modified or deleted.
+     *
+     * <p>Note: for files larger than {@link #SMALL_FILE_THRESHOLD}, the returned document holds
+     * an open file handle to the original file until {@link PDDocument#close()} is called.
      */
     public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) throw ExceptionUtils.createNullArgumentException("File");
         long size = file.length();
         log.debug("Loading PDF from file: {} MB", size >> 20);
-        Path temp = createTempFilePath("pdf-copy-");
-        Files.copy(file.toPath(), temp, StandardCopyOption.REPLACE_EXISTING);
-        return maybePostProcess(loadAdaptively(temp.toFile(), Files.size(temp), null), readOnly);
+        if (size < SMALL_FILE_THRESHOLD) {
+            return load(Files.readAllBytes(file.toPath()), readOnly);
+        }
+        MemorySnapshot mem = MemorySnapshot.capture();
+        // Use the overridable method so that test spies (SpyPDFDocumentFactory) can intercept.
+        StreamCacheCreateFunction cache = getStreamCacheFunction(size, mem);
+        // Non-destructive — caller's file is never deleted
+        RandomAccessReadBufferedFile raf = new RandomAccessReadBufferedFile(file);
+        PDDocument doc;
+        try {
+            doc = Loader.loadPDF(raf, "", null, null, cache);
+        } catch (IOException e) {
+            try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
+            ExceptionUtils.logException("PDF loading from file", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
+        if (size > LARGE_FILE_THRESHOLD || mem.isLow()) {
+            doc.setResourceCache(null);
+        }
+        try {
+            return maybePostProcess(doc, readOnly);
+        } catch (IOException | RuntimeException ex) {
+            doc.close();
+            throw ex;
+        }
     }
 
     public PDDocument load(Path path) throws IOException {
@@ -136,7 +168,13 @@ public class CustomPDFDocumentFactory {
         if (input == null) throw ExceptionUtils.createNullArgumentException("Input bytes");
         long size = input.length;
         log.debug("Loading PDF from byte[]: {} MB", size >> 20);
-        return maybePostProcess(loadAdaptively(input, size, null), readOnly);
+        PDDocument doc = loadAdaptively(input, size, null);
+        try {
+            return maybePostProcess(doc, readOnly);
+        } catch (IOException | RuntimeException ex) {
+            doc.close();
+            throw ex;
+        }
     }
 
     public PDDocument load(InputStream input) throws IOException {
@@ -207,7 +245,17 @@ public class CustomPDFDocumentFactory {
      * <p>Overridden by {@code SpyPDFDocumentFactory} in tests to record which strategy was chosen.
      */
     public StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
-        return selectCacheFunction(contentSize, MemorySnapshot.capture());
+        return getStreamCacheFunction(contentSize, MemorySnapshot.capture());
+    }
+
+    /**
+     * Overload accepting a pre-captured {@link MemorySnapshot} so that internal callers can reuse
+     * a single snapshot for both cache selection and resource-cache decisions. Overridable so that
+     * test spies ({@code SpyPDFDocumentFactory}) can intercept.
+     */
+    protected StreamCacheCreateFunction getStreamCacheFunction(
+            long contentSize, MemorySnapshot mem) {
+        return selectCacheFunction(contentSize, mem);
     }
 
     public PDDocument createNewDocument(MemoryUsageSetting settings) throws IOException {
@@ -229,14 +277,20 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Serialises a {@link PDDocument} to a byte array. Uses an in-memory {@link
-     * ByteArrayOutputStream} — the previous temp-file round-trip added two unnecessary syscalls on
-     * every save, even for tiny documents.
+     * Serialises a {@link PDDocument} to a byte array. The document is written to a temp file
+     * first so that the PDDocument's internal object graph can be GC'd before {@link
+     * Files#readAllBytes} allocates the returned byte array, preventing double-peak memory for
+     * large documents. The OS buffer cache absorbs the I/O overhead for small documents.
      */
     public byte[] saveToBytes(PDDocument document) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
-        return baos.toByteArray();
+        Path temp = createTempFilePath("pdf-save-");
+        try {
+            document.save(temp.toFile());
+            return Files.readAllBytes(temp);
+        } finally {
+            try { Files.deleteIfExists(temp); }
+            catch (IOException e) { log.warn("Failed to delete temp file: {}", temp, e); }
+        }
     }
 
     public byte[] createNewBytesBasedOnOldDocument(byte[] oldDocument) throws IOException {
@@ -277,12 +331,13 @@ public class CustomPDFDocumentFactory {
         }
     }
 
-    // ── Parallel / batch loading (Project Loom — one virtual thread per file) ─────────────────
-
     /**
      * Loads all {@code files} concurrently, one virtual thread per file. PDF loading is I/O-bound;
      * virtual threads yield their carrier threads during blocking reads, so the JVM can serve other
      * requests while each document is being parsed from disk.
+     *
+     * <p>Concurrency is bounded by {@link #MAX_CONCURRENT_OPS} to prevent unbounded memory
+     * pressure when many files are submitted simultaneously.
      *
      * <p>If any single load fails, all pending tasks are cancelled, any already-open documents are
      * closed, and the first {@link IOException} is rethrown. The caller retains ownership of all
@@ -293,14 +348,22 @@ public class CustomPDFDocumentFactory {
      */
     public List<PDDocument> loadAll(List<File> files) throws IOException, InterruptedException {
         List<Callable<PDDocument>> tasks =
-                files.stream().<Callable<PDDocument>>map(f -> () -> load(f)).toList();
+                files.stream().<Callable<PDDocument>>map(f -> () -> {
+                    CONCURRENT_GATE.acquire();
+                    try {
+                        return load(f);
+                    } finally {
+                        CONCURRENT_GATE.release();
+                    }
+                }).toList();
         return runConcurrently(tasks, CustomPDFDocumentFactory::closeQuietly);
     }
 
     /**
      * Loads all multipart uploads concurrently, one virtual thread per upload. Small uploads (≤
      * {@link #SMALL_FILE_THRESHOLD}) are read into heap; larger uploads spill to temp files.
-     * Failure semantics are identical to {@link #loadAll(List)}.
+     * Concurrency is bounded by {@link #MAX_CONCURRENT_OPS}. Failure semantics are identical to
+     * {@link #loadAll(List)}.
      *
      * @param files ordered list of uploads; the returned list preserves insertion order
      * @throws InterruptedException if the calling thread is interrupted while waiting
@@ -308,22 +371,36 @@ public class CustomPDFDocumentFactory {
     public List<PDDocument> loadAllMultipart(List<MultipartFile> files)
             throws IOException, InterruptedException {
         List<Callable<PDDocument>> tasks =
-                files.stream().<Callable<PDDocument>>map(f -> () -> load(f)).toList();
+                files.stream().<Callable<PDDocument>>map(f -> () -> {
+                    CONCURRENT_GATE.acquire();
+                    try {
+                        return load(f);
+                    } finally {
+                        CONCURRENT_GATE.release();
+                    }
+                }).toList();
         return runConcurrently(tasks, CustomPDFDocumentFactory::closeQuietly);
     }
 
     /**
-     * Serialises all documents to byte arrays concurrently, one virtual thread per document. Each
-     * document is written to a temp file (preventing double-peak-memory — see {@link
-     * #saveToBytes}); the concurrent writes proceed in parallel. The returned list preserves
-     * insertion order.
+     * Serialises all documents to byte arrays concurrently, one virtual thread per document.
+     * Concurrency is bounded by {@link #MAX_CONCURRENT_OPS}. Each document is written to a temp
+     * file (preventing double-peak-memory, see {@link #saveToBytes}); the concurrent writes
+     * proceed in parallel. The returned list preserves insertion order.
      *
      * @throws InterruptedException if the calling thread is interrupted while waiting
      */
     public List<byte[]> saveAllToBytes(List<PDDocument> documents)
             throws IOException, InterruptedException {
         List<Callable<byte[]>> tasks =
-                documents.stream().<Callable<byte[]>>map(doc -> () -> saveToBytes(doc)).toList();
+                documents.stream().<Callable<byte[]>>map(doc -> () -> {
+                    CONCURRENT_GATE.acquire();
+                    try {
+                        return saveToBytes(doc);
+                    } finally {
+                        CONCURRENT_GATE.release();
+                    }
+                }).toList();
         return runConcurrently(tasks, null);
     }
 
@@ -349,25 +426,30 @@ public class CustomPDFDocumentFactory {
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
                 futures.forEach(f -> f.cancel(true));
-                cleanupFutureResults(futures, results, onFailureCleanup);
+                cleanupFutureResults(futures, onFailureCleanup);
                 throw ie;
             } catch (ExecutionException e) {
                 futures.forEach(f -> f.cancel(true));
-                cleanupFutureResults(futures, results, onFailureCleanup);
+                cleanupFutureResults(futures, onFailureCleanup);
                 Throwable cause = e.getCause();
                 if (cause instanceof IOException ioe) throw ioe;
+                if (cause instanceof InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw ie;
+                }
                 throw new IOException("Concurrent PDF operation failed", cause);
             }
         }
     }
 
     /**
-     * Cleans up results from concurrent execution on failure. Retrieves results from
-     * already-completed futures (which {@code cancel(true)} cannot reach) and applies the cleanup
-     * function to every collected result.
+     * Cleans up results from concurrent execution on failure. Iterates all completed futures and
+     * applies the cleanup function to their results. This is the single source of truth — the
+     * formerly separate {@code collectedResults} iteration has been removed to prevent
+     * double-closing already-collected results.
      */
     private static <T> void cleanupFutureResults(
-            List<Future<T>> futures, List<T> collectedResults, Consumer<T> onFailureCleanup) {
+            List<Future<T>> futures, Consumer<T> onFailureCleanup) {
         if (onFailureCleanup == null) return;
         for (Future<T> f : futures) {
             if (f.isDone() && !f.isCancelled()) {
@@ -378,7 +460,6 @@ public class CustomPDFDocumentFactory {
                 }
             }
         }
-        collectedResults.forEach(onFailureCleanup);
     }
 
     private static void closeQuietly(PDDocument doc) {
@@ -400,8 +481,10 @@ public class CustomPDFDocumentFactory {
     private PDDocument loadAdaptively(Object source, long contentSize, String password)
             throws IOException {
         Object sourceObj = source;
+        // Capture a single snapshot for both cache selection and resource-cache decision.
+        MemorySnapshot mem = MemorySnapshot.capture();
         // Use the overridable method so that test spies (SpyPDFDocumentFactory) can intercept.
-        StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
+        StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize, mem);
 
         // Slurp small on-disk files into heap immediately so the temp file can be removed and its
         // file descriptor released before PDFBox opens its own internal scratch space.
@@ -415,12 +498,7 @@ public class CustomPDFDocumentFactory {
                 switch (sourceObj) {
                     case File f ->
                             password != null
-                                    ? Loader.loadPDF(
-                                            new DeletingRandomAccessFile(f),
-                                            password,
-                                            null,
-                                            null,
-                                            cacheFunction)
+                                    ? loadFromFileWithPassword(f, cacheFunction, password)
                                     : loadFromFile(f, cacheFunction);
                     case byte[] b ->
                             password != null
@@ -433,7 +511,7 @@ public class CustomPDFDocumentFactory {
                                             + sourceObj.getClass().getSimpleName());
                 };
 
-        MemorySnapshot mem = MemorySnapshot.capture();
+        // Use the same snapshot captured above for consistent resource-cache decision.
         if (contentSize > LARGE_FILE_THRESHOLD || mem.isLow()) {
             document.setResourceCache(null);
         }
@@ -497,8 +575,24 @@ public class CustomPDFDocumentFactory {
             // Empty string password: PDFBox convention for unencrypted documents.
             return Loader.loadPDF(raf, "", null, null, cache);
         } catch (IOException e) {
-            raf.close(); // triggers file deletion
+            try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
             ExceptionUtils.logException("PDF loading from file", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
+    }
+
+    /**
+     * Loads a password-protected PDF from a file. The {@link DeletingRandomAccessFile} is
+     * explicitly closed if {@link Loader#loadPDF} throws to prevent file descriptor leaks.
+     */
+    private static PDDocument loadFromFileWithPassword(
+            File file, StreamCacheCreateFunction cache, String password) throws IOException {
+        DeletingRandomAccessFile raf = new DeletingRandomAccessFile(file);
+        try {
+            return Loader.loadPDF(raf, password, null, null, cache);
+        } catch (IOException e) {
+            try { raf.close(); } catch (IOException ce) { e.addSuppressed(ce); }
+            ExceptionUtils.logException("PDF loading from file with password", e);
             throw ExceptionUtils.handlePdfException(e);
         }
     }
@@ -531,6 +625,11 @@ public class CustomPDFDocumentFactory {
         }
     }
 
+    /**
+     * Loads a password-protected PDF from a byte array. Large arrays are spilled to a temp file.
+     * The {@link DeletingRandomAccessFile} is explicitly closed if loading throws to prevent file
+     * descriptor leaks on Windows.
+     */
     private PDDocument loadFromBytesWithPassword(
             byte[] bytes, long size, StreamCacheCreateFunction cache, String password)
             throws IOException {
@@ -539,15 +638,15 @@ public class CustomPDFDocumentFactory {
             boolean success = false;
             try {
                 Files.write(tmp, bytes);
-                PDDocument doc =
-                        Loader.loadPDF(
-                                new DeletingRandomAccessFile(tmp.toFile()),
-                                password,
-                                null,
-                                null,
-                                cache);
-                success = true;
-                return doc;
+                DeletingRandomAccessFile raf = new DeletingRandomAccessFile(tmp.toFile());
+                try {
+                    PDDocument doc = Loader.loadPDF(raf, password, null, null, cache);
+                    success = true;
+                    return doc;
+                } catch (IOException e) {
+                    raf.close();
+                    throw e;
+                }
             } finally {
                 if (!success) Files.deleteIfExists(tmp);
             }
@@ -567,7 +666,7 @@ public class CustomPDFDocumentFactory {
         if (document.isEncrypted()) {
             try {
                 document.setAllSecurityToBeRemoved(true);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 ExceptionUtils.logException("PDF decryption", e);
                 throw new IOException("PDF decryption failed", e);
             }
@@ -587,12 +686,15 @@ public class CustomPDFDocumentFactory {
     /**
      * Creates a managed temp file. When {@link TempFileManager} is available (production Spring
      * context) it registers the file for automatic cleanup. Falls back to {@link
-     * Files#createTempFile} for test environments where the full context is not present.
+     * Files#createTempFile} for test environments where the full context is not present; the
+     * fallback file is registered for JVM-shutdown deletion.
      */
     private Path createTempFilePath(String prefix) throws IOException {
         if (tempFileManager != null) {
             return tempFileManager.createTempFile(".tmp").toPath();
         }
-        return Files.createTempFile(prefix, ".tmp");
+        Path p = Files.createTempFile(prefix, ".tmp");
+        p.toFile().deleteOnExit();
+        return p;
     }
 }
