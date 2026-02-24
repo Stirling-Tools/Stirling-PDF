@@ -104,8 +104,8 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Loads a PDF from a caller-owned {@link File}. The file is copied to a temp file first so
-     * that the caller's original is never deleted by the internal destructive loading pipeline.
+     * Loads a PDF from a caller-owned {@link File}. The file is copied to a temp file first so that
+     * the caller's original is never deleted by the internal destructive loading pipeline.
      */
     public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) throw ExceptionUtils.createNullArgumentException("File");
@@ -120,9 +120,7 @@ public class CustomPDFDocumentFactory {
         return load(path, false);
     }
 
-    /**
-     * Loads a PDF from a caller-owned {@link Path}. Delegates to {@link #load(File, boolean)}.
-     */
+    /** Loads a PDF from a caller-owned {@link Path}. Delegates to {@link #load(File, boolean)}. */
     public PDDocument load(Path path, boolean readOnly) throws IOException {
         if (path == null) throw ExceptionUtils.createNullArgumentException("Path");
         return load(path.toFile(), readOnly);
@@ -229,9 +227,9 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Serialises a {@link PDDocument} to a byte array. Uses an in-memory
-     * {@link ByteArrayOutputStream} — the previous temp-file round-trip added two unnecessary
-     * syscalls on every save, even for tiny documents.
+     * Serialises a {@link PDDocument} to a byte array. Uses an in-memory {@link
+     * ByteArrayOutputStream} — the previous temp-file round-trip added two unnecessary syscalls on
+     * every save, even for tiny documents.
      */
     public byte[] saveToBytes(PDDocument document) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -363,8 +361,8 @@ public class CustomPDFDocumentFactory {
 
     /**
      * Cleans up results from concurrent execution on failure. Retrieves results from
-     * already-completed futures (which {@code cancel(true)} cannot reach) and applies the
-     * cleanup function to every collected result.
+     * already-completed futures (which {@code cancel(true)} cannot reach) and applies the cleanup
+     * function to every collected result.
      */
     private static <T> void cleanupFutureResults(
             List<Future<T>> futures, List<T> collectedResults, Consumer<T> onFailureCleanup) {
