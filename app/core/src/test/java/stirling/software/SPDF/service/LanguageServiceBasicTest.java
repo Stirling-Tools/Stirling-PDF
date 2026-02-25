@@ -107,6 +107,25 @@ class LanguageServiceBasicTest {
         assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
     }
 
+    // Added by Pengcheng Xu: stub resource lookup to throw IOException and verify empty-set fallback behavior.
+    @Test
+    void testGetSupportedLanguages_WhenResourceLookupThrows_ReturnsEmptySet_Stubbed() {
+        LanguageService failingService =
+                new LanguageServiceForTest(applicationProperties) {
+                    @Override
+                    protected Resource[] getResourcesFromPattern(String pattern)
+                            throws java.io.IOException {
+                        throw new java.io.IOException("stubbed failure");
+                    }
+                };
+
+        when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
+
+        Set<String> supportedLanguages = failingService.getSupportedLanguages();
+
+        assertTrue(supportedLanguages.isEmpty(), "On IO failure, service should return empty set");
+    }
+
     // Test subclass
     private static class LanguageServiceForTest extends LanguageService {
         private Resource[] mockResources;
