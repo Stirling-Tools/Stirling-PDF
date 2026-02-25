@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
+import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 
 export type ConnectionMode = 'saas' | 'selfhosted';
 
@@ -106,6 +107,11 @@ export class ConnectionModeService {
     });
 
     this.currentConfig = { mode: 'saas', server_config: serverConfig, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
+
+    // Clear endpoint availability cache when mode changes
+    endpointAvailabilityService.clearCache();
+    console.log('Cleared endpoint availability cache due to connection mode change');
+
     this.notifyListeners();
 
     console.log('Switched to SaaS mode successfully');
@@ -120,6 +126,11 @@ export class ConnectionModeService {
     });
 
     this.currentConfig = { mode: 'selfhosted', server_config: serverConfig, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
+
+    // Clear endpoint availability cache when mode changes
+    endpointAvailabilityService.clearCache();
+    console.log('Cleared endpoint availability cache due to connection mode change');
+
     this.notifyListeners();
 
     console.log('Switched to self-hosted mode successfully');
