@@ -174,7 +174,9 @@ export const executeToolOperationWithPrefix = async (
 
   } catch (error: any) {
     console.error(`❌ ${operationName} failed:`, error);
-    throw new Error(`${operationName} operation failed: ${error.response?.data || error.message}`);
+    throw new Error(`${operationName} operation failed: ${error.response?.data || error.message}`, {
+      cause: error,
+    });
   }
 };
 

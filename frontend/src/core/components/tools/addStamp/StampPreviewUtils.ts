@@ -110,7 +110,7 @@ export function computeStampPreviewStyle(
       // Convert measured px width back to PDF points using horizontal scale
       widthPtsContent = measuredWidthPx / scaleX;
 
-      let adjustmentFactor = 1.0;
+      let adjustmentFactor: number;
       switch (parameters.alphabet) {
         case 'roman':
           adjustmentFactor = 0.90;
@@ -126,6 +126,7 @@ export function computeStampPreviewStyle(
           break;
         default:
           adjustmentFactor = 0.93;
+          break;
       }
       widthPtsContent *= adjustmentFactor;
     }

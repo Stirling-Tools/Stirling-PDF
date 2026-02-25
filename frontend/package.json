@@ -111,13 +111,6 @@
     "update:interactive": "npx npm-check-updates -i",
     "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"
   },
-  "eslintConfig": {
-    "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:react-hooks/recommended"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -131,7 +124,7 @@
     ]
   },
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
+    "@eslint/js": "^10.0.1",
     "@iconify-json/material-symbols": "^1.2.53",
     "@iconify/utils": "^3.1.0",
     "@playwright/test": "^1.55.0",
@@ -152,8 +145,7 @@
     "@vitejs/plugin-react-swc": "^4.1.0",
     "@vitest/coverage-v8": "^3.2.4",
     "dpdm": "^3.14.0",
-    "eslint": "^9.36.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint": "^10.0.2",
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",

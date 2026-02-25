@@ -217,7 +217,7 @@ export function usePageDocument(): PageDocumentHook {
     });
 
     // Build pages by interleaving original pages with insertions
-    let pages: PDFPage[] = [];
+    let pages: PDFPage[];
 
     // Helper function to create pages from a file (or placeholder if deselected)
     const createPagesFromFile = (fileId: FileId, startPageNumber: number, isSelected: boolean): PDFPage[] => {
@@ -242,11 +242,10 @@ export function usePageDocument(): PageDocumentHook {
       }
 
       const processedFile = stirlingFileStub.processedFile;
-      let filePages: PDFPage[] = [];
 
       if (processedFile?.pages && processedFile.pages.length > 0) {
         // Use fully processed pages with thumbnails
-        filePages = processedFile.pages.map((page, pageIndex) => ({
+        return processedFile.pages.map((page, pageIndex) => ({
           id: `${fileId}-${pageIndex + 1}`,
           pageNumber: startPageNumber + pageIndex,
           thumbnail: page.thumbnail || null,
@@ -259,9 +258,11 @@ export function usePageDocument(): PageDocumentHook {
           originalFileId: fileId,
           isPlaceholder: false,
         }));
-      } else if (processedFile?.totalPages) {
+      }
+
+      if (processedFile?.totalPages) {
         // Fallback: create pages without thumbnails but with correct count
-        filePages = Array.from({ length: processedFile.totalPages }, (_, pageIndex) => ({
+        return Array.from({ length: processedFile.totalPages }, (_, pageIndex) => ({
           id: `${fileId}-${pageIndex + 1}`,
           pageNumber: startPageNumber + pageIndex,
           originalPageNumber: pageIndex + 1,
@@ -272,23 +273,21 @@ export function usePageDocument(): PageDocumentHook {
           splitAfter: false,
           isPlaceholder: false,
         }));
-      } else {
-        // No processedFile yet - create a single loading placeholder
-        // This will be replaced when processing completes
-        filePages = [{
-          id: `${fileId}-loading`,
-          pageNumber: startPageNumber,
-          originalPageNumber: 1,
-          originalFileId: fileId,
-          rotation: 0,
-          thumbnail: null,
-          selected: false,
-          splitAfter: false,
-          isPlaceholder: true,
-        }];
       }
 
-      return filePages;
+      // No processedFile yet - create a single loading placeholder
+      // This will be replaced when processing completes
+      return [{
+        id: `${fileId}-loading`,
+        pageNumber: startPageNumber,
+        originalPageNumber: 1,
+        originalFileId: fileId,
+        rotation: 0,
+        thumbnail: null,
+        selected: false,
+        splitAfter: false,
+        isPlaceholder: true,
+      }];
     };
 
     // Collect all pages from original files, respecting their previous positions

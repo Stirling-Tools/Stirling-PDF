@@ -71,7 +71,10 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
       processedFiles.push(processedFile);
     } catch (error) {
       console.error('Error processing file:', file.name, error);
-      throw new Error(`Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
+      );
     }
   }
 
