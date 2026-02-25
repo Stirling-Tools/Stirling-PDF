@@ -253,11 +253,12 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 FROM ubuntu:noble AS gs-build
 ARG GS_VERSION=10.06.0
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/tmp/gs-build \
+    --mount=type=cache,target=/tmp/gs-build,id=gs-build-${TARGETPLATFORM:-local} \
     apt-get update && apt-get install -y --no-install-recommends \
       build-essential curl ca-certificates libfontconfig1-dev && rm -rf /var/lib/apt/lists/* && \
     GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
     cd /tmp/gs-build && \
+    rm -rf ghostscript-* && \
     (test -d "ghostscript-${GS_VERSION}" || curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz) && \
     cd "ghostscript-${GS_VERSION}" && \
     ./configure \
@@ -275,12 +276,13 @@ FROM ubuntu:noble AS pdf-tools-build
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.2-13
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/tmp/pdf-tools-build \
+    --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
     apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
       libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
       libltdl-dev libtool && rm -rf /var/lib/apt/lists/* && \
     cd /tmp/pdf-tools-build && \
+    rm -rf qpdf-* ImageMagick-* && \
     # Build QPDF
     (test -d "qpdf-${QPDF_VERSION}" || curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz) && \
     cd "qpdf-${QPDF_VERSION}" && \
