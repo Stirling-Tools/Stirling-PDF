@@ -65,18 +65,6 @@ LABEL org.opencontainers.image.title="Stirling-PDF Ultra-Lite" \
       org.opencontainers.image.version="${VERSION_TAG}" \
       org.opencontainers.image.keywords="PDF, manipulation, ultra-lite, API, Spring Boot, React"
 
-# Copy scripts
-COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
-COPY scripts/installFonts.sh /scripts/installFonts.sh
-COPY scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
-
-# Copy built JARs from build stage
-# Use numeric UID:GID (1000:1000) since the named user doesn't exist yet at COPY time
-COPY --from=build --chown=1000:1000 \
-     /app/app/core/build/libs/*.jar /app.jar
-COPY --from=build --chown=1000:1000 \
-     /app/build/libs/restart-helper.jar /restart-helper.jar
-
 # Environment Variables
 # NOTE: Memory flags (InitialRAMPercentage, MaxRAMPercentage, MaxMetaspaceSize)
 # are computed dynamically by init-without-ocr.sh based on container memory limits.
@@ -96,7 +84,6 @@ ENV VERSION_TAG=$VERSION_TAG \
     ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 # Install minimal dependencies
-# --chown on COPY above removes need to chown JARs here
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
@@ -111,10 +98,22 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     su-exec && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
-    chmod +x /scripts/*.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /configs /customFiles /pipeline /tmp/stirling-pdf
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /configs /customFiles /pipeline /tmp/stirling-pdf
+
+# Copy scripts and built artifacts after OS package layer to maximize cache reuse.
+COPY --chown=1000:1000 scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY --chown=1000:1000 scripts/installFonts.sh /scripts/installFonts.sh
+COPY --chown=1000:1000 scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
+
+# Copy built JARs from build stage
+COPY --from=build --chown=1000:1000 \
+     /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build --chown=1000:1000 \
+     /app/build/libs/restart-helper.jar /restart-helper.jar
+
+RUN chmod +x /scripts/*.sh
 
 EXPOSE 8080/tcp
 
