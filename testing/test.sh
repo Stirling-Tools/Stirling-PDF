@@ -105,9 +105,13 @@ capture_file_list() {
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
         -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
+        -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
         -not -path '*/tmp/stirling-pdf/lu*' \
         -not -path '*/tmp/stirling-pdf/tmp*' \
+        -not -path '/app/stirling.aot' \
+        -not -path '*/tmp/stirling.aotconf' \
+        -not -path '*/tmp/aot-*.log' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
 
     # Check if the output file has content
@@ -127,10 +131,14 @@ capture_file_list() {
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
+            -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
+            -not -path '/app/stirling.aot' \
+            -not -path '*/tmp/stirling.aotconf' \
+            -not -path '*/tmp/aot-*.log' \
             2>/dev/null | sort" > "$output_file"
 
         if [ ! -s "$output_file" ]; then
@@ -539,8 +547,14 @@ main() {
 
         capture_file_list "$CONTAINER_NAME" "$BEFORE_FILE"
 
+        CUCUMBER_REPORT="$PROJECT_ROOT/testing/cucumber/report.html"
+        CUCUMBER_JUNIT_DIR="$PROJECT_ROOT/testing/cucumber/junit"
+        mkdir -p "$CUCUMBER_JUNIT_DIR"
         cd "testing/cucumber"
-        if python -m behave; then
+        if python -m behave \
+            -f behave_html_formatter:HTMLFormatter -o "$CUCUMBER_REPORT" \
+            -f pretty \
+            --junit --junit-directory "$CUCUMBER_JUNIT_DIR"; then
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 

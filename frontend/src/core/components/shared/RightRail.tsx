@@ -3,7 +3,8 @@ import { ActionIcon, Divider } from '@mantine/core';
 import '@app/components/shared/rightRail/RightRail.css';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useRightRail } from '@app/contexts/RightRailContext';
-import { useFileState, useFileSelection } from '@app/contexts/FileContext';
+import { useFileState, useFileSelection, useFileActions } from '@app/contexts/FileContext';
+import { isStirlingFile } from '@app/types/fileContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { useTranslation } from 'react-i18next';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
@@ -13,7 +14,6 @@ import LanguageSelector from '@app/components/shared/LanguageSelector';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { ViewerContext } from '@app/contexts/ViewerContext';
-import { useSignature } from '@app/contexts/SignatureContext';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -22,6 +22,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
 import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
+import { downloadFile } from '@app/services/downloadService';
 
 const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
 
@@ -59,12 +60,10 @@ export default function RightRail() {
 
   const { selectors } = useFileState();
   const { selectedFiles, selectedFileIds } = useFileSelection();
-  const { signaturesApplied } = useSignature();
-
+  const { actions: fileActions } = useFileActions();
   const activeFiles = selectors.getFiles();
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
-  const exportState = viewerContext?.getExportState?.();
 
   const totalItems = useMemo(() => {
     if (currentView === 'pageEditor') return pageEditorTotalPages;
@@ -137,11 +136,26 @@ export default function RightRail() {
 
   const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
-      if (!signaturesApplied) {
-        alert('You have unapplied signatures. Please use "Apply Signatures" first before exporting.');
-        return;
+      const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+      if (!buffer) return;
+      const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+      if (!fileToExport) return;
+      const stub = isStirlingFile(fileToExport) ? selectors.getStirlingFileStub(fileToExport.fileId) : undefined;
+      try {
+        const result = await downloadFile({
+          data: new Blob([buffer], { type: 'application/pdf' }),
+          filename: fileToExport.name,
+          localPath: stub?.localFilePath,
+        });
+        if (!result.cancelled && stub && result.savedPath) {
+          fileActions.updateStirlingFileStub(stub.id, {
+            localFilePath: stub.localFilePath ?? result.savedPath,
+            isDirty: false,
+          });
+        }
+      } catch (error) {
+        console.error('[RightRail] Failed to export viewer file:', error);
       }
-      viewerContext?.exportActions?.download();
       return;
     }
 
@@ -150,23 +164,37 @@ export default function RightRail() {
       return;
     }
 
-    const filesToDownload = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-    filesToDownload.forEach(file => {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(file);
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    });
+    const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+
+    if (filesToExport.length > 0) {
+      for (const file of filesToExport) {
+        const stub = isStirlingFile(file) ? selectors.getStirlingFileStub(file.fileId) : undefined;
+        try {
+          const result = await downloadFile({
+            data: file,
+            filename: file.name,
+            localPath: stub?.localFilePath
+          });
+          if (result.cancelled) continue;
+          if (stub && result.savedPath) {
+            fileActions.updateStirlingFileStub(stub.id, {
+              localFilePath: stub.localFilePath ?? result.savedPath,
+              isDirty: false
+            });
+          }
+        } catch (error) {
+          console.error('[RightRail] Failed to export file:', file.name, error);
+        }
+      }
+    }
   }, [
     currentView,
     selectedFiles,
     activeFiles,
     pageEditorFunctions,
     viewerContext,
-    signaturesApplied
+    selectors,
+    fileActions,
   ]);
 
   const downloadTooltip = useMemo(() => {
@@ -239,7 +267,7 @@ export default function RightRail() {
               onClick={handleExportAll}
               disabled={
                 disableForFullscreen ||
-                (currentView === 'viewer' ? !exportState?.canExport : totalItems === 0 || allButtonsDisabled)
+                (currentView !== 'viewer' && (totalItems === 0 || allButtonsDisabled))
               }
             >
               <LocalIcon icon={icons.downloadIconName} width="1.5rem" height="1.5rem" />

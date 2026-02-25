@@ -6,6 +6,7 @@ import type { ValidateSignatureOperationHook } from '@app/hooks/tools/validateSi
 import '@app/components/tools/validateSignature/reportView/styles.css';
 import FitText from '@app/components/shared/FitText';
 import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
+import { downloadFile } from '@app/services/downloadService';
 
 interface ValidateSignatureResultsProps {
   operation: ValidateSignatureOperationHook;
@@ -80,14 +81,7 @@ const ValidateSignatureResults = ({
   ];
 
   const handleDownload = useCallback((file: File) => {
-    const blobUrl = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = file.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(blobUrl);
+    void downloadFile({ data: file, filename: file.name });
   }, []);
 
   // Show the big loader only while we're still waiting for the first results.

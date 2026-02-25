@@ -16,10 +16,89 @@ import { useRedaction } from '@app/contexts/RedactionContext';
 import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
-import { isStirlingFile } from '@app/types/fileContext';
+import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
+import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type ViewportScale } from '@app/components/viewer/RulerOverlay';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
+import { useFormFill } from '@app/tools/formFill/FormFillContext';
+import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
+
+import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
+
+// ─── Measure dictionary extraction ────────────────────────────────────────────
+
+async function extractPageMeasureScales(file: Blob): Promise<PageMeasureScales | null> {
+  try {
+    const { PDFDocument, PDFDict, PDFName, PDFArray, PDFNumber, PDFString, PDFHexString } = await import('@cantoo/pdf-lib');
+    const pdfDoc = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+
+    // Parse a Measure dict into a MeasureScale, or return null if malformed.
+    const parseScale = (measureObj: unknown) => {
+      if (!(measureObj instanceof PDFDict)) return null;
+      const rObj = measureObj.lookup(PDFName.of('R'));
+      const ratioLabel = (rObj instanceof PDFString || rObj instanceof PDFHexString)
+        ? rObj.decodeText() : '';
+      // D = distance array, X = x-axis fallback
+      let fmtArray = measureObj.lookup(PDFName.of('D'));
+      if (!(fmtArray instanceof PDFArray)) fmtArray = measureObj.lookup(PDFName.of('X'));
+      if (!(fmtArray instanceof PDFArray)) return null;
+      const firstFmt = fmtArray.lookup(0);
+      if (!(firstFmt instanceof PDFDict)) return null;
+      const cObj = firstFmt.lookup(PDFName.of('C'));
+      const uObj = firstFmt.lookup(PDFName.of('U'));
+      if (!(cObj instanceof PDFNumber) || cObj.asNumber() <= 0) return null;
+      const unit = (uObj instanceof PDFString || uObj instanceof PDFHexString)
+        ? uObj.decodeText() : 'units';
+      return { factor: cObj.asNumber(), unit, ratioLabel };
+    };
+
+    const result: PageMeasureScales = new Map();
+
+    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+      const page = pdfDoc.getPage(i);
+      const pageHeight = page.getHeight();
+      const pageNode = page.node as unknown as PDFDict;
+      const viewports: ViewportScale[] = [];
+
+      // Spec-conformant: /VP array — each viewport can have its own scale and BBox
+      const vpObj = pageNode.lookup(PDFName.of('VP'));
+      if (vpObj instanceof PDFArray) {
+        for (let j = 0; j < vpObj.size(); j++) {
+          const vpEntry = vpObj.lookup(j);
+          if (!(vpEntry instanceof PDFDict)) continue;
+          const scale = parseScale(vpEntry.lookup(PDFName.of('Measure')));
+          if (!scale) continue;
+          let bbox: ViewportScale['bbox'] = null;
+          const bboxObj = vpEntry.lookup(PDFName.of('BBox'));
+          if (bboxObj instanceof PDFArray && bboxObj.size() >= 4) {
+            bbox = [
+              (bboxObj.lookup(0) as PDFNumber).asNumber(),
+              (bboxObj.lookup(1) as PDFNumber).asNumber(),
+              (bboxObj.lookup(2) as PDFNumber).asNumber(),
+              (bboxObj.lookup(3) as PDFNumber).asNumber(),
+            ];
+          }
+          viewports.push({ bbox, scale });
+        }
+      }
+
+      // Fallback: /Measure directly on page (non-conforming but seen in the wild)
+      if (viewports.length === 0) {
+        const scale = parseScale(pageNode.lookup(PDFName.of('Measure')));
+        if (scale) viewports.push({ bbox: null, scale });
+      }
+
+      if (viewports.length > 0) result.set(i, { viewports, pageHeight } satisfies PageScaleInfo);
+    }
+
+    return result.size > 0 ? result : null;
+  } catch {
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 
 export interface EmbedPdfViewerProps {
   sidebarsVisible: boolean;
@@ -52,13 +131,15 @@ const EmbedPdfViewerContent = ({
     zoomActions,
     scrollActions,
     panActions: _panActions,
-    rotationActions: _rotationActions,
+    rotationActions,
     getScrollState,
     getRotationState,
     setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
+    printActions,
     setApplyChanges,
+    applyChanges: viewerApplyChanges,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -86,8 +167,14 @@ const EmbedPdfViewerContent = ({
   const pendingScrollRestoreRef = useRef<number | null>(null);
   const scrollRestoreAttemptsRef = useRef<number>(0);
 
+  // Rotation preservation system
+  // Similar to scroll preservation - track rotation across file reloads
+  const pendingRotationRestoreRef = useRef<number | null>(null);
+  const rotationRestoreAttemptsRef = useRef<number>(0);
   // Track the file ID we should be viewing after a save (to handle list reordering)
   const pendingFileIdRef = useRef<string | null>(null);
+
+  const formApplyInProgressRef = useRef(false);
 
   // Get redaction context
   const { redactionsApplied, setRedactionsApplied } = useRedaction();
@@ -107,6 +194,9 @@ const EmbedPdfViewerContent = ({
 
   const { selectedTool } = useNavigationState();
 
+  // Form fill context
+  const { fetchFields: fetchFormFields, setProviderMode } = useFormFill();
+
   const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
   const isSignatureMode = isInAnnotationTool;
   const isManualRedactMode = selectedTool === 'redact';
@@ -116,6 +206,19 @@ const EmbedPdfViewerContent = ({
 
   // Enable redaction only when redaction tool is selected
   const shouldEnableRedaction = selectedTool === 'redact';
+
+  // FormFill tool mode — uses PDFBox backend for full-fidelity form handling
+  const isFormFillToolActive = (selectedTool as string) === 'formFill';
+
+  // Form overlays are shown in BOTH modes:
+  // - Normal viewer: form overlays visible (pdf-lib, frontend-only)
+  // - formFill tool: form overlays visible (PDFBox, backend)
+  const shouldEnableFormFill = true;
+
+  // Switch the provider when the tool mode changes
+  useEffect(() => {
+    setProviderMode(isFormFillToolActive ? 'pdfbox' : 'pdflib');
+  }, [isFormFillToolActive, setProviderMode]);
 
   // Track previous annotation/redaction state to detect tool switches
   const prevEnableAnnotationsRef = useRef(shouldEnableAnnotations);
@@ -271,32 +374,134 @@ const EmbedPdfViewerContent = ({
     onZoomOut: zoomActions.zoomOut,
   });
 
-  // Handle keyboard shortcuts (zoom and search)
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isViewerHovered) return;
+      const mod = event.ctrlKey || event.metaKey;
 
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
-      if (event.ctrlKey || event.metaKey) {
-        if (event.key === '=' || event.key === '+') {
-          // Ctrl+= or Ctrl++ for zoom in
-          event.preventDefault();
-          zoomActions.zoomIn();
-        } else if (event.key === '-' || event.key === '_') {
-          // Ctrl+- for zoom out
-          event.preventDefault();
-          zoomActions.zoomOut();
-        } else if (event.key === 'f' || event.key === 'F') {
-          // Ctrl+F for search
-          event.preventDefault();
-          if (isSearchInterfaceVisible) {
-            // If already open, trigger refocus event
-            window.dispatchEvent(new CustomEvent('refocus-search-input'));
-          } else {
-            // Open search interface
-            searchInterfaceActions.open();
+      // Ctrl+P (print) and Ctrl+R (rotate) must be intercepted unconditionally
+      // whenever the viewer is mounted, even before the user has hovered over it.
+      // Without this, the browser falls through to its native "print HTML page"
+      // or "reload page" behaviour.
+      if (mod) {
+        const target = event.target as Element;
+        const isInTextInput =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          (target as HTMLElement).isContentEditable;
+
+        if (!isInTextInput) {
+          switch (event.key) {
+            case 'p':
+            case 'P':
+              event.preventDefault();
+              printActions.print();
+              return;
+            case 'r':
+            case 'R':
+              // Ctrl+R: Rotate forward; Ctrl+Shift+R: Rotate backward
+              event.preventDefault();
+              if (event.shiftKey) {
+                rotationActions.rotateBackward();
+              } else {
+                rotationActions.rotateForward();
+              }
+              return;
           }
         }
+      }
+
+      // All remaining shortcuts require the viewer to be hovered so they
+      // don't conflict with the rest of the UI when the viewer is mounted
+      // but not the active focus target.
+      if (!isViewerHovered) return;
+
+      // Modifier key shortcuts (Ctrl/Cmd + key)
+      if (mod) {
+        switch (event.key) {
+          case '=':
+          case '+':
+            event.preventDefault();
+            zoomActions.zoomIn();
+            return;
+          case '-':
+          case '_':
+            event.preventDefault();
+            zoomActions.zoomOut();
+            return;
+          case '0':
+            // Ctrl+0: Reset zoom to fit width
+            event.preventDefault();
+            zoomActions.requestZoom('fit-width');
+            return;
+          case 'a':
+          case 'A':
+            // Ctrl+A: Prevent browser from selecting all UI text
+            event.preventDefault();
+            return;
+          case 'f':
+          case 'F':
+            event.preventDefault();
+            if (isSearchInterfaceVisible) {
+              window.dispatchEvent(new CustomEvent('refocus-search-input'));
+            } else {
+              searchInterfaceActions.open();
+            }
+            return;
+          case 's':
+          case 'S':
+            // Ctrl+S: Save/apply changes
+            if (!event.shiftKey) {
+              event.preventDefault();
+              if (viewerApplyChanges) {
+                viewerApplyChanges();
+              }
+            }
+            return;
+          case 'z':
+          case 'Z':
+            // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
+            event.preventDefault();
+            if (event.shiftKey) {
+              historyApiRef.current?.redo?.();
+            } else {
+              historyApiRef.current?.undo?.();
+            }
+            return;
+          case 'y':
+          case 'Y':
+            // Ctrl+Y: Redo
+            event.preventDefault();
+            historyApiRef.current?.redo?.();
+            return;
+        }
+        return;
+      }
+
+      // Non-modifier shortcuts
+      switch (event.key) {
+        case 'Home':
+          event.preventDefault();
+          scrollActions.scrollToFirstPage();
+          return;
+        case 'End':
+          event.preventDefault();
+          scrollActions.scrollToLastPage();
+          return;
+        case 'PageUp':
+          event.preventDefault();
+          scrollActions.scrollToPreviousPage();
+          return;
+        case 'PageDown':
+          event.preventDefault();
+          scrollActions.scrollToNextPage();
+          return;
+        case 'Escape':
+          if (isSearchInterfaceVisible) {
+            event.preventDefault();
+            searchInterfaceActions.close();
+          }
+          return;
       }
     };
 
@@ -304,7 +509,11 @@ const EmbedPdfViewerContent = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions]);
+  }, [
+    isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
+    scrollActions, printActions, exportActions, rotationActions, historyApiRef,
+    viewerApplyChanges,
+  ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
   // We treat any change that makes the history undoable as unsaved changes until
@@ -367,6 +576,9 @@ const EmbedPdfViewerContent = ({
       // Use the continuously tracked scroll position - more reliable than reading at this moment
       const pageToRestore = lastKnownScrollPageRef.current;
 
+      // Save the current rotation to restore after reload
+      const currentRotation = rotationState.rotation ?? 0;
+
       // Step 0: Commit any pending redactions before export
       const hadPendingRedactions = (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
 
@@ -408,6 +620,9 @@ const EmbedPdfViewerContent = ({
       pendingScrollRestoreRef.current = pageToRestore;
       scrollRestoreAttemptsRef.current = 0;
 
+      // Store the rotation to restore after file replacement
+      pendingRotationRestoreRef.current = currentRotation;
+      rotationRestoreAttemptsRef.current = 0;
       // Store the new file ID so we can track it after the list reorders
       const newFileId = stubs[0]?.id;
       if (newFileId) {
@@ -424,7 +639,72 @@ const EmbedPdfViewerContent = ({
     } catch (error) {
       console.error('Apply changes failed:', error);
     }
-  }, [currentFile, activeFiles, activeFileIndex, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied]);
+  }, [currentFile, activeFiles, activeFileIndex, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied, rotationState.rotation]);
+
+  // Apply form fill changes - reload the filled PDF into the viewer
+  const handleFormApply = useCallback(async (filledBlob: Blob) => {
+    if (formApplyInProgressRef.current) return;
+    if (!currentFile || activeFileIds.length === 0) return;
+
+    formApplyInProgressRef.current = true;
+    try {
+      console.log('[Viewer] Applying form fill changes - reloading filled PDF');
+
+      // Use the continuously tracked scroll position
+      const pageToRestore = lastKnownScrollPageRef.current;
+
+      // Save the current rotation to restore after reload
+      const currentRotation = rotationState.rotation ?? 0;
+
+      // Convert Blob to File
+      const filename = currentFile.name || 'document.pdf';
+      const file = new File([filledBlob], filename, { type: 'application/pdf' });
+
+      // Get current file info for creating the updated version
+      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      if (!currentFileId) throw new Error('Current file ID not found');
+
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
+      if (!parentStub) throw new Error('Parent stub not found');
+
+      // Create StirlingFiles and stubs for version history
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+
+      // Store the page to restore after file replacement
+      pendingScrollRestoreRef.current = pageToRestore;
+      scrollRestoreAttemptsRef.current = 0;
+
+      // Store the rotation to restore after file replacement
+      pendingRotationRestoreRef.current = currentRotation;
+      rotationRestoreAttemptsRef.current = 0;
+
+      // Store the new file ID for tracking
+      const newFileId = stubs[0]?.id;
+      if (newFileId) {
+        pendingFileIdRef.current = newFileId;
+      }
+
+      // Replace the current file in context
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+
+      console.log('[Viewer] Form fill changes applied successfully');
+    } catch (error) {
+      console.error('[Viewer] Apply form changes failed:', error);
+    } finally {
+      formApplyInProgressRef.current = false;
+    }
+  }, [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const blob = (e as CustomEvent).detail?.blob;
+      if (blob) {
+        handleFormApply(blob);
+      }
+    };
+    window.addEventListener('formfill:apply', handler);
+    return () => window.removeEventListener('formfill:apply', handler);
+  }, [handleFormApply]);
 
   // Discard pending redactions but save already-applied ones
   // This is called when user clicks "Discard & Leave" - we want to:
@@ -438,6 +718,10 @@ const EmbedPdfViewerContent = ({
 
     try {
       console.log('[Viewer] Discarding pending marks but saving applied redactions');
+
+      // Save current view state to restore after file replacement
+      const pageToRestore = lastKnownScrollPageRef.current;
+      const currentRotation = rotationState.rotation ?? 0;
 
       // Export PDF WITHOUT committing pending marks - this saves only applied redactions
       const arrayBuffer = await exportActions.saveAsCopy();
@@ -459,6 +743,12 @@ const EmbedPdfViewerContent = ({
 
       const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
 
+      // Store view state to restore after file replacement
+      pendingScrollRestoreRef.current = pageToRestore;
+      scrollRestoreAttemptsRef.current = 0;
+      pendingRotationRestoreRef.current = currentRotation;
+      rotationRestoreAttemptsRef.current = 0;
+
       // Consume only the current file (replace in context)
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
 
@@ -470,7 +760,7 @@ const EmbedPdfViewerContent = ({
     } catch (error) {
       console.error('Failed to save applied redactions:', error);
     }
-  }, [redactionsApplied, currentFile, activeFiles, activeFileIndex, activeFileIds.length, exportActions, actions, selectors, setRedactionsApplied]);
+  }, [redactionsApplied, currentFile, activeFiles, activeFileIndex, activeFileIds.length, exportActions, actions, selectors, setRedactionsApplied, rotationState.rotation]);
 
   // Restore scroll position after file replacement or tool switch
   // Uses polling with retries to ensure the scroll succeeds
@@ -524,6 +814,57 @@ const EmbedPdfViewerContent = ({
     return () => clearTimeout(timer);
   }, [scrollState.totalPages, scrollActions, getScrollState]);
 
+  // Restore rotation after file replacement or tool switch
+  // Uses polling with retries to ensure the rotation succeeds
+  useEffect(() => {
+    if (pendingRotationRestoreRef.current === null) return;
+
+    const rotationToRestore = pendingRotationRestoreRef.current;
+    const maxAttempts = 10;
+    const attemptInterval = 100; // ms between attempts
+
+    const attemptRotation = () => {
+      const currentState = getScrollState();
+
+      // Only attempt if PDF is loaded (totalPages > 0)
+      if (currentState.totalPages > 0) {
+        rotationActions.setRotation(rotationToRestore);
+
+        // Check if rotation succeeded after a brief delay
+        setTimeout(() => {
+          const currentRotation = rotationActions.getRotation();
+          if (currentRotation === rotationToRestore || rotationRestoreAttemptsRef.current >= maxAttempts) {
+            // Success or max attempts reached - clear pending
+            pendingRotationRestoreRef.current = null;
+            rotationRestoreAttemptsRef.current = 0;
+          } else {
+            // Rotation might not have worked, retry
+            rotationRestoreAttemptsRef.current++;
+            if (rotationRestoreAttemptsRef.current < maxAttempts) {
+              setTimeout(attemptRotation, attemptInterval);
+            } else {
+              // Give up after max attempts
+              pendingRotationRestoreRef.current = null;
+              rotationRestoreAttemptsRef.current = 0;
+            }
+          }
+        }, 50);
+      } else if (rotationRestoreAttemptsRef.current < maxAttempts) {
+        // PDF not ready yet, retry
+        rotationRestoreAttemptsRef.current++;
+        setTimeout(attemptRotation, attemptInterval);
+      } else {
+        // Give up after max attempts
+        pendingRotationRestoreRef.current = null;
+        rotationRestoreAttemptsRef.current = 0;
+      }
+    };
+
+    // Start attempting after initial delay
+    const timer = setTimeout(attemptRotation, 150);
+    return () => clearTimeout(timer);
+  }, [scrollState.totalPages, rotationActions, getScrollState]);
+
   // Register applyChanges with ViewerContext so tools can access it directly
   useEffect(() => {
     setApplyChanges(applyChanges);
@@ -532,8 +873,51 @@ const EmbedPdfViewerContent = ({
     };
   }, [applyChanges, setApplyChanges]);
 
+  // Ruler / measurement tool state
+  const [isRulerActive, setIsRulerActive] = useState(false);
+  const [pageMeasureScales, setPageMeasureScales] = useState<PageMeasureScales | null>(null);
+
+  useEffect(() => {
+    const file = effectiveFile?.file;
+    if (!file) { setPageMeasureScales(null); return; }
+    let cancelled = false;
+    extractPageMeasureScales(file).then(scales => { if (!cancelled) setPageMeasureScales(scales); });
+    return () => { cancelled = true; };
+  }, [effectiveFile]);
+
   // Register viewer right-rail buttons
-  useViewerRightRailButtons();
+  useViewerRightRailButtons(isRulerActive, setIsRulerActive);
+
+  // Auto-fetch form fields when a PDF is loaded in the viewer.
+  // In normal viewer mode, this uses pdf-lib (frontend-only).
+  // In formFill tool mode, this uses PDFBox (backend).
+  const formFillFileIdRef = useRef<string | null>(null);
+  const formFillProviderRef = useRef(isFormFillToolActive);
+
+  // Generate a unique identifier for the current file to detect file changes
+  const currentFileId = React.useMemo(() => {
+    return getFormFillFileId(currentFile);
+  }, [currentFile]);
+
+  useEffect(() => {
+    const fileChanged = currentFileId !== formFillFileIdRef.current;
+    const providerChanged = formFillProviderRef.current !== isFormFillToolActive;
+    formFillProviderRef.current = isFormFillToolActive;
+
+    if (fileChanged) {
+      console.log('[FormFill] File changed. Old:', formFillFileIdRef.current, 'New:', currentFileId);
+      formFillFileIdRef.current = currentFileId;
+      // NOTE: Don't call resetFormFill() here — fetchFormFields() handles
+      // clearing old state internally. Calling reset() before fetch() would
+      // double-increment fetchVersionRef, causing version mismatches when
+      // the effect re-fires before the async fetch completes.
+    }
+
+    if (currentFile && (fileChanged || providerChanged)) {
+      console.log('[FormFill] Fetching form fields for:', currentFileId);
+      fetchFormFields(currentFile, currentFileId ?? undefined);
+    }
+  }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields]);
 
   const sidebarWidthRem = 15;
   const totalRightMargin =
@@ -586,7 +970,7 @@ const EmbedPdfViewerContent = ({
               transition: 'margin-right 0.3s ease'
             }}>
             <LocalEmbedPDF
-              key={currentFile && isStirlingFile(currentFile) ? currentFile.fileId : (effectiveFile.file instanceof File ? effectiveFile.file.name : effectiveFile.url)}
+              key={currentFileId || 'no-file'}
               file={effectiveFile.file}
               url={effectiveFile.url}
               fileName={
@@ -597,20 +981,33 @@ const EmbedPdfViewerContent = ({
               enableAnnotations={shouldEnableAnnotations}
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
+              enableFormFill={shouldEnableFormFill}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               annotationApiRef={annotationApiRef as React.RefObject<any>}
               historyApiRef={historyApiRef as React.RefObject<any>}
               redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
+              fileId={currentFileId}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
             />
+            {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
+            <FormSaveBar
+              file={currentFile ?? null}
+              isFormFillToolActive={isFormFillToolActive}
+              onApply={handleFormApply}
+            />
             <StampPlacementOverlay
               containerRef={pdfContainerRef}
               isActive={isPlacementOverlayActive}
               signatureConfig={signatureConfig}
+            />
+            <RulerOverlay
+              containerRef={pdfContainerRef}
+              isActive={isRulerActive}
+              pageMeasureScales={pageMeasureScales}
             />
           </Box>
         </>
@@ -677,7 +1074,9 @@ const EmbedPdfViewerContent = ({
 };
 
 const EmbedPdfViewer = (props: EmbedPdfViewerProps) => {
-  return <EmbedPdfViewerContent {...props} />;
+  return (
+    <EmbedPdfViewerContent {...props} />
+  );
 };
 
 export default EmbedPdfViewer;

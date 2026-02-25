@@ -28,9 +28,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,6 +43,9 @@ import stirling.software.proprietary.model.api.audit.AuditStatsResponse;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** REST endpoints for the audit dashboard. */
 @Slf4j
@@ -266,7 +266,7 @@ public class AuditDashboardController {
             headers.setContentDispositionFormData("attachment", "audit_export.json");
 
             return ResponseEntity.ok().headers(headers).body(jsonBytes);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error serializing audit events to JSON", e);
             return ResponseEntity.internalServerError().build();
         }

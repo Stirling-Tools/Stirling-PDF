@@ -13,15 +13,20 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { BASE_PATH, withBasePath } from '@app/constants/app';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
+import TextFieldsIcon from '@mui/icons-material/TextFields';
+import StraightenIcon from '@mui/icons-material/Straighten';
 
-export function useViewerRightRailButtons() {
+export function useViewerRightRailButtons(
+  isRulerActive?: boolean,
+  setIsRulerActive?: (v: boolean) => void,
+) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
   const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
-  const { handleToolSelect } = useToolWorkflow();
+  const { handleToolSelect, handleBackToTools } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
@@ -77,6 +82,11 @@ export function useViewerRightRailButtons() {
   const attachmentLabel = t('rightRail.toggleAttachments', 'Toggle Attachments');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
+  const formFillLabel = t('rightRail.formFill', 'Fill Form');
+
+  const isFormFillActive = (selectedTool as string) === 'formFill';
+
+  const rulerLabel = t('rightRail.ruler', 'Ruler / Measure');
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
@@ -131,6 +141,24 @@ export function useViewerRightRailButtons() {
         onClick: () => {
           viewer.panActions.togglePan();
           setIsPanning(prev => !prev);
+        },
+      },
+      {
+        id: 'viewer-ruler',
+        icon: <StraightenIcon sx={{ fontSize: '1.5rem' }} />,
+        tooltip: rulerLabel,
+        ariaLabel: rulerLabel,
+        section: 'top' as const,
+        order: 25,
+        active: Boolean(isRulerActive),
+        onClick: () => {
+          const next = !isRulerActive;
+          setIsRulerActive?.(next);
+          // Disable pan when activating ruler — they conflict
+          if (next && viewer.getPanState()?.isPanning) {
+            viewer.panActions.togglePan();
+            setIsPanning(false);
+          }
         },
       },
       {
@@ -253,6 +281,35 @@ export function useViewerRightRailButtons() {
           <ViewerAnnotationControls currentView="viewer" disabled={disabled} />
         )
       },
+      {
+        id: 'viewer-form-fill',
+        tooltip: formFillLabel,
+        ariaLabel: formFillLabel,
+        section: 'top' as const,
+        order: 62,
+        render: ({ disabled }) => (
+          <Tooltip content={formFillLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+            <ActionIcon
+              variant={isFormFillActive ? 'filled' : 'subtle'}
+              radius="md"
+              className="right-rail-icon"
+              onClick={() => {
+                if (disabled) return;
+                if (isFormFillActive) {
+                  handleBackToTools();
+                } else {
+                  handleToolSelect('formFill' as any);
+                }
+              }}
+              disabled={disabled}
+              aria-pressed={isFormFillActive}
+              color={isFormFillActive ? 'blue' : undefined}
+            >
+              <TextFieldsIcon sx={{ fontSize: '1.5rem' }} />
+            </ActionIcon>
+          </Tooltip>
+        )
+      },
     ];
 
     // Optional: Save button for annotations (always registered when this hook is used
@@ -282,6 +339,11 @@ export function useViewerRightRailButtons() {
     handleToolSelect,
     pendingCount,
     redactionActiveType,
+    formFillLabel,
+    isFormFillActive,
+    rulerLabel,
+    isRulerActive,
+    setIsRulerActive,
   ]);
 
   useRightRailButtons(viewerButtons);

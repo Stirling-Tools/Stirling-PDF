@@ -43,7 +43,7 @@ export interface ZoomAPIWrapper {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: number) => void;
+  requestZoom: (level: any, center?: any) => void;
 }
 
 export interface PanAPIWrapper {
@@ -92,7 +92,6 @@ export interface ThumbnailAPIWrapper {
 }
 
 export interface ExportAPIWrapper {
-  download: () => void;
   saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
 }
 
@@ -227,7 +226,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
 export function registerBridge<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
   type: K,
-  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]>
+  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
 ): void {
   registry[type] = ref as ViewerBridgeRegistry[K];
 }

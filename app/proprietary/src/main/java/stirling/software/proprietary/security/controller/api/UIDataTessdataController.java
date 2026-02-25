@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Data;
@@ -30,13 +28,18 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/ui-data")
 @RequiredArgsConstructor
 public class UIDataTessdataController {
 
+    private static final Pattern INVALID_LANG_CHARS_PATTERN = Pattern.compile("[^A-Za-z0-9_+\\-]");
     private final RuntimePathConfig runtimePathConfig;
+    private final ObjectMapper objectMapper;
     private static volatile List<String> cachedRemoteTessdata = null;
     private static volatile long cachedRemoteTessdataExpiry = 0L;
     private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -88,7 +91,7 @@ public class UIDataTessdataController {
                 failed.add(language);
                 continue;
             }
-            String safeLang = language.replaceAll("[^A-Za-z0-9_+\\-]", "");
+            String safeLang = INVALID_LANG_CHARS_PATTERN.matcher(language).replaceAll("");
             if (!safeLang.equals(language)) {
                 failed.add(language);
                 continue;
@@ -221,9 +224,9 @@ public class UIDataTessdataController {
             }
 
             try (InputStream is = connection.getInputStream()) {
-                ObjectMapper mapper = new ObjectMapper();
                 List<Map<String, Object>> items =
-                        mapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
+                        objectMapper.readValue(
+                                is, new TypeReference<List<Map<String, Object>>>() {});
                 List<String> languages =
                         items.stream()
                                 .map(item -> (String) item.get("name"))

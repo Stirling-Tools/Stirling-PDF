@@ -1,5 +1,5 @@
-import type { AppConfig } from '@app/contexts/AppConfigContext';
-import type { LicenseInfo } from '@app/services/licenseService';
+import type { AppConfig } from '@app/types/appConfig';
+import type { LicenseInfo } from '@app/types/license';
 
 interface WauResponse {
   trackingSince: string;
@@ -48,7 +48,7 @@ const FREE_LICENSE_INFO: LicenseInfo = {
 
 const BASE_NO_LOGIN_CONFIG: AppConfig = {
   enableAnalytics: true,
-  appVersion: '2.4.6',
+  appVersion: '2.5.3',
   serverCertificateEnabled: false,
   enableAlphaFunctionality: false,
   enableDesktopInstallSlide: true,
@@ -208,4 +208,3 @@ export function getSimulatedLicenseInfo(): LicenseInfo | null {
 }
 
 export const DEV_TESTING_ENABLED = DEV_TESTING_MODE;
-

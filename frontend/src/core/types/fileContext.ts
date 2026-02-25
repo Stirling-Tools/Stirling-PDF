@@ -45,9 +45,11 @@ export interface StirlingFileStub extends BaseFileMetadata {
   quickKey?: string;             // Fast deduplication key: name|size|lastModified
   thumbnailUrl?: string;         // Generated thumbnail blob URL for visual display
   blobUrl?: string;             // File access blob URL for downloads/processing
+  localFilePath?: string;        // Original local filesystem path (desktop app only)
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string;   // Page ID after which this file should be inserted
   isPinned?: boolean;           // Protected from tool consumption (replace/remove)
+  isDirty?: boolean;            // Has unsaved changes (only for files with localFilePath)
   // Note: File object stored in provider ref, not in state
 }
 
@@ -63,7 +65,7 @@ export function createFileId(): FileId {
     return window.crypto.randomUUID() as FileId;
   }
   // Fallback for environments without randomUUID
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -83,9 +85,29 @@ export interface StirlingFile extends File {
 }
 
 // Type guard to check if a File object has an embedded fileId
-export function isStirlingFile(file: File): file is StirlingFile {
-  return 'fileId' in file && typeof (file as any).fileId === 'string' &&
-         'quickKey' in file && typeof (file as any).quickKey === 'string';
+export function isStirlingFile(file: File | Blob): file is StirlingFile {
+  return file instanceof File && 'fileId' in file && typeof (file as any).fileId === 'string' &&
+    'quickKey' in file && typeof (file as any).quickKey === 'string';
+}
+
+/**
+ * Generate a unique identifier for form fill state tracking.
+ * This ensures that form widgets/values are correctly isolated between files
+ * even if they have the same name or are re-scanned.
+ */
+export function getFormFillFileId(file: File | Blob | null | undefined): string | null {
+  if (!file) return null;
+
+  if (isStirlingFile(file)) {
+    return `stirling-${file.fileId}`;
+  }
+
+  if (file instanceof File) {
+    return `file-${file.name}-${file.size}-${file.lastModified}`;
+  }
+
+  // Fallback for Blobs or other objects
+  return `blob-${(file as any).size || 0}`;
 }
 
 // Create a StirlingFile from a regular File object
@@ -139,11 +161,11 @@ export function extractFiles(files: StirlingFile[]): File[] {
 // Check if an object is a File or StirlingFile (replaces instanceof File checks)
 export function isFileObject(obj: any): obj is File | StirlingFile {
   return obj &&
-         typeof obj.name === 'string' &&
-         typeof obj.size === 'number' &&
-         typeof obj.type === 'string' &&
-         typeof obj.lastModified === 'number' &&
-         typeof obj.arrayBuffer === 'function';
+    typeof obj.name === 'string' &&
+    typeof obj.size === 'number' &&
+    typeof obj.type === 'string' &&
+    typeof obj.lastModified === 'number' &&
+    typeof obj.arrayBuffer === 'function';
 }
 
 

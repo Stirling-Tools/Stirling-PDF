@@ -50,14 +50,14 @@ import { useTranslation } from 'react-i18next';
 import { LinkLayer } from '@app/components/viewer/LinkLayer';
 import { TextSelectionHandler } from '@app/components/viewer/TextSelectionHandler';
 import { RedactionSelectionMenu } from '@app/components/viewer/RedactionSelectionMenu';
+import { AnnotationSelectionMenu } from '@app/components/viewer/AnnotationSelectionMenu';
 import { RedactionPendingTracker, RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { RedactionAPIBridge } from '@app/components/viewer/RedactionAPIBridge';
 import { DocumentPermissionsAPIBridge } from '@app/components/viewer/DocumentPermissionsAPIBridge';
 import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
 import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentContext';
 import { absoluteWithBasePath } from '@app/constants/app';
-
-const DOCUMENT_NAME = 'stirling-pdf-viewer';
+import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -65,6 +65,7 @@ interface LocalEmbedPDFProps {
   fileName?: string;
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
+  enableFormFill?: boolean;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: any) => void;
@@ -72,9 +73,11 @@ interface LocalEmbedPDFProps {
   annotationApiRef?: React.RefObject<AnnotationAPI>;
   historyApiRef?: React.RefObject<HistoryAPI>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
+  /** File identity passed through to FormFieldOverlay for stale-field guards */
+  fileId?: string | null;
 }
 
-export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: any}>>([]);
@@ -113,7 +116,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       createPluginRegistration(DocumentManagerPluginPackage, {
         initialDocuments: [{
           url: pdfUrl,
-          name: DOCUMENT_NAME,
+          name: exportFileName,
         }],
       }),
       createPluginRegistration(ViewportPluginPackage, {
@@ -121,7 +124,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: true,
+        withForms: !enableFormFill,
         withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
       }),
 
@@ -731,13 +734,24 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                           </div>
                           <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
 
+                          {/* FormFieldOverlay for interactive form filling */}
+                          {enableFormFill && (
+                            <FormFieldOverlay
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              pageWidth={width}
+                              pageHeight={height}
+                              fileId={fileId}
+                            />
+                          )}
+
                           {/* AnnotationLayer for annotation editing and annotation-based redactions */}
                           {(enableAnnotations || enableRedaction) && (
                             <AnnotationLayer
                               documentId={documentId}
                               pageIndex={pageIndex}
                               selectionOutlineColor="#007ACC"
-                              selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+                              selectionMenu={(props) => <AnnotationSelectionMenu {...props} />}
                             />
                           )}
 
@@ -749,13 +763,10 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                             />
                           )}
 
-                          {/* LinkLayer – uses pdf-lib for link extraction, rendered last for click priority */}
+                          {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
                           <LinkLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
-                            _pageWidth={width}
-                            _pageHeight={height}
-                            pdfUrl={pdfUrl}
                           />
                         </div>
                       </PagePointerProvider>

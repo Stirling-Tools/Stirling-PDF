@@ -16,6 +16,7 @@ let lastBackendToast = 0;
 interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   operationName?: string;
   skipBackendReadyCheck?: boolean;
+  skipAuthRedirect?: boolean;
   _retry?: boolean;
 }
 
@@ -55,7 +56,10 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           // Self-hosted mode: enable credentials for session management
           extendedConfig.withCredentials = true;
 
+          // If another request is already refreshing, wait before attaching token.
+          await authService.awaitRefreshIfInProgress();
           const token = await authService.getAuthToken();
+
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
           } else {
@@ -104,9 +108,16 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     },
     async (error) => {
       const originalRequest = error.config as ExtendedRequestConfig;
+      const requestUrl = String(originalRequest?.url || '');
+      const isAuthProbeRequest = requestUrl.includes('/api/v1/auth/me');
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
+        // `/auth/me` is used as a probe by session bootstrap; refreshing here can
+        // create recursion (refresh -> save token -> jwt-available -> /auth/me).
+        if (isAuthProbeRequest) {
+          return Promise.reject(error);
+        }
         if (typeof window !== 'undefined') {
           console.warn('[apiClientSetup] 401 on path:', window.location.pathname, 'url:', originalRequest.url);
         }

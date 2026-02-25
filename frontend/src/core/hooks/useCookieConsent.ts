@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { TOUR_STATE_EVENT, type TourStatePayload } from '@app/constants/events';
+import { getCookieConsentOverrides } from '@app/extensions/cookieConsentConfig';
 
 declare global {
   interface Window {
@@ -112,9 +113,11 @@ export const useCookieConsent = ({
         }
 
         try {
+          const overrides = getCookieConsentOverrides();
           window.CookieConsent.run({
             autoShow: true,
             hideFromBots: false,
+            ...overrides,
             guiOptions: {
               consentModal: {
                 layout: "bar",
