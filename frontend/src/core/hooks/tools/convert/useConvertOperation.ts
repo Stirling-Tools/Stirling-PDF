@@ -22,8 +22,8 @@ export const shouldProcessFilesSeparately = (
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
     // PDF to PDF/A and PDF/X conversions (each PDF should be processed separately)
     (parameters.fromExtension === 'pdf' && (parameters.toExtension === 'pdfa' || parameters.toExtension === 'pdfx')) ||
-    // PDF to text-like formats should be one output per input
-    (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv'].includes(parameters.toExtension)) ||
+    // PDF to text-like/spreadsheet formats should be one output per input
+    (parameters.fromExtension === 'pdf' && ['txt', 'rtf', 'csv', 'xlsx'].includes(parameters.toExtension)) ||
   // PDF to CBR conversions (each PDF should generate its own archive)
   (parameters.fromExtension === 'pdf' && parameters.toExtension === 'cbr') ||
     // PDF to EPUB/AZW3 conversions (each PDF should generate its own ebook)
@@ -85,6 +85,8 @@ export const buildConvertFormData = (parameters: ConvertParameters, selectedFile
     // Use PDF/A endpoint with PDF/X format parameter
     formData.append("outputFormat", pdfxOptions?.outputFormat || 'pdfx');
   } else if (fromExtension === 'pdf' && toExtension === 'csv') {
+    formData.append("pageNumbers", "all");
+  } else if (fromExtension === 'pdf' && toExtension === 'xlsx') {
     formData.append("pageNumbers", "all");
   } else if (fromExtension === 'cbr' && toExtension === 'pdf') {
     formData.append("optimizeForEbook", cbrOptions.optimizeForEbook.toString());

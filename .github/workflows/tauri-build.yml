@@ -19,6 +19,9 @@ on:
       - "frontend/src-tauri/**"
       - "frontend/src/desktop/**"
       - "frontend/tsconfig.desktop.json"
+      - "frontend/package.json"
+      - "frontend/package-lock.json"
+      - "frontend/vite.config.ts"
       - ".github/workflows/tauri-build.yml"
   push:
     branches: [main]

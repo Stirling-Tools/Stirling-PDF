@@ -26,13 +26,14 @@ import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontSignatureCalculator;
 import stirling.software.SPDF.service.pdfjson.type3.Type3GlyphExtractor;
 import stirling.software.SPDF.service.pdfjson.type3.model.Type3GlyphOutline;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Small CLI helper that scans a PDF for Type3 fonts, computes their signatures, and optionally
@@ -48,7 +49,7 @@ import stirling.software.SPDF.service.pdfjson.type3.model.Type3GlyphOutline;
 public final class Type3SignatureTool {
 
     private static final ObjectMapper OBJECT_MAPPER =
-            new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+            JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT).build();
 
     private Type3SignatureTool() {}
 

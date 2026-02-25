@@ -2,11 +2,7 @@ import apiClient from '@app/services/apiClient';
 import { supabase, isSupabaseConfigured } from '@app/services/supabaseClient';
 import { getCheckoutMode } from '@app/utils/protocolDetection';
 import { PLAN_FEATURES, PLAN_HIGHLIGHTS } from '@app/constants/planConstants';
-
-export interface PlanFeature {
-  name: string;
-  included: boolean;
-}
+import type { LicenseInfo, PlanFeature } from '@app/types/license';
 
 export interface PlanTier {
   id: string;
@@ -69,13 +65,7 @@ export interface LicenseKeyResponse {
   plan?: string;
 }
 
-export interface LicenseInfo {
-  licenseType: 'NORMAL' | 'SERVER' | 'ENTERPRISE';
-  enabled: boolean;
-  maxUsers: number;
-  hasKey: boolean;
-  licenseKey?: string; // The actual license key (for upgrades)
-}
+export type { LicenseInfo, PlanFeature };
 
 export interface LicenseSaveResponse {
   success: boolean;

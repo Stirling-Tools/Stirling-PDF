@@ -649,7 +649,8 @@ public class GeneralUtils {
     }
 
     public List<Integer> parsePageList(String[] pages, int totalPages, boolean oneBased) {
-        List<Integer> result = new ArrayList<>();
+        // Use LinkedHashSet to prevent duplicates from inflating size and triggering maxSize guard
+        Set<Integer> result = new LinkedHashSet<>();
         int offset = oneBased ? 1 : 0;
         int maxSize = Math.max(1000, totalPages * 3);
         for (String page : pages) {
@@ -672,7 +673,7 @@ public class GeneralUtils {
                         "Page list exceeds maximum allowed size of " + maxSize);
             }
         }
-        return result;
+        return new ArrayList<>(result);
     }
 
     /*

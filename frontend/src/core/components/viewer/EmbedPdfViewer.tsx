@@ -16,7 +16,7 @@ import { useRedaction } from '@app/contexts/RedactionContext';
 import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
-import { isStirlingFile } from '@app/types/fileContext';
+import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type ViewportScale } from '@app/components/viewer/RulerOverlay';
@@ -131,13 +131,15 @@ const EmbedPdfViewerContent = ({
     zoomActions,
     scrollActions,
     panActions: _panActions,
-    rotationActions: _rotationActions,
+    rotationActions,
     getScrollState,
     getRotationState,
     setAnnotationMode,
     isAnnotationsVisible,
     exportActions,
+    printActions,
     setApplyChanges,
+    applyChanges: viewerApplyChanges,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -372,32 +374,134 @@ const EmbedPdfViewerContent = ({
     onZoomOut: zoomActions.zoomOut,
   });
 
-  // Handle keyboard shortcuts (zoom and search)
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isViewerHovered) return;
+      const mod = event.ctrlKey || event.metaKey;
 
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
-      if (event.ctrlKey || event.metaKey) {
-        if (event.key === '=' || event.key === '+') {
-          // Ctrl+= or Ctrl++ for zoom in
-          event.preventDefault();
-          zoomActions.zoomIn();
-        } else if (event.key === '-' || event.key === '_') {
-          // Ctrl+- for zoom out
-          event.preventDefault();
-          zoomActions.zoomOut();
-        } else if (event.key === 'f' || event.key === 'F') {
-          // Ctrl+F for search
-          event.preventDefault();
-          if (isSearchInterfaceVisible) {
-            // If already open, trigger refocus event
-            window.dispatchEvent(new CustomEvent('refocus-search-input'));
-          } else {
-            // Open search interface
-            searchInterfaceActions.open();
+      // Ctrl+P (print) and Ctrl+R (rotate) must be intercepted unconditionally
+      // whenever the viewer is mounted, even before the user has hovered over it.
+      // Without this, the browser falls through to its native "print HTML page"
+      // or "reload page" behaviour.
+      if (mod) {
+        const target = event.target as Element;
+        const isInTextInput =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          (target as HTMLElement).isContentEditable;
+
+        if (!isInTextInput) {
+          switch (event.key) {
+            case 'p':
+            case 'P':
+              event.preventDefault();
+              printActions.print();
+              return;
+            case 'r':
+            case 'R':
+              // Ctrl+R: Rotate forward; Ctrl+Shift+R: Rotate backward
+              event.preventDefault();
+              if (event.shiftKey) {
+                rotationActions.rotateBackward();
+              } else {
+                rotationActions.rotateForward();
+              }
+              return;
           }
         }
+      }
+
+      // All remaining shortcuts require the viewer to be hovered so they
+      // don't conflict with the rest of the UI when the viewer is mounted
+      // but not the active focus target.
+      if (!isViewerHovered) return;
+
+      // Modifier key shortcuts (Ctrl/Cmd + key)
+      if (mod) {
+        switch (event.key) {
+          case '=':
+          case '+':
+            event.preventDefault();
+            zoomActions.zoomIn();
+            return;
+          case '-':
+          case '_':
+            event.preventDefault();
+            zoomActions.zoomOut();
+            return;
+          case '0':
+            // Ctrl+0: Reset zoom to fit width
+            event.preventDefault();
+            zoomActions.requestZoom('fit-width');
+            return;
+          case 'a':
+          case 'A':
+            // Ctrl+A: Prevent browser from selecting all UI text
+            event.preventDefault();
+            return;
+          case 'f':
+          case 'F':
+            event.preventDefault();
+            if (isSearchInterfaceVisible) {
+              window.dispatchEvent(new CustomEvent('refocus-search-input'));
+            } else {
+              searchInterfaceActions.open();
+            }
+            return;
+          case 's':
+          case 'S':
+            // Ctrl+S: Save/apply changes
+            if (!event.shiftKey) {
+              event.preventDefault();
+              if (viewerApplyChanges) {
+                viewerApplyChanges();
+              }
+            }
+            return;
+          case 'z':
+          case 'Z':
+            // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
+            event.preventDefault();
+            if (event.shiftKey) {
+              historyApiRef.current?.redo?.();
+            } else {
+              historyApiRef.current?.undo?.();
+            }
+            return;
+          case 'y':
+          case 'Y':
+            // Ctrl+Y: Redo
+            event.preventDefault();
+            historyApiRef.current?.redo?.();
+            return;
+        }
+        return;
+      }
+
+      // Non-modifier shortcuts
+      switch (event.key) {
+        case 'Home':
+          event.preventDefault();
+          scrollActions.scrollToFirstPage();
+          return;
+        case 'End':
+          event.preventDefault();
+          scrollActions.scrollToLastPage();
+          return;
+        case 'PageUp':
+          event.preventDefault();
+          scrollActions.scrollToPreviousPage();
+          return;
+        case 'PageDown':
+          event.preventDefault();
+          scrollActions.scrollToNextPage();
+          return;
+        case 'Escape':
+          if (isSearchInterfaceVisible) {
+            event.preventDefault();
+            searchInterfaceActions.close();
+          }
+          return;
       }
     };
 
@@ -405,7 +509,11 @@ const EmbedPdfViewerContent = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions]);
+  }, [
+    isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
+    scrollActions, printActions, exportActions, rotationActions, historyApiRef,
+    viewerApplyChanges,
+  ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
   // We treat any change that makes the history undoable as unsaved changes until
@@ -720,11 +828,11 @@ const EmbedPdfViewerContent = ({
 
       // Only attempt if PDF is loaded (totalPages > 0)
       if (currentState.totalPages > 0) {
-        _rotationActions.setRotation(rotationToRestore);
+        rotationActions.setRotation(rotationToRestore);
 
         // Check if rotation succeeded after a brief delay
         setTimeout(() => {
-          const currentRotation = _rotationActions.getRotation();
+          const currentRotation = rotationActions.getRotation();
           if (currentRotation === rotationToRestore || rotationRestoreAttemptsRef.current >= maxAttempts) {
             // Success or max attempts reached - clear pending
             pendingRotationRestoreRef.current = null;
@@ -755,7 +863,7 @@ const EmbedPdfViewerContent = ({
     // Start attempting after initial delay
     const timer = setTimeout(attemptRotation, 150);
     return () => clearTimeout(timer);
-  }, [scrollState.totalPages, _rotationActions, getScrollState]);
+  }, [scrollState.totalPages, rotationActions, getScrollState]);
 
   // Register applyChanges with ViewerContext so tools can access it directly
   useEffect(() => {
@@ -788,19 +896,7 @@ const EmbedPdfViewerContent = ({
 
   // Generate a unique identifier for the current file to detect file changes
   const currentFileId = React.useMemo(() => {
-    if (!currentFile) return null;
-
-    if (isStirlingFile(currentFile)) {
-      return `stirling-${currentFile.fileId}`;
-    }
-
-    // File is also a Blob, but has more specific properties
-    if (currentFile instanceof File) {
-      return `file-${currentFile.name}-${currentFile.size}-${currentFile.lastModified}`;
-    }
-
-    // Fallback for any other object (shouldn't happen in practice)
-    return `unknown-${(currentFile as any).size || 0}`;
+    return getFormFillFileId(currentFile);
   }, [currentFile]);
 
   useEffect(() => {

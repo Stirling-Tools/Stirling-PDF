@@ -127,6 +127,24 @@ export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent |
           ]
         }
       ]
+    },
+
+    [SPLIT_METHODS.BY_POSTER]: {
+      header: {
+        title: t("split.tooltip.byPoster.title", "Split for Poster Print")
+      },
+      tips: [
+        {
+          title: t("split.tooltip.byPoster.title", "Split for Poster Print"),
+          description: t("split.tooltip.byPoster.text", "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."),
+          bullets: [
+            t("split.tooltip.byPoster.bullet1", "Target Page Size: Choose output paper size (A4, Letter, etc.)"),
+            t("split.tooltip.byPoster.bullet2", "Horizontal/Vertical Divisions: Grid size for splitting"),
+            t("split.tooltip.byPoster.bullet3", "Right-to-Left: Reverse column order for RTL layouts"),
+            t("split.tooltip.byPoster.bullet4", "Print and assemble the pieces to create your poster")
+          ]
+        }
+      ]
     }
   };
 
