@@ -97,6 +97,8 @@ jobs:
           context: .
           file: ./docker/frontend/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-v2-frontend
+          cache-to: type=gha,mode=max,scope=stirling-v2-frontend
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
@@ -110,6 +112,8 @@ jobs:
           context: .
           file: ./docker/backend/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-v2-backend
+          cache-to: type=gha,mode=max,scope=stirling-v2-backend
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-latest

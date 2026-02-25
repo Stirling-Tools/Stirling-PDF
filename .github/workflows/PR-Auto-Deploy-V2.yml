@@ -231,6 +231,8 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-pdf-latest
+          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64

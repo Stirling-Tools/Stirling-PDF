@@ -5,7 +5,8 @@ FROM ubuntu:noble AS calibre-build
 
 ARG CALIBRE_VERSION=9.3.1
 
-RUN set -eux; \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       ca-certificates curl xz-utils libnss3 libfontconfig1 \
@@ -184,12 +185,13 @@ RUN set -eux; \
 # Build the Java application and frontend.
 FROM gradle:9.3.1-jdk25 AS app-build
 
-RUN apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
 ENV JDK_JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
@@ -228,7 +230,8 @@ FROM ubuntu:noble AS python-build
 ARG UNOSERVER_VERSION=3.6
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-venv python3-dev \
       python3-packaging \
       build-essential \
@@ -249,11 +252,13 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Build Ghostscript 10.06.0 from source in an isolated stage (avoids library conflicts).
 FROM ubuntu:noble AS gs-build
 ARG GS_VERSION=10.06.0
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      build-essential curl ca-certificates libfontconfig1-dev && \
-    rm -rf /var/lib/apt/lists/* && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/tmp/gs-build \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential curl ca-certificates libfontconfig1-dev && rm -rf /var/lib/apt/lists/* && \
     GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
-    curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz && \
+    cd /tmp/gs-build && \
+    (test -d "ghostscript-${GS_VERSION}" || curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz) && \
     cd "ghostscript-${GS_VERSION}" && \
     ./configure \
       --prefix=/usr/local \
@@ -269,19 +274,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM ubuntu:noble AS pdf-tools-build
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.2-13
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/tmp/pdf-tools-build \
+    apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
       libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
-      libltdl-dev libtool && \
+      libltdl-dev libtool && rm -rf /var/lib/apt/lists/* && \
+    cd /tmp/pdf-tools-build && \
     # Build QPDF
-    curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz && \
+    (test -d "qpdf-${QPDF_VERSION}" || curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz) && \
     cd "qpdf-${QPDF_VERSION}" && \
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DALLOW_CRYPTO_OPENSSL=ON -DDEFAULT_CRYPTO=openssl && \
     cmake --build build --parallel "$(nproc)" && \
     cmake --install build && \
     cd .. && \
     # Build ImageMagick 7
-    curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz && \
+    (test -d "ImageMagick-${IM_VERSION}" || curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz) && \
     cd "ImageMagick-${IM_VERSION}" && \
     ./configure --prefix=/usr/local --with-modules --with-perl=no --with-magick-plus-plus=no --with-quantum-depth=16 --disable-static --enable-shared && \
     make -j"$(nproc)" && \
@@ -307,7 +315,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
 ARG UNOSERVER_VERSION=3.6
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/root/.cache/pip \
     set -eux; \
     apt-get update; \
@@ -354,8 +361,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     \
     # Cleanup stage.
     \
-    # apt clean not strictly needed with cache mounts, but good for reducing layer metadata
-    apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     \
     # Docs / man / info / icons / themes / GUI assets (headless server)

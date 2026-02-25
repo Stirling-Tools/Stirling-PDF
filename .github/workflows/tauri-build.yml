@@ -15,6 +15,7 @@ on:
           - linux
   pull_request:
     branches: [main, V2-tauri-windows]
+    types: [opened, reopened, synchronize, ready_for_review]
     paths:
       - "frontend/src-tauri/**"
       - "frontend/src/desktop/**"
@@ -23,8 +24,6 @@ on:
       - "frontend/package-lock.json"
       - "frontend/vite.config.ts"
       - ".github/workflows/tauri-build.yml"
-  push:
-    branches: [main]
 
 permissions:
   contents: read
