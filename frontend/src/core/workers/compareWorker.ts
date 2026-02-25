@@ -167,10 +167,10 @@ const chunkedDiff = (
     const remaining2 = Math.max(0, words2.length - index2);
 
     let windowSize = Math.max(dynamicChunkSize, buffer1.length, buffer2.length);
-    let window1: string[] = [];
-    let window2: string[] = [];
-    let chunkTokens: CompareDiffToken[] = [];
-    let reachedEnd = false;
+    let window1: string[];
+    let window2: string[];
+    let chunkTokens: CompareDiffToken[];
+    let reachedEnd: boolean;
 
     while (true) {
       const take1 = Math.min(Math.max(0, windowSize - buffer1.length), remaining1);
@@ -220,7 +220,6 @@ const chunkedDiff = (
         flushRemainder();
         return;
       }
-      windowSize = Math.min(windowSize + dynamicStep, dynamicMaxWindow);
       stallIterations += 1;
       if (stallIterations >= 3) {
         increaseChunkSizes();
@@ -422,7 +421,7 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
       },
       { maxProcessedTokens: runtimeMaxProcessedTokens, minUnchangedRatio: runtimeMinUnchangedRatio }
     );
-  } catch (err) { 
+  } catch (err) {
     const error = err as Error & { __earlyStop?: boolean };
     if (error && (error.__earlyStop || error.message === 'EARLY_STOP_TOO_DISSIMILAR')) {
       const response: CompareWorkerResponse = {
