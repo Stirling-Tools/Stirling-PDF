@@ -27,6 +27,7 @@ import {
   getActiveNavButton,
 } from '@app/components/shared/quickAccessBar/QuickAccessBar';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import { QuickAccessBarFooterExtensions } from '@app/components/quickAccessBar/QuickAccessBarFooterExtensions';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
@@ -264,6 +265,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
           {/* Spacer to push bottom buttons to bottom */}
           <div className="spacer" />
+
+          <QuickAccessBarFooterExtensions className="quick-access-footer" />
 
           {/* Bottom section */}
           <Stack gap="lg" align="stretch">
