@@ -15,9 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +25,9 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
 @Service
 @Slf4j
 public class ApiDocService {
@@ -36,12 +36,15 @@ public class ApiDocService {
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
+    private final ObjectMapper objectMapper;
     Map<String, List<String>> outputToFileTypes = new HashMap<>();
     JsonNode apiDocsJsonRootNode;
 
     public ApiDocService(
+            ObjectMapper objectMapper,
             ServletContext servletContext,
             @Autowired(required = false) UserServiceInterface userService) {
+        this.objectMapper = objectMapper;
         this.servletContext = servletContext;
         this.userService = userService;
     }
@@ -116,8 +119,7 @@ public class ApiDocService {
             ResponseEntity<String> response =
                     restTemplate.exchange(getApiDocsUrl(), HttpMethod.GET, entity, String.class);
             apiDocsJson = response.getBody();
-            ObjectMapper mapper = new ObjectMapper();
-            apiDocsJsonRootNode = mapper.readTree(apiDocsJson);
+            apiDocsJsonRootNode = objectMapper.readTree(apiDocsJson);
             JsonNode paths = apiDocsJsonRootNode.path("paths");
             paths.propertyStream()
                     .forEach(

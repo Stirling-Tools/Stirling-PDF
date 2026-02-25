@@ -46,8 +46,23 @@ dependencies {
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
-    implementation 'com.posthog.java:posthog:1.2.0'
-    implementation 'org.telegram:telegrambots:6.9.7.1'
+    implementation 'org.eclipse.jetty.http2:jetty-http2-server'
+    implementation ('org.telegram:telegrambots:6.9.7.1') {
+        // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
+        // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
+        exclude group: 'org.glassfish.jersey.inject'
+        exclude group: 'org.glassfish.jersey.media'
+        exclude group: 'org.glassfish.jersey.containers'
+        exclude group: 'org.glassfish.jersey.core'
+        exclude group: 'org.glassfish.jersey.ext'
+        exclude group: 'org.glassfish.grizzly'
+        exclude group: 'org.glassfish.hk2'
+        exclude group: 'org.glassfish.hk2.external'
+        exclude group: 'org.javassist', module: 'javassist'
+        // Old javax JAX-RS Jackson bindings (not needed, project uses jakarta)
+        exclude group: 'com.fasterxml.jackson.jaxrs'
+        exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
+    }
     implementation 'commons-io:commons-io:2.21.0'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
@@ -66,6 +81,7 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
     implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
@@ -75,9 +91,11 @@ dependencies {
     }
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
     implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
-    // Batik
-    implementation 'org.apache.xmlgraphics:batik-all:1.19'
+    // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
+    // Replaces batik-all which included unused codec, svggen, transcoder, script modules
+    implementation 'org.apache.xmlgraphics:batik-bridge:1.19'
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
     implementation 'de.rototor.pdfbox:graphics2d:3.0.5'

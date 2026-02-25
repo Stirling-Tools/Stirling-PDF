@@ -4649,6 +4649,13 @@ prompt = "Choose page to extract table"
 submit = "Extract"
 title = "PDF to CSV"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+title = "PDF to Excel (XLSX)"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+
 [PDFToHTML]
 credit = "This service uses pdftohtml for file conversion."
 header = "PDF to HTML"
@@ -6002,6 +6009,11 @@ desc = "Auto-split with divider sheets"
 name = "Page Divider"
 tooltip = "Use QR code divider sheets between documents when scanning"
 
+[split.methods.byPoster]
+name = "Printable Chunks"
+desc = "Split large pages into printable sizes"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.byPages]
 desc = "Extract specific pages (1,3,5-10)"
 name = "Page Numbers"
@@ -6020,6 +6032,7 @@ tooltip = "Specify maximum file size (e.g. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Split at"
 splitBy = "Split by"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Click on a method card to select it"
@@ -6038,6 +6051,21 @@ selectMethodFirst = "Please select a split method first"
 [split.steps]
 chooseMethod = "Choose Method"
 settings = "Settings"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+label = "Target Page Size"
+description = "Size of output pages for printing"
+
+[split.poster.xFactor]
+label = "Horizontal Divisions"
+description = "Number of columns to split each page into"
+
+[split.poster.yFactor]
+label = "Vertical Divisions"
+description = "Number of rows to split each page into"
 
 [split.tooltip.byChapters]
 bullet1 = "Bookmark Level: Which level to split on (1=top level)"
@@ -6075,6 +6103,14 @@ bullet4 = "Upload - divider pages are automatically detected and removed"
 bullet5 = "Enable Duplex Mode if scanning both sides of divider sheets"
 text = "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together."
 title = "Split by Page Divider"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.byPages]
 bullet1 = "Single split points: 3,7 (splits after pages 3 and 7)"
