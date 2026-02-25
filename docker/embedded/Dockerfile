@@ -4,7 +4,8 @@ FROM ubuntu:noble AS calibre-build
 
 ARG CALIBRE_VERSION=9.3.1
 
-RUN set -eux; \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       ca-certificates curl xz-utils libnss3 libfontconfig1 \
@@ -185,12 +186,13 @@ RUN set -eux; \
 # Build the Java application and frontend.
 FROM gradle:9.3.1-jdk25 AS app-build
 
-RUN apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
 ENV JDK_JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
@@ -232,9 +234,9 @@ RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 # Build Ghostscript 10.06.0 from source in an isolated stage (avoids library conflicts).
 FROM ubuntu:noble AS gs-build
 ARG GS_VERSION=10.06.0
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      build-essential curl ca-certificates libfontconfig1-dev && \
-    rm -rf /var/lib/apt/lists/* && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential curl ca-certificates libfontconfig1-dev && rm -rf /var/lib/apt/lists/* && \
     GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
     curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz && \
     cd "ghostscript-${GS_VERSION}" && \
@@ -252,10 +254,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM ubuntu:noble AS pdf-tools-build
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.2-13
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
       libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
-      libltdl-dev libtool && \
+      libltdl-dev libtool && rm -rf /var/lib/apt/lists/* && \
     # Build QPDF
     curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz && \
     cd "qpdf-${QPDF_VERSION}" && \
@@ -289,7 +292,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 ARG UNOSERVER_VERSION=3.6
 
-RUN set -eux; \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    set -eux; \
     apt-get update; \
     # Add LibreOffice Fresh PPA for latest version (26.2.x)
     apt-get install -y --no-install-recommends software-properties-common; \
@@ -351,8 +355,6 @@ RUN set -eux; \
     \
     # Cleanup stage.
     \
-    # apt clean needed without cache mounts
-    apt-get clean; \
     rm -rf /var/lib/apt/lists/*; \
     \
     # Docs / man / info / icons / themes / GUI assets (headless server)
