@@ -146,7 +146,10 @@ export class OperationRouter {
       const endpointToCheck = this.extractEndpointName(operation);
       console.debug(`[operationRouter] Checking capability for ${operation} -> endpoint name: ${endpointToCheck}`);
 
-      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointToCheck);
+      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+        endpointToCheck,
+        tauriBackendService.getBackendUrl()
+      );
       console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
 
       if (!supportedLocally) {
@@ -236,7 +239,10 @@ export class OperationRouter {
     if (mode === 'saas' && endpoint && this.isToolEndpoint(endpoint)) {
       // For UI data endpoints, extract the endpoint name
       const endpointToCheck = this.extractEndpointName(endpoint);
-      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointToCheck);
+      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+        endpointToCheck,
+        tauriBackendService.getBackendUrl()
+      );
       return !supportedLocally; // Skip check if not supported locally
     }
 
@@ -260,7 +266,10 @@ export class OperationRouter {
     if (this.isToolEndpoint(endpoint)) {
       // For UI data endpoints, extract the endpoint name
       const endpointToCheck = this.extractEndpointName(endpoint);
-      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointToCheck);
+      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+        endpointToCheck,
+        tauriBackendService.getBackendUrl()
+      );
       return !supportedLocally;
     }
 

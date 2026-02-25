@@ -82,7 +82,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
       const backendHealthy = tauriBackendService.isBackendHealthy();
       if (backendHealthy) {
         console.debug('[AppProviders] Preloading common tool endpoints');
-        await endpointAvailabilityService.preloadEndpoints(COMMON_TOOL_ENDPOINTS);
+        await endpointAvailabilityService.preloadEndpoints(
+          COMMON_TOOL_ENDPOINTS,
+          tauriBackendService.getBackendUrl()
+        );
         console.debug('[AppProviders] Endpoint preloading complete');
       }
     };

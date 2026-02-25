@@ -1,4 +1,3 @@
-import { tauriBackendService } from '@app/services/tauriBackendService';
 import { fetch } from '@tauri-apps/plugin-http';
 import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
 
@@ -20,9 +19,10 @@ export class EndpointAvailabilityService {
    * Returns cached result if available, otherwise fetches from backend
    *
    * @param endpoint - The endpoint path to check (e.g., "/api/v1/misc/compress-pdf")
+   * @param backendUrl - The URL for the backend
    * @returns Promise<boolean> - true if supported locally, false otherwise
    */
-  async isEndpointSupportedLocally(endpoint: string): Promise<boolean> {
+  async isEndpointSupportedLocally(endpoint: string, backendUrl: string | null): Promise<boolean> {
     // Check cache first
     const cached = this.localCache.get(endpoint);
     const expiry = this.localCacheExpiry.get(endpoint);
@@ -33,7 +33,6 @@ export class EndpointAvailabilityService {
 
     // Fetch from backend
     try {
-      const backendUrl = tauriBackendService.getBackendUrl();
       if (!backendUrl) {
         // Backend not started yet - assume not supported (will route to SaaS)
         return false;
@@ -169,9 +168,9 @@ export class EndpointAvailabilityService {
    * Optimizes batch checking for tool initialization
    *
    * @param endpoints - Array of endpoint paths to check
+   * @param backendUrl - The URL of the backend
    */
-  async preloadEndpoints(endpoints: string[]): Promise<void> {
-    const backendUrl = tauriBackendService.getBackendUrl();
+  async preloadEndpoints(endpoints: string[], backendUrl: string | null): Promise<void> {
     if (!backendUrl || endpoints.length === 0) {
       return;
     }
@@ -213,7 +212,7 @@ export class EndpointAvailabilityService {
    * @param endpoint - The endpoint path to check
    * @returns Promise with availability details
    */
-  async checkEndpointCombined(endpoint: string): Promise<{
+  async checkEndpointCombined(endpoint: string, backendUrl: string | null): Promise<{
     availableLocally: boolean;
     availableOnSaaS: boolean;
     isAvailable: boolean;      // local || saas
@@ -222,7 +221,7 @@ export class EndpointAvailabilityService {
   }> {
     // Check both backends in parallel for efficiency
     const [availableLocally, availableOnSaaS] = await Promise.all([
-      this.isEndpointSupportedLocally(endpoint),
+      this.isEndpointSupportedLocally(endpoint, backendUrl),
       this.isEndpointSupportedOnSaaS(endpoint),
     ]);
 

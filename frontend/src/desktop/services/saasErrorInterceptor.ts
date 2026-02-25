@@ -1,4 +1,4 @@
-import { extractAxiosErrorMessage } from '@app/services/httpErrorHandler';
+import { extractAxiosErrorMessage } from '@app/services/httpErrorUtils';
 import { alert } from '@app/components/toast';
 
 /**

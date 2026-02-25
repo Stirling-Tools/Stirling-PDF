@@ -59,7 +59,10 @@ export function useConversionCloudStatus(): ConversionStatus {
         pairs.map(async ([fromExt, toExt, endpointName]) => {
           const key = `${fromExt}-${toExt}`;
           try {
-            const combined = await endpointAvailabilityService.checkEndpointCombined(endpointName);
+            const combined = await endpointAvailabilityService.checkEndpointCombined(
+              endpointName,
+              tauriBackendService.getBackendUrl()
+            );
             return { key, isAvailable: combined.isAvailable, willUseCloud: combined.willUseCloud, localOnly: combined.localOnly };
           } catch (error) {
             console.error(`[useConversionCloudStatus] Endpoint check failed for ${key}:`, error);
