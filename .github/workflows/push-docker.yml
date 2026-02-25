@@ -8,6 +8,7 @@ on:
       - main
       - V2-master
       - testMain
+      - cachefixing
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -116,7 +117,7 @@ jobs:
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
-            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testMain' }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testMain' || github.ref == 'refs/heads/cachefixing' }}
 
       - name: Build and push Unified Dockerfile (latest variant)
         id: build-push-latest
@@ -152,7 +153,7 @@ jobs:
       - name: Generate tags for latest-fat
         id: meta-fat
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && github.ref != 'refs/heads/cachefixing'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -166,7 +167,7 @@ jobs:
       - name: Build and push Unified Dockerfile (fat variant)
         id: build-push-fat
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && github.ref != 'refs/heads/cachefixing'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -196,7 +197,7 @@ jobs:
       - name: Generate tags for ultra-lite
         id: meta-lite
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && github.ref != 'refs/heads/cachefixing'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -210,7 +211,7 @@ jobs:
       - name: Build and push Unified Dockerfile (ultra-lite variant)
         id: build-push-lite
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && github.ref != 'refs/heads/cachefixing'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
