@@ -44,9 +44,7 @@ public class FileToPdf {
                             sanitizeHtmlContent(
                                     new String(fileBytes, StandardCharsets.UTF_8),
                                     customHtmlSanitizer);
-                    Files.write(
-                            tempInputFile.getPath(),
-                            sanitizedHtml.getBytes(StandardCharsets.UTF_8));
+                    Files.writeString(tempInputFile.getPath(), sanitizedHtml);
                 } else if (fileName.toLowerCase(Locale.ROOT).endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
@@ -100,10 +98,12 @@ public class FileToPdf {
                 while (entry != null) {
                     Path filePath =
                             tempUnzippedDir.getPath().resolve(sanitizeZipFilename(entry.getName()));
-                    Path normalizedTargetDir = tempUnzippedDir.getPath().toAbsolutePath().normalize();
+                    Path normalizedTargetDir =
+                            tempUnzippedDir.getPath().toAbsolutePath().normalize();
                     Path normalizedFilePath = filePath.toAbsolutePath().normalize();
                     if (!normalizedFilePath.startsWith(normalizedTargetDir)) {
-                        throw new IOException("Zip entry path escapes target directory: " + entry.getName());
+                        throw new IOException(
+                                "Zip entry path escapes target directory: " + entry.getName());
                     }
                     if (!entry.isDirectory()) {
                         Files.createDirectories(filePath.getParent());
@@ -113,8 +113,7 @@ public class FileToPdf {
                                     new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
                             String sanitizedContent =
                                     sanitizeHtmlContent(content, customHtmlSanitizer);
-                            Files.write(
-                                    filePath, sanitizedContent.getBytes(StandardCharsets.UTF_8));
+                            Files.writeString(filePath, sanitizedContent);
                         } else {
                             Files.copy(zipIn, filePath);
                         }

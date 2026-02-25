@@ -134,16 +134,16 @@ public class PdfJsonImageService {
             cache.put(cacheKey, image);
         }
 
-        List<Float> transform = element.getTransform();
-        if (transform != null && transform.size() == 6) {
+        float[] transform = element.getTransform();
+        if (transform != null && transform.length == 6) {
             Matrix matrix =
                     new Matrix(
-                            safeFloat(transform.get(0), 1f),
-                            safeFloat(transform.get(1), 0f),
-                            safeFloat(transform.get(2), 0f),
-                            safeFloat(transform.get(3), 1f),
-                            safeFloat(transform.get(4), 0f),
-                            safeFloat(transform.get(5), 0f));
+                            safeFloat(transform[0], 1f),
+                            safeFloat(transform[1], 0f),
+                            safeFloat(transform[2], 0f),
+                            safeFloat(transform[3], 1f),
+                            safeFloat(transform[4], 0f),
+                            safeFloat(transform[5], 0f));
             contentStream.drawImage(image, matrix);
             return;
         }
@@ -269,19 +269,19 @@ public class PdfJsonImageService {
         return 0f;
     }
 
-    private List<Float> toMatrixValues(Matrix matrix) {
-        List<Float> values = new ArrayList<>(6);
-        values.add(matrix.getValue(0, 0));
-        values.add(matrix.getValue(0, 1));
-        values.add(matrix.getValue(1, 0));
-        values.add(matrix.getValue(1, 1));
-        values.add(matrix.getValue(2, 0));
-        values.add(matrix.getValue(2, 1));
-        return values;
+    private float[] toMatrixValues(Matrix matrix) {
+        return new float[] {
+            matrix.getValue(0, 0),
+            matrix.getValue(0, 1),
+            matrix.getValue(1, 0),
+            matrix.getValue(1, 1),
+            matrix.getValue(2, 0),
+            matrix.getValue(2, 1)
+        };
     }
 
-    private float safeFloat(Float value, float defaultValue) {
-        if (value == null || Float.isNaN(value) || Float.isInfinite(value)) {
+    private static float safeFloat(float value, float defaultValue) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
             return defaultValue;
         }
         return value;
@@ -324,7 +324,7 @@ public class PdfJsonImageService {
             }
             Matrix ctm = getGraphicsState().getCurrentTransformationMatrix();
             Bounds bounds = computeBounds(ctm);
-            List<Float> matrixValues = toMatrixValues(ctm);
+            float[] matrixValues = toMatrixValues(ctm);
 
             PdfJsonImageElement element =
                     PdfJsonImageElement.builder()

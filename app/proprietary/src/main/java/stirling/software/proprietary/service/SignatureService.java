@@ -35,7 +35,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
 
     private static final Pattern FILENAME_VALIDATION_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     private final String SIGNATURE_BASE_PATH;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final String ALL_USERS_FOLDER = "ALL_USERS";
     private final ObjectMapper objectMapper;
 
     // Storage limits per user
@@ -115,7 +115,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             }
 
             // Extract base64 data
-            String base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
+            String base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
             byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
             // Validate decoded size
@@ -127,8 +127,8 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             }
 
             // Determine and validate file extension from data URL
-            String mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
-            String rawExtension = mimeType.substring(mimeType.indexOf("/") + 1);
+            String mimeType = dataUrl.substring(dataUrl.indexOf(':') + 1, dataUrl.indexOf(';'));
+            String rawExtension = mimeType.substring(mimeType.indexOf('/') + 1);
             String extension = validateAndNormalizeExtension(rawExtension);
 
             // Save image file

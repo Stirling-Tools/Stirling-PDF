@@ -1,6 +1,8 @@
 package stirling.software.common.service;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -102,6 +104,41 @@ public class FileStorage {
         }
 
         return Files.readAllBytes(filePath);
+    }
+
+    /**
+     * Retrieve a file by its ID as a streaming InputStream. The caller is responsible for closing
+     * the returned stream.
+     *
+     * @param fileId The ID of the file to retrieve
+     * @return A buffered InputStream for the file
+     * @throws IOException If the file doesn't exist or can't be read
+     */
+    public InputStream retrieveInputStream(String fileId) throws IOException {
+        Path filePath = getFilePath(fileId);
+        if (!Files.exists(filePath)) {
+            throw new IOException("File not found: " + fileId);
+        }
+        return new BufferedInputStream(Files.newInputStream(filePath));
+    }
+
+    /**
+     * Store data from an InputStream as a file and return its unique ID. Streams directly to disk
+     * without buffering the entire content in heap.
+     *
+     * @param inputStream The input stream to read from
+     * @param originalName The original name of the file (unused, kept for API symmetry)
+     * @return The unique ID assigned to the file
+     * @throws IOException If there is an error storing the file
+     */
+    public String storeInputStream(InputStream inputStream, String originalName)
+            throws IOException {
+        String fileId = generateFileId();
+        Path filePath = getFilePath(fileId);
+        Files.createDirectories(filePath.getParent());
+        Files.copy(inputStream, filePath);
+        log.debug("Stored input stream with ID: {}", fileId);
+        return fileId;
     }
 
     /**

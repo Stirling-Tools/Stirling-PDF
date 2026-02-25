@@ -1,8 +1,8 @@
 package stirling.software.common.service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -19,7 +19,6 @@ import java.util.zip.ZipInputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.ZipSecurity;
 
@@ -363,39 +362,27 @@ public class TaskManager {
             String zipFileId, String originalZipFileName) throws IOException {
         List<ResultFile> extractedFiles = new ArrayList<>();
 
-        MultipartFile zipFile = fileStorage.retrieveFile(zipFileId);
-
-        try (ZipInputStream zipIn =
-                ZipSecurity.createHardenedInputStream(
-                        new ByteArrayInputStream(zipFile.getBytes()))) {
+        try (InputStream fileStream = fileStorage.retrieveInputStream(zipFileId);
+                ZipInputStream zipIn =
+                        ZipSecurity.createHardenedInputStream(
+                                new BufferedInputStream(fileStream))) {
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
-                    // Use buffered reading for memory safety
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = zipIn.read(buffer)) != -1) {
-                        out.write(buffer, 0, bytesRead);
-                    }
-                    byte[] fileContent = out.toByteArray();
-
                     String contentType = determineContentType(entry.getName());
-                    String individualFileId = fileStorage.storeBytes(fileContent, entry.getName());
+                    String individualFileId = fileStorage.storeInputStream(zipIn, entry.getName());
+                    long fileSize = fileStorage.getFileSize(individualFileId);
 
                     ResultFile resultFile =
                             ResultFile.builder()
                                     .fileId(individualFileId)
                                     .fileName(entry.getName())
                                     .contentType(contentType)
-                                    .fileSize(fileContent.length)
+                                    .fileSize(fileSize)
                                     .build();
 
                     extractedFiles.add(resultFile);
-                    log.debug(
-                            "Extracted file: {} (size: {} bytes)",
-                            entry.getName(),
-                            fileContent.length);
+                    log.debug("Extracted file: {} (size: {} bytes)", entry.getName(), fileSize);
                 }
                 zipIn.closeEntry();
             }

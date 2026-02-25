@@ -28,8 +28,8 @@ class SignatureServiceTest {
     private SharedSignatureService signatureService;
     private Path personalSignatureFolder;
     private Path sharedSignatureFolder;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
-    private final String TEST_USER = "testUser";
+    private static final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final String TEST_USER = "testUser";
 
     @BeforeEach
     void setUp() throws IOException {
