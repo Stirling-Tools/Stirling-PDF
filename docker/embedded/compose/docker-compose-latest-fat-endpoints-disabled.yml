@@ -2,7 +2,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Fat-Disable-Endpoints
-    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+    image: stirling-pdf:fat-test-sh
     deploy:
       resources:
         limits:

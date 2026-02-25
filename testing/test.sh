@@ -439,7 +439,7 @@ main() {
             DOCKER_CACHE_ARGS_ULTRA_LITE=""
         fi
         docker buildx build --build-arg VERSION_TAG=alpha \
-            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
+            -t stirling-pdf:ultra-lite-test-sh \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
             ${DOCKER_CACHE_ARGS_ULTRA_LITE} .
@@ -505,8 +505,8 @@ main() {
         else
             DOCKER_CACHE_ARGS_FAT=""
         fi
-        docker buildx build --pull --build-arg VERSION_TAG=alpha \
-            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
+        docker buildx build --build-arg VERSION_TAG=alpha \
+            -t stirling-pdf:fat-test-sh \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
             ${DOCKER_CACHE_ARGS_FAT} .
