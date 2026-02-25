@@ -433,9 +433,16 @@ main() {
 
         # Build Ultra-Lite image with embedded frontend (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
-        docker build --build-arg VERSION_TAG=alpha \
+        if [ -n "${GITHUB_ACTIONS}" ]; then
+            DOCKER_CACHE_ARGS_ULTRA_LITE="--cache-from type=gha,scope=stirling-pdf-ultra-lite --cache-to type=gha,mode=max,scope=stirling-pdf-ultra-lite"
+        else
+            DOCKER_CACHE_ARGS_ULTRA_LITE=""
+        fi
+        docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
-            -f ./docker/embedded/Dockerfile.ultra-lite .
+            -f ./docker/embedded/Dockerfile.ultra-lite \
+            --load \
+            ${DOCKER_CACHE_ARGS_ULTRA_LITE} .
     else
         echo "Skipping ultra-lite image build - no ultra-lite tests in rerun list"
     fi
@@ -493,9 +500,16 @@ main() {
 
         # Build Fat (Security) image with embedded frontend for GHCR tag used in all 'fat' compose files
         echo "Building fat image for tests that require it..."
-        docker build --no-cache --pull --build-arg VERSION_TAG=alpha \
+        if [ -n "${GITHUB_ACTIONS}" ]; then
+            DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat --cache-to type=gha,mode=max,scope=stirling-pdf-fat"
+        else
+            DOCKER_CACHE_ARGS_FAT=""
+        fi
+        docker buildx build --pull --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
-            -f ./docker/embedded/Dockerfile.fat .
+            -f ./docker/embedded/Dockerfile.fat \
+            --load \
+            ${DOCKER_CACHE_ARGS_FAT} .
     else
         echo "Skipping fat image build - no fat tests in rerun list"
     fi

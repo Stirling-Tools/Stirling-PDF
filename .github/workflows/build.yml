@@ -68,6 +68,16 @@ jobs:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
@@ -143,6 +153,16 @@ jobs:
           java-version: "25"
           distribution: "temurin"
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
@@ -215,6 +235,16 @@ jobs:
           java-version: "25"
           distribution: "temurin"
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
@@ -275,6 +305,16 @@ jobs:
         with:
           java-version: "25"
           distribution: "temurin"
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
@@ -338,12 +378,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - docker-rev: docker/embedded/Dockerfile
-          #   artifact-suffix: Dockerfile
+          - docker-rev: docker/embedded/Dockerfile
+            artifact-suffix: Dockerfile
+            cache-scope: stirling-pdf-latest
           - docker-rev: docker/embedded/Dockerfile.ultra-lite
             artifact-suffix: Dockerfile.ultra-lite
-          # - docker-rev: docker/embedded/Dockerfile.fat
-          #   artifact-suffix: Dockerfile.fat
+            cache-scope: stirling-pdf-ultra-lite
+          - docker-rev: docker/embedded/Dockerfile.fat
+            artifact-suffix: Dockerfile.fat
+            cache-scope: stirling-pdf-fat
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
@@ -365,6 +408,16 @@ jobs:
         with:
           java-version: "25"
           distribution: "temurin"
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
@@ -394,8 +447,8 @@ jobs:
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          cache-from: type=gha,scope=${{ matrix.artifact-suffix }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.artifact-suffix }}
+          cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
