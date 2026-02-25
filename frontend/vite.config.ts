@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
     const requiredEnvVars = [
       'VITE_SAAS_SERVER_URL',
       'VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
+      'VITE_SAAS_BACKEND_API_URL',
     ];
 
     const missingVars = requiredEnvVars.filter(varName => !env[varName]);

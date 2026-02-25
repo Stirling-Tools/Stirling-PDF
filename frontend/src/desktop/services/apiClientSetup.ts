@@ -6,7 +6,7 @@ import { createBackendNotReadyError } from '@app/constants/backendErrors';
 import { operationRouter } from '@app/services/operationRouter';
 import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
 import i18n from '@app/i18n';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
@@ -18,6 +18,7 @@ interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
   _retry?: boolean;
+  _isSaaSRequest?: boolean;
 }
 
 /**
@@ -36,9 +37,15 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     async (config: InternalAxiosRequestConfig) => {
       const extendedConfig = config as ExtendedRequestConfig;
 
+      // IMPORTANT: Check backend readiness BEFORE modifying URL
+      // Pattern matching in shouldSkipBackendReadyCheck() needs original relative URL
+      const originalUrl = extendedConfig.url;
+      const skipCheck = extendedConfig.skipBackendReadyCheck === true;
+      const skipForSaaSBackend = await operationRouter.shouldSkipBackendReadyCheck(originalUrl);
+
       try {
         // Get the appropriate base URL for this request
-        const baseUrl = await operationRouter.getBaseUrl(extendedConfig.url);
+        const baseUrl = await operationRouter.getBaseUrl(originalUrl);
 
         // Build the full URL
         if (extendedConfig.url && !extendedConfig.url.startsWith('http')) {
@@ -50,23 +57,35 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         // Debug logging
         console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
 
-        // Add auth token for remote requests and enable credentials
+        // Determine if this request needs authentication
+        // - Local bundled backend: No auth (security disabled)
+        // - SaaS backend: Needs auth token
+        // - Self-hosted backend: Needs auth token
         const isRemote = await operationRouter.isSelfHostedMode();
-        if (isRemote) {
-          // Self-hosted mode: enable credentials for session management
+        const isSaaSBackendRequest = baseUrl === STIRLING_SAAS_BACKEND_API_URL;
+        const needsAuth = isRemote || isSaaSBackendRequest;
+
+        // Tag request so error handler can identify SaaS backend errors without URL matching
+        extendedConfig._isSaaSRequest = isSaaSBackendRequest;
+
+        console.debug(`[apiClientSetup] Auth check: isRemote=${isRemote}, isSaaSBackendRequest=${isSaaSBackendRequest}, needsAuth=${needsAuth}, baseUrl=${baseUrl}`);
+
+        if (needsAuth) {
+          // Enable credentials for session management
           extendedConfig.withCredentials = true;
 
-          // If another request is already refreshing, wait before attaching token.
+          // If another request is already refreshing, wait before attaching token
           await authService.awaitRefreshIfInProgress();
           const token = await authService.getAuthToken();
 
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
+            console.debug(`[apiClientSetup] Added auth token for request to: ${extendedConfig.url}`);
           } else {
-            console.warn('[apiClientSetup] Self-hosted mode but no auth token available');
+            console.warn(`[apiClientSetup] No auth token available for: ${extendedConfig.url}`);
           }
         } else {
-          // SaaS mode: disable credentials (security disabled on local backend)
+          // Local bundled backend: disable credentials (security disabled)
           extendedConfig.withCredentials = false;
         }
       } catch (error) {
@@ -76,10 +95,14 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       }
 
       // Backend readiness check (for local backend)
-      const skipCheck = extendedConfig.skipBackendReadyCheck === true;
       const isSaaS = await operationRouter.isSaaSMode();
+      const backendHealthy = tauriBackendService.isBackendHealthy();
+      const backendStatus = tauriBackendService.getBackendStatus();
+      const backendPort = tauriBackendService.getBackendPort();
 
-      if (isSaaS && !skipCheck && !tauriBackendService.isBackendHealthy()) {
+      console.debug(`[apiClientSetup] Backend readiness check for ${extendedConfig.url}: isSaaS=${isSaaS}, skipCheck=${skipCheck}, skipForSaaSBackend=${skipForSaaSBackend}, backendHealthy=${backendHealthy}, backendStatus=${backendStatus}, backendPort=${backendPort}`);
+
+      if (isSaaS && !skipCheck && !skipForSaaSBackend && !backendHealthy) {
         const method = (extendedConfig.method || 'get').toLowerCase();
         if (method !== 'get') {
           const now = Date.now();
@@ -101,9 +124,24 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     (error) => Promise.reject(error)
   );
 
-  // Response interceptor: Handle auth errors
+  // Response interceptor: Handle auth errors and update credits from headers
   client.interceptors.response.use(
-    (response) => {
+    async (response) => {
+      // Check for credit balance update in response headers
+      // Backend includes X-Credits-Remaining header after operations that consume credits
+      const creditsHeader = response.headers['x-credits-remaining'];
+
+      if (creditsHeader !== undefined && creditsHeader !== null) {
+        const creditsRemaining = parseInt(creditsHeader, 10);
+
+        if (!isNaN(creditsRemaining)) {
+          // Dispatch event with new balance for immediate update
+          window.dispatchEvent(new CustomEvent('credits:updated', {
+            detail: { creditsRemaining }
+          }));
+        }
+      }
+
       return response;
     },
     async (error) => {
