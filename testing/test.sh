@@ -421,7 +421,7 @@ main() {
        should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
 
         export DISABLE_ADDITIONAL_FEATURES=true
-        if ! ./gradlew clean build; then
+        if ! ./gradlew clean build -PnoSpotless; then
             echo "Gradle build failed with security disabled, exiting script."
             exit 1
         fi
@@ -433,7 +433,7 @@ main() {
 
         # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
-        if [ -n "${GITHUB_ACTIONS}" ]; then
+        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
             DOCKER_CACHE_ARGS_ULTRA_LITE="--cache-from type=gha,scope=stirling-pdf-ultra-lite --cache-to type=gha,mode=max,scope=stirling-pdf-ultra-lite"
         else
             DOCKER_CACHE_ARGS_ULTRA_LITE=""
@@ -489,7 +489,7 @@ main() {
        should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
 
         export DISABLE_ADDITIONAL_FEATURES=false
-        if ! ./gradlew clean build; then
+        if ! ./gradlew clean build -PnoSpotless; then
             echo "Gradle build failed with security enabled, exiting script."
             exit 1
         fi
@@ -500,7 +500,7 @@ main() {
 
         # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
-        if [ -n "${GITHUB_ACTIONS}" ]; then
+        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
             DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat --cache-to type=gha,mode=max,scope=stirling-pdf-fat"
         else
             DOCKER_CACHE_ARGS_FAT=""
