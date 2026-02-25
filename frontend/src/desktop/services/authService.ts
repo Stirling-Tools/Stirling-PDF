@@ -247,9 +247,9 @@ export class AuthService {
           error.response?.data?.msg ||
           error.response?.data?.message ||
           error.message;
-        throw new Error(message || 'Sign up failed');
+        throw new Error(message || 'Sign up failed', { cause: error });
       }
-      throw error instanceof Error ? error : new Error('Sign up failed');
+      throw error instanceof Error ? error : new Error('Sign up failed', { cause: error });
     }
   }
 
@@ -282,7 +282,7 @@ export class AuthService {
         await this.saveTokenEverywhere(token);
       } catch (error) {
         console.error('[Desktop AuthService] Failed to save token:', error);
-        throw new Error('Failed to save authentication token');
+        throw new Error('Failed to save authentication token', { cause: error });
       }
 
       // Save user info to store
@@ -320,37 +320,49 @@ export class AuthService {
         // Authentication errors
         if (errMsg.includes('401') || errMsg.includes('unauthorized') || errMsg.includes('invalid credentials')) {
           this.setAuthStatus('unauthenticated', null);
-          throw new Error('Invalid username or password. Please check your credentials and try again.');
+          throw new Error('Invalid username or password. Please check your credentials and try again.', {
+            cause: error,
+          });
         }
         // Server not found or unreachable
         else if (errMsg.includes('connection refused') || errMsg.includes('econnrefused')) {
           this.setAuthStatus('unauthenticated', null);
-          throw new Error('Cannot connect to server. Please check the server URL and ensure the server is running.');
+          throw new Error('Cannot connect to server. Please check the server URL and ensure the server is running.', {
+            cause: error,
+          });
         }
         // Timeout
         else if (errMsg.includes('timeout') || errMsg.includes('timed out')) {
           this.setAuthStatus('unauthenticated', null);
-          throw new Error('Login request timed out. Please check your network connection and try again.');
+          throw new Error('Login request timed out. Please check your network connection and try again.', {
+            cause: error,
+          });
         }
         // DNS failure
         else if (errMsg.includes('getaddrinfo') || errMsg.includes('dns') || errMsg.includes('not found') || errMsg.includes('enotfound')) {
           this.setAuthStatus('unauthenticated', null);
-          throw new Error('Cannot resolve server address. Please check the server URL is correct.');
+          throw new Error('Cannot resolve server address. Please check the server URL is correct.', { cause: error });
         }
         // SSL/TLS errors
         else if (errMsg.includes('ssl') || errMsg.includes('tls') || errMsg.includes('certificate') || errMsg.includes('cert')) {
           this.setAuthStatus('unauthenticated', null);
-          throw new Error('SSL/TLS certificate error. Server may have an invalid or self-signed certificate.');
+          throw new Error('SSL/TLS certificate error. Server may have an invalid or self-signed certificate.', {
+            cause: error,
+          });
         }
         // 404 - endpoint not found
         else if (errMsg.includes('404') || errMsg.includes('not found')) {
           this.setAuthStatus('unauthenticated', null);
-          throw new Error('Login endpoint not found. Please ensure you are connecting to a valid Stirling PDF server.');
+          throw new Error('Login endpoint not found. Please ensure you are connecting to a valid Stirling PDF server.', {
+            cause: error,
+          });
         }
         // 403 - security disabled
         else if (errMsg.includes('403') || errMsg.includes('forbidden')) {
           this.setAuthStatus('unauthenticated', null);
-          throw new Error('Login is not enabled on this server. Please enable security mode (DOCKER_ENABLE_SECURITY=true).');
+          throw new Error('Login is not enabled on this server. Please enable security mode (DOCKER_ENABLE_SECURITY=true).', {
+            cause: error,
+          });
         }
       }
 
