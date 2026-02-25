@@ -235,10 +235,12 @@ RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 FROM ubuntu:noble AS gs-build
 ARG GS_VERSION=10.06.0
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/tmp/gs-build \
     apt-get update && apt-get install -y --no-install-recommends \
       build-essential curl ca-certificates libfontconfig1-dev && rm -rf /var/lib/apt/lists/* && \
     GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
-    curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz && \
+    cd /tmp/gs-build && \
+    (test -d "ghostscript-${GS_VERSION}" || curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz) && \
     cd "ghostscript-${GS_VERSION}" && \
     ./configure \
       --prefix=/usr/local \
@@ -255,19 +257,21 @@ FROM ubuntu:noble AS pdf-tools-build
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.2-13
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/tmp/pdf-tools-build \
     apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
       libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
       libltdl-dev libtool && rm -rf /var/lib/apt/lists/* && \
+    cd /tmp/pdf-tools-build && \
     # Build QPDF
-    curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz && \
+    (test -d "qpdf-${QPDF_VERSION}" || curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz) && \
     cd "qpdf-${QPDF_VERSION}" && \
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DALLOW_CRYPTO_OPENSSL=ON -DDEFAULT_CRYPTO=openssl && \
     cmake --build build --parallel "$(nproc)" && \
     cmake --install build && \
     cd .. && \
     # Build ImageMagick 7
-    curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz && \
+    (test -d "ImageMagick-${IM_VERSION}" || curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz) && \
     cd "ImageMagick-${IM_VERSION}" && \
     ./configure --prefix=/usr/local --with-modules --with-perl=no --with-magick-plus-plus=no --with-quantum-depth=16 --disable-static --enable-shared && \
     make -j"$(nproc)" && \
