@@ -624,9 +624,10 @@ class JobControllerTest {
         assertEquals(content, response.getBody());
     }
 
-    // Added by Pengcheng Xu: mock fileStorage to verify 404 path and ensure no byte/metadata retrieval is invoked.
+    // Added by Pengcheng Xu: mock fileStorage to verify 404 path and ensure no byte/metadata
+    // retrieval is invoked.
     @Test
-    void testDownloadFile_WhenFileMissing_Returns404_AndDoesNotReadBytes_Mocked() {
+    void testDownloadFile_WhenFileMissing_Returns404_AndDoesNotReadBytes_Mocked() throws Exception {
         String fileId = "missing-file";
         when(fileStorage.fileExists(fileId)).thenReturn(false);
 

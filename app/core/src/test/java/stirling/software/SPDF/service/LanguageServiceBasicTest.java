@@ -107,11 +107,12 @@ class LanguageServiceBasicTest {
         assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
     }
 
-    // Added by Pengcheng Xu: stub resource lookup to throw IOException and verify empty-set fallback behavior.
+    // Added by Pengcheng Xu: stub resource lookup to throw IOException and verify empty-set
+    // fallback behavior.
     @Test
     void testGetSupportedLanguages_WhenResourceLookupThrows_ReturnsEmptySet_Stubbed() {
         LanguageService failingService =
-                new LanguageServiceForTest(applicationProperties) {
+                new LanguageService(applicationProperties) {
                     @Override
                     protected Resource[] getResourcesFromPattern(String pattern)
                             throws java.io.IOException {
