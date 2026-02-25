@@ -201,8 +201,6 @@ subprojects {
         // CVE-2024-47554: commons-io 2.21.0 DoS prevention
         resolutionStrategy.force 'commons-io:commons-io:2.21.0'
         // Bouncycastle 1.83 (from bouncycastleVersion variable)
-        // Breaking changes from 1.69→1.83: Blake3 limits, Kangaroo digest, ASN.1 ApplicationSpecific
-        // No code changes needed: Stirling-PDF doesn't use these specific APIs
         resolutionStrategy.force 'org.bouncycastle:bcprov-jdk18on:1.83'
         resolutionStrategy.force 'org.bouncycastle:bcpkix-jdk18on:1.83'
     }
