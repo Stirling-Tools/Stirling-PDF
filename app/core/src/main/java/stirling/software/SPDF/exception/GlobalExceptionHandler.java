@@ -3,6 +3,7 @@ package stirling.software.SPDF.exception;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.springframework.context.MessageSource;
@@ -22,8 +23,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -872,7 +871,7 @@ public class GlobalExceptionHandler {
 
         // Use ObjectMapper to properly escape JSON values and prevent XSS
         ObjectMapper mapper = new ObjectMapper();
-        java.util.Map<String, Object> errorMap = new java.util.LinkedHashMap<>();
+        java.util.Map<String, Object> errorMap = new LinkedHashMap<>();
         errorMap.put("type", "about:blank");
         errorMap.put("title", "Not Acceptable");
         errorMap.put("status", 406);
