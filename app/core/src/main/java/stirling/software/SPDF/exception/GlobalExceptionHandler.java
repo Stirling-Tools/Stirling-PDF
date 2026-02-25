@@ -23,13 +23,13 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
@@ -874,10 +874,16 @@ public class GlobalExceptionHandler {
         errorMap.put("type", "about:blank");
         errorMap.put("title", "Not Acceptable");
         errorMap.put("status", 406);
-        errorMap.put("detail", "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.");
+        errorMap.put(
+                "detail",
+                "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.");
         errorMap.put("instance", request.getRequestURI());
         errorMap.put("timestamp", Instant.now().toString());
-        errorMap.put("hints", java.util.Arrays.asList("Error responses are always returned as application/json or application/problem+json", "Set Accept header to include application/json for proper error handling"));
+        errorMap.put(
+                "hints",
+                java.util.Arrays.asList(
+                        "Error responses are always returned as application/json or application/problem+json",
+                        "Set Accept header to include application/json for proper error handling"));
 
         String errorJson = mapper.writeValueAsString(errorMap);
         response.getWriter().write(errorJson);
