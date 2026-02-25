@@ -431,7 +431,7 @@ main() {
         EXPECTED_VERSION=$(get_expected_version)
         echo "Expected version: $EXPECTED_VERSION"
 
-        # Build Ultra-Lite image with embedded frontend (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
+        # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
         if [ -n "${GITHUB_ACTIONS}" ]; then
             DOCKER_CACHE_ARGS_ULTRA_LITE="--cache-from type=gha,scope=stirling-pdf-ultra-lite --cache-to type=gha,mode=max,scope=stirling-pdf-ultra-lite"
@@ -439,7 +439,7 @@ main() {
             DOCKER_CACHE_ARGS_ULTRA_LITE=""
         fi
         docker buildx build --build-arg VERSION_TAG=alpha \
-            -t stirling-pdf:ultra-lite-test-sh \
+            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
             ${DOCKER_CACHE_ARGS_ULTRA_LITE} .
@@ -498,7 +498,7 @@ main() {
         EXPECTED_VERSION=$(get_expected_version)
         echo "Expected version with security enabled: $EXPECTED_VERSION"
 
-        # Build Fat (Security) image with embedded frontend for GHCR tag used in all 'fat' compose files
+        # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
         if [ -n "${GITHUB_ACTIONS}" ]; then
             DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat --cache-to type=gha,mode=max,scope=stirling-pdf-fat"
@@ -506,7 +506,7 @@ main() {
             DOCKER_CACHE_ARGS_FAT=""
         fi
         docker buildx build --build-arg VERSION_TAG=alpha \
-            -t stirling-pdf:fat-test-sh \
+            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
             ${DOCKER_CACHE_ARGS_FAT} .
