@@ -60,6 +60,7 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
 
 export const getSplitEndpoint = (parameters: SplitParameters): string => {
   switch (parameters.method) {
+    case '':
     case SPLIT_METHODS.BY_PAGES:
       return "/api/v1/general/split-pages";
     case SPLIT_METHODS.BY_SECTIONS:
