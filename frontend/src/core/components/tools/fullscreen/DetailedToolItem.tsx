@@ -21,7 +21,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
   const iconBg = getIconBackground(categoryColor, true);
   const iconClasses = 'tool-panel__fullscreen-icon';
 
-  let iconNode: React.ReactNode = null;
+  let iconNode: React.ReactNode;
   if (React.isValidElement<{ style?: React.CSSProperties }>(tool.icon)) {
     const element = tool.icon as React.ReactElement<{ style?: React.CSSProperties }>;
     iconNode = React.cloneElement(element, {
@@ -70,7 +70,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
               color="orange"
             >
               {/* we can add more translations for different badges in future, like beta, etc. */}
-            {t('toolPanel.alpha', 'Alpha')} 
+            {t('toolPanel.alpha', 'Alpha')}
             </Badge>
           )}
         </div>
@@ -105,5 +105,4 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
 };
 
 export default DetailedToolItem;
-
 

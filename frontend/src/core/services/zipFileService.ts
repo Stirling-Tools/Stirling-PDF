@@ -162,7 +162,10 @@ export class ZipFileService {
 
       return { zipFile, size: zipFile.size };
     } catch (error) {
-      throw new Error(`Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
+      );
     }
   }
 
