@@ -5,10 +5,10 @@ bootRun {
 spotless {
     java {
         target 'src/**/java/**/*.java'
+        targetExclude 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
@@ -27,6 +27,7 @@ spotless {
     }
 }
 dependencies {
+    api 'com.google.guava:guava:33.4.8-jre'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'

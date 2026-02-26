@@ -942,7 +942,7 @@ public class UserController {
     public ResponseEntity<?> completeInitialSetup() {
         try {
             String username = userService.getCurrentUsername();
-            if (username == null) {
+            if (username == null || "anonymousUser".equalsIgnoreCase(username)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("User not authenticated");
             }

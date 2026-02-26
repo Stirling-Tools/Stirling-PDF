@@ -467,4 +467,24 @@ public class TaskManager {
         }
         return null;
     }
+
+    /**
+     * Find the job key that owns a given file ID.
+     *
+     * @param fileId file identifier to look up
+     * @return scoped job key if found, otherwise null
+     */
+    public String findJobKeyByFileId(String fileId) {
+        for (Map.Entry<String, JobResult> entry : jobResults.entrySet()) {
+            JobResult jobResult = entry.getValue();
+            if (jobResult.hasFiles()) {
+                for (ResultFile resultFile : jobResult.getAllResultFiles()) {
+                    if (fileId.equals(resultFile.getFileId())) {
+                        return entry.getKey();
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }
