@@ -3,7 +3,7 @@ import { BaseParameters } from '@app/types/parameters';
 import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface SplitParameters extends BaseParameters {
-  method: SplitMethod;
+  method: SplitMethod | null;
   pages: string;
   hDiv: string;
   vDiv: string;
@@ -24,7 +24,7 @@ export interface SplitParameters extends BaseParameters {
 export type SplitParametersHook = BaseParametersHook<SplitParameters>;
 
 export const defaultParameters: SplitParameters = {
-  method: SPLIT_METHODS.BY_PAGES,
+  method: null,
   pages: '',
   hDiv: '2',
   vDiv: '2',
@@ -45,7 +45,7 @@ export const defaultParameters: SplitParameters = {
 export const useSplitParameters = (): SplitParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: (params) => ENDPOINTS[params.method],
+    endpointName: (params) => params.method ? ENDPOINTS[params.method] : ENDPOINTS[SPLIT_METHODS.BY_PAGES],
     validateFn: (params) => {
       switch (params.method) {
         case SPLIT_METHODS.BY_PAGES:
