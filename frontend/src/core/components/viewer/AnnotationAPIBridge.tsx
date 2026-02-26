@@ -304,7 +304,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
 
   const configureAnnotationTool = useCallback(
     (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
-      const api = annotationApi as AnnotationApiSurface | undefined;
+      const api = annotationApi as unknown as AnnotationApiSurface | undefined;
       if (!api?.setActiveTool) return;
 
       const defaults = buildAnnotationDefaults(toolId, options);
@@ -331,13 +331,13 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       isReady: () => !!annotationApi && documentReady,
       setAnnotationStyle: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
         const defaults = buildAnnotationDefaults(toolId, options);
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         if (defaults && api?.setToolDefaults) {
           api.setToolDefaults(toolId, defaults);
         }
       },
       getSelectedAnnotation: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         if (!api?.getSelectedAnnotation) {
           return null;
         }
@@ -357,36 +357,36 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
         }
       },
       deselectAnnotation: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.deselectAnnotation?.();
       },
       updateAnnotation: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.updateAnnotation?.(pageIndex, annotationId, patch);
       },
       deactivateTools: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.setActiveTool?.(null);
       },
       onAnnotationEvent: (listener: (event: AnnotationEvent) => void) => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         if (api?.onAnnotationEvent) {
           return api.onAnnotationEvent(listener);
         }
         return undefined;
       },
       getActiveTool: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         return api?.getActiveTool?.() ?? null;
       },
 
       purgeAnnotation: (pageIndex: number, annotationId: string) => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.purgeAnnotation?.(pageIndex, annotationId);
       },
 
       moveAnnotation: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
