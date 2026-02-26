@@ -249,6 +249,12 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         throw new FileNotFoundException("Signature metadata not found");
     }
 
+    public boolean isSharedSignature(String signatureId) {
+        validateFileName(signatureId);
+        Path sharedFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        return Files.exists(sharedFolder.resolve(signatureId + ".json"));
+    }
+
     private void updateMetadataLabel(Path metadataPath, String newLabel) throws IOException {
         String metadataJson = Files.readString(metadataPath, StandardCharsets.UTF_8);
         SavedSignatureResponse sig =
