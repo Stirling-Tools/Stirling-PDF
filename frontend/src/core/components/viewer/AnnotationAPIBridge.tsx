@@ -7,6 +7,7 @@ import type {
   AnnotationAPI,
   AnnotationEvent,
   AnnotationPatch,
+  AnnotationRect,
 } from '@app/components/viewer/viewerTypes';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
@@ -90,6 +91,8 @@ type AnnotationApiSurface = {
   updateAnnotation?: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => void;
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
+  /** v2.7.0: move annotation without regenerating its appearance stream */
+  moveAnnotation?: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => void;
 };
 
 type ToolDefaultsBuilder = (options?: AnnotationToolOptions) => AnnotationDefaults;
@@ -380,6 +383,11 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       purgeAnnotation: (pageIndex: number, annotationId: string) => {
         const api = annotationApi as AnnotationApiSurface | undefined;
         api?.purgeAnnotation?.(pageIndex, annotationId);
+      },
+
+      moveAnnotation: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => {
+        const api = annotationApi as AnnotationApiSurface | undefined;
+        api?.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
     [annotationApi, configureAnnotationTool, buildAnnotationDefaults]
