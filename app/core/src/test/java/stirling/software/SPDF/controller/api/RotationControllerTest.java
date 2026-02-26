@@ -1,7 +1,11 @@
 package stirling.software.SPDF.controller.api;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -126,5 +130,37 @@ public class RotationControllerTest {
                         IllegalArgumentException.class,
                         () -> rotationController.rotatePDF(request));
         assertEquals("Angle must be a multiple of 90", exception.getMessage());
+    }
+
+    // testing added by Dazhi Wang, more testable version (dummy helper method)
+    @Test
+    public void testValidateAngleMultipleOf90_InvalidAngle_Throws() {
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> RotationController.validateAngleMultipleOf90(45));
+
+        assertEquals("Angle must be a multiple of 90", ex.getMessage());
+    }
+
+    @Test
+    public void testRotatePDF_WhenAngleInvalid_Throws_AndDoesNotLoadPdf_Mocked()
+            throws IOException {
+        MockMultipartFile mockFile =
+                new MockMultipartFile(
+                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
+        RotatePDFRequest request = new RotatePDFRequest();
+        request.setFileInput(mockFile);
+        request.setAngle(45);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> rotationController.rotatePDF(request));
+
+        assertEquals("Angle must be a multiple of 90", ex.getMessage());
+
+        // Key mocking/interaction check: factory should never be used on invalid input
+        verify(pdfDocumentFactory, never()).load(any(RotatePDFRequest.class));
     }
 }

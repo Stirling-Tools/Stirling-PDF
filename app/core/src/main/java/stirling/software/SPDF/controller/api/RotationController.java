@@ -42,10 +42,7 @@ public class RotationController {
         Integer angle = request.getAngle();
 
         // Validate the angle is a multiple of 90
-        if (angle % 90 != 0) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.angleNotMultipleOf90", "Angle must be a multiple of 90");
-        }
+        validateAngleMultipleOf90(angle);
 
         // Load the PDF document with proper resource management
         try (PDDocument document = pdfDocumentFactory.load(request)) {
@@ -61,6 +58,14 @@ public class RotationController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"));
+        }
+    }
+
+    // Added by Dazhi Wang, more testable version (dummy helper method)
+    static void validateAngleMultipleOf90(int angle) {
+        if (angle % 90 != 0) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.angleNotMultipleOf90", "Angle must be a multiple of 90");
         }
     }
 }
