@@ -1,5 +1,6 @@
 repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
+    maven { url = "https://repository.jboss.org/" }
 }
 
 ext {
@@ -63,12 +64,9 @@ dependencies {
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database
     runtimeOnly 'org.postgresql:postgresql:42.7.9'
-    constraints {
-        implementation "org.opensaml:opensaml-core:$openSamlVersion"
-        implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
-        implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
+    implementation('com.coveo:saml-client:5.0.0') {
+        exclude group: 'org.opensaml', module: 'opensaml-core'
     }
-    implementation 'com.coveo:saml-client:5.0.0'
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

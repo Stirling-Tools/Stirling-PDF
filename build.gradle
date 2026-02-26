@@ -26,7 +26,7 @@ ext {
     lombokVersion = "1.18.42"
     bouncycastleVersion = "1.83"
     springSecuritySamlVersion = "7.0.2"
-    openSamlVersion = "4.3.2"
+    openSamlVersion = "5.2.1"
     commonmarkVersion = "0.27.1"
     googleJavaFormatVersion = "1.34.1"
     logback = "1.5.28"
@@ -176,6 +176,7 @@ subprojects {
             }
         }
         maven { url = "https://build.shibboleth.net/maven/releases" }
+        maven { url = "https://repository.jboss.org/" }
         mavenCentral()
     }
 
@@ -203,6 +204,13 @@ subprojects {
         // Bouncycastle 1.83 (from bouncycastleVersion variable)
         resolutionStrategy.force 'org.bouncycastle:bcprov-jdk18on:1.83'
         resolutionStrategy.force 'org.bouncycastle:bcpkix-jdk18on:1.83'
+        // OpenSAML version alignment - force all to 5.2.1 for Spring Security SAML 7.0.2
+        resolutionStrategy.force "org.opensaml:opensaml-core:$openSamlVersion"
+        resolutionStrategy.force "org.opensaml:opensaml-core-api:$openSamlVersion"
+        resolutionStrategy.force "org.opensaml:opensaml-saml-api:$openSamlVersion"
+        resolutionStrategy.force "org.opensaml:opensaml-saml-impl:$openSamlVersion"
+        resolutionStrategy.force "org.opensaml:opensaml-xmlsec-api:$openSamlVersion"
+        resolutionStrategy.force "org.opensaml:opensaml-xmlsec-impl:$openSamlVersion"
     }
 
     dependencyManagement {
