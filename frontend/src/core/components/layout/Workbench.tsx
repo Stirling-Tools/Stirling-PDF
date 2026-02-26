@@ -97,8 +97,8 @@ export default function Workbench() {
     if (!isBaseWorkbench(currentView)) {
       const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
       if (customView) {
-        // PDF text editor handles its own empty state (shows dropzone when no document)
-        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor';
+        // These custom views handle their own empty state (show dropzone when no document)
+        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor' || currentView === 'custom:smartFolder';
         if (handlesOwnEmptyState || activeFiles.length > 0) {
           const CustomComponent = customView.component;
           return <CustomComponent data={customView.data} />;

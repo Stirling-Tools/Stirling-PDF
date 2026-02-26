@@ -18,6 +18,7 @@ import { useToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
 import { useRightRail } from '@app/contexts/RightRailContext';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import '@app/components/tools/ToolPanel.css';
+import { SmartFolderSection } from '@app/components/smartFolders/SmartFolderSection';
 
 // No props needed - component uses context
 
@@ -160,41 +161,48 @@ export default function ToolPanel() {
             )}
           </div>
 
-                {searchQuery.trim().length > 0 ? (
-                  <div className="flex-1 flex flex-col overflow-y-auto">
-                    <SearchResults
-                      filteredTools={filteredTools}
-                      onSelect={(id) => handleToolSelect(id as ToolId)}
-                      searchQuery={searchQuery}
-                    />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              {searchQuery.trim().length > 0 ? (
+                <div className="flex-1 flex flex-col overflow-y-auto">
+                  <SearchResults
+                    filteredTools={filteredTools}
+                    onSelect={(id) => handleToolSelect(id as ToolId)}
+                    searchQuery={searchQuery}
+                  />
+                </div>
+              ) : leftPanelView === 'toolPicker' ? (
+                <div className="flex-1 flex flex-col overflow-auto">
+                  <ToolPicker
+                    selectedToolKey={selectedToolKey}
+                    onSelect={(id) => handleToolSelect(id as ToolId)}
+                    filteredTools={filteredTools}
+                    isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <ScrollArea h="100%">
+                      {selectedToolKey ? (
+                        <ToolRenderer
+                          selectedToolKey={selectedToolKey}
+                          onPreviewFile={setPreviewFile}
+                        />
+                      ) : (
+                        <div className="tool-panel__placeholder">
+                          {t('toolPanel.placeholder', 'Choose a tool to get started')}
+                        </div>
+                      )}
+                    </ScrollArea>
                   </div>
-                ) : leftPanelView === 'toolPicker' ? (
-                  <div className="flex-1 flex flex-col overflow-auto">
-                    <ToolPicker
-                      selectedToolKey={selectedToolKey}
-                      onSelect={(id) => handleToolSelect(id as ToolId)}
-                      filteredTools={filteredTools}
-                      isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
-                    />
-                  </div>
-          ) : (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <ScrollArea h="100%">
-                  {selectedToolKey ? (
-                    <ToolRenderer
-                      selectedToolKey={selectedToolKey}
-                      onPreviewFile={setPreviewFile}
-                    />
-                  ) : (
-                    <div className="tool-panel__placeholder">
-                      {t('toolPanel.placeholder', 'Choose a tool to get started')}
-                    </div>
-                  )}
-                </ScrollArea>
-              </div>
+                </div>
+              )}
             </div>
-          )}
+            <div style={{ flex: '0 0 50%', minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <SmartFolderSection />
+            </div>
+          </div>
         </div>
       )}
 

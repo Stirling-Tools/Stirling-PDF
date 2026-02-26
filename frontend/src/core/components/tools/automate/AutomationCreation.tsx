@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -28,9 +28,12 @@ interface AutomationCreationProps {
   onBack: () => void;
   onComplete: (automation: AutomationConfig) => void;
   toolRegistry: Partial<ToolRegistry>;
+  hideMetadata?: boolean;
+  nameOverride?: string;
+  saveTriggerRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {
+export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry, hideMetadata = false, nameOverride, saveTriggerRef }: AutomationCreationProps) {
   const { t } = useTranslation();
 
   const {
@@ -43,7 +46,6 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     selectedTools,
     removeTool,
     updateTool,
-    canSaveAutomation,
     getToolName,
     getToolDefaultParameters
   } = useAutomationForm({ mode, existingAutomation, toolRegistry });
@@ -94,11 +96,18 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     setUnsavedWarningOpen(false);
   };
 
+  const effectiveName = nameOverride ?? automationName;
+
+  const canSave = () => {
+    const nameOk = effectiveName.trim() !== '';
+    return nameOk && selectedTools.length > 0 && selectedTools.every(tool => tool.configured && tool.operation !== '');
+  };
+
   const saveAutomation = async () => {
-    if (!canSaveAutomation()) return;
+    if (!canSave()) return;
 
     const automationData = {
-      name: automationName.trim(),
+      name: effectiveName.trim(),
       description: automationDescription.trim(),
       icon: automationIcon,
       operations: selectedTools.map(tool => ({
@@ -139,45 +148,58 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     }
   };
 
+  // Expose saveAutomation to parent via ref (for hideMetadata mode)
+  if (saveTriggerRef) {
+    saveTriggerRef.current = saveAutomation;
+  }
+
   const currentConfigTool = configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
 
   return (
     <div>
-        <Text size="sm" mb="md" p="md"  style={{borderRadius:'var(--mantine-radius-md)', background: 'var(--color-gray-200)', color: 'var(--mantine-color-text)' }}>
-            {t("automate.creation.intro", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
-        </Text>
-      <Divider mb="md" />
+      {!hideMetadata && (
+        <>
+          <Text size="sm" mb="md" p="md"  style={{borderRadius:'var(--mantine-radius-md)', background: 'var(--color-gray-200)', color: 'var(--mantine-color-text)' }}>
+              {t("automate.creation.intro", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
+          </Text>
+          <Divider mb="md" />
+        </>
+      )}
 
       <Stack gap="md">
-        {/* Automation Name and Icon */}
-        <Group gap="xs" align="flex-end">
-          <Stack gap="xs" style={{ flex: 1 }}>
-            <TextInput
-              placeholder={t('automate.creation.name.placeholder', 'My Automation')}
-              value={automationName}
-              withAsterisk
-              label={t('automate.creation.name.label', 'Automation Name')}
-              onChange={(e) => setAutomationName(e.currentTarget.value)}
+        {!hideMetadata && (
+          <>
+            {/* Automation Name and Icon */}
+            <Group gap="xs" align="flex-end">
+              <Stack gap="xs" style={{ flex: 1 }}>
+                <TextInput
+                  placeholder={t('automate.creation.name.placeholder', 'My Automation')}
+                  value={automationName}
+                  withAsterisk
+                  label={t('automate.creation.name.label', 'Automation Name')}
+                  onChange={(e) => setAutomationName(e.currentTarget.value)}
+                  size="sm"
+                />
+              </Stack>
+
+              <IconSelector
+                value={automationIcon || 'SettingsIcon'}
+                onChange={setAutomationIcon}
+                size="sm"
+              />
+            </Group>
+
+            {/* Automation Description */}
+            <Textarea
+              placeholder={t('automate.creation.description.placeholder', 'Describe what this automation does...')}
+              value={automationDescription}
+              label={t('automate.creation.description.label', 'Description')}
+              onChange={(e) => setAutomationDescription(e.currentTarget.value)}
               size="sm"
+              rows={3}
             />
-          </Stack>
-
-          <IconSelector
-            value={automationIcon || 'SettingsIcon'}
-            onChange={setAutomationIcon}
-            size="sm"
-          />
-        </Group>
-
-        {/* Automation Description */}
-        <Textarea
-          placeholder={t('automate.creation.description.placeholder', 'Describe what this automation does...')}
-          value={automationDescription}
-          label={t('automate.creation.description.label', 'Description')}
-          onChange={(e) => setAutomationDescription(e.currentTarget.value)}
-          size="sm"
-          rows={3}
-        />
+          </>
+        )}
 
 
         {/* Selected Tools List */}
@@ -198,16 +220,18 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
         {/* Action Buttons */}
         <Stack gap="sm">
-          <Button
-            leftSection={<CheckIcon />}
-            onClick={saveAutomation}
-            disabled={!canSaveAutomation()}
-            fullWidth
-          >
-            {t('automate.creation.save', 'Save Automation')}
-          </Button>
+          {!hideMetadata && (
+            <Button
+              leftSection={<CheckIcon />}
+              onClick={saveAutomation}
+              disabled={!canSave()}
+              fullWidth
+            >
+              {t('automate.creation.save', 'Save Automation')}
+            </Button>
+          )}
 
-          <Button
+          {!hideMetadata && <Button
             leftSection={<DownloadIcon />}
             onClick={() => {
               // Create a temporary automation config from current state
@@ -225,12 +249,12 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
               };
               downloadFolderScanningConfig(tempAutomation, toolRegistry);
             }}
-            disabled={!canSaveAutomation()}
+            disabled={!canSave()}
             variant="light"
             fullWidth
           >
             {t('automate.creation.exportForFolderScanning', 'Export for Folder Scanning')}
-          </Button>
+          </Button>}
         </Stack>
       </Stack>
 
