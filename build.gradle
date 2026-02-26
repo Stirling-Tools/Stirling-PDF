@@ -204,13 +204,6 @@ subprojects {
         // Bouncycastle 1.83 (from bouncycastleVersion variable)
         resolutionStrategy.force 'org.bouncycastle:bcprov-jdk18on:1.83'
         resolutionStrategy.force 'org.bouncycastle:bcpkix-jdk18on:1.83'
-        // OpenSAML version alignment - force all to 5.2.1 for Spring Security SAML 7.0.2
-        resolutionStrategy.force "org.opensaml:opensaml-core:$openSamlVersion"
-        resolutionStrategy.force "org.opensaml:opensaml-core-api:$openSamlVersion"
-        resolutionStrategy.force "org.opensaml:opensaml-saml-api:$openSamlVersion"
-        resolutionStrategy.force "org.opensaml:opensaml-saml-impl:$openSamlVersion"
-        resolutionStrategy.force "org.opensaml:opensaml-xmlsec-api:$openSamlVersion"
-        resolutionStrategy.force "org.opensaml:opensaml-xmlsec-impl:$openSamlVersion"
     }
 
     dependencyManagement {
