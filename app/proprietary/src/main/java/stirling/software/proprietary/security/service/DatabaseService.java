@@ -65,11 +65,30 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Pattern.compile("(?i)\\bFOREIGN\\s+KEY\\b"),
                     Pattern.compile("(?i)\\bCONSTRAINT\\b"),
                     Pattern.compile("(?i)\\bCHECK\\b"),
-                    Pattern.compile("(?i)\\bGENERATED\\s+(BY\\s+DEFAULT|ALWAYS)\\s+AS\\s+IDENTITY\\b"),
+                    Pattern.compile(
+                            "(?i)\\bGENERATED\\s+(BY\\s+DEFAULT|ALWAYS)\\s+AS\\s+IDENTITY\\b"),
                     Pattern.compile("(?i)\\bDEFAULT\\b"),
-                    Pattern.compile("(?i)^\\s*SET\\s+(REFERENTIAL_INTEGRITY|MODE|DATABASE|IGNORECASE|AUTOINCREMENT)\\b"),
+                    Pattern.compile(
+                            "(?i)\\bSET\\s+(REFERENTIAL_INTEGRITY|MODE|DATABASE|IGNORECASE|AUTOINCREMENT|DB_CLOSE_DELAY)\\b"),
                     Pattern.compile("(?i)\\bIF\\s+EXISTS\\b"),
-                    Pattern.compile("(?i)\\bIF\\s+NOT\\s+EXISTS\\b"));
+                    Pattern.compile("(?i)\\bIF\\s+NOT\\s+EXISTS\\b"),
+                    Pattern.compile("(?i)\\bNULLS\\s+(FIRST|LAST)\\b"),
+                    Pattern.compile("(?i)\\bREFERENCES\\b"),
+                    Pattern.compile("(?i)\\bNOCHECK\\b"),
+                    Pattern.compile("(?i)\\bRESTART\\s+WITH\\b"),
+                    Pattern.compile("(?i)\\bCASCADE\\b"),
+                    Pattern.compile("(?i)\\bON\\b"),
+                    Pattern.compile("(?i)\\bSTART\\s+WITH\\b"),
+                    Pattern.compile("(?i)\\bAS\\b"),
+                    Pattern.compile("(?i)\\bUNIQUE\\b"),
+                    Pattern.compile("(?i)\\bDISTINCT\\b"),
+                    Pattern.compile("(?i)\\bWITH\\s+TIME\\s+ZONE\\b"),
+                    Pattern.compile("(?i)\\bTIMESTAMP\\b"),
+                    Pattern.compile("(?i)\\bVARYING\\b"),
+                    Pattern.compile("(?i)\\bNOT\\s+NULL\\b"),
+                    Pattern.compile("(?i)\\bTRUE\\b"),
+                    Pattern.compile("(?i)\\bFALSE\\b"),
+                    Pattern.compile("(?i)\\bNULL\\b"));
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
