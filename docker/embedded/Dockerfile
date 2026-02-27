@@ -27,7 +27,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
-    # ── Remove GUI-only and unused Qt6 shared libraries ──
     # We only need Qt6 WebEngine (Chromium) for ebook→PDF output.
     # PDF INPUT now uses the pdftohtml engine (poppler), not Qt.
     rm -f  /opt/calibre/lib/libQt6Designer* \
@@ -109,6 +108,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /opt/calibre/lib/qt6/plugins/geometryloaders \
            /opt/calibre/lib/qt6/plugins/generic \
            /opt/calibre/lib/qt6/libexec/QtWebEngineProcess.bak; \
+    rm -rf /opt/calibre/plugins/sqldrivers \
+           /opt/calibre/plugins/multimedia \
+           /opt/calibre/plugins/wayland-shell-integration \
+           /opt/calibre/plugins/wayland-graphics-integration-client \
+           /opt/calibre/plugins/wayland-decoration-client \
+           /opt/calibre/plugins/texttospeech \
+           /opt/calibre/plugins/platformthemes \
+           /opt/calibre/plugins/platforminputcontexts \
+           /opt/calibre/plugins/egldeviceintegrations \
+           /opt/calibre/plugins/iconengines; \
     \
     # Remove GUI executables but keep ebook-convert, ebook-meta, and calibre-parallel.
     rm -f  /opt/calibre/calibre \
@@ -186,15 +195,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /opt/calibre/resources/user-manual-translation-stats.json \
            /opt/calibre/resources/pin-template.svg \
            /opt/calibre/resources/scripts.calibre_msgpack \
+           /opt/calibre/resources/fonts \
+           /opt/calibre/resources/qtwebengine_devtools_resources.pak \
            /opt/calibre/lib/calibre/ebooks/docx/images \
            /opt/calibre/share \
            /opt/calibre/man; \
     \
     # Remove translations and localization while keeping required libraries.
     # Keep iso639.calibre_msgpack (required)
-    # Keep qtwebengine_locales (required for WebEngine)
+    # Keep only en-US.pak from qtwebengine_locales (required for WebEngine)
     rm -rf /opt/calibre/lib/qt6/translations; \
     find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} +; \
+    find /opt/calibre/translations/qtwebengine_locales -type f ! -name 'en-US.pak' -delete 2>/dev/null || true; \
     if [ -d /opt/calibre/resources/localization ]; then \
       rm -rf /opt/calibre/resources/localization/locales.zip \
              /opt/calibre/resources/localization/stats.calibre_msgpack \
@@ -390,6 +402,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages; \
     /opt/venv/bin/pip install --no-cache-dir \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
+      cryptography \
       "unoserver==${UNOSERVER_VERSION}"; \
     \
     ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
@@ -433,13 +446,20 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/share/xml/iso-codes \
            /usr/share/GConf \
            /usr/share/bash-completion \
-           /usr/share/zsh; \
+           /usr/share/zsh \
+           /usr/share/libmysofa \
+           /usr/share/alsa \
+           /usr/share/iso-codes \
+           /usr/share/perl5 \
+           /usr/share/libthai \
+           /usr/share/libexttextcat \
+           /usr/share/openal \
+           /usr/share/gcc; \
     \
     find /usr/share/locale -mindepth 1 -maxdepth 1 -type d \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
     rm -rf /usr/share/i18n/locales /usr/share/i18n/charmaps; \
     \
-    # LibreOffice extras: Only remove specific directories as requested
     rm -rf /usr/lib/libreoffice/share/gallery \
            /usr/lib/libreoffice/share/template \
            /usr/lib/libreoffice/share/wizards \
@@ -462,12 +482,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/share/dtd \
            /usr/lib/libreoffice/share/tipoftheday \
            /usr/lib/libreoffice/share/toolbarmode \
-           /usr/lib/libreoffice/share/psprint; \
+           /usr/lib/libreoffice/share/psprint \
+           /usr/lib/libreoffice/CREDITS.fodt \
+           /usr/lib/libreoffice/LICENSE.html; \
     \
-    # Preserving soffice.cfg because LibreOffice needs it to load documents.
     \
     \
-    # Python caches + pip/setuptools cleanup
     find /opt/venv -type d -name __pycache__ \
       -exec rm -rf {} + 2>/dev/null || true; \
     find /opt/venv \
@@ -477,26 +497,22 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /opt/venv/lib/python*/site-packages/setuptools \
            /opt/venv/lib/python*/site-packages/setuptools-*.dist-info; \
     \
-    # Python stdlib: remove unused modules (~71 MB)
     rm -rf /usr/lib/python3.12/test \
            /usr/lib/python3.12/idlelib \
            /usr/lib/python3.12/tkinter \
            /usr/lib/python3.12/lib2to3 \
            /usr/lib/python3.12/pydoc_data; \
     \
-    # System Python packages not needed at runtime (~153 MB)
     rm -rf /usr/lib/python3/dist-packages/scipy \
            /usr/lib/python3/dist-packages/sympy \
            /usr/lib/python3/dist-packages/mpmath; \
     \
-    # Remove system cffi superseded by venv cffi 2.0
     rm -rf \
       /usr/lib/python3/dist-packages/cffi \
       /usr/lib/python3/dist-packages/cffi-*.dist-info \
       /usr/lib/python3/dist-packages/_cffi_backend*.so \
       /usr/lib/python3/dist-packages/_cffi_backend*.cpython*.so \
       2>/dev/null || true; \
-    # Verify cffi is still importable from the venv after system package removal
     /opt/venv/bin/python -c "import cffi; print('cffi OK:', cffi.__version__)" \
       || { echo 'ERROR: cffi broken after system package cleanup'; exit 1; }; \
     \
@@ -516,16 +532,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       "${MULTIARCH_LIBDIR}"/libgallium*.so* \
       2>/dev/null || true; \
     \
-    # System-wide Python cache cleanup
     find /usr/lib/python3* -type d -name __pycache__ \
         -exec rm -rf {} + 2>/dev/null || true; \
     find /usr/lib/python3* \( -name '*.pyc' -o -name '*.pyi' \) \
         -delete 2>/dev/null || true; \
     \
-    # Additional metadata cleanup
-    # FIX: Only remove ImageMagick doc/www, NOT the whole dir (preserves policy.xml/delegates.xml)
     rm -rf /usr/share/bug /usr/share/lintian /usr/share/linda \
-           /var/lib/dpkg/info/*.md5sums \
            /var/log/dpkg.log /var/log/apt/* \
            /usr/local/share/ghostscript/*/doc \
            /usr/local/share/ghostscript/*/examples \
@@ -536,9 +548,56 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # NEW: Tesseract training configs (not needed for OCR, but keep configs/ for hocr/txt output)
     rm -rf /usr/share/tesseract-ocr/*/tessdata/tessconfigs; \
     \
-    # Trim CJK fonts to Regular weight only (FIX: Broadened path)
-    find /usr/share/fonts -name '*CJK*' \
-        ! -name '*Regular*' -type f -delete 2>/dev/null || true; \
+    # Noto fonts ship 1800+ files in many weights (Bold, Italic, SemiBold, etc.)
+    # For PDF processing, Regular weight covers all scripts. Saves ~370MB.
+    find /usr/share/fonts/truetype/noto -type f \
+        ! -name '*Regular*' -delete 2>/dev/null || true; \
+    find /usr/share/fonts/opentype -type f \
+        ! -name '*Regular*' -delete 2>/dev/null || true; \
+    # DejaVu: keep Regular and Bold only (commonly referenced in PDFs)
+    find /usr/share/fonts/truetype -name '*DejaVu*' \
+        ! -name '*-Regular*' ! -name '*-Bold*' ! -name '*Bold.ttf' \
+        ! -name 'DejaVuSans.ttf' ! -name 'DejaVuSerif.ttf' ! -name 'DejaVuSansMono.ttf' \
+        -type f -delete 2>/dev/null || true; \
+    # Remove empty font directories after cleanup
+    find /usr/share/fonts -type d -empty -delete 2>/dev/null || true; \
+    \
+    # ── gconv: keep only essential charset conversion modules (~6MB savings) ──
+    # PDF processing needs UTF-8, ISO-8859-*, and a few CJK encodings.
+    GCONV_DIR=$(find /usr/lib -type d -name gconv 2>/dev/null | head -1); \
+    if [ -n "$GCONV_DIR" ] && [ -d "$GCONV_DIR" ]; then \
+      mkdir -p /tmp/gconv-keep; \
+      for mod in UTF-8.so UTF-16.so UTF-32.so UTF-7.so \
+                 ISO8859-1.so ISO8859-15.so ISO8859-2.so ISO8859-9.so \
+                 UNICODE.so CP1252.so CP1251.so CP1250.so \
+                 EUC-JP.so EUC-KR.so EUC-CN.so \
+                 SHIFT_JIS.so GB18030.so BIG5.so \
+                 gconv-modules gconv-modules.d gconv-modules.cache; do \
+        [ -e "$GCONV_DIR/$mod" ] && \
+          cp -a "$GCONV_DIR/$mod" /tmp/gconv-keep/ 2>/dev/null || true; \
+      done; \
+      rm -rf "$GCONV_DIR"/*; \
+      cp -a /tmp/gconv-keep/* "$GCONV_DIR/" 2>/dev/null || true; \
+      rm -rf /tmp/gconv-keep; \
+    fi; \
+    \
+    # NOTE: flite TTS voice libs (~26MB) are kept because ffmpeg directly links them.
+    # Removing them breaks ffmpeg startup. To save these 26MB, ffmpeg would need
+    # to be rebuilt without --enable-libflite (not worth the complexity).
+    \
+    # ── dpkg metadata cleanup (~14MB) ──
+    # Not needed at runtime — container won't run apt-get.
+    rm -rf /var/lib/dpkg/info/*.list \
+           /var/lib/dpkg/info/*.md5sums \
+           /var/lib/dpkg/info/*.conffiles \
+           /var/lib/dpkg/info/*.postinst \
+           /var/lib/dpkg/info/*.preinst \
+           /var/lib/dpkg/info/*.prerm \
+           /var/lib/dpkg/info/*.postrm \
+           /var/lib/dpkg/info/*.triggers \
+           /var/lib/dpkg/info/*.shlibs \
+           /var/lib/dpkg/info/*.symbols \
+           /var/lib/dpkg/info/*.templates; \
     \
     # Misc caches
     rm -rf /var/cache/fontconfig/* /tmp/*
