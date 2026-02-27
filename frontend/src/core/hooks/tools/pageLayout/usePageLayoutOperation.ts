@@ -6,8 +6,14 @@ import { PageLayoutParameters, defaultParameters } from '@app/hooks/tools/pageLa
 export const buildPageLayoutFormData = (parameters: PageLayoutParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
+  formData.append('mode', String(parameters.mode));
   formData.append('pagesPerSheet', String(parameters.pagesPerSheet));
+  formData.append('rows', String(parameters.rows));
+  formData.append('cols', String(parameters.cols));
   formData.append('addBorder', String(parameters.addBorder));
+  formData.append('orientation', String(parameters.orientation));
+  formData.append('arrangement', String(parameters.arrangement));
+  formData.append('readingDirection', String(parameters.readingDirection));
   return formData;
 };
 
