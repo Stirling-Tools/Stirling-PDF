@@ -79,6 +79,14 @@ public class MobileScannerController {
         return null;
     }
 
+    // Package-private on purpose: easy to unit-test without Spring context.
+    static String validateUploadFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            return "No files provided";
+        }
+        return null; // null means OK
+    }
+
     /**
      * Create a new session (called by desktop when QR code is generated)
      *
@@ -196,12 +204,12 @@ public class MobileScannerController {
         }
 
         try {
-            if (files == null || files.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "No files provided"));
+            String validationError = validateUploadFiles(files);
+            if (validationError != null) {
+                return ResponseEntity.badRequest().body(Map.of("error", validationError));
             }
 
             mobileScannerService.uploadFiles(sessionId, files);
-
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("sessionId", sessionId);
