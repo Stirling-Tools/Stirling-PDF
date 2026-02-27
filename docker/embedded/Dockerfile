@@ -276,6 +276,7 @@ COPY . .
 
 RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
     --mount=type=cache,target=/home/gradle/.gradle/wrapper \
+    --mount=type=cache,target=/root/.npm,sharing=locked \
     DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
       -PbuildWithFrontend=true \
@@ -307,7 +308,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --disable-cups \
       --disable-gtk && \
     make -j"$(nproc)" && \
-    make install && \
+    make install-strip && \
     cd ..
 
 
@@ -328,14 +329,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     cd "qpdf-${QPDF_VERSION}" && \
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DALLOW_CRYPTO_OPENSSL=ON -DDEFAULT_CRYPTO=openssl && \
     cmake --build build --parallel "$(nproc)" && \
-    cmake --install build && \
+    cmake --install build --strip && \
     cd .. && \
     # Build ImageMagick 7
     (test -d "ImageMagick-${IM_VERSION}" || curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz) && \
     cd "ImageMagick-${IM_VERSION}" && \
     ./configure --prefix=/usr/local --with-modules --with-perl=no --with-magick-plus-plus=no --with-quantum-depth=16 --disable-static --enable-shared && \
     make -j"$(nproc)" && \
-    make install && \
+    make install-strip && \
     # Enable PDF/PS/EPS in policy
     sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /usr/local/etc/ImageMagick-7/policy.xml && \
     sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
@@ -486,7 +487,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/CREDITS.fodt \
            /usr/lib/libreoffice/LICENSE.html; \
     \
-    \
+    # Remove unused LO extensions (GUI-only; not needed for document conversion)
+    rm -rf /usr/lib/libreoffice/share/extensions/wiki-publisher \
+           /usr/lib/libreoffice/share/extensions/nlpsolver \
+           /usr/lib/libreoffice/share/extensions/dict-* 2>/dev/null || true; \
+    # Remove LO database components (LO Base; not needed for Writer/Calc/Impress conversion)
+    rm -rf /usr/lib/libreoffice/program/libdba* \
+           /usr/lib/libreoffice/program/libdbahsql* \
+           /usr/lib/libreoffice/program/libdbu* \
+           /usr/lib/libreoffice/program/libreport* 2>/dev/null || true; \
     \
     find /opt/venv -type d -name __pycache__ \
       -exec rm -rf {} + 2>/dev/null || true; \
@@ -606,7 +615,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 COPY --from=calibre-build /opt/calibre /opt/calibre
 COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
 COPY --from=pdf-tools-build /usr/local/bin/magick /usr/bin/magick
-COPY --from=pdf-tools-build /usr/local/lib/libMagick* /usr/local/lib/
+COPY --from=pdf-tools-build /usr/local/lib/libMagick*.so* /usr/local/lib/
 # Copy loadable coder/filter modules (required when built with --with-modules)
 COPY --from=pdf-tools-build /usr/local/lib/ImageMagick-7* /usr/local/lib/
 COPY --from=pdf-tools-build /usr/local/etc/ImageMagick-7 /usr/local/etc/ImageMagick-7
