@@ -49,20 +49,20 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.42'
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.15.0'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.43'
+    implementation 'com.bucket4j:bucket4j_jdk17-core:8.16.1'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
     api 'io.micrometer:micrometer-registry-prometheus'
-    implementation 'com.unboundid.product.scim2:scim2-sdk-client:4.1.0'
+    implementation 'com.unboundid.product.scim2:scim2-sdk-client:5.0.0'
 
     api "io.jsonwebtoken:jjwt-api:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database
-    runtimeOnly 'org.postgresql:postgresql:42.7.9'
+    runtimeOnly 'org.postgresql:postgresql:42.7.10'
     constraints {
         implementation "org.opensaml:opensaml-core:$openSamlVersion"
         implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
