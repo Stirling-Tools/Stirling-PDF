@@ -73,6 +73,7 @@ jobs:
     env:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
@@ -271,7 +272,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && env.APPLE_CERTIFICATE != ''
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -292,7 +293,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && env.APPLE_CERTIFICATE != ''
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
