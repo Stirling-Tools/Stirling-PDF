@@ -10,7 +10,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       ca-certificates curl xz-utils libnss3 libfontconfig1 \
       libgl1 libegl1 libdbus-1-3 libasound2t64 libxcomposite1 \
-      libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0; \
+      libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0 \
+      poppler-utils; \
     rm -rf /var/lib/apt/lists/*; \
     \
     case "$(uname -m)" in \
@@ -26,15 +27,36 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
-    # Remove GUI-only shared libraries.
-    # Libs required by WebEngine PDF output are preserved.
+    # ── Remove GUI-only and unused Qt6 shared libraries ──
+    # We only need Qt6 WebEngine (Chromium) for ebook→PDF output.
+    # PDF INPUT now uses the pdftohtml engine (poppler), not Qt.
     rm -f  /opt/calibre/lib/libQt6Designer* \
            /opt/calibre/lib/libQt6Multimedia* \
            /opt/calibre/lib/libQt6SpatialAudio.so.* \
            /opt/calibre/lib/libQt6NetworkAuth.so.* \
            /opt/calibre/lib/libQt6Concurrent.so.* \
            /opt/calibre/lib/libQt6OpenGLWidgets.so.* \
-           /opt/calibre/lib/libQt6QuickWidgets.so.* \
+           /opt/calibre/lib/libQt6Svg.so.* \
+           /opt/calibre/lib/libQt6SvgWidgets.so.* \
+           /opt/calibre/lib/libQt6Pdf*.so.* \
+           /opt/calibre/lib/libQt6ShaderTools.so.* \
+           /opt/calibre/lib/libQt6SerialPort.so.* \
+           /opt/calibre/lib/libQt6Sensors.so.* \
+           /opt/calibre/lib/libQt6Test.so.* \
+           /opt/calibre/lib/libQt6Sql.so.* \
+           /opt/calibre/lib/libQt6RemoteObjects.so.* \
+           /opt/calibre/lib/libQt6Help.so.* \
+           /opt/calibre/lib/libQt6VirtualKeyboard.so.* \
+           /opt/calibre/lib/libQt6WaylandClient.so.* \
+           /opt/calibre/lib/libQt6WaylandCompositor.so.* \
+           /opt/calibre/lib/libQt6Bluetooth.so.* \
+           /opt/calibre/lib/libQt6Nfc.so.* \
+           /opt/calibre/lib/libQt6Charts.so.* \
+           /opt/calibre/lib/libQt6DataVisualization.so.* \
+           /opt/calibre/lib/libQt6Scxml.so.* \
+           /opt/calibre/lib/libQt6StateMachine.so.* \
+           /opt/calibre/lib/libQt6TextToSpeech.so.* \
+           /opt/calibre/lib/libQt63D*.so.* \
            /opt/calibre/lib/libavcodec.so.* \
            /opt/calibre/lib/libavfilter.so.* \
            /opt/calibre/lib/libavformat.so.* \
@@ -65,11 +87,28 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /opt/calibre/lib/libgpg-error.so.* \
            /opt/calibre/lib/libicuio.so.* \
            /opt/calibre/lib/libreadline.so.* \
-           /opt/calibre/lib/libusb-1.0.so.*; \
+           /opt/calibre/lib/libusb-1.0.so.* \
+           /opt/calibre/lib/libpulse*.so.* \
+           /opt/calibre/lib/libsndfile.so.* \
+           /opt/calibre/lib/libmpv.so.* \
+           /opt/calibre/lib/libass.so.* \
+           /opt/calibre/lib/librubberband.so.* \
+           /opt/calibre/lib/libsamplerate.so.*; \
     rm -rf /opt/calibre/lib/qt6/plugins/platformthemes \
            /opt/calibre/lib/qt6/plugins/multimedia \
            /opt/calibre/lib/qt6/plugins/designer \
-           /opt/calibre/lib/qt6/plugins/qmltooling; \
+           /opt/calibre/lib/qt6/plugins/virtualkeyboard \
+           /opt/calibre/lib/qt6/plugins/wayland* \
+           /opt/calibre/lib/qt6/plugins/texttospeech \
+           /opt/calibre/lib/qt6/plugins/position \
+           /opt/calibre/lib/qt6/plugins/sensors \
+           /opt/calibre/lib/qt6/plugins/sqldrivers \
+           /opt/calibre/lib/qt6/plugins/canbus \
+           /opt/calibre/lib/qt6/plugins/sceneparsers \
+           /opt/calibre/lib/qt6/plugins/renderers \
+           /opt/calibre/lib/qt6/plugins/geometryloaders \
+           /opt/calibre/lib/qt6/plugins/generic \
+           /opt/calibre/lib/qt6/libexec/QtWebEngineProcess.bak; \
     \
     # Remove GUI executables but keep ebook-convert, ebook-meta, and calibre-parallel.
     rm -f  /opt/calibre/calibre \
@@ -95,7 +134,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /opt/calibre/lib/calibre/db \
            /opt/calibre/lib/calibre/srv \
            /opt/calibre/lib/calibre/spell \
-           /opt/calibre/lib/calibre/live; \
+           /opt/calibre/lib/calibre/live \
+           /opt/calibre/lib/calibre/utils/piper \
+           /opt/calibre/lib/calibre/utils/certgen.so \
+           /opt/calibre/lib/calibre/utils/https \
+           /opt/calibre/lib/calibre/utils/mdns; \
     \
     # Remove resources not needed for CLI conversion.
     rm -rf /opt/calibre/resources/images \
@@ -180,6 +223,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     echo "Hello" > /tmp/test.txt; \
     /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.epub; \
     rm -f /tmp/test.txt /tmp/test.epub; \
+    \
+    # Verify pdftohtml (poppler) is available for the pdftohtml PDF engine.
+    pdftohtml -v 2>&1 || true; \
     echo "=== Calibre stripped successfully ==="
 
 
@@ -361,7 +407,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     \
     # Cleanup stage.
     \
+    # Remove build-only packages no longer needed at runtime.
+    apt-get remove --purge -y software-properties-common python3-dev || true; \
+    apt-get autoremove --purge -y || true; \
     rm -rf /var/lib/apt/lists/*; \
+    \
+    # Remove C/C++ headers (no longer needed after pip install)
+    rm -rf /usr/include/*; \
     \
     # Docs / man / info / icons / themes / GUI assets (headless server)
     rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* \
@@ -370,9 +422,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/share/javascript/* \
            /usr/share/gtk-3.0/* \
            /usr/share/fontforge/pixmaps \
+           /usr/share/fontforge/osx \
+           /usr/share/fontforge/cidmap \
+           /usr/share/fontforge/prefs \
            /usr/share/liblangtag/* \
            /usr/share/tcltk/* \
-           /usr/share/python-wheels/*; \
+           /usr/share/python-wheels/* \
+           /usr/share/glib-2.0/schemas/* \
+           /usr/share/mime/* \
+           /usr/share/xml/iso-codes \
+           /usr/share/GConf \
+           /usr/share/bash-completion \
+           /usr/share/zsh; \
     \
     find /usr/share/locale -mindepth 1 -maxdepth 1 -type d \
       ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true; \
