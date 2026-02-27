@@ -16,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -148,6 +150,25 @@ class UserServiceTest {
         assertEquals("id", captured.getSsoProviderId());
         assertEquals("prov", captured.getSsoProvider());
         assertEquals(AuthenticationType.SAML2, captured.getAuthenticationType());
+    }
+
+    @Test
+    void getCurrentUsernameReturnsNullWhenAuthenticationMissing() {
+        SecurityContextHolder.clearContext();
+
+        assertNull(userService.getCurrentUsername());
+    }
+
+    @Test
+    void getCurrentUsernameReturnsUsernameForAuthenticatedPrincipal() {
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "alice", "n/a", java.util.List.of()));
+
+        assertEquals("alice", userService.getCurrentUsername());
+
+        SecurityContextHolder.clearContext();
     }
 
     @Test

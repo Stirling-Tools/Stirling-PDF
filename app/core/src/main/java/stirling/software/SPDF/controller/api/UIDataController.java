@@ -168,7 +168,8 @@ public class UIDataController {
     public ResponseEntity<SignData> getSignData() {
         String username = "";
         if (userService != null) {
-            username = userService.getCurrentUsername();
+            String currentUsername = userService.getCurrentUsername();
+            username = currentUsername != null ? currentUsername : "";
         }
 
         List<SignatureFile> signatures = signatureService.getAvailableSignatures(username);

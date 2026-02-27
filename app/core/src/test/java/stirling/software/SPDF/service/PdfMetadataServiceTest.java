@@ -192,6 +192,30 @@ class PdfMetadataServiceTest {
     }
 
     @Test
+    void testSetMetadataToPdf_WithProFeaturesAndMissingUsername() {
+        PDDocument testDocument = mock(PDDocument.class);
+        PDDocumentInformation testInfo = mock(PDDocumentInformation.class);
+        when(testDocument.getDocumentInformation()).thenReturn(testInfo);
+
+        PdfMetadataService proService =
+                new PdfMetadataService(
+                        applicationProperties, STIRLING_PDF_LABEL, true, userService);
+
+        PdfMetadata testMetadata = PdfMetadata.builder().author("Original Author").build();
+
+        CustomMetadata customMetadata =
+                applicationProperties.getPremium().getProFeatures().getCustomMetadata();
+        when(customMetadata.isAutoUpdateMetadata()).thenReturn(true);
+        when(customMetadata.getAuthor()).thenReturn("Pro Author username");
+        when(userService.getCurrentUsername()).thenReturn(null);
+
+        proService.setMetadataToPdf(testDocument, testMetadata, false);
+
+        // When username is null, the "username" placeholder should not be replaced
+        verify(testInfo).setAuthor("Pro Author username");
+    }
+
+    @Test
     void testSetMetadataToPdf_ExistingDocument() {
         // Create a fresh document
         PDDocument testDocument = mock(PDDocument.class);
