@@ -12,11 +12,11 @@ import stirling.software.common.model.api.PDFFile;
 public class MergeMultiplePagesRequest extends PDFFile {
 
     @Schema(
-        description = "Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols×rows.",
-        requiredMode = Schema.RequiredMode.REQUIRED,
-        type = "string",
-        defaultValue = "DEFAULT",
-        allowableValues = {"DEFAULT", "CUSTOM"})
+            description = "Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows.",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            type = "string",
+            defaultValue = "DEFAULT",
+            allowableValues = {"DEFAULT", "CUSTOM"})
     private String mode;
 
     @Schema(
@@ -24,36 +24,44 @@ public class MergeMultiplePagesRequest extends PDFFile {
             type = "integer",
             allowableValues = {"2", "3", "4", "9", "16"})
     private int pagesPerSheet = 2;
-    @Schema(
-        description = "Options for the ordering of pages",
-        type = "string",
-        defaultValue = "LR_TD",
-        allowableValues = {"LR_TD", "RL_TD", "TD_LR", "TD_RL"})
-    private String pageOrder;
 
     @Schema(
-        description = "Number of rows",
-        type = "number",
-        defaultValue = "1",
-        maximum = "300",
-        minimum = "1",
-        example = "3")
+            description = "The arrangement of pages on the sheet: BY_ROWS fills pages row by row, while BY_COLUMNS fills pages column by column.",
+            type = "string",
+            defaultValue = "BY_ROWS",
+            allowableValues = {"BY_ROWS", "BY_COLUMNS"})
+    private String arrangement;
+
+    @Schema(
+        description = "The direction in which pages are arranged on the sheet: LTR (left-to-right) or RTL (right-to-left).",
+        type = "string",
+        defaultValue = "LTR",
+        allowableValues = {"LTR", "RTL"})
+    private String readingDirection;
+
+    @Schema(
+            description = "Number of rows",
+            type = "number",
+            defaultValue = "1",
+            maximum = "300",
+            minimum = "1",
+            example = "3")
     private Integer rows;
 
     @Schema(
-        description = "Number of columns",
-        type = "number",
-        defaultValue = "2",
-        maximum = "300",
-        minimum = "1",
-        example = "2")
+            description = "Number of columns",
+            type = "number",
+            defaultValue = "2",
+            maximum = "300",
+            minimum = "1",
+            example = "2")
     private Integer cols;
 
     @Schema(
-        description = "The orientation of the output PDF pages",
-        type = "string",
-        defaultValue = "PORTRAIT",
-        allowableValues = {"PORTRAIT", "LANDSCAPE"})
+            description = "The orientation of the output PDF pages",
+            type = "string",
+            defaultValue = "PORTRAIT",
+            allowableValues = {"PORTRAIT", "LANDSCAPE"})
     private String orientation;
 
     @Schema(description = "Boolean for if you wish to add border around the pages")

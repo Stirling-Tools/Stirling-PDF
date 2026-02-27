@@ -137,9 +137,28 @@ public class MultiPageLayoutController {
                     "orientation",
                     "only 'PORTRAIT' and 'LANDSCAPE' are supported");
         }
-        String pageOrder = request.getPageOrder();
-        if (pageOrder == null || pageOrder.trim().isEmpty()) {
-            pageOrder = "LR_TD";
+        String arrangement = request.getArrangement();
+        if (arrangement == null || arrangement.trim().isEmpty()) {
+            arrangement = "BY_ROWS";
+        }
+        if (!"BY_ROWS".equals(arrangement) && !"BY_COLUMNS".equals(arrangement)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "arrangement",
+                    "only 'BY_ROWS' and 'BY_COLUMNS' are supported");
+        }
+
+        String readingDirection = request.getReadingDirection();
+        if (readingDirection == null || readingDirection.trim().isEmpty()) {
+            readingDirection = "LTR";
+        }
+        if (!"LTR".equals(readingDirection) && !"RTL".equals(readingDirection)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "readingDirection",
+                    "only 'LTR' and 'RTL' are supported");
         }
 
         boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
@@ -200,32 +219,20 @@ public class MultiPageLayoutController {
                             int rowIndex;
                             int colIndex;
 
-                            switch (pageOrder) {
-                                case "LR_TD": // Left→Right, then Top→Down
-                                    rowIndex = adjustedPageIndex / cols;
+                            if (arrangement.equals("BY_ROWS")) {
+                                rowIndex = adjustedPageIndex / cols;
+                                if (readingDirection.equals("LTR")) {
                                     colIndex = adjustedPageIndex % cols;
-                                    break;
-
-                                case "RL_TD": // Right→Left, then Top→Down
-                                    rowIndex = adjustedPageIndex / cols;
+                                } else {
                                     colIndex = cols - 1 - (adjustedPageIndex % cols);
-                                    break;
-
-                                case "TD_LR": // Top→Down, then Left→Right
+                                }
+                            } else {
+                                rowIndex = adjustedPageIndex % rows;
+                                if (readingDirection.equals("LTR")) {
                                     colIndex = adjustedPageIndex / rows;
-                                    rowIndex = adjustedPageIndex % rows;
-                                    break;
-
-                                case "TD_RL": // Top→Down, then Right→Left
+                                } else {
                                     colIndex = cols - 1 - (adjustedPageIndex / rows);
-                                    rowIndex = adjustedPageIndex % rows;
-                                    break;
-                                default:
-                                    throw ExceptionUtils.createIllegalArgumentException(
-                                            "error.invalidFormat",
-                                            "Invalid {0} format: {1}",
-                                            "pageOrder",
-                                            "only 'LR_TD', 'RL_TD', 'TD_LR', and 'TD_RL' are supported");
+                                }
                             }
 
                             float x =
