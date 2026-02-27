@@ -8,7 +8,6 @@ spotless {
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
