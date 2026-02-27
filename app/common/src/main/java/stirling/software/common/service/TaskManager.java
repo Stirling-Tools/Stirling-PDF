@@ -370,19 +370,23 @@ public class TaskManager {
             while ((entry = zipIn.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
                     String contentType = determineContentType(entry.getName());
-                    String individualFileId = fileStorage.storeInputStream(zipIn, entry.getName());
-                    long fileSize = fileStorage.getFileSize(individualFileId);
+                    // storeInputStream returns the fileId and byte count — no extra stat needed
+                    FileStorage.StoredFile stored =
+                            fileStorage.storeInputStream(zipIn, entry.getName());
 
                     ResultFile resultFile =
                             ResultFile.builder()
-                                    .fileId(individualFileId)
+                                    .fileId(stored.fileId())
                                     .fileName(entry.getName())
                                     .contentType(contentType)
-                                    .fileSize(fileSize)
+                                    .fileSize(stored.size())
                                     .build();
 
                     extractedFiles.add(resultFile);
-                    log.debug("Extracted file: {} (size: {} bytes)", entry.getName(), fileSize);
+                    log.debug(
+                            "Extracted file: {} (size: {} bytes)",
+                            entry.getName(),
+                            stored.size());
                 }
                 zipIn.closeEntry();
             }

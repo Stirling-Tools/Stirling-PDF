@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.MessageDigest;
@@ -221,11 +222,16 @@ public class ExtractImagesController {
                     // Convert to standard RGB colorspace if needed
                     BufferedImage bufferedImage = convertToRGB(renderedImage, format);
 
-                    // Write image directly to zip stream (no intermediate BAOS)
+                    // Encode image outside the lock to allow parallel encoding across threads
                     String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
+                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                    ImageIO.write(bufferedImage, format, imageBaos);
+                    byte[] imageData = imageBaos.toByteArray();
+
+                    // Write encoded bytes to zip under lock (ZipOutputStream requires serialization)
                     synchronized (zos) {
                         zos.putNextEntry(new ZipEntry(imageName));
-                        ImageIO.write(bufferedImage, format, zos);
+                        zos.write(imageData);
                         zos.closeEntry();
                     }
                 }

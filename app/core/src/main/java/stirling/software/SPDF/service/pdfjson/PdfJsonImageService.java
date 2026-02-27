@@ -280,8 +280,8 @@ public class PdfJsonImageService {
         };
     }
 
-    private static float safeFloat(float value, float defaultValue) {
-        if (Float.isNaN(value) || Float.isInfinite(value)) {
+    private static float safeFloat(Float value, float defaultValue) {
+        if (value == null || Float.isNaN(value) || Float.isInfinite(value)) {
             return defaultValue;
         }
         return value;

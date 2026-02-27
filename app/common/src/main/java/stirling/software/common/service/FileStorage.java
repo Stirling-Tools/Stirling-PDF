@@ -23,6 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FileStorage {
 
+    /** Holds the result of a stream-to-disk store operation: the file ID and the bytes written. */
+    public record StoredFile(String fileId, long size) {}
+
     @Value("${stirling.tempDir:/tmp/stirling-files}")
     private String tempDirPath;
 
@@ -116,29 +119,28 @@ public class FileStorage {
      */
     public InputStream retrieveInputStream(String fileId) throws IOException {
         Path filePath = getFilePath(fileId);
-        if (!Files.exists(filePath)) {
-            throw new IOException("File not found: " + fileId);
-        }
+        // Let Files.newInputStream throw NoSuchFileException naturally — avoids TOCTOU race
+        // between exists-check and open when another thread may delete concurrently.
         return new BufferedInputStream(Files.newInputStream(filePath));
     }
 
     /**
-     * Store data from an InputStream as a file and return its unique ID. Streams directly to disk
-     * without buffering the entire content in heap.
+     * Store data from an InputStream as a file and return its unique ID and byte count. Streams
+     * directly to disk without buffering the entire content in heap.
      *
      * @param inputStream The input stream to read from
      * @param originalName The original name of the file (unused, kept for API symmetry)
-     * @return The unique ID assigned to the file
+     * @return A {@link StoredFile} containing the file ID and the number of bytes written
      * @throws IOException If there is an error storing the file
      */
-    public String storeInputStream(InputStream inputStream, String originalName)
+    public StoredFile storeInputStream(InputStream inputStream, String originalName)
             throws IOException {
         String fileId = generateFileId();
         Path filePath = getFilePath(fileId);
         Files.createDirectories(filePath.getParent());
-        Files.copy(inputStream, filePath);
+        long size = Files.copy(inputStream, filePath);
         log.debug("Stored input stream with ID: {}", fileId);
-        return fileId;
+        return new StoredFile(fileId, size);
     }
 
     /**
