@@ -3,6 +3,9 @@ package stirling.software.common.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +28,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 @Slf4j
 @UtilityClass
@@ -46,6 +50,131 @@ public class CbrUtils {
             throws IOException {
 
         validateCbrFile(cbrFile);
+
+        // Try Calibre first (preferred method - preserves color and quality)
+        try {
+            return convertCbrToPdfWithCalibre(
+                    cbrFile, pdfDocumentFactory, tempFileManager, optimizeForEbook);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Calibre CBR conversion interrupted, falling back to JunRAR");
+            // Fall through to JunRAR method
+        } catch (Exception e) {
+            log.warn("Calibre CBR conversion failed, falling back to JunRAR: {}", e.getMessage());
+            // Fall through to JunRAR method
+        }
+
+        // Fallback to JunRAR method
+        return convertCbrToPdfWithJunrar(
+                cbrFile, pdfDocumentFactory, tempFileManager, optimizeForEbook);
+    }
+
+    /**
+     * Converts CBR to PDF using Calibre's ebook-convert tool. This method preserves color images
+     * and maintains original quality.
+     *
+     * @param cbrFile the input CBR file
+     * @param pdfDocumentFactory PDF document factory
+     * @param tempFileManager temporary file manager
+     * @param optimizeForEbook whether to optimize for ebook reading
+     * @return PDF bytes
+     * @throws IOException if conversion fails
+     * @throws InterruptedException if the process is interrupted
+     */
+    private byte[] convertCbrToPdfWithCalibre(
+            MultipartFile cbrFile,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager,
+            boolean optimizeForEbook)
+            throws IOException, InterruptedException {
+
+        // Check if Calibre is available
+        if (!CheckProgramInstall.isCalibreAvailable()) {
+            throw new IllegalStateException("Calibre is not available");
+        }
+
+        String originalFilename = cbrFile.getOriginalFilename();
+        if (originalFilename == null) {
+            originalFilename = "comic.cbr";
+        }
+
+        String baseName = FilenameUtils.getBaseName(originalFilename);
+        if (baseName == null || baseName.isBlank()) {
+            baseName = "comic";
+        }
+
+        Path workingDirectory = tempFileManager.createTempDirectory();
+        Path inputPath = workingDirectory.resolve(baseName + ".cbr");
+        Path outputPath = workingDirectory.resolve(baseName + ".pdf");
+
+        try (InputStream inputStream = cbrFile.getInputStream()) {
+            Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        // Build Calibre command with color preservation flags
+        List<String> command = new ArrayList<>();
+        command.add("ebook-convert");
+        command.add(inputPath.toString());
+        command.add(outputPath.toString());
+        // Critical: Disable grayscale conversion to preserve color images
+        command.add("--dont-grayscale");
+        // Preserve aspect ratio to prevent image distortion
+        command.add("--keep-aspect-ratio");
+
+        ProcessExecutorResult result =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
+                        .runCommandWithOutputHandling(command, workingDirectory.toFile());
+
+        if (result == null) {
+            throw new IllegalStateException("Calibre conversion returned no result");
+        }
+
+        if (result.getRc() != 0) {
+            String errorMessage = result.getMessages();
+            if (errorMessage == null || errorMessage.isBlank()) {
+                errorMessage = "Calibre conversion failed";
+            }
+            throw new IllegalStateException(errorMessage);
+        }
+
+        if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
+            throw new IllegalStateException("Calibre did not produce a PDF output");
+        }
+
+        byte[] pdfBytes = Files.readAllBytes(outputPath);
+
+        // Apply Ghostscript optimization if requested
+        if (optimizeForEbook) {
+            try {
+                pdfBytes = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+            } catch (IOException e) {
+                log.warn(
+                        "Ghostscript optimization failed for CBR conversion, returning unoptimized"
+                                + " PDF",
+                        e);
+            }
+        }
+
+        return pdfBytes;
+    }
+
+    /**
+     * Converts CBR to PDF using JunRAR library (fallback method). Extracts images from RAR archive
+     * and creates PDF pages.
+     *
+     * @param cbrFile the input CBR file
+     * @param pdfDocumentFactory PDF document factory
+     * @param tempFileManager temporary file manager
+     * @param optimizeForEbook whether to optimize for ebook reading
+     * @return PDF bytes
+     * @throws IOException if conversion fails
+     */
+    private byte[] convertCbrToPdfWithJunrar(
+            MultipartFile cbrFile,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager,
+            boolean optimizeForEbook)
+            throws IOException {
 
         try (TempFile tempFile = new TempFile(tempFileManager, ".cbr")) {
             cbrFile.transferTo(tempFile.getFile());

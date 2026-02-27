@@ -79,4 +79,29 @@ public class CheckProgramInstall {
         }
         return ffmpegAvailable;
     }
+
+    private static boolean calibreAvailableChecked = false;
+    private static boolean calibreAvailable = false;
+
+    /**
+     * Checks if Calibre (ebook-convert) is available on the system.
+     *
+     * @return true if Calibre is installed and accessible, false otherwise.
+     */
+    public static boolean isCalibreAvailable() {
+        if (!calibreAvailableChecked) {
+            try {
+                ProcessExecutorResult result =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
+                                .runCommandWithOutputHandling(
+                                        Arrays.asList("ebook-convert", "--version"));
+                calibreAvailable = true;
+            } catch (IOException | InterruptedException e) {
+                calibreAvailable = false;
+            } finally {
+                calibreAvailableChecked = true;
+            }
+        }
+        return calibreAvailable;
+    }
 }
