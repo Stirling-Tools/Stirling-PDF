@@ -64,43 +64,43 @@ public class MultiPageLayoutController {
             case "DEFAULT":
                 pagesPerSheet = request.getPagesPerSheet();
                 if (pagesPerSheet != 2
-                    && pagesPerSheet != 3
-                    && pagesPerSheet
-                    != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
+                        && pagesPerSheet != 3
+                        && pagesPerSheet
+                                != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat",
-                        "Invalid {0} format: {1}",
-                        "pagesPerSheet",
-                        "must be 2, 3 or a perfect square");
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "pagesPerSheet",
+                            "must be 2, 3 or a perfect square");
                 }
 
                 cols =
-                    pagesPerSheet == 2 || pagesPerSheet == 3
-                        ? pagesPerSheet
-                        : (int) Math.sqrt(pagesPerSheet);
+                        pagesPerSheet == 2 || pagesPerSheet == 3
+                                ? pagesPerSheet
+                                : (int) Math.sqrt(pagesPerSheet);
                 rows =
-                    pagesPerSheet == 2 || pagesPerSheet == 3
-                        ? 1
-                        : (int) Math.sqrt(pagesPerSheet);
+                        pagesPerSheet == 2 || pagesPerSheet == 3
+                                ? 1
+                                : (int) Math.sqrt(pagesPerSheet);
                 break;
             case "CUSTOM":
                 rows = request.getRows();
                 cols = request.getCols();
                 if (rows <= 0 || cols <= 0) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat",
-                        "Invalid {0} format: {1}",
-                        "rows and cols",
-                        "only strictly positive values are allowed");
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "rows and cols",
+                            "only strictly positive values are allowed");
                 }
                 pagesPerSheet = cols * rows;
                 break;
             default:
                 throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat",
-                    "Invalid {0} format: {1}",
-                    "mode",
-                    "only 'DEFAULT' and 'CUSTOM' are supported");
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        "mode",
+                        "only 'DEFAULT' and 'CUSTOM' are supported");
         }
 
         if (pagesPerSheet > MAX_PAGES) {
@@ -112,17 +112,17 @@ public class MultiPageLayoutController {
         }
         if (cols > MAX_COLS) {
             throw ExceptionUtils.createIllegalArgumentException(
-                "error.invalidArgument",
-                "Invalid {0} format: {1}",
-                "cols",
-                "must be less than " + MAX_COLS);
+                    "error.invalidArgument",
+                    "Invalid {0} format: {1}",
+                    "cols",
+                    "must be less than " + MAX_COLS);
         }
         if (rows > MAX_ROWS) {
             throw ExceptionUtils.createIllegalArgumentException(
-                "error.invalidArgument",
-                "Invalid {0} format: {1}",
-                "rows",
-                "must be less than " + MAX_ROWS);
+                    "error.invalidArgument",
+                    "Invalid {0} format: {1}",
+                    "rows",
+                    "must be less than " + MAX_ROWS);
         }
 
         MultipartFile file = request.getFileInput();
@@ -132,10 +132,10 @@ public class MultiPageLayoutController {
         }
         if (!"PORTRAIT".equals(orientation) && !"LANDSCAPE".equals(orientation)) {
             throw ExceptionUtils.createIllegalArgumentException(
-                "error.invalidFormat",
-                "Invalid {0} format: {1}",
-                "orientation",
-                "only 'PORTRAIT' and 'LANDSCAPE' are supported");
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "orientation",
+                    "only 'PORTRAIT' and 'LANDSCAPE' are supported");
         }
         String pageOrder = request.getPageOrder();
         if (pageOrder == null || pageOrder.trim().isEmpty()) {
@@ -152,8 +152,14 @@ public class MultiPageLayoutController {
 
                 // Calculate cell dimensions once (all output pages are A4) - declare outside try
                 // blocks
-                float cellWidth = PDRectangle.A4.getWidth() / cols;
-                float cellHeight = PDRectangle.A4.getHeight() / rows;
+                float cellWidth =
+                        "PORTRAIT".equals(orientation)
+                                ? PDRectangle.A4.getWidth() / cols
+                                : PDRectangle.A4.getHeight() / cols;
+                float cellHeight =
+                        "PORTRAIT".equals(orientation)
+                                ? PDRectangle.A4.getHeight() / rows
+                                : PDRectangle.A4.getWidth() / rows;
 
                 // Process pages in groups of pagesPerSheet, creating a new page and content stream
                 // for each group
@@ -161,11 +167,11 @@ public class MultiPageLayoutController {
                     // Create a new output page for each group of pagesPerSheet
                     // Create a new A4 landscape rectangle that we use when orientation is landscape
                     PDRectangle a4Landscape =
-                        new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
+                            new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
                     PDPage newPage =
-                        "PORTRAIT".equals(orientation)
-                            ? new PDPage(PDRectangle.A4)
-                            : new PDPage(a4Landscape);
+                            "PORTRAIT".equals(orientation)
+                                    ? new PDPage(PDRectangle.A4)
+                                    : new PDPage(a4Landscape);
                     newDocument.addPage(newPage);
 
                     // Use try-with-resources for each content stream to ensure proper cleanup
@@ -216,10 +222,10 @@ public class MultiPageLayoutController {
                                     break;
                                 default:
                                     throw ExceptionUtils.createIllegalArgumentException(
-                                        "error.invalidFormat",
-                                        "Invalid {0} format: {1}",
-                                        "pageOrder",
-                                        "only 'LR_TD', 'RL_TD', 'TD_LR', and 'TD_RL' are supported");
+                                            "error.invalidFormat",
+                                            "Invalid {0} format: {1}",
+                                            "pageOrder",
+                                            "only 'LR_TD', 'RL_TD', 'TD_LR', and 'TD_RL' are supported");
                             }
 
                             float x =
