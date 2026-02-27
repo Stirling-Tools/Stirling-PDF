@@ -308,7 +308,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --disable-cups \
       --disable-gtk && \
     make -j"$(nproc)" && \
-    make install-strip && \
+    make install && \
     cd ..
 
 
