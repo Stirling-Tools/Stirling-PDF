@@ -243,14 +243,9 @@ RUN python3 -m venv /opt/venv --system-site-packages
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Build all heavy python packages here
-# Versions are pinned to specific releases to ensure reproducible builds and
-# reduce supply-chain risk. Update deliberately and verify each bump.
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install \
-      "weasyprint==68.1" \
-      "pdf2image==1.17.0" \
-      "opencv-python-headless==4.13.0.92" \
-      "ocrmypdf==17.3.0" \
+     weasyprint pdf2image opencv-python-headless ocrmypdf \
       "unoserver==${UNOSERVER_VERSION}"
 
 
