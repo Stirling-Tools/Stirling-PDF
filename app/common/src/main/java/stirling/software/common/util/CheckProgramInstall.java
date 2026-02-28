@@ -23,10 +23,10 @@ public class CheckProgramInstall {
     public static String getAvailablePythonCommand() {
         if (!pythonAvailableChecked) {
             availablePythonCommand =
-                    PYTHON_COMMANDS.stream()
-                            .filter(CheckProgramInstall::checkPythonVersion)
-                            .findFirst()
-                            .orElse(null);
+                PYTHON_COMMANDS.stream()
+                    .filter(CheckProgramInstall::checkPythonVersion)
+                    .findFirst()
+                    .orElse(null);
             pythonAvailableChecked = true;
         }
         return availablePythonCommand;
@@ -41,9 +41,9 @@ public class CheckProgramInstall {
     private static boolean checkPythonVersion(String pythonCommand) {
         try {
             ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                            .runCommandWithOutputHandling(
-                                    Arrays.asList(pythonCommand, "--version"));
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                    .runCommandWithOutputHandling(
+                        Arrays.asList(pythonCommand, "--version"));
             return true; // Command succeeded, Python is available
         } catch (IOException | InterruptedException e) {
             return false; // Command failed, Python is not available
@@ -68,8 +68,8 @@ public class CheckProgramInstall {
         if (!ffmpegAvailableChecked) {
             try {
                 ProcessExecutorResult result =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
-                                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
+                        .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
                 ffmpegAvailable = true;
             } catch (IOException | InterruptedException e) {
                 ffmpegAvailable = false;
@@ -78,30 +78,5 @@ public class CheckProgramInstall {
             }
         }
         return ffmpegAvailable;
-    }
-
-    private static boolean calibreAvailableChecked = false;
-    private static boolean calibreAvailable = false;
-
-    /**
-     * Checks if Calibre (ebook-convert) is available on the system.
-     *
-     * @return true if Calibre is installed and accessible, false otherwise.
-     */
-    public static boolean isCalibreAvailable() {
-        if (!calibreAvailableChecked) {
-            try {
-                ProcessExecutorResult result =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                                .runCommandWithOutputHandling(
-                                        Arrays.asList("ebook-convert", "--version"));
-                calibreAvailable = true;
-            } catch (IOException | InterruptedException e) {
-                calibreAvailable = false;
-            } finally {
-                calibreAvailableChecked = true;
-            }
-        }
-        return calibreAvailable;
     }
 }
