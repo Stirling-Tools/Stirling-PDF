@@ -35,6 +35,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /opt/calibre/lib/libQt6NetworkAuth.so.* \
            /opt/calibre/lib/libQt6Concurrent.so.* \
            /opt/calibre/lib/libQt6OpenGLWidgets.so.* \
+           /opt/calibre/lib/libQt6QuickWidgets.so.* \
            /opt/calibre/lib/libQt6Svg.so.* \
            /opt/calibre/lib/libQt6SvgWidgets.so.* \
            /opt/calibre/lib/libQt6Pdf*.so.* \
@@ -107,6 +108,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /opt/calibre/lib/qt6/plugins/renderers \
            /opt/calibre/lib/qt6/plugins/geometryloaders \
            /opt/calibre/lib/qt6/plugins/generic \
+           /opt/calibre/lib/qt6/plugins/qmltooling \
            /opt/calibre/lib/qt6/libexec/QtWebEngineProcess.bak; \
     rm -rf /opt/calibre/plugins/sqldrivers \
            /opt/calibre/plugins/multimedia \
@@ -237,7 +239,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -f /tmp/test.txt /tmp/test.epub; \
     \
     # Verify pdftohtml (poppler) is available for the pdftohtml PDF engine.
-    pdftohtml -v 2>&1 || true; \
+    pdftohtml -v >/dev/null 2>&1 && echo "pdftohtml OK" || { echo "ERROR: pdftohtml not found"; exit 1; }; \
     echo "=== Calibre stripped successfully ==="
 
 
