@@ -31,19 +31,19 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 public class CbrUtils {
 
     public byte[] convertCbrToPdf(
-        MultipartFile cbrFile,
-        CustomPDFDocumentFactory pdfDocumentFactory,
-        TempFileManager tempFileManager)
-        throws IOException {
+            MultipartFile cbrFile,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager)
+            throws IOException {
         return convertCbrToPdf(cbrFile, pdfDocumentFactory, tempFileManager, false);
     }
 
     public byte[] convertCbrToPdf(
-        MultipartFile cbrFile,
-        CustomPDFDocumentFactory pdfDocumentFactory,
-        TempFileManager tempFileManager,
-        boolean optimizeForEbook)
-        throws IOException {
+            MultipartFile cbrFile,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager,
+            boolean optimizeForEbook)
+            throws IOException {
 
         validateCbrFile(cbrFile);
 
@@ -57,8 +57,8 @@ public class CbrUtils {
                     archive = new Archive(tempFile.getFile());
                 } catch (CorruptHeaderException e) {
                     log.warn(
-                        "Failed to open CBR/RAR archive due to corrupt header: {}",
-                        e.getMessage());
+                            "Failed to open CBR/RAR archive due to corrupt header: {}",
+                            e.getMessage());
                     throw ExceptionUtils.createCbrInvalidFormatException(null);
                 } catch (RarException e) {
                     log.warn("Failed to open CBR/RAR archive: {}", e.getMessage());
@@ -68,14 +68,14 @@ public class CbrUtils {
                         throw ExceptionUtils.createCbrEncryptedException();
                     } else if (exMessage.isEmpty()) {
                         throw ExceptionUtils.createCbrInvalidFormatException(
-                            "Invalid CBR/RAR archive. The file may be encrypted, corrupted, or"
-                                + " use an unsupported format.");
+                                "Invalid CBR/RAR archive. The file may be encrypted, corrupted, or"
+                                        + " use an unsupported format.");
                     } else {
                         throw ExceptionUtils.createCbrInvalidFormatException(
-                            "Invalid CBR/RAR archive: "
-                                + exMessage
-                                + ". The file may be encrypted, corrupted, or use an"
-                                + " unsupported format.");
+                                "Invalid CBR/RAR archive: "
+                                        + exMessage
+                                        + ". The file may be encrypted, corrupted, or use an"
+                                        + " unsupported format.");
                     }
                 } catch (IOException e) {
                     log.warn("IO error reading CBR/RAR archive: {}", e.getMessage());
@@ -91,13 +91,13 @@ public class CbrUtils {
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                                 is.transferTo(baos);
                                 imageEntries.add(
-                                    new ImageEntryData(
-                                        fileHeader.getFileName(), baos.toByteArray()));
+                                        new ImageEntryData(
+                                                fileHeader.getFileName(), baos.toByteArray()));
                             } catch (Exception e) {
                                 log.warn(
-                                    "Error reading image {}: {}",
-                                    fileHeader.getFileName(),
-                                    e.getMessage());
+                                        "Error reading image {}: {}",
+                                        fileHeader.getFileName(),
+                                        e.getMessage());
                             }
                         }
                     }
@@ -110,44 +110,44 @@ public class CbrUtils {
                 }
 
                 imageEntries.sort(
-                    Comparator.comparing(ImageEntryData::name, new NaturalOrderComparator()));
+                        Comparator.comparing(ImageEntryData::name, new NaturalOrderComparator()));
 
                 if (imageEntries.isEmpty()) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                        "error.fileProcessing",
-                        "No valid images found in the CBR file. The archive may be empty or"
-                            + " contain no supported image formats.");
+                            "error.fileProcessing",
+                            "No valid images found in the CBR file. The archive may be empty or"
+                                    + " contain no supported image formats.");
                 }
 
                 for (ImageEntryData imageEntry : imageEntries) {
                     try {
                         PDImageXObject pdImage =
-                            PDImageXObject.createFromByteArray(
-                                document, imageEntry.data(), imageEntry.name());
+                                PDImageXObject.createFromByteArray(
+                                        document, imageEntry.data(), imageEntry.name());
                         PDPage page =
-                            new PDPage(
-                                new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
+                                new PDPage(
+                                        new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
                         document.addPage(page);
                         try (PDPageContentStream contentStream =
-                                 new PDPageContentStream(
-                                     document,
-                                     page,
-                                     PDPageContentStream.AppendMode.OVERWRITE,
-                                     true,
-                                     true)) {
+                                new PDPageContentStream(
+                                        document,
+                                        page,
+                                        PDPageContentStream.AppendMode.OVERWRITE,
+                                        true,
+                                        true)) {
                             contentStream.drawImage(pdImage, 0, 0);
                         }
                     } catch (IOException e) {
                         log.warn(
-                            "Error processing image {}: {}", imageEntry.name(), e.getMessage());
+                                "Error processing image {}: {}", imageEntry.name(), e.getMessage());
                     }
                 }
 
                 if (document.getNumberOfPages() == 0) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                        "error.fileProcessing",
-                        "No images could be processed from the CBR file. All images may be"
-                            + " corrupted or in unsupported formats.");
+                            "error.fileProcessing",
+                            "No images could be processed from the CBR file. All images may be"
+                                    + " corrupted or in unsupported formats.");
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
