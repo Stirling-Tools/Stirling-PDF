@@ -196,8 +196,9 @@ public class AdminSettingsController {
                 log.info("Admin updating setting: {} = {}", key, value);
                 GeneralUtils.saveKeyToSettings(key, value);
 
-                // Track this as a pending change
-                pendingChanges.put(key, value);
+                // Track this as a pending change (convert null to empty string for
+                // ConcurrentHashMap)
+                pendingChanges.put(key, value != null ? value : "");
 
                 updatedCount++;
             }
@@ -267,6 +268,9 @@ public class AdminSettingsController {
                     sectionMap.put("_pending", sectionPending);
                 }
             }
+
+            // Mask sensitive fields before returning to frontend
+            sectionMap = maskSensitiveFields(sectionMap);
 
             log.debug(
                     "Admin requested settings section: {} (includePending={})",
