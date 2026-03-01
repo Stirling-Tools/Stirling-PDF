@@ -803,6 +803,11 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
         generate_aot_cache "$AOT_CACHE" -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication
       elif [ -f /app.jar ]; then
         generate_aot_cache "$AOT_CACHE" -jar /app.jar
+      elif [ -d /app/BOOT-INF ]; then
+        # Spring Boot exploded layer layout (produced by 'java -Djarmode=tools extract --layers').
+        # The actual JAVA_CMD uses JarLauncher with default classpath = CWD (/app).
+        # Mirror that exactly: -cp /app resolves the same classes.
+        generate_aot_cache "$AOT_CACHE" -cp /app org.springframework.boot.loader.launch.JarLauncher
       else
         log "AOT: Cannot determine JAR layout; skipping cache generation."
       fi
