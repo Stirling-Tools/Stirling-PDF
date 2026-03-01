@@ -4205,11 +4205,20 @@ title = "Extract Pages"
 
 [pageLayout]
 addBorder = "Add Borders"
+cols = "Columns"
 header = "Multi Page Layout"
+orientation = "Orientation:"
 pagesPerSheet = "Pages per sheet:"
+readingDirection = "Reading Direction:"
+rows = "Rows"
 submit = "Submit"
 tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
+
+[pageLayout.arrangement]
+byColumns = "By Columns"
+byRows = "By Rows"
+label = "Page arrangement:"
 
 [pageLayout.desc]
 16 = "Place 16 pages on a single sheet (4 × 4 grid)."
@@ -4220,6 +4229,57 @@ title = "Multi Page Layout"
 
 [pageLayout.error]
 failed = "An error occurred while creating the multi-page layout."
+
+[pageLayout.orientation]
+landscape = "Landscape"
+portrait = "Portrait"
+
+[pageLayout.readingDirection]
+ltr = "Left to Right"
+rtl = "Right to Left"
+
+[pageLayout.tooltip.header]
+title = "Page Layout Guide"
+
+[pageLayout.tooltip.overview]
+title = "What is Page Layout?"
+text = "Fit multiple pages onto a single sheet for handouts or to save paper."
+
+[pageLayout.tooltip.mode]
+title = "Mode"
+text = "Choose how the grid is configured:"
+bullet1 = "Default: Pick a preset and the grid is calculated automatically."
+bullet2 = "Custom: Set rows and columns manually."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pages per Sheet (Default Mode)"
+text = "Choose how many pages per sheet (e.g. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rows & Columns (Custom Mode)"
+text = "Set exact grid dimensions. Total pages per sheet = rows × columns."
+
+[pageLayout.tooltip.orientation]
+title = "Orientation"
+text = "Sets the output sheet orientation:"
+bullet1 = "Portrait: Taller than wide."
+bullet2 = "Landscape: Wider than tall."
+
+[pageLayout.tooltip.arrangement]
+title = "Page Arrangement"
+text = "Controls the order pages fill the grid:"
+bullet1 = "By Rows: Fill row by row (left-to-right or right-to-left)."
+bullet2 = "By Columns: Fill top-to-bottom, column by column."
+
+[pageLayout.tooltip.readingDirection]
+title = "Reading Direction"
+text = "Controls the horizontal order of pages:"
+bullet1 = "LTR: Left to right."
+bullet2 = "RTL: Right to left."
+
+[pageLayout.tooltip.addBorder]
+title = "Add Borders"
+text = "Draws border lines around each page cell for cutting guides or visual separation."
 
 [pageRemover]
 header = "PDF Page remover"
