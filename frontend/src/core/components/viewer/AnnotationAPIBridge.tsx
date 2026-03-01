@@ -7,6 +7,7 @@ import type {
   AnnotationAPI,
   AnnotationEvent,
   AnnotationPatch,
+  AnnotationRect,
 } from '@app/components/viewer/viewerTypes';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
@@ -90,6 +91,8 @@ type AnnotationApiSurface = {
   updateAnnotation?: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => void;
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
+  /** v2.7.0: move annotation without regenerating its appearance stream */
+  moveAnnotation?: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => void;
 };
 
 type ToolDefaultsBuilder = (options?: AnnotationToolOptions) => AnnotationDefaults;
@@ -301,7 +304,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
 
   const configureAnnotationTool = useCallback(
     (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
-      const api = annotationApi as AnnotationApiSurface | undefined;
+      const api = annotationApi as unknown as AnnotationApiSurface | undefined;
       if (!api?.setActiveTool) return;
 
       const defaults = buildAnnotationDefaults(toolId, options);
@@ -328,13 +331,13 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       isReady: () => !!annotationApi && documentReady,
       setAnnotationStyle: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
         const defaults = buildAnnotationDefaults(toolId, options);
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         if (defaults && api?.setToolDefaults) {
           api.setToolDefaults(toolId, defaults);
         }
       },
       getSelectedAnnotation: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         if (!api?.getSelectedAnnotation) {
           return null;
         }
@@ -354,32 +357,37 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
         }
       },
       deselectAnnotation: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.deselectAnnotation?.();
       },
       updateAnnotation: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.updateAnnotation?.(pageIndex, annotationId, patch);
       },
       deactivateTools: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.setActiveTool?.(null);
       },
       onAnnotationEvent: (listener: (event: AnnotationEvent) => void) => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         if (api?.onAnnotationEvent) {
           return api.onAnnotationEvent(listener);
         }
         return undefined;
       },
       getActiveTool: () => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         return api?.getActiveTool?.() ?? null;
       },
 
       purgeAnnotation: (pageIndex: number, annotationId: string) => {
-        const api = annotationApi as AnnotationApiSurface | undefined;
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         api?.purgeAnnotation?.(pageIndex, annotationId);
+      },
+
+      moveAnnotation: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => {
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
+        api?.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
     [annotationApi, configureAnnotationTool, buildAnnotationDefaults]

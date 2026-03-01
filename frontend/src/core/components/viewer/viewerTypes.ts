@@ -1,3 +1,8 @@
+export interface AnnotationRect {
+  origin: { x: number; y: number };
+  size: { width: number; height: number };
+}
+
 export interface SignatureAPI {
   addImageSignature: (
     signatureData: string,
@@ -14,6 +19,7 @@ export interface SignatureAPI {
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   getPageAnnotations: (pageIndex: number) => Promise<any[]>;
+  moveAnnotation?: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => void;
 }
 
 export interface AnnotationAPI {
@@ -26,6 +32,12 @@ export interface AnnotationAPI {
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   getActiveTool?: () => { id: AnnotationToolId } | null;
   purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
+  /**
+   * Move an annotation to a new position without regenerating its appearance stream.
+   * Uses the embedPDF v2.7.0 moveAnnotation API for efficient repositioning of annotations
+   * that have existing AP streams (e.g. stamps, signatures).
+   */
+  moveAnnotation?: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => void;
 }
 
 export interface HistoryAPI {
