@@ -219,16 +219,16 @@ public class MultiPageLayoutController {
                             int rowIndex;
                             int colIndex;
 
-                            if (arrangement.equals("BY_ROWS")) {
+                            if ("BY_ROWS".equals(arrangement)) {
                                 rowIndex = adjustedPageIndex / cols;
-                                if (readingDirection.equals("LTR")) {
+                                if ("LTR".equals(readingDirection)) {
                                     colIndex = adjustedPageIndex % cols;
                                 } else {
                                     colIndex = cols - 1 - (adjustedPageIndex % cols);
                                 }
                             } else {
                                 rowIndex = adjustedPageIndex % rows;
-                                if (readingDirection.equals("LTR")) {
+                                if ("LTR".equals(readingDirection)) {
                                     colIndex = adjustedPageIndex / rows;
                                 } else {
                                     colIndex = cols - 1 - (adjustedPageIndex / rows);
@@ -255,11 +255,12 @@ public class MultiPageLayoutController {
 
                             if (addBorder) {
                                 // Draw border around each page
-                                float borderX = colIndex * cellWidth;
-                                float borderY =
-                                        newPage.getMediaBox().getHeight()
-                                                - (rowIndex + 1) * cellHeight;
-                                contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
+                                // float borderX = colIndex * cellWidth;
+                                /*float borderY =
+                                newPage.getMediaBox().getHeight()
+                                        - (rowIndex + 1) * cellHeight;*/
+                                contentStream.addRect(
+                                        x, y, rect.getWidth() * scale, rect.getHeight() * scale);
                                 contentStream.stroke();
                             }
                         }
