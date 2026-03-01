@@ -137,7 +137,7 @@
     "@types/gapi.client.drive-v3": "^0.0.5",
     "@types/google.accounts": "^0.0.18",
     "@types/google.picker": "^0.0.51",
-    "@types/node": "^24.5.2",
+    "@types/node": "^25.3.3",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.44.1",
