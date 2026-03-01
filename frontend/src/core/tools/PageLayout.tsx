@@ -5,6 +5,7 @@ import { BaseToolProps, ToolComponent } from '@app/types/tool';
 import { usePageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
 import { usePageLayoutOperation } from '@app/hooks/tools/pageLayout/usePageLayoutOperation';
 import PageLayoutSettings from '@app/components/tools/pageLayout/PageLayoutSettings';
+import { usePageLayoutTips } from '@app/components/tooltips/usePageLayoutTips';
 
 const PageLayout = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -16,6 +17,8 @@ const PageLayout = (props: BaseToolProps) => {
     props
   );
 
+  const pageLayoutTips = usePageLayoutTips();
+
   return createToolFlow({
     files: {
       selectedFiles: base.selectedFiles,
@@ -26,6 +29,7 @@ const PageLayout = (props: BaseToolProps) => {
         title: 'Settings',
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        tooltip: pageLayoutTips,
         content: (
           <PageLayoutSettings
             parameters={base.params.parameters}
