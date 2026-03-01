@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import lombok.RequiredArgsConstructor;
@@ -44,12 +45,13 @@ public class AuditRestController {
     private final ObjectMapper objectMapper;
 
     /**
-     * Get audit events with pagination and filters. Maps to frontend's getEvents() call.
+     * Get audit events with pagination and filters. Maps to frontend's getEvents() call. Supports
+     * both single values and multi-select arrays for eventType and username.
      *
      * @param page Page number (0-indexed)
      * @param pageSize Number of items per page
-     * @param eventType Filter by event type
-     * @param username Filter by username (principal)
+     * @param eventType Filter by event type(s) - can be single value or array
+     * @param username Filter by username(s) - can be single value or array
      * @param startDate Filter start date
      * @param endDate Filter end date
      * @return Paginated audit events response
@@ -58,8 +60,8 @@ public class AuditRestController {
     public ResponseEntity<AuditEventsResponse> getAuditEvents(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "pageSize", defaultValue = "30") int pageSize,
-            @RequestParam(value = "eventType", required = false) String eventType,
-            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "eventType", required = false) String[] eventTypes,
+            @RequestParam(value = "username", required = false) String[] usernames,
             @RequestParam(value = "startDate", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate startDate,
@@ -70,33 +72,45 @@ public class AuditRestController {
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by("timestamp").descending());
         Page<PersistentAuditEvent> events;
 
+        // Convert arrays to lists
+        List<String> eventTypeList =
+                (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
+        List<String> usernameList =
+                (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
+
+        Instant startInstant = null;
+        Instant endInstant = null;
+        if (startDate != null && endDate != null) {
+            startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            endInstant = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        }
+
         // Apply filters based on provided parameters
-        if (eventType != null && username != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        if (eventTypeList != null
+                && usernameList != null
+                && startInstant != null
+                && endInstant != null) {
             events =
-                    auditRepository.findByPrincipalAndTypeAndTimestampBetween(
-                            username, eventType, start, end, pageable);
-        } else if (eventType != null && username != null) {
-            events = auditRepository.findByPrincipalAndType(username, eventType, pageable);
-        } else if (eventType != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTypeAndTimestampBetween(eventType, start, end, pageable);
-        } else if (username != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                    auditRepository.findByTypeInAndPrincipalInAndTimestampBetween(
+                            eventTypeList, usernameList, startInstant, endInstant, pageable);
+        } else if (eventTypeList != null && usernameList != null) {
             events =
-                    auditRepository.findByPrincipalAndTimestampBetween(
-                            username, start, end, pageable);
-        } else if (startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTimestampBetween(start, end, pageable);
-        } else if (eventType != null) {
-            events = auditRepository.findByType(eventType, pageable);
-        } else if (username != null) {
-            events = auditRepository.findByPrincipal(username, pageable);
+                    auditRepository.findByTypeInAndPrincipalIn(
+                            eventTypeList, usernameList, pageable);
+        } else if (eventTypeList != null && startInstant != null && endInstant != null) {
+            events =
+                    auditRepository.findByTypeInAndTimestampBetween(
+                            eventTypeList, startInstant, endInstant, pageable);
+        } else if (usernameList != null && startInstant != null && endInstant != null) {
+            events =
+                    auditRepository.findByPrincipalInAndTimestampBetween(
+                            usernameList, startInstant, endInstant, pageable);
+        } else if (startInstant != null && endInstant != null) {
+            events = auditRepository.findByTimestampBetween(startInstant, endInstant, pageable);
+        } else if (eventTypeList != null) {
+            events = auditRepository.findByTypeIn(eventTypeList, pageable);
+        } else if (usernameList != null) {
+            events = auditRepository.findByPrincipalIn(usernameList, pageable);
         } else {
             events = auditRepository.findAll(pageable);
         }
@@ -515,13 +529,14 @@ public class AuditRestController {
     }
 
     /**
-     * Export audit data in CSV or JSON format. Maps to frontend's exportData() call.
+     * Export audit data in CSV or JSON format. Maps to frontend's exportData() call. Supports both
+     * single values and multi-select arrays for eventType and username.
      *
      * @param format Export format (csv or json)
-     * @param fields Comma-separated list of fields to include in CSV (e.g.,
+     * @param fields Comma-separated list of fields to include (e.g.,
      *     "date,username,tool,documentName,author,fileHash")
-     * @param eventType Filter by event type
-     * @param username Filter by username
+     * @param eventTypes Filter by event type(s) - can be single value or array
+     * @param usernames Filter by username(s) - can be single value or array
      * @param startDate Filter start date
      * @param endDate Filter end date
      * @return File download response
@@ -530,8 +545,8 @@ public class AuditRestController {
     public ResponseEntity<byte[]> exportAuditData(
             @RequestParam(value = "format", defaultValue = "csv") String format,
             @RequestParam(value = "fields", required = false) String fields,
-            @RequestParam(value = "eventType", required = false) String eventType,
-            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "eventType", required = false) String[] eventTypes,
+            @RequestParam(value = "username", required = false) String[] usernames,
             @RequestParam(value = "startDate", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate startDate,
@@ -542,34 +557,44 @@ public class AuditRestController {
         // Get data with same filtering as getAuditEvents
         List<PersistentAuditEvent> events;
 
-        if (eventType != null && username != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        // Convert arrays to lists
+        List<String> eventTypeList =
+                (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
+        List<String> usernameList =
+                (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
+
+        Instant startInstant = null;
+        Instant endInstant = null;
+        if (startDate != null && endDate != null) {
+            startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            endInstant = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        }
+
+        if (eventTypeList != null
+                && usernameList != null
+                && startInstant != null
+                && endInstant != null) {
             events =
-                    auditRepository.findAllByPrincipalAndTypeAndTimestampBetweenForExport(
-                            username, eventType, start, end);
-        } else if (eventType != null && username != null) {
-            events = auditRepository.findAllByPrincipalAndTypeForExport(username, eventType);
-        } else if (eventType != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                    auditRepository.findByTypeInAndPrincipalInAndTimestampBetweenForExport(
+                            eventTypeList, usernameList, startInstant, endInstant);
+        } else if (eventTypeList != null && usernameList != null) {
             events =
-                    auditRepository.findAllByTypeAndTimestampBetweenForExport(
-                            eventType, start, end);
-        } else if (username != null && startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                    auditRepository.findByTypeInAndPrincipalInForExport(
+                            eventTypeList, usernameList);
+        } else if (eventTypeList != null && startInstant != null && endInstant != null) {
             events =
-                    auditRepository.findAllByPrincipalAndTimestampBetweenForExport(
-                            username, start, end);
-        } else if (startDate != null && endDate != null) {
-            Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findAllByTimestampBetweenForExport(start, end);
-        } else if (eventType != null) {
-            events = auditRepository.findByTypeForExport(eventType);
-        } else if (username != null) {
-            events = auditRepository.findAllByPrincipalForExport(username);
+                    auditRepository.findByTypeInAndTimestampBetweenForExport(
+                            eventTypeList, startInstant, endInstant);
+        } else if (usernameList != null && startInstant != null && endInstant != null) {
+            events =
+                    auditRepository.findByPrincipalInAndTimestampBetweenForExport(
+                            usernameList, startInstant, endInstant);
+        } else if (startInstant != null && endInstant != null) {
+            events = auditRepository.findAllByTimestampBetweenForExport(startInstant, endInstant);
+        } else if (eventTypeList != null) {
+            events = auditRepository.findByTypeInForExport(eventTypeList);
+        } else if (usernameList != null) {
+            events = auditRepository.findByPrincipalInForExport(usernameList);
         } else {
             events = auditRepository.findAll();
         }
@@ -872,5 +897,26 @@ public class AuditRestController {
         private Map<String, Long> eventsByType;
         private Map<String, Long> eventsByUser;
         private Map<String, Long> topTools;
+    }
+
+    /**
+     * Clear all audit data from the database. This is an irreversible operation. Requires ADMIN
+     * role.
+     *
+     * @return Success response
+     */
+    @PostMapping("/audit-clear-all")
+    public ResponseEntity<?> clearAllAuditData() {
+        try {
+            // Delete all audit events
+            auditRepository.deleteAll();
+            log.warn("All audit data has been cleared by admin user");
+            return ResponseEntity.ok()
+                    .body(Map.of("message", "All audit data has been cleared successfully"));
+        } catch (Exception e) {
+            log.error("Error clearing audit data", e);
+            return ResponseEntity.internalServerError()
+                    .body("Failed to clear audit data: " + e.getMessage());
+        }
     }
 }

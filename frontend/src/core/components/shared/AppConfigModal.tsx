@@ -118,7 +118,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       opened={opened}
       onClose={handleClose}
       title={null}
-      size={isMobile ? "100%" : 980}
+      size={isMobile ? "100%" : 1100}
       centered
       radius="lg"
       withCloseButton={false}

@@ -17,22 +17,30 @@ import AuditFiltersForm from '@app/components/shared/config/configSections/audit
 
 interface AuditExportSectionProps {
   loginEnabled?: boolean;
-  pdfMetadataEnabled?: boolean;
+  captureFileHash?: boolean;
+  capturePdfAuthor?: boolean;
+  captureOperationResults?: boolean;
 }
 
-const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = true, pdfMetadataEnabled = false }) => {
+const AuditExportSection: React.FC<AuditExportSectionProps> = ({
+  loginEnabled = true,
+  captureFileHash = false,
+  capturePdfAuthor = false,
+  captureOperationResults = false,
+}) => {
   const { t } = useTranslation();
   const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
   const [exporting, setExporting] = useState(false);
   const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({
     date: true,
     username: true,
-    ipaddress: true,
+    ipaddress: false,
     tool: true,
     documentName: true,
-    outcome: false,
-    author: pdfMetadataEnabled,
-    fileHash: pdfMetadataEnabled,
+    outcome: true,
+    author: capturePdfAuthor,
+    fileHash: captureFileHash,
+    operationResults: captureOperationResults,
   });
 
   // Use shared filters hook
@@ -44,9 +52,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = 
     try {
       setExporting(true);
 
-      const fieldsParam = exportFormat === 'csv'
-        ? Object.keys(selectedFields).filter(k => selectedFields[k as keyof typeof selectedFields]).join(',')
-        : undefined;
+      const fieldsParam = Object.keys(selectedFields).filter(k => selectedFields[k as keyof typeof selectedFields]).join(',');
 
       const blob = await auditService.exportData(exportFormat, { ...filters, fields: fieldsParam });
 
@@ -100,9 +106,8 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = 
           />
         </div>
 
-        {/* CSV Field Selection */}
-        {exportFormat === 'csv' && (
-          <div>
+        {/* Field Selection */}
+        <div>
             <Text size="sm" fw={600} mb="xs">
               {t('audit.export.selectFields', 'Select Fields to Include')}
             </Text>
@@ -143,33 +148,32 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = 
                 onChange={(e) => setSelectedFields({ ...selectedFields, outcome: e.currentTarget.checked })}
                 disabled={!loginEnabled}
               />
-              <Tooltip
-                label={pdfMetadataEnabled ? '' : t('audit.export.verboseRequired', 'Requires VERBOSE audit level')}
-                disabled={pdfMetadataEnabled}
-              >
+              {capturePdfAuthor && (
                 <Checkbox
                   label={t('audit.export.fieldAuthor', 'Author (from PDF)')}
                   checked={selectedFields.author}
                   onChange={(e) => setSelectedFields({ ...selectedFields, author: e.currentTarget.checked })}
-                  disabled={!loginEnabled || !pdfMetadataEnabled}
-                  opacity={pdfMetadataEnabled ? 1 : 0.5}
+                  disabled={!loginEnabled}
                 />
-              </Tooltip>
-              <Tooltip
-                label={pdfMetadataEnabled ? '' : t('audit.export.verboseRequired', 'Requires VERBOSE audit level')}
-                disabled={pdfMetadataEnabled}
-              >
+              )}
+              {captureFileHash && (
                 <Checkbox
                   label={t('audit.export.fieldFileHash', 'File Hash (SHA-256)')}
                   checked={selectedFields.fileHash}
                   onChange={(e) => setSelectedFields({ ...selectedFields, fileHash: e.currentTarget.checked })}
-                  disabled={!loginEnabled || !pdfMetadataEnabled}
-                  opacity={pdfMetadataEnabled ? 1 : 0.5}
+                  disabled={!loginEnabled}
                 />
-              </Tooltip>
+              )}
+              {captureOperationResults && (
+                <Checkbox
+                  label={t('audit.export.fieldOperationResults', 'Operation Results')}
+                  checked={selectedFields.operationResults}
+                  onChange={(e) => setSelectedFields({ ...selectedFields, operationResults: e.currentTarget.checked })}
+                  disabled={!loginEnabled}
+                />
+              )}
             </Stack>
-          </div>
-        )}
+        </div>
 
         {/* Filters */}
         <div>

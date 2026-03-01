@@ -2,12 +2,12 @@
 .modal-container {
   display: flex;
   gap: 0;
-  height: 37.5rem; /* 600px */
+  height: 45rem; /* 720px */
 }
 
 .modal-nav {
   width: 15rem; /* 240px */
-  height: 37.5rem; /* 600px */
+  height: 45rem; /* 720px */
   border-top-left-radius: 0.75rem; /* 12px */
   border-bottom-left-radius: 0.75rem; /* 12px */
   overflow: hidden;
@@ -108,7 +108,7 @@
 
 .modal-content {
   flex: 1;
-  height: 37.5rem; /* 600px */
+  height: 45rem; /* 720px */
   display: flex;
   flex-direction: column;
   overflow: hidden;

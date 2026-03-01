@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Select, Button, Stack, SimpleGrid, Text } from '@mantine/core';
+import { Group, Select, MultiSelect, Button, Stack, SimpleGrid, Text } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
 import { AuditFilters } from '@app/services/auditService';
@@ -125,20 +125,20 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
 
       {/* Filter Inputs */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm">
-        <Select
+        <MultiSelect
           placeholder={t('audit.events.filterByType', 'Filter by type')}
           data={eventTypes.map((type) => ({ value: type, label: type }))}
-          value={filters.eventType}
-          onChange={(value) => onFilterChange('eventType', value || undefined)}
+          value={Array.isArray(filters.eventType) ? filters.eventType : (filters.eventType ? [filters.eventType] : [])}
+          onChange={(value) => onFilterChange('eventType', value.length > 0 ? value : undefined)}
           clearable
           disabled={disabled}
           comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
         />
-        <Select
+        <MultiSelect
           placeholder={t('audit.events.filterByUser', 'Filter by user')}
           data={users.map((user) => ({ value: user, label: user }))}
-          value={filters.username}
-          onChange={(value) => onFilterChange('username', value || undefined)}
+          value={Array.isArray(filters.username) ? filters.username : (filters.username ? [filters.username] : [])}
+          onChange={(value) => onFilterChange('username', value.length > 0 ? value : undefined)}
           clearable
           searchable
           disabled={disabled}
@@ -152,7 +152,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
           }}
           clearable
           disabled={disabled}
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL, modal: true }}
         />
         <DateInput
           placeholder={t('audit.events.endDate', 'End date')}
@@ -162,7 +162,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
           }}
           clearable
           disabled={disabled}
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL, modal: true }}
         />
       </SimpleGrid>
 

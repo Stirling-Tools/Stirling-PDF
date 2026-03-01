@@ -612,7 +612,14 @@ public class AuditService {
             String cls = controller.getSimpleName().toLowerCase(Locale.ROOT);
             String pkg = controller.getPackage().getName().toLowerCase(Locale.ROOT);
 
-            if ("GET".equals(httpMethod)) return AuditEventType.HTTP_REQUEST;
+            if ("GET".equals(httpMethod)) {
+                // Categorize GET requests as UI_DATA (UI data fetches)
+                // API endpoints use POST/PUT/DELETE, or are specific operational endpoints
+                if (isUiDataEndpoint(path)) {
+                    return AuditEventType.UI_DATA;
+                }
+                return AuditEventType.HTTP_REQUEST;
+            }
 
             if (cls.contains("user")
                     || cls.contains("auth")
@@ -757,6 +764,32 @@ public class AuditService {
     }
 
     // ========== HELPER METHODS ==========
+
+    /**
+     * Check if an endpoint is an API endpoint. API endpoints match /api/v1/* pattern but exclude
+     * /api/v1/auth/*, /api/v1/ui-data/*, /api/v1/proprietary/ui-data/*, /api/v1/config/*, and
+     * /api/v1/admin/license-info. Everything else is considered "UI".
+     *
+     * @param endpoint The endpoint path to check
+     * @return true if this is an API endpoint, false if it's a UI endpoint
+     */
+    private boolean isUiDataEndpoint(String endpoint) {
+        if (endpoint == null) {
+            return false;
+        }
+
+        // UI data endpoints include auth, settings, config, user/team management, and UI data
+        // fetches
+        return endpoint.startsWith("/api/v1/auth/")
+                || endpoint.startsWith("/api/v1/ui-data/")
+                || endpoint.startsWith("/api/v1/proprietary/ui-data/")
+                || endpoint.startsWith("/api/v1/config/")
+                || endpoint.startsWith("/api/v1/admin/settings/")
+                || endpoint.startsWith("/api/v1/user/")
+                || endpoint.startsWith("/api/v1/users/")
+                || endpoint.equals("/api/v1/admin/license-info")
+                || endpoint.equals("/login");
+    }
 
     /**
      * Check if operation results (return values) should be captured

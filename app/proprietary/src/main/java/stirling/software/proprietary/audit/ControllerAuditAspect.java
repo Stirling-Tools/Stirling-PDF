@@ -260,6 +260,17 @@ public class ControllerAuditAspect {
     // Using AuditUtils.determineAuditEventType instead
 
     private String getRequestPath(Method method, String httpMethod) {
+        // Prefer actual request URI over annotation patterns (which may contain regex)
+        ServletRequestAttributes attrs =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs != null) {
+            HttpServletRequest request = attrs.getRequest();
+            if (request != null) {
+                return request.getRequestURI();
+            }
+        }
+
+        // Fallback: reconstruct from annotations when not in web context
         String base = "";
         RequestMapping cm = method.getDeclaringClass().getAnnotation(RequestMapping.class);
         if (cm != null && cm.value().length > 0) base = cm.value()[0];

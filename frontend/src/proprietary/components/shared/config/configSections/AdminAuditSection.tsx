@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Loader, Alert, Stack, Switch, Group, Text, Button, Accordion } from '@mantine/core';
+import { Tabs, Loader, Alert, Stack, Text, Button, Accordion } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import auditService, { AuditSystemStatus as AuditStatus } from '@app/services/auditService';
@@ -8,6 +8,7 @@ import AuditStatsCards from '@app/components/shared/config/configSections/audit/
 import AuditChartsSection from '@app/components/shared/config/configSections/audit/AuditChartsSection';
 import AuditEventsTable from '@app/components/shared/config/configSections/audit/AuditEventsTable';
 import AuditExportSection from '@app/components/shared/config/configSections/audit/AuditExportSection';
+import AuditClearDataSection from '@app/components/shared/config/configSections/audit/AuditClearDataSection';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
@@ -26,8 +27,6 @@ const AdminAuditSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month'>('week');
-  const [autoRefresh, setAutoRefresh] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchSystemStatus = async () => {
@@ -63,20 +62,7 @@ const AdminAuditSection: React.FC = () => {
       });
       setLoading(false);
     }
-  }, [loginEnabled, showDemoData, refreshKey]);
-
-  // Auto-refresh effect
-  useEffect(() => {
-    if (!autoRefresh) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setRefreshKey((prev) => prev + 1);
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [autoRefresh]);
+  }, [loginEnabled, showDemoData]);
 
   // Override loading state when showing demo data
   const actualLoading = showDemoData ? false : loading;
@@ -154,18 +140,6 @@ const AdminAuditSection: React.FC = () => {
 
       <AuditSystemStatus status={systemStatus} />
 
-      {/* Auto-refresh toggle */}
-      {systemStatus?.enabled && isEnabled && (
-        <Group justify="flex-end">
-          <Switch
-            label={t('audit.systemStatus.autoRefreshLabel', 'Auto-refresh every 30s')}
-            checked={autoRefresh}
-            onChange={(event) => setAutoRefresh(event.currentTarget.checked)}
-            disabled={!isEnabled}
-          />
-        </Group>
-      )}
-
       {systemStatus?.enabled ? (
         <Tabs defaultValue="dashboard">
           <Tabs.List>
@@ -178,10 +152,13 @@ const AdminAuditSection: React.FC = () => {
             <Tabs.Tab value="export" disabled={!isEnabled}>
               {t('audit.tabs.export', 'Export')}
             </Tabs.Tab>
+            <Tabs.Tab value="clearData" disabled={!isEnabled}>
+              {t('audit.tabs.clearData', 'Clear Data')}
+            </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="dashboard" pt="md">
-            <Stack gap="lg" key={`dashboard-${refreshKey}`}>
+            <Stack gap="lg">
               {/* Stats Cards - Always Visible */}
               <AuditStatsCards loginEnabled={isEnabled} timePeriod={timePeriod} />
 
@@ -203,12 +180,21 @@ const AdminAuditSection: React.FC = () => {
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value="events" pt="md" key={`events-${refreshKey}`}>
+          <Tabs.Panel value="events" pt="md">
             <AuditEventsTable loginEnabled={isEnabled} pdfMetadataEnabled={systemStatus?.pdfMetadataEnabled} />
           </Tabs.Panel>
 
-          <Tabs.Panel value="export" pt="md" key={`export-${refreshKey}`}>
-            <AuditExportSection loginEnabled={isEnabled} pdfMetadataEnabled={systemStatus?.pdfMetadataEnabled} />
+          <Tabs.Panel value="export" pt="md">
+            <AuditExportSection
+              loginEnabled={isEnabled}
+              captureFileHash={systemStatus?.captureFileHash}
+              capturePdfAuthor={systemStatus?.capturePdfAuthor}
+              captureOperationResults={systemStatus?.captureOperationResults}
+            />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="clearData" pt="md">
+            <AuditClearDataSection loginEnabled={isEnabled} />
           </Tabs.Panel>
         </Tabs>
       ) : (

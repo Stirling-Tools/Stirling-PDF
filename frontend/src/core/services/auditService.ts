@@ -6,6 +6,9 @@ export interface AuditSystemStatus {
   retentionDays: number;
   totalEvents: number;
   pdfMetadataEnabled: boolean;
+  captureFileHash: boolean;
+  capturePdfAuthor: boolean;
+  captureOperationResults: boolean;
 }
 
 export interface AuditEvent {
@@ -37,8 +40,8 @@ export interface AuditChartsData {
 }
 
 export interface AuditFilters {
-  eventType?: string;
-  username?: string;
+  eventType?: string | string[];
+  username?: string | string[];
   startDate?: string;
   endDate?: string;
   outcome?: string;
@@ -82,6 +85,9 @@ const auditService = {
       retentionDays: data.retentionDays,
       totalEvents: 0, // Will be fetched separately
       pdfMetadataEnabled: data.pdfMetadataEnabled ?? false,
+      captureFileHash: data.captureFileHash ?? false,
+      capturePdfAuthor: data.capturePdfAuthor ?? false,
+      captureOperationResults: data.captureOperationResults ?? false,
     };
   },
 
@@ -143,6 +149,13 @@ const auditService = {
   async getUsers(): Promise<string[]> {
     const response = await apiClient.get<string[]>('/api/v1/proprietary/ui-data/audit-users');
     return response.data;
+  },
+
+  /**
+   * Clear all audit data from the database (irreversible)
+   */
+  async clearAllAuditData(): Promise<void> {
+    await apiClient.post('/api/v1/proprietary/ui-data/audit-clear-all', {});
   },
 };
 
