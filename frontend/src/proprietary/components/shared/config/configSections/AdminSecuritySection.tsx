@@ -523,7 +523,7 @@ export default function AdminSecuritySection() {
                   <PendingBadge show={isFieldPending('audit.level')} />
                 </Group>
               }
-              description={t('admin.settings.security.audit.level.description', 'Audit Level: OFF (0) = no logging | BASIC (1) = auth events only | STANDARD (2) = all requests & operations | VERBOSE (3) = detailed logs with parameters. Higher levels include all events from lower levels.')}
+              description={t('admin.settings.security.audit.level.description', 'Audit Level: OFF (0) = no logging | BASIC (1) = file modifications & settings | STANDARD (2) = file operations + user actions (excludes polling) | VERBOSE (3) = everything including polling. Higher levels include all events from lower levels.')}
               value={settings?.audit?.level || 2}
               onChange={(value) => setSettings({ ...settings, audit: { ...settings?.audit, level: Number(value) } })}
               min={0}
@@ -606,10 +606,10 @@ export default function AdminSecuritySection() {
                   <PendingBadge show={isFieldPending('audit.retentionDays')} />
                 </Group>
               }
-              description={t('admin.settings.security.audit.retentionDays.description', 'Number of days to retain audit logs (0 or negative = infinite retention)')}
+              description={t('admin.settings.security.audit.retentionDays.description', 'Number of days to retain audit logs (0 = infinite retention)')}
               value={settings?.audit?.retentionDays || 90}
               onChange={(value) => setSettings({ ...settings, audit: { ...settings?.audit, retentionDays: Number(value) } })}
-              min={1}
+              min={0}
               max={3650}
               disabled={!loginEnabled}
             />

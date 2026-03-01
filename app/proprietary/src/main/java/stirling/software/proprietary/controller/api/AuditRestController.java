@@ -376,16 +376,20 @@ public class AuditRestController {
                     Map<String, Object> data = objectMapper.readValue(event.getData(), Map.class);
 
                     // Track success/failure (safe type conversion)
-                    Object outcomeObj = data.get("outcome");
-                    String outcome = null;
-                    if (outcomeObj instanceof String) {
-                        outcome = (String) outcomeObj;
-                    } else if (outcomeObj != null) {
-                        outcome = String.valueOf(outcomeObj);
+                    // Check both "status" (current) and "outcome" (legacy) for compatibility
+                    Object statusObj = data.get("status");
+                    if (statusObj == null) {
+                        statusObj = data.get("outcome");
                     }
-                    if ("success".equals(outcome)) {
+                    String status = null;
+                    if (statusObj instanceof String) {
+                        status = (String) statusObj;
+                    } else if (statusObj != null) {
+                        status = String.valueOf(statusObj);
+                    }
+                    if ("success".equals(status)) {
                         successCount++;
-                    } else if ("failure".equals(outcome)) {
+                    } else if ("failure".equals(status)) {
                         failureCount++;
                     }
 
@@ -451,16 +455,18 @@ public class AuditRestController {
                 try {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> data = objectMapper.readValue(event.getData(), Map.class);
-                    // Safe type conversion for outcome (already parsed earlier, but do it again for
-                    // safety)
-                    Object outcomeObj = data.get("outcome");
-                    String outcome = null;
-                    if (outcomeObj instanceof String) {
-                        outcome = (String) outcomeObj;
-                    } else if (outcomeObj != null) {
-                        outcome = String.valueOf(outcomeObj);
+                    // Check both "status" (current) and "outcome" (legacy) for compatibility
+                    Object statusObj = data.get("status");
+                    if (statusObj == null) {
+                        statusObj = data.get("outcome");
                     }
-                    if ("failure".equals(outcome)) {
+                    String status = null;
+                    if (statusObj instanceof String) {
+                        status = (String) statusObj;
+                    } else if (statusObj != null) {
+                        status = String.valueOf(statusObj);
+                    }
+                    if ("failure".equals(status)) {
                         errorCount++;
                     } else {
                         Object statusCode = data.get("statusCode");

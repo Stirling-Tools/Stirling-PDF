@@ -13,8 +13,9 @@ public enum AuditLevel {
 
     /**
      * BASIC - File modifications only (level 1) Tracks: PDF file operations like compress, split,
-     * merge, etc., and settings changes. Ideal for: Compliance tracking of file modifications with
-     * minimal log volume.
+     * merge, etc., and settings changes. Captures: Operation status (success/failure), method
+     * parameters, timing. Ideal for: Compliance tracking of file modifications with minimal log
+     * volume.
      */
     BASIC(1),
 
@@ -28,8 +29,9 @@ public enum AuditLevel {
 
     /**
      * VERBOSE - Everything including polling (level 3) Tracks: Everything in STANDARD plus
-     * continuous polling calls and all GET requests. Captures: Method parameters, operation
-     * results, detailed timing. Warning: High log volume and performance impact.
+     * continuous polling calls and all GET requests. Captures: Detailed timing information. Note:
+     * Operation results (return values) are controlled by separate captureOperationResults flag.
+     * Warning: High log volume and performance impact.
      */
     VERBOSE(3);
 

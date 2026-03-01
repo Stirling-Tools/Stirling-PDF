@@ -246,4 +246,8 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             @Param("principals") List<String> principals,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate);
+
+    // Query events excluding a specific type (used for analytics where we want to exclude UI_DATA)
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType")
+    List<PersistentAuditEvent> findAllExceptTypeForExport(@Param("excludeType") String excludeType);
 }

@@ -3,8 +3,6 @@ package stirling.software.common.aop;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -189,38 +187,20 @@ public class AutoJobAspect {
                                             }
                                         }
 
-                                        // Use non-blocking delay for all retry attempts to avoid
-                                        // blocking
-                                        // threads
-                                        // For sync jobs this avoids starving the tomcat thread pool
-                                        // under
-                                        // load
+                                        // Use sleep for retry delay
+                                        // For sync jobs, both sleep and async are blocking at this
+                                        // point
+                                        // For async jobs, the delay occurs in the executor thread
                                         long delayMs = RETRY_BASE_DELAY.toMillis() * currentAttempt;
 
-                                        // Execute the retry after a delay through the
-                                        // JobExecutorService
-                                        // rather than blocking the current thread with sleep
-                                        CompletableFuture<Object> delayedRetry =
-                                                new CompletableFuture<>();
-
-                                        // Use a delayed executor for non-blocking delay
-                                        CompletableFuture.delayedExecutor(
-                                                        delayMs, TimeUnit.MILLISECONDS)
-                                                .execute(
-                                                        () -> {
-                                                            // Continue the retry loop in the next
-                                                            // iteration
-                                                            // We can't return from here directly
-                                                            // since
-                                                            // we're in a Runnable
-                                                            delayedRetry.complete(null);
-                                                        });
-
-                                        // Wait for the delay to complete before continuing
                                         try {
-                                            delayedRetry.join();
-                                        } catch (Exception e) {
+                                            Thread.sleep(delayMs);
+                                        } catch (InterruptedException e) {
                                             Thread.currentThread().interrupt();
+                                            log.debug(
+                                                    "Retry delay interrupted for attempt {}/{}",
+                                                    currentAttempt,
+                                                    maxRetries);
                                             break;
                                         }
                                     } else {

@@ -100,14 +100,9 @@ public class AuditAspect {
             }
         }
 
-        // Add arguments if requested and if at VERBOSE level, or if specifically requested
-        boolean includeArgs =
-                auditedAnnotation.includeArgs()
-                        && (auditedAnnotation.level() == AuditLevel.VERBOSE
-                                || auditConfig.getAuditLevel() == AuditLevel.VERBOSE);
-
-        if (includeArgs) {
-            auditService.addMethodArguments(auditData, joinPoint, AuditLevel.VERBOSE);
+        // Add method arguments if requested (captured at all audit levels for operational context)
+        if (auditedAnnotation.includeArgs()) {
+            auditService.addMethodArguments(auditData, joinPoint, auditedAnnotation.level());
         }
 
         // Record start time for latency calculation

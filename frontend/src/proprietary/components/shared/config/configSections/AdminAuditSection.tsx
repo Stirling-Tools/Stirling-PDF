@@ -59,6 +59,9 @@ const AdminAuditSection: React.FC = () => {
         retentionDays: 90,
         totalEvents: 1234,
         pdfMetadataEnabled: true,
+        captureFileHash: false,
+        capturePdfAuthor: false,
+        captureOperationResults: false,
       });
       setLoading(false);
     }

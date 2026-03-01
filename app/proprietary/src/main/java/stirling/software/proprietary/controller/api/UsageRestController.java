@@ -175,10 +175,8 @@ public class UsageRestController {
             // UI data endpoints only
             return auditRepository.findByTypeForExport(AuditEventType.UI_DATA.name());
         } else if ("api".equalsIgnoreCase(dataType)) {
-            // API = everything except UI_DATA
-            return auditRepository.findAll().stream()
-                    .filter(event -> !AuditEventType.UI_DATA.name().equals(event.getType()))
-                    .collect(Collectors.toList());
+            // API = everything except UI_DATA (queried at DB level, not filtered in-memory)
+            return auditRepository.findAllExceptTypeForExport(AuditEventType.UI_DATA.name());
         }
 
         return new ArrayList<>();

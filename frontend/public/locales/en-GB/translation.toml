@@ -1156,14 +1156,14 @@ description = "Track user actions and system events for compliance and security 
 label = "Enable Audit Logging"
 
 [admin.settings.security.audit.level]
-description = "Audit Level: OFF (0) = no logging | BASIC (1) = auth events only | STANDARD (2) = all requests & operations | VERBOSE (3) = detailed logs with parameters. Higher levels include all events from lower levels."
+description = "Audit Level: OFF (0) = no logging | BASIC (1) = file modifications (compress/split/merge/etc) & settings | STANDARD (2) = file operations + user actions | VERBOSE (3) = all requests including polling. Higher levels include all events from lower levels."
 label = "Audit Level"
 
 [admin.settings.security.audit.levelDetails]
 off = "No audit logging (except critical security events)"
-basic = "Authentication events (login/logout/failed logins), password changes, user/role modifications, system configuration changes"
-standard = "BASIC events plus: all HTTP requests (URL, method, status), file uploads/downloads, PDF operations (convert, compress, split, etc.), document viewing/editing"
-verbose = "STANDARD events plus: request headers/parameters, method parameters, operation results, detailed timing, request/response bodies, file SHA-256 hashes, PDF metadata extraction (⚠️ note: higher storage & processing time requirements)"
+basic = "PDF file operations (compress, split, merge, etc.) and settings changes. Captures: operation status (success/failure), method parameters, timing. Minimal log volume."
+standard = "BASIC events plus: user login/logout, account changes, general GET requests. Excludes continuous polling calls (/auth/me, /app-config, /health, etc.) to reduce log noise. Ideal for most deployments."
+verbose = "STANDARD events plus: continuous polling calls, all GET requests, detailed timing. Warning: high log volume and performance impact."
 
 [admin.settings.security.audit.retentionDays]
 description = "Number of days to retain audit logs"
