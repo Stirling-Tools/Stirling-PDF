@@ -9,6 +9,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +38,7 @@ import stirling.software.proprietary.service.AuditService;
 @Slf4j
 @RequiredArgsConstructor
 @org.springframework.core.annotation.Order(
-        10) // Lower precedence (higher number) - executes after AutoJobAspect
+        0) // Highest precedence - runs BEFORE AutoJobAspect to populate MDC
 public class ControllerAuditAspect {
 
     private final AuditService auditService;
@@ -92,7 +93,7 @@ public class ControllerAuditAspect {
 
         // Fast path: check if auditing is enabled before doing any work
         // This avoids all data collection if auditing is disabled
-        if (!AuditUtils.shouldAudit(method, auditConfig)) {
+        if (!auditService.shouldAudit(method, auditConfig)) {
             return joinPoint.proceed();
         }
 
@@ -110,8 +111,14 @@ public class ControllerAuditAspect {
 
         // Skip static GET resources
         if ("GET".equals(httpMethod)) {
-            HttpServletRequest maybe = AuditUtils.getCurrentRequest();
-            if (maybe != null && AuditUtils.isStaticResourceRequest(maybe)) {
+            HttpServletRequest maybe = auditService.getCurrentRequest();
+            if (maybe != null && auditService.isStaticResourceRequest(maybe)) {
+                return joinPoint.proceed();
+            }
+            // Skip polling calls at STANDARD level (exclude from audit log noise)
+            if (maybe != null
+                    && auditService.isPollingCall(maybe)
+                    && auditConfig.getAuditLevel() == AuditLevel.STANDARD) {
                 return joinPoint.proceed();
             }
         }
@@ -121,20 +128,60 @@ public class ControllerAuditAspect {
         HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
         HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
 
+        // EARLY CAPTURE: Try to get from MDC first (may be running in background thread)
+        // If not found, capture from SecurityContext on request thread
+        String capturedPrincipal = MDC.get("auditPrincipal");
+        if (capturedPrincipal == null) {
+            capturedPrincipal = auditService.captureCurrentPrincipal();
+            MDC.put("auditPrincipal", capturedPrincipal);
+        }
+
+        String capturedOrigin = MDC.get("auditOrigin");
+        if (capturedOrigin == null) {
+            capturedOrigin = auditService.captureCurrentOrigin();
+            MDC.put("auditOrigin", capturedOrigin);
+        }
+
+        String capturedIp = MDC.get("auditIp");
+        if (capturedIp == null && req != null) {
+            capturedIp = auditService.extractClientIp(req);
+            if (capturedIp != null) {
+                MDC.put("auditIp", capturedIp);
+            }
+        }
+
         long start = System.currentTimeMillis();
 
-        // Use AuditUtils to create the base audit data
-        Map<String, Object> data = AuditUtils.createBaseAuditData(joinPoint, level);
+        // Use auditService to create the base audit data
+        Map<String, Object> data = auditService.createBaseAuditData(joinPoint, level);
 
         // Add HTTP-specific information
-        AuditUtils.addHttpData(data, httpMethod, path, level);
+        auditService.addHttpData(data, httpMethod, path, level);
 
         // Add file information if present
-        AuditUtils.addFileData(data, joinPoint, level);
+        auditService.addFileData(data, joinPoint, level);
+
+        // File operation details logged at DEBUG level for verification
+        if (data.containsKey("files") || data.containsKey("filename")) {
+            log.debug(
+                    "File operation audit - Principal: {}, Origin: {}, IP: {}, Method: {}, Path: {}, Files: {}",
+                    capturedPrincipal,
+                    capturedOrigin,
+                    capturedIp,
+                    httpMethod,
+                    path,
+                    data.getOrDefault("files", data.getOrDefault("filename", "N/A")));
+        }
+        if (data.containsKey("fileHash") || data.containsKey("hash")) {
+            log.debug(
+                    "File hash captured - Hash: {}, Document: {}",
+                    data.getOrDefault("fileHash", data.getOrDefault("hash", "N/A")),
+                    data.getOrDefault("filename", "N/A"));
+        }
 
         // Add method arguments if at VERBOSE level
         if (level.includes(AuditLevel.VERBOSE)) {
-            AuditUtils.addMethodArguments(data, joinPoint, level);
+            auditService.addMethodArguments(data, joinPoint, level);
         }
 
         Object result = null;
@@ -147,43 +194,66 @@ public class ControllerAuditAspect {
             data.put("errorMessage", ex.getMessage());
             throw ex;
         } finally {
-            // Handle timing directly for HTTP requests
-            if (level.includes(AuditLevel.STANDARD)) {
-                data.put("latencyMs", System.currentTimeMillis() - start);
-                if (resp != null) data.put("statusCode", resp.getStatus());
-            }
-
-            // Call AuditUtils but with isHttpRequest=true to skip additional timing
-            AuditUtils.addTimingData(data, start, resp, level, true);
-
-            // Add result for VERBOSE level
-            if (level.includes(AuditLevel.VERBOSE) && result != null) {
-                // Use safe string conversion with size limiting
-                data.put("result", AuditUtils.safeToString(result, 1000));
-            }
-
-            // Resolve the event type using the unified method
-            AuditEventType eventType =
-                    AuditUtils.resolveEventType(
-                            method,
-                            joinPoint.getTarget().getClass(),
-                            path,
-                            httpMethod,
-                            auditedAnnotation);
-
-            // Check if we should use string type instead (for backward compatibility)
-            if (auditedAnnotation != null) {
-                String typeString = auditedAnnotation.typeString();
-                if (eventType == AuditEventType.HTTP_REQUEST
-                        && StringUtils.isNotEmpty(typeString)) {
-                    auditService.audit(typeString, data, level);
-                    return result;
+            try {
+                // Handle timing directly for HTTP requests
+                if (level.includes(AuditLevel.STANDARD)) {
+                    data.put("latencyMs", System.currentTimeMillis() - start);
+                    if (resp != null) data.put("statusCode", resp.getStatus());
                 }
-            }
 
-            // Use the enum type
-            auditService.audit(eventType, data, level);
+                // Call auditService but with isHttpRequest=true to skip additional timing
+                auditService.addTimingData(data, start, resp, level, true);
+
+                // Add result only if operation result capture is explicitly enabled
+                if (auditService.shouldCaptureOperationResults() && result != null) {
+                    // Use safe string conversion with size limiting
+                    data.put("result", auditService.safeToString(result, 1000));
+                }
+
+                // Resolve the event type using the unified method
+                AuditEventType eventType =
+                        auditService.resolveEventType(
+                                method,
+                                joinPoint.getTarget().getClass(),
+                                path,
+                                httpMethod,
+                                auditedAnnotation);
+
+                // Check if we should use string type instead (for backward compatibility)
+                if (auditedAnnotation != null) {
+                    String typeString = auditedAnnotation.typeString();
+                    if (eventType == AuditEventType.HTTP_REQUEST
+                            && StringUtils.isNotEmpty(typeString)) {
+                        auditService.audit(
+                                capturedPrincipal,
+                                capturedOrigin,
+                                capturedIp,
+                                typeString,
+                                data,
+                                level);
+                    } else {
+                        // Use the enum type with early-captured values
+                        auditService.audit(
+                                capturedPrincipal,
+                                capturedOrigin,
+                                capturedIp,
+                                eventType,
+                                data,
+                                level);
+                    }
+                } else {
+                    // Use the enum type with early-captured values
+                    auditService.audit(
+                            capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
+                }
+            } finally {
+                // Clean up MDC to prevent cross-request contamination (guaranteed to run)
+                MDC.remove("auditPrincipal");
+                MDC.remove("auditOrigin");
+                MDC.remove("auditIp");
+            }
         }
+
         return result;
     }
 

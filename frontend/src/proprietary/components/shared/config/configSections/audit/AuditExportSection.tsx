@@ -6,6 +6,8 @@ import {
   Stack,
   Button,
   SegmentedControl,
+  Checkbox,
+  Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import auditService from '@app/services/auditService';
@@ -15,12 +17,23 @@ import AuditFiltersForm from '@app/components/shared/config/configSections/audit
 
 interface AuditExportSectionProps {
   loginEnabled?: boolean;
+  pdfMetadataEnabled?: boolean;
 }
 
-const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = true }) => {
+const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = true, pdfMetadataEnabled = false }) => {
   const { t } = useTranslation();
   const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
   const [exporting, setExporting] = useState(false);
+  const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({
+    date: true,
+    username: true,
+    ipaddress: true,
+    tool: true,
+    documentName: true,
+    outcome: false,
+    author: pdfMetadataEnabled,
+    fileHash: pdfMetadataEnabled,
+  });
 
   // Use shared filters hook
   const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters({}, loginEnabled);
@@ -31,7 +44,11 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = 
     try {
       setExporting(true);
 
-      const blob = await auditService.exportData(exportFormat, filters);
+      const fieldsParam = exportFormat === 'csv'
+        ? Object.keys(selectedFields).filter(k => selectedFields[k as keyof typeof selectedFields]).join(',')
+        : undefined;
+
+      const blob = await auditService.exportData(exportFormat, { ...filters, fields: fieldsParam });
 
       // Create download link
       const url = window.URL.createObjectURL(blob);
@@ -82,6 +99,77 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({ loginEnabled = 
             ]}
           />
         </div>
+
+        {/* CSV Field Selection */}
+        {exportFormat === 'csv' && (
+          <div>
+            <Text size="sm" fw={600} mb="xs">
+              {t('audit.export.selectFields', 'Select Fields to Include')}
+            </Text>
+            <Stack gap="xs">
+              <Checkbox
+                label={t('audit.export.fieldDate', 'Date')}
+                checked={selectedFields.date}
+                onChange={(e) => setSelectedFields({ ...selectedFields, date: e.currentTarget.checked })}
+                disabled={!loginEnabled}
+              />
+              <Checkbox
+                label={t('audit.export.fieldUsername', 'Username')}
+                checked={selectedFields.username}
+                onChange={(e) => setSelectedFields({ ...selectedFields, username: e.currentTarget.checked })}
+                disabled={!loginEnabled}
+              />
+              <Checkbox
+                label={t('audit.export.fieldIpAddress', 'IP Address')}
+                checked={selectedFields.ipaddress}
+                onChange={(e) => setSelectedFields({ ...selectedFields, ipaddress: e.currentTarget.checked })}
+                disabled={!loginEnabled}
+              />
+              <Checkbox
+                label={t('audit.export.fieldTool', 'Tool')}
+                checked={selectedFields.tool}
+                onChange={(e) => setSelectedFields({ ...selectedFields, tool: e.currentTarget.checked })}
+                disabled={!loginEnabled}
+              />
+              <Checkbox
+                label={t('audit.export.fieldDocumentName', 'Document Name')}
+                checked={selectedFields.documentName}
+                onChange={(e) => setSelectedFields({ ...selectedFields, documentName: e.currentTarget.checked })}
+                disabled={!loginEnabled}
+              />
+              <Checkbox
+                label={t('audit.export.fieldOutcome', 'Outcome (Success/Failure)')}
+                checked={selectedFields.outcome}
+                onChange={(e) => setSelectedFields({ ...selectedFields, outcome: e.currentTarget.checked })}
+                disabled={!loginEnabled}
+              />
+              <Tooltip
+                label={pdfMetadataEnabled ? '' : t('audit.export.verboseRequired', 'Requires VERBOSE audit level')}
+                disabled={pdfMetadataEnabled}
+              >
+                <Checkbox
+                  label={t('audit.export.fieldAuthor', 'Author (from PDF)')}
+                  checked={selectedFields.author}
+                  onChange={(e) => setSelectedFields({ ...selectedFields, author: e.currentTarget.checked })}
+                  disabled={!loginEnabled || !pdfMetadataEnabled}
+                  opacity={pdfMetadataEnabled ? 1 : 0.5}
+                />
+              </Tooltip>
+              <Tooltip
+                label={pdfMetadataEnabled ? '' : t('audit.export.verboseRequired', 'Requires VERBOSE audit level')}
+                disabled={pdfMetadataEnabled}
+              >
+                <Checkbox
+                  label={t('audit.export.fieldFileHash', 'File Hash (SHA-256)')}
+                  checked={selectedFields.fileHash}
+                  onChange={(e) => setSelectedFields({ ...selectedFields, fileHash: e.currentTarget.checked })}
+                  disabled={!loginEnabled || !pdfMetadataEnabled}
+                  opacity={pdfMetadataEnabled ? 1 : 0.5}
+                />
+              </Tooltip>
+            </Stack>
+          </div>
+        )}
 
         {/* Filters */}
         <div>

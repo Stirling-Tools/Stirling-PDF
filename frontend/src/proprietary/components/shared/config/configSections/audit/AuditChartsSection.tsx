@@ -1,65 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Text, Group, Stack, SegmentedControl, Loader, Alert, Box, SimpleGrid } from '@mantine/core';
+import {
+  Card,
+  Text,
+  Group,
+  Stack,
+  SegmentedControl,
+  Loader,
+  Alert,
+  Box,
+  SimpleGrid,
+} from '@mantine/core';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  LineChart,
+  Line,
+  ResponsiveContainer,
+} from 'recharts';
 import { useTranslation } from 'react-i18next';
 import auditService, { AuditChartsData } from '@app/services/auditService';
 
-interface SimpleBarChartProps {
-  data: { label: string; value: number }[];
-  title: string;
-  color?: string;
-}
+// Event type color mapping
+const EVENT_TYPE_COLORS: Record<string, string> = {
+  USER_LOGIN: 'var(--mantine-color-green-6)',
+  USER_LOGOUT: 'var(--mantine-color-gray-5)',
+  USER_FAILED_LOGIN: 'var(--mantine-color-red-6)',
+  USER_PROFILE_UPDATE: 'var(--mantine-color-blue-6)',
+  SETTINGS_CHANGED: 'var(--mantine-color-orange-6)',
+  FILE_OPERATION: 'var(--mantine-color-cyan-6)',
+  PDF_PROCESS: 'var(--mantine-color-violet-6)',
+  HTTP_REQUEST: 'var(--mantine-color-indigo-6)',
+};
 
-const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title, color = 'blue' }) => {
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
-
-  return (
-    <Stack gap="sm">
-      <Text size="sm" fw={600}>
-        {title}
-      </Text>
-      <Stack gap="sm">
-        {data.map((item, index) => (
-          <Box key={index}>
-            <Group justify="space-between" mb={4}>
-              <Text size="xs" c="dimmed" maw={200} style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {item.label}
-              </Text>
-              <Text size="xs" fw={600}>
-                {item.value}
-              </Text>
-            </Group>
-            <Box
-              style={{
-                width: '100%',
-                height: '0.5rem',
-                backgroundColor: 'var(--mantine-color-gray-2)',
-                borderRadius: 'var(--mantine-radius-sm)',
-                overflow: 'hidden',
-              }}
-            >
-              <Box
-                style={{
-                  width: `${(item.value / maxValue) * 100}%`,
-                  height: '100%',
-                  backgroundColor: `var(--mantine-color-${color}-6)`,
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </Box>
-          </Box>
-        ))}
-      </Stack>
-    </Stack>
-  );
+const getEventTypeColor = (type: string): string => {
+  return EVENT_TYPE_COLORS[type] || 'var(--mantine-color-blue-6)';
 };
 
 interface AuditChartsSectionProps {
   loginEnabled?: boolean;
+  timePeriod?: 'day' | 'week' | 'month';
+  onTimePeriodChange?: (period: 'day' | 'week' | 'month') => void;
 }
 
-const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({ loginEnabled = true }) => {
+const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
+  loginEnabled = true,
+  timePeriod = 'week',
+  onTimePeriodChange,
+}) => {
   const { t } = useTranslation();
-  const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month'>('week');
   const [chartsData, setChartsData] = useState<AuditChartsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +68,7 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({ loginEnabled = 
         const data = await auditService.getChartsData(timePeriod);
         setChartsData(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load charts');
+        setError(err instanceof Error ? err.message : t('audit.charts.error', 'Failed to load charts'));
       } finally {
         setLoading(false);
       }
@@ -81,7 +77,7 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({ loginEnabled = 
     if (loginEnabled) {
       fetchChartsData();
     } else {
-      // Provide example charts data when login is disabled
+      // Demo data when login disabled
       setChartsData({
         eventsByType: {
           labels: ['LOGIN', 'LOGOUT', 'SETTINGS_CHANGE', 'FILE_UPLOAD', 'FILE_DOWNLOAD'],
@@ -122,62 +118,161 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({ loginEnabled = 
     return null;
   }
 
+  // Transform data for Recharts
+  const eventsOverTimeData = chartsData.eventsOverTime.labels.map((label, index) => ({
+    name: label,
+    value: chartsData.eventsOverTime.values[index],
+  }));
+
   const eventsByTypeData = chartsData.eventsByType.labels.map((label, index) => ({
-    label,
+    type: label,
     value: chartsData.eventsByType.values[index],
   }));
 
   const eventsByUserData = chartsData.eventsByUser.labels.map((label, index) => ({
-    label,
+    user: label,
     value: chartsData.eventsByUser.values[index],
   }));
 
-  const eventsOverTimeData = chartsData.eventsOverTime.labels.map((label, index) => ({
-    label,
-    value: chartsData.eventsOverTime.values[index],
-  }));
-
   return (
-    <Card padding="lg" radius="md" withBorder>
-      <Stack gap="lg">
-        <Group justify="space-between" align="center">
-          <Text size="lg" fw={600}>
-            {t('audit.charts.title', 'Audit Dashboard')}
-          </Text>
-          <SegmentedControl
-            value={timePeriod}
-            onChange={(value) => {
-              if (!loginEnabled) return;
-              setTimePeriod(value as 'day' | 'week' | 'month');
-            }}
-            disabled={!loginEnabled}
-            data={[
-              { label: t('audit.charts.day', 'Day'), value: 'day' },
-              { label: t('audit.charts.week', 'Week'), value: 'week' },
-              { label: t('audit.charts.month', 'Month'), value: 'month' },
-            ]}
-          />
-        </Group>
+    <Stack gap="lg">
+      {/* Header with time period selector */}
+      <Group justify="space-between" align="center">
+        <Text size="lg" fw={600}>
+          {t('audit.charts.title', 'Audit Dashboard')}
+        </Text>
+        <SegmentedControl
+          value={timePeriod}
+          onChange={(value) => {
+            onTimePeriodChange?.(value as 'day' | 'week' | 'month');
+          }}
+          disabled={!loginEnabled}
+          data={[
+            { label: t('audit.charts.day', 'Day'), value: 'day' },
+            { label: t('audit.charts.week', 'Week'), value: 'week' },
+            { label: t('audit.charts.month', 'Month'), value: 'month' },
+          ]}
+        />
+      </Group>
 
-        <SimpleGrid cols={3} spacing="xl">
-          <SimpleBarChart
-            data={eventsByTypeData}
-            title={t('audit.charts.byType', 'Events by Type')}
-            color="blue"
-          />
-          <SimpleBarChart
-            data={eventsByUserData}
-            title={t('audit.charts.byUser', 'Events by User')}
-            color="green"
-          />
-          <SimpleBarChart
-            data={eventsOverTimeData}
-            title={t('audit.charts.overTime', 'Events Over Time')}
-            color="purple"
-          />
-        </SimpleGrid>
-      </Stack>
-    </Card>
+      {/* Full-width Events Over Time Chart */}
+      <Card padding="lg" radius="md" withBorder>
+        <Stack gap="md">
+          <Text size="md" fw={600}>
+            {t('audit.charts.overTime', 'Events Over Time')}
+          </Text>
+          <Box style={{ width: '100%', height: 280 }}>
+            {eventsOverTimeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={eventsOverTimeData}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--mantine-color-blue-6)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--mantine-color-blue-6)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-gray-2)" />
+                  <XAxis dataKey="name" stroke="var(--mantine-color-gray-6)" />
+                  <YAxis stroke="var(--mantine-color-gray-6)" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--mantine-color-gray-8)',
+                      border: 'none',
+                      borderRadius: 'var(--mantine-radius-md)',
+                      color: 'var(--mantine-color-gray-0)',
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="var(--mantine-color-blue-6)"
+                    fillOpacity={1}
+                    fill="url(#colorValue)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <Group justify="center">
+                <Text c="dimmed">{t('audit.charts.noData', 'No data for this period')}</Text>
+              </Group>
+            )}
+          </Box>
+        </Stack>
+      </Card>
+
+      {/* Two-column grid for remaining charts */}
+      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+        {/* Events by Type Chart */}
+        <Card padding="lg" radius="md" withBorder>
+          <Stack gap="md">
+            <Text size="md" fw={600}>
+              {t('audit.charts.byType', 'Events by Type')}
+            </Text>
+            <Box style={{ width: '100%', height: 280 }}>
+              {eventsByTypeData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={eventsByTypeData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-gray-2)" />
+                    <XAxis dataKey="type" stroke="var(--mantine-color-gray-6)" angle={-45} textAnchor="end" height={80} />
+                    <YAxis stroke="var(--mantine-color-gray-6)" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--mantine-color-gray-8)',
+                        border: 'none',
+                        borderRadius: 'var(--mantine-radius-md)',
+                        color: 'var(--mantine-color-gray-0)',
+                      }}
+                    />
+                    <Bar dataKey="value" fill="var(--mantine-color-blue-6)">
+                      {eventsByTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={getEventTypeColor(entry.type)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <Group justify="center">
+                  <Text c="dimmed">{t('audit.charts.noData', 'No data')}</Text>
+                </Group>
+              )}
+            </Box>
+          </Stack>
+        </Card>
+
+        {/* Top Users Chart (Horizontal) */}
+        <Card padding="lg" radius="md" withBorder>
+          <Stack gap="md">
+            <Text size="md" fw={600}>
+              {t('audit.charts.byUser', 'Top Users')}
+            </Text>
+            <Box style={{ width: '100%', height: 280 }}>
+              {eventsByUserData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={eventsByUserData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-gray-2)" />
+                    <XAxis type="number" stroke="var(--mantine-color-gray-6)" />
+                    <YAxis type="category" dataKey="user" stroke="var(--mantine-color-gray-6)" width={100} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--mantine-color-gray-8)',
+                        border: 'none',
+                        borderRadius: 'var(--mantine-radius-md)',
+                        color: 'var(--mantine-color-gray-0)',
+                      }}
+                    />
+                    <Bar dataKey="value" fill="var(--mantine-color-green-6)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <Group justify="center">
+                  <Text c="dimmed">{t('audit.charts.noData', 'No data')}</Text>
+                </Group>
+              )}
+            </Box>
+          </Stack>
+        </Card>
+      </SimpleGrid>
+    </Stack>
   );
 };
 

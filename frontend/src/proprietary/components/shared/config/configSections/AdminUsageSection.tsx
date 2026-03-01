@@ -1,15 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Stack,
-  Group,
-  Text,
-  Button,
-  SegmentedControl,
-  Loader,
-  Alert,
-  Card,
-} from '@mantine/core';
+import { Stack, Group, Text, Button, SegmentedControl, Loader, Alert, Card } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import usageAnalyticsService, { EndpointStatisticsResponse } from '@app/services/usageAnalyticsService';
 import UsageAnalyticsChart from '@app/components/shared/config/configSections/usage/UsageAnalyticsChart';
 import UsageAnalyticsTable from '@app/components/shared/config/configSections/usage/UsageAnalyticsTable';
@@ -21,6 +13,7 @@ import EnterpriseRequiredBanner from '@app/components/shared/config/EnterpriseRe
 
 const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled } = useLoginRequired();
   const { config } = useAppConfig();
   const licenseType = config?.license ?? 'NORMAL';
@@ -30,7 +23,7 @@ const AdminUsageSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<'top10' | 'top20' | 'all'>('top10');
-  const [dataType, setDataType] = useState<'all' | 'api' | 'ui'>('all');
+  const [dataType, setDataType] = useState<'all' | 'api' | 'ui'>('api');
 
   const buildDemoUsageData = useCallback((): EndpointStatisticsResponse => {
     const totalVisits = 15847;
@@ -179,6 +172,43 @@ const AdminUsageSection: React.FC = () => {
         show={!hasEnterpriseLicense}
         featureName={t('settings.licensingAnalytics.usageAnalytics', 'Usage Analytics')}
       />
+
+      {/* Info banner about usage analytics and audit relationship */}
+      {loginEnabled && hasEnterpriseLicense && (
+        <Alert
+          icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+          title={t('usage.aboutUsageAnalytics', 'About Usage Analytics')}
+          color="cyan"
+          variant="light"
+        >
+          <Stack gap="xs">
+            <Text size="sm">
+              {t(
+                'usage.usageAnalyticsExplanation',
+                'Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events.'
+              )}
+            </Text>
+            <Group gap="sm">
+              <Button
+                variant="light"
+                size="xs"
+                onClick={() => navigate('/settings/adminSecurity')}
+                rightSection={<LocalIcon icon="arrow-forward" width="0.9rem" height="0.9rem" />}
+              >
+                {t('usage.configureSettings', 'Configure Analytics Settings')}
+              </Button>
+              <Button
+                variant="light"
+                size="xs"
+                onClick={() => navigate('/settings/adminSecurity#auditLogging')}
+                rightSection={<LocalIcon icon="arrow-forward" width="0.9rem" height="0.9rem" />}
+              >
+                {t('usage.viewAuditLogs', 'View Audit Logs')}
+              </Button>
+            </Group>
+          </Stack>
+        </Alert>
+      )}
 
       {/* Controls */}
       <Card padding="lg" radius="md" withBorder>

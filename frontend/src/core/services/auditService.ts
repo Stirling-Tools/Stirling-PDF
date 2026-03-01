@@ -5,6 +5,7 @@ export interface AuditSystemStatus {
   level: string;
   retentionDays: number;
   totalEvents: number;
+  pdfMetadataEnabled: boolean;
 }
 
 export interface AuditEvent {
@@ -40,8 +41,28 @@ export interface AuditFilters {
   username?: string;
   startDate?: string;
   endDate?: string;
+  outcome?: string;
   page?: number;
   pageSize?: number;
+  fields?: string;
+}
+
+export interface AuditStats {
+  totalEvents: number;
+  prevTotalEvents: number;
+  uniqueUsers: number;
+  prevUniqueUsers: number;
+  successRate: number; // 0–100
+  prevSuccessRate: number;
+  avgLatencyMs: number;
+  prevAvgLatencyMs: number;
+  errorCount: number;
+  topEventType: string;
+  topUser: string;
+  eventsByType: Record<string, number>;
+  eventsByUser: Record<string, number>;
+  topTools: Record<string, number>;
+  hourlyDistribution: Record<string, number>; // "00"–"23" keys
 }
 
 const auditService = {
@@ -60,7 +81,18 @@ const auditService = {
       level: data.auditLevel,
       retentionDays: data.retentionDays,
       totalEvents: 0, // Will be fetched separately
+      pdfMetadataEnabled: data.pdfMetadataEnabled ?? false,
     };
+  },
+
+  /**
+   * Get audit statistics and KPI data
+   */
+  async getStats(timePeriod: 'day' | 'week' | 'month' = 'week'): Promise<AuditStats> {
+    const response = await apiClient.get<AuditStats>('/api/v1/proprietary/ui-data/audit-stats', {
+      params: { period: timePeriod },
+    });
+    return response.data;
   },
 
   /**
@@ -84,7 +116,7 @@ const auditService = {
   },
 
   /**
-   * Export audit data
+   * Export audit data with custom field selection
    */
   async exportData(
     format: 'csv' | 'json',

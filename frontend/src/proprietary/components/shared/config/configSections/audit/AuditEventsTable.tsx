@@ -11,18 +11,22 @@ import {
   Loader,
   Alert,
   Table,
+  Badge,
+  UnstyledButton,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import auditService, { AuditEvent } from '@app/services/auditService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAuditFilters } from '@app/hooks/useAuditFilters';
 import AuditFiltersForm from '@app/components/shared/config/configSections/audit/AuditFiltersForm';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
+  pdfMetadataEnabled?: boolean;
 }
 
-const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true }) => {
+const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true, pdfMetadataEnabled = false }) => {
   const { t } = useTranslation();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -30,6 +34,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<AuditEvent | null>(null);
+  const [sortKey, setSortKey] = useState<'timestamp' | 'eventType' | 'username' | 'ipAddress' | null>('timestamp');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   // Use shared filters hook
   const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters({
@@ -122,6 +128,68 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
     return new Date(dateString).toLocaleString();
   };
 
+  // Sort handling
+  const toggleSort = (key: 'timestamp' | 'eventType' | 'username' | 'ipAddress') => {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const getSortIcon = (key: 'timestamp' | 'eventType' | 'username' | 'ipAddress') => {
+    if (sortKey !== key) return 'unfold-more';
+    return sortDir === 'asc' ? 'expand-less' : 'expand-more';
+  };
+
+  // Event type colors
+  const EVENT_TYPE_COLORS: Record<string, string> = {
+    USER_LOGIN: 'green',
+    USER_LOGOUT: 'gray',
+    USER_FAILED_LOGIN: 'red',
+    USER_PROFILE_UPDATE: 'blue',
+    SETTINGS_CHANGED: 'orange',
+    FILE_OPERATION: 'cyan',
+    PDF_PROCESS: 'violet',
+    HTTP_REQUEST: 'indigo',
+  };
+
+  const getEventTypeColor = (type: string): string => {
+    return EVENT_TYPE_COLORS[type] || 'blue';
+  };
+
+  // Apply sorting to current events
+  const sortedEvents = [...events].sort((a, b) => {
+    let aVal: any = '';
+    let bVal: any = '';
+
+    switch (sortKey) {
+      case 'timestamp':
+        aVal = new Date(a.timestamp).getTime();
+        bVal = new Date(b.timestamp).getTime();
+        break;
+      case 'eventType':
+        aVal = a.eventType;
+        bVal = b.eventType;
+        break;
+      case 'username':
+        aVal = a.username;
+        bVal = b.username;
+        break;
+      case 'ipAddress':
+        aVal = a.ipAddress;
+        bVal = b.ipAddress;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   return (
     <Card padding="lg" radius="md" withBorder>
       <Stack gap="md">
@@ -161,59 +229,131 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
             >
               <Table.Thead>
                 <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
-                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
-                    {t('audit.events.timestamp', 'Timestamp')}
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)', padding: '0.5rem' }} fz="sm">
+                    <UnstyledButton onClick={() => toggleSort('timestamp')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                      {t('audit.events.timestamp', 'Timestamp')}
+                      <LocalIcon icon={getSortIcon('timestamp')} width="0.9rem" height="0.9rem" />
+                    </UnstyledButton>
+                  </Table.Th>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)', padding: '0.5rem' }} fz="sm">
+                    <UnstyledButton onClick={() => toggleSort('eventType')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                      {t('audit.events.type', 'Type')}
+                      <LocalIcon icon={getSortIcon('eventType')} width="0.9rem" height="0.9rem" />
+                    </UnstyledButton>
+                  </Table.Th>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)', padding: '0.5rem' }} fz="sm">
+                    <UnstyledButton onClick={() => toggleSort('username')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                      {t('audit.events.user', 'User')}
+                      <LocalIcon icon={getSortIcon('username')} width="0.9rem" height="0.9rem" />
+                    </UnstyledButton>
+                  </Table.Th>
+                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)', padding: '0.5rem' }} fz="sm">
+                    <UnstyledButton onClick={() => toggleSort('ipAddress')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                      {t('audit.events.ipAddress', 'IP Address')}
+                      <LocalIcon icon={getSortIcon('ipAddress')} width="0.9rem" height="0.9rem" />
+                    </UnstyledButton>
                   </Table.Th>
                   <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
-                    {t('audit.events.type', 'Type')}
+                    {t('audit.events.documentName', 'Document Name')}
                   </Table.Th>
-                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
-                    {t('audit.events.user', 'User')}
-                  </Table.Th>
-                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
-                    {t('audit.events.ipAddress', 'IP Address')}
-                  </Table.Th>
+                  {pdfMetadataEnabled && (
+                    <>
+                      <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                        {t('audit.events.author', 'Author')}
+                      </Table.Th>
+                      <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                        {t('audit.events.fileHash', 'File Hash')}
+                      </Table.Th>
+                    </>
+                  )}
                   <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm" ta="center">
                     {t('audit.events.actions', 'Actions')}
                   </Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {events.length === 0 ? (
+                {sortedEvents.length === 0 ? (
                   <Table.Tr>
-                    <Table.Td colSpan={5}>
-                      <Text ta="center" c="dimmed" py="xl">
-                        {t('audit.events.noEvents', 'No events found')}
-                      </Text>
+                    <Table.Td colSpan={pdfMetadataEnabled ? 8 : 6}>
+                      <Group justify="center" py="xl">
+                        <Stack align="center" gap={0}>
+                          <LocalIcon icon="search" width="2rem" height="2rem" style={{ opacity: 0.4 }} />
+                          <Text ta="center" c="dimmed" size="sm">
+                            {t('audit.events.noEvents', 'No events found')}
+                          </Text>
+                        </Stack>
+                      </Group>
                     </Table.Td>
                   </Table.Tr>
                 ) : (
-                  events.map((event) => (
-                    <Table.Tr key={event.id}>
-                      <Table.Td>
-                        <Text size="sm">{formatDate(event.timestamp)}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{event.eventType}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{event.username}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{event.ipAddress}</Text>
-                      </Table.Td>
-                      <Table.Td ta="center">
-                        <Button
-                          variant="subtle"
-                          size="xs"
-                          onClick={() => setSelectedEvent(event)}
-                          disabled={!loginEnabled}
-                        >
-                          {t('audit.events.viewDetails', 'View Details')}
-                        </Button>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))
+                  sortedEvents.map((event) => {
+                    // Extract document name, author, hash from details.files if available
+                    let documentName = '';
+                    let author = '';
+                    let fileHash = '';
+                    let outcome = 'unknown';
+                    if (event.details && typeof event.details === 'object') {
+                      const details = event.details as Record<string, any>;
+                      outcome = details.outcome || details.status || 'unknown';
+                      const files = details.files;
+                      if (Array.isArray(files) && files.length > 0) {
+                        const firstFile = files[0] as Record<string, any>;
+                        documentName = firstFile.name || '';
+                        if (pdfMetadataEnabled) {
+                          author = firstFile.pdfAuthor || '';
+                          fileHash = firstFile.fileHash ? firstFile.fileHash.substring(0, 16) + '...' : '';
+                        }
+                      }
+                    }
+
+                    return (
+                      <Table.Tr key={event.id}>
+                        <Table.Td>
+                          <Text size="sm">{formatDate(event.timestamp)}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Badge variant="light" size="sm" color={getEventTypeColor(event.eventType)}>
+                            {event.eventType}
+                          </Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">{event.username}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" title={event.ipAddress}>
+                            {event.ipAddress || '—'}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" title={documentName}>
+                            {documentName || '—'}
+                          </Text>
+                        </Table.Td>
+                        {pdfMetadataEnabled && (
+                          <>
+                            <Table.Td>
+                              <Text size="sm">{author}</Text>
+                            </Table.Td>
+                            <Table.Td>
+                              <Text size="sm" title={fileHash} style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                                {fileHash}
+                              </Text>
+                            </Table.Td>
+                          </>
+                        )}
+                        <Table.Td ta="center">
+                          <Button
+                            variant="subtle"
+                            size="xs"
+                            onClick={() => setSelectedEvent(event)}
+                            disabled={!loginEnabled}
+                          >
+                            {t('audit.events.viewDetails', 'View Details')}
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })
                 )}
               </Table.Tbody>
             </Table>

@@ -258,9 +258,268 @@ public class AuditRestController {
     }
 
     /**
+     * Get audit statistics for KPI dashboard. Includes success rates, latency metrics, and top
+     * items.
+     *
+     * @param period Time period for statistics (day/week/month)
+     * @return Audit statistics data for dashboard KPI cards and enhanced charts
+     */
+    @GetMapping("/audit-stats")
+    public ResponseEntity<AuditStatsData> getAuditStats(
+            @RequestParam(value = "period", defaultValue = "week") String period) {
+
+        // Calculate days based on period
+        int days;
+        switch (period.toLowerCase()) {
+            case "day":
+                days = 1;
+                break;
+            case "month":
+                days = 30;
+                break;
+            case "week":
+            default:
+                days = 7;
+                break;
+        }
+
+        // Get events from the specified period and previous period
+        Instant now = Instant.now();
+        Instant start = now.minus(java.time.Duration.ofDays(days));
+        Instant prevStart = start.minus(java.time.Duration.ofDays(days));
+
+        List<PersistentAuditEvent> currentEvents = auditRepository.findByTimestampAfter(start);
+        List<PersistentAuditEvent> prevEvents =
+                auditRepository.findAllByTimestampBetweenForExport(prevStart, start);
+
+        // Compute metrics for current period
+        AuditMetrics currentMetrics = computeMetrics(currentEvents);
+        AuditMetrics prevMetrics = computeMetrics(prevEvents);
+
+        // Get hourly distribution using DB aggregation
+        List<Object[]> hourlyData = auditRepository.histogramByHourBetween(start, now);
+        Map<String, Long> hourlyDistribution = new TreeMap<>();
+        for (int h = 0; h < 24; h++) {
+            hourlyDistribution.put(String.format("%02d", h), 0L);
+        }
+        for (Object[] row : hourlyData) {
+            int hour = ((Number) row[0]).intValue();
+            long count = ((Number) row[1]).longValue();
+            hourlyDistribution.put(String.format("%02d", hour), count);
+        }
+
+        return ResponseEntity.ok(
+                AuditStatsData.builder()
+                        .totalEvents(currentMetrics.totalEvents)
+                        .prevTotalEvents(prevMetrics.totalEvents)
+                        .uniqueUsers(currentMetrics.uniqueUsers)
+                        .prevUniqueUsers(prevMetrics.uniqueUsers)
+                        .successRate(currentMetrics.successRate)
+                        .prevSuccessRate(prevMetrics.successRate)
+                        .avgLatencyMs(currentMetrics.avgLatencyMs)
+                        .prevAvgLatencyMs(prevMetrics.avgLatencyMs)
+                        .errorCount(currentMetrics.errorCount)
+                        .topEventType(currentMetrics.topEventType)
+                        .topUser(currentMetrics.topUser)
+                        .eventsByType(currentMetrics.eventsByType)
+                        .eventsByUser(currentMetrics.eventsByUser)
+                        .topTools(currentMetrics.topTools)
+                        .hourlyDistribution(hourlyDistribution)
+                        .build());
+    }
+
+    /** Compute metrics from a list of audit events. */
+    private AuditMetrics computeMetrics(List<PersistentAuditEvent> events) {
+        if (events.isEmpty()) {
+            return AuditMetrics.builder().build();
+        }
+
+        // Count by type
+        Map<String, Long> eventsByType =
+                events.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        PersistentAuditEvent::getType, Collectors.counting()));
+
+        // Count by principal (user)
+        Map<String, Long> eventsByUser =
+                events.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        PersistentAuditEvent::getPrincipal, Collectors.counting()));
+
+        // Parse JSON data for success rate, latency, and tool extraction
+        long successCount = 0;
+        long failureCount = 0;
+        long totalLatencyMs = 0;
+        long latencyCount = 0;
+        Map<String, Long> topTools = new HashMap<>();
+
+        for (PersistentAuditEvent event : events) {
+            if (event.getData() != null) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> data = objectMapper.readValue(event.getData(), Map.class);
+
+                    // Track success/failure (safe type conversion)
+                    Object outcomeObj = data.get("outcome");
+                    String outcome = null;
+                    if (outcomeObj instanceof String) {
+                        outcome = (String) outcomeObj;
+                    } else if (outcomeObj != null) {
+                        outcome = String.valueOf(outcomeObj);
+                    }
+                    if ("success".equals(outcome)) {
+                        successCount++;
+                    } else if ("failure".equals(outcome)) {
+                        failureCount++;
+                    }
+
+                    // Track latency (safe conversion to handle strings/numbers)
+                    Object latency = data.get("latencyMs");
+                    if (latency != null) {
+                        try {
+                            long latencyVal;
+                            if (latency instanceof Number) {
+                                latencyVal = ((Number) latency).longValue();
+                            } else if (latency instanceof String) {
+                                latencyVal = Long.parseLong((String) latency);
+                            } else {
+                                latencyVal = 0;
+                            }
+                            totalLatencyMs += latencyVal;
+                            latencyCount++;
+                        } catch (NumberFormatException e) {
+                            log.debug("Failed to parse latency value: {}", latency);
+                        }
+                    }
+
+                    // Extract tool from path (safe type conversion)
+                    Object pathObj = data.get("path");
+                    String path = null;
+                    if (pathObj instanceof String) {
+                        path = (String) pathObj;
+                    } else if (pathObj != null) {
+                        path = String.valueOf(pathObj);
+                    }
+                    if (path != null && !path.isEmpty()) {
+                        String[] parts = path.split("/");
+                        if (parts.length > 0) {
+                            String tool = parts[parts.length - 1];
+                            if (!tool.isEmpty()) {
+                                topTools.put(tool, topTools.getOrDefault(tool, 0L) + 1);
+                            }
+                        }
+                    }
+                } catch (JacksonException e) {
+                    log.debug("Failed to parse audit event data: {}", event.getData());
+                }
+            }
+        }
+
+        // Calculate success rate
+        double successRate = 0;
+        long totalWithOutcome = successCount + failureCount;
+        if (totalWithOutcome > 0) {
+            successRate = (successCount * 100.0) / totalWithOutcome;
+        }
+
+        // Calculate average latency
+        double avgLatencyMs = 0;
+        if (latencyCount > 0) {
+            avgLatencyMs = totalLatencyMs / (double) latencyCount;
+        }
+
+        // Count errors (outcome=failure OR statusCode>=400)
+        long errorCount = 0;
+        for (PersistentAuditEvent event : events) {
+            if (event.getData() != null) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> data = objectMapper.readValue(event.getData(), Map.class);
+                    // Safe type conversion for outcome (already parsed earlier, but do it again for
+                    // safety)
+                    Object outcomeObj = data.get("outcome");
+                    String outcome = null;
+                    if (outcomeObj instanceof String) {
+                        outcome = (String) outcomeObj;
+                    } else if (outcomeObj != null) {
+                        outcome = String.valueOf(outcomeObj);
+                    }
+                    if ("failure".equals(outcome)) {
+                        errorCount++;
+                    } else {
+                        Object statusCode = data.get("statusCode");
+                        if (statusCode != null) {
+                            try {
+                                int statusCodeVal;
+                                if (statusCode instanceof Number) {
+                                    statusCodeVal = ((Number) statusCode).intValue();
+                                } else if (statusCode instanceof String) {
+                                    statusCodeVal = Integer.parseInt((String) statusCode);
+                                } else {
+                                    statusCodeVal = 0;
+                                }
+                                if (statusCodeVal >= 400) {
+                                    errorCount++;
+                                }
+                            } catch (NumberFormatException e) {
+                                log.debug("Failed to parse statusCode value: {}", statusCode);
+                            }
+                        }
+                    }
+                } catch (JacksonException e) {
+                    // skip
+                }
+            }
+        }
+
+        // Get top event type
+        String topEventType =
+                eventsByType.entrySet().stream()
+                        .max((e1, e2) -> Long.compare(e1.getValue(), e2.getValue()))
+                        .map(Map.Entry::getKey)
+                        .orElse("");
+
+        // Get top user
+        String topUser =
+                eventsByUser.entrySet().stream()
+                        .max((e1, e2) -> Long.compare(e1.getValue(), e2.getValue()))
+                        .map(Map.Entry::getKey)
+                        .orElse("");
+
+        // Sort and limit top tools to 10
+        Map<String, Long> topToolsSorted =
+                topTools.entrySet().stream()
+                        .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
+                        .limit(10)
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e1,
+                                        LinkedHashMap::new));
+
+        return AuditMetrics.builder()
+                .totalEvents(events.size())
+                .uniqueUsers((int) eventsByUser.size())
+                .successRate(successRate)
+                .avgLatencyMs(avgLatencyMs)
+                .errorCount(errorCount)
+                .topEventType(topEventType)
+                .topUser(topUser)
+                .eventsByType(eventsByType)
+                .eventsByUser(eventsByUser)
+                .topTools(topToolsSorted)
+                .build();
+    }
+
+    /**
      * Export audit data in CSV or JSON format. Maps to frontend's exportData() call.
      *
      * @param format Export format (csv or json)
+     * @param fields Comma-separated list of fields to include in CSV (e.g.,
+     *     "date,username,tool,documentName,author,fileHash")
      * @param eventType Filter by event type
      * @param username Filter by username
      * @param startDate Filter start date
@@ -270,6 +529,7 @@ public class AuditRestController {
     @GetMapping("/audit-export")
     public ResponseEntity<byte[]> exportAuditData(
             @RequestParam(value = "format", defaultValue = "csv") String format,
+            @RequestParam(value = "fields", required = false) String fields,
             @RequestParam(value = "eventType", required = false) String eventType,
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "startDate", required = false)
@@ -318,7 +578,7 @@ public class AuditRestController {
         if ("json".equalsIgnoreCase(format)) {
             return exportAsJson(events);
         } else {
-            return exportAsCsv(events);
+            return exportAsCsv(events, fields);
         }
     }
 
@@ -338,17 +598,88 @@ public class AuditRestController {
             }
         }
 
+        // Extract IP address (check both clientIp and __ipAddress for async/audited events)
+        String ipAddress = "";
+        Object ipObj = details.get("clientIp");
+        if (ipObj != null) {
+            ipAddress = String.valueOf(ipObj);
+        } else {
+            ipObj = details.get("__ipAddress");
+            if (ipObj != null) {
+                ipAddress = String.valueOf(ipObj);
+            }
+        }
+
         return AuditEventDto.builder()
                 .id(String.valueOf(event.getId()))
                 .timestamp(event.getTimestamp().toString())
                 .eventType(event.getType())
                 .username(event.getPrincipal())
-                .ipAddress((String) details.getOrDefault("ipAddress", "")) // Extract if available
+                .ipAddress(ipAddress)
                 .details(details)
                 .build();
     }
 
-    private ResponseEntity<byte[]> exportAsCsv(List<PersistentAuditEvent> events) {
+    private ResponseEntity<byte[]> exportAsCsv(List<PersistentAuditEvent> events, String fields) {
+        // Parse selected fields (comma-separated:
+        // date,username,tool,documentName,author,fileHash,ipAddress,etc)
+        Set<String> selectedFields = new HashSet<>();
+        if (fields != null && !fields.trim().isEmpty()) {
+            String[] fieldArray = fields.split(",");
+            for (String field : fieldArray) {
+                selectedFields.add(field.trim().toLowerCase());
+            }
+        }
+
+        // If no fields specified, use default technical export
+        if (selectedFields.isEmpty()) {
+            return exportAsDefaultCsv(events);
+        }
+
+        StringBuilder csv = new StringBuilder();
+
+        // Build header based on selected fields
+        List<String> headerOrder = new ArrayList<>();
+        if (selectedFields.contains("date")) headerOrder.add("date");
+        if (selectedFields.contains("username")) headerOrder.add("username");
+        if (selectedFields.contains("ipaddress")) headerOrder.add("ipaddress");
+        if (selectedFields.contains("tool")) headerOrder.add("tool");
+        if (selectedFields.contains("documentname")) headerOrder.add("documentname");
+        if (selectedFields.contains("outcome")) headerOrder.add("outcome");
+        if (selectedFields.contains("author")) headerOrder.add("author");
+        if (selectedFields.contains("filehash")) headerOrder.add("filehash");
+        if (selectedFields.contains("eventtype")) headerOrder.add("eventtype");
+
+        // Write header
+        for (int i = 0; i < headerOrder.size(); i++) {
+            csv.append(capitalizeHeader(headerOrder.get(i)));
+            if (i < headerOrder.size() - 1) csv.append(",");
+        }
+        csv.append("\n");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
+
+        // Write data rows
+        for (PersistentAuditEvent event : events) {
+            Map<String, String> rowData = extractEventData(event, formatter);
+
+            for (int i = 0; i < headerOrder.size(); i++) {
+                csv.append(escapeCSV(rowData.getOrDefault(headerOrder.get(i), "")));
+                if (i < headerOrder.size() - 1) csv.append(",");
+            }
+            csv.append("\n");
+        }
+
+        byte[] csvBytes = csv.toString().getBytes();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData(
+                "attachment", "audit_export_" + System.currentTimeMillis() + ".csv");
+
+        return ResponseEntity.ok().headers(headers).body(csvBytes);
+    }
+
+    private ResponseEntity<byte[]> exportAsDefaultCsv(List<PersistentAuditEvent> events) {
         StringBuilder csv = new StringBuilder();
         csv.append("ID,Principal,Type,Timestamp,Data\n");
 
@@ -363,12 +694,88 @@ public class AuditRestController {
         }
 
         byte[] csvBytes = csv.toString().getBytes();
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment", "audit_export.csv");
 
         return ResponseEntity.ok().headers(headers).body(csvBytes);
+    }
+
+    private Map<String, String> extractEventData(
+            PersistentAuditEvent event, DateTimeFormatter formatter) {
+        Map<String, String> data = new HashMap<>();
+
+        data.put("date", formatter.format(event.getTimestamp()));
+        data.put("username", event.getPrincipal());
+        data.put("eventtype", event.getType());
+        data.put("ipaddress", "");
+        data.put("tool", "");
+        data.put("documentname", "");
+        data.put("outcome", "");
+        data.put("author", "");
+        data.put("filehash", "");
+
+        if (event.getData() != null) {
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> eventData = objectMapper.readValue(event.getData(), Map.class);
+
+                // Extract IP address (check both clientIp and __ipAddress)
+                String ipAddress = "";
+                if (eventData.containsKey("clientIp")) {
+                    ipAddress = String.valueOf(eventData.getOrDefault("clientIp", ""));
+                } else if (eventData.containsKey("__ipAddress")) {
+                    ipAddress = String.valueOf(eventData.getOrDefault("__ipAddress", ""));
+                }
+                if (!ipAddress.isEmpty()) {
+                    data.put("ipaddress", ipAddress);
+                }
+
+                // Extract outcome (success/failure)
+                if (eventData.containsKey("outcome")) {
+                    data.put("outcome", String.valueOf(eventData.getOrDefault("outcome", "")));
+                }
+
+                // Extract tool from path
+                if (eventData.containsKey("path")) {
+                    String path = (String) eventData.get("path");
+                    if (path != null) {
+                        String[] parts = path.split("/");
+                        data.put("tool", parts.length > 0 ? parts[parts.length - 1] : "");
+                    }
+                }
+
+                // Extract file information
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> files =
+                        (List<Map<String, Object>>) eventData.get("files");
+                if (files != null && !files.isEmpty()) {
+                    Map<String, Object> firstFile = files.get(0);
+                    data.put("documentname", String.valueOf(firstFile.getOrDefault("name", "")));
+                    data.put("author", String.valueOf(firstFile.getOrDefault("pdfAuthor", "")));
+                    data.put("filehash", String.valueOf(firstFile.getOrDefault("fileHash", "")));
+                }
+            } catch (Exception e) {
+                log.debug("Failed to parse audit event data: {}", event.getData());
+            }
+        }
+
+        return data;
+    }
+
+    private String capitalizeHeader(String field) {
+        return switch (field.toLowerCase()) {
+            case "date" -> "Date";
+            case "username" -> "Username";
+            case "ipaddress" -> "IP Address";
+            case "tool" -> "Tool";
+            case "documentname" -> "Document Name";
+            case "outcome" -> "Outcome";
+            case "author" -> "Author";
+            case "filehash" -> "File Hash";
+            case "eventtype" -> "Event Type";
+            default -> field;
+        };
     }
 
     private ResponseEntity<byte[]> exportAsJson(List<PersistentAuditEvent> events) {
@@ -430,5 +837,40 @@ public class AuditRestController {
     public static class ChartData {
         private List<String> labels;
         private List<Integer> values;
+    }
+
+    @lombok.Data
+    @lombok.Builder
+    public static class AuditStatsData {
+        private long totalEvents;
+        private long prevTotalEvents;
+        private int uniqueUsers;
+        private int prevUniqueUsers;
+        private double successRate;
+        private double prevSuccessRate;
+        private double avgLatencyMs;
+        private double prevAvgLatencyMs;
+        private long errorCount;
+        private String topEventType;
+        private String topUser;
+        private Map<String, Long> eventsByType;
+        private Map<String, Long> eventsByUser;
+        private Map<String, Long> topTools;
+        private Map<String, Long> hourlyDistribution;
+    }
+
+    @lombok.Data
+    @lombok.Builder
+    public static class AuditMetrics {
+        private long totalEvents;
+        private int uniqueUsers;
+        private double successRate;
+        private double avgLatencyMs;
+        private long errorCount;
+        private String topEventType;
+        private String topUser;
+        private Map<String, Long> eventsByType;
+        private Map<String, Long> eventsByUser;
+        private Map<String, Long> topTools;
     }
 }

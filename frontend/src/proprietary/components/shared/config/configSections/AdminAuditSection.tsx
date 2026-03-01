@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Loader, Alert, Stack } from '@mantine/core';
+import { Tabs, Loader, Alert, Stack, Switch, Group, Text, Button, Accordion } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import auditService, { AuditSystemStatus as AuditStatus } from '@app/services/auditService';
 import AuditSystemStatus from '@app/components/shared/config/configSections/audit/AuditSystemStatus';
+import AuditStatsCards from '@app/components/shared/config/configSections/audit/AuditStatsCards';
 import AuditChartsSection from '@app/components/shared/config/configSections/audit/AuditChartsSection';
 import AuditEventsTable from '@app/components/shared/config/configSections/audit/AuditEventsTable';
 import AuditExportSection from '@app/components/shared/config/configSections/audit/AuditExportSection';
@@ -10,9 +12,11 @@ import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import EnterpriseRequiredBanner from '@app/components/shared/config/EnterpriseRequiredBanner';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled } = useLoginRequired();
   const { config } = useAppConfig();
   const licenseType = config?.license ?? 'NORMAL';
@@ -21,6 +25,9 @@ const AdminAuditSection: React.FC = () => {
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month'>('week');
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchSystemStatus = async () => {
@@ -52,10 +59,24 @@ const AdminAuditSection: React.FC = () => {
         level: 'INFO',
         retentionDays: 90,
         totalEvents: 1234,
+        pdfMetadataEnabled: true,
       });
       setLoading(false);
     }
-  }, [loginEnabled, showDemoData]);
+  }, [loginEnabled, showDemoData, refreshKey]);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (!autoRefresh) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setRefreshKey((prev) => prev + 1);
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
 
   // Override loading state when showing demo data
   const actualLoading = showDemoData ? false : loading;
@@ -94,6 +115,8 @@ const AdminAuditSection: React.FC = () => {
     );
   }
 
+  const isEnabled = loginEnabled && hasEnterpriseLicense;
+
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
@@ -101,32 +124,91 @@ const AdminAuditSection: React.FC = () => {
         show={!hasEnterpriseLicense}
         featureName={t('settings.licensingAnalytics.audit', 'Audit')}
       />
+
+      {/* Info banner about audit settings */}
+      {isEnabled && (
+        <Alert
+          icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+          title={t('audit.configureAudit', 'Configure Audit Logging')}
+          color="blue"
+          variant="light"
+        >
+          <Stack gap="xs">
+            <Text size="sm">
+              {t(
+                'audit.configureAuditMessage',
+                'Adjust audit logging level, retention period, and other settings in the Security & Authentication section.'
+              )}
+            </Text>
+            <Button
+              variant="light"
+              size="xs"
+              onClick={() => navigate('/settings/adminSecurity#auditLogging')}
+              rightSection={<LocalIcon icon="arrow-forward" width="0.9rem" height="0.9rem" />}
+            >
+              {t('audit.goToSettings', 'Go to Audit Settings')}
+            </Button>
+          </Stack>
+        </Alert>
+      )}
+
       <AuditSystemStatus status={systemStatus} />
 
-      {systemStatus.enabled ? (
+      {/* Auto-refresh toggle */}
+      {systemStatus?.enabled && isEnabled && (
+        <Group justify="flex-end">
+          <Switch
+            label={t('audit.systemStatus.autoRefreshLabel', 'Auto-refresh every 30s')}
+            checked={autoRefresh}
+            onChange={(event) => setAutoRefresh(event.currentTarget.checked)}
+            disabled={!isEnabled}
+          />
+        </Group>
+      )}
+
+      {systemStatus?.enabled ? (
         <Tabs defaultValue="dashboard">
           <Tabs.List>
-            <Tabs.Tab value="dashboard" disabled={!loginEnabled || !hasEnterpriseLicense}>
+            <Tabs.Tab value="dashboard" disabled={!isEnabled}>
               {t('audit.tabs.dashboard', 'Dashboard')}
             </Tabs.Tab>
-            <Tabs.Tab value="events" disabled={!loginEnabled || !hasEnterpriseLicense}>
+            <Tabs.Tab value="events" disabled={!isEnabled}>
               {t('audit.tabs.events', 'Audit Events')}
             </Tabs.Tab>
-            <Tabs.Tab value="export" disabled={!loginEnabled || !hasEnterpriseLicense}>
+            <Tabs.Tab value="export" disabled={!isEnabled}>
               {t('audit.tabs.export', 'Export')}
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="dashboard" pt="md">
-            <AuditChartsSection loginEnabled={loginEnabled && hasEnterpriseLicense} />
+            <Stack gap="lg" key={`dashboard-${refreshKey}`}>
+              {/* Stats Cards - Always Visible */}
+              <AuditStatsCards loginEnabled={isEnabled} timePeriod={timePeriod} />
+
+              {/* Charts in Accordion - Collapsible */}
+              <Accordion defaultValue={["events-over-time"]} multiple>
+                <Accordion.Item value="events-over-time">
+                  <Accordion.Control>
+                    {t('audit.charts.overTime', 'Events Over Time')}
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <AuditChartsSection
+                      loginEnabled={isEnabled}
+                      timePeriod={timePeriod}
+                      onTimePeriodChange={setTimePeriod}
+                    />
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
+            </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value="events" pt="md">
-            <AuditEventsTable loginEnabled={loginEnabled && hasEnterpriseLicense} />
+          <Tabs.Panel value="events" pt="md" key={`events-${refreshKey}`}>
+            <AuditEventsTable loginEnabled={isEnabled} pdfMetadataEnabled={systemStatus?.pdfMetadataEnabled} />
           </Tabs.Panel>
 
-          <Tabs.Panel value="export" pt="md">
-            <AuditExportSection loginEnabled={loginEnabled && hasEnterpriseLicense} />
+          <Tabs.Panel value="export" pt="md" key={`export-${refreshKey}`}>
+            <AuditExportSection loginEnabled={isEnabled} pdfMetadataEnabled={systemStatus?.pdfMetadataEnabled} />
           </Tabs.Panel>
         </Tabs>
       ) : (

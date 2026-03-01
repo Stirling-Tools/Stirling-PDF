@@ -2,12 +2,15 @@ package stirling.software.common.aop;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.slf4j.MDC;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,7 +29,7 @@ import stirling.software.common.service.JobExecutorService;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Order(0) // Highest precedence - executes before audit aspects
+@Order(20) // Lower precedence - executes AFTER audit aspects populate MDC
 public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
@@ -70,26 +73,29 @@ public class AutoJobAspect {
             // No retries needed, simple execution
             return jobExecutorService.runJobGeneric(
                     async,
-                    () -> {
-                        try {
-                            // Note: Progress tracking is handled in TaskManager/JobExecutorService
-                            // The trackProgress flag controls whether detailed progress is stored
-                            // for REST API queries, not WebSocket notifications
-                            return joinPoint.proceed(args);
-                        } catch (Throwable ex) {
-                            log.error(
-                                    "AutoJobAspect caught exception during job execution: {}",
-                                    ex.getMessage(),
-                                    ex);
-                            // Rethrow RuntimeException as-is to preserve exception type
-                            if (ex instanceof RuntimeException) {
-                                throw (RuntimeException) ex;
-                            }
-                            // Wrap checked exceptions - GlobalExceptionHandler will unwrap
-                            // BaseAppException
-                            throw new RuntimeException(ex);
-                        }
-                    },
+                    wrapWithMDC(
+                            () -> {
+                                try {
+                                    // Note: Progress tracking is handled in
+                                    // TaskManager/JobExecutorService
+                                    // The trackProgress flag controls whether detailed progress is
+                                    // stored
+                                    // for REST API queries, not WebSocket notifications
+                                    return joinPoint.proceed(args);
+                                } catch (Throwable ex) {
+                                    log.error(
+                                            "AutoJobAspect caught exception during job execution: {}",
+                                            ex.getMessage(),
+                                            ex);
+                                    // Rethrow RuntimeException as-is to preserve exception type
+                                    if (ex instanceof RuntimeException) {
+                                        throw (RuntimeException) ex;
+                                    }
+                                    // Wrap checked exceptions - GlobalExceptionHandler will unwrap
+                                    // BaseAppException
+                                    throw new RuntimeException(ex);
+                                }
+                            }),
                     timeout,
                     queueable,
                     resourceWeight);
@@ -123,114 +129,126 @@ public class AutoJobAspect {
 
         return jobExecutorService.runJobGeneric(
                 async,
-                () -> {
-                    // Use iterative approach instead of recursion to avoid stack overflow
-                    Throwable lastException = null;
+                wrapWithMDC(
+                        () -> {
+                            // Use iterative approach instead of recursion to avoid stack overflow
+                            Throwable lastException = null;
 
-                    // Attempt counter starts at 1 for first try
-                    for (int currentAttempt = 1; currentAttempt <= maxRetries; currentAttempt++) {
-                        try {
-                            if (trackProgress && async) {
-                                // Get jobId for progress tracking in TaskManager
-                                // This enables REST API progress queries, not WebSocket
-                                if (jobIdRef.get() == null) {
-                                    jobIdRef.set(getJobIdFromContext());
-                                }
-                                String jobId = jobIdRef.get();
-                                if (jobId != null) {
-                                    log.debug(
-                                            "Tracking progress for job {} (attempt {}/{})",
-                                            jobId,
+                            // Attempt counter starts at 1 for first try
+                            for (int currentAttempt = 1;
+                                    currentAttempt <= maxRetries;
+                                    currentAttempt++) {
+                                try {
+                                    if (trackProgress && async) {
+                                        // Get jobId for progress tracking in TaskManager
+                                        // This enables REST API progress queries, not WebSocket
+                                        if (jobIdRef.get() == null) {
+                                            jobIdRef.set(getJobIdFromContext());
+                                        }
+                                        String jobId = jobIdRef.get();
+                                        if (jobId != null) {
+                                            log.debug(
+                                                    "Tracking progress for job {} (attempt {}/{})",
+                                                    jobId,
+                                                    currentAttempt,
+                                                    maxRetries);
+                                            // Progress is tracked in TaskManager for REST API
+                                            // access
+                                            // No WebSocket notifications sent here
+                                        }
+                                    }
+
+                                    // Attempt to execute the operation
+                                    return joinPoint.proceed(args);
+
+                                } catch (Throwable ex) {
+                                    lastException = ex;
+                                    log.error(
+                                            "AutoJobAspect caught exception during job execution (attempt"
+                                                    + " {}/{}): {}",
                                             currentAttempt,
-                                            maxRetries);
-                                    // Progress is tracked in TaskManager for REST API access
-                                    // No WebSocket notifications sent here
-                                }
-                            }
+                                            maxRetries,
+                                            ex.getMessage(),
+                                            ex);
 
-                            // Attempt to execute the operation
-                            return joinPoint.proceed(args);
+                                    // Check if we should retry
+                                    if (currentAttempt < maxRetries) {
+                                        log.info(
+                                                "Retrying operation, attempt {}/{}",
+                                                currentAttempt + 1,
+                                                maxRetries);
 
-                        } catch (Throwable ex) {
-                            lastException = ex;
-                            log.error(
-                                    "AutoJobAspect caught exception during job execution (attempt"
-                                            + " {}/{}): {}",
-                                    currentAttempt,
-                                    maxRetries,
-                                    ex.getMessage(),
-                                    ex);
+                                        if (trackProgress && async) {
+                                            String jobId = jobIdRef.get();
+                                            if (jobId != null) {
+                                                log.debug(
+                                                        "Recording retry attempt for job {} in TaskManager",
+                                                        jobId);
+                                                // Retry info is tracked in TaskManager for REST API
+                                                // access
+                                            }
+                                        }
 
-                            // Check if we should retry
-                            if (currentAttempt < maxRetries) {
-                                log.info(
-                                        "Retrying operation, attempt {}/{}",
-                                        currentAttempt + 1,
-                                        maxRetries);
+                                        // Use non-blocking delay for all retry attempts to avoid
+                                        // blocking
+                                        // threads
+                                        // For sync jobs this avoids starving the tomcat thread pool
+                                        // under
+                                        // load
+                                        long delayMs = RETRY_BASE_DELAY.toMillis() * currentAttempt;
 
-                                if (trackProgress && async) {
-                                    String jobId = jobIdRef.get();
-                                    if (jobId != null) {
-                                        log.debug(
-                                                "Recording retry attempt for job {} in TaskManager",
-                                                jobId);
-                                        // Retry info is tracked in TaskManager for REST API access
+                                        // Execute the retry after a delay through the
+                                        // JobExecutorService
+                                        // rather than blocking the current thread with sleep
+                                        CompletableFuture<Object> delayedRetry =
+                                                new CompletableFuture<>();
+
+                                        // Use a delayed executor for non-blocking delay
+                                        CompletableFuture.delayedExecutor(
+                                                        delayMs, TimeUnit.MILLISECONDS)
+                                                .execute(
+                                                        () -> {
+                                                            // Continue the retry loop in the next
+                                                            // iteration
+                                                            // We can't return from here directly
+                                                            // since
+                                                            // we're in a Runnable
+                                                            delayedRetry.complete(null);
+                                                        });
+
+                                        // Wait for the delay to complete before continuing
+                                        try {
+                                            delayedRetry.join();
+                                        } catch (Exception e) {
+                                            Thread.currentThread().interrupt();
+                                            break;
+                                        }
+                                    } else {
+                                        // No more retries, we'll throw the exception after the loop
+                                        break;
                                     }
                                 }
-
-                                // Use non-blocking delay for all retry attempts to avoid blocking
-                                // threads
-                                // For sync jobs this avoids starving the tomcat thread pool under
-                                // load
-                                long delayMs = RETRY_BASE_DELAY.toMillis() * currentAttempt;
-
-                                // Execute the retry after a delay through the JobExecutorService
-                                // rather than blocking the current thread with sleep
-                                CompletableFuture<Object> delayedRetry = new CompletableFuture<>();
-
-                                // Use a delayed executor for non-blocking delay
-                                CompletableFuture.delayedExecutor(delayMs, TimeUnit.MILLISECONDS)
-                                        .execute(
-                                                () -> {
-                                                    // Continue the retry loop in the next iteration
-                                                    // We can't return from here directly since
-                                                    // we're in a Runnable
-                                                    delayedRetry.complete(null);
-                                                });
-
-                                // Wait for the delay to complete before continuing
-                                try {
-                                    delayedRetry.join();
-                                } catch (Exception e) {
-                                    Thread.currentThread().interrupt();
-                                    break;
-                                }
-                            } else {
-                                // No more retries, we'll throw the exception after the loop
-                                break;
                             }
-                        }
-                    }
 
-                    // If we get here, all retries failed
-                    if (lastException != null) {
-                        // Rethrow RuntimeException as-is to preserve exception type
-                        if (lastException instanceof RuntimeException) {
-                            throw (RuntimeException) lastException;
-                        }
-                        // Wrap checked exceptions - GlobalExceptionHandler will unwrap
-                        // BaseAppException
-                        throw new RuntimeException(
-                                "Job failed after "
-                                        + maxRetries
-                                        + " attempts: "
-                                        + lastException.getMessage(),
-                                lastException);
-                    }
+                            // If we get here, all retries failed
+                            if (lastException != null) {
+                                // Rethrow RuntimeException as-is to preserve exception type
+                                if (lastException instanceof RuntimeException) {
+                                    throw (RuntimeException) lastException;
+                                }
+                                // Wrap checked exceptions - GlobalExceptionHandler will unwrap
+                                // BaseAppException
+                                throw new RuntimeException(
+                                        "Job failed after "
+                                                + maxRetries
+                                                + " attempts: "
+                                                + lastException.getMessage(),
+                                        lastException);
+                            }
 
-                    // This should never happen if lastException is properly tracked
-                    throw new RuntimeException("Job failed but no exception was recorded");
-                },
+                            // This should never happen if lastException is properly tracked
+                            throw new RuntimeException("Job failed but no exception was recorded");
+                        }),
                 timeout,
                 queueable,
                 resourceWeight);
@@ -298,5 +316,33 @@ public class AutoJobAspect {
             log.debug("Could not retrieve job ID from context: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Wraps a supplier to propagate MDC context to background threads. Captures MDC on request
+     * thread and restores it in the background thread. Ensures proper cleanup to prevent context
+     * leakage across jobs in thread pools.
+     */
+    private Supplier<Object> wrapWithMDC(Supplier<Object> supplier) {
+        final Map<String, String> captured = MDC.getCopyOfContextMap();
+        return () -> {
+            final Map<String, String> previous = MDC.getCopyOfContextMap();
+            try {
+                // Set the captured context (or clear if none was captured)
+                if (captured != null) {
+                    MDC.setContextMap(captured);
+                } else {
+                    MDC.clear();
+                }
+                return supplier.get();
+            } finally {
+                // Restore previous state (or clear if there was none)
+                if (previous != null) {
+                    MDC.setContextMap(previous);
+                } else {
+                    MDC.clear();
+                }
+            }
+        };
     }
 }

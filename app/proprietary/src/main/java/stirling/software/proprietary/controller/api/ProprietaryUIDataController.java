@@ -126,6 +126,8 @@ public class ProprietaryUIDataController {
         data.setRetentionDays(auditConfig.getRetentionDays());
         data.setAuditLevels(AuditLevel.values());
         data.setAuditEventTypes(AuditEventType.values());
+        // PDF metadata (author, hash) only captured at VERBOSE level
+        data.setPdfMetadataEnabled(auditConfig.isLevelEnabled(AuditLevel.VERBOSE));
 
         return ResponseEntity.ok(data);
     }
@@ -527,6 +529,7 @@ public class ProprietaryUIDataController {
         private int retentionDays;
         private AuditLevel[] auditLevels;
         private AuditEventType[] auditEventTypes;
+        private boolean pdfMetadataEnabled;
     }
 
     @Data

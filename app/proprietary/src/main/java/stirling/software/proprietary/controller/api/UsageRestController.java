@@ -193,10 +193,11 @@ public class UsageRestController {
 
     /**
      * Check if an endpoint is an API endpoint. API endpoints match /api/v1/* pattern but exclude
-     * /api/v1/auth/* paths.
+     * /api/v1/auth/* paths and admin UI endpoints.
      *
      * @param endpoint The endpoint path to check
-     * @return true if this is an API endpoint (excluding auth endpoints), false otherwise
+     * @return true if this is an API endpoint (excluding auth and admin UI endpoints), false
+     *     otherwise
      */
     private boolean isApiEndpoint(String endpoint) {
         if (endpoint == null) {
@@ -210,6 +211,11 @@ public class UsageRestController {
 
         // Exclude auth endpoints
         if (endpoint.startsWith("/api/v1/auth/")) {
+            return false;
+        }
+
+        // Exclude admin UI endpoints
+        if (endpoint.equals("/api/v1/admin/license-info")) {
             return false;
         }
 
