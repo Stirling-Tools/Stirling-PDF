@@ -410,7 +410,7 @@ public class AuditRestController {
                                     errorCount++;
                                 }
                             } catch (NumberFormatException e) {
-                                log.debug("Failed to parse statusCode value: {}", statusCode);
+                                log.trace("Failed to parse statusCode value: {}", statusCode);
                             }
                         }
                     }
@@ -430,7 +430,7 @@ public class AuditRestController {
                             totalLatencyMs += latencyVal;
                             latencyCount++;
                         } catch (NumberFormatException e) {
-                            log.debug("Failed to parse latency value: {}", latency);
+                            log.trace("Failed to parse latency value: {}", latency);
                         }
                     }
 
@@ -452,7 +452,7 @@ public class AuditRestController {
                         }
                     }
                 } catch (JacksonException e) {
-                    log.debug("Failed to parse audit event data: {}", event.getData());
+                    log.trace("Failed to parse audit event data: {}", event.getData());
                 }
             }
         }
@@ -763,7 +763,7 @@ public class AuditRestController {
                     data.put("filehash", String.valueOf(firstFile.getOrDefault("fileHash", "")));
                 }
             } catch (Exception e) {
-                log.debug("Failed to parse audit event data: {}", event.getData());
+                log.trace("Failed to parse audit event data: {}", event.getData());
             }
         }
 

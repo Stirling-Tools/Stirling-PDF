@@ -162,24 +162,6 @@ public class ControllerAuditAspect {
         // Add file information if present
         auditService.addFileData(data, joinPoint, level);
 
-        // File operation details logged at DEBUG level for verification
-        if (data.containsKey("files") || data.containsKey("filename")) {
-            log.debug(
-                    "File operation audit - Principal: {}, Origin: {}, IP: {}, Method: {}, Path: {}, Files: {}",
-                    capturedPrincipal,
-                    capturedOrigin,
-                    capturedIp,
-                    httpMethod,
-                    path,
-                    data.getOrDefault("files", data.getOrDefault("filename", "N/A")));
-        }
-        if (data.containsKey("fileHash") || data.containsKey("hash")) {
-            log.debug(
-                    "File hash captured - Hash: {}, Document: {}",
-                    data.getOrDefault("fileHash", data.getOrDefault("hash", "N/A")),
-                    data.getOrDefault("filename", "N/A"));
-        }
-
         // Add method arguments if at VERBOSE level
         if (level.includes(AuditLevel.VERBOSE)) {
             auditService.addMethodArguments(data, joinPoint, level);

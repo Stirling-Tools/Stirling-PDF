@@ -542,7 +542,7 @@ public class UserService implements UserServiceInterface {
                 }
             }
         } catch (Exception e) {
-            log.debug("Error retrieving username from SecurityContext, falling back to MDC", e);
+            log.trace("Error retrieving username from SecurityContext, falling back to MDC", e);
         }
 
         // Fallback to MDC for async contexts (e.g., when called from async job threads)
