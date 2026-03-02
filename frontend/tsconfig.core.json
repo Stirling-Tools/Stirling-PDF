@@ -5,11 +5,19 @@
       "@app/*": [
         "src/core/*"
       ],
-      "@core/*": ["src/core/*"],
-      "@proprietary/*": ["src/core/*"]
+      "@core/*": [
+        "src/core/*"
+      ],
+      "@proprietary/*": [
+        "src/core/*"
+      ],
+      "posthog-js/react": [
+        "node_modules/posthog-js/react/dist/types/index.d.ts"
+      ]
     }
   },
   "include": [
+    "src/global.d.ts",
     "src/*.js",
     "src/*.ts",
     "src/*.tsx",

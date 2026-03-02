@@ -94,7 +94,7 @@ public class OCRController {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         List<String> selectedLanguages = request.getLanguages();
-        Boolean sidecar = request.isSidecar();
+        boolean sidecar = request.isSidecar();
         Boolean deskew = request.isDeskew();
         Boolean clean = request.isClean();
         Boolean cleanFinal = request.isCleanFinal();

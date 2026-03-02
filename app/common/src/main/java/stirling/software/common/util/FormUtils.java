@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
@@ -73,6 +74,10 @@ public class FormUtils {
      * of top-to-bottom.
      */
     private static final float SAME_LINE_THRESHOLD_PT = 10.0f;
+
+    private static final Pattern HEX_UUID_PATTERN =
+            Pattern.compile("^[0-9a-fA-F]{8}[0-9a-fA-F]{24,}$");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 
     /**
      * Returns a normalized logical type string for the supplied PDFBox field instance. Centralized
@@ -1357,7 +1362,7 @@ public class FormUtils {
             if (da != null && !da.isBlank()) {
                 // Standard DA looks like: /Helv 12 Tf 0 g
                 // We want the number before 'Tf'
-                String[] tokens = da.split("\\s+");
+                String[] tokens = WHITESPACE_PATTERN.split(da);
                 for (int i = 0; i < tokens.length; i++) {
                     if ("Tf".equals(tokens[i]) && i > 0) {
                         try {
@@ -1457,9 +1462,8 @@ public class FormUtils {
         // Detect UUID-like hex strings (e.g. "cdc47b7041524571 7b2d93017fe77bf7")
         // Standard UUIDs are 32 hex characters; require at least that to avoid
         // false positives on short hex-like field names.
-        String nospaces = simplified.replaceAll("\\s+", "");
-        if (nospaces.length() >= 32 && nospaces.matches("^[0-9a-fA-F]{8}[0-9a-fA-F]{24,}$"))
-            return true;
+        String nospaces = WHITESPACE_PATTERN.matcher(simplified).replaceAll("");
+        if (nospaces.length() >= 32 && HEX_UUID_PATTERN.matcher(nospaces).matches()) return true;
 
         return patterns.getGenericFieldNamePattern().matcher(simplified).matches()
                 || patterns.getSimpleFormFieldPattern().matcher(simplified).matches()

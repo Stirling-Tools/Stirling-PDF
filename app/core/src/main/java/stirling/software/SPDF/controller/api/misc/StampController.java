@@ -233,7 +233,7 @@ public class StampController {
                 };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
 
         // Use TempFile with try-with-resources for automatic cleanup
         try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {

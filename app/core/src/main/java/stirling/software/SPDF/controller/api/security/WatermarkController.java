@@ -188,7 +188,7 @@ public class WatermarkController {
                 };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
         File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
         try (InputStream is = classPathResource.getInputStream();
                 FileOutputStream os = new FileOutputStream(tempFile)) {

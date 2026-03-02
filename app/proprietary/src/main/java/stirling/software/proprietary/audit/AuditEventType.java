@@ -49,7 +49,7 @@ public enum AuditEventType {
             // If the exact enum name doesn't match, try finding a similar one
             for (AuditEventType eventType : values()) {
                 if (eventType.name().equalsIgnoreCase(type)
-                        || eventType.getDescription().equalsIgnoreCase(type)) {
+                        || eventType.description.equalsIgnoreCase(type)) {
                     return eventType;
                 }
             }

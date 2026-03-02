@@ -316,7 +316,7 @@ public class JobExecutorService {
                             filename =
                                     disposition.substring(
                                             disposition.indexOf("filename=") + 9,
-                                            disposition.lastIndexOf("\""));
+                                            disposition.lastIndexOf('"'));
                         }
                     }
 

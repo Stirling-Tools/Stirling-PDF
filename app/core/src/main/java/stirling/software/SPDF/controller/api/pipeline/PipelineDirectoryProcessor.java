@@ -254,7 +254,7 @@ public class PipelineDirectoryProcessor {
                                         String extension =
                                                 filename.contains(".")
                                                         ? filename.substring(
-                                                                        filename.lastIndexOf(".")
+                                                                        filename.lastIndexOf('.')
                                                                                 + 1)
                                                                 .toLowerCase(Locale.ROOT)
                                                         : "";

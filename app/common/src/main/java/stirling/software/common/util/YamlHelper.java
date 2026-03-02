@@ -191,7 +191,7 @@ public class YamlHelper {
             mappingNode.getValue().clear();
             mappingNode.getValue().addAll(updatedTuples);
         }
-        setNewNode(node);
+        updatedRootNode = node;
 
         return updated;
     }

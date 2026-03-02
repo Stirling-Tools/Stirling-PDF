@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -33,6 +34,8 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 @Slf4j
 public class PDFToFile {
 
+    private static final Pattern PATTERN =
+            Pattern.compile("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)");
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
 
@@ -163,7 +166,7 @@ public class PDFToFile {
     private String updateImageReferences(String markdown) {
         // Match markdown image syntax: ![alt text](image.png)
         // Only update if the path doesn't already start with images/
-        return markdown.replaceAll("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)", "$1(images/$2)");
+        return PATTERN.matcher(markdown).replaceAll("$1(images/$2)");
     }
 
     public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
