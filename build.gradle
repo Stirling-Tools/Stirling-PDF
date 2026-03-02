@@ -30,7 +30,7 @@ ext {
     commonmarkVersion = "0.27.1"
     googleJavaFormatVersion = "1.34.1"
     logback = "1.5.32"
-    junitPlatformVersion = "1.12.2"
+    junitPlatformVersion = "6.0.3"
     modernJavaVersion = 21
 }
 
