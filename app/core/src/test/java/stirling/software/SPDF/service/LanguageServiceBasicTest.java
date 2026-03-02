@@ -130,15 +130,18 @@ class LanguageServiceBasicTest {
 
     // Added by Pengcheng Xu: exercise the new resolver seam to avoid subclass-based stubbing.
     @Test
-    void testGetSupportedLanguages_WithInjectedResolver_ReturnsExpectedLanguages_MoreTestable() throws Exception {
+    void testGetSupportedLanguages_WithInjectedResolver_ReturnsExpectedLanguages_MoreTestable()
+            throws Exception {
         ResourcePatternResolver resolver = mock(ResourcePatternResolver.class);
+        Resource enResource = createMockResource("messages_en_US.properties");
         when(resolver.getResources("classpath*:messages_*.properties"))
-                .thenReturn(new Resource[] {createMockResource("messages_en_US.properties")});
+                .thenReturn(new Resource[] {enResource});
         when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
 
         LanguageService directInjectionService = new LanguageService(applicationProperties);
 
-        Set<String> supportedLanguages = directInjectionService.getSupportedLanguagesWithResolver(resolver);
+        Set<String> supportedLanguages =
+                directInjectionService.getSupportedLanguagesWithResolver(resolver);
 
         assertEquals(Collections.singleton("en_US"), supportedLanguages);
     }
