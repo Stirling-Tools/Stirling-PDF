@@ -6,12 +6,14 @@ The Shared Signing feature enables collaborative document signing workflows wher
 
 **Key Capabilities:**
 - Multi-participant signing sessions
-- Digital certificate signatures (P12, JKS, SERVER, USER_CERT)
-- Visual wet signature overlays (drawn, typed, or uploaded)
+- Digital certificate signatures (P12/PKCS12, JKS, SERVER, USER_CERT, PEM/UPLOAD)
+- Visual wet signature overlays (drawn, typed, or uploaded) — multiple per participant
 - Token-based participant access (no authentication required for participants)
+- Authenticated participant access for registered users via sign-requests API
 - Progress tracking for session owners
+- Optional signature summary page appended to finalized PDF
 - Automatic role downgrade after signing (security)
-- GDPR-compliant metadata cleanup
+- GDPR-compliant wet signature metadata cleanup
 
 ## Architecture
 
@@ -48,7 +50,7 @@ The Shared Signing feature enables collaborative document signing workflows wher
 
 #### Service Layer
 
-**WorkflowSessionService** (`759 lines`)
+**WorkflowSessionService** (`816 lines`)
 - Core workflow management service
 - Creates sessions with participants
 - Handles participant status updates
@@ -75,7 +77,7 @@ Key responsibilities:
 
 #### Controller Layer
 
-**SigningSessionController** (Owner-facing)
+**SigningSessionController** (Owner-facing + Authenticated participant endpoints)
 - `POST /api/v1/security/cert-sign/sessions` - Create signing session
 - `GET /api/v1/security/cert-sign/sessions` - List user's sessions
 - `GET /api/v1/security/cert-sign/sessions/{id}` - Get session details
@@ -83,19 +85,27 @@ Key responsibilities:
 - `POST /api/v1/security/cert-sign/sessions/{id}/finalize` - Finalize and apply signatures
 - `GET /api/v1/security/cert-sign/sessions/{id}/signed-pdf` - Download signed PDF
 - `DELETE /api/v1/security/cert-sign/sessions/{id}` - Delete session
+- `POST /api/v1/security/cert-sign/sessions/{id}/participants` - Add participants
+- `DELETE /api/v1/security/cert-sign/sessions/{id}/participants/{participantId}` - Remove participant
+- `GET /api/v1/security/cert-sign/sign-requests` - List sign requests for authenticated user
+- `GET /api/v1/security/cert-sign/sign-requests/{id}` - Get sign request details
+- `GET /api/v1/security/cert-sign/sign-requests/{id}/document` - Download document for signing
+- `POST /api/v1/security/cert-sign/sign-requests/{id}/sign` - Sign document (authenticated)
+- `POST /api/v1/security/cert-sign/sign-requests/{id}/decline` - Decline sign request (authenticated)
 
 **WorkflowParticipantController** (Participant-facing, token-based)
 - `GET /api/v1/workflow/participant/session?token={token}` - View session details
+- `GET /api/v1/workflow/participant/details?token={token}` - Get participant details
 - `GET /api/v1/workflow/participant/document?token={token}` - Download PDF
-- `POST /api/v1/workflow/participant/submit` - Submit signature
+- `POST /api/v1/workflow/participant/submit-signature` - Submit signature
 - `POST /api/v1/workflow/participant/decline?token={token}` - Decline to sign
 
 #### Data Flow
 
 ```
 Owner creates session → Participants receive tokens →
-Participants access via token → Participants submit signatures →
-Owner finalizes → System applies signatures → Signed PDF generated
+Participants access via token (or authenticated) → Participants submit signatures →
+Owner finalizes → System applies signatures → [Optional: append summary page] → Signed PDF generated
 ```
 
 ### Frontend Architecture
@@ -186,10 +196,23 @@ Content-Type: multipart/form-data
 
 file: document.pdf
 workflowType: SIGNING
-participantUserIds: [1, 2, 3]
+documentName: "contract.pdf"           # Optional display name
+participantUserIds: [1, 2, 3]          # Registered user IDs
+participantEmails: ["a@b.com"]         # External/unregistered users
+participants: [...]                    # Detailed participant configs (optional)
 message: "Please sign this contract"
 dueDate: "2025-12-31"
+ownerEmail: "owner@example.com"        # Optional, for notifications
+workflowMetadata: '{"showSignature": false, "showLogo": false, "includeSummaryPage": true}'
 ```
+
+**Session-level `workflowMetadata` fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `showSignature` | boolean | Show visible digital signature block on PDF |
+| `pageNumber` | integer | Page to place digital signature on |
+| `showLogo` | boolean | Show logo in digital signature block |
+| `includeSummaryPage` | boolean | Append a signature summary page before digital signing |
 
 **Response:**
 ```json
@@ -214,52 +237,72 @@ dueDate: "2025-12-31"
 ```
 Participant → Clicks token link → Views session details
         ↓
-Status changes: PENDING → VIEWED
+Status changes: PENDING/NOTIFIED → VIEWED
         ↓
 Participant downloads PDF to review
 ```
 
-**Access URL:**
+**Access URL (unauthenticated):**
 ```
 https://app.example.com/sign?token={participant_token}
 ```
 
+**Authenticated participants** can also use:
+```
+GET /api/v1/security/cert-sign/sign-requests
+GET /api/v1/security/cert-sign/sign-requests/{sessionId}
+GET /api/v1/security/cert-sign/sign-requests/{sessionId}/document
+```
+
 **Automatic Status Update:**
-- First access: PENDING → VIEWED
+- First access: PENDING/NOTIFIED → VIEWED
 - Downloads tracked but don't change status
 
 ### 3. Signature Submission
 
 ```
 Participant → Selects certificate type → Uploads certificate (if needed)
-           → Draws/uploads wet signature (optional)
+           → Draws/uploads wet signatures (optional, multiple supported)
            → Submits signature
         ↓
 System stores:
   - Certificate data (P12/JKS keystore as base64)
-  - Certificate password (encrypted)
-  - Wet signature metadata (base64 image + coordinates)
+  - Certificate password
+  - Wet signatures metadata (JSON array: base64 image + coordinates per signature)
         ↓
 Status changes: VIEWED → SIGNED
 Access role: EDITOR → VIEWER (automatic downgrade)
 ```
 
-**API Call:**
+**API Call (token-based, unauthenticated):**
 ```bash
-POST /api/v1/workflow/participant/submit
+POST /api/v1/workflow/participant/submit-signature
 Content-Type: multipart/form-data
 
 participantToken: {token}
 certType: P12 | JKS | SERVER | USER_CERT
 p12File: certificate.p12 (if certType=P12)
+jksFile: keystore.jks (if certType=JKS)
 password: cert_password
-wetSignatureType: IMAGE | TEXT | CANVAS
-wetSignatureData: base64_image_data
-wetSignaturePage: 1
-wetSignatureX: 100
-wetSignatureY: 200
-wetSignatureWidth: 150
-wetSignatureHeight: 50
+showSignature: false
+pageNumber: 1
+location: "New York"
+reason: "I approve this contract"
+showLogo: false
+wetSignaturesData: '[{"page":0,"x":100,"y":200,"width":150,"height":50,"type":"IMAGE","data":"base64..."}]'
+```
+
+**API Call (authenticated users):**
+```bash
+POST /api/v1/security/cert-sign/sign-requests/{sessionId}/sign
+Content-Type: multipart/form-data
+
+certType: SERVER | USER_CERT | UPLOAD | PEM | PKCS12 | PFX | JKS
+p12File: certificate.p12 (if applicable)
+password: cert_password
+reason: "I approve this contract"
+location: "New York"
+wetSignaturesData: '[...]'
 ```
 
 **Metadata Storage (JSONB):**
@@ -267,20 +310,29 @@ wetSignatureHeight: 50
 {
   "certificateSubmission": {
     "certType": "P12",
-    "password": "encrypted",
-    "p12Keystore": "base64_encoded_keystore"
+    "password": "cert_password",
+    "p12Keystore": "base64_encoded_keystore",
+    "showSignature": false,
+    "pageNumber": 1,
+    "location": "New York",
+    "reason": "I approve this contract",
+    "showLogo": false
   },
-  "wetSignature": {
-    "type": "IMAGE",
-    "data": "base64_image",
-    "page": 1,
-    "x": 100,
-    "y": 200,
-    "width": 150,
-    "height": 50
-  }
+  "wetSignatures": [
+    {
+      "type": "IMAGE",
+      "data": "base64_image",
+      "page": 0,
+      "x": 100,
+      "y": 200,
+      "width": 150,
+      "height": 50
+    }
+  ]
 }
 ```
+
+Note: Multiple wet signatures are supported per participant (array).
 
 ### 4. Progress Tracking (Owner)
 
@@ -310,10 +362,11 @@ Owner → Clicks "Finalize" → System processes signatures
         ↓
 Processing steps:
   1. Apply wet signatures to PDF (visual overlays)
+  1.5. Append signature summary page (if includeSummaryPage=true)
   2. Apply digital certificates in participant order
+     - Visual signature block suppressed when summary page is enabled
   3. Store signed PDF
-  4. Clear sensitive metadata (GDPR compliance)
-  5. Mark session as finalized
+  4. Clear wet signature metadata (GDPR compliance)
         ↓
 Owner downloads signed PDF
 ```
@@ -325,32 +378,47 @@ Owner downloads signed PDF
    for (WetSignature sig : wetSignatures) {
      PDPage page = document.getPage(sig.getPage());
      byte[] imageBytes = Base64.decode(sig.getData());
-     PDImageXObject image = PDImageXObject.create(document, imageBytes);
-     contentStream.drawImage(image, sig.getX(), sig.getY(),
-                             sig.getWidth(), sig.getHeight());
+     // Convert Y from top-left (UI) to bottom-left (PDF) coordinate system
+     float pdfY = page.getMediaBox().getHeight() - sig.getY() - sig.getHeight();
+     PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "signature");
+     contentStream.drawImage(image, sig.getX(), pdfY, sig.getWidth(), sig.getHeight());
    }
    ```
 
-2. **Apply Digital Certificates (in order)**
+2. **Append Summary Page (optional, before digital signing)**
+
+   If `includeSummaryPage=true`, a new A4 page is appended showing:
+   - Stirling logo and "Signature Summary" title
+   - Document name and session owner
+   - Finalization timestamp
+   - Per-participant: name, email, status, signed timestamp, reason, location, certificate type
+   - Supports overflow to additional pages
+
+   This step occurs **before** digital certificate signing so signatures are not invalidated.
+   When a summary page is added, the visual digital signature block (`showSignature`) is suppressed — wet signatures (hand-drawn overlays) are unaffected.
+
+3. **Apply Digital Certificates (in participant order)**
    ```java
-   for (Participant p : participants.sortedByOrder()) {
+   for (Participant p : participants) {
      if (p.status == SIGNED) {
        KeyStore keystore = buildKeystore(p.certificate);
+       // Reason: participant override > owner default > "Document Signing"
+       // Location: participant-provided only (no default)
        CertSignController.sign(pdfBytes, keystore, password, settings);
      }
    }
    ```
 
-3. **Store and Cleanup**
+4. **Store and Cleanup**
    ```java
    StoredFile signedFile = storeFile(signedPdfBytes, SIGNING_SIGNED);
    session.setProcessedFile(signedFile);
    session.setFinalized(true);
 
-   // GDPR: Clear sensitive metadata
+   // GDPR: Clear wet signature image data after finalization
    for (Participant p : participants) {
-     p.metadata.remove("wetSignature");
-     p.metadata.remove("certificatePassword");
+     p.metadata.remove("wetSignatures");
+     // Note: certificate passwords are NOT removed (TODO: encrypt at rest)
    }
    ```
 
@@ -397,6 +465,11 @@ private Map<String, Object> participantMetadata;
 - Automatic expiration support
 - One-time signing (cannot sign twice)
 
+**Authenticated Participant Access:**
+- Registered users can also access sign requests via `/api/v1/security/cert-sign/sign-requests`
+- Standard Spring Security authentication required
+- Supports additional cert types: UPLOAD, PEM, PKCS12, PFX
+
 **Automatic Role Downgrade:**
 - After signing: EDITOR → VIEWER
 - After declining: EDITOR → VIEWER
@@ -412,10 +485,13 @@ private Map<String, Object> participantMetadata;
 
 ### 5. Certificate Types
 
-**P12/PFX:** User uploads PKCS#12 file + password
+**P12/PKCS12/PFX:** User uploads PKCS#12 file + password
 **JKS:** User uploads Java KeyStore + password
+**PEM/UPLOAD:** User uploads PEM certificate + private key
 **SERVER:** Uses organization's server certificate (no upload needed)
 **USER_CERT:** Uses user's auto-generated personal certificate (one-click)
+
+Note: UPLOAD, PEM, PKCS12, PFX are available on the authenticated (`sign-requests`) path. The token-based path uses P12, JKS, SERVER, USER_CERT.
 
 ## Frontend Components Overview
 
@@ -475,27 +551,40 @@ storage.maxFileSize=100GB
 | GET | `/api/v1/security/cert-sign/sessions/{id}/pdf` | Download original |
 | GET | `/api/v1/security/cert-sign/sessions/{id}/signed-pdf` | Download signed |
 | DELETE | `/api/v1/security/cert-sign/sessions/{id}` | Delete session |
+| POST | `/api/v1/security/cert-sign/sessions/{id}/participants` | Add participants |
+| DELETE | `/api/v1/security/cert-sign/sessions/{id}/participants/{pid}` | Remove participant |
 
-### Participant Endpoints (Token-based)
+### Authenticated Participant Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/security/cert-sign/sign-requests` | List sign requests |
+| GET | `/api/v1/security/cert-sign/sign-requests/{id}` | Get sign request details |
+| GET | `/api/v1/security/cert-sign/sign-requests/{id}/document` | Download document |
+| POST | `/api/v1/security/cert-sign/sign-requests/{id}/sign` | Sign document |
+| POST | `/api/v1/security/cert-sign/sign-requests/{id}/decline` | Decline signing |
+
+### Token-Based Participant Endpoints (No Auth Required)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/v1/workflow/participant/session?token={token}` | View session |
+| GET | `/api/v1/workflow/participant/details?token={token}` | Get participant details |
 | GET | `/api/v1/workflow/participant/document?token={token}` | Download PDF |
-| POST | `/api/v1/workflow/participant/submit` | Submit signature |
+| POST | `/api/v1/workflow/participant/submit-signature` | Submit signature |
 | POST | `/api/v1/workflow/participant/decline?token={token}` | Decline signing |
 
 ## Security Considerations
 
 ### Data Protection
-- Certificate passwords stored (not encrypted in current implementation - TODO)
-- Wet signature metadata cleared after finalization (GDPR compliance)
-- Base64-encoded keystore data in database
+- Certificate passwords stored but not encrypted at rest (TODO)
+- Wet signature image data cleared after finalization (GDPR compliance)
+- Certificate keystores stored as base64 in database; not cleared after finalization (TODO)
 - Token expiration support
 
 ### Access Control
 - Owner authentication required for session management
-- Participant access via secure UUID tokens
+- Participant access via secure UUID tokens (no auth) or standard auth (sign-requests)
 - Automatic role downgrade prevents re-signing
 - Session status checks prevent unauthorized actions
 
@@ -528,6 +617,7 @@ storage.maxFileSize=100GB
 - Template-based signing workflows
 - Signature validation/verification UI
 - Certificate password encryption at rest
+- Certificate keystore cleanup after finalization (GDPR)
 - Webhook support for external integrations
 - Analytics dashboard for signing metrics
 
@@ -556,6 +646,12 @@ storage.maxFileSize=100GB
 - Frontend auto-refresh every 15 seconds
 - Check network tab for API errors
 
+**Wet signatures not visible after finalization:**
+- Wet signatures are applied first as image overlays (Step 1)
+- Check `wetSignaturesData` was sent as valid JSON array
+- Verify page index is within document bounds
+- Note: wet signatures survive regardless of `includeSummaryPage` setting
+
 ### Debug Queries
 
 ```sql
@@ -573,7 +669,7 @@ WHERE workflow_session_id = (SELECT id FROM workflow_sessions WHERE session_id =
 -- Check metadata storage
 SELECT email,
        participant_metadata->'certificateSubmission'->>'certType' as cert_type,
-       participant_metadata->'wetSignature'->>'type' as wet_sig_type
+       jsonb_array_length(participant_metadata->'wetSignatures') as wet_sig_count
 FROM workflow_participants;
 ```
 
@@ -581,13 +677,15 @@ FROM workflow_participants;
 
 The Shared Signing feature provides a complete collaborative signing workflow with:
 - ✅ Multi-participant support with progress tracking
-- ✅ Multiple certificate types (P12, JKS, SERVER, USER_CERT)
-- ✅ Visual wet signature overlays
-- ✅ Token-based security for participants
+- ✅ Multiple certificate types (P12/PKCS12/PFX, JKS, PEM, SERVER, USER_CERT)
+- ✅ Visual wet signature overlays (multiple per participant)
+- ✅ Token-based security for unauthenticated participants
+- ✅ Authenticated participant access via sign-requests API
 - ✅ Automatic role management
 - ✅ Large file support (100GB+)
-- ✅ GDPR-compliant metadata cleanup
+- ✅ GDPR-compliant wet signature metadata cleanup
 - ✅ Real-time progress updates
 - ✅ Full frontend integration with Quick Access Bar
+- ✅ Optional signature summary page with logo and participant details
 
 The architecture leverages existing file sharing infrastructure while adding workflow-specific features, ensuring consistency and maintainability across the application.
