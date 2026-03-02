@@ -49,7 +49,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.gradle/caches
@@ -419,8 +419,9 @@ jobs:
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
-          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           # Only enable Windows signing in Tauri when on release or V2-master
           SIGN: ${{ (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
           CI: true

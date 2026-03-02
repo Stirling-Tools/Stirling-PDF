@@ -292,7 +292,7 @@ def step_encrypt_pdf(context, password):
 
 @given("the request data is")
 def step_request_data(context):
-    context.request_data = eval(context.text)
+    context.request_data = json_module.loads(context.text)
 
 
 @given("the request data includes")
