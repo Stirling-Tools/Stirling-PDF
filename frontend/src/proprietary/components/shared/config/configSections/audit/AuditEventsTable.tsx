@@ -218,6 +218,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
           </Alert>
         ) : (
           <>
+            <div style={{ overflowX: 'auto', overflowY: 'hidden', marginBottom: '1rem' }}>
             <Table
               horizontalSpacing="md"
               verticalSpacing="sm"
@@ -247,12 +248,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
                       <LocalIcon icon={getSortIcon('username')} width="0.9rem" height="0.9rem" />
                     </UnstyledButton>
                   </Table.Th>
-                  <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)', padding: '0.5rem' }} fz="sm">
-                    <UnstyledButton onClick={() => toggleSort('ipAddress')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
-                      {t('audit.events.ipAddress', 'IP Address')}
-                      <LocalIcon icon={getSortIcon('ipAddress')} width="0.9rem" height="0.9rem" />
-                    </UnstyledButton>
-                  </Table.Th>
                   <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
                     {t('audit.events.documentName', 'Document Name')}
                   </Table.Th>
@@ -274,7 +269,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
               <Table.Tbody>
                 {sortedEvents.length === 0 ? (
                   <Table.Tr>
-                    <Table.Td colSpan={pdfMetadataEnabled ? 8 : 6}>
+                    <Table.Td colSpan={pdfMetadataEnabled ? 7 : 5}>
                       <Group justify="center" py="xl">
                         <Stack align="center" gap={0}>
                           <LocalIcon icon="search" width="2rem" height="2rem" style={{ opacity: 0.4 }} />
@@ -316,11 +311,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm">{event.username}</Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm" title={event.ipAddress}>
-                            {event.ipAddress || '—'}
-                          </Text>
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm" title={documentName}>
@@ -366,6 +356,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
                 />
               </Group>
             )}
+            </div>
           </>
         )}
       </Stack>

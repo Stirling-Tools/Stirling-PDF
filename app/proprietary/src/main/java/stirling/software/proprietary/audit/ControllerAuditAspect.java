@@ -205,12 +205,6 @@ public class ControllerAuditAspect {
                 // Call auditService but with isHttpRequest=true to skip additional timing
                 auditService.addTimingData(data, start, resp, level, true);
 
-                // Add result only if operation result capture is explicitly enabled
-                if (auditService.shouldCaptureOperationResults() && result != null) {
-                    // Use safe string conversion with size limiting
-                    data.put("result", auditService.safeToString(result, 1000));
-                }
-
                 // Resolve the event type using the unified method
                 AuditEventType eventType =
                         auditService.resolveEventType(
@@ -219,6 +213,15 @@ public class ControllerAuditAspect {
                                 path,
                                 httpMethod,
                                 auditedAnnotation);
+
+                // Add result only if operation result capture is explicitly enabled
+                // Skip result for UI_DATA events to avoid storing large response bodies
+                if (auditService.shouldCaptureOperationResults()
+                        && result != null
+                        && eventType != AuditEventType.UI_DATA) {
+                    // Use safe string conversion with size limiting
+                    data.put("result", auditService.safeToString(result, 1000));
+                }
 
                 // Check if we should use string type instead (for backward compatibility)
                 if (auditedAnnotation != null) {

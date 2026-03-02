@@ -663,7 +663,7 @@ export default function AdminSecuritySection() {
             <div>
               <Text fw={500} size="sm">{t('admin.settings.security.audit.captureOperationResults.label', 'Capture Operation Results')}</Text>
               <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.security.audit.captureOperationResults.description', 'Capture method return values. Not recommended: significantly increases log volume and disk usage.')}
+                {t('admin.settings.security.audit.captureOperationResults.description', 'Capture method return values. Not recommended: significantly increases log volume and disk usage. Note: UI data requests (fetching settings, auth info, etc.) are excluded to reduce bloat.')}
               </Text>
             </div>
             <Group gap="xs">
