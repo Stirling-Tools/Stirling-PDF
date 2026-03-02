@@ -16,13 +16,13 @@ comingSoon = "Kommer snart"
 confirmClose = "Bekreft lukking"
 confirmCloseCancel = "Avbryt"
 confirmCloseConfirm = "Lukk fil"
-confirmCloseMessage = "Er du sikker på at du vil lukke denne filen?"
 confirmCloseDiscard = "Forkast endringer og lukk"
+confirmCloseMessage = "Er du sikker på at du vil lukke denne filen?"
 confirmCloseSave = "Lagre og lukk"
+confirmCloseSaveFailed = "Lagret med feil. {{count}} fil{{plural}} kunne ikke lagres."
+confirmCloseSaveFailedTitle = "Lagring mislyktes"
 confirmCloseUnsaved = "Denne filen har ulagrede endringer."
 confirmCloseUnsavedList = "Du har {{count}} fil{{plural}} med ulagrede endringer.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Lagring mislyktes"
-confirmCloseSaveFailed = "Lagret med feil. {{count}} fil{{plural}} kunne ikke lagres."
 confirmPasswordErrorMessage = "Nytt passord og Bekreft nytt passord må være like."
 custom = "Tilpasset..."
 customPosition = "Egendefinert posisjon"
@@ -42,11 +42,12 @@ downloadComplete = "Nedlasting Fullført"
 downloadPdf = "Last ned PDF"
 downloadUnavailable = "Nedlasting ikke tilgjengelig for dette elementet"
 edit = "Rediger"
+editSecret = "Edit this value"
 editYourNewFiles = "Rediger den nye filen(e)"
 exportAndContinue = "Eksporter og fortsett"
 false = "Usann"
-fileSavedToDisk = "Fil lagret til disk"
 fileNotSavedToDisk = "Ikke lagret til disk"
+fileSavedToDisk = "Fil lagret til disk"
 fileSelected = "Valgt: {{filename}}"
 filesSelected = "filer valgt"
 font = "Skrifttype"
@@ -841,6 +842,14 @@ title = "API-endepunkter"
 userDefaults = "Standardverdier for brukerpreferanser"
 userDefaultsDescription = "Angi standardverdier for brukerpreferanser. Brukere kan overstyre disse i sine personlige innstillinger."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Fjern deaktiverte konverteringer i stedet for å vise dem nedtonet"
+label = "Skjul utilgjengelige konverteringer som standard"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Fjern deaktiverte verktøy i stedet for å vise dem nedtonet"
+label = "Skjul utilgjengelige verktøy som standard"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Velg endepunktgrupper som skal deaktiveres"
 label = "Deaktiverte endepunktgrupper"
@@ -848,14 +857,6 @@ label = "Deaktiverte endepunktgrupper"
 [admin.settings.endpoints.toRemove]
 description = "Velg individuelle endepunkter som skal deaktiveres"
 label = "Deaktiverte endepunkter"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Fjern deaktiverte verktøy i stedet for å vise dem nedtonet"
-label = "Skjul utilgjengelige verktøy som standard"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Fjern deaktiverte konverteringer i stedet for å vise dem nedtonet"
-label = "Skjul utilgjengelige konverteringer som standard"
 
 [admin.settings.enterpriseRequired]
 message = "En Enterprise-lisens kreves for å få tilgang til {{featureName}}. Du ser demodata som referanse."
@@ -1228,6 +1229,14 @@ label = "Første brukernavn"
 [admin.settings.security.jwt]
 label = "JWT-konfigurasjon"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Toleranse for klient/server tidsavvik under tokenvalidering (standard: 60 sekunder)"
+label = "Toleranse for klokkeavvik (sekunder)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Levetid for tilgangstoken i minutter for desktop-klienter. Desktop-apper oppdages automatisk via User-Agent og får lengre økter for bedre brukeropplevelse (standard: 43200 = 30 dager)"
+label = "Utløp for desktop-token (minutter)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Fjern automatisk utløpte JWT-nøkler"
 label = "Aktiver opprydding av nøkler"
@@ -1236,29 +1245,21 @@ label = "Aktiver opprydding av nøkler"
 description = "Roter automatisk JWT-signeringsnøkler periodisk"
 label = "Aktiver nøkkelrotasjon"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Levetid for tilgangstoken i minutter for nettklienter (standard: 1440 = 24 timer)"
-label = "Utløp for webtoken (minutter)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Levetid for tilgangstoken i minutter for desktop-klienter. Desktop-apper oppdages automatisk via User-Agent og får lengre økter for bedre brukeropplevelse (standard: 43200 = 30 dager)"
-label = "Utløp for desktop-token (minutter)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Toleranse for klient/server tidsavvik under tokenvalidering (standard: 60 sekunder)"
-label = "Toleranse for klokkeavvik (sekunder)"
+[admin.settings.security.jwt.persistence]
+description = "Lagre JWT-nøkler vedvarende for å tåle serveromstarter"
+label = "Aktiver nøkkelpersistens"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Tillat fornyelse av token innen så mange minutter etter utløp (standard: 15 minutter, maks 3 forsøk)"
 label = "Fornyelsesfrist (minutter)"
 
-[admin.settings.security.jwt.persistence]
-description = "Lagre JWT-nøkler vedvarende for å tåle serveromstarter"
-label = "Aktiver nøkkelpersistens"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Krev HTTPS for JWT-informasjonskapsler (anbefales for produksjon)"
 label = "Sikker informasjonskapsel"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Levetid for tilgangstoken i minutter for nettklienter (standard: 1440 = 24 timer)"
+label = "Utløp for webtoken (minutter)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maksimalt antall mislykkede innloggingsforsøk før kontolåsing"
@@ -2238,6 +2239,9 @@ title = "Endre tillatelser"
 [changePermissions.tooltip.warning]
 text = "For å gjøre disse tillatelsene uforanderlige, bruk verktøyet Legg til passord for å sette et eierpassord."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Velg farge"
 
@@ -2254,9 +2258,11 @@ copy = "Kopier"
 done = "Ferdig"
 error = "Feil"
 expand = "Utvid"
+learnMore = "Learn more"
 lines = "linjer"
 loading = "Laster..."
 next = "Neste"
+operation = "this operation"
 preview = "Forhåndsvis"
 previous = "Forrige"
 refresh = "Oppdater"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Beskjær hvite mellomrom automatisk"
 header = "Beskjær PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Kopier stakksporing"
 discordSubmit = "Discord - Send inn støtteinnlegg"
 dismissAllErrors = "Avvis alle feil"
 encryptedPdfMustRemovePassword = "Denne PDF-en er kryptert eller passordbeskyttet. Lås den opp før du konverterer til PDF/A."
+generic = "An error occurred"
 github = "Send inn en billett på GitHub"
 githubSubmit = "GitHub - Send inn en billett"
 incorrectPasswordProvided = "PDF-passordet er feil eller ikke oppgitt."
@@ -3346,10 +3424,6 @@ desc = "Bygg flertrinns arbeidsflyter ved å lenke sammen PDF-handlinger. Ideelt
 tags = "arbeidsflyt,sekvens,automatisering"
 title = "Automatiser"
 
-[home.formFill]
-desc = "Fyll ut felter i PDF-skjemaer interaktivt med en visuell editor"
-title = "Fyll ut skjema"
-
 [home.autoRename]
 desc = "Gir automatisk nytt navn til en PDF-fil basert på den oppdagede overskriften"
 tags = "autogjenkjenning,overskriftsbasert,organiser,gi nytt navn"
@@ -3444,6 +3518,10 @@ title = "Trekk ut Sider"
 desc = "Fjern alle interaktive elementer og skjemaer fra en PDF"
 tags = "forenkle,fjern,interaktiv"
 title = "Gjøre flat"
+
+[home.formFill]
+desc = "Fyll ut felter i PDF-skjemaer interaktivt med en visuell editor"
+title = "Fyll ut skjema"
 
 [home.getPdfInfo]
 desc = "Fanger opp all tilgjengelig informasjon om PDF-er"
@@ -4247,75 +4325,6 @@ title = "Sideeditor"
 zoomIn = "Zoom inn"
 zoomOut = "Zoom ut"
 
-[viewer]
-cannotPreviewFile = "Kan ikke forhåndsvise fil"
-dualPageView = "Dobbelsidevisning"
-firstPage = "Første side"
-lastPage = "Siste side"
-nextPage = "Neste side"
-onlyPdfSupported = "Visningsprogrammet støtter bare PDF-filer. Denne filen ser ut til å ha et annet format."
-previousPage = "Forrige side"
-singlePageView = "Enkeltsidevisning"
-unknownFile = "Ukjent fil"
-zoomIn = "Zoom inn"
-zoomOut = "Zoom ut"
-
-[viewer.attachments]
-title = "Vedlegg"
-searchPlaceholder = "Søk i vedlegg"
-noSupport = "Støtte for vedlegg er ikke tilgjengelig i denne viseren."
-noDocument = "Åpne en PDF for å se vedleggene."
-loading = "Laster vedlegg..."
-empty = "Ingen vedlegg i dette dokumentet"
-noMatch = "Ingen vedlegg samsvarer med søket ditt"
-
-[viewer.formBar]
-title = "Skjemafelter"
-unsavedBadge = "Ulagret"
-unsavedDesc = "Du har ulagrede endringer"
-hasFieldsDesc = "Denne PDF-en inneholder utfyllbare felter"
-dismiss = "Avvis"
-apply = "Bruk endringer"
-download = "Last ned PDF"
-
-[rightRail]
-closeSelected = "Lukk valgte filer"
-selectAll = "Velg alle"
-deselectAll = "Fjern all markering"
-selectByNumber = "Velg etter sidenummer"
-deleteSelected = "Slett valgte sider"
-closePdf = "Lukk PDF"
-exportAll = "Eksporter PDF"
-downloadSelected = "Last ned valgte filer"
-annotations = "Merknader"
-exportSelected = "Eksporter valgte sider"
-formFill = "Fyll ut skjema"
-saveChanges = "Lagre endringer"
-toggleAttachments = "Vis/skjul vedlegg"
-toggleTheme = "Bytt tema"
-language = "Språk"
-toggleAnnotations = "Vis/skjul merknader"
-search = "Søk i PDF"
-panMode = "Panoreringsmodus"
-applyRedactionsFirst = "Bruk sladding først"
-rotateLeft = "Roter til venstre"
-rotateRight = "Roter til høyre"
-toggleSidebar = "Vis/skjul sidepanel"
-toggleBookmarks = "Veksle bokmerker"
-print = "Skriv ut PDF"
-ruler = "Linjal / Måling"
-draw = "Tegn"
-redact = "Sladd"
-exitRedaction = "Avslutt sladdemodus"
-save = "Lagre"
-downloadAll = "Last ned alle"
-saveAll = "Lagre alle"
-
-[textAlign]
-left = "Venstre"
-center = "Sentrert"
-right = "Høyre"
-
 [pageExtracter]
 header = "Trekk ut Sider"
 placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Tips"
 autoClose = "Dette vinduet lukkes automatisk..."
 billingPeriod = "Faktureringsperiode"
 canCloseWindow = "Du kan nå lukke dette vinduet."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Angi en gyldig e-postadresse"
 enterpriseNote = "Plasser kan justeres i kassen (1–1000)."
 error = "Betalingsfeil"
@@ -4445,6 +4457,7 @@ perMonth = "/måned"
 perYear = "/år"
 preparing = "Forbereder kassen..."
 redirecting = "Videresender til sikker betaling..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe ikke konfigurert"
 stripeNotConfiguredMessage = "Stripe-betalingsintegrasjon er ikke konfigurert. Kontakt administratoren din."
 success = "Betaling vellykket!"
@@ -4777,6 +4790,13 @@ title = "PDF til Word"
 [PDFToWord.selectText]
 1 = "Utdatafilformat"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Denne tjenesten bruker LibreOffice for filkonvertering."
 header = "PDF til XML"
@@ -4835,6 +4855,7 @@ customPricing = "Tilpasset"
 featureComparison = "Funksjonssammenligning"
 from = "Fra"
 hideComparison = "Skjul funksjonssammenligning"
+included = "Included"
 includedInCurrent = "Inkludert i planen din"
 licensedSeats = "Lisensiert: {{count}} plasser"
 manage = "Administrer"
@@ -4851,6 +4872,7 @@ subtitle = "Detaljer om ditt nåværende abonnement"
 title = "Aktiv plan"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Velg planen som passer dine behov"
 title = "Tilgjengelige planer"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Nyeste funksjoner"
 name = "Enterprise"
 requiresServer = "Krever server"
 requiresServerMessage = "Oppgrader til Server-planen først før du oppgraderer til Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API-tilgang"
@@ -4928,6 +4951,10 @@ keyDescription = "Lim inn lisensnøkkelen fra e-posten din"
 success = "Lisens aktivert!"
 successMessage = "Lisensen din er aktivert. Du kan nå lukke dette vinduet."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Skriv ut fil til skriver"
 submit = "Skriv ut"
@@ -4992,15 +5019,15 @@ title = "Ord som skal sladdes"
 failed = "Det oppstod en feil under sladding av PDF-en."
 
 [redact.manual]
+activate = "Aktiver sladdeverktøy"
+active = "Sladdemodus aktiv"
 apply = "Bruk"
 applyChanges = "Bruk endringer"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent handling, kan ikke angres og data under blir slettet"
 boxRedaction = "Sladding ved å tegne boks"
-colourPicker = "Fargevelger"
 colorLabel = "Farge for sladding"
-active = "Sladdemodus aktiv"
-activate = "Aktiver sladdeverktøy"
+colourPicker = "Fargevelger"
 controlsTitle = "Manuelle sladdekontroller"
 convertPDFToImageLabel = "Konverter PDF til PDF-bilde (brukes til å fjerne tekst bak boksen)"
 export = "Eksporter"
@@ -5396,6 +5423,39 @@ title = "Høy kontrast"
 text = "Inverterer alle farger i PDF-en fullstendig og skaper en negativ-effekt. Nyttig for å lage mørk-modus-versjoner av dokumenter eller redusere øyebelastning i lite lys."
 title = "Inverter alle farger"
 
+[rightRail]
+annotations = "Merknader"
+applyRedactionsFirst = "Bruk sladding først"
+closePdf = "Lukk PDF"
+closeSelected = "Lukk valgte filer"
+deleteSelected = "Slett valgte sider"
+deselectAll = "Fjern all markering"
+downloadAll = "Last ned alle"
+downloadSelected = "Last ned valgte filer"
+draw = "Tegn"
+exitRedaction = "Avslutt sladdemodus"
+exportAll = "Eksporter PDF"
+exportSelected = "Eksporter valgte sider"
+formFill = "Fyll ut skjema"
+language = "Språk"
+panMode = "Panoreringsmodus"
+print = "Skriv ut PDF"
+redact = "Sladd"
+rotateLeft = "Roter til venstre"
+rotateRight = "Roter til høyre"
+ruler = "Linjal / Måling"
+save = "Lagre"
+saveAll = "Lagre alle"
+saveChanges = "Lagre endringer"
+search = "Søk i PDF"
+selectAll = "Velg alle"
+selectByNumber = "Velg etter sidenummer"
+toggleAnnotations = "Vis/skjul merknader"
+toggleAttachments = "Vis/skjul vedlegg"
+toggleBookmarks = "Veksle bokmerker"
+toggleSidebar = "Vis/skjul sidepanel"
+toggleTheme = "Bytt tema"
+
 [rotate]
 rotateLeft = "Roter mot klokken"
 rotateRight = "Roter med klokken"
@@ -5647,6 +5707,70 @@ plan = "Plan"
 title = "Lisensiering og analyse"
 usageAnalytics = "Bruksanalyse"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Juridisk"
 privacy = "Personvern"
@@ -5679,6 +5803,9 @@ connections = "Tilkoblinger"
 security = "Sikkerhet"
 telegram = "Telegram"
 title = "Sikkerhet og autentisering"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Aktiver påloggingsmodus først"
@@ -6016,6 +6143,11 @@ desc = "Trekk ut bestemte sider (1,3,5-10)"
 name = "Sidetall"
 tooltip = "Skriv inn sidetall separert med komma eller områder med bindestrek"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Del sider i rutenettseksjoner"
 name = "Seksjoner"
@@ -6029,6 +6161,7 @@ tooltip = "Angi maksimal filstørrelse (f.eks. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Del ved"
 splitBy = "Del etter"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Klikk på et metodekort for å velge det"
@@ -6040,6 +6173,21 @@ title = "Velg delingsmetode"
 [split.methodSelection.tooltip.header]
 text = "Velg hvordan du vil dele PDF-dokumentet. Hver metode er optimalisert for ulike brukstilfeller og dokumenttyper."
 title = "Valg av delingsmetode"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Velg en delingsmetode først"
@@ -6091,6 +6239,14 @@ bullet2 = "Områdepunkter: 3-8 (deler før side 3 og etter side 8)"
 bullet3 = "Blandet: 2,5-10,15 (deler etter side 2, før side 5, etter side 10 og etter side 15)"
 text = "Del PDF-en ved bestemte sidetall. Ved bruk av 'n' splittes etter side n. Ved bruk av 'n-m' splittes før side n og etter side m."
 title = "Del ved sidetall"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Horisontal: Antall rader som skal lages"
@@ -6232,6 +6388,82 @@ title = "API-dokumentasjon"
 
 [tableExtraxt]
 tags = "CSV,tabelluttrekk,ekstrahere,konvertere"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Sentrert"
+left = "Venstre"
+right = "Høyre"
 
 [theme]
 toggle = "Bytt tema"
@@ -6507,6 +6739,37 @@ invalid = "Sertifikatet er ikke i tillitslager - kilden kan ikke verifiseres"
 fileManager = "Filbehandling"
 pageEditor = "Sideeditor"
 viewer = "Visning"
+
+[viewer]
+cannotPreviewFile = "Kan ikke forhåndsvise fil"
+dualPageView = "Dobbelsidevisning"
+firstPage = "Første side"
+lastPage = "Siste side"
+nextPage = "Neste side"
+onlyPdfSupported = "Visningsprogrammet støtter bare PDF-filer. Denne filen ser ut til å ha et annet format."
+previousPage = "Forrige side"
+singlePageView = "Enkeltsidevisning"
+unknownFile = "Ukjent fil"
+zoomIn = "Zoom inn"
+zoomOut = "Zoom ut"
+
+[viewer.attachments]
+empty = "Ingen vedlegg i dette dokumentet"
+loading = "Laster vedlegg..."
+noDocument = "Åpne en PDF for å se vedleggene."
+noMatch = "Ingen vedlegg samsvarer med søket ditt"
+noSupport = "Støtte for vedlegg er ikke tilgjengelig i denne viseren."
+searchPlaceholder = "Søk i vedlegg"
+title = "Vedlegg"
+
+[viewer.formBar]
+apply = "Bruk endringer"
+dismiss = "Avvis"
+download = "Last ned PDF"
+hasFieldsDesc = "Denne PDF-en inneholder utfyllbare felter"
+title = "Skjemafelter"
+unsavedBadge = "Ulagret"
+unsavedDesc = "Du har ulagrede endringer"
 
 [viewPdf]
 header = "Vis PDF"

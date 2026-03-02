@@ -16,13 +16,13 @@ comingSoon = "Kommer snart"
 confirmClose = "Bekräfta stängning"
 confirmCloseCancel = "Avbryt"
 confirmCloseConfirm = "Stäng fil"
-confirmCloseMessage = "Är du säker på att du vill stänga den här filen?"
 confirmCloseDiscard = "Kasta ändringar och stäng"
+confirmCloseMessage = "Är du säker på att du vill stänga den här filen?"
 confirmCloseSave = "Spara och stäng"
+confirmCloseSaveFailed = "Sparat med fel. {{count}} fil{{plural}} kunde inte sparas."
+confirmCloseSaveFailedTitle = "Sparandet misslyckades"
 confirmCloseUnsaved = "Den här filen har osparade ändringar."
 confirmCloseUnsavedList = "Du har {{count}} fil{{plural}} med osparade ändringar.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Sparandet misslyckades"
-confirmCloseSaveFailed = "Sparat med fel. {{count}} fil{{plural}} kunde inte sparas."
 confirmPasswordErrorMessage = "Nytt lösenord och bekräfta nytt lösenord måste matcha."
 custom = "Anpassad..."
 customPosition = "Anpassad position"
@@ -42,11 +42,12 @@ downloadComplete = "Nedladdning klar"
 downloadPdf = "Ladda ner PDF"
 downloadUnavailable = "Nedladdning inte tillgänglig för detta objekt"
 edit = "Redigera"
+editSecret = "Edit this value"
 editYourNewFiles = "Redigera dina nya filer"
 exportAndContinue = "Exportera och fortsätt"
 false = "Falskt"
-fileSavedToDisk = "Fil sparad till disk"
 fileNotSavedToDisk = "Inte sparad till disk"
+fileSavedToDisk = "Fil sparad till disk"
 fileSelected = "Vald: {{filename}}"
 filesSelected = "filer valda"
 font = "Teckensnitt"
@@ -841,6 +842,14 @@ title = "API-slutpunkter"
 userDefaults = "Standardvärden för användarinställningar"
 userDefaultsDescription = "Ange standardvärden för användarinställningar. Användare kan åsidosätta dessa i sina personliga inställningar."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Ta bort inaktiverade konverteringsalternativ i stället för att visa dem nedtonade"
+label = "Dölj otillgängliga konverteringar som standard"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Ta bort inaktiverade verktyg i stället för att visa dem nedtonade"
+label = "Dölj otillgängliga verktyg som standard"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Välj slutpunktsgrupper att inaktivera"
 label = "Inaktiverade slutpunktsgrupper"
@@ -848,14 +857,6 @@ label = "Inaktiverade slutpunktsgrupper"
 [admin.settings.endpoints.toRemove]
 description = "Välj enskilda slutpunkter att inaktivera"
 label = "Inaktiverade slutpunkter"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Ta bort inaktiverade verktyg i stället för att visa dem nedtonade"
-label = "Dölj otillgängliga verktyg som standard"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Ta bort inaktiverade konverteringsalternativ i stället för att visa dem nedtonade"
-label = "Dölj otillgängliga konverteringar som standard"
 
 [admin.settings.enterpriseRequired]
 message = "En företagslicens krävs för att få åtkomst till {{featureName}}. Du ser demodata som referens."
@@ -1228,6 +1229,14 @@ label = "Initialt användarnamn"
 [admin.settings.security.jwt]
 label = "JWT-konfiguration"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerans för klient-/serverklockans avvikelse under tokenvalidering (standard: 60 sekunder)"
+label = "Tolerans för klockavvikelse (sekunder)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Giltighetstid för åtkomsttoken i minuter för skrivbordsklienter. Skrivbordsappar identifieras automatiskt via User-Agent och får längre sessioner för bättre UX (standard: 43200 = 30 dagar)"
+label = "Giltighetstid för skrivbordstoken (minuter)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Ta automatiskt bort utgångna JWT-nycklar"
 label = "Aktivera rensning av nycklar"
@@ -1236,29 +1245,21 @@ label = "Aktivera rensning av nycklar"
 description = "Rotera automatiskt JWT-signeringsnycklar periodiskt"
 label = "Aktivera nyckelrotation"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Giltighetstid för åtkomsttoken i minuter för webbklienter (standard: 1440 = 24 timmar)"
-label = "Giltighetstid för webbtoken (minuter)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Giltighetstid för åtkomsttoken i minuter för skrivbordsklienter. Skrivbordsappar identifieras automatiskt via User-Agent och får längre sessioner för bättre UX (standard: 43200 = 30 dagar)"
-label = "Giltighetstid för skrivbordstoken (minuter)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerans för klient-/serverklockans avvikelse under tokenvalidering (standard: 60 sekunder)"
-label = "Tolerans för klockavvikelse (sekunder)"
+[admin.settings.security.jwt.persistence]
+description = "Lagra JWT-nycklar beständigt för att överleva serveromstarter"
+label = "Aktivera nyckelpersistens"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Tillåt tokenuppdatering inom så här många minuter efter utgång (standard: 15 minuter, max 3 försök)"
 label = "Uppdateringsfrist (minuter)"
 
-[admin.settings.security.jwt.persistence]
-description = "Lagra JWT-nycklar beständigt för att överleva serveromstarter"
-label = "Aktivera nyckelpersistens"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Kräv HTTPS för JWT-cookies (rekommenderas för produktion)"
 label = "Säker cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Giltighetstid för åtkomsttoken i minuter för webbklienter (standard: 1440 = 24 timmar)"
+label = "Giltighetstid för webbtoken (minuter)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximalt antal misslyckade inloggningsförsök innan kontot låses"
@@ -2238,6 +2239,9 @@ title = "Ändra behörigheter"
 [changePermissions.tooltip.warning]
 text = "För att göra dessa behörigheter oföränderliga, använd verktyget Lägg till lösenord för att ange ett ägarlösenord."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Välj färg"
 
@@ -2254,9 +2258,11 @@ copy = "Kopiera"
 done = "Klar"
 error = "Fel"
 expand = "Fäll ut"
+learnMore = "Learn more"
 lines = "rader"
 loading = "Läser in..."
 next = "Nästa"
+operation = "this operation"
 preview = "Förhandsgranska"
 previous = "Föregående"
 refresh = "Uppdatera"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Auto-beskär tomrum"
 header = "Beskär PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Kopiera stackspårning"
 discordSubmit = "Discord - Skicka in ett supportinlägg"
 dismissAllErrors = "Avfärda alla fel"
 encryptedPdfMustRemovePassword = "Denna PDF är krypterad eller lösenordsskyddad. Lås upp den innan konvertering till PDF/A."
+generic = "An error occurred"
 github = "Skicka in en fråga på GitHub"
 githubSubmit = "GitHub - Skicka in en fråga"
 incorrectPasswordProvided = "PDF‑lösenordet är felaktigt eller saknas."
@@ -3346,10 +3424,6 @@ desc = "Skapa flerstegade arbetsflöden genom att kedja ihop PDF‑åtgärder. P
 tags = "arbetsflöde,sekvens,automation"
 title = "Automatisera"
 
-[home.formFill]
-desc = "Fyll i PDF-formulärfält interaktivt med en visuell redigerare"
-title = "Fyll i formulär"
-
 [home.autoRename]
 desc = "Byter automatiskt namn på en PDF baserat på detekterad rubrik"
 tags = "autodetektera,huvudbaserad,organisera,etikettera om"
@@ -3444,6 +3518,10 @@ title = "Extrahera sidor"
 desc = "Ta bort alla interaktiva element och formulär från en PDF"
 tags = "förenkla,ta bort,interaktiv"
 title = "Platta till"
+
+[home.formFill]
+desc = "Fyll i PDF-formulärfält interaktivt med en visuell redigerare"
+title = "Fyll i formulär"
 
 [home.getPdfInfo]
 desc = "Hämtar all möjlig information om PDF:er"
@@ -4247,75 +4325,6 @@ title = "Sidredigerare"
 zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
 
-[viewer]
-cannotPreviewFile = "Kan inte förhandsgranska filen"
-dualPageView = "Dubbelsidig vy"
-firstPage = "Första sidan"
-lastPage = "Sista sidan"
-nextPage = "Nästa sida"
-onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
-previousPage = "Föregående sida"
-singlePageView = "Ensidig vy"
-unknownFile = "Okänd fil"
-zoomIn = "Zooma in"
-zoomOut = "Zooma ut"
-
-[viewer.attachments]
-title = "Bilagor"
-searchPlaceholder = "Sök bilagor"
-noSupport = "Stöd för bilagor är inte tillgängligt i den här visaren."
-noDocument = "Öppna en PDF för att visa dess bilagor."
-loading = "Läser in bilagor..."
-empty = "Inga bilagor i det här dokumentet"
-noMatch = "Inga bilagor matchar din sökning"
-
-[viewer.formBar]
-title = "Formulärfält"
-unsavedBadge = "Ej sparat"
-unsavedDesc = "Du har osparade ändringar"
-hasFieldsDesc = "Denna PDF innehåller ifyllbara fält"
-dismiss = "Avfärda"
-apply = "Verkställ ändringar"
-download = "Ladda ned PDF"
-
-[rightRail]
-closeSelected = "Stäng markerade filer"
-selectAll = "Välj allt"
-deselectAll = "Avmarkera alla"
-selectByNumber = "Välj efter sidnummer"
-deleteSelected = "Ta bort markerade sidor"
-closePdf = "Stäng PDF"
-exportAll = "Exportera PDF"
-downloadSelected = "Ladda ner markerade filer"
-annotations = "Annoteringar"
-exportSelected = "Exportera markerade sidor"
-formFill = "Fyll i formulär"
-saveChanges = "Spara ändringar"
-toggleAttachments = "Visa/dölj bilagor"
-toggleTheme = "Växla tema"
-language = "Språk"
-toggleAnnotations = "Växla synlighet för anteckningar"
-search = "Sök i PDF"
-panMode = "Panoreringsläge"
-applyRedactionsFirst = "Tillämpa maskningar först"
-rotateLeft = "Rotera åt vänster"
-rotateRight = "Rotera åt höger"
-toggleSidebar = "Växla sidofält"
-toggleBookmarks = "Visa/dölj bokmärken"
-print = "Skriv ut PDF"
-ruler = "Linjal / Mätning"
-draw = "Rita"
-redact = "Maskera"
-exitRedaction = "Avsluta maskeringsläge"
-save = "Spara"
-downloadAll = "Ladda ner alla"
-saveAll = "Spara alla"
-
-[textAlign]
-left = "Vänster"
-center = "Centrerat"
-right = "Höger"
-
 [pageExtracter]
 header = "Extrahera sidor"
 placeholder = "(t.ex. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Tips"
 autoClose = "Detta fönster stängs automatiskt..."
 billingPeriod = "Faktureringsperiod"
 canCloseWindow = "Du kan nu stänga detta fönster."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Ange en giltig e-postadress"
 enterpriseNote = "Platser kan justeras i kassan (1–1000)."
 error = "Betalningsfel"
@@ -4445,6 +4457,7 @@ perMonth = "/månad"
 perYear = "/år"
 preparing = "Förbereder din kassa..."
 redirecting = "Omdirigerar till säker kassa..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe ej konfigurerat"
 stripeNotConfiguredMessage = "Stripe-betalningsintegrationen är inte konfigurerad. Kontakta din administratör."
 success = "Betalning genomförd!"
@@ -4777,6 +4790,13 @@ title = "PDF till Word"
 [PDFToWord.selectText]
 1 = "Utdatafilformat"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Denna tjänst använder LibreOffice för filkonvertering."
 header = "PDF till XML"
@@ -4835,6 +4855,7 @@ customPricing = "Anpassad"
 featureComparison = "Funktionsjämförelse"
 from = "Från"
 hideComparison = "Dölj funktionsjämförelse"
+included = "Included"
 includedInCurrent = "Ingår i din plan"
 licensedSeats = "Licensierade: {{count}} platser"
 manage = "Hantera"
@@ -4851,6 +4872,7 @@ subtitle = "Detaljer om din nuvarande prenumeration"
 title = "Aktiv plan"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Välj den plan som passar dina behov"
 title = "Tillgängliga planer"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Senaste funktionerna"
 name = "Enterprise"
 requiresServer = "Kräver Server"
 requiresServerMessage = "Uppgradera till Server-planen först innan du uppgraderar till Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API-åtkomst"
@@ -4928,6 +4951,10 @@ keyDescription = "Klistra in licensnyckeln från ditt e‑postmeddelande"
 success = "Licens aktiverad!"
 successMessage = "Din licens har aktiverats. Du kan nu stänga detta fönster."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Skriv ut fil till skrivare"
 submit = "Skriv ut"
@@ -4992,15 +5019,15 @@ title = "Ord att maskera"
 failed = "Ett fel inträffade vid maskning av PDF:en."
 
 [redact.manual]
+activate = "Aktivera maskningsverktyg"
+active = "Maskningsläge aktivt"
 apply = "Tillämpa"
 applyChanges = "Verkställ ändringar"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent åtgärd, kan inte ångras och underliggande data raderas"
 boxRedaction = "Rita ruta för maskning"
-colourPicker = "Färgväljare"
 colorLabel = "Maskningsfärg"
-active = "Maskningsläge aktivt"
-activate = "Aktivera maskningsverktyg"
+colourPicker = "Färgväljare"
 controlsTitle = "Manuella maskeringskontroller"
 convertPDFToImageLabel = "Konvertera PDF till PDF-bild (Används för att ta bort text bakom rutan)"
 export = "Exportera"
@@ -5396,6 +5423,39 @@ title = "Hög kontrast"
 text = "Invertera alla färger i PDF:en helt och hållet, vilket skapar en negativliknande effekt. Användbart för att skapa mörkt läge-versioner av dokument eller minska ansträngning för ögonen i svagt ljus."
 title = "Invertera alla färger"
 
+[rightRail]
+annotations = "Annoteringar"
+applyRedactionsFirst = "Tillämpa maskningar först"
+closePdf = "Stäng PDF"
+closeSelected = "Stäng markerade filer"
+deleteSelected = "Ta bort markerade sidor"
+deselectAll = "Avmarkera alla"
+downloadAll = "Ladda ner alla"
+downloadSelected = "Ladda ner markerade filer"
+draw = "Rita"
+exitRedaction = "Avsluta maskeringsläge"
+exportAll = "Exportera PDF"
+exportSelected = "Exportera markerade sidor"
+formFill = "Fyll i formulär"
+language = "Språk"
+panMode = "Panoreringsläge"
+print = "Skriv ut PDF"
+redact = "Maskera"
+rotateLeft = "Rotera åt vänster"
+rotateRight = "Rotera åt höger"
+ruler = "Linjal / Mätning"
+save = "Spara"
+saveAll = "Spara alla"
+saveChanges = "Spara ändringar"
+search = "Sök i PDF"
+selectAll = "Välj allt"
+selectByNumber = "Välj efter sidnummer"
+toggleAnnotations = "Växla synlighet för anteckningar"
+toggleAttachments = "Visa/dölj bilagor"
+toggleBookmarks = "Visa/dölj bokmärken"
+toggleSidebar = "Växla sidofält"
+toggleTheme = "Växla tema"
+
 [rotate]
 rotateLeft = "Rotera moturs"
 rotateRight = "Rotera medurs"
@@ -5647,6 +5707,70 @@ plan = "Plan"
 title = "Licensiering och analys"
 usageAnalytics = "Användningsanalys"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Juridik"
 privacy = "Integritet"
@@ -5679,6 +5803,9 @@ connections = "Anslutningar"
 security = "Säkerhet"
 telegram = "Telegram"
 title = "Säkerhet och autentisering"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Aktivera inloggningsläge först"
@@ -6016,6 +6143,11 @@ desc = "Extrahera specifika sidor (1,3,5-10)"
 name = "Sidnummer"
 tooltip = "Ange sidnummer separerade med kommatecken eller intervall med bindestreck"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Dela sidor i rutnätssektioner"
 name = "Sektioner"
@@ -6029,6 +6161,7 @@ tooltip = "Ange maximal filstorlek (t.ex. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Dela vid"
 splitBy = "Dela efter"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Klicka på ett metodkort för att välja det"
@@ -6040,6 +6173,21 @@ title = "Välj din delningsmetod"
 [split.methodSelection.tooltip.header]
 text = "Välj hur du vill dela din PDF‑fil. Varje metod är optimerad för olika användningsfall och dokumenttyper."
 title = "Val av delningsmetod"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Välj först en delningsmetod"
@@ -6091,6 +6239,14 @@ bullet2 = "Intervallpunkter: 3-8 (delar före sida 3 och efter sida 8)"
 bullet3 = "Blandat: 2,5-10,15 (delar efter sida 2, före sida 5, efter sida 10 och efter sida 15)"
 text = "Dela din PDF vid specifika sidnummer. Med 'n' delas efter sida n. Med 'n-m' delas före sida n och efter sida m."
 title = "Dela vid sidnummer"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Horisontellt: Antal rader som ska skapas"
@@ -6232,6 +6388,82 @@ title = "API-dokumentation"
 
 [tableExtraxt]
 tags = "CSV,Tabellextraktion,extrahera,konvertera"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Centrerat"
+left = "Vänster"
+right = "Höger"
 
 [theme]
 toggle = "Växla tema"
@@ -6507,6 +6739,37 @@ invalid = "Certifikat finns inte i betrodd certifikatsbutik – källan kan inte
 fileManager = "Filhanterare"
 pageEditor = "Sidredigerare"
 viewer = "Visare"
+
+[viewer]
+cannotPreviewFile = "Kan inte förhandsgranska filen"
+dualPageView = "Dubbelsidig vy"
+firstPage = "Första sidan"
+lastPage = "Sista sidan"
+nextPage = "Nästa sida"
+onlyPdfSupported = "Visaren stöder endast PDF-filer. Den här filen verkar vara i ett annat format."
+previousPage = "Föregående sida"
+singlePageView = "Ensidig vy"
+unknownFile = "Okänd fil"
+zoomIn = "Zooma in"
+zoomOut = "Zooma ut"
+
+[viewer.attachments]
+empty = "Inga bilagor i det här dokumentet"
+loading = "Läser in bilagor..."
+noDocument = "Öppna en PDF för att visa dess bilagor."
+noMatch = "Inga bilagor matchar din sökning"
+noSupport = "Stöd för bilagor är inte tillgängligt i den här visaren."
+searchPlaceholder = "Sök bilagor"
+title = "Bilagor"
+
+[viewer.formBar]
+apply = "Verkställ ändringar"
+dismiss = "Avfärda"
+download = "Ladda ned PDF"
+hasFieldsDesc = "Denna PDF innehåller ifyllbara fält"
+title = "Formulärfält"
+unsavedBadge = "Ej sparat"
+unsavedDesc = "Du har osparade ändringar"
 
 [viewPdf]
 header = "Visa PDF"

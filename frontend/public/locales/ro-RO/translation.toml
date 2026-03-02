@@ -16,13 +16,13 @@ comingSoon = "În curând"
 confirmClose = "Confirmare închidere"
 confirmCloseCancel = "Anulare"
 confirmCloseConfirm = "Închideți fișierul"
-confirmCloseMessage = "Sigur doriți să închideți acest fișier?"
 confirmCloseDiscard = "Renunță la modificări și închide"
+confirmCloseMessage = "Sigur doriți să închideți acest fișier?"
 confirmCloseSave = "Salvează și închide"
+confirmCloseSaveFailed = "Salvat cu erori. Salvarea a eșuat pentru {{count}} file{{plural}}."
+confirmCloseSaveFailedTitle = "Salvare eșuată"
 confirmCloseUnsaved = "Acest fișier are modificări nesalvate."
 confirmCloseUnsavedList = "Ai {{count}} file{{plural}} cu modificări nesalvate.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Salvare eșuată"
-confirmCloseSaveFailed = "Salvat cu erori. Salvarea a eșuat pentru {{count}} file{{plural}}."
 confirmPasswordErrorMessage = "Noua Parolă și Confirmarea Noii Parole trebuie să se potrivească."
 custom = "Personalizat..."
 customPosition = "Poziție personalizată"
@@ -42,11 +42,12 @@ downloadComplete = "Descărcare Completă"
 downloadPdf = "Descarcă PDF"
 downloadUnavailable = "Descărcare indisponibilă pentru acest element"
 edit = "Editare"
+editSecret = "Edit this value"
 editYourNewFiles = "Editați noile fișiere"
 exportAndContinue = "Exportați și continuați"
 false = "Fals"
-fileSavedToDisk = "Fișier salvat pe disc"
 fileNotSavedToDisk = "Nesalvat pe disc"
+fileSavedToDisk = "Fișier salvat pe disc"
 fileSelected = "Selectat: {{filename}}"
 filesSelected = "fișiere selectate"
 font = "Font"
@@ -841,6 +842,14 @@ title = "Puncte finale API"
 userDefaults = "Valori implicite pentru preferințele utilizatorilor"
 userDefaultsDescription = "Stabilește valorile implicite pentru preferințele utilizatorilor. Utilizatorii le pot suprascrie în setările personale."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Elimină opțiunile de conversie dezactivate în loc să le afișezi gri"
+label = "Ascunde conversiile indisponibile în mod implicit"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Elimină instrumentele dezactivate în loc să le afișezi gri"
+label = "Ascunde instrumentele indisponibile în mod implicit"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Selectați grupuri de puncte finale pentru dezactivare"
 label = "Grupuri de puncte finale dezactivate"
@@ -848,14 +857,6 @@ label = "Grupuri de puncte finale dezactivate"
 [admin.settings.endpoints.toRemove]
 description = "Selectați puncte finale individuale pentru dezactivare"
 label = "Puncte finale dezactivate"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Elimină instrumentele dezactivate în loc să le afișezi gri"
-label = "Ascunde instrumentele indisponibile în mod implicit"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Elimină opțiunile de conversie dezactivate în loc să le afișezi gri"
-label = "Ascunde conversiile indisponibile în mod implicit"
 
 [admin.settings.enterpriseRequired]
 message = "Este necesară o licență Enterprise pentru a accesa {{featureName}}. Vizualizați date demonstrative pentru referință."
@@ -1228,6 +1229,14 @@ label = "Utilizator inițial"
 [admin.settings.security.jwt]
 label = "Configurare JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Toleranță pentru diferența de timp client/server în timpul validării tokenului (implicit: 60 de secunde)"
+label = "Toleranță diferență de ceas (secunde)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Valabilitatea tokenului de acces, în minute, pentru clienții desktop. Aplicațiile desktop sunt detectate automat prin User-Agent și primesc sesiuni mai lungi pentru o experiență mai bună (UX) (implicit: 43200 = 30 de zile)"
+label = "Expirare token desktop (minute)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Elimină automat cheile JWT expirate"
 label = "Activează curățarea cheilor"
@@ -1236,29 +1245,21 @@ label = "Activează curățarea cheilor"
 description = "Rotește automat periodic cheile de semnare JWT"
 label = "Activează rotația cheilor"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Valabilitatea tokenului de acces, în minute, pentru clienții web (implicit: 1440 = 24 de ore)"
-label = "Expirare token web (minute)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Valabilitatea tokenului de acces, în minute, pentru clienții desktop. Aplicațiile desktop sunt detectate automat prin User-Agent și primesc sesiuni mai lungi pentru o experiență mai bună (UX) (implicit: 43200 = 30 de zile)"
-label = "Expirare token desktop (minute)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Toleranță pentru diferența de timp client/server în timpul validării tokenului (implicit: 60 de secunde)"
-label = "Toleranță diferență de ceas (secunde)"
+[admin.settings.security.jwt.persistence]
+description = "Stochează persistent cheile JWT pentru a supraviețui repornirilor serverului"
+label = "Activează persistența cheilor"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Permite reîmprospătarea tokenului în acest număr de minute după expirare (implicit: 15 minute, max. 3 încercări)"
 label = "Perioadă de grație pentru reîmprospătare (minute)"
 
-[admin.settings.security.jwt.persistence]
-description = "Stochează persistent cheile JWT pentru a supraviețui repornirilor serverului"
-label = "Activează persistența cheilor"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Solicită HTTPS pentru cookie-urile JWT (recomandat pentru producție)"
 label = "Cookie securizat"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Valabilitatea tokenului de acces, în minute, pentru clienții web (implicit: 1440 = 24 de ore)"
+label = "Expirare token web (minute)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Numărul maxim de încercări eșuate înainte de blocarea contului"
@@ -2238,6 +2239,9 @@ title = "Schimbă Permisiunile"
 [changePermissions.tooltip.warning]
 text = "Pentru ca aceste permisiuni să nu poată fi schimbate, utilizați instrumentul Adăugare parolă pentru a seta o parolă de proprietar."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Alege culoarea"
 
@@ -2254,9 +2258,11 @@ copy = "Copiați"
 done = "Gata"
 error = "Eroare"
 expand = "Extinde"
+learnMore = "Learn more"
 lines = "linii"
 loading = "Se încarcă..."
 next = "Înainte"
+operation = "this operation"
 preview = "Previzualizare"
 previous = "Înapoi"
 refresh = "Reîmprospătați"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Decupare automată a spațiilor albe"
 header = "Decupează PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Copiază Urmărirea Stivei"
 discordSubmit = "Discord - Trimite o postare de Suport"
 dismissAllErrors = "Închideți toate erorile"
 encryptedPdfMustRemovePassword = "Acest PDF este criptat sau protejat cu parolă. Vă rugăm să îl deblocați înainte de a converti la PDF/A."
+generic = "An error occurred"
 github = "Deschide un tichet pe GitHub"
 githubSubmit = "GitHub - Deschide un tichet"
 incorrectPasswordProvided = "Parola PDF este incorectă sau lipsește."
@@ -3346,10 +3424,6 @@ desc = "Construiți fluxuri cu mai mulți pași legând acțiuni PDF. Ideal pent
 tags = "flux,secvență,automatizare"
 title = "Automatizare"
 
-[home.formFill]
-desc = "Completează interactiv câmpurile formularului PDF cu un editor vizual"
-title = "Completează formularul"
-
 [home.autoRename]
 desc = "Redenumește automat un fișier PDF pe baza antetului detectat"
 tags = "auto-detectare,bazat-pe-antet,organizează,re-etichetează"
@@ -3444,6 +3518,10 @@ title = "Extrage Pagini"
 desc = "Elimină toate elementele interactive și formularele dintr-un PDF."
 tags = "simplifică,elimină,interactiv"
 title = "Nivelare"
+
+[home.formFill]
+desc = "Completează interactiv câmpurile formularului PDF cu un editor vizual"
+title = "Completează formularul"
 
 [home.getPdfInfo]
 desc = "Extrage orice și toate informațiile posibile despre PDF-uri"
@@ -4247,75 +4325,6 @@ title = "Editor de pagini"
 zoomIn = "Măriți"
 zoomOut = "Micșorați"
 
-[viewer]
-cannotPreviewFile = "Nu se poate previzualiza fișierul"
-dualPageView = "Vizualizare cu două pagini"
-firstPage = "Prima pagină"
-lastPage = "Ultima pagină"
-nextPage = "Pagina următoare"
-onlyPdfSupported = "Vizualizatorul acceptă doar fișiere PDF. Acest fișier pare a fi într-un format diferit."
-previousPage = "Pagina anterioară"
-singlePageView = "Vizualizare cu o singură pagină"
-unknownFile = "Fișier necunoscut"
-zoomIn = "Măriți"
-zoomOut = "Micșorați"
-
-[viewer.attachments]
-title = "Atașamente"
-searchPlaceholder = "Caută în atașamente"
-noSupport = "Suportul pentru atașamente nu este disponibil în acest vizualizator."
-noDocument = "Deschide un PDF pentru a-i vedea atașamentele."
-loading = "Se încarcă atașamentele..."
-empty = "Nu există atașamente în acest document"
-noMatch = "Niciun atașament nu corespunde căutării tale"
-
-[viewer.formBar]
-title = "Câmpuri formular"
-unsavedBadge = "Nesalvate"
-unsavedDesc = "Ai modificări nesalvate"
-hasFieldsDesc = "Acest PDF conține câmpuri completabile"
-dismiss = "Închide"
-apply = "Aplică modificările"
-download = "Descarcă PDF"
-
-[rightRail]
-closeSelected = "Închideți fișierele selectate"
-selectAll = "Selectați tot"
-deselectAll = "Deselectați tot"
-selectByNumber = "Selectați după numerele paginilor"
-deleteSelected = "Ștergeți paginile selectate"
-closePdf = "Închide PDF"
-exportAll = "Exportați PDF"
-downloadSelected = "Descărcați fișierele selectate"
-annotations = "Anotări"
-exportSelected = "Exportați paginile selectate"
-formFill = "Completează formularul"
-saveChanges = "Salvați modificările"
-toggleAttachments = "Afișează/ascunde atașamentele"
-toggleTheme = "Comutați tema"
-language = "Limbă"
-toggleAnnotations = "Comutați vizibilitatea adnotărilor"
-search = "Căutați în PDF"
-panMode = "Mod panoramare"
-applyRedactionsFirst = "Aplicați mai întâi redactările"
-rotateLeft = "Rotiți la stânga"
-rotateRight = "Rotiți la dreapta"
-toggleSidebar = "Comutați bara laterală"
-toggleBookmarks = "Comută semnele de carte"
-print = "Imprimați PDF"
-ruler = "Riglă / Măsurare"
-draw = "Desenați"
-redact = "Redactează"
-exitRedaction = "Ieși din modul Redactare"
-save = "Salvați"
-downloadAll = "Descărcați tot"
-saveAll = "Salvează tot"
-
-[textAlign]
-left = "Stânga"
-center = "Centru"
-right = "Dreapta"
-
 [pageExtracter]
 header = "Extrage Pagini"
 placeholder = "(ex. 1,2,8 sau 4,7,12-16 sau 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Sfaturi"
 autoClose = "Această fereastră se va închide automat..."
 billingPeriod = "Perioadă de facturare"
 canCloseWindow = "Poți închide această fereastră."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Te rugăm să introduci o adresă de email validă"
 enterpriseNote = "Locurile pot fi ajustate la checkout (1-1000)."
 error = "Eroare de plată"
@@ -4445,6 +4457,7 @@ perMonth = "/lună"
 perYear = "/an"
 preparing = "Se pregătește checkout-ul..."
 redirecting = "Se redirecționează către checkout securizat..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe neconfigurat"
 stripeNotConfiguredMessage = "Integrarea de plăți Stripe nu este configurată. Te rugăm să contactezi administratorul."
 success = "Plată reușită!"
@@ -4777,6 +4790,13 @@ title = "PDF către Word"
 [PDFToWord.selectText]
 1 = "Format fișier de ieșire"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Acest serviciu utilizează LibreOffice pentru conversia fișierului."
 header = "PDF către XML"
@@ -4835,6 +4855,7 @@ customPricing = "Personalizat"
 featureComparison = "Comparație funcții"
 from = "De la"
 hideComparison = "Ascunde comparația funcțiilor"
+included = "Included"
 includedInCurrent = "Inclus în planul tău"
 licensedSeats = "Licențiate: {{count}} locuri"
 manage = "Gestionează"
@@ -4851,6 +4872,7 @@ subtitle = "Detaliile abonamentului curent"
 title = "Plan activ"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Alegeți planul care se potrivește nevoilor dvs."
 title = "Planuri disponibile"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Cele mai noi funcții"
 name = "Enterprise"
 requiresServer = "Necesită Server"
 requiresServerMessage = "Te rugăm să faci mai întâi upgrade la planul Server înainte de a trece la Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Acces API"
@@ -4928,6 +4951,10 @@ keyDescription = "Lipiți cheia de licență din e-mail"
 success = "Licență activată!"
 successMessage = "Licența a fost activată cu succes. Puteți închide această fereastră."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Tipărește Fișier la Imprimantă"
 submit = "Tipărește"
@@ -4992,15 +5019,15 @@ title = "Cuvinte de redactat"
 failed = "A apărut o eroare la redactarea PDF-ului."
 
 [redact.manual]
+activate = "Activează instrumentul de redactare"
+active = "Modul de redactare activ"
 apply = "Aplică"
 applyChanges = "Aplică modificările"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Aplicare permanentă, nu poate fi anulată, iar datele dedesubt vor fi șterse"
 boxRedaction = "Redactare prin desenarea casetei"
-colourPicker = "Selector de culoare"
 colorLabel = "Culoare redactare"
-active = "Modul de redactare activ"
-activate = "Activează instrumentul de redactare"
+colourPicker = "Selector de culoare"
 controlsTitle = "Controale de redactare manuală"
 convertPDFToImageLabel = "Convertește PDF în PDF-imagine (utilizat pentru a elimina textul din spatele casetei)"
 export = "Exportă"
@@ -5396,6 +5423,39 @@ title = "Contrast ridicat"
 text = "Inversează complet toate culorile din PDF, creând un efect de tip negativ. Util pentru crearea unor versiuni în modul întunecat sau pentru reducerea oboselii oculare în lumină slabă."
 title = "Inversează toate culorile"
 
+[rightRail]
+annotations = "Anotări"
+applyRedactionsFirst = "Aplicați mai întâi redactările"
+closePdf = "Închide PDF"
+closeSelected = "Închideți fișierele selectate"
+deleteSelected = "Ștergeți paginile selectate"
+deselectAll = "Deselectați tot"
+downloadAll = "Descărcați tot"
+downloadSelected = "Descărcați fișierele selectate"
+draw = "Desenați"
+exitRedaction = "Ieși din modul Redactare"
+exportAll = "Exportați PDF"
+exportSelected = "Exportați paginile selectate"
+formFill = "Completează formularul"
+language = "Limbă"
+panMode = "Mod panoramare"
+print = "Imprimați PDF"
+redact = "Redactează"
+rotateLeft = "Rotiți la stânga"
+rotateRight = "Rotiți la dreapta"
+ruler = "Riglă / Măsurare"
+save = "Salvați"
+saveAll = "Salvează tot"
+saveChanges = "Salvați modificările"
+search = "Căutați în PDF"
+selectAll = "Selectați tot"
+selectByNumber = "Selectați după numerele paginilor"
+toggleAnnotations = "Comutați vizibilitatea adnotărilor"
+toggleAttachments = "Afișează/ascunde atașamentele"
+toggleBookmarks = "Comută semnele de carte"
+toggleSidebar = "Comutați bara laterală"
+toggleTheme = "Comutați tema"
+
 [rotate]
 rotateLeft = "Rotiți în sens antiorar"
 rotateRight = "Rotiți în sens orar"
@@ -5647,6 +5707,70 @@ plan = "Plan"
 title = "Licențiere și Analytics"
 usageAnalytics = "Analytics de utilizare"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Legal"
 privacy = "Confidențialitate"
@@ -5679,6 +5803,9 @@ connections = "Conexiuni"
 security = "Securitate"
 telegram = "Telegram"
 title = "Securitate și autentificare"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Activați mai întâi modul de login"
@@ -6016,6 +6143,11 @@ desc = "Extrageți pagini specifice (1,3,5-10)"
 name = "Numere de pagină"
 tooltip = "Introduceți numere de pagină separate prin virgule sau intervale cu cratime"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Împărțiți paginile în secțiuni de grilă"
 name = "Secțiuni"
@@ -6029,6 +6161,7 @@ tooltip = "Specificați dimensiunea maximă a fișierului (ex. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Împarte la"
 splitBy = "Împarte după"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Faceți clic pe o cartelă de metodă pentru a o selecta"
@@ -6040,6 +6173,21 @@ title = "Alegeți metoda de împărțire"
 [split.methodSelection.tooltip.header]
 text = "Alegeți cum doriți să împărțiți documentul PDF. Fiecare metodă este optimizată pentru cazuri de utilizare și tipuri de documente diferite."
 title = "Selecție metodă de împărțire"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Vă rugăm să selectați mai întâi o metodă de împărțire"
@@ -6091,6 +6239,14 @@ bullet2 = "Puncte de împărțire interval: 3-8 (împarte înainte de pagina 3 �
 bullet3 = "Mix: 2,5-10,15 (împarte după pagina 2, înainte de pagina 5, după pagina 10 și după pagina 15)"
 text = "Împărțiți PDF-ul la anumite numere de pagină. Folosirea 'n' împarte după pagina n. Folosirea 'n-m' împarte înainte de pagina n și după pagina m."
 title = "Împarte la numerele de pagină"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Orizontal: Numărul de rânduri de creat"
@@ -6232,6 +6388,82 @@ title = "Documentație API"
 
 [tableExtraxt]
 tags = "CSV,Extragere Tabel,extrage,convertește"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Centru"
+left = "Stânga"
+right = "Dreapta"
 
 [theme]
 toggle = "Comutați tema"
@@ -6507,6 +6739,37 @@ invalid = "Certificatul nu este în stocul de încredere - sursa nu poate fi ver
 fileManager = "Manager de fișiere"
 pageEditor = "Editor de pagini"
 viewer = "Vizualizator"
+
+[viewer]
+cannotPreviewFile = "Nu se poate previzualiza fișierul"
+dualPageView = "Vizualizare cu două pagini"
+firstPage = "Prima pagină"
+lastPage = "Ultima pagină"
+nextPage = "Pagina următoare"
+onlyPdfSupported = "Vizualizatorul acceptă doar fișiere PDF. Acest fișier pare a fi într-un format diferit."
+previousPage = "Pagina anterioară"
+singlePageView = "Vizualizare cu o singură pagină"
+unknownFile = "Fișier necunoscut"
+zoomIn = "Măriți"
+zoomOut = "Micșorați"
+
+[viewer.attachments]
+empty = "Nu există atașamente în acest document"
+loading = "Se încarcă atașamentele..."
+noDocument = "Deschide un PDF pentru a-i vedea atașamentele."
+noMatch = "Niciun atașament nu corespunde căutării tale"
+noSupport = "Suportul pentru atașamente nu este disponibil în acest vizualizator."
+searchPlaceholder = "Caută în atașamente"
+title = "Atașamente"
+
+[viewer.formBar]
+apply = "Aplică modificările"
+dismiss = "Închide"
+download = "Descarcă PDF"
+hasFieldsDesc = "Acest PDF conține câmpuri completabile"
+title = "Câmpuri formular"
+unsavedBadge = "Nesalvate"
+unsavedDesc = "Ai modificări nesalvate"
 
 [viewPdf]
 header = "Vizualizează PDF"

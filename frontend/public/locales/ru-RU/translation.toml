@@ -16,13 +16,13 @@ comingSoon = "Скоро"
 confirmClose = "Подтвердить закрытие"
 confirmCloseCancel = "Отмена"
 confirmCloseConfirm = "Закрыть файл"
-confirmCloseMessage = "Вы уверены, что хотите закрыть этот файл?"
 confirmCloseDiscard = "Отменить изменения и закрыть"
+confirmCloseMessage = "Вы уверены, что хотите закрыть этот файл?"
 confirmCloseSave = "Сохранить и закрыть"
+confirmCloseSaveFailed = "Сохранено с ошибками. {{count}} файл{{plural}} не удалось сохранить."
+confirmCloseSaveFailedTitle = "Не удалось сохранить"
 confirmCloseUnsaved = "В этом файле есть несохранённые изменения."
 confirmCloseUnsavedList = "У вас {{count}} файл{{plural}} с несохранёнными изменениями.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Не удалось сохранить"
-confirmCloseSaveFailed = "Сохранено с ошибками. {{count}} файл{{plural}} не удалось сохранить."
 confirmPasswordErrorMessage = "Новый пароль и его подтверждение должны совпадать."
 custom = "Пользовательский..."
 customPosition = "Пользовательское положение"
@@ -42,11 +42,12 @@ downloadComplete = "Загрузка завершена"
 downloadPdf = "Скачать PDF"
 downloadUnavailable = "Загрузка недоступна для этого элемента"
 edit = "Редактировать"
+editSecret = "Edit this value"
 editYourNewFiles = "Отредактируйте ваши новые файлы"
 exportAndContinue = "Экспорт и продолжить"
 false = "Нет"
-fileSavedToDisk = "Файл сохранён на диск"
 fileNotSavedToDisk = "Не сохранён на диск"
+fileSavedToDisk = "Файл сохранён на диск"
 fileSelected = "Выбрано: {{filename}}"
 filesSelected = "файлов выбрано"
 font = "Шрифт"
@@ -841,6 +842,14 @@ title = "Эндпойнты API"
 userDefaults = "Значения по умолчанию для пользовательских настроек"
 userDefaultsDescription = "Задайте значения по умолчанию для пользовательских настроек. Пользователи могут переопределить их в личных настройках."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Удалять отключённые параметры конвертации вместо отображения их неактивными"
+label = "Скрывать недоступные конвертации по умолчанию"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Удалять отключённые инструменты вместо отображения их неактивными"
+label = "Скрывать недоступные инструменты по умолчанию"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Выберите группы эндпойнтов для отключения"
 label = "Отключенные группы эндпойнтов"
@@ -848,14 +857,6 @@ label = "Отключенные группы эндпойнтов"
 [admin.settings.endpoints.toRemove]
 description = "Выберите отдельные эндпойнты для отключения"
 label = "Отключенные эндпойнты"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Удалять отключённые инструменты вместо отображения их неактивными"
-label = "Скрывать недоступные инструменты по умолчанию"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Удалять отключённые параметры конвертации вместо отображения их неактивными"
-label = "Скрывать недоступные конвертации по умолчанию"
 
 [admin.settings.enterpriseRequired]
 message = "Для доступа к {{featureName}} требуется лицензия Enterprise. Вы просматриваете демонстрационные данные для справки."
@@ -1228,6 +1229,14 @@ label = "Начальное имя пользователя"
 [admin.settings.security.jwt]
 label = "Конфигурация JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Допуск расхождения времени клиента/сервера при проверке токена (по умолчанию: 60 секунд)"
+label = "Допустимое расхождение времени (секунды)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Время жизни токена доступа в минутах для настольных клиентов. Настольные приложения автоматически определяются по User-Agent и получают более длительные сессии для лучшего UX (по умолчанию: 43200 = 30 дней)"
+label = "Срок действия токена для настольных клиентов (в минутах)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Автоматически удалять просроченные ключи JWT"
 label = "Включить очистку ключей"
@@ -1236,29 +1245,21 @@ label = "Включить очистку ключей"
 description = "Автоматически периодически ротировать ключи подписи JWT"
 label = "Включить ротацию ключей"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Время жизни токена доступа в минутах для веб‑клиентов (по умолчанию: 1440 = 24 часа)"
-label = "Срок действия веб‑токена (в минутах)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Время жизни токена доступа в минутах для настольных клиентов. Настольные приложения автоматически определяются по User-Agent и получают более длительные сессии для лучшего UX (по умолчанию: 43200 = 30 дней)"
-label = "Срок действия токена для настольных клиентов (в минутах)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Допуск расхождения времени клиента/сервера при проверке токена (по умолчанию: 60 секунд)"
-label = "Допустимое расхождение времени (секунды)"
+[admin.settings.security.jwt.persistence]
+description = "Хранить ключи JWT постоянно, чтобы переживать перезапуски сервера"
+label = "Включить постоянность ключей"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Разрешить обновление токена в течение указанного количества минут после истечения срока (по умолчанию: 15 минут, максимум 3 попытки)"
 label = "Льготный период обновления (минуты)"
 
-[admin.settings.security.jwt.persistence]
-description = "Хранить ключи JWT постоянно, чтобы переживать перезапуски сервера"
-label = "Включить постоянность ключей"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Требовать HTTPS для cookie с JWT (рекомендуется для продакшена)"
 label = "Безопасная cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Время жизни токена доступа в минутах для веб‑клиентов (по умолчанию: 1440 = 24 часа)"
+label = "Срок действия веб‑токена (в минутах)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Максимальное число неудачных попыток входа до блокировки учетной записи"
@@ -2238,6 +2239,9 @@ title = "Изменить разрешения"
 [changePermissions.tooltip.warning]
 text = "Чтобы сделать эти разрешения неизменяемыми, используйте инструмент «Добавить пароль» и задайте пароль владельца."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Выберите цвет"
 
@@ -2254,9 +2258,11 @@ copy = "Копировать"
 done = "Готово"
 error = "Ошибка"
 expand = "Развернуть"
+learnMore = "Learn more"
 lines = "строк"
 loading = "Загрузка..."
 next = "Далее"
+operation = "this operation"
 preview = "Предпросмотр"
 previous = "Предыдущий"
 refresh = "Обновить"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Автообрезка пустых полей"
 header = "Обрезка PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Скопировать трассировку стека"
 discordSubmit = "Discord - Отправить запрос в поддержку"
 dismissAllErrors = "Скрыть все ошибки"
 encryptedPdfMustRemovePassword = "Этот PDF зашифрован или защищён паролем. Пожалуйста, разблокируйте его перед преобразованием в PDF/A."
+generic = "An error occurred"
 github = "Отправить тикет на GitHub"
 githubSubmit = "GitHub - Отправить тикет"
 incorrectPasswordProvided = "Пароль к PDF неверен или не указан."
@@ -3346,10 +3424,6 @@ desc = "Создавайте многошаговые процессы, связ
 tags = "рабочий процесс,последовательность,автоматизация"
 title = "Автоматизация"
 
-[home.formFill]
-desc = "Заполняйте поля формы PDF интерактивно с визуальным редактором"
-title = "Заполнить форму"
-
 [home.autoRename]
 desc = "Автоматически переименовывает PDF по обнаруженному заголовку"
 tags = "автообнаружение,заголовок,организация,переименование"
@@ -3444,6 +3518,10 @@ title = "Извлечь страницы"
 desc = "Удаляет все интерактивные элементы и формы из PDF"
 tags = "упростить,удалить,интерактив"
 title = "Сведение"
+
+[home.formFill]
+desc = "Заполняйте поля формы PDF интерактивно с визуальным редактором"
+title = "Заполнить форму"
 
 [home.getPdfInfo]
 desc = "Собирает всю возможную информацию о PDF"
@@ -4247,75 +4325,6 @@ title = "Редактор страниц"
 zoomIn = "Увеличить"
 zoomOut = "Уменьшить"
 
-[viewer]
-cannotPreviewFile = "Не удаётся просмотреть файл"
-dualPageView = "Двухстраничный вид"
-firstPage = "Первая страница"
-lastPage = "Последняя страница"
-nextPage = "Следующая страница"
-onlyPdfSupported = "Просмотрщик поддерживает только PDF-файлы. Похоже, этот файл другого формата."
-previousPage = "Предыдущая страница"
-singlePageView = "Одностраничный вид"
-unknownFile = "Неизвестный файл"
-zoomIn = "Увеличить"
-zoomOut = "Уменьшить"
-
-[viewer.attachments]
-title = "Вложения"
-searchPlaceholder = "Поиск вложений"
-noSupport = "Поддержка вложений недоступна для этого просмотрщика."
-noDocument = "Откройте PDF, чтобы просмотреть его вложения."
-loading = "Загрузка вложений..."
-empty = "В этом документе нет вложений"
-noMatch = "Нет вложений, соответствующих вашему поиску"
-
-[viewer.formBar]
-title = "Поля формы"
-unsavedBadge = "Несохранено"
-unsavedDesc = "У вас есть несохранённые изменения"
-hasFieldsDesc = "В этом PDF есть поля для заполнения"
-dismiss = "Скрыть"
-apply = "Применить изменения"
-download = "Скачать PDF"
-
-[rightRail]
-closeSelected = "Закрыть выбранные файлы"
-selectAll = "Выбрать все"
-deselectAll = "Отменить выбор всех"
-selectByNumber = "Выбрать по номерам страниц"
-deleteSelected = "Удалить выбранные страницы"
-closePdf = "Закрыть PDF"
-exportAll = "Экспортировать PDF"
-downloadSelected = "Скачать выбранные файлы"
-annotations = "Аннотации"
-exportSelected = "Экспортировать выбранные страницы"
-formFill = "Заполнить форму"
-saveChanges = "Сохранить изменения"
-toggleAttachments = "Показать/скрыть вложения"
-toggleTheme = "Переключить тему"
-language = "Язык"
-toggleAnnotations = "Показать/скрыть аннотации"
-search = "Поиск по PDF"
-panMode = "Режим панорамирования"
-applyRedactionsFirst = "Сначала примените зачернения"
-rotateLeft = "Повернуть влево"
-rotateRight = "Повернуть вправо"
-toggleSidebar = "Показать/скрыть боковую панель"
-toggleBookmarks = "Показать/скрыть закладки"
-print = "Печать PDF"
-ruler = "Линейка / Измерение"
-draw = "Рисовать"
-redact = "Зачернить"
-exitRedaction = "Выйти из режима зачернения"
-save = "Сохранить"
-downloadAll = "Скачать все"
-saveAll = "Сохранить всё"
-
-[textAlign]
-left = "По левому краю"
-center = "По центру"
-right = "По правому краю"
-
 [pageExtracter]
 header = "Извлечь страницы"
 placeholder = "(например, 1,2,8 или 4,7,12-16 или 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Советы"
 autoClose = "Это окно закроется автоматически..."
 billingPeriod = "Период оплаты"
 canCloseWindow = "Теперь можно закрыть это окно."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Введите корректный адрес email"
 enterpriseNote = "Количество мест можно изменить на оплате (1–1000)."
 error = "Ошибка оплаты"
@@ -4445,6 +4457,7 @@ perMonth = "/месяц"
 perYear = "/год"
 preparing = "Подготовка к оплате..."
 redirecting = "Перенаправление на безопасную оплату..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe не настроен"
 stripeNotConfiguredMessage = "Интеграция платежей Stripe не настроена. Обратитесь к администратору."
 success = "Платеж успешно выполнен!"
@@ -4777,6 +4790,13 @@ title = "PDF в Word"
 [PDFToWord.selectText]
 1 = "Формат выходного файла"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Этот сервис использует LibreOffice для преобразования файлов."
 header = "PDF в XML"
@@ -4835,6 +4855,7 @@ customPricing = "Индивидуально"
 featureComparison = "Сравнение функций"
 from = "От"
 hideComparison = "Скрыть сравнение функций"
+included = "Included"
 includedInCurrent = "Входит в ваш тариф"
 licensedSeats = "Лицензировано: {{count}} мест"
 manage = "Управлять"
@@ -4851,6 +4872,7 @@ subtitle = "Детали вашей текущей подписки"
 title = "Активный план"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Выберите план, подходящий вашим потребностям"
 title = "Доступные планы"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Последние функции"
 name = "Корпоративный"
 requiresServer = "Требуется Server"
 requiresServerMessage = "Сначала перейдите на тариф Server, прежде чем обновляться до Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Доступ к API"
@@ -4928,6 +4951,10 @@ keyDescription = "Вставьте лицензионный ключ из пис
 success = "Лицензия активирована!"
 successMessage = "Ваша лицензия успешно активирована. Теперь можно закрыть это окно."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Печать файла на принтер"
 submit = "Печать"
@@ -4992,15 +5019,15 @@ title = "Слова для скрытия"
 failed = "Произошла ошибка при редактировании (редакции) PDF."
 
 [redact.manual]
+activate = "Активировать инструмент скрытия"
+active = "Режим скрытия включён"
 apply = "Применить"
 applyChanges = "Применить изменения"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Применение необратимо; отмена невозможна, данные под зачернением будут удалены"
 boxRedaction = "Скрытие рамкой"
-colourPicker = "Выбор цвета"
 colorLabel = "Цвет скрытия"
-active = "Режим скрытия включён"
-activate = "Активировать инструмент скрытия"
+colourPicker = "Выбор цвета"
 controlsTitle = "Ручные элементы управления зачернением"
 convertPDFToImageLabel = "Преобразовать PDF в PDF-изображение (для удаления текста за рамкой)"
 export = "Экспорт"
@@ -5396,6 +5423,39 @@ title = "Высокая контрастность"
 text = "Полностью инвертируйте все цвета в PDF, создавая эффект негатива. Полезно для темного режима или снижения нагрузки на глаза при слабом освещении."
 title = "Инвертировать все цвета"
 
+[rightRail]
+annotations = "Аннотации"
+applyRedactionsFirst = "Сначала примените зачернения"
+closePdf = "Закрыть PDF"
+closeSelected = "Закрыть выбранные файлы"
+deleteSelected = "Удалить выбранные страницы"
+deselectAll = "Отменить выбор всех"
+downloadAll = "Скачать все"
+downloadSelected = "Скачать выбранные файлы"
+draw = "Рисовать"
+exitRedaction = "Выйти из режима зачернения"
+exportAll = "Экспортировать PDF"
+exportSelected = "Экспортировать выбранные страницы"
+formFill = "Заполнить форму"
+language = "Язык"
+panMode = "Режим панорамирования"
+print = "Печать PDF"
+redact = "Зачернить"
+rotateLeft = "Повернуть влево"
+rotateRight = "Повернуть вправо"
+ruler = "Линейка / Измерение"
+save = "Сохранить"
+saveAll = "Сохранить всё"
+saveChanges = "Сохранить изменения"
+search = "Поиск по PDF"
+selectAll = "Выбрать все"
+selectByNumber = "Выбрать по номерам страниц"
+toggleAnnotations = "Показать/скрыть аннотации"
+toggleAttachments = "Показать/скрыть вложения"
+toggleBookmarks = "Показать/скрыть закладки"
+toggleSidebar = "Показать/скрыть боковую панель"
+toggleTheme = "Переключить тему"
+
 [rotate]
 rotateLeft = "Повернуть против часовой стрелки"
 rotateRight = "Повернуть по часовой стрелке"
@@ -5647,6 +5707,70 @@ plan = "План"
 title = "Лицензирование и аналитика"
 usageAnalytics = "Аналитика использования"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Юридическая информация"
 privacy = "Конфиденциальность"
@@ -5679,6 +5803,9 @@ connections = "Подключения"
 security = "Безопасность"
 telegram = "Telegram"
 title = "Безопасность и аутентификация"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Сначала включите режим входа"
@@ -6016,6 +6143,11 @@ desc = "Извлечь конкретные страницы (1,3,5-10)"
 name = "Номера страниц"
 tooltip = "Введите номера страниц через запятую или диапазоны через дефис"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Делить страницы на секции сетки"
 name = "Секции"
@@ -6029,6 +6161,7 @@ tooltip = "Укажите максимальный размер файла (на
 [split.methods.prefix]
 splitAt = "Разделить на"
 splitBy = "Разделить по"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Нажмите на карточку метода, чтобы выбрать его"
@@ -6040,6 +6173,21 @@ title = "Выберите метод разделения"
 [split.methodSelection.tooltip.header]
 text = "Выберите способ разделения PDF. Каждый метод оптимизирован для разных сценариев и типов документов."
 title = "Выбор метода разделения"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Сначала выберите метод разделения"
@@ -6091,6 +6239,14 @@ bullet2 = "Диапазоны: 3-8 (делит перед 3 и после 8)"
 bullet3 = "Смешанные: 2,5-10,15 (после 2, перед 5, после 10 и после 15)"
 text = "Разделяйте PDF в указанных точках. «n» — делит после страницы n. «n-m» — делит перед n и после m."
 title = "Делить по номерам страниц"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Горизонтально: число строк"
@@ -6232,6 +6388,82 @@ title = "Документация API"
 
 [tableExtraxt]
 tags = "CSV,Извлечение таблиц,извлечение,конвертация"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "По центру"
+left = "По левому краю"
+right = "По правому краю"
 
 [theme]
 toggle = "Переключить тему"
@@ -6507,6 +6739,37 @@ invalid = "Сертификат отсутствует в доверенном �
 fileManager = "Менеджер файлов"
 pageEditor = "Редактор страниц"
 viewer = "Просмотрщик"
+
+[viewer]
+cannotPreviewFile = "Не удаётся просмотреть файл"
+dualPageView = "Двухстраничный вид"
+firstPage = "Первая страница"
+lastPage = "Последняя страница"
+nextPage = "Следующая страница"
+onlyPdfSupported = "Просмотрщик поддерживает только PDF-файлы. Похоже, этот файл другого формата."
+previousPage = "Предыдущая страница"
+singlePageView = "Одностраничный вид"
+unknownFile = "Неизвестный файл"
+zoomIn = "Увеличить"
+zoomOut = "Уменьшить"
+
+[viewer.attachments]
+empty = "В этом документе нет вложений"
+loading = "Загрузка вложений..."
+noDocument = "Откройте PDF, чтобы просмотреть его вложения."
+noMatch = "Нет вложений, соответствующих вашему поиску"
+noSupport = "Поддержка вложений недоступна для этого просмотрщика."
+searchPlaceholder = "Поиск вложений"
+title = "Вложения"
+
+[viewer.formBar]
+apply = "Применить изменения"
+dismiss = "Скрыть"
+download = "Скачать PDF"
+hasFieldsDesc = "В этом PDF есть поля для заполнения"
+title = "Поля формы"
+unsavedBadge = "Несохранено"
+unsavedDesc = "У вас есть несохранённые изменения"
 
 [viewPdf]
 header = "Просмотр PDF"

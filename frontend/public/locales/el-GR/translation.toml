@@ -16,13 +16,13 @@ comingSoon = "Σύντομα διαθέσιμο"
 confirmClose = "Επιβεβαίωση κλεισίματος"
 confirmCloseCancel = "Άκυρο"
 confirmCloseConfirm = "Κλείσιμο αρχείου"
-confirmCloseMessage = "Είστε βέβαιοι ότι θέλετε να κλείσετε αυτό το αρχείο;"
 confirmCloseDiscard = "Απόρριψη αλλαγών και κλείσιμο"
+confirmCloseMessage = "Είστε βέβαιοι ότι θέλετε να κλείσετε αυτό το αρχείο;"
 confirmCloseSave = "Αποθήκευση και κλείσιμο"
+confirmCloseSaveFailed = "Αποθηκεύτηκε με σφάλματα. {{count}} αρχείο{{plural}} δεν μπόρεσε να αποθηκευτεί."
+confirmCloseSaveFailedTitle = "Αποτυχία αποθήκευσης"
 confirmCloseUnsaved = "Αυτό το αρχείο έχει μη αποθηκευμένες αλλαγές."
 confirmCloseUnsavedList = "Έχετε {{count}} αρχείο{{plural}} με μη αποθηκευμένες αλλαγές.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Αποτυχία αποθήκευσης"
-confirmCloseSaveFailed = "Αποθηκεύτηκε με σφάλματα. {{count}} αρχείο{{plural}} δεν μπόρεσε να αποθηκευτεί."
 confirmPasswordErrorMessage = "Ο νέος κωδικός και η επιβεβαίωση νέου κωδικού πρέπει να ταιριάζουν."
 custom = "Προσαρμογή..."
 customPosition = "Προσαρμοσμένη θέση"
@@ -42,11 +42,12 @@ downloadComplete = "Η λήψη ολοκληρώθηκε"
 downloadPdf = "Λήψη PDF"
 downloadUnavailable = "Η λήψη δεν είναι διαθέσιμη για αυτό το στοιχείο"
 edit = "Επεξεργασία"
+editSecret = "Edit this value"
 editYourNewFiles = "Επεξεργαστείτε τα νέα αρχεία σας"
 exportAndContinue = "Εξαγωγή & Συνέχεια"
 false = "Ψευδές"
-fileSavedToDisk = "Το αρχείο αποθηκεύτηκε στον δίσκο"
 fileNotSavedToDisk = "Δεν αποθηκεύτηκε στον δίσκο"
+fileSavedToDisk = "Το αρχείο αποθηκεύτηκε στον δίσκο"
 fileSelected = "Επιλέχθηκε: {{filename}}"
 filesSelected = "αρχεία επιλεγμένα"
 font = "Γραμματοσειρά"
@@ -841,6 +842,14 @@ title = "Τελικά σημεία API"
 userDefaults = "Προεπιλεγμένες προτιμήσεις χρήστη"
 userDefaultsDescription = "Ορίστε προεπιλεγμένες τιμές για τις προτιμήσεις χρήστη. Οι χρήστες μπορούν να τις παρακάμψουν στις προσωπικές ρυθμίσεις τους."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Αφαίρεση απενεργοποιημένων επιλογών μετατροπής αντί να εμφανίζονται με γκρι χρώμα"
+label = "Απόκρυψη μη διαθέσιμων μετατροπών από προεπιλογή"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Αφαίρεση απενεργοποιημένων εργαλείων αντί να εμφανίζονται με γκρι χρώμα"
+label = "Απόκρυψη μη διαθέσιμων εργαλείων από προεπιλογή"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Επιλέξτε ομάδες endpoints προς απενεργοποίηση"
 label = "Απενεργοποιημένες ομάδες endpoints"
@@ -848,14 +857,6 @@ label = "Απενεργοποιημένες ομάδες endpoints"
 [admin.settings.endpoints.toRemove]
 description = "Επιλέξτε μεμονωμένα endpoints προς απενεργοποίηση"
 label = "Απενεργοποιημένα endpoints"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Αφαίρεση απενεργοποιημένων εργαλείων αντί να εμφανίζονται με γκρι χρώμα"
-label = "Απόκρυψη μη διαθέσιμων εργαλείων από προεπιλογή"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Αφαίρεση απενεργοποιημένων επιλογών μετατροπής αντί να εμφανίζονται με γκρι χρώμα"
-label = "Απόκρυψη μη διαθέσιμων μετατροπών από προεπιλογή"
 
 [admin.settings.enterpriseRequired]
 message = "Απαιτείται άδεια Enterprise για πρόσβαση στο {{featureName}}. Βλέπετε δεδομένα επίδειξης για αναφορά."
@@ -1228,6 +1229,14 @@ label = "Αρχικό όνομα χρήστη"
 [admin.settings.security.jwt]
 label = "Ρύθμιση JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Ανοχή για απόκλιση ώρας πελάτη/διακομιστή κατά την επικύρωση token (προεπιλογή: 60 δευτερόλεπτα)"
+label = "Ανοχή απόκλισης ρολογιού (δευτερόλεπτα)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Διάρκεια ζωής access token σε λεπτά για πελάτες desktop. Οι εφαρμογές Desktop ανιχνεύονται αυτόματα μέσω User-Agent και λαμβάνουν μεγαλύτερες συνεδρίες για καλύτερο UX (προεπιλογή: 43200 = 30 ημέρες)"
+label = "Λήξη Desktop Token (λεπτά)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Αυτόματη αφαίρεση ληγμένων κλειδιών JWT"
 label = "Ενεργοποίηση καθαρισμού κλειδιών"
@@ -1236,29 +1245,21 @@ label = "Ενεργοποίηση καθαρισμού κλειδιών"
 description = "Αυτόματη περιοδική εναλλαγή κλειδιών υπογραφής JWT"
 label = "Ενεργοποίηση εναλλαγής κλειδιών"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Διάρκεια ζωής access token σε λεπτά για πελάτες ιστού (προεπιλογή: 1440 = 24 ώρες)"
-label = "Λήξη Web Token (λεπτά)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Διάρκεια ζωής access token σε λεπτά για πελάτες desktop. Οι εφαρμογές Desktop ανιχνεύονται αυτόματα μέσω User-Agent και λαμβάνουν μεγαλύτερες συνεδρίες για καλύτερο UX (προεπιλογή: 43200 = 30 ημέρες)"
-label = "Λήξη Desktop Token (λεπτά)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Ανοχή για απόκλιση ώρας πελάτη/διακομιστή κατά την επικύρωση token (προεπιλογή: 60 δευτερόλεπτα)"
-label = "Ανοχή απόκλισης ρολογιού (δευτερόλεπτα)"
+[admin.settings.security.jwt.persistence]
+description = "Αποθήκευση κλειδιών JWT μόνιμα ώστε να επιβιώνουν επανεκκινήσεις διακομιστή"
+label = "Ενεργοποίηση μόνιμης αποθήκευσης κλειδιών"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Να επιτρέπεται ανανέωση token εντός τόσων λεπτών μετά τη λήξη (προεπιλογή: 15 λεπτά, μέγ. 3 προσπάθειες)"
 label = "Περίοδος χάριτος ανανέωσης (λεπτά)"
 
-[admin.settings.security.jwt.persistence]
-description = "Αποθήκευση κλειδιών JWT μόνιμα ώστε να επιβιώνουν επανεκκινήσεις διακομιστή"
-label = "Ενεργοποίηση μόνιμης αποθήκευσης κλειδιών"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Απαιτεί HTTPS για τα cookies JWT (συνιστάται για παραγωγή)"
 label = "Ασφαλές cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Διάρκεια ζωής access token σε λεπτά για πελάτες ιστού (προεπιλογή: 1440 = 24 ώρες)"
+label = "Λήξη Web Token (λεπτά)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Μέγιστος αριθμός αποτυχημένων προσπαθειών σύνδεσης πριν από το κλείδωμα λογαριασμού"
@@ -2238,6 +2239,9 @@ title = "Αλλαγή δικαιωμάτων"
 [changePermissions.tooltip.warning]
 text = "Για να καταστούν αυτά τα δικαιώματα μη τροποποιήσιμα, χρησιμοποιήστε το εργαλείο Προσθήκη Κωδικού για να ορίσετε κωδικό πρόσβασης κατόχου."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Επιλέξτε χρώμα"
 
@@ -2254,9 +2258,11 @@ copy = "Αντιγραφή"
 done = "Τέλος"
 error = "Σφάλμα"
 expand = "Ανάπτυξη"
+learnMore = "Learn more"
 lines = "γραμμές"
 loading = "Φόρτωση..."
 next = "Επόμενο"
+operation = "this operation"
 preview = "Προεπισκόπηση"
 previous = "Προηγούμενο"
 refresh = "Ανανέωση"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Αυτόματη περικοπή κενού"
 header = "Περικοπή PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Αντιγραφή ίχνους στοίβας"
 discordSubmit = "Discord - Υποβολή αιτήματος υποστήριξης"
 dismissAllErrors = "Απόρριψη όλων των σφαλμάτων"
 encryptedPdfMustRemovePassword = "Αυτό το PDF είναι κρυπτογραφημένο ή προστατευμένο με κωδικό. Ξεκλειδώστε το πριν από τη μετατροπή σε PDF/A."
+generic = "An error occurred"
 github = "Υποβολή ticket στο GitHub"
 githubSubmit = "GitHub - Υποβολή ticket"
 incorrectPasswordProvided = "Ο κωδικός πρόσβασης του PDF είναι εσφαλμένος ή δεν δόθηκε."
@@ -3346,10 +3424,6 @@ desc = "Δημιουργήστε ροές πολλών βημάτων συνδέ
 tags = "ροή εργασιών,ακολουθία,αυτοματοποίηση"
 title = "Αυτοματοποίηση"
 
-[home.formFill]
-desc = "Συμπληρώστε πεδία φόρμας PDF διαδραστικά με έναν οπτικό επεξεργαστή"
-title = "Συμπλήρωση φόρμας"
-
 [home.autoRename]
 desc = "Μετονομάζει αυτόματα ένα αρχείο PDF βάσει της ανιχνευμένης κεφαλίδας του"
 tags = "αυτόματος εντοπισμός,βασισμένο σε κεφαλίδα,οργάνωση,επαναονομασία"
@@ -3444,6 +3518,10 @@ title = "Εξαγωγή σελίδων"
 desc = "Αφαίρεση όλων των διαδραστικών στοιχείων και φορμών από ένα PDF"
 tags = "απλοποίηση,αφαίρεση,διαδραστικό"
 title = "Ισοπέδωση"
+
+[home.formFill]
+desc = "Συμπληρώστε πεδία φόρμας PDF διαδραστικά με έναν οπτικό επεξεργαστή"
+title = "Συμπλήρωση φόρμας"
 
 [home.getPdfInfo]
 desc = "Λήψη όλων των δυνατών πληροφοριών για τα PDF"
@@ -4247,75 +4325,6 @@ title = "Επεξεργαστής σελίδων"
 zoomIn = "Μεγέθυνση"
 zoomOut = "Σμίκρυνση"
 
-[viewer]
-cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπηση του αρχείου"
-dualPageView = "Προβολή διπλής σελίδας"
-firstPage = "Πρώτη σελίδα"
-lastPage = "Τελευταία σελίδα"
-nextPage = "Επόμενη σελίδα"
-onlyPdfSupported = "Ο προβολέας υποστηρίζει μόνο αρχεία PDF. Αυτό το αρχείο φαίνεται να είναι διαφορετικής μορφής."
-previousPage = "Προηγούμενη σελίδα"
-singlePageView = "Προβολή μίας σελίδας"
-unknownFile = "Άγνωστο αρχείο"
-zoomIn = "Μεγέθυνση"
-zoomOut = "Σμίκρυνση"
-
-[viewer.attachments]
-title = "Συνημμένα"
-searchPlaceholder = "Αναζήτηση συνημμένων"
-noSupport = "Η υποστήριξη συνημμένων δεν είναι διαθέσιμη σε αυτόν τον προβολέα."
-noDocument = "Ανοίξτε ένα PDF για να δείτε τα συνημμένα του."
-loading = "Φόρτωση συνημμένων..."
-empty = "Δεν υπάρχουν συνημμένα σε αυτό το έγγραφο"
-noMatch = "Κανένα συνημμένο δεν ταιριάζει με την αναζήτησή σας"
-
-[viewer.formBar]
-title = "Πεδία φόρμας"
-unsavedBadge = "Μη αποθηκευμένο"
-unsavedDesc = "Έχετε μη αποθηκευμένες αλλαγές"
-hasFieldsDesc = "Αυτό το PDF περιέχει πεδία προς συμπλήρωση"
-dismiss = "Απόρριψη"
-apply = "Εφαρμογή αλλαγών"
-download = "Λήψη PDF"
-
-[rightRail]
-closeSelected = "Κλείσιμο επιλεγμένων αρχείων"
-selectAll = "Επιλογή όλων"
-deselectAll = "Αποεπιλογή όλων"
-selectByNumber = "Επιλογή με αριθμούς σελίδων"
-deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
-closePdf = "Κλείσιμο PDF"
-exportAll = "Εξαγωγή PDF"
-downloadSelected = "Λήψη επιλεγμένων αρχείων"
-annotations = "Σχολιασμοί"
-exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
-formFill = "Συμπλήρωση φόρμας"
-saveChanges = "Αποθήκευση αλλαγών"
-toggleAttachments = "Εναλλαγή συνημμένων"
-toggleTheme = "Εναλλαγή θέματος"
-language = "Γλώσσα"
-toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
-search = "Αναζήτηση PDF"
-panMode = "Λειτουργία μετακίνησης"
-applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
-rotateLeft = "Περιστροφή αριστερά"
-rotateRight = "Περιστροφή δεξιά"
-toggleSidebar = "Εναλλαγή πλευρικής γραμμής"
-toggleBookmarks = "Εναλλαγή σελιδοδεικτών"
-print = "Εκτύπωση PDF"
-ruler = "Χάρακας / Μέτρηση"
-draw = "Σχεδίαση"
-redact = "Απόκρυψη"
-exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
-save = "Αποθήκευση"
-downloadAll = "Λήψη όλων"
-saveAll = "Αποθήκευση όλων"
-
-[textAlign]
-left = "Αριστερά"
-center = "Κέντρο"
-right = "Δεξιά"
-
 [pageExtracter]
 header = "Εξαγωγή σελίδων"
 placeholder = "(π.χ. 1,2,8 ή 4,7,12-16 ή 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Συμβουλές"
 autoClose = "Αυτό το παράθυρο θα κλείσει αυτόματα..."
 billingPeriod = "Περίοδος χρέωσης"
 canCloseWindow = "Μπορείτε τώρα να κλείσετε αυτό το παράθυρο."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Εισαγάγετε έγκυρη διεύθυνση email"
 enterpriseNote = "Οι θέσεις ρυθμίζονται στο checkout (1-1000)."
 error = "Σφάλμα πληρωμής"
@@ -4445,6 +4457,7 @@ perMonth = "/μήνα"
 perYear = "/έτος"
 preparing = "Προετοιμασία ολοκλήρωσης αγοράς..."
 redirecting = "Γίνεται ανακατεύθυνση στο ασφαλές checkout..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Η Stripe δεν έχει ρυθμιστεί"
 stripeNotConfiguredMessage = "Η ενσωμάτωση πληρωμών Stripe δεν έχει ρυθμιστεί. Επικοινωνήστε με τον διαχειριστή σας."
 success = "Επιτυχής πληρωμή!"
@@ -4777,6 +4790,13 @@ title = "PDF σε Word"
 [PDFToWord.selectText]
 1 = "Μορφή αρχείου εξόδου"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Αυτή η υπηρεσία χρησιμοποιεί το LibreOffice για μετατροπή αρχείων."
 header = "PDF σε XML"
@@ -4835,6 +4855,7 @@ customPricing = "Προσαρμοσμένο"
 featureComparison = "Σύγκριση λειτουργιών"
 from = "Από"
 hideComparison = "Απόκρυψη σύγκρισης λειτουργιών"
+included = "Included"
 includedInCurrent = "Περιλαμβάνεται στο πλάνο σας"
 licensedSeats = "Αδειοδοτημένες: {{count}} θέσεις"
 manage = "Διαχείριση"
@@ -4851,6 +4872,7 @@ subtitle = "Οι τρέχουσες λεπτομέρειες συνδρομής 
 title = "Ενεργό πλάνο"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Επιλέξτε το πλάνο που ταιριάζει στις ανάγκες σας"
 title = "Διαθέσιμα πλάνα"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Τελευταίες λειτουργίες"
 name = "Enterprise"
 requiresServer = "Απαιτεί Server"
 requiresServerMessage = "Παρακαλούμε αναβαθμίστε πρώτα στο πλάνο Server πριν αναβαθμίσετε σε Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Πρόσβαση API"
@@ -4928,6 +4951,10 @@ keyDescription = "Επικολλήστε το κλειδί άδειας από �
 success = "Η άδεια ενεργοποιήθηκε!"
 successMessage = "Η άδειά σας ενεργοποιήθηκε με επιτυχία. Μπορείτε τώρα να κλείσετε αυτό το παράθυρο."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Εκτύπωση αρχείου σε εκτυπωτή"
 submit = "Εκτύπωση"
@@ -4992,15 +5019,15 @@ title = "Λέξεις προς απόκρυψη"
 failed = "Παρουσιάστηκε σφάλμα κατά την απόκρυψη στο PDF."
 
 [redact.manual]
+activate = "Ενεργοποίηση εργαλείου απόκρυψης"
+active = "Λειτουργία απόκρυψης ενεργή"
 apply = "Εφαρμογή"
 applyChanges = "Εφαρμογή αλλαγών"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Μόνιμη εφαρμογή, δεν μπορεί να αναιρεθεί και τα υποκείμενα δεδομένα θα διαγραφούν"
 boxRedaction = "Απόκρυψη με σχεδίαση πλαισίου"
-colourPicker = "Επιλογέας χρώματος"
 colorLabel = "Χρώμα απόκρυψης"
-active = "Λειτουργία απόκρυψης ενεργή"
-activate = "Ενεργοποίηση εργαλείου απόκρυψης"
+colourPicker = "Επιλογέας χρώματος"
 controlsTitle = "Χειροκίνητα χειριστήρια απόκρυψης"
 convertPDFToImageLabel = "Μετατροπή PDF σε PDF-Image (Χρησιμοποιείται για την αφαίρεση κειμένου πίσω από το πλαίσιο)"
 export = "Εξαγωγή"
@@ -5396,6 +5423,39 @@ title = "Υψηλή αντίθεση"
 text = "Αντιστρέψτε πλήρως όλα τα χρώματα στο PDF, δημιουργώντας ένα αποτέλεσμα παρόμοιο με αρνητικό. Χρήσιμο για δημιουργία εκδόσεων σκοτεινού θέματος ή μείωση κόπωσης ματιών σε χαμηλό φωτισμό."
 title = "Αντιστροφή όλων των χρωμάτων"
 
+[rightRail]
+annotations = "Σχολιασμοί"
+applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
+closePdf = "Κλείσιμο PDF"
+closeSelected = "Κλείσιμο επιλεγμένων αρχείων"
+deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
+deselectAll = "Αποεπιλογή όλων"
+downloadAll = "Λήψη όλων"
+downloadSelected = "Λήψη επιλεγμένων αρχείων"
+draw = "Σχεδίαση"
+exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
+exportAll = "Εξαγωγή PDF"
+exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
+formFill = "Συμπλήρωση φόρμας"
+language = "Γλώσσα"
+panMode = "Λειτουργία μετακίνησης"
+print = "Εκτύπωση PDF"
+redact = "Απόκρυψη"
+rotateLeft = "Περιστροφή αριστερά"
+rotateRight = "Περιστροφή δεξιά"
+ruler = "Χάρακας / Μέτρηση"
+save = "Αποθήκευση"
+saveAll = "Αποθήκευση όλων"
+saveChanges = "Αποθήκευση αλλαγών"
+search = "Αναζήτηση PDF"
+selectAll = "Επιλογή όλων"
+selectByNumber = "Επιλογή με αριθμούς σελίδων"
+toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
+toggleAttachments = "Εναλλαγή συνημμένων"
+toggleBookmarks = "Εναλλαγή σελιδοδεικτών"
+toggleSidebar = "Εναλλαγή πλευρικής γραμμής"
+toggleTheme = "Εναλλαγή θέματος"
+
 [rotate]
 rotateLeft = "Περιστροφή αριστερόστροφα"
 rotateRight = "Περιστροφή δεξιόστροφα"
@@ -5647,6 +5707,70 @@ plan = "Πλάνο"
 title = "Άδειες & Αναλύσεις"
 usageAnalytics = "Αναλύσεις χρήσης"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Νομικά"
 privacy = "Απόρρητο"
@@ -5679,6 +5803,9 @@ connections = "Συνδέσεις"
 security = "Ασφάλεια"
 telegram = "Telegram"
 title = "Ασφάλεια & Αυθεντικοποίηση"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Ενεργοποιήστε πρώτα τη λειτουργία σύνδεσης"
@@ -6016,6 +6143,11 @@ desc = "Εξαγωγή συγκεκριμένων σελίδων (1,3,5-10)"
 name = "Αριθμοί σελίδων"
 tooltip = "Εισαγάγετε αριθμούς σελίδων χωρισμένους με κόμματα ή εύρη με παύλες"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Διαίρεση σελίδων σε τμήματα πλέγματος"
 name = "Ενότητες"
@@ -6029,6 +6161,7 @@ tooltip = "Καθορίστε μέγιστο μέγεθος αρχείου (π.�
 [split.methods.prefix]
 splitAt = "Διαχωρισμός στο"
 splitBy = "Διαχωρισμός κατά"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Κάντε κλικ σε μια κάρτα μεθόδου για να την επιλέξετε"
@@ -6040,6 +6173,21 @@ title = "Επιλέξτε τη μέθοδο διαχωρισμού σας"
 [split.methodSelection.tooltip.header]
 text = "Επιλέξτε πώς θέλετε να διαχωρίσετε το έγγραφο PDF σας. Κάθε μέθοδος είναι βελτιστοποιημένη για διαφορετικές περιπτώσεις και τύπους εγγράφων."
 title = "Επιλογή μεθόδου διαχωρισμού"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Παρακαλώ επιλέξτε πρώτα μια μέθοδο διαχωρισμού"
@@ -6091,6 +6239,14 @@ bullet2 = "Σημεία διαχωρισμού εύρους: 3-8 (διαχωρί
 bullet3 = "Μικτό: 2,5-10,15 (διαχωρίζει μετά τη σελίδα 2, πριν από τη σελίδα 5, μετά τη σελίδα 10 και μετά τη σελίδα 15)"
 text = "Διαχωρίστε το PDF σας σε συγκεκριμένους αριθμούς σελίδων. Η χρήση του 'n' χωρίζει μετά τη σελίδα n. Η χρήση του 'n-m' χωρίζει πριν από τη σελίδα n και μετά τη σελίδα m."
 title = "Διαχωρισμός σε αριθμούς σελίδων"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Οριζόντια: Αριθμός σειρών που θα δημιουργηθούν"
@@ -6232,6 +6388,82 @@ title = "Τεκμηρίωση API"
 
 [tableExtraxt]
 tags = "CSV,εξαγωγή πίνακα,εξαγωγή,μετατροπή"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Κέντρο"
+left = "Αριστερά"
+right = "Δεξιά"
 
 [theme]
 toggle = "Εναλλαγή θέματος"
@@ -6507,6 +6739,37 @@ invalid = "Το πιστοποιητικό δεν βρίσκεται στο απ
 fileManager = "Διαχειριστής αρχείων"
 pageEditor = "Επεξεργαστής σελίδων"
 viewer = "Προβολέας"
+
+[viewer]
+cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπηση του αρχείου"
+dualPageView = "Προβολή διπλής σελίδας"
+firstPage = "Πρώτη σελίδα"
+lastPage = "Τελευταία σελίδα"
+nextPage = "Επόμενη σελίδα"
+onlyPdfSupported = "Ο προβολέας υποστηρίζει μόνο αρχεία PDF. Αυτό το αρχείο φαίνεται να είναι διαφορετικής μορφής."
+previousPage = "Προηγούμενη σελίδα"
+singlePageView = "Προβολή μίας σελίδας"
+unknownFile = "Άγνωστο αρχείο"
+zoomIn = "Μεγέθυνση"
+zoomOut = "Σμίκρυνση"
+
+[viewer.attachments]
+empty = "Δεν υπάρχουν συνημμένα σε αυτό το έγγραφο"
+loading = "Φόρτωση συνημμένων..."
+noDocument = "Ανοίξτε ένα PDF για να δείτε τα συνημμένα του."
+noMatch = "Κανένα συνημμένο δεν ταιριάζει με την αναζήτησή σας"
+noSupport = "Η υποστήριξη συνημμένων δεν είναι διαθέσιμη σε αυτόν τον προβολέα."
+searchPlaceholder = "Αναζήτηση συνημμένων"
+title = "Συνημμένα"
+
+[viewer.formBar]
+apply = "Εφαρμογή αλλαγών"
+dismiss = "Απόρριψη"
+download = "Λήψη PDF"
+hasFieldsDesc = "Αυτό το PDF περιέχει πεδία προς συμπλήρωση"
+title = "Πεδία φόρμας"
+unsavedBadge = "Μη αποθηκευμένο"
+unsavedDesc = "Έχετε μη αποθηκευμένες αλλαγές"
 
 [viewPdf]
 header = "Προβολή PDF"

@@ -16,13 +16,13 @@ comingSoon = "Laster"
 confirmClose = "Itxiera berretsi"
 confirmCloseCancel = "Utzi"
 confirmCloseConfirm = "Itxi fitxategia"
-confirmCloseMessage = "Ziur zaude fitxategi hau ixtea nahi duzula?"
 confirmCloseDiscard = "Baztertu aldaketak eta itxi"
+confirmCloseMessage = "Ziur zaude fitxategi hau ixtea nahi duzula?"
 confirmCloseSave = "Gorde eta itxi"
+confirmCloseSaveFailed = "Akats batzuekin gorde da. {{count}} fitxategi{{plural}} ezin izan dira gorde."
+confirmCloseSaveFailedTitle = "Gordetzeak huts egin du"
 confirmCloseUnsaved = "Fitxategi honek gorde gabeko aldaketak ditu."
 confirmCloseUnsavedList = "Gorde gabeko aldaketak dituzten {{count}} fitxategi{{plural}} dituzu.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Gordetzeak huts egin du"
-confirmCloseSaveFailed = "Akats batzuekin gorde da. {{count}} fitxategi{{plural}} ezin izan dira gorde."
 confirmPasswordErrorMessage = "Pasahitz berria eta Pasahitz berria berretsi bat etorri behar dira."
 custom = "Pertsonalizatu..."
 customPosition = "Posizio pertsonalizatua"
@@ -42,11 +42,12 @@ downloadComplete = "Deskarga osatu da"
 downloadPdf = "PDFa deskargatu"
 downloadUnavailable = "Ezin da deskargatu elementu honetarako"
 edit = "Editatu"
+editSecret = "Edit this value"
 editYourNewFiles = "Editatu zure fitxategi berria(k)"
 exportAndContinue = "Esportatu eta jarraitu"
 false = "Faltsua"
-fileSavedToDisk = "Fitxategia diskoan gorde da"
 fileNotSavedToDisk = "Ez da diskoan gorde"
+fileSavedToDisk = "Fitxategia diskoan gorde da"
 fileSelected = "Hautatuta: {{filename}}"
 filesSelected = "Hautatutako fitxategiak"
 font = "Letra-tipoa"
@@ -841,6 +842,14 @@ title = "API endpointak"
 userDefaults = "Erabiltzaile-hobespenen balio lehenetsiak"
 userDefaultsDescription = "Ezarri erabiltzaile-hobespenentzako balio lehenetsiak. Erabiltzaileek balio hauek gainidatz ditzakete beren ezarpen pertsonaletan."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Kendu desgaitutako bihurketa aukerak, gris kolorean erakutsi ordez"
+label = "Ezkutatu erabilgarri ez dauden bihurketak lehenetsita"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Kendu desgaitutako tresnak, gris kolorean erakutsi ordez"
+label = "Ezkutatu erabilgarri ez dauden tresnak lehenetsita"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Hautatu desgaitu beharreko endpoint-taldeak"
 label = "Ezgaitutako endpoint-taldeak"
@@ -848,14 +857,6 @@ label = "Ezgaitutako endpoint-taldeak"
 [admin.settings.endpoints.toRemove]
 description = "Hautatu desgaitu beharreko banakako endpointak"
 label = "Ezgaitutako endpointak"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Kendu desgaitutako tresnak, gris kolorean erakutsi ordez"
-label = "Ezkutatu erabilgarri ez dauden tresnak lehenetsita"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Kendu desgaitutako bihurketa aukerak, gris kolorean erakutsi ordez"
-label = "Ezkutatu erabilgarri ez dauden bihurketak lehenetsita"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} atzitzeko Enterprise lizentzia behar da. Erreferentzia gisa demo datuak ikusten ari zara."
@@ -1228,6 +1229,14 @@ label = "Hasierako erabiltzaile-izena"
 [admin.settings.security.jwt]
 label = "JWT konfigurazioa"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tokena balioztatzean bezero/zerbitzari denboraren desbideratzearen tolerantzia (lehenetsia: 60 segundo)"
+label = "Ordulari-desbideratzearen tolerantzia (segundoak)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Sarbide-tokenaren bizi-iraupena minututan mahaigaineko bezeroentzat. Mahaigaineko aplikazioak automatikoki detektatzen dira User-Agent bidez eta saio luzeagoak jasotzen dituzte UX hobea lortzeko (lehenetsia: 43200 = 30 egun)"
+label = "Mahaigaineko tokenaren iraungitzea (minutuak)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automatikoki kendu iraungitako JWT gakoak"
 label = "Gakoen garbiketa gaitu"
@@ -1236,29 +1245,21 @@ label = "Gakoen garbiketa gaitu"
 description = "Automatikoki biratu JWT sinadura-gakoak aldian-aldian"
 label = "Gakoen biraketa gaitu"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Sarbide-tokenaren bizi-iraupena minututan web bezeroentzat (lehenetsia: 1440 = 24 ordu)"
-label = "Web tokenaren iraungitzea (minutuak)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Sarbide-tokenaren bizi-iraupena minututan mahaigaineko bezeroentzat. Mahaigaineko aplikazioak automatikoki detektatzen dira User-Agent bidez eta saio luzeagoak jasotzen dituzte UX hobea lortzeko (lehenetsia: 43200 = 30 egun)"
-label = "Mahaigaineko tokenaren iraungitzea (minutuak)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tokena balioztatzean bezero/zerbitzari denboraren desbideratzearen tolerantzia (lehenetsia: 60 segundo)"
-label = "Ordulari-desbideratzearen tolerantzia (segundoak)"
+[admin.settings.security.jwt.persistence]
+description = "JWT gakoak modu iraunkorrean gorde zerbitzaria berrabiaraztea gainditzeko"
+label = "Gakoen iraunkortasuna gaitu"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Onartu tokena freskatzea iraungi ondorengo minutu kopuru honetan (lehenetsia: 15 minutu, gehienez 3 saiakera)"
 label = "Freskatze tolerantzia-epea (minutuak)"
 
-[admin.settings.security.jwt.persistence]
-description = "JWT gakoak modu iraunkorrean gorde zerbitzaria berrabiaraztea gainditzeko"
-label = "Gakoen iraunkortasuna gaitu"
-
 [admin.settings.security.jwt.secureCookie]
 description = "HTTPS beharrezkoa JWT cookieentzat (gomendatua ekoizpenerako)"
 label = "Cookie segurua"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Sarbide-tokenaren bizi-iraupena minututan web bezeroentzat (lehenetsia: 1440 = 24 ordu)"
+label = "Web tokenaren iraungitzea (minutuak)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Kontua blokeatu aurretik huts egindako saio-saiakeren gehienezko kopurua"
@@ -2238,6 +2239,9 @@ title = "Aldatu baimenak"
 [changePermissions.tooltip.warning]
 text = "Baimen hauek aldaezinak bihurtzeko, erabili Gehitu Pasahitza tresna jabearen pasahitza ezartzeko."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Aukeratu kolorea"
 
@@ -2254,9 +2258,11 @@ copy = "Kopiatu"
 done = "Eginda"
 error = "Errorea"
 expand = "Zabaldu"
+learnMore = "Learn more"
 lines = "lerro"
 loading = "Kargatzen..."
 next = "Hurrengoa"
+operation = "this operation"
 preview = "Aurrebista"
 previous = "Aurrekoa"
 refresh = "Freskatu"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Moztu automatikoki zuriuneak"
 header = "Moztu PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Kopiatu stack trazadura"
 discordSubmit = "Discord - Bidali laguntza-mezua"
 dismissAllErrors = "Itxi errore guztiak"
 encryptedPdfMustRemovePassword = "PDF hau zifratuta edo pasahitzarekin babestuta dago. Mesedez, desblokeatu PDF/A bihurtu aurretik."
+generic = "An error occurred"
 github = "Bidali tiketa GitHuben"
 githubSubmit = "GitHub - Bidali tiketa"
 incorrectPasswordProvided = "PDFaren pasahitza okerra da edo ez da eman."
@@ -3346,10 +3424,6 @@ desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregi
 tags = "workflow,sekuentzia,automatizazioa"
 title = "Automatizatu"
 
-[home.formFill]
-desc = "Bete PDF inprimakiaren eremuak modu interaktiboan editore bisual batekin"
-title = "Bete inprimakia"
-
 [home.autoRename]
 desc = "PDF fitxategi bat automatikoki berrizendatzen du detektatutako goiburuaren arabera"
 tags = "auto-detektatu,goiburuetan oinarritua,antolatu,berrerrotulatu"
@@ -3444,6 +3518,10 @@ title = "Atera orriak"
 desc = "PDF batetik elementu eta inprimaki interaktibo guztiak ezabatu"
 tags = "sinplifikatu,kendu,interaktiboa"
 title = "Lautu"
+
+[home.formFill]
+desc = "Bete PDF inprimakiaren eremuak modu interaktiboan editore bisual batekin"
+title = "Bete inprimakia"
 
 [home.getPdfInfo]
 desc = "Eskuratu PDF fitxategiko Informazio guztia"
@@ -4247,75 +4325,6 @@ title = "Orri-editorea"
 zoomIn = "Zoom handitu"
 zoomOut = "Zoom txikitu"
 
-[viewer]
-cannotPreviewFile = "Ezin da fitxategia aurreikusi"
-dualPageView = "Orri biko ikuspegia"
-firstPage = "Lehen orria"
-lastPage = "Azken orria"
-nextPage = "Hurrengo orria"
-onlyPdfSupported = "Ikustaileak PDF fitxategiak bakarrik onartzen ditu. Fitxategi honek beste formatu batekoa dirudi."
-previousPage = "Aurreko orria"
-singlePageView = "Orri bakarreko ikuspegia"
-unknownFile = "Fitxategi ezezaguna"
-zoomIn = "Zoom handitu"
-zoomOut = "Zoom txikitu"
-
-[viewer.attachments]
-title = "Eranskinak"
-searchPlaceholder = "Bilatu eranskinak"
-noSupport = "Eranskinetarako euskarria ez dago erabilgarri ikusgailu honetan."
-noDocument = "Ireki PDF bat bere eranskinak ikusteko."
-loading = "Eranskinak kargatzen..."
-empty = "Ez dago eranskinik dokumentu honetan"
-noMatch = "Ez dago zure bilaketarekin bat datorren eranskinik"
-
-[viewer.formBar]
-title = "Inprimaki-eremuak"
-unsavedBadge = "Gorde gabe"
-unsavedDesc = "Gorde gabeko aldaketak dituzu"
-hasFieldsDesc = "PDF honek betetzeko eremuak ditu"
-dismiss = "Baztertu"
-apply = "Aplikatu aldaketak"
-download = "Deskargatu PDF"
-
-[rightRail]
-closeSelected = "Itxi hautatutako fitxategiak"
-selectAll = "Hautatu dena"
-deselectAll = "Deshautatu dena"
-selectByNumber = "Hautatu orri-zenbakien arabera"
-deleteSelected = "Ezabatu hautatutako orriak"
-closePdf = "Itxi PDFa"
-exportAll = "Esportatu PDFa"
-downloadSelected = "Deskargatu hautatutako fitxategiak"
-annotations = "Oharpenak"
-exportSelected = "Esportatu hautatutako orriak"
-formFill = "Bete inprimakia"
-saveChanges = "Aldaketak gorde"
-toggleAttachments = "Eranskinak erakutsi/ezkutatu"
-toggleTheme = "Gaia txandakatu"
-language = "Hizkuntza"
-toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
-search = "Bilatu PDF"
-panMode = "Pan modua"
-applyRedactionsFirst = "Lehenik aplikatu zentsurak"
-rotateLeft = "Biratu ezkerrera"
-rotateRight = "Biratu eskuinera"
-toggleSidebar = "Alboko barra txandakatu"
-toggleBookmarks = "Laster-markak txandakatu"
-print = "Inprimatu PDFa"
-ruler = "Erregela / Neurketa"
-draw = "Marraztu"
-redact = "Zentsuratu"
-exitRedaction = "Irten zentsura modutik"
-save = "Gorde"
-downloadAll = "Deskargatu dena"
-saveAll = "Gorde dena"
-
-[textAlign]
-left = "Ezkerrera"
-center = "Erdira"
-right = "Eskuinera"
-
 [pageExtracter]
 header = "Atera orriak"
 placeholder = "(adib. 1,2,8 edo 4,7,12-16 edo 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Aholkuak"
 autoClose = "Leiho hau automatikoki itxiko da..."
 billingPeriod = "Fakturazio epea"
 canCloseWindow = "Orain leiho hau itxi dezakezu."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Sartu baliozko helbide elektroniko bat"
 enterpriseNote = "Eserlekuak checkout-ean doi daitezke (1-1000)."
 error = "Ordainketa-errorea"
@@ -4445,6 +4457,7 @@ perMonth = "/hilean"
 perYear = "/urte"
 preparing = "Zure ordainketa prestatzen..."
 redirecting = "Ordainketa segurura birbideratzen..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe ez dago konfiguratuta"
 stripeNotConfiguredMessage = "Stripe ordainketa integrazioa ez dago konfiguratuta. Jarri harremanetan zure administratzailearekin."
 success = "Ordainketa arrakastatsua!"
@@ -4777,6 +4790,13 @@ title = "PDFa Word bihurtu"
 [PDFToWord.selectText]
 1 = "Irteerako fitxategiaren formatua"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Zerbitzu honek LibreOffice erabiltzen du fitxategiak bihurtzeko"
 header = "PDFa XML bihurtu"
@@ -4835,6 +4855,7 @@ customPricing = "Pertsonalizatua"
 featureComparison = "Ezaugarrien konparazioa"
 from = "Hasita"
 hideComparison = "Ezkutatu ezaugarrien konparazioa"
+included = "Included"
 includedInCurrent = "Zure planean sartuta"
 licensedSeats = "Lizentziadunak: {{count}} eserleku"
 manage = "Kudeatu"
@@ -4851,6 +4872,7 @@ subtitle = "Zure uneko harpidetzaren xehetasunak"
 title = "Plan aktiboa"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Aukeratu zure beharretara egokitzen den plana"
 title = "Plan eskuragarriak"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Azken ezaugarriak"
 name = "Enpresa"
 requiresServer = "Zerbitzaria behar du"
 requiresServerMessage = "Mesedez, eguneratu lehenik Zerbitzari planera Enpresara eguneratu aurretik."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API sarbidea"
@@ -4928,6 +4951,10 @@ keyDescription = "Itsatsi lizentzia-gakoa zure postatik"
 success = "Lizentzia aktibatuta!"
 successMessage = "Zure lizentzia ongi aktibatu da. Orain leiho hau itxi dezakezu."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Inprimatu fitxategia inprimagailuan"
 submit = "Inprimatu"
@@ -4992,15 +5019,15 @@ title = "Zentsuratzeko hitzak"
 failed = "Errore bat gertatu da PDFa zentsuratzean."
 
 [redact.manual]
+activate = "Aktibatu zentsuratze tresna"
+active = "Zentsuratze modua aktibatuta"
 apply = "Aplikatu"
 applyChanges = "Aplikatu aldaketak"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Aplikazio iraunkorra; ezin da desegin eta azpiko datuak ezabatu egingo dira"
 boxRedaction = "Koadro marrazketa bidezko zentsura"
-colourPicker = "Kolore-hautatzailea"
 colorLabel = "Zentsuratze kolorea"
-active = "Zentsuratze modua aktibatuta"
-activate = "Aktibatu zentsuratze tresna"
+colourPicker = "Kolore-hautatzailea"
 controlsTitle = "Eskuzko zentsura-kontrolak"
 convertPDFToImageLabel = "Bihurtu PDFa PDF-Irudira (koadroaren atzeko testua kentzeko erabiltzen da)"
 export = "Esportatu"
@@ -5396,6 +5423,39 @@ title = "Kontraste handia"
 text = "PDFko kolore guztiak erabat alderantzikatu, negatibo moduko efektua sortuz. Erabilgarria da dokumentuen gaueko bertsioak sortzeko edo argi gutxiko inguruneetan nekea murrizteko."
 title = "Kolore guztiak alderantzikatu"
 
+[rightRail]
+annotations = "Oharpenak"
+applyRedactionsFirst = "Lehenik aplikatu zentsurak"
+closePdf = "Itxi PDFa"
+closeSelected = "Itxi hautatutako fitxategiak"
+deleteSelected = "Ezabatu hautatutako orriak"
+deselectAll = "Deshautatu dena"
+downloadAll = "Deskargatu dena"
+downloadSelected = "Deskargatu hautatutako fitxategiak"
+draw = "Marraztu"
+exitRedaction = "Irten zentsura modutik"
+exportAll = "Esportatu PDFa"
+exportSelected = "Esportatu hautatutako orriak"
+formFill = "Bete inprimakia"
+language = "Hizkuntza"
+panMode = "Pan modua"
+print = "Inprimatu PDFa"
+redact = "Zentsuratu"
+rotateLeft = "Biratu ezkerrera"
+rotateRight = "Biratu eskuinera"
+ruler = "Erregela / Neurketa"
+save = "Gorde"
+saveAll = "Gorde dena"
+saveChanges = "Aldaketak gorde"
+search = "Bilatu PDF"
+selectAll = "Hautatu dena"
+selectByNumber = "Hautatu orri-zenbakien arabera"
+toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
+toggleAttachments = "Eranskinak erakutsi/ezkutatu"
+toggleBookmarks = "Laster-markak txandakatu"
+toggleSidebar = "Alboko barra txandakatu"
+toggleTheme = "Gaia txandakatu"
+
 [rotate]
 rotateLeft = "Biratu erlojuaren aurkako noranzkoan"
 rotateRight = "Biratu erlojuaren noranzkoan"
@@ -5647,6 +5707,70 @@ plan = "Plana"
 title = "Lizentziak eta Analitika"
 usageAnalytics = "Erabilera-analitika"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Legal"
 privacy = "Pribatutasuna"
@@ -5679,6 +5803,9 @@ connections = "Konexioak"
 security = "Segurtasuna"
 telegram = "Telegram"
 title = "Segurtasuna eta Autentifikazioa"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Lehenik login modua gaitu"
@@ -6016,6 +6143,11 @@ desc = "Atera orrialde zehatzak (1,3,5-10)"
 name = "Orri-zenbakiak"
 tooltip = "Sartu orri-zenbakiak komaz bereizita edo tarteak marratxoekin"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Zatitu orriak sare-sekzioetan"
 name = "Atalak"
@@ -6029,6 +6161,7 @@ tooltip = "Zehaztu gehieneko fitxategi-tamaina (adib. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Zatitu hemen"
 splitBy = "Zatitu honen arabera"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Egin klik metodo txartelean hura hautatzeko"
@@ -6040,6 +6173,21 @@ title = "Aukeratu zure zatiketa metodoa"
 [split.methodSelection.tooltip.header]
 text = "Aukeratu nola zatitu nahi duzun zure PDF dokumentua. Metodo bakoitza erabilera-kasu eta dokumentu mota desberdinetarako optimizatuta dago."
 title = "Zatiketa metodoaren hautaketa"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Mesedez, hautatu banaketa-metodo bat lehenik"
@@ -6091,6 +6239,14 @@ bullet2 = "Tarteko banaketa-puntuak: 3-8 (3. orriaren aurretik eta 8. orriaren o
 bullet3 = "Nahasia: 2,5-10,15 (2. orriaren ondoren, 5.aren aurretik, 10.aren ondoren eta 15.aren ondoren zatitzen du)"
 text = "Zatitu zure PDFa orri-zenbaki zehatzetan. 'n' erabiliz zatitzen du n. orriaren ondoren. 'n-m' erabiliz zatitzen du n. orriaren aurretik eta m. orriaren ondoren."
 title = "Zatitu orri-zenbakietan"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Horizontala: sortu beharreko errenkada kopurua"
@@ -6232,6 +6388,82 @@ title = "API Dokumentazioa"
 
 [tableExtraxt]
 tags = "CSV,Taula erauzketa,erauzi,bihurtu"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Erdira"
+left = "Ezkerrera"
+right = "Eskuinera"
 
 [theme]
 toggle = "Gaia txandakatu"
@@ -6507,6 +6739,37 @@ invalid = "Ziurtagiria ez dago konfiantza-biltegiean - ezin da iturburua egiazta
 fileManager = "Fitxategi-kudeatzailea"
 pageEditor = "Orri-editorea"
 viewer = "Ikuslea"
+
+[viewer]
+cannotPreviewFile = "Ezin da fitxategia aurreikusi"
+dualPageView = "Orri biko ikuspegia"
+firstPage = "Lehen orria"
+lastPage = "Azken orria"
+nextPage = "Hurrengo orria"
+onlyPdfSupported = "Ikustaileak PDF fitxategiak bakarrik onartzen ditu. Fitxategi honek beste formatu batekoa dirudi."
+previousPage = "Aurreko orria"
+singlePageView = "Orri bakarreko ikuspegia"
+unknownFile = "Fitxategi ezezaguna"
+zoomIn = "Zoom handitu"
+zoomOut = "Zoom txikitu"
+
+[viewer.attachments]
+empty = "Ez dago eranskinik dokumentu honetan"
+loading = "Eranskinak kargatzen..."
+noDocument = "Ireki PDF bat bere eranskinak ikusteko."
+noMatch = "Ez dago zure bilaketarekin bat datorren eranskinik"
+noSupport = "Eranskinetarako euskarria ez dago erabilgarri ikusgailu honetan."
+searchPlaceholder = "Bilatu eranskinak"
+title = "Eranskinak"
+
+[viewer.formBar]
+apply = "Aplikatu aldaketak"
+dismiss = "Baztertu"
+download = "Deskargatu PDF"
+hasFieldsDesc = "PDF honek betetzeko eremuak ditu"
+title = "Inprimaki-eremuak"
+unsavedBadge = "Gorde gabe"
+unsavedDesc = "Gorde gabeko aldaketak dituzu"
 
 [viewPdf]
 header = "Ikusi PDF"

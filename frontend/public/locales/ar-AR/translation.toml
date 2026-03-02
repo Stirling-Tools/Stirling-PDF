@@ -16,13 +16,13 @@ comingSoon = "قريبًا"
 confirmClose = "تأكيد الإغلاق"
 confirmCloseCancel = "إلغاء"
 confirmCloseConfirm = "إغلاق الملف"
-confirmCloseMessage = "هل أنت متأكد أنك تريد إغلاق هذا الملف؟"
 confirmCloseDiscard = "تجاهل التغييرات والإغلاق"
+confirmCloseMessage = "هل أنت متأكد أنك تريد إغلاق هذا الملف؟"
 confirmCloseSave = "حفظ وإغلاق"
+confirmCloseSaveFailed = "تم الحفظ مع أخطاء. تعذّر حفظ {{count}} ملف{{plural}}."
+confirmCloseSaveFailedTitle = "فشل الحفظ"
 confirmCloseUnsaved = "يحتوي هذا الملف على تغييرات غير محفوظة."
 confirmCloseUnsavedList = "لديك {{count}} ملف{{plural}} بتغييرات غير محفوظة.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "فشل الحفظ"
-confirmCloseSaveFailed = "تم الحفظ مع أخطاء. تعذّر حفظ {{count}} ملف{{plural}}."
 confirmPasswordErrorMessage = "كلمة المرور الجديدة وتأكيد كلمة المرور الجديدة يجب أن تتطابقا."
 custom = "مخصص..."
 customPosition = "موضع مخصص"
@@ -42,11 +42,12 @@ downloadComplete = "إكتمل التحميل"
 downloadPdf = "تنزيل PDF"
 downloadUnavailable = "التنزيل غير متاح لهذا العنصر"
 edit = "تحرير"
+editSecret = "Edit this value"
 editYourNewFiles = "حرّر ملفاتك الجديدة"
 exportAndContinue = "تصدير ومتابعة"
 false = "خطأ"
-fileSavedToDisk = "تم حفظ الملف على القرص"
 fileNotSavedToDisk = "لم يُحفَظ على القرص"
+fileSavedToDisk = "تم حفظ الملف على القرص"
 fileSelected = "المحدد: {{filename}}"
 filesSelected = "الملفات المحددة"
 font = "الخط"
@@ -841,6 +842,14 @@ title = "نقاط نهاية API"
 userDefaults = "القيم الافتراضية لتفضيلات المستخدم"
 userDefaultsDescription = "تعيين القيم الافتراضية لتفضيلات المستخدم. يمكن للمستخدمين تجاوزها في إعداداتهم الشخصية."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "إزالة خيارات التحويل المعطّلة بدلاً من عرضها باللون الرمادي"
+label = "إخفاء خيارات التحويل غير المتاحة افتراضيًا"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "إزالة الأدوات المعطّلة بدلاً من عرضها باللون الرمادي"
+label = "إخفاء الأدوات غير المتاحة افتراضيًا"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "اختر مجموعات نقاط النهاية لتعطيلها"
 label = "مجموعات نقاط النهاية المعطّلة"
@@ -848,14 +857,6 @@ label = "مجموعات نقاط النهاية المعطّلة"
 [admin.settings.endpoints.toRemove]
 description = "اختر نقاط النهاية الفردية لتعطيلها"
 label = "نقاط النهاية المعطّلة"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "إزالة الأدوات المعطّلة بدلاً من عرضها باللون الرمادي"
-label = "إخفاء الأدوات غير المتاحة افتراضيًا"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "إزالة خيارات التحويل المعطّلة بدلاً من عرضها باللون الرمادي"
-label = "إخفاء خيارات التحويل غير المتاحة افتراضيًا"
 
 [admin.settings.enterpriseRequired]
 message = "يلزم توفر ترخيص Enterprise للوصول إلى {{featureName}}. أنت تشاهد بيانات تجريبية للمرجع."
@@ -1228,6 +1229,14 @@ label = "اسم المستخدم الأولي"
 [admin.settings.security.jwt]
 label = "تهيئة JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "هامش السماح لانحراف الوقت بين العميل/الخادم أثناء التحقق من الرمز (الافتراضي: 60 ثانية)"
+label = "هامش انحراف الساعة (بالثواني)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "مدة صلاحية رمز الوصول بالدقائق لعملاء سطح المكتب. يتم كشف تطبيقات سطح المكتب تلقائيًا عبر User-Agent وتتلقى جلسات أطول لتحسين تجربة الاستخدام (الافتراضي: 43200 = 30 يومًا)"
+label = "انتهاء صلاحية رمز سطح المكتب (بالدقائق)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "إزالة مفاتيح JWT المنتهية تلقائيًا"
 label = "تمكين تنظيف المفاتيح"
@@ -1236,29 +1245,21 @@ label = "تمكين تنظيف المفاتيح"
 description = "تدوير مفاتيح توقيع JWT تلقائيًا بشكل دوري"
 label = "تمكين تدوير المفاتيح"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "مدة صلاحية رمز الوصول بالدقائق لعملاء الويب (الافتراضي: 1440 = 24 ساعة)"
-label = "انتهاء صلاحية رمز الويب (بالدقائق)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "مدة صلاحية رمز الوصول بالدقائق لعملاء سطح المكتب. يتم كشف تطبيقات سطح المكتب تلقائيًا عبر User-Agent وتتلقى جلسات أطول لتحسين تجربة الاستخدام (الافتراضي: 43200 = 30 يومًا)"
-label = "انتهاء صلاحية رمز سطح المكتب (بالدقائق)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "هامش السماح لانحراف الوقت بين العميل/الخادم أثناء التحقق من الرمز (الافتراضي: 60 ثانية)"
-label = "هامش انحراف الساعة (بالثواني)"
+[admin.settings.security.jwt.persistence]
+description = "تخزين مفاتيح JWT بشكل دائم لتجاوز عمليات إعادة تشغيل الخادم"
+label = "تمكين استمرارية المفاتيح"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "السماح بتحديث الرمز خلال هذا العدد من الدقائق بعد انتهاء الصلاحية (الافتراضي: 15 دقيقة، بحد أقصى 3 محاولات)"
 label = "فترة سماح للتحديث (بالدقائق)"
 
-[admin.settings.security.jwt.persistence]
-description = "تخزين مفاتيح JWT بشكل دائم لتجاوز عمليات إعادة تشغيل الخادم"
-label = "تمكين استمرارية المفاتيح"
-
 [admin.settings.security.jwt.secureCookie]
 description = "طلب HTTPS لملفات تعريف الارتباط الخاصة بـ JWT (موصى به للإنتاج)"
 label = "ملف تعريف ارتباط آمن"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "مدة صلاحية رمز الوصول بالدقائق لعملاء الويب (الافتراضي: 1440 = 24 ساعة)"
+label = "انتهاء صلاحية رمز الويب (بالدقائق)"
 
 [admin.settings.security.loginAttemptCount]
 description = "الحد الأقصى لعدد محاولات تسجيل الدخول الفاشلة قبل قفل الحساب"
@@ -2238,6 +2239,9 @@ title = "تغيير الأذونات"
 [changePermissions.tooltip.warning]
 text = "لجعل هذه الأذونات غير قابلة للتغيير، استخدم أداة إضافة كلمة مرور لتعيين كلمة مرور للمالك."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "اختر اللون"
 
@@ -2254,9 +2258,11 @@ copy = "نسخ"
 done = "تم"
 error = "خطأ"
 expand = "توسيع"
+learnMore = "Learn more"
 lines = "أسطر"
 loading = "جارٍ التحميل..."
 next = "التالي"
+operation = "this operation"
 preview = "معاينة"
 previous = "السابق"
 refresh = "تحديث"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "اقتصاص تلقائي للمساحات البيضاء"
 header = "اقتصاص PDF"
@@ -2920,6 +2997,7 @@ copyStack = "نسخ تتبع المكدس"
 discordSubmit = "Discord - إرسال منشور دعم"
 dismissAllErrors = "تجاهل كل الأخطاء"
 encryptedPdfMustRemovePassword = "هذا PDF مشفّر أو محمي بكلمة مرور. يرجى فتحه قبل التحويل إلى PDF/A."
+generic = "An error occurred"
 github = "إرسال تذكرة على GitHub"
 githubSubmit = "GitHub - إرسال تذكرة"
 incorrectPasswordProvided = "كلمة مرور PDF غير صحيحة أو غير مذكورة."
@@ -3346,10 +3424,6 @@ desc = "ابنِ تدفّقات عمل متعددة الخطوات بسلسلة 
 tags = "سير عمل،تسلسل،أتمتة"
 title = "أتمتة"
 
-[home.formFill]
-desc = "املأ حقول نموذج PDF بشكل تفاعلي باستخدام محرر مرئي"
-title = "تعبئة نموذج"
-
 [home.autoRename]
 desc = "إعادة تسمية ملف PDF تلقائيًا استنادًا إلى العنوان المكتشف"
 tags = "كشف تلقائي،مستند للعناوين،تنظيم،إعادة وسم"
@@ -3444,6 +3518,10 @@ title = "استخراج الصفحات"
 desc = "قم بإزالة كافة العناصر والنماذج التفاعلية من ملف PDF"
 tags = "تبسيط،إزالة،تفاعلي"
 title = "تسطيح"
+
+[home.formFill]
+desc = "املأ حقول نموذج PDF بشكل تفاعلي باستخدام محرر مرئي"
+title = "تعبئة نموذج"
 
 [home.getPdfInfo]
 desc = "يجمع أي وكل المعلومات الممكنة عن ملفات PDF"
@@ -4247,75 +4325,6 @@ title = "محرر الصفحات"
 zoomIn = "تكبير"
 zoomOut = "تصغير"
 
-[viewer]
-cannotPreviewFile = "لا يمكن معاينة الملف"
-dualPageView = "عرض صفحتين"
-firstPage = "الصفحة الأولى"
-lastPage = "الصفحة الأخيرة"
-nextPage = "الصفحة التالية"
-onlyPdfSupported = "عارض الملفات يدعم ملفات PDF فقط. يبدو أن هذا الملف بتنسيق مختلف."
-previousPage = "الصفحة السابقة"
-singlePageView = "عرض صفحة واحدة"
-unknownFile = "ملف غير معروف"
-zoomIn = "تكبير"
-zoomOut = "تصغير"
-
-[viewer.attachments]
-title = "المرفقات"
-searchPlaceholder = "ابحث في المرفقات"
-noSupport = "دعم المرفقات غير متاح في هذا العارض."
-noDocument = "افتح ملف PDF لعرض مرفقاته."
-loading = "جارٍ تحميل المرفقات..."
-empty = "لا توجد مرفقات في هذا المستند"
-noMatch = "لا توجد مرفقات تطابق بحثك"
-
-[viewer.formBar]
-title = "حقول النموذج"
-unsavedBadge = "غير محفوظ"
-unsavedDesc = "لديك تغييرات غير محفوظة"
-hasFieldsDesc = "يحتوي ملف PDF هذا على حقول قابلة للتعبئة"
-dismiss = "تجاهل"
-apply = "تطبيق التغييرات"
-download = "تنزيل PDF"
-
-[rightRail]
-closeSelected = "إغلاق الصفحات المحددة"
-selectAll = "تحديد الكل"
-deselectAll = "إلغاء تحديد الكل"
-selectByNumber = "تحديد حسب أرقام الصفحات"
-deleteSelected = "حذف الصفحات المحددة"
-closePdf = "إغلاق PDF"
-exportAll = "تصدير PDF"
-downloadSelected = "تنزيل الملفات المحددة"
-annotations = "تعليقات"
-exportSelected = "تصدير الصفحات المحددة"
-formFill = "تعبئة نموذج"
-saveChanges = "حفظ التغييرات"
-toggleAttachments = "إظهار/إخفاء المرفقات"
-toggleTheme = "تبديل السِمة"
-language = "اللغة"
-toggleAnnotations = "تبديل ظهور التعليقات التوضيحية"
-search = "بحث في PDF"
-panMode = "وضع السحب"
-applyRedactionsFirst = "طبّق التنقيحات أولًا"
-rotateLeft = "تدوير لليسار"
-rotateRight = "تدوير لليمين"
-toggleSidebar = "تبديل الشريط الجانبي"
-toggleBookmarks = "تبديل الإشارات المرجعية"
-print = "طباعة PDF"
-ruler = "مسطرة/قياس"
-draw = "رسم"
-redact = "تنقيح"
-exitRedaction = "الخروج من وضع التنقيح"
-save = "حفظ"
-downloadAll = "تنزيل الكل"
-saveAll = "حفظ الكل"
-
-[textAlign]
-left = "يسار"
-center = "وسط"
-right = "يمين"
-
 [pageExtracter]
 header = "استخراج الصفحات"
 placeholder = "(مثال: 1,2,8 أو 4,7,12-16 أو 2n-1)"
@@ -4424,6 +4433,9 @@ title = "نصائح"
 autoClose = "سيتم إغلاق هذه النافذة تلقائيًا..."
 billingPeriod = "فترة الفوترة"
 canCloseWindow = "يمكنك الآن إغلاق هذه النافذة."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "يرجى إدخال عنوان بريد إلكتروني صالح"
 enterpriseNote = "يمكن تعديل المقاعد عند الدفع (1-1000)."
 error = "خطأ في الدفع"
@@ -4445,6 +4457,7 @@ perMonth = "/شهر"
 perYear = "/سنة"
 preparing = "جارٍ تجهيز عملية الدفع..."
 redirecting = "جارٍ التحويل إلى الدفع الآمن..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe غير مُهيأ"
 stripeNotConfiguredMessage = "تكامل دفع Stripe غير مُعد. يرجى التواصل مع المسؤول."
 success = "تم الدفع بنجاح!"
@@ -4777,6 +4790,13 @@ title = "تحويل PDF إلى Word"
 [PDFToWord.selectText]
 1 = "تنسيق ملف الإخراج"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "تستخدم هذه الخدمة LibreOffice لتحويل الملفات."
 header = "تحويل PDF إلى XML"
@@ -4835,6 +4855,7 @@ customPricing = "مخصص"
 featureComparison = "مقارنة الميزات"
 from = "من"
 hideComparison = "إخفاء مقارنة الميزات"
+included = "Included"
 includedInCurrent = "مشمولة في خطتك"
 licensedSeats = "المرخَّصة: {{count}} مقعداً"
 manage = "إدارة"
@@ -4851,6 +4872,7 @@ subtitle = "تفاصيل اشتراكك الحالي"
 title = "الخطة النشطة"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "اختر الخطة التي تناسب احتياجاتك"
 title = "الخطط المتاحة"
 
@@ -4861,6 +4883,7 @@ highlight3 = "أحدث الميزات"
 name = "مؤسسات"
 requiresServer = "يتطلب خادماً"
 requiresServerMessage = "يرجى الترقية إلى خطة الخادم أولاً قبل الترقية إلى Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "وصول API"
@@ -4928,6 +4951,10 @@ keyDescription = "الصق مفتاح الترخيص من بريدك الإلك�
 success = "تم تفعيل الترخيص!"
 successMessage = "تم تفعيل ترخيصك بنجاح. يمكنك الآن إغلاق هذه النافذة."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "طباعة ملف بالطابعة"
 submit = "طباعة"
@@ -4992,15 +5019,15 @@ title = "كلمات للتنقيح"
 failed = "حدث خطأ أثناء توقيع PDF."
 
 [redact.manual]
+activate = "تفعيل أداة التنقيح"
+active = "وضع التنقيح نشط"
 apply = "تطبيق"
 applyChanges = "تطبيق التغييرات"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ تطبيق دائم، لا يمكن التراجع عنه وسيُحذف البيانات الموجودة تحته"
 boxRedaction = "تنقيح بالرسم بصندوق"
-colourPicker = "منتقي الألوان"
 colorLabel = "لون التنقيح"
-active = "وضع التنقيح نشط"
-activate = "تفعيل أداة التنقيح"
+colourPicker = "منتقي الألوان"
 controlsTitle = "عناصر التحكم في التنقيح اليدوي"
 convertPDFToImageLabel = "تحويل PDF إلى PDF-Image (لإزالة النص خلف الصندوق)"
 export = "تصدير"
@@ -5396,6 +5423,39 @@ title = "تباين عالٍ"
 text = "اعكس كل الألوان في ملف PDF بالكامل، مما يخلق تأثيرًا مشابهًا للسالب. مفيد لإنشاء نسخ وضع داكن للمستندات أو تقليل إجهاد العين في الإضاءة المنخفضة."
 title = "عكس كل الألوان"
 
+[rightRail]
+annotations = "تعليقات"
+applyRedactionsFirst = "طبّق التنقيحات أولًا"
+closePdf = "إغلاق PDF"
+closeSelected = "إغلاق الصفحات المحددة"
+deleteSelected = "حذف الصفحات المحددة"
+deselectAll = "إلغاء تحديد الكل"
+downloadAll = "تنزيل الكل"
+downloadSelected = "تنزيل الملفات المحددة"
+draw = "رسم"
+exitRedaction = "الخروج من وضع التنقيح"
+exportAll = "تصدير PDF"
+exportSelected = "تصدير الصفحات المحددة"
+formFill = "تعبئة نموذج"
+language = "اللغة"
+panMode = "وضع السحب"
+print = "طباعة PDF"
+redact = "تنقيح"
+rotateLeft = "تدوير لليسار"
+rotateRight = "تدوير لليمين"
+ruler = "مسطرة/قياس"
+save = "حفظ"
+saveAll = "حفظ الكل"
+saveChanges = "حفظ التغييرات"
+search = "بحث في PDF"
+selectAll = "تحديد الكل"
+selectByNumber = "تحديد حسب أرقام الصفحات"
+toggleAnnotations = "تبديل ظهور التعليقات التوضيحية"
+toggleAttachments = "إظهار/إخفاء المرفقات"
+toggleBookmarks = "تبديل الإشارات المرجعية"
+toggleSidebar = "تبديل الشريط الجانبي"
+toggleTheme = "تبديل السِمة"
+
 [rotate]
 rotateLeft = "تدوير عكس عقارب الساعة"
 rotateRight = "تدوير مع عقارب الساعة"
@@ -5647,6 +5707,70 @@ plan = "الخطة"
 title = "الترخيص والتحليلات"
 usageAnalytics = "تحليلات الاستخدام"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "قانوني"
 privacy = "الخصوصية"
@@ -5679,6 +5803,9 @@ connections = "الاتصالات"
 security = "الأمان"
 telegram = "Telegram"
 title = "الأمان والمصادقة"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "فعّل وضع تسجيل الدخول أولاً"
@@ -6016,6 +6143,11 @@ desc = "استخراج صفحات محددة (1,3,5-10)"
 name = "أرقام الصفحات"
 tooltip = "أدخل أرقام الصفحات مفصولة بفواصل أو نطاقات بشرطة"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "تقسيم الصفحات إلى أقسام شبكية"
 name = "الأقسام"
@@ -6029,6 +6161,7 @@ tooltip = "حدّد أقصى حجم للملف (مثل 10MB، 500KB)"
 [split.methods.prefix]
 splitAt = "تقسيم عند"
 splitBy = "تقسيم حسب"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "انقر بطاقة الطريقة لاختيارها"
@@ -6040,6 +6173,21 @@ title = "اختر طريقة التقسيم"
 [split.methodSelection.tooltip.header]
 text = "اختر كيف تريد تقسيم مستند PDF. كل طريقة مُحسَّنة لحالات استخدام وأنواع مستندات مختلفة."
 title = "اختيار طريقة التقسيم"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "يرجى اختيار طريقة التقسيم أولًا"
@@ -6091,6 +6239,14 @@ bullet2 = "نقاط تقسيم بالنطاق: 3-8 (يقسم قبل الصفحة
 bullet3 = "مختلط: 2,5-10,15 (يقسم بعد 2، قبل 5، بعد 10، وبعد 15)"
 text = "قسّم ملفك عند أرقام صفحات محددة. استخدام 'n' يقسم بعد الصفحة n. استخدام 'n-m' يقسم قبل n وبعد m."
 title = "التقسيم عند أرقام الصفحات"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "أفقي: عدد الصفوف المطلوب إنشاؤها"
@@ -6232,6 +6388,82 @@ title = "توثيق API"
 
 [tableExtraxt]
 tags = "CSV,استخراج الجدول,استخراج,تحويل"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "وسط"
+left = "يسار"
+right = "يمين"
 
 [theme]
 toggle = "تبديل السِمة"
@@ -6507,6 +6739,37 @@ invalid = "الشهادة غير موجودة في مخزن الثقة - الم�
 fileManager = "مدير الملفات"
 pageEditor = "محرر الصفحات"
 viewer = "عارض"
+
+[viewer]
+cannotPreviewFile = "لا يمكن معاينة الملف"
+dualPageView = "عرض صفحتين"
+firstPage = "الصفحة الأولى"
+lastPage = "الصفحة الأخيرة"
+nextPage = "الصفحة التالية"
+onlyPdfSupported = "عارض الملفات يدعم ملفات PDF فقط. يبدو أن هذا الملف بتنسيق مختلف."
+previousPage = "الصفحة السابقة"
+singlePageView = "عرض صفحة واحدة"
+unknownFile = "ملف غير معروف"
+zoomIn = "تكبير"
+zoomOut = "تصغير"
+
+[viewer.attachments]
+empty = "لا توجد مرفقات في هذا المستند"
+loading = "جارٍ تحميل المرفقات..."
+noDocument = "افتح ملف PDF لعرض مرفقاته."
+noMatch = "لا توجد مرفقات تطابق بحثك"
+noSupport = "دعم المرفقات غير متاح في هذا العارض."
+searchPlaceholder = "ابحث في المرفقات"
+title = "المرفقات"
+
+[viewer.formBar]
+apply = "تطبيق التغييرات"
+dismiss = "تجاهل"
+download = "تنزيل PDF"
+hasFieldsDesc = "يحتوي ملف PDF هذا على حقول قابلة للتعبئة"
+title = "حقول النموذج"
+unsavedBadge = "غير محفوظ"
+unsavedDesc = "لديك تغييرات غير محفوظة"
 
 [viewPdf]
 header = "عرض PDF"
