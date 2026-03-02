@@ -1166,8 +1166,24 @@ standard = "BASIC events plus: user login/logout, account changes, general GET r
 verbose = "STANDARD events plus: continuous polling calls, all GET requests, detailed timing. Warning: high log volume and performance impact."
 
 [admin.settings.security.audit.retentionDays]
-description = "Number of days to retain audit logs"
+description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
+
+[admin.settings.security.audit.metadata]
+description = "Enable additional metadata extraction. Each option independently increases processing time per file (50-200ms depending on file size)."
+warning = "Optional Metadata Capture"
+
+[admin.settings.security.audit.captureFileHash]
+description = "Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level."
+label = "Capture File Hash (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Extract author field from PDF documents during processing. Requires PDF parsing, increases latency. Independent of audit level."
+label = "Capture PDF Author Metadata"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Capture method return values. Not recommended: significantly increases log volume and disk usage."
+label = "Capture Operation Results"
 
 [admin.settings.security.csrfDisabled]
 description = "Disable Cross-Site Request Forgery protection (not recommended)"
@@ -1542,36 +1558,8 @@ goToSettings = "Go to Audit Settings"
 notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
 
-[audit.charts]
-byType = "Events by Type"
-byUser = "Events by User"
-day = "Day"
-error = "Error loading charts"
-month = "Month"
-overTime = "Events Over Time"
-title = "Audit Dashboard"
-week = "Week"
-
 [audit.error]
 title = "Error loading audit system"
-
-[audit.events]
-actions = "Actions"
-clearFilters = "Clear"
-details = "Details"
-endDate = "End date"
-error = "Error loading events"
-eventDetails = "Event Details"
-filterByType = "Filter by type"
-filterByUser = "Filter by user"
-ipAddress = "IP Address"
-noEvents = "No events found"
-startDate = "Start date"
-timestamp = "Timestamp"
-title = "Audit Events"
-type = "Type"
-user = "User"
-viewDetails = "View Details"
 
 [audit.export]
 clearFilters = "Clear"
@@ -1584,6 +1572,7 @@ fieldDate = "Date"
 fieldDocumentName = "Document Name"
 fieldFileHash = "File Hash (SHA-256)"
 fieldIpAddress = "IP Address"
+fieldOperationResults = "Operation Results"
 fieldOutcome = "Outcome (Success/Failure)"
 fieldTool = "Tool"
 fieldUsername = "Username"
@@ -1617,14 +1606,15 @@ username = "Username"
 verboseOnly = "VERBOSE only"
 
 [audit.stats]
+activeUsers = "Active Users"
 attention = "Attention needed"
 avgLatency = "Avg Latency"
+error = "Error loading statistics"
 errorLoadingStats = "Failed to load statistics"
 excellent = "Excellent"
 good = "Good"
 noData = "N/A"
 successRate = "Success Rate"
-activeUsers = "Active Users"
 title = "Summary"
 totalEvents = "Total Events"
 vsLastPeriod = "vs last period"
@@ -1644,6 +1634,7 @@ week = "Week"
 
 [audit.events]
 actions = "Actions"
+author = "Author"
 clearFilters = "Clear"
 details = "Details"
 documentName = "Document"
@@ -1651,6 +1642,7 @@ endDate = "End date"
 error = "Error loading events"
 eventDetails = "Event Details"
 failure = "Failure"
+fileHash = "File Hash"
 filterByType = "Filter by type"
 filterByUser = "Filter by user"
 ipAddress = "IP Address"
@@ -1678,9 +1670,28 @@ thisMonth = "This month"
 today = "Today"
 
 [audit.tabs]
+clearData = "Clear Data"
 dashboard = "Dashboard"
 events = "Audit Events"
 export = "Export"
+
+[audit.clearData]
+cancel = "Cancel"
+codeDoesNotMatch = "Code does not match"
+codePlaceholder = "Type the code here"
+confirmationCode = "Confirmation Code"
+confirmationRequired = "Delete All Audit Data"
+confirmMessage = "This will permanently remove all audit logs. Enter the confirmation code below to proceed."
+confirmTitle = "Please confirm you want to delete"
+deleteButton = "Delete"
+enterCode = "Confirmation Code"
+enterCodeBelow = "Enter the code exactly as shown above (case-sensitive)"
+initiateDelete = "Delete All Data"
+irreversible = "IRREVERSIBLE"
+success = "Success"
+successMessage = "All audit data has been cleared successfully"
+warning1 = "This action cannot be undone"
+warning2 = "Deleting audit data will permanently remove all historical audit logs, including security events, user activities, and file operations from the database."
 
 [auth]
 accessDenied = "Access Denied"

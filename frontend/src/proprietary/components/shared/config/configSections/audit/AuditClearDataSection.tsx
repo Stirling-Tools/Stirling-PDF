@@ -61,7 +61,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
           icon={<LocalIcon icon="check-circle" width="1.2rem" height="1.2rem" />}
           title={t('audit.clearData.success', 'Success')}
           onClose={() => setSuccess(false)}
-          closeButtonProps={{ 'aria-label': 'Close alert' }}
+          closeButtonLabel="Close alert"
           withCloseButton
         >
           {t('audit.clearData.successMessage', 'All audit data has been cleared successfully')}

@@ -152,7 +152,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
           }}
           clearable
           disabled={disabled}
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL, modal: true }}
+          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
         />
         <DateInput
           placeholder={t('audit.events.endDate', 'End date')}
@@ -162,7 +162,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
           }}
           clearable
           disabled={disabled}
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL, modal: true }}
+          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
         />
       </SimpleGrid>
 

@@ -362,9 +362,10 @@ public class AuditRestController {
                                 Collectors.groupingBy(
                                         PersistentAuditEvent::getPrincipal, Collectors.counting()));
 
-        // Parse JSON data for success rate, latency, and tool extraction
+        // Parse JSON data once for success rate, latency, tool extraction, and error counting
         long successCount = 0;
         long failureCount = 0;
+        long errorCount = 0;
         long totalLatencyMs = 0;
         long latencyCount = 0;
         Map<String, Long> topTools = new HashMap<>();
@@ -391,6 +392,27 @@ public class AuditRestController {
                         successCount++;
                     } else if ("failure".equals(status)) {
                         failureCount++;
+                        errorCount++;
+                    } else {
+                        // Check statusCode for error counting (when status is not explicit failure)
+                        Object statusCode = data.get("statusCode");
+                        if (statusCode != null) {
+                            try {
+                                int statusCodeVal;
+                                if (statusCode instanceof Number) {
+                                    statusCodeVal = ((Number) statusCode).intValue();
+                                } else if (statusCode instanceof String) {
+                                    statusCodeVal = Integer.parseInt((String) statusCode);
+                                } else {
+                                    statusCodeVal = 0;
+                                }
+                                if (statusCodeVal >= 400) {
+                                    errorCount++;
+                                }
+                            } catch (NumberFormatException e) {
+                                log.debug("Failed to parse statusCode value: {}", statusCode);
+                            }
+                        }
                     }
 
                     // Track latency (safe conversion to handle strings/numbers)
@@ -446,52 +468,6 @@ public class AuditRestController {
         double avgLatencyMs = 0;
         if (latencyCount > 0) {
             avgLatencyMs = totalLatencyMs / (double) latencyCount;
-        }
-
-        // Count errors (outcome=failure OR statusCode>=400)
-        long errorCount = 0;
-        for (PersistentAuditEvent event : events) {
-            if (event.getData() != null) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> data = objectMapper.readValue(event.getData(), Map.class);
-                    // Check both "status" (current) and "outcome" (legacy) for compatibility
-                    Object statusObj = data.get("status");
-                    if (statusObj == null) {
-                        statusObj = data.get("outcome");
-                    }
-                    String status = null;
-                    if (statusObj instanceof String) {
-                        status = (String) statusObj;
-                    } else if (statusObj != null) {
-                        status = String.valueOf(statusObj);
-                    }
-                    if ("failure".equals(status)) {
-                        errorCount++;
-                    } else {
-                        Object statusCode = data.get("statusCode");
-                        if (statusCode != null) {
-                            try {
-                                int statusCodeVal;
-                                if (statusCode instanceof Number) {
-                                    statusCodeVal = ((Number) statusCode).intValue();
-                                } else if (statusCode instanceof String) {
-                                    statusCodeVal = Integer.parseInt((String) statusCode);
-                                } else {
-                                    statusCodeVal = 0;
-                                }
-                                if (statusCodeVal >= 400) {
-                                    errorCount++;
-                                }
-                            } catch (NumberFormatException e) {
-                                log.debug("Failed to parse statusCode value: {}", statusCode);
-                            }
-                        }
-                    }
-                } catch (JacksonException e) {
-                    // skip
-                }
-            }
         }
 
         // Get top event type
