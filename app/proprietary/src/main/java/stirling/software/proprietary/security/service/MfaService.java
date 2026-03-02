@@ -66,14 +66,12 @@ public class MfaService {
     @Transactional
     public void setSecret(User user, String secret)
             throws SQLException, UnsupportedProviderException {
-        User managedUser = getUserWithSettings(user);
+        User managedUser = getUserWithSettings(user, true);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "false");
         // Clear existing values and flush the removals before inserting a new secret. This keeps
         // the (user_id, setting_key) PK satisfied even when the persistence context re-inserts the
         // same keys within a single transaction.
-        settings.remove(MFA_SECRET_KEY);
-        settings.remove(MFA_LAST_USED_STEP_KEY);
         if (managedUser != null && managedUser.getId() != null) {
             userRepository.deleteSettingsByUserIdAndKeys(
                     managedUser.getId(), Arrays.asList(MFA_SECRET_KEY, MFA_LAST_USED_STEP_KEY));
@@ -90,8 +88,9 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
+    @Transactional
     public void enableMfa(User user) throws SQLException, UnsupportedProviderException {
-        User managedUser = getUserWithSettings(user);
+        User managedUser = getUserWithSettings(user, true);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "true");
         persist(managedUser);
@@ -104,12 +103,17 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
+    @Transactional
     public void clearPendingSecret(User user) throws SQLException, UnsupportedProviderException {
-        User managedUser = getUserWithSettings(user);
+        User managedUser = getUserWithSettings(user, true);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "false");
-        settings.remove(MFA_SECRET_KEY);
-        settings.remove(MFA_LAST_USED_STEP_KEY);
+
+        if (managedUser != null && managedUser.getId() != null) {
+            userRepository.deleteSettingsByUserIdAndKeys(
+                    managedUser.getId(), Arrays.asList(MFA_SECRET_KEY, MFA_LAST_USED_STEP_KEY));
+            userRepository.flush();
+        }
         persist(managedUser);
     }
 
@@ -120,12 +124,16 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
+    @Transactional
     public void disableMfa(User user) throws SQLException, UnsupportedProviderException {
-        User managedUser = getUserWithSettings(user);
+        User managedUser = getUserWithSettings(user, true);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "false");
-        settings.remove(MFA_SECRET_KEY);
-        settings.remove(MFA_LAST_USED_STEP_KEY);
+        if (managedUser != null && managedUser.getId() != null) {
+            userRepository.deleteSettingsByUserIdAndKeys(
+                    managedUser.getId(), Arrays.asList(MFA_SECRET_KEY, MFA_LAST_USED_STEP_KEY));
+            userRepository.flush();
+        }
         persist(managedUser);
     }
 
@@ -163,9 +171,10 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
+    @Transactional
     public boolean markTotpStepUsed(User user, long timeStep)
             throws SQLException, UnsupportedProviderException {
-        User managedUser = getUserWithSettings(user);
+        User managedUser = getUserWithSettings(user, true);
         Map<String, String> settings = ensureSettings(managedUser);
         String lastUsed = settings.get(MFA_LAST_USED_STEP_KEY);
         if (lastUsed != null) {
@@ -206,9 +215,10 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
+    @Transactional
     public void setMfaRequired(User user, boolean required)
             throws SQLException, UnsupportedProviderException {
-        User managedUser = getUserWithSettings(user);
+        User managedUser = getUserWithSettings(user, true);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_REQUIRED_KEY, Boolean.toString(required));
         log.info("Set MFA required={} for user {}", required, managedUser.getUsername());
@@ -225,10 +235,16 @@ public class MfaService {
     }
 
     private User getUserWithSettings(User user) {
+        return getUserWithSettings(user, false);
+    }
+
+    private User getUserWithSettings(User user, boolean lockForUpdate) {
         if (user == null || user.getId() == null) {
             return user;
         }
-        return userRepository.findByIdWithSettings(user.getId()).orElse(user);
+        return lockForUpdate
+                ? userRepository.findByIdWithSettingsForUpdate(user.getId()).orElse(user)
+                : userRepository.findByIdWithSettings(user.getId()).orElse(user);
     }
 
     private Map<String, String> ensureSettings(User user) {

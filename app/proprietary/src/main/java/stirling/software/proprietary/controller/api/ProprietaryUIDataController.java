@@ -316,6 +316,9 @@ public class ProprietaryUIDataController {
                 if (settingsCopy.containsKey("mfaSecret")) {
                     settingsCopy.put("mfaSecret", "********");
                 }
+                if (settingsCopy.containsKey("mfaRequired")) {
+                    settingsCopy.put("mfaRequired", settingsCopy.get("mfaRequired"));
+                }
                 userSettings.put(username, settingsCopy);
                 userSessions.put(username, hasActiveSession);
                 userLastRequest.put(username, lastRequest);

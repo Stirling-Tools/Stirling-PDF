@@ -214,6 +214,7 @@ public class ApplicationProperties {
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
         private String xFrameOptions = "DENY";
+        private MFARequired mfaRequired = new MFARequired();
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -530,6 +531,12 @@ public class ApplicationProperties {
                 private String mode = "none";
                 private boolean hardFail = false;
             }
+        }
+
+        @Data
+        public static class MFARequired {
+            private boolean enforceForAdmins = false;
+            private boolean enforceForUsers = false;
         }
     }
 

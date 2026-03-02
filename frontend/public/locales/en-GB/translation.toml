@@ -1276,6 +1276,14 @@ saml2 = "SAML2 Only"
 description = "Time before failed login attempts are reset"
 label = "Login Reset Time (minutes)"
 
+[admin.settings.security.mfaEnforcement.enforceForAdmins]
+description = "Require multi-factor authentication for all admin users"
+label = "Enforce Multi-Factor Authentication for Admins"
+
+[admin.settings.security.mfaEnforcement.enforceForUsers]
+description = "Require multi-factor authentication for all non-admin users"
+label = "Enforce Multi-Factor Authentication for Users"
+
 [admin.settings.security.ssoNotice]
 message = "OAuth2 and SAML2 authentication providers have been moved to the Connections menu for easier management."
 title = "Looking for SSO/SAML settings?"
@@ -6884,6 +6892,7 @@ enable = "Enable"
 loading = "Loading people..."
 loginRequired = "Enable login mode first"
 member = "Member"
+mfaTitle = "MFA"
 noMembersFound = "No members found"
 role = "Role"
 searchMembers = "Search members..."
@@ -6891,6 +6900,7 @@ status = "Status"
 team = "Team"
 title = "People"
 user = "User"
+viewProfile = "View your profile"
 
 [workspace.people.actions]
 label = "Actions"
@@ -7027,7 +7037,14 @@ users = "users"
 [workspace.people.mfa]
 adminDisableError = "Failed to disable MFA for user"
 adminDisableSuccess = "MFA disabled successfully for user"
+adminEnableError = "Failed to enable MFA for user"
+adminEnableSuccess = "MFA enabled successfully for user"
 disableByAdmin = "Disable MFA"
+enabled = "MFA Enabled"
+notRequired = "MFA Not Required"
+required = "MFA Required"
+setOptional = "Set MFA Optional"
+setRequired = "Set MFA Require"
 
 [workspace.people.roleDescriptions]
 admin = "Can manage settings and invite members, with full administrative access."
